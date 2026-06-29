@@ -226,6 +226,32 @@ final class TracingDriverTest extends TestCase
         static::assertSame('my_database', $spans[0]->attributes()['db.namespace']);
     }
 
+    public function test_records_exception_when_connect_fails(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = $this->createTelemetry($spanProcessor);
+
+        $driver = $this->createStub(Driver::class);
+        $driver->method('connect')->willThrowException(new RuntimeException('connection refused'));
+
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+
+        $caught = false;
+
+        try {
+            $tracingDriver->connect([]);
+        } catch (RuntimeException) {
+            $caught = true;
+        }
+
+        static::assertTrue($caught);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertTrue($spans[0]->status()?->isError());
+        static::assertSame(RuntimeException::class, $spans[0]->attributes()['error.type']);
+    }
+
     private function createMockDriverWithPlatform(AbstractPlatform $platform): Driver
     {
         return new readonly class($platform) implements Driver {

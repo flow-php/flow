@@ -22,6 +22,7 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 use function mb_strlen;
@@ -175,6 +176,49 @@ final class TracingConnectionTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('SELECT * FROM users ...', $spans[0]->attributes()['db.query.text']);
+    }
+
+    public function test_records_exception_when_operation_fails(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = $this->createTelemetry($spanProcessor);
+
+        $connection = $this->createStub(ConnectionInterface::class);
+        $connection->method('beginTransaction')->willThrowException(new RuntimeException('boom'));
+        $connection->method('commit')->willThrowException(new RuntimeException('boom'));
+        $connection->method('exec')->willThrowException(new RuntimeException('boom'));
+        $connection->method('prepare')->willThrowException(new RuntimeException('boom'));
+        $connection->method('query')->willThrowException(new RuntimeException('boom'));
+        $connection->method('rollBack')->willThrowException(new RuntimeException('boom'));
+
+        $tracing = new TracingConnection($connection, $telemetry, logSql: true, maxSqlLength: 100);
+
+        $failures = 0;
+
+        foreach ([
+            static fn() => $tracing->beginTransaction(),
+            static fn() => $tracing->commit(),
+            static fn() => $tracing->exec('SELECT 1'),
+            static fn() => $tracing->prepare('SELECT 1'),
+            static fn() => $tracing->query('SELECT 1'),
+            static fn() => $tracing->rollBack(),
+        ] as $operation) {
+            try {
+                $operation();
+            } catch (RuntimeException) {
+                $failures++;
+            }
+        }
+
+        static::assertSame(6, $failures);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(6, $spans);
+
+        foreach ($spans as $span) {
+            static::assertTrue($span->status()?->isError());
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
+        }
     }
 
     private function createMockConnection(): ConnectionInterface

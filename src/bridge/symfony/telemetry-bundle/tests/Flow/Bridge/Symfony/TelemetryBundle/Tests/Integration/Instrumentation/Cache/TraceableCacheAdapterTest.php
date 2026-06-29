@@ -8,6 +8,8 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\CacheTeleme
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TagAwareTraceableCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\ArrayCacheAdapter;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\FailingCacheAdapter;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\FailingTagAwareCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\TagAwareArrayCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
@@ -16,6 +18,7 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
+use RuntimeException;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -533,6 +536,263 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $container = $this->getContainer();
 
         static::assertInstanceOf(TagAwareTraceableCacheAdapter::class, $container->get('test.cache.tags'));
+    }
+
+    public function test_traceable_adapter_records_a_span_for_every_traced_operation(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'memory', 'exporter' => 'memory'],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $item = $cache->getItem('save-key');
+
+        $cache->clear();
+        $cache->commit();
+        $cache->delete('delete-key');
+        $cache->deleteItem('delete-item-key');
+        $cache->deleteItems(['a', 'b']);
+        $cache->prune();
+        $cache->reset();
+        $cache->save($item);
+        $cache->saveDeferred($item);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $operations = array_map(static fn($span) => $span->attributes()['cache.operation'], $processor->endedSpans());
+
+        static::assertSame(
+            ['clear', 'commit', 'delete', 'deleteItem', 'deleteItems', 'prune', 'reset', 'save', 'saveDeferred'],
+            $operations,
+        );
+    }
+
+    public function test_traceable_adapter_records_error_span_when_operation_fails(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.app', FailingCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'memory', 'exporter' => 'memory'],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $item = (new ArrayCacheAdapter())->getItem('save-key');
+
+        $failures = 0;
+
+        foreach ([
+            static fn() => $cache->clear(),
+            static fn() => $cache->commit(),
+            static fn() => $cache->delete('key'),
+            static fn() => $cache->deleteItem('key'),
+            static fn() => $cache->deleteItems(['a']),
+            static fn() => $cache->prune(),
+            static fn() => $cache->reset(),
+            static fn() => $cache->save($item),
+            static fn() => $cache->saveDeferred($item),
+        ] as $operation) {
+            try {
+                $operation();
+            } catch (RuntimeException) {
+                $failures++;
+            }
+        }
+
+        static::assertSame(9, $failures);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertCount(9, $spans);
+
+        foreach ($spans as $span) {
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
+        }
+    }
+
+    public function test_tag_aware_adapter_records_a_span_for_every_traced_operation(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.tags', TagAwareArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'memory', 'exporter' => 'memory'],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TagAwareTraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.tags');
+        $item = $cache->getItem('save-key');
+
+        $cache->clear();
+        $cache->commit();
+        $cache->delete('delete-key');
+        $cache->deleteItem('delete-item-key');
+        $cache->deleteItems(['a', 'b']);
+        $cache->invalidateTags(['tag1']);
+        $cache->prune();
+        $cache->reset();
+        $cache->save($item);
+        $cache->saveDeferred($item);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $operations = array_map(static fn($span) => $span->attributes()['cache.operation'], $processor->endedSpans());
+
+        static::assertSame(
+            [
+                'clear',
+                'commit',
+                'delete',
+                'deleteItem',
+                'deleteItems',
+                'invalidateTags',
+                'prune',
+                'reset',
+                'save',
+                'saveDeferred',
+            ],
+            $operations,
+        );
+    }
+
+    public function test_tag_aware_adapter_records_error_span_when_operation_fails(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.tags', FailingTagAwareCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'memory', 'exporter' => 'memory'],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TagAwareTraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.tags');
+        $item = (new TagAwareArrayCacheAdapter())->getItem('save-key');
+
+        $failures = 0;
+
+        foreach ([
+            static fn() => $cache->clear(),
+            static fn() => $cache->commit(),
+            static fn() => $cache->delete('key'),
+            static fn() => $cache->deleteItem('key'),
+            static fn() => $cache->deleteItems(['a']),
+            static fn() => $cache->invalidateTags(['tag1']),
+            static fn() => $cache->prune(),
+            static fn() => $cache->reset(),
+            static fn() => $cache->save($item),
+            static fn() => $cache->saveDeferred($item),
+        ] as $operation) {
+            try {
+                $operation();
+            } catch (RuntimeException) {
+                $failures++;
+            }
+        }
+
+        static::assertSame(10, $failures);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertCount(10, $spans);
+
+        foreach ($spans as $span) {
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
+        }
     }
 
     public function test_tag_aware_cache_creates_span_for_invalidate_tags(): void
