@@ -7,6 +7,7 @@ namespace Flow\Telemetry\Tests\Unit\Context;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\ResettableContextStorage;
 use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
@@ -54,5 +55,22 @@ final class MemoryContextStorageTest extends TestCase
     public function test_implements_context_storage(): void
     {
         static::assertInstanceOf(ContextStorage::class, new MemoryContextStorage());
+    }
+
+    public function test_implements_resettable_context_storage(): void
+    {
+        static::assertInstanceOf(ResettableContextStorage::class, new MemoryContextStorage());
+    }
+
+    public function test_reset_returns_current_context_to_root(): void
+    {
+        $storage = new MemoryContextStorage();
+        $storage->attach(Context::root()->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate())));
+
+        static::assertFalse($storage->current()->isRootContext());
+
+        $storage->reset();
+
+        static::assertTrue($storage->current()->isRootContext());
     }
 }

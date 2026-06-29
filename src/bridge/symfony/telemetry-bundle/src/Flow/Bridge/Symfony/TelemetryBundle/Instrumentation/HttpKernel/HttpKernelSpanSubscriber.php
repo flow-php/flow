@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 use DateTimeImmutable;
+use Flow\Bridge\Symfony\HttpFoundationTelemetry\QueryCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
@@ -22,10 +24,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RouterInterface;
 
 use function array_map;
 use function is_string;
@@ -35,6 +39,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public const string SPAN_ATTRIBUTE = '_flow_telemetry_span';
 
     private const string TRACER_ATTRIBUTE = '_flow_telemetry_tracer';
+
+    private const string PROPAGATION_SCOPE_ATTRIBUTE = '_flow_telemetry_propagation_scope';
 
     /** @var array<PathExclusionRule> */
     private array $excludePathRules;
@@ -48,6 +54,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private ContextStorage $contextStorage,
         private Propagator $propagator,
         private bool $contextPropagation = true,
+        private bool $contextPropagationQuery = false,
+        private ?RouterInterface $router = null,
+        private RouteNaming $routeNaming = RouteNaming::Path,
     ) {
         $this->excludePathRules = array_map(
             static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
@@ -62,6 +71,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             KernelEvents::CONTROLLER => ['onController', 0],
             KernelEvents::RESPONSE => ['onResponse', -10000],
             KernelEvents::EXCEPTION => ['onException', 0],
+            KernelEvents::FINISH_REQUEST => ['onFinishRequest', -10000],
             KernelEvents::TERMINATE => ['onTerminate', -10000],
         ];
     }
@@ -76,15 +86,30 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
 
         // @mago-expect analysis:mixed-assignment
-        if (is_string($route = $request->attributes->get('_route'))) {
-            $span->setAttribute('http.route', $route);
-        }
-
+        $route = $request->attributes->get('_route');
         $controllerName = ControllerName::resolve($event->getController())?->name;
 
         if ($controllerName !== null) {
             $span->setAttribute('controller', $controllerName);
         }
+
+        if (is_string($route) && $route !== '') {
+            $routeValue = $this->routeValue($route);
+            $span->setAttribute('http.route', $routeValue);
+            $span->rename("{$request->getMethod()} {$routeValue}");
+        } elseif ($controllerName !== null) {
+            // Sub-requests (render(controller(...))) carry no route, so name them after the controller.
+            $span->rename("{$request->getMethod()} {$controllerName}");
+        }
+    }
+
+    private function routeValue(string $routeName): string
+    {
+        if ($this->routeNaming !== RouteNaming::Path || $this->router === null) {
+            return $routeName;
+        }
+
+        return $this->router->getRouteCollection()->get($routeName)?->getPath() ?? $routeName;
     }
 
     public function onException(ExceptionEvent $event): void
@@ -115,8 +140,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
 
+        // OTEL HTTP semconv: the span name must be low-cardinality, so start with just the method and
+        // upgrade to "{method} {route}" once the route is resolved (see onController). The raw path stays
+        // on the url.path attribute.
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
-        $span = $tracer->span("{$method} {$path}", $kind, [
+        $span = $tracer->span($method, $kind, [
             'http.request.method' => $method,
             'url.full' => $request->getUri(),
             'url.path' => $request->getRequestUri(),
@@ -142,10 +170,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $span->setAttribute('http.response.status_code', $statusCode);
 
-        if ($statusCode >= 400) {
+        // OTEL HTTP semconv: for SpanKind.SERVER the span status MUST be left unset for 1xx-4xx; only
+        // 5xx (or other server-caused failures) is an Error. A 4xx is the client's fault, not the server's.
+        if ($statusCode >= 500) {
             $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-        } else {
-            $span->setStatus(SpanStatus::ok());
+            $span->setAttribute('error.type', (string) $statusCode);
         }
 
         if ($event->isMainRequest() && $this->contextPropagation) {
@@ -153,10 +182,26 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
     }
 
+    /**
+     * Sub-requests never reach kernel.terminate (it fires only for the main request), so their span is
+     * completed here, where kernel.finish_request fires once for every request, main and sub alike.
+     */
+    public function onFinishRequest(FinishRequestEvent $event): void
+    {
+        if ($event->isMainRequest()) {
+            return;
+        }
+
+        $this->completeSpan($event->getRequest());
+    }
+
     public function onTerminate(TerminateEvent $event): void
     {
-        $request = $event->getRequest();
+        $this->completeSpan($event->getRequest());
+    }
 
+    private function completeSpan(Request $request): void
+    {
         // @mago-expect analysis:mixed-assignment
         if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
@@ -167,15 +212,31 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        $tracer->complete($span);
+        try {
+            $tracer->complete($span);
+        } finally {
+            // Always detach so a completion failure cannot strand the context scope into the next
+            // request when the kernel is reused (worker mode).
+            // @mago-expect analysis:mixed-assignment
+            if (($scope = $request->attributes->get(self::PROPAGATION_SCOPE_ATTRIBUTE)) instanceof Scope) {
+                $scope->detach();
+                $request->attributes->remove(self::PROPAGATION_SCOPE_ATTRIBUTE);
+            }
 
-        $request->attributes->remove(self::SPAN_ATTRIBUTE);
-        $request->attributes->remove(self::TRACER_ATTRIBUTE);
+            $request->attributes->remove(self::SPAN_ATTRIBUTE);
+            $request->attributes->remove(self::TRACER_ATTRIBUTE);
+        }
     }
 
     private function extractContextFromRequest(Request $request): void
     {
         $propagationContext = $this->propagator->extract(new RequestCarrier($request));
+
+        // Links and full-page navigations cannot send headers, so optionally fall back to the query
+        // string. Headers win when both are present.
+        if ($propagationContext->spanContext === null && $this->contextPropagationQuery) {
+            $propagationContext = $this->propagator->extract(new QueryCarrier($request));
+        }
 
         $spanContext = $propagationContext->spanContext;
 
@@ -186,7 +247,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->attach($context);
+            $request->attributes->set(self::PROPAGATION_SCOPE_ATTRIBUTE, $this->contextStorage->attach($context));
         }
     }
 

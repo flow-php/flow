@@ -57,15 +57,16 @@ final readonly class PSR18TraceableClient implements ClientInterface
             $statusCode = $response->getStatusCode();
             $span->setAttribute('http.response.status_code', $statusCode);
 
+            // OTEL HTTP semconv: for SpanKind.CLIENT both 4xx and 5xx are Errors; 1xx-3xx leaves status unset.
             if ($statusCode >= 400) {
                 $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-            } else {
-                $span->setStatus(SpanStatus::ok());
+                $span->setAttribute('error.type', (string) $statusCode);
             }
 
             return $response;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

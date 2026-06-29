@@ -91,9 +91,9 @@ final class TraceableCursor implements Cursor
     {
         try {
             $this->cursor->free();
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -116,9 +116,9 @@ final class TraceableCursor implements Cursor
                 yield $row;
             }
 
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -140,9 +140,9 @@ final class TraceableCursor implements Cursor
                 yield $object;
             }
 
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -215,7 +215,7 @@ final class TraceableCursor implements Cursor
         return 'cursor';
     }
 
-    private function completeSpan(SpanStatus $status, ?Throwable $exception = null): void
+    private function completeSpan(?Throwable $exception = null): void
     {
         $span = $this->span;
 
@@ -227,12 +227,12 @@ final class TraceableCursor implements Cursor
 
         $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $this->rowsIterated);
 
+        // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
         if ($exception !== null) {
             $span->recordException($exception, $this->telemetryConfig->clock->now());
             $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $exception::class);
+            $span->setStatus(SpanStatus::error($exception->getMessage()));
         }
-
-        $span->setStatus($status);
 
         $tracer = $this->tracer;
 

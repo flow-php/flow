@@ -47,9 +47,8 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_exit_code_nonzero_sets_error_status(): void
@@ -73,6 +72,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('Exit code: 1', $status->description);
+        static::assertSame('1', $spans[0]->attributes()['error.type']);
     }
 
     public function test_get_subscribed_events_returns_correct_events(): void

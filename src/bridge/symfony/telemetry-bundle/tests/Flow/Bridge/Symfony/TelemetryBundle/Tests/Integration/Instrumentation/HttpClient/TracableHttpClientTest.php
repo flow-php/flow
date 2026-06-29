@@ -290,10 +290,10 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertSame('api.example.com', $attributes['server.address']);
         static::assertSame('test.api_client', $attributes['http.client.name']);
         static::assertSame(200, $attributes['http.response.status_code']);
+        static::assertArrayNotHasKey('error.type', $attributes);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL semconv: 1xx-3xx leaves the span status unset.
+        static::assertNull($span->status());
     }
 
     public function test_wrapped_client_records_exception_and_creates_error_span(): void

@@ -79,6 +79,7 @@ final class TracableResponseTest extends TestCase
 
         static::assertTrue($span->isEnded());
         static::assertCount(1, $processor->endedSpans());
+        static::assertSame('404', $span->attributes()['error.type']);
 
         $status = $span->status();
         static::assertNotNull($status);
@@ -86,7 +87,7 @@ final class TracableResponseTest extends TestCase
         static::assertSame('HTTP 404', $status->description);
     }
 
-    public function test_get_content_completes_span_with_ok_status(): void
+    public function test_get_content_completes_span_with_unset_status_on_success(): void
     {
         $processor = new MemorySpanProcessor(new MemoryExporter());
         $tracer = TelemetryMother::withSpanProcessor($processor)->tracer('test');
@@ -98,10 +99,10 @@ final class TracableResponseTest extends TestCase
         static::assertTrue($span->isEnded());
         static::assertCount(1, $processor->endedSpans());
         static::assertSame(200, $span->attributes()['http.response.status_code']);
+        static::assertArrayNotHasKey('error.type', $span->attributes());
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL semconv: 1xx-3xx leaves the span status unset.
+        static::assertNull($span->status());
     }
 
     public function test_get_headers_records_status_without_completing_span(): void

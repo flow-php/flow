@@ -265,21 +265,22 @@ final class TracerTest extends TestCase
         } catch (RuntimeException) {
         }
 
-        $status = $processor->endedSpans()[0]->status();
+        $span = $processor->endedSpans()[0];
+        $status = $span->status();
         static::assertNotNull($status);
         static::assertTrue($status->isError());
+        static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
     }
 
-    public function test_trace_sets_ok_status_on_success(): void
+    public function test_trace_leaves_status_unset_on_success(): void
     {
         $processor = TracerMother::createMemoryProcessor();
         $tracer = TracerMother::withInMemoryProcessor($processor);
 
         $tracer->trace('test-span', static fn() => 'ok');
 
-        $status = $processor->endedSpans()[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($processor->endedSpans()[0]->status());
     }
 
     public function test_version_returns_tracer_version(): void

@@ -200,6 +200,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
+        static::assertSame('404', $spans[0]->attributes()['error.type']);
 
         $status = $spans[0]->status();
         static::assertNotNull($status);
@@ -220,6 +221,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
+        static::assertSame('500', $spans[0]->attributes()['error.type']);
 
         $status = $spans[0]->status();
         static::assertNotNull($status);
@@ -227,7 +229,7 @@ final class TracableHttpClientTest extends TestCase
         static::assertSame('HTTP 500', $status->description);
     }
 
-    public function test_request_sets_ok_status_for_2xx_codes(): void
+    public function test_request_leaves_status_unset_for_2xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracable = new TracableHttpClient(
@@ -241,12 +243,11 @@ final class TracableHttpClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL semconv: 1xx-3xx leaves the span status unset.
+        static::assertNull($spans[0]->status());
     }
 
-    public function test_request_sets_ok_status_for_3xx_codes(): void
+    public function test_request_leaves_status_unset_for_3xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracable = new TracableHttpClient(
@@ -260,9 +261,7 @@ final class TracableHttpClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        static::assertNull($spans[0]->status());
     }
 
     public function test_request_span_name_includes_method_and_host(): void

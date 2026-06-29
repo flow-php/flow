@@ -32,13 +32,10 @@ final class TracingStatement extends AbstractStatementMiddleware
         $span = $tracer->span('doctrine.dbal.statement.execute', SpanKind::CLIENT);
 
         try {
-            $result = parent::execute();
-
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return parent::execute();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

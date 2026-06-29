@@ -306,7 +306,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT)',
             $execSpan->attributes()['db.query.text'],
         );
-        static::assertTrue($execSpan->status()?->isOk());
+        static::assertNull($execSpan->status());
     }
 
     public function test_failed_transaction_creates_rollback_span(): void
@@ -375,7 +375,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         static::assertNotNull($rollbackSpan, 'Rollback span should exist');
         static::assertSame(SpanKind::CLIENT, $rollbackSpan->kind());
-        static::assertTrue($rollbackSpan->status()?->isOk());
+        static::assertNull($rollbackSpan->status());
     }
 
     public function test_long_sql_is_truncated_when_max_length_configured(): void
@@ -518,10 +518,10 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         static::assertNotNull($prepareSpan, 'Prepare span should exist');
         static::assertSame('INSERT INTO test_table (name) VALUES (:name)', $prepareSpan->attributes()['db.query.text']);
-        static::assertTrue($prepareSpan->status()?->isOk());
+        static::assertNull($prepareSpan->status());
 
         static::assertNotNull($executeSpan, 'Execute span should exist');
-        static::assertTrue($executeSpan->status()?->isOk());
+        static::assertNull($executeSpan->status());
     }
 
     public function test_query_creates_span_with_sql_attribute(): void
@@ -576,13 +576,13 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertSame('doctrine.dbal.connection', $connectionSpan->name());
         static::assertSame(SpanKind::CLIENT, $connectionSpan->kind());
         static::assertSame('default', $connectionSpan->attributes()['db.connection.name']);
-        static::assertTrue($connectionSpan->status()?->isOk());
+        static::assertNull($connectionSpan->status());
 
         $querySpan = $spans[1];
         static::assertSame('doctrine.dbal.connection.query', $querySpan->name());
         static::assertSame(SpanKind::CLIENT, $querySpan->kind());
         static::assertSame('SELECT 1 as value', $querySpan->attributes()['db.query.text']);
-        static::assertTrue($querySpan->status()?->isOk());
+        static::assertNull($querySpan->status());
     }
 
     public function test_query_error_creates_span_with_error_status(): void
@@ -790,10 +790,10 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         static::assertNotNull($beginSpan, 'Begin transaction span should exist');
         static::assertSame(SpanKind::CLIENT, $beginSpan->kind());
-        static::assertTrue($beginSpan->status()?->isOk());
+        static::assertNull($beginSpan->status());
 
         static::assertNotNull($commitSpan, 'Commit span should exist');
         static::assertSame(SpanKind::CLIENT, $commitSpan->kind());
-        static::assertTrue($commitSpan->status()?->isOk());
+        static::assertNull($commitSpan->status());
     }
 }

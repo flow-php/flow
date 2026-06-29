@@ -63,12 +63,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         $span = $this->tracer->span("Cache Clear {$this->poolName}", SpanKind::CLIENT, $attributes);
 
         try {
-            $result = $this->adapter->clear($prefix);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->clear($prefix);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -85,12 +83,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->commit();
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->commit();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -116,12 +112,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->delete($key);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->delete($key);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -141,12 +135,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->deleteItem($keyString);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->deleteItem($keyString);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -167,12 +159,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->deleteItems($keys);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->deleteItems($keys);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -281,12 +271,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->invalidateTags($tags);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->invalidateTags($tags);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -307,12 +295,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->prune();
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->prune();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -334,9 +320,9 @@ final readonly class TagAwareTraceableCacheAdapter implements
 
         try {
             $this->adapter->reset();
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -355,12 +341,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->save($item);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->save($item);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -379,12 +363,10 @@ final readonly class TagAwareTraceableCacheAdapter implements
         ]);
 
         try {
-            $result = $this->adapter->saveDeferred($item);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->saveDeferred($item);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

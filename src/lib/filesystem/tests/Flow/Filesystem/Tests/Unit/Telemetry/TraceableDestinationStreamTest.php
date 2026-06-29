@@ -48,9 +48,8 @@ final class TraceableDestinationStreamTest extends TestCase
             strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_close_completes_lifecycle_span_with_final_attributes(): void
@@ -77,9 +76,8 @@ final class TraceableDestinationStreamTest extends TestCase
             strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_close_records_exception_and_rethrows(): void
@@ -108,6 +106,10 @@ final class TraceableDestinationStreamTest extends TestCase
             $status = $spans[0]->status();
             static::assertNotNull($status);
             static::assertTrue($status->isError());
+            static::assertSame(
+                RuntimeException::class,
+                $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_ERROR_TYPE],
+            );
             static::assertNotEmpty($spans[0]->events());
         }
     }
@@ -154,9 +156,8 @@ final class TraceableDestinationStreamTest extends TestCase
         static::assertSame('Write test.txt', $spans[0]->name());
         static::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
 
         fclose($resource);
     }

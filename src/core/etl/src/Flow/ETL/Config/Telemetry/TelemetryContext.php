@@ -102,18 +102,14 @@ final class TelemetryContext
             $throughput = $durationSeconds > 0 ? round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
         }
 
-        $this->tracer->complete(
-            $dataFrameSpan
-                ->setAttributes(array_merge($attributes, [
-                    'dataframe.id' => $context->config->id(),
-                    'dataframe.name' => $context->config->name(),
-                    'rows.total' => $this->totalRowsProcessed,
-                    'rows.throughput.per_second' => $throughput,
-                    'memory.min.mb' => $this->memory->min()->inMb(),
-                    'memory.max.mb' => $this->memory->max()->inMb(),
-                ]))
-                ->setStatus(SpanStatus::ok()),
-        );
+        $this->tracer->complete($dataFrameSpan->setAttributes(array_merge($attributes, [
+            'dataframe.id' => $context->config->id(),
+            'dataframe.name' => $context->config->name(),
+            'rows.total' => $this->totalRowsProcessed,
+            'rows.throughput.per_second' => $throughput,
+            'memory.min.mb' => $this->memory->min()->inMb(),
+            'memory.max.mb' => $this->memory->max()->inMb(),
+        ])));
 
         if ($this->counterProcessedRows !== null) {
             $this->meter->complete($this->counterProcessedRows);
@@ -166,6 +162,7 @@ final class TelemetryContext
                     'memory.min.mb' => $this->memory->min()->inMb(),
                     'memory.max.mb' => $this->memory->max()->inMb(),
                 ]))
+                ->setAttribute('error.type', $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 
@@ -248,7 +245,7 @@ final class TelemetryContext
         if ($this->loadingSpan === null) {
             return;
         }
-        $this->tracer->complete($this->loadingSpan->setAttributes($attributes)->setStatus(SpanStatus::ok()));
+        $this->tracer->complete($this->loadingSpan->setAttributes($attributes));
 
         $this->loadingSpan = null;
     }
@@ -264,7 +261,10 @@ final class TelemetryContext
 
         $this->logger->error('Loading failed', ['exception' => $exception->getMessage(), 'loader' => $loader::class]);
         $this->tracer->complete(
-            $this->loadingSpan->setAttributes($attributes)->setStatus(SpanStatus::error($exception->getMessage())),
+            $this->loadingSpan
+                ->setAttributes($attributes)
+                ->setAttribute('error.type', $exception::class)
+                ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 
         $this->loadingSpan = null;
@@ -304,7 +304,7 @@ final class TelemetryContext
             return;
         }
 
-        $this->tracer->complete($this->transformationSpan->setAttributes($attributes)->setStatus(SpanStatus::ok()));
+        $this->tracer->complete($this->transformationSpan->setAttributes($attributes));
     }
 
     /**
@@ -323,6 +323,7 @@ final class TelemetryContext
         $this->tracer->complete(
             $this->transformationSpan
                 ->setAttributes($attributes)
+                ->setAttribute('error.type', $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 

@@ -45,9 +45,9 @@ final readonly class TraceableCache implements Cache
 
         try {
             $this->cache->clear();
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -65,9 +65,9 @@ final readonly class TraceableCache implements Cache
 
         try {
             $this->cache->delete($key);
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -122,9 +122,9 @@ final readonly class TraceableCache implements Cache
 
         try {
             $this->cache->set($key, $value);
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

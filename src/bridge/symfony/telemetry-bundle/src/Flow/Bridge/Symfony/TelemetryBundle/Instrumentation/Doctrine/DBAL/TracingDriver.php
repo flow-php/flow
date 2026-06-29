@@ -56,11 +56,11 @@ final class TracingDriver extends AbstractDriverMiddleware
             $connection = parent::connect($params);
 
             $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
-            $span->setStatus(SpanStatus::ok());
 
             return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

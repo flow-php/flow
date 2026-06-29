@@ -239,6 +239,50 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertSame('Rows', $attributes['cache.value_type']);
     }
 
+    public function test_clear_records_exception_on_error(): void
+    {
+        $innerCache = $this->createMock(Cache::class);
+        $innerCache->method('clear')->willThrowException(new RuntimeException('Test error'));
+
+        $cache = new TraceableCache($innerCache, $this->telemetry);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Test error');
+
+        try {
+            $cache->clear();
+        } finally {
+            $this->telemetry->flush();
+            $spans = $this->spanProcessor->endedSpans();
+
+            static::assertCount(1, $spans);
+            static::assertTrue($spans[0]->status()?->isError());
+            static::assertSame(RuntimeException::class, $spans[0]->attributes()['error.type']);
+        }
+    }
+
+    public function test_delete_records_exception_on_error(): void
+    {
+        $innerCache = $this->createMock(Cache::class);
+        $innerCache->method('delete')->willThrowException(new RuntimeException('Test error'));
+
+        $cache = new TraceableCache($innerCache, $this->telemetry);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Test error');
+
+        try {
+            $cache->delete('test-key');
+        } finally {
+            $this->telemetry->flush();
+            $spans = $this->spanProcessor->endedSpans();
+
+            static::assertCount(1, $spans);
+            static::assertTrue($spans[0]->status()?->isError());
+            static::assertSame(RuntimeException::class, $spans[0]->attributes()['error.type']);
+        }
+    }
+
     public function test_set_records_exception_on_error(): void
     {
         $innerCache = $this->createMock(Cache::class);
@@ -262,6 +306,7 @@ final class TraceableCacheTest extends FlowTestCase
             static::assertNotNull($status);
             static::assertTrue($status->isError());
             static::assertSame('Test error', $status->description);
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
             static::assertCount(1, $span->events());
         }
     }

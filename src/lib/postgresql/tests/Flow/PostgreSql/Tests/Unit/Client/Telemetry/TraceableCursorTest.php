@@ -184,6 +184,36 @@ final class TraceableCursorTest extends TestCase
         static::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
+    public function test_map_records_error_on_exception(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig($spanProcessor);
+
+        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor
+            ->method('map')
+            ->willReturnCallback(static function (): Generator {
+                yield new stdClass();
+
+                throw new RuntimeException('Mapping failed');
+            });
+
+        $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
+
+        $this->expectException(RuntimeException::class);
+
+        try {
+            foreach ($cursor->map(new SpyRowMapper()) as $_object) {
+            }
+        } finally {
+            $spans = $spanProcessor->endedSpans();
+            static::assertCount(1, $spans);
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
+        }
+    }
+
     public function test_next_increments_row_count(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());

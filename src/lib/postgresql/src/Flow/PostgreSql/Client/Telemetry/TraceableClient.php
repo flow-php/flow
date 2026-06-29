@@ -133,10 +133,10 @@ final class TraceableClient implements Client
         try {
             $this->client->commit();
 
-            $this->completeTransactionSpan($nestingLevel, SpanStatus::ok());
+            $this->completeTransactionSpan($nestingLevel);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
         } catch (Throwable $e) {
-            $this->completeTransactionSpan($nestingLevel, SpanStatus::error($e->getMessage()), $e);
+            $this->completeTransactionSpan($nestingLevel, $e);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
 
             throw $e;
@@ -443,10 +443,10 @@ final class TraceableClient implements Client
         try {
             $this->client->rollBack();
 
-            $this->completeAllTransactionSpans($nestingLevel, SpanStatus::ok());
+            $this->completeAllTransactionSpans($nestingLevel);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
         } catch (Throwable $e) {
-            $this->completeAllTransactionSpans($nestingLevel, SpanStatus::error($e->getMessage()), $e);
+            $this->completeAllTransactionSpans($nestingLevel, $e);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
 
             throw $e;
@@ -586,14 +586,14 @@ final class TraceableClient implements Client
         return $operation . ' TRANSACTION';
     }
 
-    private function completeAllTransactionSpans(int $fromLevel, SpanStatus $status, ?Throwable $exception = null): void
+    private function completeAllTransactionSpans(int $fromLevel, ?Throwable $exception = null): void
     {
         for ($level = $fromLevel; $level >= 1; $level--) {
-            $this->completeTransactionSpan($level, $status, $exception);
+            $this->completeTransactionSpan($level, $exception);
         }
     }
 
-    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?Throwable $exception = null): void
+    private function completeTransactionSpan(int $nestingLevel, ?Throwable $exception = null): void
     {
         $tracer = $this->tracer;
 
@@ -603,10 +603,9 @@ final class TraceableClient implements Client
 
         $span = $this->transactionSpans[$nestingLevel];
 
+        // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
         if ($exception !== null) {
             $this->recordFailure($span, $exception);
-        } else {
-            $span->setStatus($status);
         }
 
         $tracer->complete($span);
@@ -703,15 +702,12 @@ final class TraceableClient implements Client
         try {
             $result = $operation();
 
-            if ($span !== null) {
-                if ($rowCountExtractor !== null) {
-                    $rowCount = $rowCountExtractor($result);
-                    $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $rowCount);
-                    $this->recordRowCount($rowCount, $queryAttrs);
-                }
-
-                $span->setStatus(SpanStatus::ok());
+            if ($span !== null && $rowCountExtractor !== null) {
+                $rowCount = $rowCountExtractor($result);
+                $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $rowCount);
+                $this->recordRowCount($rowCount, $queryAttrs);
             }
+            // OTEL spec: instrumentation leaves the status Unset on success.
 
             $this->recordDuration($startTime, $attributes);
 

@@ -166,6 +166,32 @@ final class TraceableClientTest extends TestCase
         }
     }
 
+    public function test_commit_rethrows_exception_and_records_error(): void
+    {
+        $config = $this->createConfig(memory_span_processor(void_exporter()));
+
+        $mockClient = $this->createMockClient();
+        $mockClient->method('commit')->willThrowException(new RuntimeException('Commit failed'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Commit failed');
+
+        traceable_postgresql_client($mockClient, $config)->commit();
+    }
+
+    public function test_roll_back_rethrows_exception_and_records_error(): void
+    {
+        $config = $this->createConfig(memory_span_processor(void_exporter()));
+
+        $mockClient = $this->createMockClient();
+        $mockClient->method('rollBack')->willThrowException(new RuntimeException('Rollback failed'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Rollback failed');
+
+        traceable_postgresql_client($mockClient, $config)->rollBack();
+    }
+
     public function test_fetch_all_creates_span_with_row_count(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());

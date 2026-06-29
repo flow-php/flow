@@ -17,6 +17,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('flow.telemetry.profiler.collector', FlowTelemetryDataCollector::class)->args([
         service(Telemetry::class),
         service('flow.telemetry.profiler.store'),
+        '%flow.telemetry.profiler.configured_instruments%',
     ])->tag('data_collector', [
         'id' => 'flow_telemetry',
         'template' => '@FlowTelemetry/Collector/telemetry.html.twig',

@@ -271,9 +271,8 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         static::assertSame('api.example.com', $attributes['server.address']);
         static::assertSame(200, $attributes['http.response.status_code']);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 
     public function test_wrapped_client_records_exception_and_creates_error_span(): void

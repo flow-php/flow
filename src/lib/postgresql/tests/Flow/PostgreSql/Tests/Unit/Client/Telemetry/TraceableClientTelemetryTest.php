@@ -157,9 +157,8 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertFalse($status->isError());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_duration_metric_is_recorded_when_metrics_enabled(): void

@@ -13,6 +13,7 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -66,5 +67,37 @@ final class TracingValueResolverTest extends TestCase
 
         static::assertSame(['resolved'], $resolved);
         static::assertCount(0, $spanProcessor->endedSpans());
+    }
+
+    public function test_records_exception_when_inner_resolver_fails(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
+        $requestSpan = $telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))->span(
+            'GET /test',
+            SpanKind::SERVER,
+        );
+
+        $inner = $this->createStub(ValueResolverInterface::class);
+        $inner->method('resolve')->willThrowException(new RuntimeException('resolver failed'));
+
+        $request = new Request();
+        $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);
+        $argument = new ArgumentMetadata('id', 'int', false, false, null);
+
+        $caught = false;
+
+        try {
+            iterator_to_array((new TracingValueResolver($inner, $telemetry))->resolve($request, $argument));
+        } catch (RuntimeException) {
+            $caught = true;
+        }
+
+        static::assertTrue($caught);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertTrue($spans[0]->status()?->isError());
+        static::assertSame(RuntimeException::class, $spans[0]->attributes()['error.type']);
     }
 }

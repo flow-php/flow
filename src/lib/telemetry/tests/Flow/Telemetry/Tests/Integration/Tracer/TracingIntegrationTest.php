@@ -116,6 +116,7 @@ final class TracingIntegrationTest extends TestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('Database connection failed', $status->description);
+        static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
 
         static::assertCount(1, $span->events());
         $event = $span->events()[0];
@@ -213,9 +214,9 @@ final class TracingIntegrationTest extends TestCase
         $span = $processor->endedSpans()[0];
         static::assertSame('calculate', $span->name());
         static::assertTrue($span->isEnded());
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 
     private function clock(): ClockInterface

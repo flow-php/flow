@@ -775,6 +775,77 @@ final class ConfigurationTest extends TestCase
         static::assertFalse($disabled['instrumentation']['messenger']['link_to_worker']);
     }
 
+    public function test_security_fields_default_to_semconv_keys_and_are_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['security' => ['enabled' => true]],
+        ]);
+        $fields = $default['instrumentation']['security']['fields'];
+
+        static::assertTrue($fields['id']['enabled']);
+        static::assertSame('user.id', $fields['id']['attribute']);
+        static::assertFalse($fields['roles']['enabled']);
+        static::assertSame('user.roles', $fields['roles']['attribute']);
+        static::assertFalse($fields['email']['enabled']);
+        static::assertSame('user.email', $fields['email']['attribute']);
+        static::assertSame('getEmail', $fields['email']['getter']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'security' => [
+                    'enabled' => true,
+                    'fields' => [
+                        'id' => ['enabled' => false, 'attribute' => 'app.actor'],
+                        'roles' => ['enabled' => true, 'attribute' => 'app.actor_roles'],
+                        'email' => ['enabled' => true, 'getter' => 'getEmailAddress'],
+                    ],
+                ],
+            ],
+        ]);
+        $customFields = $custom['instrumentation']['security']['fields'];
+
+        static::assertFalse($customFields['id']['enabled']);
+        static::assertSame('app.actor', $customFields['id']['attribute']);
+        static::assertTrue($customFields['roles']['enabled']);
+        static::assertSame('app.actor_roles', $customFields['roles']['attribute']);
+        static::assertTrue($customFields['email']['enabled']);
+        static::assertSame('getEmailAddress', $customFields['email']['getter']);
+    }
+
+    public function test_http_kernel_route_naming_defaults_to_path_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true]],
+        ]);
+        static::assertSame('path', $default['instrumentation']['http_kernel']['route_naming']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'name']],
+        ]);
+        static::assertSame('name', $custom['instrumentation']['http_kernel']['route_naming']);
+    }
+
+    public function test_http_kernel_route_naming_rejects_unknown_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'controller']],
+        ]);
+    }
+
+    public function test_security_is_disabled_by_default(): void
+    {
+        $config = $this->context->processConfig(['resource' => []]);
+
+        static::assertFalse($config['instrumentation']['security']['enabled']);
+    }
+
     public function test_max_batch_age_is_parsed_for_span_metric_and_log_processors(): void
     {
         $config = $this->context->processConfig([

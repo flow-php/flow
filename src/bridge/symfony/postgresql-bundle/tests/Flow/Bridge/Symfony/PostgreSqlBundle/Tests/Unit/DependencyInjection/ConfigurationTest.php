@@ -208,6 +208,31 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
     }
 
+    public function test_connection_is_lazy_by_default(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]);
+
+        static::assertTrue($config['connections']['default']['lazy']);
+    }
+
+    public function test_connection_lazy_can_be_disabled(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'lazy' => false,
+                ],
+            ],
+        ]);
+
+        static::assertFalse($config['connections']['default']['lazy']);
+    }
+
     public function test_connection_accepts_dbname_suffix(): void
     {
         $config = $this->context->processConfig([

@@ -11,6 +11,8 @@ use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
+use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
+use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
@@ -121,6 +123,42 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         } finally {
             if (is_file($cachePath)) {
                 unlink($cachePath);
+            }
+        }
+    }
+
+    public function test_caching_detector_default_path_is_keyed_by_kernel_environment(): void
+    {
+        $expectedPath = sys_get_temp_dir() . '/flow_telemetry_resource_test.cache';
+
+        if (is_file($expectedPath)) {
+            unlink($expectedPath);
+        }
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel): void {
+                    $kernel->addTestExtensionConfig('flow_telemetry', [
+                        'resource' => [
+                            'custom' => ['service.name' => 'env-keyed-service'],
+                        ],
+                    ]);
+                },
+            ]);
+
+            $container = $this->getContainer();
+            static::assertInstanceOf(
+                CachingDetector::class,
+                $container->get('flow.telemetry.resource.detector.static'),
+            );
+
+            $resource = $container->get('flow.telemetry.resource');
+            static::assertInstanceOf(Resource::class, $resource);
+            static::assertSame('env-keyed-service', $resource->get('service.name'));
+            static::assertFileExists($expectedPath);
+        } finally {
+            if (is_file($expectedPath)) {
+                unlink($expectedPath);
             }
         }
     }
@@ -530,6 +568,71 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $definition = $container->getDefinition('flow.telemetry.messenger.async_curl_transport_tick_subscriber');
         static::assertSame(AsyncCurlTransportTickSubscriber::class, $definition->getClass());
         static::assertTrue($definition->hasTag('kernel.event_subscriber'));
+    }
+
+    public function test_security_instrumentation_registers_subscriber_and_field_parameters(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'security' => [
+                    'enabled' => true,
+                    'fields' => [
+                        'roles' => ['enabled' => true],
+                        'email' => ['enabled' => false],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        static::assertTrue($container->hasDefinition('flow.telemetry.security.user_attribute_resolver'));
+        static::assertTrue(
+            $container->getDefinition('flow.telemetry.security.span_subscriber')->hasTag('kernel.event_subscriber'),
+        );
+
+        static::assertSame('user.id', $container->getParameter('flow.telemetry.security.field.id_attribute'));
+        static::assertSame('user.roles', $container->getParameter('flow.telemetry.security.field.roles_attribute'));
+        static::assertNull($container->getParameter('flow.telemetry.security.field.email_attribute'));
+        static::assertSame('getEmail', $container->getParameter('flow.telemetry.security.field.email_getter'));
+    }
+
+    public function test_security_instrumentation_is_not_registered_by_default(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
+
+        static::assertFalse($container->hasDefinition('flow.telemetry.security.span_subscriber'));
+    }
+
+    public function test_trace_context_propagation_services_are_registered(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
+
+        static::assertTrue($container->hasDefinition('flow.telemetry.trace_context_provider'));
+        static::assertTrue($container->hasAlias(TraceContextProvider::class));
+        static::assertTrue($container->hasDefinition('flow.telemetry.trace_context_url_generator'));
+        static::assertTrue($container->hasAlias(TraceContextUrlGenerator::class));
+
+        $providerDefinition = $container->getDefinition('flow.telemetry.trace_context_provider');
+        static::assertInstanceOf(Reference::class, $providerDefinition->getArgument(2));
+        static::assertSame('request_stack', (string) $providerDefinition->getArgument(2));
     }
 
     public function test_custom_exporter_via_service(): void

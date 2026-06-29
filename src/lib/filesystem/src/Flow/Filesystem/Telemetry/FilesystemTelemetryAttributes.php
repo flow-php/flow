@@ -14,6 +14,8 @@ final class FilesystemTelemetryAttributes
 
     public const string ATTR_BYTES_WRITTEN = 'bytes.written';
 
+    public const string ATTR_ERROR_TYPE = 'error.type';
+
     public const string ATTR_FILESYSTEM_OPERATION = 'filesystem.operation';
 
     public const string ATTR_FILESYSTEM_PROTOCOL = 'filesystem.protocol';

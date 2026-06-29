@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
+use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
@@ -12,6 +13,7 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use ReflectionFunctionAbstract;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
+use Throwable;
 
 final readonly class TracingArgumentResolver implements ArgumentResolverInterface
 {
@@ -34,8 +36,14 @@ final readonly class TracingArgumentResolver implements ArgumentResolverInterfac
 
         try {
             return $this->resolver->getArguments($request, $controller, $reflector);
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
+            $span->setStatus(SpanStatus::error($exception->getMessage()));
+
+            throw $exception;
         } finally {
-            $span->setStatus(SpanStatus::ok());
+            // OTEL spec: instrumentation leaves the status Unset on success.
             $tracer->complete($span);
         }
     }

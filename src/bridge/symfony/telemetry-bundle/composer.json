@@ -37,6 +37,8 @@
         "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
         "symfony/messenger": "^6.4 || ^7.4 || ^8.0",
         "symfony/routing": "^6.4 || ^7.4 || ^8.0",
+        "symfony/security-core": "^6.4 || ^7.4 || ^8.0",
+        "symfony/security-http": "^6.4 || ^7.4 || ^8.0",
         "symfony/var-dumper": "^6.4 || ^7.4 || ^8.0",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0",
         "twig/twig": "^3.0"
@@ -47,6 +49,8 @@
         "flow-php/symfony-http-foundation-telemetry-bridge": "Required for HTTP trace context propagation (extract incoming / inject outgoing W3C trace headers)",
         "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
         "symfony/messenger": "Required for Messenger tracing middleware",
+        "symfony/security-core": "Required for authenticated-user span decoration (security instrumentation)",
+        "symfony/security-http": "Required to capture mid-request/programmatic logins (LoginSuccessEvent) in security instrumentation",
         "symfony/web-profiler-bundle": "Required for the dev-only Flow Telemetry Web Profiler panel",
         "twig/twig": "Required for Twig template tracing"
     },

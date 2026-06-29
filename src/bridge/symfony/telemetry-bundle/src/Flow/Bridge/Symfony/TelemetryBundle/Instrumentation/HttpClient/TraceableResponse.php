@@ -197,10 +197,10 @@ final class TraceableResponse implements ResponseInterface
         $this->statusRecorded = true;
         $this->span->setAttribute('http.response.status_code', $statusCode);
 
+        // OTEL HTTP semconv: for SpanKind.CLIENT both 4xx and 5xx are Errors; 1xx-3xx leaves the status unset.
         if ($statusCode >= 400) {
             $this->span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-        } else {
-            $this->span->setStatus(SpanStatus::ok());
+            $this->span->setAttribute('error.type', (string) $statusCode);
         }
     }
 

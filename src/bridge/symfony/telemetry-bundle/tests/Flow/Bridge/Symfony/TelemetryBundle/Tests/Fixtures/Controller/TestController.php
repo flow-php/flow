@@ -26,6 +26,11 @@ final class TestController
         return new JsonResponse(['status' => 'ok']);
     }
 
+    public function serverError(): Response
+    {
+        return new JsonResponse(['error' => 'boom'], 500);
+    }
+
     public function withArgument(Request $request): Response
     {
         return new JsonResponse(['method' => $request->getMethod()]);
