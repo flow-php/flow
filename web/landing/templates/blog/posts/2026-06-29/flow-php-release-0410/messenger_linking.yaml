@@ -1,0 +1,7 @@
+flow_telemetry:
+  instrumentation:
+    messenger:
+      enabled: true
+      context_propagation: true  # Propagate context across message boundaries
+      propagation_style: link     # link|continue - How the consumer span relates to the producer span
+      link_to_worker: true        # Link each message trace back to the messenger:consume worker span
