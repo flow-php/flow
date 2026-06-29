@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 783
+ * Total functions: 790
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -2830,15 +2830,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">context</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">TraceId</span> <span class=\"fn-param\">$traceId</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Baggage</span> <span class=\"fn-param\">$baggage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Context</span>
+                    <span class=\"fn-name\">context</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Baggage</span> <span class=\"fn-param\">$baggage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Context</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a Context.<br>If no TraceId is provided, generates a new one.<br>If no Baggage is provided, creates an empty one.<br>@param null|TraceId $traceId Optional TraceId to use<br>@param null|Baggage $baggage Optional Baggage to use
+                    Create a root Context (no active span).<br>A span created in this context becomes a new trace root. Attach an active span with<br>Context::withActiveSpan() to make subsequent spans its children.<br>@param null|Baggage $baggage Optional Baggage to use
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\context(" + "$" + "{" + "1:traceId" + "}" + ", " + "$" + "{" + "2:baggage" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\context(" + "$" + "{" + "1:baggage" + "}" + ")"),
         boost: 10
     },                {
         label: "copy",
@@ -4066,15 +4066,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filesystem_telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceStreams</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collectMetrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemTelemetryOptions</span>
+                    <span class=\"fn-name\">filesystem_telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_streams</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemTelemetryOptions</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create options for filesystem telemetry.<br>@param bool $traceStreams Create a single span per stream lifecycle (default: ON)<br>@param bool $collectMetrics Collect metrics for bytes/operation counts (default: ON)
+                    Create options for filesystem telemetry.<br>@param bool $trace_streams Create a single span per stream lifecycle (default: ON)<br>@param bool $collect_metrics Collect metrics for bytes/operation counts (default: ON)
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Filesystem\\DSL\\filesystem_telemetry_options(" + "$" + "{" + "1:traceStreams" + "}" + ", " + "$" + "{" + "2:collectMetrics" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\filesystem_telemetry_options(" + "$" + "{" + "1:trace_streams" + "}" + ", " + "$" + "{" + "2:collect_metrics" + "}" + ")"),
         boost: 10
     },                {
         label: "file_copy",
@@ -4918,6 +4918,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\get_type(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "git_detector",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">git_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$workingDirectory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$gitBinary</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;git&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GitDetector</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a GitDetector.<br>@param null|string $workingDirectory Directory to run git in (default: current working directory)<br>@param string $gitBinary Path to the git binary (default: \"git\", resolved from $PATH)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\git_detector(" + "$" + "{" + "1:workingDirectory" + "}" + ", " + "$" + "{" + "2:gitBinary" + "}" + ")"),
         boost: 10
     },                {
         label: "grant",
@@ -6849,6 +6867,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\os_detector()"),
         boost: 10
     },                {
+        label: "otlp_async_curl_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">otlp_async_curl_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AsyncCurlTransportOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create async curl transport options for OTLP.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_async_curl_options()"),
+        boost: 10
+    },                {
+        label: "otlp_async_curl_transport",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">otlp_async_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JsonSerializer|ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\JsonSerializer::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AsyncCurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\AsyncCurlTransportOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$failover</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$error_handler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an asynchronous curl transport for OTLP endpoints.<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param AsyncCurlTransportOptions $options Transport configuration options<br>@param ?Transport $failover Optional failover transport receiving prior batches when primary fails<br>@param ErrorHandler $error_handler Handler for failures reaped on send()/tick()/shutdown() (no failover)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_async_curl_transport(" + "$" + "{" + "1:endpoint" + "}" + ", " + "$" + "{" + "2:serializer" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:failover" + "}" + ", " + "$" + "{" + "5:error_handler" + "}" + ")"),
+        boost: 10
+    },                {
         label: "otlp_curl_options",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6877,7 +6931,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JsonSerializer|ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\JsonSerializer::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">CurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$failover</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an async curl transport for OTLP endpoints.<br>Creates a CurlTransport that uses curl_multi for non-blocking I/O.<br>Requests are queued and executed asynchronously. OTLP/HTTP allows JSON<br>or Protobuf encoding; defaults to JSON.<br>Requires: ext-curl PHP extension<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options<br>@param ?Transport $failover Optional failover transport receiving prior batches when primary fails
+                    Create a synchronous curl transport for OTLP endpoints.<br>Creates a CurlTransport that drives each request to completion and reports the<br>outcome immediately (returns on success, throws on failure). OTLP/HTTP allows<br>JSON or Protobuf encoding; defaults to JSON. Keeping export off the application<br>hot path is the job of the batching processor in front of the exporter.<br>Requires: ext-curl PHP extension<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options<br>@param ?Transport $failover Optional failover transport receiving the batch when the primary fails
                 </div>
                             `
             return div
@@ -9127,6 +9181,72 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\schema_sequence(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:dataType" + "}" + ", " + "$" + "{" + "3:startValue" + "}" + ", " + "$" + "{" + "4:minValue" + "}" + ", " + "$" + "{" + "5:maxValue" + "}" + ", " + "$" + "{" + "6:incrementBy" + "}" + ", " + "$" + "{" + "7:cycle" + "}" + ", " + "$" + "{" + "8:cacheValue" + "}" + ", " + "$" + "{" + "9:ownedByTable" + "}" + ", " + "$" + "{" + "10:ownedByColumn" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "schema_sort_by_metadata",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_sort_by_metadata</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_sort_by_metadata(" + "$" + "{" + "1:key" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "schema_sort_by_name",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_sort_by_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_sort_by_name(" + "$" + "{" + "1:order" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "schema_sort_by_type",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<class-string<Type<mixed>>, int> $priorities
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_sort_by_type(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "schema_sort_by_type_and_name",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_sort_by_type_and_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<class-string<Type<mixed>>, int> $priorities
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_sort_by_type_and_name(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
         boost: 10
     },                {
         label: "schema_strict_validator",

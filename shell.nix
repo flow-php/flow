@@ -81,6 +81,8 @@ pkgs.mkShell {
         pkgs.actionlint
         pkgs.zizmor
         pkgs.just
+        pkgs.oxipng
+        pkgs.jpegoptim
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
         ++ pkgs.lib.optionals with-wasm [

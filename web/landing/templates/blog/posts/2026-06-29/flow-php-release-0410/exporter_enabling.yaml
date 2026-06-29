@@ -1,0 +1,9 @@
+flow_telemetry:
+  exporters:
+    otlp_exporter:
+      enabled: '%env(bool:OTEL_ENABLED)%' # off → discard exports; profiler still captures every signal
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_ENDPOINT)%'
+          encoding: protobuf

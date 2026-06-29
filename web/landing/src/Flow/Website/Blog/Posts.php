@@ -39,6 +39,12 @@ final class Posts
             'date' => '2025-03-16',
             'slug' => 'flow-php-release-cycle',
         ],
+        [
+            'title' => 'Flow PHP - Release 0.41.0',
+            'description' => 'Summary of things changed in Flow PHP 0.41.0 release',
+            'date' => '2026-06-29',
+            'slug' => 'flow-php-release-0410',
+        ],
     ];
 
     /**

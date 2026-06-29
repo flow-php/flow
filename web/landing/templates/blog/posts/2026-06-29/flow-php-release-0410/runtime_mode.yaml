@@ -1,0 +1,2 @@
+flow_telemetry:
+  runtime_mode: auto  # auto|classic|worker

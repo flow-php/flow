@@ -1,0 +1,102 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Flow PHP - Release 0.41.0</h1>
+        <hr/>
+        <p>
+            This is a first blog post about Flow Release, and 0.41.0 is bringing a lot of cool new features, mostly
+            around Telemetry and Symfony Integration.
+        </p>
+        <blockquote>
+            The plan is to write a blog post for each release, or at least try to.
+        </blockquote>
+
+        <h2>Symfony Telemetry Bundle</h2>
+        <hr/>
+        <p>
+            This is where most of our efforts were focused on, so lets start from the most exciting one.
+        </p>
+        <h3>Telemetry integration with Profiler</h3>
+        <figure>
+            <img src="{{ asset('images/blog/flow-php-release-0410/profiler_01.png') }}" alt="Symfony profiler showing Flow telemetry panel">
+            <img src="{{ asset('images/blog/flow-php-release-0410/profiler_02.png') }}" alt="Symfony profiler showing Flow telemetry panel">
+            <figcaption>Telemetry panel in the Symfony profiler</figcaption>
+        </figure>
+
+        <p>
+            This way during local development, we don't need to setup a full scale APM to quickly check if given part of
+            the system is correctly collecting telemetry signals.
+        </p>
+        <p>
+            Profiler integration is configurable on the bundle level, you can read more about it in <a href="/documentation/components/bridges/symfony-telemetry-bundle#web-profiler">documentation</a>.
+        </p>
+        <h3>Telemetry Worker Mode Support</h3>
+        <p>
+            Modern PHP systems are often deployed in the Worker mode, through runtimes like FrankenPHP or Swoole.
+            In order to support that, we introduced a <a href="https://github.com/flow-php/flow/blob/c2727605d2458ac7f0bffc76b60640803f0cfba3/src/lib/telemetry/src/Flow/Telemetry/Context/ResettableContextStorage.php" target="_blank">ResettableContextStorage</a> and a mechanism that can automatically detect if system is running in a worker mode.
+        </p>
+        <p>
+            <code>runtime_mode</code> can also be configured at symfony configuration level.
+        </p>
+        <pre><code class="language-yaml" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/runtime_mode.yaml' %}{% endapply %}</code></pre>
+
+        <h3>Messenger traces linking</h3>
+        <p>
+            Symfony Telemetry Bundle can now link traces that published message on the queue with message handling process (trace).
+        </p>
+        <figure>
+            <img src="{{ asset('images/blog/flow-php-release-0410/messenger_link.png') }}" alt="Link between symfony messenger traces">
+            <figcaption>Symfony Messenger traces linking</figcaption>
+        </figure>
+        <p>
+            As we can see on the screenshot above, trace representing processing <code>CreateOrderMessage</code>
+            is now linked into two other Traces.
+        </p>
+        <p>
+            The first one is a Worker trace (Flow Telemetry separates workers from handlers) and the second one is a
+            link to a Controller that published that <code>CreateOrderMessage</code> on the queue.
+        </p>
+        <p>
+            That behavior is also configurable at Symfony Bundle level.
+        </p>
+        <pre><code class="language-yaml" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/messenger_linking.yaml' %}{% endapply %}</code></pre>
+        <h3>Disable/Enable Exporters</h3>
+        <p>
+            Integrating Telemetry into existing systems can be really challenging task. It might be a good idea to start
+            in development environment or staging first, and only when everything is calibrated and tuned, enable it also
+            at production.
+        </p>
+        <p>
+            Now it can be achieved by a dedicated <code>enabled</code> option added to each export
+        </p>
+        <pre><code class="language-yaml" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/exporter_enabling.yaml' %}{% endapply %}</code></pre>
+        <h3>Symfony PostgreSQL Bundle - Profiler Integration</h3>
+        <p>
+            Similarly to Telemetry, PostgreSQL Bundle supports Symfony Profiler where we can see all queries and current migrations status.
+        </p>
+        <figure>
+            <img src="{{ asset('images/blog/flow-php-release-0410/profiler_migrations.png') }}" alt="Symfony Profiler - Migrations View">
+            <figcaption>Symfony Profiler - Migrations View</figcaption>
+        </figure>
+        <figure>
+            <img src="{{ asset('images/blog/flow-php-release-0410/profiler_queries.png') }}" alt="Symfony Profiler - Queries View">
+            <figcaption>Symfony Profiler - Queries View</figcaption>
+        </figure>
+        <h3>Integration with SEAL</h3>
+        <p>
+            <a href="https://php-cmsig.github.io/search/" target="_blank">SEAL - Search Engine Abstraction Layer</a> is now supported
+            by flow through dedicated <a href="https://github.com/flow-php/etl-adapter-seal" target="blank"><code>flow-php/etl-adapter-seal</code></a>
+        </p>
+        <p>
+            This adapter was delivered by <a href="https://github.com/MrHDOLEK">Aleksander</a>.
+        </p>
+        <p>
+            This opens a new set of features for Flow, making scalable indexing documents from various sources easier than ever.<br/>
+            Please look at the example of indexing a CSV document:
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/seal.php' %}{% endapply %}</code></pre>
+        <p>
+            Those are just the most important additions to Flow PHP. For more details, check full at <a href="/changelog">Changelog</a>
+        </p>
+    </article>
+{% endblock %}
