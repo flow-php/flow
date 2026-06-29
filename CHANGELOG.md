@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-06-28
+## [Unreleased] - 2026-06-29
 
 ### Added
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - security instrumentation** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - enriched web profiler panel** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - trace context propagation and route-aware span naming** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - long-running worker runtime support** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-http-foundation-telemetry-bridge - query string trace context carrier** - [@norberttech](https://github.com/norberttech)
 - [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/telemetry - ConditionalExporter that gates a wrapped exporter behind a runtime flag** - [@norberttech](https://github.com/norberttech)
 - [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - per-exporter enabled flag supporting literal booleans and %env(bool:...)%** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - AsyncCurlTransport (curl_multi) with bounded select-driven tick()** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +46,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-postgresql-bundle - lazy connections by default** - [@norberttech](https://github.com/norberttech)
 - [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/postgresql - report decoded node and parse-result PostgreSQL version on SelectStmt mismatch** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CurlTransport is now synchronous; send() blocks and throws on failure** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - curl request timeout default raised to 10000ms** - [@norberttech](https://github.com/norberttech)
@@ -62,6 +68,8 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - browser trace-context helpers emit the request span** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - leaked context scopes in HTTP and messenger instrumentation** - [@norberttech](https://github.com/norberttech)
 - [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - profiler reports total trace time as wall-clock window instead of summed span durations** - [@norberttech](https://github.com/norberttech)
 - [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/pg-query-ext - reject system libpg_query whose PostgreSQL major differs from the pinned version** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CollectorMetrics test parser reads scientific-notation counters** - [@norberttech](https://github.com/norberttech)
