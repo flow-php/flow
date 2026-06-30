@@ -1,13 +1,23 @@
-## [Unreleased] - 2026-06-29
+## [Unreleased] - 2026-06-30
 
 ### Added
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - messenger instrumentation emits messaging metrics (consumed/sent counters, process duration histogram) with configurable unit and on/off toggle** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - Flow PHP 0.41.0 release blog post** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - optimize-images Just task with oxipng/jpegoptim nix deps** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/etl - emitted metric names standardized to flow.etl.* and flow.cache.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/filesystem - emitted metric names standardized to flow.filesystem.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - metric names aligned to OTEL db.client.* semantic conventions** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - cache metric names changed to flow.cache.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/phpunit-telemetry-bridge - metric names folded under flow.phpunit.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/telemetry - docblock metric name examples updated** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - widen blog post and changelog layout, add figure/image prose styles** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - losslessly recompress landing images** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - regenerate DSL autocompletion functions** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - operation duration histogram uses correct second-scale bucket boundaries** - [@norberttech](https://github.com/norberttech)
 
 ## [0.41.0] - 2026-06-29
 
