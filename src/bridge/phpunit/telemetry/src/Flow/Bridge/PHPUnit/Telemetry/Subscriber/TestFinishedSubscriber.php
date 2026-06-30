@@ -43,13 +43,13 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 if ($this->config->emitMetrics) {
                     $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-                    $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
-                    $meter->createHistogram('phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
+                    $meter->createCounter('flow.phpunit.test.count')->add(1, ['test.status' => $status]);
+                    $meter->createHistogram('flow.phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
                         'test.status' => $status,
                     ]);
 
                     if ($deltaBytes !== null) {
-                        $meter->createHistogram('phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
+                        $meter->createHistogram('flow.phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
                             'test.status' => $status,
                         ]);
                     }
@@ -98,19 +98,19 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
                 if ($duration !== null) {
-                    $meter->createHistogram('phpunit.test.duration', 'ms')->record($duration, [
+                    $meter->createHistogram('flow.phpunit.test.duration', 'ms')->record($duration, [
                         'test.status' => $status,
                     ]);
 
-                    $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
+                    $meter->createCounter('flow.phpunit.test.count')->add(1, ['test.status' => $status]);
                 }
 
-                $meter->createHistogram('phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
+                $meter->createHistogram('flow.phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
                     'test.status' => $status,
                 ]);
 
                 if ($deltaBytes !== null) {
-                    $meter->createHistogram('phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
+                    $meter->createHistogram('flow.phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
                         'test.status' => $status,
                     ]);
                 }

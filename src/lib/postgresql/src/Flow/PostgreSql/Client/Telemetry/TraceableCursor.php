@@ -75,9 +75,10 @@ final class TraceableCursor implements Cursor
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->returnedRows = $this->meter->createHistogram(
-                'response_returned_rows',
+                'db.client.response.returned_rows',
                 '{row}',
                 'Number of rows returned by database operations',
+                [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0],
             );
         }
     }

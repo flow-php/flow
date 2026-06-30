@@ -196,7 +196,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
 
         $this->collectMetrics($config);
 
-        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
+        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
         static::assertCount(1, $durationMetrics);
         static::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         static::assertGreaterThan(0, $durationMetrics[0]->value);

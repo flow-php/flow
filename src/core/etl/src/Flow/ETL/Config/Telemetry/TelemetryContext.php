@@ -222,12 +222,12 @@ final class TelemetryContext
 
         if ($this->options->collectMetrics) {
             $this->counterProcessedRows = $this->meter->createCounter(
-                'rows_processed',
+                'flow.etl.rows.processed',
                 'rows',
                 'Total number of rows processed by the DataFrame',
             );
             $this->throughputRows = $this->meter->createThroughput(
-                'rows_throughput',
+                'flow.etl.rows.throughput',
                 'rows/s',
                 'Rows processed per second',
             );

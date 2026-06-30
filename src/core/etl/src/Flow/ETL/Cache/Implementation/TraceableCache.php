@@ -33,8 +33,8 @@ final readonly class TraceableCache implements Cache
     ) {
         $this->tracer = $telemetry->tracer('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
         $meter = $telemetry->meter('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
-        $this->hitCounter = $meter->createCounter('cache_hits', 'operations', 'Number of cache hits');
-        $this->missCounter = $meter->createCounter('cache_misses', 'operations', 'Number of cache misses');
+        $this->hitCounter = $meter->createCounter('flow.cache.hits', 'operations', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('flow.cache.misses', 'operations', 'Number of cache misses');
     }
 
     public function clear(): void

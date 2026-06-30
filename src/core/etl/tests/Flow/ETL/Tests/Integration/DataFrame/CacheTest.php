@@ -126,8 +126,8 @@ final class CacheTest extends FlowIntegrationTestCase
 
         static::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
 
-        $metricProcessor->metricsWithName('cache_hits');
-        $missMetrics = $metricProcessor->metricsWithName('cache_misses');
+        $metricProcessor->metricsWithName('flow.cache.hits');
+        $missMetrics = $metricProcessor->metricsWithName('flow.cache.misses');
 
         static::assertNotEmpty($missMetrics, 'Expected cache miss metrics to be recorded (from has() checks)');
     }

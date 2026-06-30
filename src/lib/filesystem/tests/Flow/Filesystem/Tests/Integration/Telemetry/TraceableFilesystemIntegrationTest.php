@@ -221,10 +221,10 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $metrics = $metricProcessor->metrics();
         $metricNames = array_map(static fn($m) => $m->name, $metrics);
 
-        static::assertContains('write_size', $metricNames);
-        static::assertContains('write_operations', $metricNames);
-        static::assertContains('read_size', $metricNames);
-        static::assertContains('read_operations', $metricNames);
+        static::assertContains('flow.filesystem.write.size', $metricNames);
+        static::assertContains('flow.filesystem.write.operations', $metricNames);
+        static::assertContains('flow.filesystem.read.size', $metricNames);
+        static::assertContains('flow.filesystem.read.operations', $metricNames);
     }
 
     public function test_multiple_appends_create_single_span_with_cumulative_metrics(): void

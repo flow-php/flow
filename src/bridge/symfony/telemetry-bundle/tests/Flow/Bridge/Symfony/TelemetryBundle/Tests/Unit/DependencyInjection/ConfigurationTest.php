@@ -760,21 +760,6 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.my_transport', $config['exporters']['custom_otlp']['otlp']['transport']['service_id']);
     }
 
-    public function test_messenger_link_to_worker_defaults_to_true_and_is_configurable(): void
-    {
-        $default = $this->context->processConfig([
-            'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true]],
-        ]);
-        static::assertTrue($default['instrumentation']['messenger']['link_to_worker']);
-
-        $disabled = $this->context->processConfig([
-            'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true, 'link_to_worker' => false]],
-        ]);
-        static::assertFalse($disabled['instrumentation']['messenger']['link_to_worker']);
-    }
-
     public function test_security_fields_default_to_semconv_keys_and_are_configurable(): void
     {
         $default = $this->context->processConfig([
@@ -885,5 +870,50 @@ final class ConfigurationTest extends TestCase
         static::assertNull($config['tracer_provider']['processor']['max_batch_age']);
         static::assertNull($config['meter_provider']['processor']['max_batch_age']);
         static::assertNull($config['logger_provider']['processor']['max_batch_age']);
+    }
+
+    public function test_messenger_metrics_default_to_enabled_with_seconds_unit(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => ['enabled' => true],
+            ],
+        ]);
+
+        static::assertTrue($config['instrumentation']['messenger']['metrics']);
+        static::assertSame('s', $config['instrumentation']['messenger']['metrics_duration_unit']);
+    }
+
+    public function test_messenger_metrics_can_be_disabled_with_ms_unit(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'metrics' => false,
+                    'metrics_duration_unit' => 'ms',
+                ],
+            ],
+        ]);
+
+        static::assertFalse($config['instrumentation']['messenger']['metrics']);
+        static::assertSame('ms', $config['instrumentation']['messenger']['metrics_duration_unit']);
+    }
+
+    public function test_messenger_metrics_duration_unit_rejects_invalid_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'metrics_duration_unit' => 'minutes',
+                ],
+            ],
+        ]);
     }
 }

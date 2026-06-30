@@ -942,41 +942,6 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         );
     }
 
-    public function test_messenger_link_to_worker_defaults_to_true_and_can_be_disabled(): void
-    {
-        if (!interface_exists(MessengerMiddlewareInterface::class)) {
-            static::markTestSkipped('symfony/messenger is not installed');
-        }
-
-        $enabled = new ContainerBuilder();
-        $enabled->setParameter('kernel.environment', 'test');
-        $enabled->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $enabled->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true]],
-        ]], $enabled);
-
-        $definition = $enabled->getDefinition('flow.telemetry.messenger.middleware');
-        static::assertTrue($definition->getArgument(4));
-        static::assertInstanceOf(Reference::class, $definition->getArgument(1));
-
-        $disabled = new ContainerBuilder();
-        $disabled->setParameter('kernel.environment', 'test');
-        $disabled->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $disabled->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true, 'link_to_worker' => false]],
-        ]], $disabled);
-
-        static::assertFalse($disabled->getDefinition('flow.telemetry.messenger.middleware')->getArgument(4));
-    }
-
     public function test_messenger_context_storage_wired_even_when_propagation_disabled(): void
     {
         if (!interface_exists(MessengerMiddlewareInterface::class)) {

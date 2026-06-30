@@ -122,11 +122,11 @@ flow_telemetry:
   runtime_mode: auto  # auto|classic|worker
 ```
 
-| Mode      | Behaviour                                                                                          |
-|-----------|----------------------------------------------------------------------------------------------------|
-| `auto`    | Detect the runtime per request and pick `worker` or `classic` accordingly (default).               |
-| `classic` | One process per request: shut telemetry down on terminate (full flush + transport close).          |
-| `worker`  | Long-running runtime: flush on terminate, drain async transports, never shut the transport down.   |
+| Mode      | Behaviour                                                                                        |
+|-----------|--------------------------------------------------------------------------------------------------|
+| `auto`    | Detect the runtime per request and pick `worker` or `classic` accordingly (default).             |
+| `classic` | One process per request: shut telemetry down on terminate (full flush + transport close).        |
+| `worker`  | Long-running runtime: flush on terminate, drain async transports, never shut the transport down. |
 
 `auto` detection looks for the Symfony Runtime worker signal (`APP_RUNTIME_MODE` containing `worker=1`),
 FrankenPHP (`FRANKENPHP_WORKER`), and RoadRunner (`RR_MODE`); when none are present it falls back to `classic`.
@@ -1260,9 +1260,10 @@ flow_telemetry:
   instrumentation:
     messenger:
       enabled: true
-      context_propagation: true  # Propagate context across message boundaries
-      propagation_style: link     # How the consumer span relates to the producer span
-      link_to_worker: true        # Link each message trace back to the messenger:consume worker span
+      context_propagation: true   # Propagate context across message boundaries
+      propagation_style: link      # How the consumer span relates to the producer span
+      metrics: true                # Emit messaging metrics (default true)
+      metrics_duration_unit: s     # process.duration histogram unit: 's' (OTEL semconv, default) or 'ms'
 ```
 
 When `context_propagation` is enabled, `propagation_style` controls how a consumed message's span
@@ -1278,10 +1279,6 @@ relates to the producing (publishing) span:
 
 `propagation_style` has no effect when `context_propagation` is `false` (there is nothing to relate to).
 The producer side is identical in both modes — the telemetry stamp is always written on dispatch.
-
-`link_to_worker` (default `true`) adds a span link from each consumed message's trace back to the active
-`messenger:consume` worker span, so you can pivot from a message trace to the worker that processed it.
-Set it to `false` to omit the link (e.g. if the consume command is not traced).
 
 Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
 consumer-side traces/logs/metrics export promptly instead of only when the `messenger:consume` worker
@@ -1301,6 +1298,17 @@ to keep that sub-millisecond (see [Timeouts](#timeouts)).
 
 With the `async_curl` transport, the subscriber also pumps each transport's `tick()` on every `WorkerRunningEvent`, so
 in-flight requests complete in the background.
+
+**Metrics.** 
+
+| Metric                               | Instrument | Unit          | Emitted                       | Attributes                                                                                                                        |
+|--------------------------------------|------------|---------------|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `messaging.client.consumed.messages` | Counter    | `{message}`   | once per **received** message | `messaging.system`, `messaging.operation.name=process`, `messaging.destination.name`, `messaging.consumer.group.name` (transport) |
+| `messaging.process.duration`         | Histogram  | `s` (or `ms`) | per **received** message      | same as above, plus `error.type` when the handler fails                                                                           |
+| `messaging.client.sent.messages`     | Counter    | `{message}`   | once per **sent** message     | `messaging.system`, `messaging.operation.name=send`, `messaging.destination.name`                                                 |
+
+`metrics_duration_unit` controls the `messaging.process.duration` histogram: `s` (default) uses seconds with the
+OTEL-recommended bucket boundaries; `ms` uses milliseconds with Flow's native histogram buckets.
 
 #### Twig
 
@@ -1375,6 +1383,14 @@ flow_telemetry:
         - 'cache.system'
         - '/^cache\.validator.*/'
 ```
+
+Besides spans, the cache instrumentation emits hit/miss counters (a `meter_provider` must be configured for them
+to be exported):
+
+| Metric              | Instrument | Unit         | Emitted             |
+|---------------------|------------|--------------|---------------------|
+| `flow.cache.hits`   | Counter    | `operations` | once per cache hit  |
+| `flow.cache.misses` | Counter    | `operations` | once per cache miss |
 
 ### Web Profiler
 
@@ -1719,10 +1735,12 @@ request continues the trace automatically (`context_propagation` extracts them):
 const headers = {};
 document
     .querySelectorAll('meta[name="traceparent"], meta[name="tracestate"], meta[name="baggage"]')
-    .forEach((meta) => { headers[meta.name] = meta.content; });
+    .forEach((meta) => {
+        headers[meta.name] = meta.content;
+    });
 
 // Only send to your own API origins so trace IDs do not leak to third parties.
-fetch('/api/orders', { headers });
+fetch('/api/orders', {headers});
 ```
 
 **Links / multi-step flows (query string).** A normal navigation cannot send headers, so carry the

@@ -123,8 +123,8 @@ final class TestFinishedSubscriberTest extends TestCase
         $subscriber->notify($event);
         $telemetry->flush();
 
-        static::assertNotEmpty($metricProcessor->metricsWithName('phpunit.test.memory.peak'));
-        static::assertNotEmpty($metricProcessor->metricsWithName('phpunit.test.memory.delta'));
+        static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.peak'));
+        static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.delta'));
     }
 
     public function test_records_memory_delta_metric_when_only_metrics_enabled(): void
@@ -144,8 +144,8 @@ final class TestFinishedSubscriberTest extends TestCase
         $subscriber->notify($event);
         $telemetry->flush();
 
-        static::assertNotEmpty($metricProcessor->metricsWithName('phpunit.test.memory.peak'));
-        static::assertNotEmpty($metricProcessor->metricsWithName('phpunit.test.memory.delta'));
+        static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.peak'));
+        static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.delta'));
     }
 
     public function test_sets_error_status_and_message_on_span_for_failed_test(): void

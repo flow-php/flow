@@ -91,7 +91,7 @@ final class TraceableClientTelemetryTest extends TestCase
         static::assertCount(2, $logProcessor->entries(), 'Expected 2 log entries for 2 queries');
         static::assertGreaterThan(0, $metricProcessor->countMetrics(), 'Expected metrics to be recorded');
 
-        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
+        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
         static::assertGreaterThanOrEqual(3, count($durationMetrics), 'Expected at least 3 duration metrics');
     }
 
@@ -177,7 +177,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $this->collectMetrics($config);
 
-        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
+        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
         static::assertCount(1, $durationMetrics);
         static::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         static::assertGreaterThan(0, $durationMetrics[0]->value);
@@ -470,7 +470,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $this->collectMetrics($config);
 
-        $rowMetrics = $metricProcessor->metricsWithName('response_returned_rows');
+        $rowMetrics = $metricProcessor->metricsWithName('db.client.response.returned_rows');
         static::assertCount(1, $rowMetrics);
         static::assertSame(MetricType::HISTOGRAM, $rowMetrics[0]->type);
         static::assertSame(3.0, $rowMetrics[0]->value);
