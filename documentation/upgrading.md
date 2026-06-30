@@ -78,7 +78,9 @@ subsequent spans in the same trace.
 
 `continue` mode still joins the producer's trace.
 
-### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to `async_curl`
+### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to
+
+`async_curl`
 
 | Before                                                         | After                                                                                           |
 |----------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
@@ -107,11 +109,57 @@ flow_postgresql:
 
 ### 7) `flow-php/symfony-telemetry-bundle` - static resource cache file is keyed by kernel environment
 
-| Before                                                  | After                                                              |
-|---------------------------------------------------------|-------------------------------------------------------------------|
-| `sys_get_temp_dir()/flow_telemetry_resource.cache`      | `sys_get_temp_dir()/flow_telemetry_resource_<kernel.env>.cache`   |
+| Before                                             | After                                                           |
+|----------------------------------------------------|-----------------------------------------------------------------|
+| `sys_get_temp_dir()/flow_telemetry_resource.cache` | `sys_get_temp_dir()/flow_telemetry_resource_<kernel.env>.cache` |
 
 Delete the orphaned `flow_telemetry_resource.cache` from the temp dir; a per-env file is written on the next run.
+
+### 8) `flow-php/symfony-telemetry-bundle` - removed messenger `link_to_worker` and the `flow.messenger.worker` link
+
+| Before                                           | After   |
+|--------------------------------------------------|---------|
+| `instrumentation.messenger.link_to_worker: true` | removed |
+| consumer span link `flow.messenger.worker`       | removed |
+
+Remove the `link_to_worker` key from config — there is no replacement. Consumed messages remain their own trace
+linked to the producer (`link` mode). To keep a worker's trace list clean, give the Messenger transport a
+telemetry-disabled connection and/or exclude `messenger:consume` via `instrumentation.console.exclude_commands`.
+
+### 9) `flow-php/symfony-telemetry-bundle` - messenger instrumentation also emits messaging metrics
+
+| Before                                       | After                                                                                                           |
+|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| messenger instrumentation emitted spans only | also emits `messaging.client.consumed.messages`, `messaging.client.sent.messages`, `messaging.process.duration` |
+
+Disable with `instrumentation.messenger.metrics: false`; set the `messaging.process.duration` unit via
+`instrumentation.messenger.metrics_duration_unit` (`s` default, or `ms`).
+
+### 10) `flow-php/etl`, `flow-php/filesystem`, `flow-php/postgresql`, `flow-php/symfony-telemetry-bundle`,
+`flow-php/phpunit-telemetry-bridge` - emitted metric names standardized
+
+| Before                      | After                              |
+|-----------------------------|------------------------------------|
+| `rows_processed`            | `flow.etl.rows.processed`          |
+| `rows_throughput`           | `flow.etl.rows.throughput`         |
+| `cache_hits`                | `flow.cache.hits`                  |
+| `cache_misses`              | `flow.cache.misses`                |
+| `cache.hits`                | `flow.cache.hits`                  |
+| `cache.misses`              | `flow.cache.misses`                |
+| `write_size`                | `flow.filesystem.write.size`       |
+| `write_operations`          | `flow.filesystem.write.operations` |
+| `read_size`                 | `flow.filesystem.read.size`        |
+| `read_operations`           | `flow.filesystem.read.operations`  |
+| `operation_duration`        | `db.client.operation.duration`     |
+| `response_returned_rows`    | `db.client.response.returned_rows` |
+| `phpunit.test.duration`     | `flow.phpunit.test.duration`       |
+| `phpunit.test.count`        | `flow.phpunit.test.count`          |
+| `phpunit.test.memory.peak`  | `flow.phpunit.test.memory.peak`    |
+| `phpunit.test.memory.delta` | `flow.phpunit.test.memory.delta`   |
+| `phpunit.suite.duration`    | `flow.phpunit.suite.duration`      |
+| `phpunit.suite.test_count`  | `flow.phpunit.suite.test_count`    |
+
+Rename these series in dashboards and alerts.
 
 ---
 

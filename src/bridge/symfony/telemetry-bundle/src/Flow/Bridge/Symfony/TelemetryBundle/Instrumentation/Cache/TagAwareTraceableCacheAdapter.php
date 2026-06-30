@@ -45,8 +45,8 @@ final readonly class TagAwareTraceableCacheAdapter implements
     ) {
         $this->tracer = $this->telemetry->tracer('flow.symfony.cache', PackageVersion::get('symfony/cache'));
         $meter = $this->telemetry->meter('flow.symfony.cache', PackageVersion::get('symfony/cache'));
-        $this->hitCounter = $meter->createCounter('cache.hits', 'operations', 'Number of cache hits');
-        $this->missCounter = $meter->createCounter('cache.misses', 'operations', 'Number of cache misses');
+        $this->hitCounter = $meter->createCounter('flow.cache.hits', 'operations', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('flow.cache.misses', 'operations', 'Number of cache misses');
     }
 
     public function clear(string $prefix = ''): bool

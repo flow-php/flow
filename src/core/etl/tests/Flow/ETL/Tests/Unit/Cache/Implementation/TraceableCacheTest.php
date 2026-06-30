@@ -104,8 +104,8 @@ final class TraceableCacheTest extends FlowTestCase
         $cache->get('existing-key');
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('flow.cache.hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('flow.cache.misses');
 
         static::assertCount(1, $hitMetrics);
         static::assertCount(0, $missMetrics);
@@ -124,8 +124,8 @@ final class TraceableCacheTest extends FlowTestCase
             $cache->get('non-existing-key');
         } finally {
             $this->telemetry->flush();
-            $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
-            $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
+            $hitMetrics = $this->metricProcessor->metricsWithName('flow.cache.hits');
+            $missMetrics = $this->metricProcessor->metricsWithName('flow.cache.misses');
 
             static::assertCount(0, $hitMetrics);
             static::assertCount(1, $missMetrics);
@@ -145,8 +145,8 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertTrue($exists);
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('flow.cache.hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('flow.cache.misses');
 
         static::assertCount(1, $hitMetrics);
         static::assertCount(0, $missMetrics);
@@ -164,8 +164,8 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertFalse($exists);
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('flow.cache.hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('flow.cache.misses');
 
         static::assertCount(0, $hitMetrics);
         static::assertCount(1, $missMetrics);

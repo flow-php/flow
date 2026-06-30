@@ -55,11 +55,11 @@ final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
                 if ($this->config->emitMetrics && $duration !== null) {
                     $meter = $this->telemetry->meter('phpunit', $phpunitVersion);
 
-                    $meter->createHistogram('phpunit.suite.duration', 'ms')->record($duration, [
+                    $meter->createHistogram('flow.phpunit.suite.duration', 'ms')->record($duration, [
                         'test.suite' => $suiteName,
                     ]);
 
-                    $meter->createCounter('phpunit.suite.test_count')->add($suite->count(), [
+                    $meter->createCounter('flow.phpunit.suite.test_count')->add($suite->count(), [
                         'test.suite' => $suiteName,
                     ]);
                 }

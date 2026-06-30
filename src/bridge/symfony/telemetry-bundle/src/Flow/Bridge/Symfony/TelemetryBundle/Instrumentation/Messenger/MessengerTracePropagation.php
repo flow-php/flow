@@ -17,8 +17,8 @@ enum MessengerTracePropagation: string
     case Continuation = 'continue';
 
     /**
-     * The consumer span stays in the worker's own trace and carries a span link
-     * back to the producer span. Producer and consumer get separate, clean traces
+     * Each consumed message starts its own trace and carries a span link back to
+     * the producer span. Producer and consumer get separate, clean traces
      * connected by a link (recommended for decoupled / batch / long-delay queues).
      */
     case Link = 'link';

@@ -269,10 +269,10 @@ Each span includes attributes like:
 
 When enabled, the extension records:
 
-- `phpunit.suite.duration` - Histogram of suite execution time
-- `phpunit.suite.test_count` - Counter of tests per suite
-- `phpunit.test.duration` - Histogram of individual test execution time
-- `phpunit.test.count` - Counter of tests by status
+- `flow.phpunit.suite.duration` - Histogram of suite execution time
+- `flow.phpunit.suite.test_count` - Counter of tests per suite
+- `flow.phpunit.test.duration` - Histogram of individual test execution time
+- `flow.phpunit.test.count` - Counter of tests by status
 
 ## Running with Docker Compose
 

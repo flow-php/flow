@@ -56,7 +56,7 @@ final class TelemetryTest extends FlowTestCase
 
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
         static::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         static::assertSame(3, $counterMetrics[0]->value);
     }

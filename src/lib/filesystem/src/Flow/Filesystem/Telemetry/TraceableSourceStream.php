@@ -55,12 +55,12 @@ final class TraceableSourceStream implements SourceStream
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesReadCounter = $this->meter->createCounter(
-                'read_size',
+                'flow.filesystem.read.size',
                 'bytes',
                 'Total bytes read from source streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'read_operations',
+                'flow.filesystem.read.operations',
                 'operations',
                 'Number of read operations',
             );

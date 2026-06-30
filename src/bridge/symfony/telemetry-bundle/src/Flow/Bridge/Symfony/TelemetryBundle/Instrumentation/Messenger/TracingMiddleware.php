@@ -33,7 +33,8 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
         private MessengerTracePropagation $propagation = MessengerTracePropagation::Link,
-        private bool $linkToWorker = true,
+        private bool $metrics = true,
+        private MessengerMetricDurationUnit $durationUnit = MessengerMetricDurationUnit::Seconds,
     ) {}
 
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
@@ -73,8 +74,30 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $attributes['messaging.message.id'] = (string) $transportIdStamp->getId();
         }
 
+        $meter = $this->metrics
+            ? $this->telemetry->meter('flow.symfony.messenger', PackageVersion::get('symfony/messenger'))
+            : null;
+
+        $metricAttributes = [
+            'messaging.system' => 'symfony_messenger',
+            'messaging.operation.name' => $operation,
+            'messaging.destination.name' => $shortMessageClass,
+        ];
+
+        if ($receivedStamp instanceof ReceivedStamp) {
+            $metricAttributes['messaging.consumer.group.name'] = $receivedStamp->getTransportName();
+        }
+
+        $processDuration = $meter !== null && $isReceived
+            ? $meter->createHistogram(
+                'messaging.process.duration',
+                $this->durationUnit->value,
+                'Duration of processing a consumed message',
+                $this->durationUnit->histogramBoundaries(),
+            )
+            : null;
+
         $remote = $isReceived ? $this->extractRemoteContext($envelope) : null;
-        $workerSpan = $isReceived ? $this->contextStorage?->current()->activeSpan() : null;
         $links = [];
         $continuingRemoteTrace = false;
         $propagationScope = null;
@@ -110,19 +133,28 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         // conventions, unless we are explicitly continuing the producer's trace.
         $parentContext = $isReceived && !$continuingRemoteTrace ? false : null;
 
-        if ($parentContext === false && $this->linkToWorker && $workerSpan !== null) {
-            $links[] = SpanLink::create($workerSpan, ['flow.messenger.worker' => true]);
-        }
-
         $span = $tracer->span($spanName, $kind, $attributes, $links, $parentContext);
+
+        if ($meter !== null) {
+            $meter->createCounter(
+                $isReceived ? 'messaging.client.consumed.messages' : 'messaging.client.sent.messages',
+                '{message}',
+                $isReceived
+                    ? 'Number of messages delivered to the application'
+                    : 'Number of messages sent to the broker',
+            )->add(1, $metricAttributes);
+        }
 
         if (!$isReceived) {
             $envelope = $this->injectContext($envelope);
         }
 
+        $errorType = null;
+
         try {
             return $stack->next()->handle($envelope, $stack);
         } catch (Throwable $e) {
+            $errorType = $e::class;
             $span->recordException($e, new DateTimeImmutable());
             $span->setAttribute('error.type', $e::class);
             $span->setStatus(SpanStatus::error($e->getMessage()));
@@ -130,6 +162,20 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             throw $e;
         } finally {
             $tracer->complete($span);
+
+            if ($processDuration !== null) {
+                $durationAttributes = $metricAttributes;
+
+                if ($errorType !== null) {
+                    $durationAttributes['error.type'] = $errorType;
+                }
+
+                $processDuration->record(
+                    $this->durationUnit->fromMilliseconds($span->duration() ?? 0.0),
+                    $durationAttributes,
+                );
+            }
+
             $propagationScope?->detach();
         }
     }

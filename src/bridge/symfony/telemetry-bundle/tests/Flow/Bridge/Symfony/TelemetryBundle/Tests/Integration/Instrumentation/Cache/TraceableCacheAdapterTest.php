@@ -233,8 +233,8 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $hitMetrics = $processor->metricsWithName('cache.hits');
-        $missMetrics = $processor->metricsWithName('cache.misses');
+        $hitMetrics = $processor->metricsWithName('flow.cache.hits');
+        $missMetrics = $processor->metricsWithName('flow.cache.misses');
 
         $totalHits = array_sum(array_map(static fn($m) => $m->value, $hitMetrics));
         $totalMisses = array_sum(array_map(static fn($m) => $m->value, $missMetrics));
@@ -291,8 +291,8 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $hitMetrics = $processor->metricsWithName('cache.hits');
-        $missMetrics = $processor->metricsWithName('cache.misses');
+        $hitMetrics = $processor->metricsWithName('flow.cache.hits');
+        $missMetrics = $processor->metricsWithName('flow.cache.misses');
 
         $totalHits = array_sum(array_map(static fn($m) => $m->value, $hitMetrics));
         $totalMisses = array_sum(array_map(static fn($m) => $m->value, $missMetrics));
@@ -344,8 +344,8 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $hitMetrics = $processor->metricsWithName('cache.hits');
-        $missMetrics = $processor->metricsWithName('cache.misses');
+        $hitMetrics = $processor->metricsWithName('flow.cache.hits');
+        $missMetrics = $processor->metricsWithName('flow.cache.misses');
 
         static::assertCount(1, $hitMetrics);
         static::assertCount(1, $missMetrics);
@@ -399,7 +399,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $missMetrics = $processor->metricsWithName('cache.misses');
+        $missMetrics = $processor->metricsWithName('flow.cache.misses');
 
         static::assertCount(1, $missMetrics);
         static::assertSame(1, $missMetrics[0]->value);
@@ -451,7 +451,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $hitMetrics = $processor->metricsWithName('cache.hits');
+        $hitMetrics = $processor->metricsWithName('flow.cache.hits');
 
         static::assertCount(1, $hitMetrics);
         static::assertSame(1, $hitMetrics[0]->value);
@@ -502,7 +502,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         /** @var MemoryMetricProcessor $processor */
         $processor = $container->get('flow.telemetry.meter_provider.processor');
-        $missMetrics = $processor->metricsWithName('cache.misses');
+        $missMetrics = $processor->metricsWithName('flow.cache.misses');
 
         static::assertCount(1, $missMetrics);
         static::assertSame(1, $missMetrics[0]->value);

@@ -55,12 +55,12 @@ final class TraceableDestinationStream implements DestinationStream
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesWrittenCounter = $this->meter->createCounter(
-                'write_size',
+                'flow.filesystem.write.size',
                 'bytes',
                 'Total bytes written to destination streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'write_operations',
+                'flow.filesystem.write.operations',
                 'operations',
                 'Number of write operations',
             );

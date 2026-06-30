@@ -72,7 +72,7 @@ final class TelemetryContextTest extends FlowTestCase
         $metrics = $metricProcessor->metrics();
         static::assertNotEmpty($metrics);
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
         static::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         static::assertSame(3, $counterMetrics[0]->value);
     }
@@ -411,8 +411,8 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
-        $throughputMetrics = $metricProcessor->metricsWithName('rows_throughput');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
+        $throughputMetrics = $metricProcessor->metricsWithName('flow.etl.rows.throughput');
 
         static::assertNotEmpty($counterMetrics, 'Counter should be created when metrics enabled');
         static::assertNotEmpty($throughputMetrics, 'Throughput should be created when metrics enabled');
@@ -454,8 +454,8 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
-        $throughputMetrics = $metricProcessor->metricsWithName('rows_throughput');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
+        $throughputMetrics = $metricProcessor->metricsWithName('flow.etl.rows.throughput');
 
         static::assertCount(1, $counterMetrics);
         static::assertSame(3, $counterMetrics[0]->value);

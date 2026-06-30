@@ -76,14 +76,16 @@ final class TraceableClient implements Client
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->operationDuration = $meter->createHistogram(
-                'operation_duration',
+                'db.client.operation.duration',
                 's',
                 'Duration of database client operations',
+                [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
             );
             $this->returnedRows = $meter->createHistogram(
-                'response_returned_rows',
+                'db.client.response.returned_rows',
                 '{row}',
                 'Number of rows returned by database operations',
+                [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0],
             );
         }
 
