@@ -72,11 +72,9 @@ subsequent spans in the same trace.
 
 ### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
 
-| Before                                                     | After                                                                          |
-|------------------------------------------------------------|--------------------------------------------------------------------------------|
-| all messages in a `messenger:consume` run shared one trace | each handled message is a new trace root, linked to the producer (`link` mode) |
-
-`continue` mode still joins the producer's trace.
+| Before                                                     | After                                                            |
+|------------------------------------------------------------|------------------------------------------------------------------|
+| all messages in a `messenger:consume` run shared one trace | each handled message is a new trace root, linked to the producer |
 
 ### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to
 
@@ -115,16 +113,16 @@ flow_postgresql:
 
 Delete the orphaned `flow_telemetry_resource.cache` from the temp dir; a per-env file is written on the next run.
 
-### 8) `flow-php/symfony-telemetry-bundle` - removed messenger `link_to_worker` and the `flow.messenger.worker` link
+### 8) `flow-php/symfony-telemetry-bundle` - messenger worker receive cycle is traced; `link_to_worker` config removed
 
-| Before                                           | After   |
-|--------------------------------------------------|---------|
-| `instrumentation.messenger.link_to_worker: true` | removed |
-| consumer span link `flow.messenger.worker`       | removed |
+| Before                                             | After                                                    |
+|----------------------------------------------------|----------------------------------------------------------|
+| `instrumentation.messenger.link_to_worker: true`   | removed (always on under `messenger:consume`)            |
+| `flow.messenger.worker` link → console worker span | → per-pass `messenger.receive` span                      |
+| transport poll query = one standalone trace each   | grouped under one `messenger.receive` root span per pass |
 
-Remove the `link_to_worker` key from config — there is no replacement. Consumed messages remain their own trace
-linked to the producer (`link` mode). To keep a worker's trace list clean, give the Messenger transport a
-telemetry-disabled connection and/or exclude `messenger:consume` via `instrumentation.console.exclude_commands`.
+Remove the `link_to_worker` key from config. Idle passes (no message received) are marked
+`messaging.symfony.worker.idle: true`.
 
 ### 9) `flow-php/symfony-telemetry-bundle` - messenger instrumentation also emits messaging metrics
 
@@ -136,6 +134,7 @@ Disable with `instrumentation.messenger.metrics: false`; set the `messaging.proc
 `instrumentation.messenger.metrics_duration_unit` (`s` default, or `ms`).
 
 ### 10) `flow-php/etl`, `flow-php/filesystem`, `flow-php/postgresql`, `flow-php/symfony-telemetry-bundle`,
+
 `flow-php/phpunit-telemetry-bridge` - emitted metric names standardized
 
 | Before                      | After                              |
@@ -160,6 +159,21 @@ Disable with `instrumentation.messenger.metrics: false`; set the `messaging.proc
 | `phpunit.suite.test_count`  | `flow.phpunit.suite.test_count`    |
 
 Rename these series in dashboards and alerts.
+
+### 11) `flow-php/symfony-telemetry-bundle` - messenger `trace`/`link` config; `propagation_style` removed
+
+| Before                                        | After                                                                          |
+|-----------------------------------------------|--------------------------------------------------------------------------------|
+| `instrumentation.messenger.propagation_style` | removed (consumed messages always start their own trace)                       |
+| (no span selection)                           | `instrumentation.messenger.trace`: `worker`/`handlers`/`both` (default)/`none` |
+| (no link selection)                           | `instrumentation.messenger.link`: `dispatcher`/`worker`/`both` (default)       |
+
+Remove `propagation_style` from config — `continue` mode is gone (it made the consumer span absorb the queue wait
+time). `trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
+`link` selects the consumer span's links. `link: worker`/`both` requires `trace` to include the worker, otherwise the
+config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP client,
+…) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span, no
+orphans either way.
 
 ---
 

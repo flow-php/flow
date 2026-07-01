@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
 use DateTimeImmutable;
-use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
@@ -25,6 +24,7 @@ use Throwable;
 
 use function end;
 use function explode;
+use function hrtime;
 
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
@@ -32,7 +32,8 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private Telemetry $telemetry,
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
-        private MessengerTracePropagation $propagation = MessengerTracePropagation::Link,
+        private bool $traceHandler = true,
+        private MessengerHandlerLink $handlerLink = MessengerHandlerLink::Both,
         private bool $metrics = true,
         private MessengerMetricDurationUnit $durationUnit = MessengerMetricDurationUnit::Seconds,
     ) {}
@@ -50,6 +51,10 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $transportIdStamp = $envelope->last(TransportMessageIdStamp::class);
 
         $isReceived = $receivedStamp !== null;
+
+        // Captured before any propagation context is attached below, so it resolves to the active
+        // worker receive-cycle span (under messenger:consume) rather than a remote producer context.
+        $receiveCycleSpan = $isReceived ? $tracer->activeSpan() : null;
 
         $kind = $isReceived ? SpanKind::CONSUMER : SpanKind::PRODUCER;
         $operation = $isReceived ? 'process' : 'send';
@@ -99,41 +104,45 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $remote = $isReceived ? $this->extractRemoteContext($envelope) : null;
         $links = [];
-        $continuingRemoteTrace = false;
-        $propagationScope = null;
+        $remoteBaggage = null;
 
         if ($remote !== null && $remote->spanContext !== null) {
-            $remoteSpanContext = $remote->spanContext;
             $remoteBaggage = $remote->baggage;
 
-            if ($this->propagation === MessengerTracePropagation::Continuation) {
-                $context = (new Context())->withActiveSpan($remoteSpanContext);
-
-                if ($remoteBaggage !== null) {
-                    $context = $context->withBaggage($remoteBaggage);
-                }
-
-                $propagationScope = $this->contextStorage?->attach($context);
-                $continuingRemoteTrace = true;
-            } else {
+            if ($this->handlerLink->linksDispatcher()) {
                 $links[] = SpanLink::create(
-                    SpanContext::createRemote($remoteSpanContext->traceId, $remoteSpanContext->spanId),
+                    SpanContext::createRemote($remote->spanContext->traceId, $remote->spanContext->spanId),
                     ['messaging.operation.type' => 'process'],
                 );
-
-                if ($remoteBaggage !== null && $this->contextStorage !== null) {
-                    $propagationScope = $this->contextStorage->attach(
-                        $this->contextStorage->current()->withBaggage($remoteBaggage),
-                    );
-                }
             }
         }
 
-        // A consumed message starts its own trace (linked to the producer), per the OTEL messaging
-        // conventions, unless we are explicitly continuing the producer's trace.
-        $parentContext = $isReceived && !$continuingRemoteTrace ? false : null;
+        if ($receiveCycleSpan !== null && $this->handlerLink->linksWorker()) {
+            $links[] = SpanLink::create($receiveCycleSpan, ['flow.messenger.worker' => true]);
+        }
 
-        $span = $tracer->span($spanName, $kind, $attributes, $links, $parentContext);
+        // Build the handling context: lift the worker poll suppression so the handler's own instrumentation
+        // is recorded, and carry the producer's baggage into handling.
+        $propagationScope = null;
+
+        if ($isReceived && $this->contextStorage !== null) {
+            $handlingContext = $this->contextStorage->current();
+            $mutated = false;
+
+            if ($this->traceHandler && $handlingContext->isTracingSuppressed()) {
+                $handlingContext = $handlingContext->withoutSuppressedTracing();
+                $mutated = true;
+            }
+
+            if ($remoteBaggage !== null) {
+                $handlingContext = $handlingContext->withBaggage($remoteBaggage);
+                $mutated = true;
+            }
+
+            if ($mutated) {
+                $propagationScope = $this->contextStorage->attach($handlingContext);
+            }
+        }
 
         if ($meter !== null) {
             $meter->createCounter(
@@ -145,23 +154,34 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             )->add(1, $metricAttributes);
         }
 
+        // A consumed message starts its own trace (linked to the producer), per the OTEL messaging conventions.
+        $span = $this->traceHandler
+            ? $tracer->span($spanName, $kind, $attributes, $links, $isReceived ? false : null)
+            : null;
+
         if (!$isReceived) {
             $envelope = $this->injectContext($envelope);
         }
 
+        $startedAt = $span === null ? hrtime(true) : null;
         $errorType = null;
 
         try {
             return $stack->next()->handle($envelope, $stack);
         } catch (Throwable $e) {
             $errorType = $e::class;
-            $span->recordException($e, new DateTimeImmutable());
-            $span->setAttribute('error.type', $e::class);
-            $span->setStatus(SpanStatus::error($e->getMessage()));
+
+            if ($span !== null) {
+                $span->recordException($e, new DateTimeImmutable());
+                $span->setAttribute('error.type', $e::class);
+                $span->setStatus(SpanStatus::error($e->getMessage()));
+            }
 
             throw $e;
         } finally {
-            $tracer->complete($span);
+            if ($span !== null) {
+                $tracer->complete($span);
+            }
 
             if ($processDuration !== null) {
                 $durationAttributes = $metricAttributes;
@@ -170,10 +190,11 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                     $durationAttributes['error.type'] = $errorType;
                 }
 
-                $processDuration->record(
-                    $this->durationUnit->fromMilliseconds($span->duration() ?? 0.0),
-                    $durationAttributes,
-                );
+                $durationMs = $startedAt === null
+                    ? $span?->duration() ?? 0.0
+                    : (float) (hrtime(true) - $startedAt) / 1_000_000;
+
+                $processDuration->record($this->durationUnit->fromMilliseconds($durationMs), $durationAttributes);
             }
 
             $propagationScope?->detach();

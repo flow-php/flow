@@ -1261,31 +1261,48 @@ flow_telemetry:
     messenger:
       enabled: true
       context_propagation: true   # Propagate context across message boundaries
-      propagation_style: link      # How the consumer span relates to the producer span
+      trace: both                  # worker | handlers | both (default) | none
+      link: both                   # dispatcher | worker | both (default)
       metrics: true                # Emit messaging metrics (default true)
       metrics_duration_unit: s     # process.duration histogram unit: 's' (OTEL semconv, default) or 'ms'
 ```
 
-When `context_propagation` is enabled, `propagation_style` controls how a consumed message's span
-relates to the producing (publishing) span:
+`trace` selects which messenger spans are emitted:
 
-- `link` (default) — each consumed message is the **root of its own trace** and carries a span link back
-  to the producer span (per the OpenTelemetry messaging conventions). Producer and consumer get separate,
-  clean traces connected by a link, and a long-running worker no longer collapses every message into one
-  trace. Recommended for decoupled, batch, or long-delay queues, where continuing the trace would otherwise
-  absorb the entire queue wait into a single span's duration.
-- `continue` — the consumer span adopts the producer's trace and becomes its child, so
-  publish → queue → consume is one continuous distributed trace. Fine for fast, 1:1 processing.
+- `worker` — only the `messenger.receive` span that wraps each worker receive cycle; the transport's
+  claim/poll queries group under it instead of forming one standalone trace per query.
+- `handlers` — only the `process` (consume) and `send` (produce) message spans.
+- `both` (default) — both of the above.
+- `none` — no spans; metrics only.
 
-`propagation_style` has no effect when `context_propagation` is `false` (there is nothing to relate to).
-The producer side is identical in both modes — the telemetry stamp is always written on dispatch.
+When `trace` does **not** include the worker (`handlers` or `none`), there is no `messenger.receive` span to
+parent the transport's poll. Rather than let those operations surface as orphan root spans once per poll,
+the bundle **suppresses tracing during the receive loop** — so any spans the transport's instrumentation
+would emit (Doctrine DBAL, HTTP client, cache, …) are dropped, not just the queue table. Suppression is
+tracing-scoped (matching OpenTelemetry): metrics and logs are unaffected. Handler work is exempt: the
+`process` span and everything it calls are traced normally (with `trace: none` the handler is suppressed
+too, since there is no span to nest under). So every mode is orphan-free: `worker`/`both` group the poll,
+`handlers` suppress it (handler traced), `none` suppress the whole loop.
+
+`link` selects which links a consumed message's `process` span carries:
+
+- `dispatcher` — link back to the producing (publishing) span.
+- `worker` — link back to the `messenger.receive` cycle span the message was claimed in.
+- `both` (default) — both. `worker`/`both` require `trace` to include the worker, otherwise the
+  configuration is rejected (there would be no worker trace to link to).
+
+A consumed message is always the **root of its own trace** (per the OpenTelemetry messaging conventions):
+producer and consumer get separate, clean traces connected by the link, so a long-running worker never
+collapses every message into one trace, and the queue wait time is never absorbed into a span's duration.
+`link: dispatcher`/`both` has no effect when `context_propagation` is `false` (there is no producer context
+to link to). The producer side always writes the telemetry stamp on dispatch.
 
 Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
 consumer-side traces/logs/metrics export promptly instead of only when the `messenger:consume` worker
 stops. (Without it, signals emitted inside handlers sit in the batching processors — default batch size
 512 — and stay invisible until the buffer fills or the worker exits.) Failures flush too, so error spans
 and exception logs are visible even when the message is retried or sent to the failure transport. This is
-independent of `context_propagation` / `propagation_style`.
+independent of `context_propagation` / `trace` / `link`.
 
 Flushing per message means one exporter round-trip per message. For high-throughput workers, set
 [`max_batch_age`](#batching) on the batching processor so the batch coalesces across messages and a single
@@ -1956,7 +1973,8 @@ flow_telemetry:
     messenger:
       enabled: true
       context_propagation: true
-      propagation_style: link
+      trace: both
+      link: both
     dbal:
       enabled: true
       log_sql: true

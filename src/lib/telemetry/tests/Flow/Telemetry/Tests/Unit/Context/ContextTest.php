@@ -246,4 +246,27 @@ final class ContextTest extends TestCase
         static::assertNotNull($context->activeSpan());
         static::assertNull($newContext->activeSpan());
     }
+
+    public function test_tracing_is_not_suppressed_by_default(): void
+    {
+        static::assertFalse(Context::root()->isTracingSuppressed());
+    }
+
+    public function test_with_suppressed_tracing_toggles_the_flag(): void
+    {
+        $suppressed = Context::root()->withSuppressedTracing();
+        static::assertTrue($suppressed->isTracingSuppressed());
+
+        static::assertFalse($suppressed->withoutSuppressedTracing()->isTracingSuppressed());
+    }
+
+    public function test_suppression_survives_active_span_and_baggage_changes(): void
+    {
+        $context = Context::root()
+            ->withSuppressedTracing()
+            ->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate()))
+            ->withBaggage(new Baggage(['user.id' => '1']));
+
+        static::assertTrue($context->isTracingSuppressed());
+    }
 }
