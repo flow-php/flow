@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-06-30
+## [Unreleased] - 2026-07-01
 
 ### Added
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - configurable messenger trace (worker/handlers/both/none) and link (dispatcher/worker/both) modes** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - worker receive cycle traced as one messenger.receive span per pass, idle passes marked** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - transport poll instrumentation suppressed during the receive loop to avoid orphan spans** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - context-scoped tracing suppression producing non-recording spans** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - opt-in per-signal entry cap on MemoryExporter** - [@norberttech](https://github.com/norberttech)
 - [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - messenger instrumentation emits messaging metrics (consumed/sent counters, process duration histogram) with configurable unit and on/off toggle** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - Flow PHP 0.41.0 release blog post** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - optimize-images Just task with oxipng/jpegoptim nix deps** - [@norberttech](https://github.com/norberttech)
@@ -17,7 +22,11 @@
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - regenerate DSL autocompletion functions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - profiler signal store no longer grows unbounded in long-running messenger workers (OOM)** - [@norberttech](https://github.com/norberttech)
 - [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - operation duration histogram uses correct second-scale bucket boundaries** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - messenger propagation_style config and its continue mode** - [@norberttech](https://github.com/norberttech)
 
 ## [0.41.0] - 2026-06-29
 
