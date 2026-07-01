@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-01
+## [0.41.1] - 2026-07-01
 
 ### Added
 - [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - configurable messenger trace (worker/handlers/both/none) and link (dispatcher/worker/both) modes** - [@norberttech](https://github.com/norberttech)
@@ -11,11 +11,11 @@
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - optimize-images Just task with oxipng/jpegoptim nix deps** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
-- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/etl - emitted metric names standardized to flow.etl.* and flow.cache.*** - [@norberttech](https://github.com/norberttech)
-- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/filesystem - emitted metric names standardized to flow.filesystem.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/etl - emitted metric names standardized to flow.etl.* and flow.cache.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/filesystem - emitted metric names standardized to flow.filesystem.** - [@norberttech](https://github.com/norberttech)
 - [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - metric names aligned to OTEL db.client.* semantic conventions** - [@norberttech](https://github.com/norberttech)
-- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - cache metric names changed to flow.cache.*** - [@norberttech](https://github.com/norberttech)
-- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/phpunit-telemetry-bridge - metric names folded under flow.phpunit.*** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - cache metric names changed to flow.cache.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/phpunit-telemetry-bridge - metric names folded under flow.phpunit.** - [@norberttech](https://github.com/norberttech)
 - [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/telemetry - docblock metric name examples updated** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - widen blog post and changelog layout, add figure/image prose styles** - [@norberttech](https://github.com/norberttech)
 - [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - losslessly recompress landing images** - [@norberttech](https://github.com/norberttech)
