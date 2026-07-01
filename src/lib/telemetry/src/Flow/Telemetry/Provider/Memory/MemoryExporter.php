@@ -10,6 +10,11 @@ use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
 use Flow\Telemetry\Tracer\Span;
+use InvalidArgumentException;
+
+use function array_slice;
+use function count;
+use function sprintf;
 
 /**
  * Exporter that stores telemetry batches in memory for direct access.
@@ -34,12 +39,28 @@ final class MemoryExporter implements Exporter
      */
     private array $spans = [];
 
+    /**
+     * @param null|int $maxEntriesPerSignal maximum number of entries retained per signal type; once exceeded the
+     *                                      oldest entries are dropped. Null (default) keeps everything, which is
+     *                                      unbounded and unsafe in long-running processes that never reset().
+     */
+    public function __construct(
+        private readonly ?int $maxEntriesPerSignal = null,
+    ) {
+        if ($maxEntriesPerSignal !== null && $maxEntriesPerSignal < 1) {
+            throw new InvalidArgumentException(sprintf(
+                'MemoryExporter maxEntriesPerSignal must be a positive integer, got %d',
+                $maxEntriesPerSignal,
+            ));
+        }
+    }
+
     public function export(Signals $signal): bool
     {
         match ($signal->type) {
-            SignalType::LOGS => $this->logs = [...$this->logs, ...$signal->allLogs()],
-            SignalType::METRICS => $this->metrics = [...$this->metrics, ...$signal->allMetrics()],
-            SignalType::TRACES => $this->spans = [...$this->spans, ...$signal->allSpans()],
+            SignalType::LOGS => $this->logs = $this->cap([...$this->logs, ...$signal->allLogs()]),
+            SignalType::METRICS => $this->metrics = $this->cap([...$this->metrics, ...$signal->allMetrics()]),
+            SignalType::TRACES => $this->spans = $this->cap([...$this->spans, ...$signal->allSpans()]),
         };
 
         return true;
@@ -76,5 +97,21 @@ final class MemoryExporter implements Exporter
     public function spans(): array
     {
         return $this->spans;
+    }
+
+    /**
+     * @template T
+     *
+     * @param array<T> $entries
+     *
+     * @return array<T>
+     */
+    private function cap(array $entries): array
+    {
+        if ($this->maxEntriesPerSignal === null || count($entries) <= $this->maxEntriesPerSignal) {
+            return $entries;
+        }
+
+        return array_slice($entries, -$this->maxEntriesPerSignal);
     }
 }
