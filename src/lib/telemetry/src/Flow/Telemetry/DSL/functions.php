@@ -341,11 +341,13 @@ function void_exporter(): VoidExporter
  *
  * Unified exporter that stores logs, metrics, and spans in memory for direct access.
  * Useful for testing and inspection without serialization.
+ *
+ * @param null|int $maxEntriesPerSignal maximum entries retained per signal type; null keeps everything
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_exporter(): MemoryExporter
+function memory_exporter(?int $maxEntriesPerSignal = null): MemoryExporter
 {
-    return new MemoryExporter();
+    return new MemoryExporter($maxEntriesPerSignal);
 }
 
 /**

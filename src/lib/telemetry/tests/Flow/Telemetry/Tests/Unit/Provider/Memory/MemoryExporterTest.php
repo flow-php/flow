@@ -14,12 +14,75 @@ use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\LogEntryMother;
+use Flow\Telemetry\Tests\Mother\MetricMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tests\Mother\SpanMother;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class MemoryExporterTest extends TestCase
 {
+    public function test_constructor_rejects_non_positive_max_entries(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('MemoryExporter maxEntriesPerSignal must be a positive integer, got 0');
+
+        new MemoryExporter(0);
+    }
+
+    public function test_export_caps_logs_to_max_entries_dropping_oldest(): void
+    {
+        $exporter = new MemoryExporter(2);
+        $entry1 = LogEntryMother::create('Log 1', Severity::INFO);
+        $entry2 = LogEntryMother::create('Log 2', Severity::WARN);
+        $entry3 = LogEntryMother::create('Log 3', Severity::ERROR);
+
+        $exporter->export(Signals::logs([$entry1, $entry2]));
+        $exporter->export(Signals::logs([$entry3]));
+
+        static::assertCount(2, $exporter->logs());
+        static::assertSame($entry2, $exporter->logs()[0]);
+        static::assertSame($entry3, $exporter->logs()[1]);
+    }
+
+    public function test_export_caps_metrics_to_max_entries_dropping_oldest(): void
+    {
+        $exporter = new MemoryExporter(1);
+        $first = MetricMother::counter('first', 1);
+        $second = MetricMother::counter('second', 2);
+
+        $exporter->export(Signals::metrics([$first]));
+        $exporter->export(Signals::metrics([$second]));
+
+        static::assertCount(1, $exporter->metrics());
+        static::assertSame($second, $exporter->metrics()[0]);
+    }
+
+    public function test_export_caps_spans_to_max_entries_dropping_oldest(): void
+    {
+        $exporter = new MemoryExporter(2);
+        $span1 = SpanMother::withName('span-1');
+        $span2 = SpanMother::withName('span-2');
+        $span3 = SpanMother::withName('span-3');
+
+        $exporter->export(Signals::traces([$span1, $span2, $span3]));
+
+        static::assertCount(2, $exporter->spans());
+        static::assertSame($span2, $exporter->spans()[0]);
+        static::assertSame($span3, $exporter->spans()[1]);
+    }
+
+    public function test_export_without_cap_keeps_every_entry(): void
+    {
+        $exporter = new MemoryExporter();
+
+        for ($i = 0; $i < 100; $i++) {
+            $exporter->export(Signals::traces([SpanMother::withName('span-' . $i)]));
+        }
+
+        static::assertCount(100, $exporter->spans());
+    }
+
     public function test_export_empty_logs_does_not_modify_state(): void
     {
         $exporter = new MemoryExporter();
