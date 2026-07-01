@@ -41,6 +41,11 @@ final class DBALTelemetryPass implements CompilerPassInterface
             ? $container->getParameter('flow.telemetry.dbal.exclude_connections')
             : [];
 
+        /** @var array<string> $excludeTables */
+        $excludeTables = $container->hasParameter('flow.telemetry.dbal.exclude_tables')
+            ? $container->getParameter('flow.telemetry.dbal.exclude_tables')
+            : [];
+
         $connectionNames = $this->findConnectionNames($container);
 
         foreach ($connectionNames as $connectionName) {
@@ -56,6 +61,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
             $definition->setArgument(2, $connectionName);
             $definition->setArgument(3, $logSql);
             $definition->setArgument(4, $maxSqlLength);
+            $definition->setArgument(5, $excludeTables);
             $definition->addTag('doctrine.middleware', ['connection' => $connectionName]);
 
             $container->setDefinition($middlewareId, $definition);

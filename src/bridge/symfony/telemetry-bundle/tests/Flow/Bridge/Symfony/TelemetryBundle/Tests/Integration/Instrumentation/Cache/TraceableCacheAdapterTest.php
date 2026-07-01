@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Cache;
 
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\CacheTelemetryPass;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\CacheDeferredFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TagAwareTraceableCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\ArrayCacheAdapter;
@@ -30,6 +31,7 @@ use function iterator_to_array;
 #[CoversClass(TraceableCacheAdapter::class)]
 #[CoversClass(TagAwareTraceableCacheAdapter::class)]
 #[CoversClass(CacheTelemetryPass::class)]
+#[CoversClass(CacheDeferredFlushSubscriber::class)]
 final class TraceableCacheAdapterTest extends KernelTestCase
 {
     protected function setUp(): void
@@ -74,6 +76,63 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         static::assertInstanceOf(TraceableCacheAdapter::class, $container->get('test.cache.app'));
         static::assertInstanceOf(TraceableCacheAdapter::class, $container->get('test.cache.secondary'));
+    }
+
+    public function test_deferred_flush_subscriber_is_registered_when_flush_deferred_enabled(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => [
+                            'enabled' => true,
+                            'flush_deferred' => true,
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertTrue($this->getContainer()->has('flow.telemetry.cache.deferred_flush_subscriber'));
+    }
+
+    public function test_deferred_flush_subscriber_is_not_registered_by_default(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertFalse($this->getContainer()->has('flow.telemetry.cache.deferred_flush_subscriber'));
     }
 
     public function test_decorator_not_registered_when_feature_disabled(): void
@@ -586,7 +645,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $operations = array_map(static fn($span) => $span->attributes()['cache.operation'], $processor->endedSpans());
 
         static::assertSame(
-            ['clear', 'commit', 'delete', 'deleteItem', 'deleteItems', 'prune', 'reset', 'save', 'saveDeferred'],
+            ['clear', 'commit', 'delete', 'delete_item', 'delete_items', 'prune', 'reset', 'save', 'save_deferred'],
             $operations,
         );
     }
@@ -713,13 +772,13 @@ final class TraceableCacheAdapterTest extends KernelTestCase
                 'clear',
                 'commit',
                 'delete',
-                'deleteItem',
-                'deleteItems',
-                'invalidateTags',
+                'delete_item',
+                'delete_items',
+                'invalidate_tags',
                 'prune',
                 'reset',
                 'save',
-                'saveDeferred',
+                'save_deferred',
             ],
             $operations,
         );
@@ -838,11 +897,11 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache InvalidateTags test.cache.tags', $span->name());
+        static::assertSame('cache.invalidate_tags', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        static::assertSame('invalidateTags', $attributes['cache.operation']);
+        static::assertSame('invalidate_tags', $attributes['cache.operation']);
         static::assertSame('test.cache.tags', $attributes['cache.pool']);
         static::assertSame(['tag1', 'tag2', 'tag3'], $attributes['cache.tags']);
         static::assertSame(3, $attributes['cache.tag_count']);

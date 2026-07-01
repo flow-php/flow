@@ -9,6 +9,7 @@ use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingConnection;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingStatement;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -176,6 +177,88 @@ final class TracingConnectionTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('SELECT * FROM users ...', $spans[0]->attributes()['db.query.text']);
+    }
+
+    public function test_exec_on_excluded_table_creates_no_span(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracing = new TracingConnection(
+            $this->createMockConnection(),
+            $this->createTelemetry($spanProcessor),
+            logSql: true,
+            maxSqlLength: 100,
+            excludeTables: ['cache_items'],
+        );
+
+        $tracing->exec('DELETE FROM cache_items WHERE item_lifetime <= 1');
+
+        static::assertCount(0, $spanProcessor->endedSpans());
+    }
+
+    public function test_query_on_excluded_table_creates_no_span(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracing = new TracingConnection(
+            $this->createMockConnection(),
+            $this->createTelemetry($spanProcessor),
+            logSql: true,
+            maxSqlLength: 100,
+            excludeTables: ['cache_items'],
+        );
+
+        $tracing->query('SELECT item_data FROM cache_items WHERE item_id = 1');
+
+        static::assertCount(0, $spanProcessor->endedSpans());
+    }
+
+    public function test_prepare_on_excluded_table_creates_no_span_and_returns_unwrapped_statement(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracing = new TracingConnection(
+            $this->createMockConnection(),
+            $this->createTelemetry($spanProcessor),
+            logSql: true,
+            maxSqlLength: 100,
+            excludeTables: ['cache_items'],
+        );
+
+        $statement = $tracing->prepare('INSERT INTO cache_items (item_id, item_data) VALUES (?, ?)');
+        $statement->execute();
+
+        static::assertNotInstanceOf(TracingStatement::class, $statement);
+        static::assertCount(0, $spanProcessor->endedSpans());
+    }
+
+    public function test_non_excluded_table_is_still_traced(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracing = new TracingConnection(
+            $this->createMockConnection(),
+            $this->createTelemetry($spanProcessor),
+            logSql: true,
+            maxSqlLength: 100,
+            excludeTables: ['cache_items'],
+        );
+
+        $tracing->query('SELECT * FROM users WHERE id = 1');
+
+        static::assertCount(1, $spanProcessor->endedSpans());
+    }
+
+    public function test_exclusion_matches_whole_words_only(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracing = new TracingConnection(
+            $this->createMockConnection(),
+            $this->createTelemetry($spanProcessor),
+            logSql: true,
+            maxSqlLength: 100,
+            excludeTables: ['cache'],
+        );
+
+        $tracing->query('SELECT * FROM cache_items WHERE item_id = 1');
+
+        static::assertCount(1, $spanProcessor->endedSpans());
     }
 
     public function test_records_exception_when_operation_fails(): void

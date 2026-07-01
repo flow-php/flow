@@ -60,7 +60,7 @@ final readonly class TraceableCacheAdapter implements
             $attributes['cache.prefix'] = $prefix;
         }
 
-        $span = $this->tracer->span("Cache Clear {$this->poolName}", SpanKind::CLIENT, $attributes);
+        $span = $this->tracer->span('cache.clear', SpanKind::CLIENT, $attributes);
 
         try {
             return $this->adapter->clear($prefix);
@@ -77,7 +77,7 @@ final readonly class TraceableCacheAdapter implements
 
     public function commit(): bool
     {
-        $span = $this->tracer->span("Cache Commit {$this->poolName}", SpanKind::CLIENT, [
+        $span = $this->tracer->span('cache.commit', SpanKind::CLIENT, [
             'cache.operation' => 'commit',
             'cache.pool' => $this->poolName,
         ]);
@@ -105,7 +105,7 @@ final readonly class TraceableCacheAdapter implements
             ));
         }
 
-        $span = $this->tracer->span("Cache Delete {$key} {$this->poolName}", SpanKind::CLIENT, [
+        $span = $this->tracer->span('cache.delete', SpanKind::CLIENT, [
             'cache.operation' => 'delete',
             'cache.pool' => $this->poolName,
             'cache.key' => $key,
@@ -128,8 +128,8 @@ final readonly class TraceableCacheAdapter implements
     {
         $keyString = is_string($key) ? $key : (string) $key;
 
-        $span = $this->tracer->span("Cache DeleteItem {$keyString} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'deleteItem',
+        $span = $this->tracer->span('cache.delete_item', SpanKind::CLIENT, [
+            'cache.operation' => 'delete_item',
             'cache.pool' => $this->poolName,
             'cache.key' => $keyString,
         ]);
@@ -152,8 +152,8 @@ final readonly class TraceableCacheAdapter implements
      */
     public function deleteItems(array $keys): bool
     {
-        $span = $this->tracer->span("Cache DeleteItems {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'deleteItems',
+        $span = $this->tracer->span('cache.delete_items', SpanKind::CLIENT, [
+            'cache.operation' => 'delete_items',
             'cache.pool' => $this->poolName,
             'cache.key_count' => count($keys),
         ]);
@@ -264,7 +264,7 @@ final readonly class TraceableCacheAdapter implements
             return false;
         }
 
-        $span = $this->tracer->span("Cache Prune {$this->poolName}", SpanKind::CLIENT, [
+        $span = $this->tracer->span('cache.prune', SpanKind::CLIENT, [
             'cache.operation' => 'prune',
             'cache.pool' => $this->poolName,
         ]);
@@ -288,7 +288,7 @@ final readonly class TraceableCacheAdapter implements
             return;
         }
 
-        $span = $this->tracer->span("Cache Reset {$this->poolName}", SpanKind::CLIENT, [
+        $span = $this->tracer->span('cache.reset', SpanKind::CLIENT, [
             'cache.operation' => 'reset',
             'cache.pool' => $this->poolName,
         ]);
@@ -309,7 +309,7 @@ final readonly class TraceableCacheAdapter implements
     public function save(CacheItemInterface $item): bool
     {
         $key = $item->getKey();
-        $span = $this->tracer->span("Cache Save {$key} {$this->poolName}", SpanKind::CLIENT, [
+        $span = $this->tracer->span('cache.save', SpanKind::CLIENT, [
             'cache.operation' => 'save',
             'cache.pool' => $this->poolName,
             'cache.key' => $key,
@@ -331,8 +331,8 @@ final readonly class TraceableCacheAdapter implements
     public function saveDeferred(CacheItemInterface $item): bool
     {
         $key = $item->getKey();
-        $span = $this->tracer->span("Cache SaveDeferred {$key} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'saveDeferred',
+        $span = $this->tracer->span('cache.save_deferred', SpanKind::CLIENT, [
+            'cache.operation' => 'save_deferred',
             'cache.pool' => $this->poolName,
             'cache.key' => $key,
         ]);

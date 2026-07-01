@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 use function array_map;
 use function interface_exists;
+use function is_string;
 use function mb_strlen;
 
 #[CoversClass(TracingMiddleware::class)]
@@ -244,6 +245,77 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertTrue($container->has('flow.telemetry.dbal.middleware.default'));
         static::assertFalse($container->has('flow.telemetry.dbal.middleware.debug_primary'));
         static::assertFalse($container->has('flow.telemetry.dbal.middleware.debug_secondary'));
+    }
+
+    public function test_excluded_table_queries_are_not_traced(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->setParameter('doctrine.connections', ['default' => 'doctrine.dbal.default_connection']);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'dbal' => [
+                            'enabled' => true,
+                            'log_sql' => true,
+                            'exclude_tables' => ['cache_items'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingMiddleware $middleware */
+        $middleware = $container->get('flow.telemetry.dbal.middleware.default');
+
+        $configuration = new Configuration();
+        $configuration->setMiddlewares([$middleware]);
+
+        $connection = DriverManager::getConnection([
+            'driver' => 'pdo_sqlite',
+            'memory' => true,
+        ], $configuration);
+
+        $connection->executeStatement('CREATE TABLE cache_items (item_id TEXT PRIMARY KEY, item_data TEXT)');
+        $connection->executeStatement('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+
+        $statement = $connection->prepare('INSERT INTO cache_items (item_id, item_data) VALUES (?, ?)');
+        $statement->bindValue(1, 'k');
+        $statement->bindValue(2, 'v');
+        $statement->executeStatement();
+
+        $connection->executeQuery('SELECT * FROM users WHERE id = 1');
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spanNames = array_map(static fn($s) => $s->name(), $processor->endedSpans());
+
+        static::assertNotContains('doctrine.dbal.statement.prepare', $spanNames);
+        static::assertNotContains('doctrine.dbal.statement.execute', $spanNames);
+        static::assertContains('doctrine.dbal.connection.query', $spanNames);
+
+        foreach ($processor->endedSpans() as $span) {
+            $queryText = $span->attributes()['db.query.text'] ?? null;
+
+            if (is_string($queryText)) {
+                static::assertStringNotContainsStringIgnoringCase('cache_items', $queryText);
+            }
+        }
     }
 
     public function test_exec_creates_span_with_sql_attribute(): void

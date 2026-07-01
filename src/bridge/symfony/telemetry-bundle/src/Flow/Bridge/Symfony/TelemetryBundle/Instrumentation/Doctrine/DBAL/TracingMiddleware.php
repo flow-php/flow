@@ -12,6 +12,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 {
     /**
      * @param class-string<DriverInterface> $driverClass
+     * @param list<string> $excludeTables queries referencing any of these tables are not traced
      */
     public function __construct(
         private Telemetry $telemetry,
@@ -19,6 +20,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private string $connectionName,
         private bool $logSql = true,
         private int $maxSqlLength = 1000,
+        private array $excludeTables = [],
     ) {}
 
     public function wrap(DriverInterface $driver): DriverInterface
@@ -30,6 +32,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $this->connectionName,
             $this->logSql,
             $this->maxSqlLength,
+            $this->excludeTables,
         );
     }
 }

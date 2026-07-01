@@ -95,7 +95,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Clear test.pool', $span->name());
+        static::assertSame('cache.clear', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
         static::assertSame('clear', $span->attributes()['cache.operation']);
         static::assertSame('test.pool', $span->attributes()['cache.pool']);
@@ -365,7 +365,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache InvalidateTags test.pool', $span->name());
+        static::assertSame('cache.invalidate_tags', $span->name());
         static::assertSame(['tag1', 'tag2', 'tag3'], $span->attributes()['cache.tags']);
         static::assertSame(3, $span->attributes()['cache.tag_count']);
     }
