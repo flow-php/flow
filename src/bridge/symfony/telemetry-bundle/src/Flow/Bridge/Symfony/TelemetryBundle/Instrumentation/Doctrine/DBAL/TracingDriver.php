@@ -29,12 +29,16 @@ use Throwable;
  */
 final class TracingDriver extends AbstractDriverMiddleware
 {
+    /**
+     * @param list<string> $excludeTables queries referencing any of these tables are not traced
+     */
     public function __construct(
         private readonly Telemetry $telemetry,
         DriverInterface $driver,
         private readonly string $connectionName,
         private readonly bool $logSql,
         private readonly int $maxSqlLength,
+        private readonly array $excludeTables = [],
     ) {
         parent::__construct($driver);
     }
@@ -57,7 +61,13 @@ final class TracingDriver extends AbstractDriverMiddleware
 
             $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
 
-            return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
+            return new TracingConnection(
+                $connection,
+                $this->telemetry,
+                $this->logSql,
+                $this->maxSqlLength,
+                $this->excludeTables,
+            );
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setAttribute('error.type', $exception::class);

@@ -18,14 +18,22 @@ use Throwable;
 
 use function mb_strlen;
 use function mb_substr;
+use function preg_match;
+use function preg_quote;
 
 final class TracingConnection extends AbstractConnectionMiddleware
 {
+    /**
+     * @param list<string> $excludeTables queries referencing any of these tables are not traced, so
+     *                                     high-churn internals (e.g. the cache_items table behind a
+     *                                     Doctrine DBAL cache pool) do not surface as orphan spans
+     */
     public function __construct(
         ConnectionInterface $connection,
         private readonly Telemetry $telemetry,
         private readonly bool $logSql,
         private readonly int $maxSqlLength,
+        private readonly array $excludeTables = [],
     ) {
         parent::__construct($connection);
     }
@@ -73,6 +81,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[Override]
     public function exec(string $sql): int|string
     {
+        if ($this->isExcluded($sql)) {
+            return parent::exec($sql);
+        }
+
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
@@ -99,6 +111,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[Override]
     public function prepare(string $sql): DriverStatement
     {
+        if ($this->isExcluded($sql)) {
+            return parent::prepare($sql);
+        }
+
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
@@ -127,6 +143,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[Override]
     public function query(string $sql): Result
     {
+        if ($this->isExcluded($sql)) {
+            return parent::query($sql);
+        }
+
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
@@ -168,6 +188,17 @@ final class TracingConnection extends AbstractConnectionMiddleware
         } finally {
             $tracer->complete($span);
         }
+    }
+
+    private function isExcluded(string $sql): bool
+    {
+        foreach ($this->excludeTables as $table) {
+            if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $sql) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function truncateSql(string $sql): string

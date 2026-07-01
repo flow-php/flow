@@ -1385,6 +1385,8 @@ flow_telemetry:
       exclude_connections:
         - 'legacy'
         - '/^test_.*/'
+      exclude_tables:         # Queries referencing these tables are not traced
+        - 'cache_items'      
 ```
 
 #### Cache
@@ -1399,7 +1401,22 @@ flow_telemetry:
       exclude_pools:
         - 'cache.system'
         - '/^cache\.validator.*/'
+      flush_deferred: false   # opt-in; see below
 ```
+
+##### Deferred writes on a Doctrine DBAL cache pool
+
+A cache pool backed by `cache.adapter.doctrine_dbal` defers writes and flushes them from the pool's own
+commit path at process shutdown — outside any request/message span. Each such write then surfaces as an
+orphan `doctrine.dbal.*` trace (`statement.prepare`/`execute`, `transaction.begin`/`commit`), one per query.
+
+`flush_deferred: true` drains those deferred writes at request/command termination and after each consumed
+message, inside a single `cache.flush` span, so they group under one trace instead of orphaning (and the pool
+has nothing left to flush at shutdown). It commits the untraced inner adapters, so idle pools do not emit empty
+per-pool spans. Note this commits deferred writes slightly earlier (at termination rather than destruction).
+
+For a coarser alternative that drops the cache SQL entirely instead of grouping it, add the backing table to
+[`dbal.exclude_tables`](#dbal) (e.g. `cache_items`).
 
 Besides spans, the cache instrumentation emits hit/miss counters (a `meter_provider` must be configured for them
 to be exported):

@@ -175,6 +175,27 @@ config is rejected. When `trace` excludes the worker, the transport's poll instr
 …) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span, no
 orphans either way.
 
+### 12) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
+
+| Before                          | After                  |
+|---------------------------------|------------------------|
+| `Cache Commit {pool}`           | `cache.commit`         |
+| `Cache Save {key} {pool}`       | `cache.save`           |
+| `Cache SaveDeferred {key} {pool}` | `cache.save_deferred` |
+| `Cache Delete {key} {pool}`     | `cache.delete`         |
+| `Cache DeleteItem {key} {pool}` | `cache.delete_item`    |
+| `Cache DeleteItems {pool}`      | `cache.delete_items`   |
+| `Cache Clear {pool}`            | `cache.clear`          |
+| `Cache Prune {pool}`            | `cache.prune`          |
+| `Cache Reset {pool}`            | `cache.reset`          |
+| `Cache InvalidateTags {pool}`   | `cache.invalidate_tags` |
+| `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
+
+Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
+that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
+attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
+values.
+
 ---
 
 ## Upgrading from 0.39.x to 0.40.x
