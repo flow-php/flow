@@ -292,6 +292,31 @@ $result = $tracer->trace('fetch-user', function () use ($userId) {
 });
 ```
 
+**Suppressing tracing for a region:**
+
+Set the tracing-suppression flag on the active context to make any spans created within a region **non-recording**
+(never sampled, never exported). This is OpenTelemetry's tracing-scoped suppression (the equivalent of `suppressTracing`)
+— useful to silence noisy background work such as a queue worker's transport polling. Only traces are affected;
+**metrics and logs still flow**.
+
+```php
+<?php
+
+$scope = $contextStorage->attach($contextStorage->current()->withSuppressedTracing());
+
+try {
+    // Any $tracer->span(...) created here is non-recording and never exported.
+    $poll();
+} finally {
+    $scope->detach();
+}
+
+// $contextStorage->current()->isTracingSuppressed() is false again here.
+```
+
+Use `withoutSuppressedTracing()` to lift suppression for a nested region (e.g. to trace real work inside an otherwise
+suppressed loop).
+
 ### Metrics
 
 Metrics are numerical measurements that track the state and performance of your application over time. Flow Telemetry

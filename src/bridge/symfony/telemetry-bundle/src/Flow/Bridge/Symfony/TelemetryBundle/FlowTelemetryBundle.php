@@ -22,8 +22,8 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\TraceContex
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleLogOutputSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\RouteNaming;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerMetricDurationUnit;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\UserSpanAttributeProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleOutputLogProcessor;
 use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleVerbosityLevels;
@@ -597,17 +597,32 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->arrayNode('messenger')
             ->info('Messenger tracing configuration')
             ->canBeEnabled()
+            ->validate()
+            ->ifTrue(static function (array $messenger): bool {
+                $trace = $messenger['trace'] ?? 'both';
+                $link = $messenger['link'] ?? 'both';
+                $workerTraced = $trace === 'worker' || $trace === 'both';
+
+                return !$workerTraced && ($link === 'worker' || $link === 'both');
+            })
+            ->thenInvalid('messenger.link cannot be "worker" or "both" unless messenger.trace includes the worker (set messenger.trace to "worker" or "both"), otherwise there is no worker trace to link to.')
+            ->end()
             ->children()
             ->booleanNode('context_propagation')
             ->info('Enable context propagation across message boundaries (requires propagator)')
             ->defaultTrue()
             ->end()
-            ->enumNode('propagation_style')
-            ->info('When context propagation is enabled, how the consumer span relates to the producer span: '
-                . '"link" (default) makes each consumed message its own trace and links back to the producer; '
-                . '"continue" makes the consumer a child in the producer\'s trace.')
-            ->values(['continue', 'link'])
-            ->defaultValue('link')
+            ->enumNode('trace')
+            ->info('Which messenger spans to emit: "worker" (the messenger.receive cycle span only), '
+                . '"handlers" (the process/send message spans only), "both" (default), or "none" (no spans; metrics only).')
+            ->values(['worker', 'handlers', 'both', 'none'])
+            ->defaultValue('both')
+            ->end()
+            ->enumNode('link')
+            ->info('Which links the consumed "process" span carries: "dispatcher" (the producing span), '
+                . '"worker" (the messenger.receive cycle span), or "both" (default). "worker"/"both" require worker tracing.')
+            ->values(['dispatcher', 'worker', 'both'])
+            ->defaultValue('both')
             ->end()
             ->booleanNode('metrics')
             ->info('Emit OTEL messaging metrics for consumed/sent messages (messaging.client.consumed.messages, messaging.client.sent.messages) and processing duration (messaging.process.duration)')
@@ -864,7 +879,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', runtime_mode?: 'auto'|'classic'|'worker', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, propagation_style?: 'continue'|'link', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', runtime_mode?: 'auto'|'classic'|'worker', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: 'worker'|'handlers'|'both'|'none', link?: 'dispatcher'|'worker'|'both', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -2895,7 +2910,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, propagation_style?: 'continue'|'link', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: 'worker'|'handlers'|'both'|'none', link?: 'dispatcher'|'worker'|'both', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
      */
     private function registerInstrumentation(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
@@ -2960,19 +2975,27 @@ final class FlowTelemetryBundle extends AbstractBundle
 
             $container->import(__DIR__ . '/Resources/config/instrumentation/messenger.php');
 
+            $trace = $messengerConfig['trace'] ?? 'both';
+            $traceWorker = $trace === 'worker' || $trace === 'both';
+            $traceHandler = $trace === 'handlers' || $trace === 'both';
+
             $definition = $builder->getDefinition('flow.telemetry.messenger.middleware');
             $definition->setArgument(1, new Reference('flow.telemetry.context_storage'));
+            $definition->setArgument(2, ($messengerConfig['context_propagation'] ?? true)
+                ? new Reference('flow.telemetry.propagator')
+                : null);
+            $definition->setArgument(3, $traceHandler);
+            $definition->setArgument(4, MessengerHandlerLink::from($messengerConfig['link'] ?? 'both'));
+            $definition->setArgument(5, ($messengerConfig['metrics'] ?? true) === true);
+            $definition->setArgument(6, MessengerMetricDurationUnit::from($messengerConfig['metrics_duration_unit'] ?? 's'));
 
-            if ($messengerConfig['context_propagation'] ?? true) {
-                $definition->setArgument(2, new Reference('flow.telemetry.propagator'));
-                $definition->setArgument(3, MessengerTracePropagation::from($messengerConfig['propagation_style'] ?? 'link'));
+            // The cycle span (worker traced) and the poll suppression (worker not traced) are the two
+            // mutually exclusive strategies for keeping the transport poll from producing orphan spans.
+            if ($traceWorker) {
+                $builder->removeDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber');
             } else {
-                $definition->setArgument(2, null);
-                $definition->setArgument(3, MessengerTracePropagation::Link);
+                $builder->removeDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber');
             }
-
-            $definition->setArgument(4, ($messengerConfig['metrics'] ?? true) === true);
-            $definition->setArgument(5, MessengerMetricDurationUnit::from($messengerConfig['metrics_duration_unit'] ?? 's'));
         }
 
         $twigConfig = $config['twig'] ?? [];
@@ -3424,7 +3447,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, propagation_style?: 'continue'|'link', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: 'worker'|'handlers'|'both'|'none', link?: 'dispatcher'|'worker'|'both', metrics?: bool, metrics_duration_unit?: 's'|'ms'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
      */
     private function registerParameterOnlyInstrumentation(array $config, ContainerBuilder $builder): void
     {

@@ -25,6 +25,7 @@ final class Context
     public function __construct(
         public readonly ?SpanContext $activeSpan = null,
         public readonly Baggage $baggage = new Baggage(),
+        public readonly bool $suppressed = false,
     ) {}
 
     public static function root(): self
@@ -64,6 +65,15 @@ final class Context
     }
 
     /**
+     * Whether tracing is suppressed within this context: spans are created non-recording (never sampled,
+     * never exported). Metrics and logs are unaffected, matching OpenTelemetry's tracing-scoped suppression.
+     */
+    public function isTracingSuppressed(): bool
+    {
+        return $this->suppressed;
+    }
+
+    /**
      * @return array{activeSpan: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, baggage: array{entries: array<string, string>}}
      */
     public function normalize(): array
@@ -76,16 +86,26 @@ final class Context
 
     public function withActiveSpan(SpanContext $span): self
     {
-        return new self($span, $this->baggage);
+        return new self($span, $this->baggage, $this->suppressed);
     }
 
     public function withBaggage(Baggage $baggage): self
     {
-        return new self($this->activeSpan, $baggage);
+        return new self($this->activeSpan, $baggage, $this->suppressed);
     }
 
     public function withoutActiveSpan(): self
     {
-        return new self(null, $this->baggage);
+        return new self(null, $this->baggage, $this->suppressed);
+    }
+
+    public function withSuppressedTracing(): self
+    {
+        return new self($this->activeSpan, $this->baggage, true);
+    }
+
+    public function withoutSuppressedTracing(): self
+    {
+        return new self($this->activeSpan, $this->baggage, false);
     }
 }

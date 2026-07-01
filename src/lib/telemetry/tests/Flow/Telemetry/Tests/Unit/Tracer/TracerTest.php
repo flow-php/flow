@@ -287,4 +287,41 @@ final class TracerTest extends TestCase
     {
         static::assertSame('1.0.0', TracerMother::create()->version());
     }
+
+    public function test_span_is_non_recording_and_not_exported_when_context_is_suppressed(): void
+    {
+        $processor = TracerMother::createMemoryProcessor();
+        $tracer = TracerMother::create(
+            processor: $processor,
+            contextStorage: new MemoryContextStorage(Context::root()->withSuppressedTracing()),
+        );
+
+        $span = $tracer->span('suppressed');
+
+        static::assertFalse($span->isRecording());
+        static::assertCount(0, $processor->startedSpans());
+
+        $tracer->complete($span);
+
+        static::assertCount(0, $processor->endedSpans());
+    }
+
+    public function test_nested_spans_stay_suppressed_within_a_suppressed_context(): void
+    {
+        $processor = TracerMother::createMemoryProcessor();
+        $tracer = TracerMother::create(
+            processor: $processor,
+            contextStorage: new MemoryContextStorage(Context::root()->withSuppressedTracing()),
+        );
+
+        $parent = $tracer->span('parent');
+        $child = $tracer->span('child');
+
+        static::assertFalse($child->isRecording());
+
+        $tracer->complete($child);
+        $tracer->complete($parent);
+
+        static::assertCount(0, $processor->endedSpans());
+    }
 }

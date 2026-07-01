@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Messenger;
 
 use ArrayIterator;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TelemetryStamp;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
@@ -51,185 +50,6 @@ final class TracingMiddlewareTest extends KernelTestCase
         parent::setUp();
     }
 
-    public function test_context_is_extracted_on_consume(): void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel): void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => 'memory',
-                        ],
-                    ],
-                    'propagator' => ['type' => 'w3c'],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => [
-                            'enabled' => true,
-                            'context_propagation' => true,
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        $this->getContainer();
-
-        $telemetry = $this->symfonyContext()->getService(Telemetry::class, Telemetry::class);
-        $contextStorage = $this->symfonyContext()->getService('flow.telemetry.context_storage', ContextStorage::class);
-        $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
-
-        $originalTraceId = 'abcdef0123456789abcdef0123456789';
-        $originalSpanId = '0123456789abcdef';
-        $traceparent = "00-{$originalTraceId}-{$originalSpanId}-01";
-
-        $telemetryStamp = new TelemetryStamp(['traceparent' => $traceparent]);
-
-        $handler = new TestMessageHandler();
-
-        $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Continuation),
-            new HandleMessageMiddleware(new HandlersLocator([
-                TestMessage::class => [$handler],
-            ])),
-        ]);
-
-        $envelope = new Envelope(new TestMessage('test'), [
-            new ReceivedStamp('async'),
-            $telemetryStamp,
-        ]);
-
-        $bus->dispatch($envelope);
-
-        $processor = $this->symfonyContext()->getService(
-            'flow.telemetry.tracer_provider.processor',
-            MemorySpanProcessor::class,
-        );
-        $spans = $processor->endedSpans();
-
-        static::assertCount(1, $spans);
-        $span = $spans[0];
-
-        static::assertSame(SpanKind::CONSUMER, $span->kind());
-        static::assertSame($originalTraceId, $span->context()->traceId->toHex());
-    }
-
-    public function test_continuation_context_does_not_leak_after_consume(): void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel): void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => 'memory',
-                        ],
-                    ],
-                    'propagator' => ['type' => 'w3c'],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => [
-                            'enabled' => true,
-                            'context_propagation' => true,
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        $this->getContainer();
-
-        $telemetry = $this->symfonyContext()->getService(Telemetry::class, Telemetry::class);
-        $contextStorage = $this->symfonyContext()->getService('flow.telemetry.context_storage', ContextStorage::class);
-        $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
-
-        $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Continuation),
-            new HandleMessageMiddleware(new HandlersLocator([
-                TestMessage::class => [new TestMessageHandler()],
-            ])),
-        ]);
-
-        $bus->dispatch(new Envelope(new TestMessage('test'), [
-            new ReceivedStamp('async'),
-            new TelemetryStamp(['traceparent' => '00-abcdef0123456789abcdef0123456789-0123456789abcdef-01']),
-        ]));
-
-        static::assertNull(
-            $contextStorage->current()->activeSpan(),
-            'the continued remote span must not remain active on the worker context after the message is handled',
-        );
-    }
-
-    public function test_consumer_span_has_no_links_in_continue_mode(): void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel): void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => 'memory',
-                        ],
-                    ],
-                    'propagator' => ['type' => 'w3c'],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => [
-                            'enabled' => true,
-                            'context_propagation' => true,
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        $this->getContainer();
-
-        $telemetry = $this->symfonyContext()->getService(Telemetry::class, Telemetry::class);
-        $contextStorage = $this->symfonyContext()->getService('flow.telemetry.context_storage', ContextStorage::class);
-        $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
-
-        $originalTraceId = 'abcdef0123456789abcdef0123456789';
-        $originalSpanId = '0123456789abcdef';
-        $traceparent = "00-{$originalTraceId}-{$originalSpanId}-01";
-
-        $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Continuation),
-            new HandleMessageMiddleware(new HandlersLocator([
-                TestMessage::class => [new TestMessageHandler()],
-            ])),
-        ]);
-
-        $bus->dispatch(new Envelope(new TestMessage('test'), [
-            new ReceivedStamp('async'),
-            new TelemetryStamp(['traceparent' => $traceparent]),
-        ]));
-
-        $processor = $this->symfonyContext()->getService(
-            'flow.telemetry.tracer_provider.processor',
-            MemorySpanProcessor::class,
-        );
-        $spans = $processor->endedSpans();
-
-        static::assertCount(1, $spans);
-        $span = $spans[0];
-
-        static::assertSame(SpanKind::CONSUMER, $span->kind());
-        static::assertSame($originalTraceId, $span->context()->traceId->toHex());
-        static::assertCount(0, $span->links());
-    }
-
     public function test_consumer_span_links_to_producer_in_link_mode(): void
     {
         $this->bootKernel([
@@ -267,7 +87,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $traceparent = "00-{$originalTraceId}-{$originalSpanId}-01";
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator),
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
             ])),
@@ -331,7 +151,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $baggageSpy = new BaggageCapturingMiddleware($contextStorage);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator),
             $baggageSpy,
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
@@ -378,7 +198,8 @@ final class TracingMiddlewareTest extends KernelTestCase
 
             $consumerTraceIds[] = $span->context()->traceId->toHex();
 
-            // Each consumer span links only to its own dispatcher (producer) trace — never to a worker span.
+            // Without an active worker receive-cycle span, each consumer span links only to its own
+            // dispatcher (producer) trace.
             static::assertCount(1, $span->links());
 
             foreach ($span->links() as $link) {
@@ -450,7 +271,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $baggageSpy = new BaggageCapturingMiddleware($contextStorage);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator),
             $baggageSpy,
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
@@ -515,7 +336,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $capturingMiddleware = new CapturingMiddleware();
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator),
             $capturingMiddleware,
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
@@ -1028,7 +849,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator),
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
             ])),

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Messenger;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerMetricDurationUnit;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessageHandler;
@@ -14,6 +14,7 @@ use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -47,7 +48,8 @@ final class TracingMiddlewareTest extends TestCase
                 $telemetry,
                 null,
                 null,
-                MessengerTracePropagation::Link,
+                true,
+                MessengerHandlerLink::Both,
                 true,
                 MessengerMetricDurationUnit::Seconds,
             ),
@@ -79,7 +81,8 @@ final class TracingMiddlewareTest extends TestCase
                 $telemetry,
                 null,
                 null,
-                MessengerTracePropagation::Link,
+                true,
+                MessengerHandlerLink::Both,
                 true,
                 MessengerMetricDurationUnit::Seconds,
             ),
@@ -110,7 +113,8 @@ final class TracingMiddlewareTest extends TestCase
                 $telemetry,
                 null,
                 null,
-                MessengerTracePropagation::Link,
+                true,
+                MessengerHandlerLink::Both,
                 true,
                 MessengerMetricDurationUnit::Seconds,
             ),
@@ -145,7 +149,8 @@ final class TracingMiddlewareTest extends TestCase
                 $telemetry,
                 null,
                 null,
-                MessengerTracePropagation::Link,
+                true,
+                MessengerHandlerLink::Both,
                 true,
                 MessengerMetricDurationUnit::Seconds,
             ),
@@ -174,7 +179,8 @@ final class TracingMiddlewareTest extends TestCase
                 $telemetry,
                 null,
                 null,
-                MessengerTracePropagation::Link,
+                true,
+                MessengerHandlerLink::Both,
                 true,
                 MessengerMetricDurationUnit::Milliseconds,
             ),
@@ -196,7 +202,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, MessengerTracePropagation::Link, false),
+            new TracingMiddleware($telemetry, null, null, true, MessengerHandlerLink::Both, false),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -204,5 +210,38 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry->flush();
 
         static::assertSame(0, $memory->countMetrics());
+    }
+
+    public function test_no_span_emitted_when_handler_tracing_disabled(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($processor);
+
+        $bus = new MessageBus([
+            new TracingMiddleware($telemetry, null, null, false, MessengerHandlerLink::Both),
+            new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
+        ]);
+
+        $bus->dispatch(new Envelope(new TestMessage('hello'), [new ReceivedStamp('async')]));
+        $telemetry->flush();
+
+        static::assertCount(0, $processor->endedSpans());
+    }
+
+    public function test_metrics_emitted_without_a_handler_span(): void
+    {
+        $memory = new MemoryMetricProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withMetricProcessor($memory);
+
+        $bus = new MessageBus([
+            new TracingMiddleware($telemetry, null, null, false, MessengerHandlerLink::Both, true),
+            new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
+        ]);
+
+        $bus->dispatch(new Envelope(new TestMessage('hello'), [new ReceivedStamp('async')]));
+        $telemetry->flush();
+
+        static::assertCount(1, $memory->metricsWithName('messaging.client.consumed.messages'));
+        static::assertCount(1, $memory->metricsWithName('messaging.process.duration'));
     }
 }
