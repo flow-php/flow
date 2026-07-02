@@ -10,6 +10,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Override;
@@ -1103,6 +1104,275 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
             $serverSpan[0]->context()->spanId->toHex(),
             $subRequestSpan[0]->context()->parentSpanId?->toHex(),
             'sub-request span must be a child of the main request span',
+        );
+    }
+
+    public function test_terminate_phase_write_nests_under_request_span(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        // Emulate bindhq's PageListener::onKernelTerminate (priority 0): a synchronous DB write performed
+        // on kernel.terminate, traced exactly like TracingConnection does (a flow.symfony.dbal CLIENT span).
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+
+        $activeSpanAtTerminate = false;
+
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = $container->get('event_dispatcher');
+        $dispatcher->addListener(
+            KernelEvents::TERMINATE,
+            static function () use ($telemetry, &$activeSpanAtTerminate): void {
+                $tracer = $telemetry->tracer('flow.symfony.dbal', '0.0.0');
+                $activeSpanAtTerminate = $tracer->activeSpan();
+                $tracer->complete($tracer->span('doctrine.dbal.statement.prepare', SpanKind::CLIENT));
+            },
+            0,
+        );
+
+        $request = Request::create('/test', 'GET');
+        $kernel->terminate($request, $kernel->handle($request));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $serverSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+        $terminateSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->name() === 'doctrine.dbal.statement.prepare',
+        ))[0];
+
+        static::assertNotNull(
+            $activeSpanAtTerminate,
+            'the request span must still be the active span at kernel.terminate priority 0',
+        );
+        static::assertTrue(
+            $terminateSpan->context()->traceId->equals($serverSpan->context()->traceId),
+            'a kernel.terminate DB write must nest under the request trace, not orphan into its own trace',
+        );
+        static::assertSame(
+            $serverSpan->context()->spanId->toHex(),
+            $terminateSpan->context()->parentSpanId?->toHex(),
+            'the terminate-phase span must be a child of the request span',
+        );
+    }
+
+    public function test_terminate_phase_write_nests_after_sub_request(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = $container->get('event_dispatcher');
+
+        // A render(controller(...)) sub-request dispatched from within the main request, exactly like the
+        // existing sub-request test: it completes on kernel.finish_request and detaches its context scope.
+        $dispatcher->addListener(
+            KernelEvents::CONTROLLER,
+            static function (ControllerEvent $event) use ($kernel): void {
+                if (!$event->isMainRequest()) {
+                    return;
+                }
+
+                $kernel->handle(Request::create('/test', 'GET'), HttpKernelInterface::SUB_REQUEST);
+            },
+            -100,
+        );
+
+        $activeSpanAtTerminate = false;
+        $dispatcher->addListener(
+            KernelEvents::TERMINATE,
+            static function () use ($telemetry, &$activeSpanAtTerminate): void {
+                $tracer = $telemetry->tracer('flow.symfony.dbal', '0.0.0');
+                $activeSpanAtTerminate = $tracer->activeSpan();
+                $tracer->complete($tracer->span('doctrine.dbal.statement.prepare', SpanKind::CLIENT));
+            },
+            0,
+        );
+
+        $mainRequest = Request::create('/test', 'GET');
+        $kernel->terminate($mainRequest, $kernel->handle($mainRequest));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $serverSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+        $terminateSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->name() === 'doctrine.dbal.statement.prepare',
+        ))[0];
+
+        static::assertNotNull(
+            $activeSpanAtTerminate,
+            'the request span must still be the active span at kernel.terminate after a sub-request',
+        );
+        static::assertTrue(
+            $terminateSpan->context()->traceId->equals($serverSpan->context()->traceId),
+            'a kernel.terminate write after a sub-request must nest under the request trace, not orphan',
+        );
+    }
+
+    public function test_terminate_phase_write_is_suppressed_on_excluded_path(): void
+    {
+        // The bindhq orphan scenario: http_kernel excludes /_wdt (the web debug toolbar the browser fetches
+        // after every dev page), so no request span is created. PageListener does NOT ignore /_wdt, so its
+        // kernel.terminate system_events INSERT runs for the excluded request. Excluding a path now suppresses
+        // tracing for the whole request, so that write (and any other DBAL/cache work) is dropped instead of
+        // orphaning into its own root trace.
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'exclude_paths' => [
+                                ['path' => '~^/_wdt~'],
+                            ],
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('wdt', new Route('/_wdt/{token}', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+
+        $suppressedAtTerminate = false;
+
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = $container->get('event_dispatcher');
+        $dispatcher->addListener(
+            KernelEvents::TERMINATE,
+            static function () use ($telemetry, &$suppressedAtTerminate): void {
+                $tracer = $telemetry->tracer('flow.symfony.dbal', '0.0.0');
+                $suppressedAtTerminate = $tracer->context()->isTracingSuppressed();
+                $tracer->complete($tracer->span('doctrine.dbal.statement.prepare', SpanKind::CLIENT));
+            },
+            0,
+        );
+
+        $request = Request::create('/_wdt/abc123', 'GET');
+        $kernel->terminate($request, $kernel->handle($request));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertTrue(
+            $suppressedAtTerminate,
+            'tracing must be suppressed during the excluded request, including kernel.terminate',
+        );
+        static::assertCount(
+            0,
+            $spans,
+            'an excluded path must produce no spans at all — not the request span, not orphan terminate-phase writes',
         );
     }
 
