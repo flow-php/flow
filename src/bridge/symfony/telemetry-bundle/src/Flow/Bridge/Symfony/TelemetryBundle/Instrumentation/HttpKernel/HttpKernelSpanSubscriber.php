@@ -42,6 +42,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private const string PROPAGATION_SCOPE_ATTRIBUTE = '_flow_telemetry_propagation_scope';
 
+    private const string SUPPRESSION_SCOPE_ATTRIBUTE = '_flow_telemetry_suppression_scope';
+
     /** @var array<PathExclusionRule> */
     private array $excludePathRules;
 
@@ -131,6 +133,15 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $path = $request->getPathInfo();
 
         if (!$this->shouldTraceByPath($path, $method)) {
+            // Excluding a path must not merely skip its own span: lower-level auto-instrumentation (DBAL,
+            // cache) and app kernel.terminate listeners still run for this request and would otherwise emit
+            // orphan root spans. Suppress tracing for the whole request instead, so the SuppressingSampler
+            // drops every span created until the suppression scope is detached on finish_request/terminate.
+            $request->attributes->set(
+                self::SUPPRESSION_SCOPE_ATTRIBUTE,
+                $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing()),
+            );
+
             return;
         }
 
@@ -189,15 +200,28 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onFinishRequest(FinishRequestEvent $event): void
     {
         if ($event->isMainRequest()) {
+            // The main request's suppression scope (excluded path) is detached on terminate, below, so it
+            // still covers kernel.terminate listeners; sub-requests never terminate, so they detach here.
             return;
         }
 
         $this->completeSpan($event->getRequest());
+        $this->detachSuppressionScope($event->getRequest());
     }
 
     public function onTerminate(TerminateEvent $event): void
     {
         $this->completeSpan($event->getRequest());
+        $this->detachSuppressionScope($event->getRequest());
+    }
+
+    private function detachSuppressionScope(Request $request): void
+    {
+        // @mago-expect analysis:mixed-assignment
+        if (($scope = $request->attributes->get(self::SUPPRESSION_SCOPE_ATTRIBUTE)) instanceof Scope) {
+            $scope->detach();
+            $request->attributes->remove(self::SUPPRESSION_SCOPE_ATTRIBUTE);
+        }
     }
 
     private function completeSpan(Request $request): void

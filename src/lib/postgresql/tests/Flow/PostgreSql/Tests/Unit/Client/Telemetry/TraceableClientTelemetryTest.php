@@ -13,12 +13,15 @@ use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -42,6 +45,38 @@ use function Flow\Telemetry\DSL\void_exporter;
 
 final class TraceableClientTelemetryTest extends TestCase
 {
+    public function test_emits_no_spans_when_tracing_is_suppressed(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $clock = new SystemClock();
+        $contextStorage = memory_context_storage(Context::root()->withSuppressedTracing());
+        $tel = telemetry(
+            resource(),
+            tracer_provider($spanProcessor, $clock, $contextStorage, new SuppressingSampler(new AlwaysOnSampler())),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
+        );
+        $config = postgresql_telemetry_config(
+            $tel,
+            $clock,
+            postgresql_telemetry_options(traceQueries: true, traceTransactions: true),
+        );
+
+        $mockClient = $this->createMockClient();
+        $mockClient->method('fetchAll')->willReturn([]);
+        $mockClient->method('execute')->willReturn(1);
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->fetchAll('SELECT * FROM users');
+        $client->execute('UPDATE users SET active = true WHERE id = $1', [1]);
+
+        static::assertCount(
+            0,
+            $spanProcessor->endedSpans(),
+            'PostgreSQL client instrumentation must emit no spans while tracing is suppressed',
+        );
+    }
+
     public function test_all_telemetry_signals_work_together(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());

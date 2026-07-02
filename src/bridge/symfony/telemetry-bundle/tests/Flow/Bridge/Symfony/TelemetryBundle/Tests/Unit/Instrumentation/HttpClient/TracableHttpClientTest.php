@@ -23,6 +23,24 @@ use RuntimeException;
 #[CoversClass(ResponseStream::class)]
 final class TracableHttpClientTest extends TestCase
 {
+    public function test_emits_no_spans_when_tracing_is_suppressed(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::suppressed($spanProcessor),
+            'test.client',
+        );
+
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
+
+        static::assertCount(
+            0,
+            $spanProcessor->endedSpans(),
+            'HTTP client instrumentation must emit no spans while tracing is suppressed',
+        );
+    }
+
     public function test_request_defaults_host_to_unknown_when_missing(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());

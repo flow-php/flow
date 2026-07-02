@@ -71,6 +71,18 @@ The tracing middleware is now injected into every message bus automatically. If 
 `flow.telemetry.messenger.middleware` to a bus's `framework.messenger.buses.*.middleware` list by hand,
 remove it to avoid duplicate spans.
 
+### 6) `flow-php/symfony-telemetry-bundle` - `http_kernel.exclude_paths` now suppresses the whole request
+
+| Before                                            | After                                                   |
+|---------------------------------------------------|---------------------------------------------------------|
+| Excluded path only skips its own request span     | Excluded path suppresses tracing for the entire request |
+| DBAL/cache/`kernel.terminate` work still recorded | DBAL/cache/`kernel.terminate` work produces no spans    |
+
+An excluded path now attaches the OpenTelemetry suppression key for the request's duration (through
+`kernel.terminate`), so lower-level auto-instrumentation and terminate-phase database writes no longer emit
+orphan root spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its response). If you relied on
+those child spans being recorded for an excluded path, remove the path from `exclude_paths`.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

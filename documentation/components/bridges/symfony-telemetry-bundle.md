@@ -1160,6 +1160,12 @@ flow_telemetry:
         - path: '/^\/api\/internal\/.*/'  # Regex pattern
 ```
 
+An excluded path **suppresses tracing for the whole request**, not just its request span: the bundle attaches
+the OpenTelemetry suppression key for the request's duration (through `kernel.terminate`), so lower-level
+auto-instrumentation (DBAL, cache) and any work in `kernel.terminate` listeners produces no spans. This
+prevents excluded requests (e.g. the `/_wdt` toolbar fetch on every dev page) from emitting orphan root spans
+for database writes performed after their response.
+
 The request (SERVER) span follows the OpenTelemetry HTTP semantic conventions for its name and `http.route`,
 controlled by `route_naming`:
 

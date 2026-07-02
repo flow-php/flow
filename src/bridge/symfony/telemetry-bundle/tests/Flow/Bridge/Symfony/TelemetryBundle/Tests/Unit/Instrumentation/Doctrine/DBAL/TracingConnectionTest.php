@@ -10,6 +10,7 @@ use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingConnection;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingStatement;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -20,6 +21,8 @@ use Flow\Telemetry\Provider\Void\VoidLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -46,6 +49,33 @@ final class TracingConnectionTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('INSERT INTO use...', $spans[0]->attributes()['db.query.text']);
+    }
+
+    public function test_emits_no_spans_when_tracing_is_suppressed(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $clock = new SystemClock();
+        $contextStorage = new MemoryContextStorage(Context::root()->withSuppressedTracing());
+        $telemetry = new Telemetry(
+            Resource::create(['service.name' => 'test']),
+            new TracerProvider($spanProcessor, $clock, $contextStorage, new SuppressingSampler(new AlwaysOnSampler())),
+            new MeterProvider(new VoidMetricProcessor(), $clock),
+            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
+        );
+
+        $tracing = new TracingConnection($this->createMockConnection(), $telemetry, logSql: true, maxSqlLength: 100);
+
+        $tracing->beginTransaction();
+        $tracing->exec('DELETE FROM users');
+        $tracing->query('SELECT * FROM users');
+        $tracing->prepare('INSERT INTO users (name) VALUES (?)')->execute();
+        $tracing->commit();
+
+        static::assertCount(
+            0,
+            $spanProcessor->endedSpans(),
+            'DBAL instrumentation must emit no spans while tracing is suppressed',
+        );
     }
 
     public function test_query_uses_truncation(): void
