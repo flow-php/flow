@@ -12,6 +12,8 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
 use Psr\Clock\ClockInterface;
@@ -32,6 +34,7 @@ final class TracerMother
             $processor ?? new VoidSpanProcessor(),
             $clock ?? ClockMother::frozen(),
             $contextStorage ?? new MemoryContextStorage(),
+            new SuppressingSampler(new AlwaysOnSampler()),
         );
     }
 

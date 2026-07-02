@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
 use DateTimeImmutable;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -24,7 +25,7 @@ final class AlwaysOffSamplerTest extends TestCase
 
         for ($i = 0; $i < 10; $i++) {
             $span = $this->createSpan("span-{$i}");
-            $result = $sampler->shouldSample($span);
+            $result = $sampler->shouldSample(Context::root(), $span);
 
             static::assertSame(SamplingDecision::DROP, $result->decision);
         }
@@ -35,7 +36,7 @@ final class AlwaysOffSamplerTest extends TestCase
         $sampler = new AlwaysOffSampler();
 
         $span = $this->createSpan('test-span');
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }

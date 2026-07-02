@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\WorkerPollSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\WorkerReceiveCycleSubscriber;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -36,7 +36,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('kernel.event_subscriber');
 
     $services
-        ->set('flow.telemetry.messenger.worker_poll_suppression_subscriber', WorkerPollSuppressionSubscriber::class)
+        ->set(
+            'flow.telemetry.messenger.consume_command_suppression_subscriber',
+            ConsumeCommandSuppressionSubscriber::class,
+        )
         ->args([service('flow.telemetry.context_storage')])
         ->tag('kernel.event_subscriber');
 };

@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Messenger;
 
-use ArrayIterator;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
-use Flow\Telemetry\Context\ContextStorage;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\ConsumeMessagesCommandMother;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Telemetry;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Event\WorkerStartedEvent;
 use Symfony\Component\Messenger\Event\WorkerStoppedEvent;
-use Symfony\Component\Messenger\EventListener\ResetServicesListener;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
@@ -33,8 +35,6 @@ final class MessengerWorkerHarness
     {
         /** @var Telemetry $telemetry */
         $telemetry = $container->get(Telemetry::class);
-        /** @var ContextStorage $contextStorage */
-        $contextStorage = $container->get('flow.telemetry.context_storage');
         /** @var MiddlewareInterface $middleware */
         $middleware = $container->get('flow.telemetry.messenger.middleware');
 
@@ -48,18 +48,26 @@ final class MessengerWorkerHarness
             ])),
         ]);
 
-        $resetter = new ServicesResetter(new ArrayIterator(['cs' => $contextStorage]), ['cs' => 'reset']);
         $dispatcher = new EventDispatcher();
-        $dispatcher->addSubscriber(new ResetServicesListener($resetter));
         $dispatcher->addSubscriber($workerSubscriber);
         $worker = new Worker([], $bus, $dispatcher);
 
         $pollTracer = $telemetry->tracer('flow.symfony.dbal', 'test');
 
+        $command = ConsumeMessagesCommandMother::create();
+
+        $dispatcher->dispatch(
+            new ConsoleCommandEvent($command, new ArrayInput([]), new NullOutput()),
+            ConsoleEvents::COMMAND,
+        );
         $dispatcher->dispatch(new WorkerStartedEvent($worker));
         $pollTracer->complete($pollTracer->span('poll.query'));
         $bus->dispatch(new Envelope(new TestMessage('a'), [new ReceivedStamp('async')]));
         $dispatcher->dispatch(new WorkerStoppedEvent($worker));
+        $dispatcher->dispatch(
+            new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 0),
+            ConsoleEvents::TERMINATE,
+        );
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');

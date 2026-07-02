@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Sampler;
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Tracer\Span;
 
 /**
@@ -15,7 +16,7 @@ use Flow\Telemetry\Tracer\Span;
  * Example usage:
  * ```php
  * $sampler = new AlwaysOffSampler();
- * $result = $sampler->shouldSample($span);
+ * $result = $sampler->shouldSample($context, $span);
  * // Always returns DROP
  * ```
  */
@@ -26,7 +27,7 @@ final readonly class AlwaysOffSampler implements Sampler
         return 'AlwaysOffSampler';
     }
 
-    public function shouldSample(Span $span): SamplingResult
+    public function shouldSample(Context $parentContext, Span $span): SamplingResult
     {
         return SamplingResult::drop();
     }

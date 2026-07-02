@@ -163,7 +163,6 @@ final class Tracer
         SpanContext|false|null $parentContext = null,
     ): Span {
         $context = $this->contextStorage->current();
-        $suppressed = $context->isTracingSuppressed();
 
         $parentSpanContext = match (true) {
             $parentContext === false => null,
@@ -177,11 +176,9 @@ final class Tracer
         $parentIsRemote = $parentSpanContext !== null && $parentSpanContext->isRemote;
 
         $spanId = SpanId::generate();
-        $traceFlags = $suppressed
-            ? TraceFlags::default()
-            : ($parentSpanContext !== null ? $parentSpanContext->traceFlags : TraceFlags::sampled());
+        $traceFlags = $parentSpanContext !== null ? $parentSpanContext->traceFlags : TraceFlags::sampled();
         $traceState = $parentSpanContext?->traceState;
-        $isRecording = !$suppressed;
+        $isRecording = true;
 
         $spanContext = $parentIsRemote
             ? SpanContext::createRemote($traceId, $spanId, $parentSpanId, $traceFlags, $traceState)
@@ -211,8 +208,8 @@ final class Tracer
             $span->addLink($link);
         }
 
-        if (!$suppressed && $this->sampler !== null) {
-            $samplingResult = $this->sampler->shouldSample($span);
+        if ($this->sampler !== null) {
+            $samplingResult = $this->sampler->shouldSample($context, $span);
 
             $isRecording = $samplingResult->decision->isRecording();
             $traceFlags = $samplingResult->decision->isSampled() ? TraceFlags::sampled() : TraceFlags::default();

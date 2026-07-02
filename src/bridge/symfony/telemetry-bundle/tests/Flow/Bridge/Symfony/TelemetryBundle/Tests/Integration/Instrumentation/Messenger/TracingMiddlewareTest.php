@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Messenger;
 
-use ArrayIterator;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TelemetryStamp;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
@@ -22,11 +21,9 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Event\WorkerRunningEvent;
 use Symfony\Component\Messenger\Event\WorkerStartedEvent;
-use Symfony\Component\Messenger\EventListener\ResetServicesListener;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
@@ -119,7 +116,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertTrue($linkedContext->isRemote);
     }
 
-    public function test_consumed_messages_are_isolated_root_traces_linked_only_to_dispatcher_across_worker_reset(): void
+    public function test_consumed_messages_are_isolated_root_traces_linked_only_to_dispatcher_across_multiple_messages(): void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -158,11 +155,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             ])),
         ]);
 
-        // Reproduce the worker's per-message service reset with the real Symfony listener: it resets the
-        // context storage after every non-idle WorkerRunningEvent (priority -1024).
-        $resetter = new ServicesResetter(new ArrayIterator(['cs' => $contextStorage]), ['cs' => 'reset']);
         $dispatcher = new EventDispatcher();
-        $dispatcher->addSubscriber(new ResetServicesListener($resetter));
         $worker = new Worker([], $bus, $dispatcher);
 
         $dispatcher->dispatch(new WorkerStartedEvent($worker));

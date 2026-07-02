@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Sampler;
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Tracer\Span;
 
 /**
@@ -13,11 +14,14 @@ use Flow\Telemetry\Tracer\Span;
  * This allows controlling the volume of telemetry data while maintaining
  * the ability to trace complete transactions.
  *
+ * Following OpenTelemetry, the sampling decision receives the parent Context (carrying the active span
+ * and the tracing-suppression bit) alongside the span to be created.
+ *
  * Example usage:
  * ```php
  * $sampler = new TraceIdRatioBasedSampler(0.1); // 10% sampling
  *
- * $result = $sampler->shouldSample($span);
+ * $result = $sampler->shouldSample($context, $span);
  *
  * if ($result->decision->isRecording()) {
  *     // Record the span
@@ -39,9 +43,10 @@ interface Sampler
     /**
      * Determine if a span should be sampled.
      *
+     * @param Context $parentContext The parent context of the span to be created
      * @param Span $span The span to evaluate for sampling
      *
      * @return SamplingResult The sampling decision
      */
-    public function shouldSample(Span $span): SamplingResult;
+    public function shouldSample(Context $parentContext, Span $span): SamplingResult;
 }
