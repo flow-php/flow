@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Messenger;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerMetricDurationUnit;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
@@ -44,15 +43,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware(
-                $telemetry,
-                null,
-                null,
-                true,
-                MessengerHandlerLink::Both,
-                true,
-                MessengerMetricDurationUnit::Seconds,
-            ),
+            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -77,15 +68,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware(
-                $telemetry,
-                null,
-                null,
-                true,
-                MessengerHandlerLink::Both,
-                true,
-                MessengerMetricDurationUnit::Seconds,
-            ),
+            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -109,15 +92,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware(
-                $telemetry,
-                null,
-                null,
-                true,
-                MessengerHandlerLink::Both,
-                true,
-                MessengerMetricDurationUnit::Seconds,
-            ),
+            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [static fn(TestMessage $message): never => throw new RuntimeException('boom')],
             ])),
@@ -145,15 +120,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware(
-                $telemetry,
-                null,
-                null,
-                true,
-                MessengerHandlerLink::Both,
-                true,
-                MessengerMetricDurationUnit::Seconds,
-            ),
+            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -175,15 +142,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware(
-                $telemetry,
-                null,
-                null,
-                true,
-                MessengerHandlerLink::Both,
-                true,
-                MessengerMetricDurationUnit::Milliseconds,
-            ),
+            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Milliseconds),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -202,7 +161,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, MessengerHandlerLink::Both, false),
+            new TracingMiddleware($telemetry, null, null, true, false),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -218,7 +177,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withSpanProcessor($processor);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, false, MessengerHandlerLink::Both),
+            new TracingMiddleware($telemetry, null, null, false),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -234,7 +193,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, false, MessengerHandlerLink::Both, true),
+            new TracingMiddleware($telemetry, null, null, false, true),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 

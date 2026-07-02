@@ -33,7 +33,6 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
         private bool $traceHandler = true,
-        private MessengerHandlerLink $handlerLink = MessengerHandlerLink::Both,
         private bool $metrics = true,
         private MessengerMetricDurationUnit $durationUnit = MessengerMetricDurationUnit::Seconds,
     ) {}
@@ -51,10 +50,6 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $transportIdStamp = $envelope->last(TransportMessageIdStamp::class);
 
         $isReceived = $receivedStamp !== null;
-
-        // Captured before any propagation context is attached below, so it resolves to the active
-        // worker receive-cycle span (under messenger:consume) rather than a remote producer context.
-        $receiveCycleSpan = $isReceived ? $tracer->activeSpan() : null;
 
         $kind = $isReceived ? SpanKind::CONSUMER : SpanKind::PRODUCER;
         $operation = $isReceived ? 'process' : 'send';
@@ -109,16 +104,10 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         if ($remote !== null && $remote->spanContext !== null) {
             $remoteBaggage = $remote->baggage;
 
-            if ($this->handlerLink->linksDispatcher()) {
-                $links[] = SpanLink::create(
-                    SpanContext::createRemote($remote->spanContext->traceId, $remote->spanContext->spanId),
-                    ['messaging.operation.type' => 'process'],
-                );
-            }
-        }
-
-        if ($receiveCycleSpan !== null && $this->handlerLink->linksWorker()) {
-            $links[] = SpanLink::create($receiveCycleSpan, ['flow.messenger.worker' => true]);
+            $links[] = SpanLink::create(
+                SpanContext::createRemote($remote->spanContext->traceId, $remote->spanContext->spanId),
+                ['messaging.operation.type' => 'process'],
+            );
         }
 
         // Build the handling context: lift the worker poll suppression so the handler's own instrumentation
