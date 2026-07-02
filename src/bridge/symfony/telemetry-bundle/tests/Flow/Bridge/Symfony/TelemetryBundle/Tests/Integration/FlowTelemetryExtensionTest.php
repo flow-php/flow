@@ -10,7 +10,6 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
@@ -52,7 +51,6 @@ use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -858,7 +856,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(1));
     }
 
-    public function test_messenger_defaults_trace_handlers_with_both_links(): void
+    public function test_messenger_defaults_trace_true_and_registers_suppression(): void
     {
         if (!interface_exists(MessengerMiddlewareInterface::class)) {
             static::markTestSkipped('symfony/messenger is not installed');
@@ -879,54 +877,16 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             ],
         ]], $container);
 
-        $definition = $container->getDefinition('flow.telemetry.messenger.middleware');
-        static::assertTrue($definition->getArgument(3));
-        static::assertSame(MessengerHandlerLink::Both, $definition->getArgument(4));
-        static::assertTrue($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
+        static::assertTrue($container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3));
+        static::assertTrue($container->hasDefinition('flow.telemetry.console.command_suppression_subscriber'));
         static::assertTrue(
             $container
-                ->getDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber')
-                ->hasTag('kernel.event_subscriber'),
-        );
-        static::assertFalse($container->hasDefinition(
-            'flow.telemetry.messenger.consume_command_suppression_subscriber',
-        ));
-    }
-
-    public function test_messenger_trace_handlers_removes_worker_cycle_subscriber(): void
-    {
-        if (!interface_exists(MessengerMiddlewareInterface::class)) {
-            static::markTestSkipped('symfony/messenger is not installed');
-        }
-
-        $container = new ContainerBuilder();
-        $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'instrumentation' => [
-                'messenger' => ['enabled' => true, 'trace' => 'handlers', 'link' => 'dispatcher'],
-            ],
-        ]], $container);
-
-        $definition = $container->getDefinition('flow.telemetry.messenger.middleware');
-        static::assertTrue($definition->getArgument(3));
-        static::assertSame(MessengerHandlerLink::Dispatcher, $definition->getArgument(4));
-        static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertTrue($container->hasDefinition(
-            'flow.telemetry.messenger.consume_command_suppression_subscriber',
-        ));
-        static::assertTrue(
-            $container
-                ->getDefinition('flow.telemetry.messenger.consume_command_suppression_subscriber')
+                ->getDefinition('flow.telemetry.console.command_suppression_subscriber')
                 ->hasTag('kernel.event_subscriber'),
         );
     }
 
-    public function test_messenger_trace_worker_disables_handler_span(): void
+    public function test_messenger_trace_false_disables_the_handler_span(): void
     {
         if (!interface_exists(MessengerMiddlewareInterface::class)) {
             static::markTestSkipped('symfony/messenger is not installed');
@@ -940,22 +900,31 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         assert($extension !== null);
         $extension->load([[
             'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true, 'trace' => 'worker']],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'trace' => false]],
         ]], $container);
 
         static::assertFalse($container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3));
-        static::assertTrue($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertFalse($container->hasDefinition(
-            'flow.telemetry.messenger.consume_command_suppression_subscriber',
-        ));
+        static::assertTrue($container->hasDefinition('flow.telemetry.console.command_suppression_subscriber'));
     }
 
-    public function test_messenger_trace_none_is_metrics_only(): void
+    public function test_exclude_commands_defaults_to_messenger_consume(): void
     {
-        if (!interface_exists(MessengerMiddlewareInterface::class)) {
-            static::markTestSkipped('symfony/messenger is not installed');
-        }
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
 
+        static::assertSame(
+            ['messenger:consume'],
+            $container->getDefinition('flow.telemetry.console.command_suppression_subscriber')->getArgument(1),
+        );
+    }
+
+    public function test_exclude_commands_can_be_customized(): void
+    {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.environment', 'test');
         $container->setParameter('kernel.project_dir', sys_get_temp_dir());
@@ -964,35 +933,29 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         assert($extension !== null);
         $extension->load([[
             'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true, 'trace' => 'none', 'link' => 'dispatcher']],
+            'instrumentation' => ['console' => ['exclude_commands' => ['app:worker', 'messenger:consume']]],
         ]], $container);
 
-        static::assertFalse($container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3));
-        static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertTrue($container->hasDefinition(
-            'flow.telemetry.messenger.consume_command_suppression_subscriber',
-        ));
+        static::assertSame(
+            ['app:worker', 'messenger:consume'],
+            $container->getDefinition('flow.telemetry.console.command_suppression_subscriber')->getArgument(1),
+        );
     }
 
-    public function test_messenger_link_worker_without_worker_tracing_is_rejected(): void
+    public function test_exclude_commands_empty_traces_everything(): void
     {
-        if (!interface_exists(MessengerMiddlewareInterface::class)) {
-            static::markTestSkipped('symfony/messenger is not installed');
-        }
-
         $container = new ContainerBuilder();
         $container->setParameter('kernel.environment', 'test');
         $container->setParameter('kernel.project_dir', sys_get_temp_dir());
         $container->setParameter('kernel.build_dir', sys_get_temp_dir());
         $extension = (new FlowTelemetryBundle())->getContainerExtension();
         assert($extension !== null);
-
-        $this->expectException(InvalidConfigurationException::class);
-
         $extension->load([[
             'resource' => [],
-            'instrumentation' => ['messenger' => ['enabled' => true, 'trace' => 'handlers', 'link' => 'both']],
+            'instrumentation' => ['console' => ['exclude_commands' => []]],
         ]], $container);
+
+        static::assertFalse($container->hasDefinition('flow.telemetry.console.command_suppression_subscriber'));
     }
 
     public function test_messenger_context_storage_wired_even_when_propagation_disabled(): void

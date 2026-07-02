@@ -40,7 +40,7 @@ final class ProfilerStoreWorkerResetSubscriberTest extends TestCase
 
     public function test_it_subscribes_to_the_worker_running_event_after_the_cycle_flush(): void
     {
-        // WorkerReceiveCycleSubscriber flushes the cycle into the store at priority 1024; resetting must run
+        // the worker flushes signals into the store; resetting must run
         // afterwards (priority 512 < 1024) so the just-flushed signals are cleared and never accumulate.
         static::assertSame(
             [WorkerRunningEvent::class => ['onWorkerRunning', 512]],

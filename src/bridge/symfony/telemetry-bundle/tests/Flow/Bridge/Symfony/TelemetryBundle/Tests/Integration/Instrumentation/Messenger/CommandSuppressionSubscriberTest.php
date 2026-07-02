@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Messenger;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\CommandSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleSpanSubscriber;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessageHandler;
@@ -36,8 +35,8 @@ use Symfony\Component\Messenger\Worker;
 
 use function interface_exists;
 
-#[CoversClass(ConsumeCommandSuppressionSubscriber::class)]
-final class ConsumeCommandSuppressionSubscriberTest extends KernelTestCase
+#[CoversClass(CommandSuppressionSubscriber::class)]
+final class CommandSuppressionSubscriberTest extends KernelTestCase
 {
     protected function setUp(): void
     {
@@ -62,7 +61,7 @@ final class ConsumeCommandSuppressionSubscriberTest extends KernelTestCase
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
-                        'messenger' => ['enabled' => true, 'trace' => 'handlers', 'link' => 'dispatcher'],
+                        'messenger' => ['enabled' => true, 'trace' => true],
                     ],
                 ]);
             },
@@ -75,7 +74,7 @@ final class ConsumeCommandSuppressionSubscriberTest extends KernelTestCase
         $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, $contextStorage, $propagator, true, MessengerHandlerLink::Dispatcher),
+            new TracingMiddleware($telemetry, $contextStorage, $propagator, true),
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
             ])),
@@ -83,7 +82,7 @@ final class ConsumeCommandSuppressionSubscriberTest extends KernelTestCase
 
         $dispatcher = new EventDispatcher();
         $dispatcher->addSubscriber(new ConsoleSpanSubscriber($telemetry));
-        $dispatcher->addSubscriber(new ConsumeCommandSuppressionSubscriber($contextStorage));
+        $dispatcher->addSubscriber(new CommandSuppressionSubscriber($contextStorage, ['messenger:consume']));
 
         $dbalTracer = $telemetry->tracer('flow.symfony.dbal', 'test');
 

@@ -1245,11 +1245,23 @@ flow_telemetry:
   instrumentation:
     console:
       enabled: true
-      exclude_commands:
-        - 'cache:clear'
-        - 'assets:install'
-        - '/^debug:.*/'  # Regex: exclude all debug commands
+      exclude_commands:   # default: ['messenger:consume']
+        - 'messenger:consume'
+        - 'app:my-worker'
+        - '/^debug:.*/'   # Regex: exclude all debug commands
 ```
+
+`exclude_commands` **fully suppresses** the listed commands: the command and every span nested under it are
+dropped (not just the command's own span). Patterns match the command name exactly or as a regex (with `/`
+delimiters). It is honored **regardless of whether console spans are enabled**, so worker suppression works
+even with `console.enabled: false`.
+
+Instrumentation that starts its **own root trace** is unaffected — in particular messenger per-message
+handlers, which the middleware records as separate traces. So excluding `messenger:consume` (the default)
+silences the worker loop (transport poll, idle-tick co-listeners) while still tracing each handled message.
+
+The default is `['messenger:consume']`. Set `exclude_commands: []` to trace everything, including the
+messenger worker loop.
 
 #### Messenger
 
@@ -1260,53 +1272,39 @@ flow_telemetry:
   instrumentation:
     messenger:
       enabled: true
-      context_propagation: true   # Propagate context across message boundaries
-      trace: both                  # worker | handlers | both (default) | none
-      link: both                   # dispatcher | worker | both (default)
+      context_propagation: true    # Propagate context across message boundaries
+      trace: true                  # Emit a per-message span (default true)
       metrics: true                # Emit messaging metrics (default true)
       metrics_duration_unit: s     # process.duration histogram unit: 's' (OTEL semconv, default) or 'ms'
 ```
 
-`trace` selects which messenger spans are emitted:
+The tracing middleware is injected into **every** message bus automatically — no manual `framework.messenger`
+middleware configuration is needed.
 
-- `worker` — only the `messenger.receive` span that wraps each worker receive cycle; the transport's
-  claim/poll queries group under it instead of forming one standalone trace per query.
-- `handlers` — only the `process` (consume) and `send` (produce) message spans.
-- `both` (default) — both of the above.
-- `none` — no spans; metrics only.
+`trace: true` (default) emits one span per message — `process` for consumed messages, `send` for produced
+ones. The whole `messenger:consume` command is **suppressed** (via
+[`console.exclude_commands`](#console), default `['messenger:consume']`) so the worker's between-message
+work (transport poll, idle-tick co-listeners) does not surface: a suppression flag is set on the telemetry
+context when the command starts and cleared when it terminates. Suppression is tracing-scoped (matching OpenTelemetry) and
+enforced by a sampler — metrics and logs are unaffected. `TracingMiddleware` lifts the suppression per
+message, so the `process` span and everything it calls are traced normally. Because the command is
+suppressed, the long-lived `messenger:consume` console span is not emitted in the worker; worker liveness is
+covered by the messenger metrics.
 
-When `trace` does **not** include the worker (`handlers` or `none`), there is no `messenger.receive` span to
-parent the transport's poll. Rather than let those operations surface as orphan root spans once per poll,
-the bundle **suppresses tracing for the whole `messenger:consume` command**: a suppression flag is set on
-the telemetry context when the command starts and cleared when it terminates, so everything the worker loop
-does between messages (transport poll, co-listeners) is dropped — Doctrine DBAL, HTTP client, cache,
-whatever the instrumentation would emit. Suppression is tracing-scoped (matching OpenTelemetry) and enforced
-by a sampler: metrics and logs are unaffected. Handler work is exempt: `TracingMiddleware` lifts the
-suppression per message, so the `process` span and everything it calls are traced normally (with
-`trace: none` the handler is suppressed too, since there is no span to nest under). Because the whole command
-is suppressed, the long-lived `messenger:consume` console span is not emitted in the worker — only
-per-message traces are; worker liveness is covered by the messenger metrics. So every mode is orphan-free:
-`worker`/`both` group the poll, `handlers` suppress it (handler traced), `none` suppress the whole loop.
+`trace: false` keeps the worker fully suppressed and emits no per-message spans (metrics still emit when
+`metrics: true`).
 
-`link` selects which links a consumed message's `process` span carries:
-
-- `dispatcher` — link back to the producing (publishing) span.
-- `worker` — link back to the `messenger.receive` cycle span the message was claimed in.
-- `both` (default) — both. `worker`/`both` require `trace` to include the worker, otherwise the
-  configuration is rejected (there would be no worker trace to link to).
+When `context_propagation` is on, a consumed message's `process` span is linked back to the producing span
+(carried in the message's telemetry stamp).
 
 A consumed message is always the **root of its own trace** (per the OpenTelemetry messaging conventions):
-producer and consumer get separate, clean traces connected by the link, so a long-running worker never
-collapses every message into one trace, and the queue wait time is never absorbed into a span's duration.
-`link: dispatcher`/`both` has no effect when `context_propagation` is `false` (there is no producer context
-to link to). The producer side always writes the telemetry stamp on dispatch.
+producer and consumer get separate traces connected by a span link, so a long-running worker never
+collapses every message into one trace and the queue wait time is never absorbed into a span's duration.
 
 Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
-consumer-side traces/logs/metrics export promptly instead of only when the `messenger:consume` worker
-stops. (Without it, signals emitted inside handlers sit in the batching processors — default batch size
-512 — and stay invisible until the buffer fills or the worker exits.) Failures flush too, so error spans
-and exception logs are visible even when the message is retried or sent to the failure transport. This is
-independent of `context_propagation` / `trace` / `link`.
+consumer-side traces/logs/metrics export promptly instead of only when the worker stops. Failures flush too,
+so error spans and exception logs are visible even when the message is retried or sent to the failure
+transport.
 
 Flushing per message means one exporter round-trip per message. For high-throughput workers, set
 [`max_batch_age`](#batching) on the batching processor so the batch coalesces across messages and a single
@@ -1994,8 +1992,7 @@ flow_telemetry:
     messenger:
       enabled: true
       context_propagation: true
-      trace: both
-      link: both
+      trace: true
     dbal:
       enabled: true
       log_sql: true

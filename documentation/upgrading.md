@@ -7,7 +7,73 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
-## [Unreleased]
+## Upgrading from 0.41.x to 0.42.x
+
+### 1) `flow-php/symfony-telemetry-bundle` - messenger tracing simplified
+
+| Before (0.41)                                                        | After (0.42)                                                       |
+|----------------------------------------------------------------------|--------------------------------------------------------------------|
+| `instrumentation.messenger.trace`: `worker`/`handlers`/`both`/`none` | `instrumentation.messenger.trace`: `true`/`false` (default `true`) |
+| `instrumentation.messenger.link`: `dispatcher`/`worker`/`both`       | removed                                                            |
+| `messenger.receive` worker-cycle span                                | removed                                                            |
+
+The worker-cycle span and the `trace: worker`/`both` modes are gone; a consumed message is a `process` span and a
+produced one a `send` span. The `messenger:consume` worker loop is suppressed via
+`instrumentation.console.exclude_commands` — which now **fully suppresses** matching commands (previously it only
+skipped the console span) and defaults to `['messenger:consume']` — so transport-poll/idle-tick work does not
+surface and the long-lived `messenger:consume` console span is dropped. Per-message handler traces are still
+recorded. Set `console.exclude_commands: []` to trace the worker loop.
+
+### 2) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
+
+| Before                                                                | After                                                    |
+|-----------------------------------------------------------------------|----------------------------------------------------------|
+| `Cache Commit {pool}`                                                 | `cache.commit`                                           |
+| `Cache Save {key} {pool}`                                             | `cache.save`                                             |
+| `Cache SaveDeferred {key} {pool}`                                     | `cache.save_deferred`                                    |
+| `Cache Delete {key} {pool}`                                           | `cache.delete`                                           |
+| `Cache DeleteItem {key} {pool}`                                       | `cache.delete_item`                                      |
+| `Cache DeleteItems {pool}`                                            | `cache.delete_items`                                     |
+| `Cache Clear {pool}`                                                  | `cache.clear`                                            |
+| `Cache Prune {pool}`                                                  | `cache.prune`                                            |
+| `Cache Reset {pool}`                                                  | `cache.reset`                                            |
+| `Cache InvalidateTags {pool}`                                         | `cache.invalidate_tags`                                  |
+| `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
+
+Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
+that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
+attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
+values.
+
+### 3) `flow-php/telemetry` - `Sampler::shouldSample()` receives the parent `Context`
+
+| Before                                     | After                                                              |
+|--------------------------------------------|--------------------------------------------------------------------|
+| `shouldSample(Span $span): SamplingResult` | `shouldSample(Context $parentContext, Span $span): SamplingResult` |
+| `$sampler->shouldSample($span)`            | `$sampler->shouldSample($context, $span)`                          |
+
+Custom `Sampler` implementations (including a `sampler: { type: service }` service in
+`flow-php/symfony-telemetry-bundle`) must update the signature and forward `$parentContext` to any delegated sampler.
+
+### 4) `flow-php/telemetry` - `ResettableContextStorage` removed; `MemoryContextStorage::reset()` removed
+
+| Before                                            | After   |
+|---------------------------------------------------|---------|
+| `Flow\Telemetry\Context\ResettableContextStorage` | removed |
+| `MemoryContextStorage::reset()`                   | removed |
+
+The context storage is no longer tagged `kernel.reset` in `flow-php/symfony-telemetry-bundle`; scope balance is
+maintained by attach/detach alone. A custom `context_storage` service no longer needs a `reset()` method.
+
+### 5) `flow-php/symfony-telemetry-bundle` - messenger tracing middleware auto-injected into all buses
+
+The tracing middleware is now injected into every message bus automatically. If you previously added
+`flow.telemetry.messenger.middleware` to a bus's `framework.messenger.buses.*.middleware` list by hand,
+remove it to avoid duplicate spans.
+
+---
+
+## Upgrading from 0.40.x to 0.41.x
 
 ### 1) Removal of Elasticsearch Adapter
 
@@ -174,59 +240,6 @@ time). `trace` selects which spans are emitted (`handlers` = the `process`/`send
 config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP client,
 …) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span, no
 orphans either way.
-
-### 12) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
-
-| Before                                                                | After                                                    |
-|-----------------------------------------------------------------------|----------------------------------------------------------|
-| `Cache Commit {pool}`                                                 | `cache.commit`                                           |
-| `Cache Save {key} {pool}`                                             | `cache.save`                                             |
-| `Cache SaveDeferred {key} {pool}`                                     | `cache.save_deferred`                                    |
-| `Cache Delete {key} {pool}`                                           | `cache.delete`                                           |
-| `Cache DeleteItem {key} {pool}`                                       | `cache.delete_item`                                      |
-| `Cache DeleteItems {pool}`                                            | `cache.delete_items`                                     |
-| `Cache Clear {pool}`                                                  | `cache.clear`                                            |
-| `Cache Prune {pool}`                                                  | `cache.prune`                                            |
-| `Cache Reset {pool}`                                                  | `cache.reset`                                            |
-| `Cache InvalidateTags {pool}`                                         | `cache.invalidate_tags`                                  |
-| `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
-
-Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
-that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
-attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
-values.
-
-### 13) `flow-php/telemetry` - `Sampler::shouldSample()` receives the parent `Context`
-
-| Before                                     | After                                                              |
-|--------------------------------------------|--------------------------------------------------------------------|
-| `shouldSample(Span $span): SamplingResult` | `shouldSample(Context $parentContext, Span $span): SamplingResult` |
-| `$sampler->shouldSample($span)`            | `$sampler->shouldSample($context, $span)`                          |
-
-Custom `Sampler` implementations (including a `sampler: { type: service }` service in
-`flow-php/symfony-telemetry-bundle`) must update the signature and forward `$parentContext` to any delegated sampler.
-
-### 14) `flow-php/telemetry` - `ResettableContextStorage` removed; `MemoryContextStorage::reset()` removed
-
-| Before                                            | After   |
-|---------------------------------------------------|---------|
-| `Flow\Telemetry\Context\ResettableContextStorage` | removed |
-| `MemoryContextStorage::reset()`                   | removed |
-
-The context storage is no longer tagged `kernel.reset` in `flow-php/symfony-telemetry-bundle`; scope balance is
-maintained by attach/detach alone. A custom `context_storage` service no longer needs a `reset()` method.
-
-### 15) `flow-php/symfony-telemetry-bundle` - messenger worker suppression; `messenger:consume` console span dropped
-
-| Before                                                                | After                                                                     |
-|-----------------------------------------------------------------------|---------------------------------------------------------------------------|
-| `Flow\...\Instrumentation\Messenger\WorkerPollSuppressionSubscriber`  | `Flow\...\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber`  |
-| service `flow.telemetry.messenger.worker_poll_suppression_subscriber` | service `flow.telemetry.messenger.consume_command_suppression_subscriber` |
-| `messenger:consume` console span emitted under `trace: handlers`      | `messenger:consume` console span dropped in the worker                    |
-
-Under `trace: handlers` (and `trace: none`) the worker process records only per-message handler traces; the
-long-lived `messenger:consume` console span and deferred cache flushes are no longer exported. Worker liveness is
-covered by the messenger metrics.
 
 ---
 
