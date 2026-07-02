@@ -888,7 +888,9 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                 ->getDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber')
                 ->hasTag('kernel.event_subscriber'),
         );
-        static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertFalse($container->hasDefinition(
+            'flow.telemetry.messenger.consume_command_suppression_subscriber',
+        ));
     }
 
     public function test_messenger_trace_handlers_removes_worker_cycle_subscriber(): void
@@ -914,10 +916,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertTrue($definition->getArgument(3));
         static::assertSame(MessengerHandlerLink::Dispatcher, $definition->getArgument(4));
         static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertTrue($container->hasDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertTrue($container->hasDefinition(
+            'flow.telemetry.messenger.consume_command_suppression_subscriber',
+        ));
         static::assertTrue(
             $container
-                ->getDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber')
+                ->getDefinition('flow.telemetry.messenger.consume_command_suppression_subscriber')
                 ->hasTag('kernel.event_subscriber'),
         );
     }
@@ -941,7 +945,9 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         static::assertFalse($container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3));
         static::assertTrue($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertFalse($container->hasDefinition(
+            'flow.telemetry.messenger.consume_command_suppression_subscriber',
+        ));
     }
 
     public function test_messenger_trace_none_is_metrics_only(): void
@@ -963,7 +969,9 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         static::assertFalse($container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3));
         static::assertFalse($container->hasDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertTrue($container->hasDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertTrue($container->hasDefinition(
+            'flow.telemetry.messenger.consume_command_suppression_subscriber',
+        ));
     }
 
     public function test_messenger_link_worker_without_worker_tracing_is_rejected(): void

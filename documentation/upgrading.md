@@ -177,24 +177,56 @@ orphans either way.
 
 ### 12) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
 
-| Before                          | After                  |
-|---------------------------------|------------------------|
-| `Cache Commit {pool}`           | `cache.commit`         |
-| `Cache Save {key} {pool}`       | `cache.save`           |
-| `Cache SaveDeferred {key} {pool}` | `cache.save_deferred` |
-| `Cache Delete {key} {pool}`     | `cache.delete`         |
-| `Cache DeleteItem {key} {pool}` | `cache.delete_item`    |
-| `Cache DeleteItems {pool}`      | `cache.delete_items`   |
-| `Cache Clear {pool}`            | `cache.clear`          |
-| `Cache Prune {pool}`            | `cache.prune`          |
-| `Cache Reset {pool}`            | `cache.reset`          |
-| `Cache InvalidateTags {pool}`   | `cache.invalidate_tags` |
+| Before                                                                | After                                                    |
+|-----------------------------------------------------------------------|----------------------------------------------------------|
+| `Cache Commit {pool}`                                                 | `cache.commit`                                           |
+| `Cache Save {key} {pool}`                                             | `cache.save`                                             |
+| `Cache SaveDeferred {key} {pool}`                                     | `cache.save_deferred`                                    |
+| `Cache Delete {key} {pool}`                                           | `cache.delete`                                           |
+| `Cache DeleteItem {key} {pool}`                                       | `cache.delete_item`                                      |
+| `Cache DeleteItems {pool}`                                            | `cache.delete_items`                                     |
+| `Cache Clear {pool}`                                                  | `cache.clear`                                            |
+| `Cache Prune {pool}`                                                  | `cache.prune`                                            |
+| `Cache Reset {pool}`                                                  | `cache.reset`                                            |
+| `Cache InvalidateTags {pool}`                                         | `cache.invalidate_tags`                                  |
 | `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
 
 Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
 that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
 attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
 values.
+
+### 13) `flow-php/telemetry` - `Sampler::shouldSample()` receives the parent `Context`
+
+| Before                                     | After                                                              |
+|--------------------------------------------|--------------------------------------------------------------------|
+| `shouldSample(Span $span): SamplingResult` | `shouldSample(Context $parentContext, Span $span): SamplingResult` |
+| `$sampler->shouldSample($span)`            | `$sampler->shouldSample($context, $span)`                          |
+
+Custom `Sampler` implementations (including a `sampler: { type: service }` service in
+`flow-php/symfony-telemetry-bundle`) must update the signature and forward `$parentContext` to any delegated sampler.
+
+### 14) `flow-php/telemetry` - `ResettableContextStorage` removed; `MemoryContextStorage::reset()` removed
+
+| Before                                            | After   |
+|---------------------------------------------------|---------|
+| `Flow\Telemetry\Context\ResettableContextStorage` | removed |
+| `MemoryContextStorage::reset()`                   | removed |
+
+The context storage is no longer tagged `kernel.reset` in `flow-php/symfony-telemetry-bundle`; scope balance is
+maintained by attach/detach alone. A custom `context_storage` service no longer needs a `reset()` method.
+
+### 15) `flow-php/symfony-telemetry-bundle` - messenger worker suppression; `messenger:consume` console span dropped
+
+| Before                                                                | After                                                                     |
+|-----------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `Flow\...\Instrumentation\Messenger\WorkerPollSuppressionSubscriber`  | `Flow\...\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber`  |
+| service `flow.telemetry.messenger.worker_poll_suppression_subscriber` | service `flow.telemetry.messenger.consume_command_suppression_subscriber` |
+| `messenger:consume` console span emitted under `trace: handlers`      | `messenger:consume` console span dropped in the worker                    |
+
+Under `trace: handlers` (and `trace: none`) the worker process records only per-message handler traces; the
+long-lived `messenger:consume` console span and deferred cache flushes are no longer exported. Worker liveness is
+covered by the messenger metrics.
 
 ---
 

@@ -108,6 +108,7 @@ use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
 use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
+use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -2065,11 +2066,19 @@ final class FlowTelemetryBundle extends AbstractBundle
         $samplerServiceId = $this->buildSampler($samplerConfig, $builder);
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $builder);
 
+        // Compose the configured sampler with tracing-suppression enforcement (the context-scoped
+        // OpenTelemetry key) so suppression takes precedence over the sampling strategy in use.
+        $suppressingSamplerServiceId = $samplerServiceId . '.suppressing';
+        $builder->setDefinition(
+            $suppressingSamplerServiceId,
+            new Definition(SuppressingSampler::class, [new Reference($samplerServiceId)]),
+        );
+
         $definition = new Definition(TracerProvider::class);
         $definition->setArgument(0, new Reference($processorServiceId));
         $definition->setArgument(1, new Reference('flow.telemetry.clock'));
         $definition->setArgument(2, new Reference('flow.telemetry.context_storage'));
-        $definition->setArgument(3, new Reference($samplerServiceId));
+        $definition->setArgument(3, new Reference($suppressingSamplerServiceId));
         $definition->setArgument('$errorHandler', $errorHandlerRef);
         $builder->setDefinition($providerServiceId, $definition);
 
@@ -2897,9 +2906,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             }
             $builder->setAlias('flow.telemetry.context_storage', $customServiceId);
         } else {
-            $contextStorageDefinition = new Definition(MemoryContextStorage::class);
-            $contextStorageDefinition->addTag('kernel.reset', ['method' => 'reset']);
-            $builder->setDefinition('flow.telemetry.context_storage', $contextStorageDefinition);
+            $builder->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
         }
 
         $runtimeMode = is_string($config['runtime_mode'] ?? null) ? $config['runtime_mode'] : 'auto';
@@ -3001,7 +3008,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             // The cycle span (worker traced) and the poll suppression (worker not traced) are the two
             // mutually exclusive strategies for keeping the transport poll from producing orphan spans.
             if ($traceWorker) {
-                $builder->removeDefinition('flow.telemetry.messenger.worker_poll_suppression_subscriber');
+                $builder->removeDefinition('flow.telemetry.messenger.consume_command_suppression_subscriber');
             } else {
                 $builder->removeDefinition('flow.telemetry.messenger.worker_receive_cycle_subscriber');
             }

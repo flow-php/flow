@@ -4,25 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Messenger;
 
-use ArrayIterator;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleSpanSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerHandlerLink;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\WorkerPollSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessageHandler;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\ConsumeMessagesCommandMother;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\Propagation\Propagator;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Event\WorkerRunningEvent;
 use Symfony\Component\Messenger\Event\WorkerStartedEvent;
-use Symfony\Component\Messenger\Event\WorkerStoppedEvent;
-use Symfony\Component\Messenger\EventListener\ResetServicesListener;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
@@ -32,8 +36,8 @@ use Symfony\Component\Messenger\Worker;
 
 use function interface_exists;
 
-#[CoversClass(WorkerPollSuppressionSubscriber::class)]
-final class WorkerPollSuppressionSubscriberTest extends KernelTestCase
+#[CoversClass(ConsumeCommandSuppressionSubscriber::class)]
+final class ConsumeCommandSuppressionSubscriberTest extends KernelTestCase
 {
     protected function setUp(): void
     {
@@ -44,7 +48,7 @@ final class WorkerPollSuppressionSubscriberTest extends KernelTestCase
         parent::setUp();
     }
 
-    public function test_poll_spans_are_suppressed_while_the_handler_span_is_still_recorded(): void
+    public function test_worker_loop_is_suppressed_while_handler_traces_are_recorded(): void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -52,10 +56,7 @@ final class WorkerPollSuppressionSubscriberTest extends KernelTestCase
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => 'memory',
-                        ],
+                        'processor' => ['type' => 'memory', 'exporter' => 'memory'],
                     ],
                     'propagator' => ['type' => 'w3c'],
                     'instrumentation' => [
@@ -80,25 +81,49 @@ final class WorkerPollSuppressionSubscriberTest extends KernelTestCase
             ])),
         ]);
 
-        $resetter = new ServicesResetter(new ArrayIterator(['cs' => $contextStorage]), ['cs' => 'reset']);
         $dispatcher = new EventDispatcher();
-        $dispatcher->addSubscriber(new ResetServicesListener($resetter));
-        $dispatcher->addSubscriber(new WorkerPollSuppressionSubscriber($contextStorage));
-        $worker = new Worker([], $bus, $dispatcher);
+        $dispatcher->addSubscriber(new ConsoleSpanSubscriber($telemetry));
+        $dispatcher->addSubscriber(new ConsumeCommandSuppressionSubscriber($contextStorage));
 
         $dbalTracer = $telemetry->tracer('flow.symfony.dbal', 'test');
 
+        // Zenstruck-style co-listener doing I/O on every tick at default priority 0 — the original leak.
+        $dispatcher->addListener(
+            WorkerRunningEvent::class,
+            static function () use ($dbalTracer): void {
+                $dbalTracer->complete($dbalTracer->span('doctrine.dbal.tick'));
+            },
+            0,
+        );
+
+        $worker = new Worker([], $bus, $dispatcher);
+        $command = ConsumeMessagesCommandMother::create();
+
+        $dispatcher->dispatch(
+            new ConsoleCommandEvent($command, new ArrayInput([]), new NullOutput()),
+            ConsoleEvents::COMMAND,
+        );
+
+        // Bootstrap window (before WorkerStarted) — must be suppressed.
+        $dbalTracer->complete($dbalTracer->span('doctrine.dbal.bootstrap'));
+
         $dispatcher->dispatch(new WorkerStartedEvent($worker));
 
-        // Transport claim query during the poll — must be suppressed (no orphan).
-        $dbalTracer->complete($dbalTracer->span('doctrine.dbal.transaction.begin'));
+        // Transport poll — suppressed.
+        $dbalTracer->complete($dbalTracer->span('doctrine.dbal.poll'));
 
         $bus->dispatch(new Envelope(new TestMessage('a'), [new ReceivedStamp('async')]));
 
-        // Transport ack query after handling — suppressed again.
-        $dbalTracer->complete($dbalTracer->span('doctrine.dbal.connection.exec'));
+        // Tick between messages: the co-listener leak attempt must be suppressed.
+        $dispatcher->dispatch(new WorkerRunningEvent($worker, true));
 
-        $dispatcher->dispatch(new WorkerStoppedEvent($worker));
+        // Second message — handler tracing must still work.
+        $bus->dispatch(new Envelope(new TestMessage('b'), [new ReceivedStamp('async')]));
+
+        $dispatcher->dispatch(
+            new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 0),
+            ConsoleEvents::TERMINATE,
+        );
 
         $processor = $this->symfonyContext()->getService(
             'flow.telemetry.tracer_provider.processor',
@@ -111,8 +136,12 @@ final class WorkerPollSuppressionSubscriberTest extends KernelTestCase
             $names[] = $span->name();
         }
 
-        static::assertContains('process TestMessage', $names, 'the handler span is recorded');
-        static::assertNotContains('doctrine.dbal.transaction.begin', $names, 'the poll claim query is suppressed');
-        static::assertNotContains('doctrine.dbal.connection.exec', $names, 'the ack query is suppressed');
+        $handlerSpans = array_filter($names, static fn(string $n): bool => $n === 'process TestMessage');
+
+        static::assertCount(2, $handlerSpans, 'both handler spans are recorded');
+        static::assertNotContains('doctrine.dbal.bootstrap', $names, 'the bootstrap window is suppressed');
+        static::assertNotContains('doctrine.dbal.poll', $names, 'the transport poll is suppressed');
+        static::assertNotContains('doctrine.dbal.tick', $names, 'the per-tick co-listener span is suppressed');
+        static::assertNotContains('messenger:consume', $names, 'the long-lived console span is dropped in the worker');
     }
 }

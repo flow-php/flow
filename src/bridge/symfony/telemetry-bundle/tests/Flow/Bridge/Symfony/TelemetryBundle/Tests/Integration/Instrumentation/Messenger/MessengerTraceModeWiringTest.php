@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Messenger;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\ConsumeCommandSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\WorkerPollSuppressionSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\WorkerReceiveCycleSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Messenger\MessengerWorkerHarness;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use function interface_exists;
 
 #[CoversClass(WorkerReceiveCycleSubscriber::class)]
-#[CoversClass(WorkerPollSuppressionSubscriber::class)]
+#[CoversClass(ConsumeCommandSuppressionSubscriber::class)]
 #[CoversClass(TracingMiddleware::class)]
 final class MessengerTraceModeWiringTest extends KernelTestCase
 {
@@ -51,7 +51,7 @@ final class MessengerTraceModeWiringTest extends KernelTestCase
         $container = $this->getContainer();
 
         static::assertTrue($container->has('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
-        static::assertFalse($container->has('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertFalse($container->has('flow.telemetry.messenger.consume_command_suppression_subscriber'));
 
         $subscriber = $container->get('flow.telemetry.messenger.worker_receive_cycle_subscriber');
         static::assertInstanceOf(EventSubscriberInterface::class, $subscriber);
@@ -82,10 +82,10 @@ final class MessengerTraceModeWiringTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        static::assertTrue($container->has('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertTrue($container->has('flow.telemetry.messenger.consume_command_suppression_subscriber'));
         static::assertFalse($container->has('flow.telemetry.messenger.worker_receive_cycle_subscriber'));
 
-        $subscriber = $container->get('flow.telemetry.messenger.worker_poll_suppression_subscriber');
+        $subscriber = $container->get('flow.telemetry.messenger.consume_command_suppression_subscriber');
         static::assertInstanceOf(EventSubscriberInterface::class, $subscriber);
 
         $names = MessengerWorkerHarness::drive($container, $subscriber);
@@ -116,9 +116,9 @@ final class MessengerTraceModeWiringTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        static::assertTrue($container->has('flow.telemetry.messenger.worker_poll_suppression_subscriber'));
+        static::assertTrue($container->has('flow.telemetry.messenger.consume_command_suppression_subscriber'));
 
-        $subscriber = $container->get('flow.telemetry.messenger.worker_poll_suppression_subscriber');
+        $subscriber = $container->get('flow.telemetry.messenger.consume_command_suppression_subscriber');
         static::assertInstanceOf(EventSubscriberInterface::class, $subscriber);
 
         $names = MessengerWorkerHarness::drive($container, $subscriber);

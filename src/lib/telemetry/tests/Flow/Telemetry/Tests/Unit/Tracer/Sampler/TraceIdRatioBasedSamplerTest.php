@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
 use DateTimeImmutable;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -43,11 +44,11 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
         $traceId = TraceId::generate();
 
         $firstSpan = $this->createSpan('test-span', $traceId);
-        $firstResult = $sampler->shouldSample($firstSpan);
+        $firstResult = $sampler->shouldSample(Context::root(), $firstSpan);
 
         for ($i = 0; $i < 10; $i++) {
             $span = $this->createSpan('test-span', $traceId);
-            $result = $sampler->shouldSample($span);
+            $result = $sampler->shouldSample(Context::root(), $span);
 
             static::assertSame(
                 $firstResult->decision,
@@ -63,7 +64,7 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
 
         for ($i = 0; $i < 100; $i++) {
             $span = $this->createSpan('test-span');
-            $result = $sampler->shouldSample($span);
+            $result = $sampler->shouldSample(Context::root(), $span);
 
             static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
         }
@@ -77,7 +78,7 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
 
         for ($i = 0; $i < $total; $i++) {
             $span = $this->createSpan('test-span');
-            $result = $sampler->shouldSample($span);
+            $result = $sampler->shouldSample(Context::root(), $span);
 
             if ($result->decision === SamplingDecision::RECORD_AND_SAMPLE) {
                 $sampled++;
@@ -96,7 +97,7 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
 
         for ($i = 0; $i < 100; $i++) {
             $span = $this->createSpan('test-span');
-            $result = $sampler->shouldSample($span);
+            $result = $sampler->shouldSample(Context::root(), $span);
 
             static::assertSame(SamplingDecision::DROP, $result->decision);
         }

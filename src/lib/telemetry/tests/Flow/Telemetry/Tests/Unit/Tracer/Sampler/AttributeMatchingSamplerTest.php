@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Filter\AttributeSource;
 use Flow\Telemetry\Filter\MatchMode;
 use Flow\Telemetry\Tests\Mother\SpanMother;
@@ -32,7 +33,7 @@ final class AttributeMatchingSamplerTest extends TestCase
 
             static::assertSame(
                 SamplingDecision::DROP,
-                $sampler->shouldSample($this->spanWith(['http.route' => '/health']))->decision,
+                $sampler->shouldSample(Context::root(), $this->spanWith(['http.route' => '/health']))->decision,
             );
         } finally {
             $tmp->remove();
@@ -51,7 +52,7 @@ final class AttributeMatchingSamplerTest extends TestCase
 
             static::assertSame(
                 SamplingDecision::RECORD_AND_SAMPLE,
-                $sampler->shouldSample($this->spanWith(['http.route' => '/api']))->decision,
+                $sampler->shouldSample(Context::root(), $this->spanWith(['http.route' => '/api']))->decision,
             );
         } finally {
             $tmp->remove();
@@ -71,7 +72,7 @@ final class AttributeMatchingSamplerTest extends TestCase
 
             static::assertSame(
                 SamplingDecision::DROP,
-                $sampler->shouldSample($this->spanWith(['http.route' => '/api']))->decision,
+                $sampler->shouldSample(Context::root(), $this->spanWith(['http.route' => '/api']))->decision,
             );
         } finally {
             $tmp->remove();
@@ -92,11 +93,11 @@ final class AttributeMatchingSamplerTest extends TestCase
 
             static::assertSame(
                 SamplingDecision::RECORD_AND_SAMPLE,
-                $sampler->shouldSample($this->spanWith(['http.route' => '/checkout']))->decision,
+                $sampler->shouldSample(Context::root(), $this->spanWith(['http.route' => '/checkout']))->decision,
             );
             static::assertSame(
                 SamplingDecision::DROP,
-                $sampler->shouldSample($this->spanWith(['http.route' => '/health']))->decision,
+                $sampler->shouldSample(Context::root(), $this->spanWith(['http.route' => '/health']))->decision,
             );
         } finally {
             $tmp->remove();
@@ -115,7 +116,10 @@ final class AttributeMatchingSamplerTest extends TestCase
                 cacheDir: $tmp->path(),
             ));
 
-            static::assertSame(SamplingDecision::DROP, $sampler->shouldSample($this->spanWith([]))->decision);
+            static::assertSame(
+                SamplingDecision::DROP,
+                $sampler->shouldSample(Context::root(), $this->spanWith([]))->decision,
+            );
         } finally {
             $tmp->remove();
         }

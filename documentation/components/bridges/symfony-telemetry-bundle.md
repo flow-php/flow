@@ -1277,12 +1277,16 @@ flow_telemetry:
 
 When `trace` does **not** include the worker (`handlers` or `none`), there is no `messenger.receive` span to
 parent the transport's poll. Rather than let those operations surface as orphan root spans once per poll,
-the bundle **suppresses tracing during the receive loop** — so any spans the transport's instrumentation
-would emit (Doctrine DBAL, HTTP client, cache, …) are dropped, not just the queue table. Suppression is
-tracing-scoped (matching OpenTelemetry): metrics and logs are unaffected. Handler work is exempt: the
-`process` span and everything it calls are traced normally (with `trace: none` the handler is suppressed
-too, since there is no span to nest under). So every mode is orphan-free: `worker`/`both` group the poll,
-`handlers` suppress it (handler traced), `none` suppress the whole loop.
+the bundle **suppresses tracing for the whole `messenger:consume` command**: a suppression flag is set on
+the telemetry context when the command starts and cleared when it terminates, so everything the worker loop
+does between messages (transport poll, co-listeners) is dropped — Doctrine DBAL, HTTP client, cache,
+whatever the instrumentation would emit. Suppression is tracing-scoped (matching OpenTelemetry) and enforced
+by a sampler: metrics and logs are unaffected. Handler work is exempt: `TracingMiddleware` lifts the
+suppression per message, so the `process` span and everything it calls are traced normally (with
+`trace: none` the handler is suppressed too, since there is no span to nest under). Because the whole command
+is suppressed, the long-lived `messenger:consume` console span is not emitted in the worker — only
+per-message traces are; worker liveness is covered by the messenger metrics. So every mode is orphan-free:
+`worker`/`both` group the poll, `handlers` suppress it (handler traced), `none` suppress the whole loop.
 
 `link` selects which links a consumed message's `process` span carries:
 
