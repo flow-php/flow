@@ -30,6 +30,18 @@ final class TelemetryStampTest extends TestCase
         static::assertSame([], $stamp->all());
     }
 
+    public function test_get_context_returns_context_array_as_provided(): void
+    {
+        $context = [
+            'traceparent' => '00-abcdef0123456789abcdef0123456789-0123456789abcdef-01',
+            'tracestate' => 'vendor=value',
+        ];
+
+        $stamp = new TelemetryStamp($context);
+
+        static::assertSame($context, $stamp->getContext());
+    }
+
     public function test_get_is_case_insensitive_with_lowercase_lookup(): void
     {
         $stamp = new TelemetryStamp(['Traceparent' => 'value']);

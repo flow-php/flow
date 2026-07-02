@@ -35,6 +35,20 @@ final readonly class TelemetryStamp implements StampInterface
     }
 
     /**
+     * Getter exposing the context to the Symfony Serializer's ObjectNormalizer.
+     *
+     * The messenger transport's default `symfony_serializer` normalizes stamps via getter methods;
+     * without a getter named after the `$context` constructor argument the array is dropped, which
+     * silently strips the propagated traceparent when a message crosses an async transport.
+     *
+     * @return array<string, string>
+     */
+    public function getContext(): array
+    {
+        return $this->context;
+    }
+
+    /**
      * Get a context value by key.
      *
      * Key lookup is case-insensitive for HTTP header compatibility.
