@@ -32,6 +32,7 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\RouterInterface;
 
+use function array_key_exists;
 use function array_map;
 use function is_string;
 
@@ -88,21 +89,10 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        // @mago-expect analysis:mixed-assignment
-        $route = $request->attributes->get('_route');
         $controllerName = ControllerName::resolve($event->getController())?->name;
 
         if ($controllerName !== null) {
             $span->setAttribute(HttpKernelAttributes::ATTR_CONTROLLER, $controllerName);
-        }
-
-        if (is_string($route) && $route !== '') {
-            $routeValue = $this->routeValue($route);
-            $span->setAttribute(SemConvAttributes::HTTP_ROUTE, $routeValue);
-            $span->rename("{$request->getMethod()} {$routeValue}");
-        } elseif ($controllerName !== null) {
-            // Sub-requests (render(controller(...))) carry no route, so name them after the controller.
-            $span->rename("{$request->getMethod()} {$controllerName}");
         }
     }
 
@@ -153,7 +143,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
 
         // OTEL HTTP semconv: the span name must be low-cardinality, so start with just the method and
-        // upgrade to "{method} {route}" once the route is resolved (see onController). The raw path stays
+        // upgrade to "{method} {route}" once the route is known (see finalizeSpanName). The raw path stays
         // on the url.path attribute.
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $attributes = [
@@ -191,6 +181,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
         }
+
+        $this->finalizeSpanName($span, $request);
 
         $response = $event->getResponse();
         $statusCode = $response->getStatusCode();
@@ -265,6 +257,30 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
             $request->attributes->remove(self::SPAN_ATTRIBUTE);
             $request->attributes->remove(self::TRACER_ATTRIBUTE);
+        }
+    }
+
+    private function finalizeSpanName(Span $span, Request $request): void
+    {
+        // @mago-expect analysis:mixed-assignment
+        $route = $request->attributes->get('_route');
+
+        if (is_string($route) && $route !== '') {
+            $routeValue = $this->routeValue($route);
+            $span->setAttribute(SemConvAttributes::HTTP_ROUTE, $routeValue);
+            $span->rename("{$request->getMethod()} {$routeValue}");
+
+            return;
+        }
+
+        // Sub-requests (render(controller(...))) carry no route, so name them after the controller.
+        $attributes = $span->attributes();
+
+        if (
+            array_key_exists(HttpKernelAttributes::ATTR_CONTROLLER, $attributes)
+            && is_string($attributes[HttpKernelAttributes::ATTR_CONTROLLER])
+        ) {
+            $span->rename("{$request->getMethod()} {$attributes[HttpKernelAttributes::ATTR_CONTROLLER]}");
         }
     }
 
