@@ -105,44 +105,25 @@ flow_telemetry:
   clock_service_id: 'app.clock'
 ```
 
-### Runtime Mode
+### Telemetry Lifecycle
 
-- **type**: `enum`
-- **default**: `auto`
+Terminate events are **flush points**, never shutdown points. On `kernel.terminate` and `console.terminate`
+the bundle flushes buffered signals and pumps async transports, but keeps the transport open — the
+terminating unit of work is not necessarily the last work of the process: a command may be nested inside
+another command via `Application::run()`, a messenger worker keeps consuming after each handled message, and
+a long-running runtime (FrankenPHP worker mode, RoadRunner, …) reuses the kernel across requests.
 
-Controls how telemetry is drained at request and command boundaries. In a classic, one-process-per-request
-runtime (PHP-FPM, mod_php) the bundle shuts telemetry down on `kernel.terminate`/`console.terminate`, which
-flushes buffered signals and closes the transport before the process dies. In a long-running worker runtime
-(FrankenPHP worker mode, RoadRunner, Swoole, …) the kernel is booted once and reused across requests, so a
-terminal shutdown would close the transport permanently and leave every subsequent request unable to export.
-There the bundle instead **flushes** on terminate and keeps the transport alive.
+Transport shutdown — final drain plus close — happens exactly once, at real process end, through a shutdown
+function registered when the `Telemetry` service is created. PHP runs it on normal completion, `exit()`,
+uncaught exceptions, and fatal errors, so in a classic one-process-per-request runtime (PHP-FPM, mod_php) it
+still runs at the end of every request. Only a hard kill (SIGKILL, segfault) skips it, in which case
+everything already flushed at request/message boundaries has been exported and only the last unflushed batch
+is lost.
 
-```yaml
-flow_telemetry:
-  runtime_mode: auto  # auto|classic|worker
-```
+No configuration is required; the same behaviour is correct in classic and worker runtimes alike.
 
-| Mode      | Behaviour                                                                                        |
-|-----------|--------------------------------------------------------------------------------------------------|
-| `auto`    | Detect the runtime per request and pick `worker` or `classic` accordingly (default).             |
-| `classic` | One process per request: shut telemetry down on terminate (full flush + transport close).        |
-| `worker`  | Long-running runtime: flush on terminate, drain async transports, never shut the transport down. |
-
-`auto` detection looks for the Symfony Runtime worker signal (`APP_RUNTIME_MODE` containing `worker=1`),
-FrankenPHP (`FRANKENPHP_WORKER`), and RoadRunner (`RR_MODE`); when none are present it falls back to `classic`.
-Detection runs per request, never at container-compile time, so a container warmed on the CLI is never baked
-into the wrong mode. Because dev and prod may run different runtimes, wire it to an environment variable:
-
-```yaml
-flow_telemetry:
-  runtime_mode: '%env(FLOW_TELEMETRY_RUNTIME_MODE)%'
-```
-
-To support a runtime the built-in detector does not recognise, override the
-`Flow\Bridge\Symfony\TelemetryBundle\Runtime\WorkerModeDetector` service with your own implementation.
-
-Regardless of mode, the bundle resets per-request trace context between top-level requests (via
-`kernel.reset`), so context never leaks from one worker request into the next.
+The bundle also resets per-request trace context between top-level requests (via `kernel.reset`), so context
+never leaks from one worker request into the next.
 
 ### Context Storage
 

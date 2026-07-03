@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
+use function array_keys;
 use function array_pop;
 use function count;
 
@@ -46,7 +47,7 @@ final class SuiteOutcomeStack
 
     public function recordStatus(string $status): void
     {
-        foreach ($this->frames as $index => $frame) {
+        foreach (array_keys($this->frames) as $index) {
             $this->frames[$index]['total']++;
 
             if ($status === 'failed' || $status === 'errored') {

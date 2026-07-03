@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTrans
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Telemetry\SpySpanProcessor;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
@@ -41,6 +42,7 @@ use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\GitDetector;
+use Flow\Telemetry\Shutdown\ShutdownHandler;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ExporterSpy;
@@ -632,6 +634,56 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $providerDefinition = $container->getDefinition('flow.telemetry.trace_context_provider');
         static::assertInstanceOf(Reference::class, $providerDefinition->getArgument(2));
         static::assertSame('request_stack', (string) $providerDefinition->getArgument(2));
+    }
+
+    public function test_telemetry_definition_registers_process_end_shutdown(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
+
+        static::assertSame(
+            [['registerShutdownFunction', []]],
+            $container->getDefinition('flow.telemetry')->getMethodCalls(),
+        );
+    }
+
+    public function test_container_telemetry_is_shut_down_by_the_process_end_handler(): void
+    {
+        ShutdownHandler::invoke();
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'service', 'service_id' => 'app.spy_span_processor'],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $definition = new Definition(SpySpanProcessor::class);
+                    $definition->setPublic(true);
+                    $container->setDefinition('app.spy_span_processor', $definition);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get(Telemetry::class);
+        $telemetry->tracer('test');
+
+        /** @var SpySpanProcessor $processor */
+        $processor = $container->get('app.spy_span_processor');
+
+        ShutdownHandler::invoke();
+
+        static::assertSame(1, $processor->shutdownCount);
     }
 
     public function test_custom_exporter_via_service(): void

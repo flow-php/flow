@@ -25,7 +25,6 @@ return static function (ContainerConfigurator $container): void {
         ->set('flow.telemetry.console.flush_subscriber', ConsoleFlushSubscriber::class)
         ->args([
             service(Telemetry::class),
-            service('flow.telemetry.runtime_mode_resolver'),
             tagged_iterator('flow.telemetry.async_curl_transport'),
         ])
         ->tag('kernel.event_subscriber');

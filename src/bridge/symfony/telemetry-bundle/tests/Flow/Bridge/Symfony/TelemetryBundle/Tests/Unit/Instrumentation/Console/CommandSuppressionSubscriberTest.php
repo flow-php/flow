@@ -69,4 +69,55 @@ final class CommandSuppressionSubscriberTest extends TestCase
 
         static::assertFalse($storage->current()->isTracingSuppressed());
     }
+
+    public function test_nested_command_terminate_keeps_the_outer_suppression(): void
+    {
+        $storage = new MemoryContextStorage();
+        $subscriber = new CommandSuppressionSubscriber($storage, ['messenger:consume']);
+        $consumeCommand = new Command('messenger:consume');
+        $nestedCommand = new Command('app:report');
+
+        $subscriber->onCommand(new ConsoleCommandEvent($consumeCommand, new ArrayInput([]), new NullOutput()));
+        $subscriber->onCommand(new ConsoleCommandEvent($nestedCommand, new ArrayInput([]), new NullOutput()));
+        $subscriber->onTerminate(new ConsoleTerminateEvent($nestedCommand, new ArrayInput([]), new NullOutput(), 0));
+
+        static::assertTrue(
+            $storage->current()->isTracingSuppressed(),
+            'A nested command terminating must not detach the suppression of the enclosing command',
+        );
+
+        $subscriber->onTerminate(new ConsoleTerminateEvent($consumeCommand, new ArrayInput([]), new NullOutput(), 0));
+
+        static::assertFalse($storage->current()->isTracingSuppressed());
+    }
+
+    public function test_nested_suppressed_command_stacks_its_own_suppression(): void
+    {
+        $storage = new MemoryContextStorage();
+        $subscriber = new CommandSuppressionSubscriber($storage, ['messenger:consume', 'app:worker']);
+        $consumeCommand = new Command('messenger:consume');
+        $nestedCommand = new Command('app:worker');
+
+        $subscriber->onCommand(new ConsoleCommandEvent($consumeCommand, new ArrayInput([]), new NullOutput()));
+        $subscriber->onCommand(new ConsoleCommandEvent($nestedCommand, new ArrayInput([]), new NullOutput()));
+        $subscriber->onTerminate(new ConsoleTerminateEvent($nestedCommand, new ArrayInput([]), new NullOutput(), 0));
+
+        static::assertTrue($storage->current()->isTracingSuppressed());
+
+        $subscriber->onTerminate(new ConsoleTerminateEvent($consumeCommand, new ArrayInput([]), new NullOutput(), 0));
+
+        static::assertFalse($storage->current()->isTracingSuppressed());
+    }
+
+    public function test_terminate_without_a_matching_command_event_is_ignored(): void
+    {
+        $storage = new MemoryContextStorage();
+        $subscriber = new CommandSuppressionSubscriber($storage, ['messenger:consume']);
+
+        $subscriber->onTerminate(
+            new ConsoleTerminateEvent(new Command('cache:clear'), new ArrayInput([]), new NullOutput(), 0),
+        );
+
+        static::assertFalse($storage->current()->isTracingSuppressed());
+    }
 }

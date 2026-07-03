@@ -10,13 +10,13 @@ use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Shutdown\ShutdownHandler;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
 use SplObjectStorage;
 
 use function array_key_exists;
-use function register_shutdown_function;
 
 /**
  * Main entry point to all telemetry operations.
@@ -167,17 +167,17 @@ final class Telemetry
     }
 
     /**
-     * Register a shutdown function to automatically shutdown telemetry.
+     * Register this instance for automatic shutdown at process end.
      *
      * This ensures all pending spans, metrics, and logs are exported
-     * when the PHP script terminates. The shutdown function will call
-     * shutdown() which flushes and releases all provider resources.
+     * when the PHP process terminates - including exit() calls, fatal
+     * errors, and uncaught exceptions.
      *
      * @return $this For method chaining
      */
     public function registerShutdownFunction(): self
     {
-        register_shutdown_function(fn() => $this->shutdown());
+        ShutdownHandler::register($this);
 
         return $this;
     }
