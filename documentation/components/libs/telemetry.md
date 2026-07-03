@@ -165,6 +165,10 @@ $telemetry->flush();    // Export any buffered data
 $telemetry->shutdown(); // Flush and close transports
 ```
 
+`registerShutdownFunction()` holds only a **weak reference**: it does not keep the `Telemetry` instance
+alive, and an instance that was garbage collected before process end is skipped. Keep the instance
+referenced (e.g. in your container) for as long as it should be shut down at exit.
+
 > For production OTLP export setup, see
 > the [OTLP Bridge documentation](/documentation/components/bridges/telemetry-otlp-bridge.md).
 

@@ -11,6 +11,7 @@ use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+use function array_pop;
 use function preg_match;
 
 /**
@@ -23,6 +24,10 @@ use function preg_match;
  * The flag is attached above ConsoleSpanSubscriber's COMMAND priority (10000) so the command's own console
  * span is created non-recording, and detached below its TERMINATE priority (-10000) so that span completes
  * first.
+ *
+ * Scopes are stacked per COMMAND/TERMINATE pair (Symfony dispatches them balanced, also for commands nested
+ * via Application::run()), so a nested command's TERMINATE detaches its own entry instead of tearing down
+ * the suppression of the enclosing command.
  */
 final class CommandSuppressionSubscriber implements EventSubscriberInterface
 {
@@ -30,7 +35,10 @@ final class CommandSuppressionSubscriber implements EventSubscriberInterface
 
     private const CLEAR_PRIORITY = -20000;
 
-    private ?Scope $scope = null;
+    /**
+     * @var array<null|Scope>
+     */
+    private array $scopes = [];
 
     /**
      * @param array<string> $suppressCommands
@@ -53,14 +61,21 @@ final class CommandSuppressionSubscriber implements EventSubscriberInterface
         $name = $event->getCommand()?->getName();
 
         if ($name !== null && $this->shouldSuppress($name)) {
-            $this->scope = $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing());
+            $this->scopes[] = $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing());
+
+            return;
         }
+
+        $this->scopes[] = null;
     }
 
     public function onTerminate(ConsoleTerminateEvent $event): void
     {
-        $this->scope?->detach();
-        $this->scope = null;
+        if ($this->scopes === []) {
+            return;
+        }
+
+        array_pop($this->scopes)?->detach();
     }
 
     private function shouldSuppress(string $commandName): bool

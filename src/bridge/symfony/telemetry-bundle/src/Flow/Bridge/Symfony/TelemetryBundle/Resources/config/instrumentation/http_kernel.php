@@ -32,7 +32,6 @@ return static function (ContainerConfigurator $container): void {
         ->set('flow.telemetry.http_kernel.flush_subscriber', HttpKernelFlushSubscriber::class)
         ->args([
             service(Telemetry::class),
-            service('flow.telemetry.runtime_mode_resolver'),
             tagged_iterator('flow.telemetry.async_curl_transport'),
         ])
         ->tag('kernel.event_subscriber');

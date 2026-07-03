@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Runtime\RuntimeModeResolver;
 use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -18,7 +17,6 @@ final readonly class HttpKernelFlushSubscriber implements EventSubscriberInterfa
      */
     public function __construct(
         private Telemetry $telemetry,
-        private RuntimeModeResolver $runtimeMode,
         private iterable $asyncCurlTransports,
     ) {}
 
@@ -31,12 +29,6 @@ final readonly class HttpKernelFlushSubscriber implements EventSubscriberInterfa
 
     public function onTerminate(TerminateEvent $event): void
     {
-        if (!$this->runtimeMode->isWorker()) {
-            $this->telemetry->shutdown();
-
-            return;
-        }
-
         $this->telemetry->flush();
 
         foreach ($this->asyncCurlTransports as $transport) {

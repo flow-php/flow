@@ -224,6 +224,27 @@ Applies to the HttpKernel server span and to the `http_client`/`psr18_client` cl
 | `FilesystemTelemetryAttributes::ATTR_BYTES_READ`/`ATTR_BYTES_WRITTEN`/`ATTR_PATH_FROM`/`ATTR_PATH_IS_PATTERN`/`ATTR_ERROR_TYPE` | removed                                               |
 | `PostgreSqlTelemetryAttributes::DB_QUERY_SUMMARY` + official-key constants                                                      | removed (officials via `SemConvAttributes`)           |
 
+### 15) `flow-php/symfony-telemetry-bundle` - `runtime_mode` removed; terminate flushes, process end shuts down
+
+| Before                                                                       | After                                       |
+|------------------------------------------------------------------------------|---------------------------------------------|
+| `flow_telemetry.runtime_mode: auto`/`classic`/`worker`                       | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\RuntimeModeResolver`            | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\RuntimeMode`                    | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\WorkerModeDetector`             | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\EnvironmentWorkerModeDetector`  | removed                                     |
+| shutdown on `kernel.terminate`/`console.terminate` (classic mode)            | flush on terminate; shutdown at process end |
+
+Drop the `runtime_mode` key from `flow_telemetry` config and remove any `WorkerModeDetector` service overrides.
+
+### 16) `flow-php/telemetry` - `Telemetry::registerShutdownFunction()` holds a weak reference
+
+| Before                                           | After                                                          |
+|--------------------------------------------------|----------------------------------------------------------------|
+| strong reference; instance kept alive until exit | weak reference; garbage-collected instances are not shut down |
+
+Keep the registered `Telemetry` instance referenced for as long as it should be shut down at process end.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

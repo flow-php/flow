@@ -85,7 +85,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
         );
     }
 
-    public function test_worker_mode_keeps_exporting_across_repeated_request_cycles(): void
+    public function test_repeated_request_cycles_on_the_same_kernel_keep_exporting(): void
     {
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -100,7 +100,6 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
-                    'runtime_mode' => 'worker',
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
@@ -140,7 +139,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
         static::assertCount(
             4,
             $exporter->spans(),
-            'A second request on the same kernel must still export; worker mode must not shut telemetry down',
+            'A second request on the same kernel must still export; terminate must not shut telemetry down',
         );
     }
 
