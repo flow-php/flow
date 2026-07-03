@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
 use DateTimeImmutable;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
@@ -195,12 +196,12 @@ final class TraceableResponse implements ResponseInterface
         }
 
         $this->statusRecorded = true;
-        $this->span->setAttribute('http.response.status_code', $statusCode);
+        $this->span->setAttribute(SemConvAttributes::HTTP_RESPONSE_STATUS_CODE, $statusCode);
 
         // OTEL HTTP semconv: for SpanKind.CLIENT both 4xx and 5xx are Errors; 1xx-3xx leaves the status unset.
         if ($statusCode >= 400) {
             $this->span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-            $this->span->setAttribute('error.type', (string) $statusCode);
+            $this->span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $statusCode);
         }
     }
 

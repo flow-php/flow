@@ -21,6 +21,7 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
 use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -336,7 +337,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         foreach ($durations as $metric) {
             static::assertSame('postgresql', $metric->attributes->get('db.system.name'));
-            static::assertSame(1, $metric->attributes->get('db.transaction.nesting_level'));
+            static::assertSame(1, $metric->attributes->get('flow.db.transaction.nesting_level'));
             static::assertFalse(
                 $metric->attributes->has('server.address'),
                 'server.address must not be a metric dimension',
@@ -421,7 +422,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(2, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_fetch_into_creates_span_with_correct_row_count(): void
@@ -439,7 +440,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(1, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_fetch_one_into_creates_span(): void
@@ -457,7 +458,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(1, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_fetch_scalar_bool_creates_span(): void
@@ -603,7 +604,7 @@ final class TraceableClientTelemetryTest extends TestCase
         static::assertSame(Severity::DEBUG, $logs[0]->record->severity);
         static::assertSame(
             'DELETE FROM users WHERE inactive = $1',
-            $logs[0]->record->attributes->get(PostgreSqlTelemetryAttributes::DB_QUERY_TEXT),
+            $logs[0]->record->attributes->get(SemConvAttributes::DB_QUERY_TEXT),
         );
     }
 

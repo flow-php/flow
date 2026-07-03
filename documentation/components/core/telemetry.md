@@ -201,13 +201,14 @@ $transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
 Every DataFrame execution creates a root span with the following attributes:
 
-| Attribute                    | Description                                   |
-|------------------------------|-----------------------------------------------|
-| `dataframe.id`               | Unique identifier for the DataFrame execution |
-| `rows.total`                 | Total number of rows processed                |
-| `rows.throughput.per_second` | Processing throughput                         |
-| `memory.min.mb`              | Minimum memory consumption during execution   |
-| `memory.max.mb`              | Maximum memory consumption during execution   |
+| Attribute                             | Description                                   |
+|---------------------------------------|-----------------------------------------------|
+| `flow.etl.dataframe.id`               | Unique identifier for the DataFrame execution |
+| `flow.etl.dataframe.name`             | Configured DataFrame name                     |
+| `flow.etl.rows.total`                 | Total number of rows processed                |
+| `flow.etl.rows.throughput.per_second` | Processing throughput                         |
+| `flow.etl.memory.min`                 | Minimum memory consumption during execution (MB) |
+| `flow.etl.memory.max`                 | Maximum memory consumption during execution (MB) |
 
 When `trace_loading` is enabled, child spans are created for each loader with:
 
@@ -225,10 +226,10 @@ When `trace_transformations` is enabled, child spans are created for each transf
 
 When `collect_metrics` is enabled:
 
-| Metric                      | Type       | Description                        |
-|-----------------------------|------------|------------------------------------|
-| `rows.processed.total`      | Counter    | Cumulative count of processed rows |
-| `rows.processed.throughput` | Throughput | Rows processed per time unit       |
+| Metric                     | Type       | Unit       | Description                        |
+|----------------------------|------------|------------|------------------------------------|
+| `flow.etl.rows.processed`  | Counter    | `{row}`    | Cumulative count of processed rows |
+| `flow.etl.rows.throughput` | Throughput | `{row}/s`  | Rows processed per second          |
 
 ### Logs
 

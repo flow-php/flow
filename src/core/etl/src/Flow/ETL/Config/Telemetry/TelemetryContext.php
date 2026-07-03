@@ -18,6 +18,7 @@ use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Instrument\Throughput;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\ObjectExtractor;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -66,7 +67,7 @@ final class TelemetryContext
         $this->memory->capture();
 
         if ($this->options->collectMetrics) {
-            $attributes = ['dataframe.name' => $context->config->name()];
+            $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $context->config->name()];
             $this->counterProcessedRows?->add($rows->count(), $attributes);
             $this->throughputRows?->add($rows->count(), $attributes);
         }
@@ -103,12 +104,12 @@ final class TelemetryContext
         }
 
         $this->tracer->complete($dataFrameSpan->setAttributes(array_merge($attributes, [
-            'dataframe.id' => $context->config->id(),
-            'dataframe.name' => $context->config->name(),
-            'rows.total' => $this->totalRowsProcessed,
-            'rows.throughput.per_second' => $throughput,
-            'memory.min.mb' => $this->memory->min()->inMb(),
-            'memory.max.mb' => $this->memory->max()->inMb(),
+            TelemetryAttributes::ATTR_DATAFRAME_ID => $context->config->id(),
+            TelemetryAttributes::ATTR_DATAFRAME_NAME => $context->config->name(),
+            TelemetryAttributes::ATTR_ROWS_TOTAL => $this->totalRowsProcessed,
+            TelemetryAttributes::ATTR_ROWS_THROUGHPUT => $throughput,
+            TelemetryAttributes::ATTR_MEMORY_MIN => $this->memory->min()->inMb(),
+            TelemetryAttributes::ATTR_MEMORY_MAX => $this->memory->max()->inMb(),
         ])));
 
         if ($this->counterProcessedRows !== null) {
@@ -155,14 +156,14 @@ final class TelemetryContext
         $this->tracer->complete(
             $dataFrameSpan
                 ->setAttributes(array_merge($attributes, [
-                    'dataframe.id' => $context->config->id(),
-                    'dataframe.name' => $context->config->name(),
-                    'rows.total' => $this->totalRowsProcessed,
-                    'rows.throughput.per_second' => $throughput,
-                    'memory.min.mb' => $this->memory->min()->inMb(),
-                    'memory.max.mb' => $this->memory->max()->inMb(),
+                    TelemetryAttributes::ATTR_DATAFRAME_ID => $context->config->id(),
+                    TelemetryAttributes::ATTR_DATAFRAME_NAME => $context->config->name(),
+                    TelemetryAttributes::ATTR_ROWS_TOTAL => $this->totalRowsProcessed,
+                    TelemetryAttributes::ATTR_ROWS_THROUGHPUT => $throughput,
+                    TelemetryAttributes::ATTR_MEMORY_MIN => $this->memory->min()->inMb(),
+                    TelemetryAttributes::ATTR_MEMORY_MAX => $this->memory->max()->inMb(),
                 ]))
-                ->setAttribute('error.type', $exception::class)
+                ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 
@@ -190,8 +191,8 @@ final class TelemetryContext
             'DataFrame ' . $context->config->name(),
             SpanKind::INTERNAL,
             Attributes::create([
-                'dataframe.id' => $context->config->id(),
-                'dataframe.name' => $context->config->name(),
+                TelemetryAttributes::ATTR_DATAFRAME_ID => $context->config->id(),
+                TelemetryAttributes::ATTR_DATAFRAME_NAME => $context->config->name(),
             ]),
         );
         $this->dataFrameSpan = $dataFrameSpan;
@@ -223,12 +224,12 @@ final class TelemetryContext
         if ($this->options->collectMetrics) {
             $this->counterProcessedRows = $this->meter->createCounter(
                 'flow.etl.rows.processed',
-                'rows',
+                '{row}',
                 'Total number of rows processed by the DataFrame',
             );
             $this->throughputRows = $this->meter->createThroughput(
                 'flow.etl.rows.throughput',
-                'rows/s',
+                '{row}',
                 'Rows processed per second',
             );
         }
@@ -263,7 +264,7 @@ final class TelemetryContext
         $this->tracer->complete(
             $this->loadingSpan
                 ->setAttributes($attributes)
-                ->setAttribute('error.type', $exception::class)
+                ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 
@@ -283,8 +284,8 @@ final class TelemetryContext
             ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
-                'loader.class' => $loader::class,
-                'dataframe.name' => $this->context?->config->name(),
+                TelemetryAttributes::ATTR_LOADER_CLASS => $loader::class,
+                TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
             parentContext: $this->dataFrameSpan?->context(),
         );
@@ -323,7 +324,7 @@ final class TelemetryContext
         $this->tracer->complete(
             $this->transformationSpan
                 ->setAttributes($attributes)
-                ->setAttribute('error.type', $exception::class)
+                ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
 
@@ -343,8 +344,8 @@ final class TelemetryContext
             ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
-                'transformer.class' => $transformer::class,
-                'dataframe.name' => $this->context?->config->name(),
+                TelemetryAttributes::ATTR_TRANSFORMER_CLASS => $transformer::class,
+                TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
             parentContext: $this->dataFrameSpan?->context(),
         );

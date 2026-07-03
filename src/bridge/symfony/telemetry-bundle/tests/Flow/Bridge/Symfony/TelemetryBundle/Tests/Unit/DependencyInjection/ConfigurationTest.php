@@ -872,7 +872,7 @@ final class ConfigurationTest extends TestCase
         static::assertNull($config['logger_provider']['processor']['max_batch_age']);
     }
 
-    public function test_messenger_metrics_default_to_enabled_with_seconds_unit(): void
+    public function test_messenger_metrics_default_to_enabled(): void
     {
         $config = $this->context->processConfig([
             'resource' => [],
@@ -882,10 +882,12 @@ final class ConfigurationTest extends TestCase
         ]);
 
         static::assertTrue($config['instrumentation']['messenger']['metrics']);
-        static::assertSame('s', $config['instrumentation']['messenger']['metrics_duration_unit']);
+        // messaging.process.duration is spec-fixed at seconds; the former
+        // metrics_duration_unit option no longer exists.
+        static::assertArrayNotHasKey('metrics_duration_unit', $config['instrumentation']['messenger']);
     }
 
-    public function test_messenger_metrics_can_be_disabled_with_ms_unit(): void
+    public function test_messenger_metrics_can_be_disabled(): void
     {
         $config = $this->context->processConfig([
             'resource' => [],
@@ -893,16 +895,14 @@ final class ConfigurationTest extends TestCase
                 'messenger' => [
                     'enabled' => true,
                     'metrics' => false,
-                    'metrics_duration_unit' => 'ms',
                 ],
             ],
         ]);
 
         static::assertFalse($config['instrumentation']['messenger']['metrics']);
-        static::assertSame('ms', $config['instrumentation']['messenger']['metrics_duration_unit']);
     }
 
-    public function test_messenger_metrics_duration_unit_rejects_invalid_value(): void
+    public function test_messenger_metrics_duration_unit_option_was_removed(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -911,7 +911,7 @@ final class ConfigurationTest extends TestCase
             'instrumentation' => [
                 'messenger' => [
                     'enabled' => true,
-                    'metrics_duration_unit' => 'minutes',
+                    'metrics_duration_unit' => 's',
                 ],
             ],
         ]);

@@ -84,6 +84,7 @@ orphan root spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its
 those child spans being recorded for an excluded path, remove the path from `exclude_paths`.
 
 ### 7) `flow-php/postgresql`, `flow-php/symfony-postgresql-bundle` - `traceTransactions` bool replaced by
+
 `transactionSpans` mode
 
 | Before                                                         | After                                                                          |
@@ -120,6 +121,108 @@ Query spans now carry `db.system.name`, `db.namespace`, `server.address`, `serve
 `db.collection.name`, `db.response.returned_rows` and (on error) `db.response.status_code`, and the instrumentation
 emits `db.client.operation.duration` and `db.client.response.returned_rows` metrics. If you matched DBAL spans by
 their `doctrine.dbal.*` names, switch to the semantic names above.
+
+### 9) `flow-php/symfony-telemetry-bundle` - custom attribute keys moved out of reserved OTel namespaces
+
+| Before                             | After                                  |
+|------------------------------------|----------------------------------------|
+| `controller`                       | `flow.symfony.controller`              |
+| `controller.argument`              | `flow.symfony.controller.argument`     |
+| `code.namespace` + `code.function` | `code.function.name` (`Class::method`) |
+| `command.name`                     | `flow.symfony.command.name`            |
+| `command.class`                    | `flow.symfony.command.class`           |
+| `process.signal`                   | `flow.symfony.command.signal`          |
+| `process.exit_code`                | `process.exit.code`                    |
+| `db.connection.name`               | `flow.db.connection.name`              |
+| `db.transaction.nesting_level`     | `flow.db.transaction.nesting_level`    |
+| `http.client.name`                 | `flow.http.client.name`                |
+| `log.channel`                      | `flow.log.channel`                     |
+
+### 10) `flow-php/symfony-telemetry-bundle` - HTTP spans aligned with the stable HTTP semconv
+
+| Before                                          | After                                        |
+|-------------------------------------------------|----------------------------------------------|
+| server span `url.full`                          | removed                                      |
+| server span `url.path` = URI incl. query        | path only; query moves to `url.query`        |
+| —                                               | server span `user_agent.original`            |
+| client span name `{method} {host}`              | `{method}`                                   |
+| client span `server.port` only when non-default | always set (scheme default 80/443 filled in) |
+
+Applies to the HttpKernel server span and to the `http_client`/`psr18_client` client spans.
+
+### 11) `flow-php/symfony-telemetry-bundle` - messenger destination is the transport; `metrics_duration_unit` removed
+
+| Before                                                             | After                                                    |
+|--------------------------------------------------------------------|----------------------------------------------------------|
+| `messaging.destination.name` = short message class                 | transport name (consume side); absent on dispatch        |
+| `messaging.transport`                                              | removed (folded into `messaging.destination.name`)       |
+| `messaging.consumer.group.name` (metric attribute)                 | removed                                                  |
+| `messaging.message.class`                                          | `flow.messenger.message.class`                           |
+| `messaging.symfony.bus`                                            | `flow.messenger.bus`                                     |
+| consume span `process {ShortClass}`                                | `process {transport}`                                    |
+| dispatch span `send {ShortClass}`                                  | `send`                                                   |
+| config `instrumentation.messenger.metrics_duration_unit`: `s`/`ms` | removed — `messaging.process.duration` is always seconds |
+| `Instrumentation\Messenger\MessengerMetricDurationUnit`            | removed                                                  |
+
+### 12) `flow-php/phpunit-telemetry-bridge` - `test.*` keys aligned with the OTel test registry; durations in seconds
+
+| Before                                            | After                                                  |
+|---------------------------------------------------|--------------------------------------------------------|
+| `test.name`                                       | `test.case.name`                                       |
+| `test.status`                                     | `test.case.result.status`                              |
+| `test.suite`                                      | `test.suite.name`                                      |
+| —                                                 | `test.suite.run.status`: `success`/`failure`/`skipped` |
+| `test.id`                                         | `flow.phpunit.test.id`                                 |
+| `test.class`                                      | `flow.phpunit.test.class`                              |
+| `test.method`                                     | `flow.phpunit.test.method`                             |
+| `test.suite.test_count`                           | `flow.phpunit.suite.test_count`                        |
+| `test.suite.is_root`                              | `flow.phpunit.suite.is_root`                           |
+| `test.memory.peak_bytes`                          | `flow.phpunit.test.memory.peak`                        |
+| `test.memory.delta_bytes`                         | `flow.phpunit.test.memory.delta`                       |
+| `test.duration_ms` span attribute                 | removed (use the span duration)                        |
+| `exception.message` span attribute                | removed (message stays in the span status description) |
+| `flow.phpunit.test.duration` unit `ms`            | `s` (values rescaled)                                  |
+| `flow.phpunit.suite.duration` unit `ms`           | `s` (values rescaled)                                  |
+| `flow.phpunit.test.memory.*` unit `bytes`         | `By`                                                   |
+| `flow.phpunit.test.count`/`suite.test_count` unit | `{test}`                                               |
+| —                                                 | resource attribute `telemetry.sdk.version`             |
+
+### 13) `flow-php/filesystem`, `flow-php/etl`, `flow-php/postgresql` - flow-custom keys under `flow.*`; UCUM units
+
+| Before                                                     | After                                                |
+|------------------------------------------------------------|------------------------------------------------------|
+| `path.uri`/`path.to`                                       | `flow.filesystem.path.uri`/`.path.to`                |
+| `stream.type`                                              | `flow.filesystem.stream.type`                        |
+| `bytes.total_read`/`bytes.total_written`                   | `flow.filesystem.bytes.total_read`/`.total_written`  |
+| `filesystem.operation`/`filesystem.protocol`               | `flow.filesystem.operation`/`.protocol`              |
+| spans `Read {file}`/`Write {file}`                         | `filesystem.read`/`filesystem.write`                 |
+| `flow.filesystem.*.size` unit `bytes`                      | `By`                                                 |
+| `flow.filesystem.*.operations` unit `operations`           | `{operation}`                                        |
+| `dataframe.id`/`dataframe.name`                            | `flow.etl.dataframe.id`/`.dataframe.name`            |
+| `rows.total`/`rows.throughput.per_second`                  | `flow.etl.rows.total`/`.rows.throughput.per_second`  |
+| `memory.min.mb`/`memory.max.mb`                            | `flow.etl.memory.min`/`.memory.max` (values stay MB) |
+| `loader.class`/`transformer.class`                         | `flow.etl.loader.class`/`.transformer.class`         |
+| `destination.uri`/`loading.rows`                           | `flow.etl.destination.uri`/`.loading.rows`           |
+| `transformation.input_rows`/`.output_rows`                 | `flow.etl.transformation.input_rows`/`.output_rows`  |
+| `join.type`/`scalar.function`                              | `flow.etl.join.type`/`.scalar.function`              |
+| spans `Cache Set {key}`/`Cache Delete {key}`/`Cache Clear` | `cache.set`/`cache.delete`/`cache.clear`             |
+| `flow.cache.hits`/`.misses` unit `operations`              | `{operation}`                                        |
+| `flow.etl.rows.processed` unit `rows`                      | `{row}`                                              |
+| `flow.etl.rows.throughput` unit `rows/s/sec`               | `{row}/s`                                            |
+| `db.transaction.savepoint`                                 | `flow.db.transaction.savepoint`                      |
+| `db.transaction.nesting_level`                             | `flow.db.transaction.nesting_level`                  |
+
+### 14) `flow-php/telemetry`, `flow-php/psr18-telemetry-bridge` - shared semconv constants; UCUM time units
+
+| Before                                                                                                                          | After                                                 |
+|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| official keys duplicated per package (`DbAttributes`, `PostgreSqlTelemetryAttributes`, inline strings)                          | `Flow\Telemetry\SemConvAttributes` / `SemConvMetrics` |
+| `TimeUnit::SECONDS->value` = `'sec'`                                                                                            | `'s'`                                                 |
+| `TimeUnit::MICROSECONDS->value` = `'µs'`                                                                                        | `'us'`                                                |
+| PSR-18 client span name `{method} {host}`                                                                                       | `{method}`                                            |
+| PSR-18 `server.port` only when non-default                                                                                      | always set (scheme default 80/443 filled in)          |
+| `FilesystemTelemetryAttributes::ATTR_BYTES_READ`/`ATTR_BYTES_WRITTEN`/`ATTR_PATH_FROM`/`ATTR_PATH_IS_PATTERN`/`ATTR_ERROR_TYPE` | removed                                               |
+| `PostgreSqlTelemetryAttributes::DB_QUERY_SUMMARY` + official-key constants                                                      | removed (officials via `SemConvAttributes`)           |
 
 ---
 

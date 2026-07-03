@@ -569,7 +569,7 @@ final class TracingConnectionTest extends TestCase
 
         foreach ($metricProcessor->metricsWithName('db.client.operation.duration') as $metric) {
             static::assertSame('postgresql', $metric->attributes->get('db.system.name'));
-            static::assertSame(1, $metric->attributes->get('db.transaction.nesting_level'));
+            static::assertSame(1, $metric->attributes->get('flow.db.transaction.nesting_level'));
             static::assertFalse(
                 $metric->attributes->has('server.address'),
                 'server.address must not be a metric dimension',

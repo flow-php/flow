@@ -7,11 +7,14 @@ namespace Flow\ETL\Cache\Implementation;
 use DateTimeImmutable;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\Telemetry\CacheAttributes;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -33,21 +36,21 @@ final readonly class TraceableCache implements Cache
     ) {
         $this->tracer = $telemetry->tracer('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
         $meter = $telemetry->meter('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
-        $this->hitCounter = $meter->createCounter('flow.cache.hits', 'operations', 'Number of cache hits');
-        $this->missCounter = $meter->createCounter('flow.cache.misses', 'operations', 'Number of cache misses');
+        $this->hitCounter = $meter->createCounter('flow.cache.hits', '{operation}', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('flow.cache.misses', '{operation}', 'Number of cache misses');
     }
 
     public function clear(): void
     {
-        $span = $this->tracer->span('Cache Clear', SpanKind::CLIENT, [
-            'cache.operation' => 'clear',
+        $span = $this->tracer->span(CacheAttributes::SPAN_CLEAR, SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'clear',
         ]);
 
         try {
             $this->cache->clear();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -58,16 +61,16 @@ final readonly class TraceableCache implements Cache
 
     public function delete(string $key): void
     {
-        $span = $this->tracer->span("Cache Delete {$key}", SpanKind::CLIENT, [
-            'cache.operation' => 'delete',
-            'cache.key' => $key,
+        $span = $this->tracer->span(CacheAttributes::SPAN_DELETE, SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'delete',
+            CacheAttributes::CACHE_KEY => $key,
         ]);
 
         try {
             $this->cache->delete($key);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -78,7 +81,7 @@ final readonly class TraceableCache implements Cache
 
     public function get(string $key): Row|Rows|CacheIndex
     {
-        $attributes = ['dataframe.name' => $this->dataframeName];
+        $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
 
         try {
             $result = $this->cache->get($key);
@@ -94,7 +97,7 @@ final readonly class TraceableCache implements Cache
 
     public function has(string $key): bool
     {
-        $attributes = ['dataframe.name' => $this->dataframeName];
+        $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
         $exists = $this->cache->has($key);
 
         if ($exists) {
@@ -114,17 +117,17 @@ final readonly class TraceableCache implements Cache
             $value instanceof CacheIndex => 'CacheIndex',
         };
 
-        $span = $this->tracer->span("Cache Set {$key}", SpanKind::CLIENT, [
-            'cache.operation' => 'set',
-            'cache.key' => $key,
-            'cache.value_type' => $valueType,
+        $span = $this->tracer->span(CacheAttributes::SPAN_SET, SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'set',
+            CacheAttributes::CACHE_KEY => $key,
+            CacheAttributes::CACHE_VALUE_TYPE => $valueType,
         ]);
 
         try {
             $this->cache->set($key, $value);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

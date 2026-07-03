@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\PHPUnitTelemetryAttributes;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Bridge\PHPUnit\Telemetry\SuiteOutcomeStack;
 use Flow\Bridge\PHPUnit\Telemetry\TestMemoryRegistry;
 use Flow\Bridge\PHPUnit\Telemetry\TestStatusRegistry;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Event\Test\Finished;
@@ -20,12 +23,33 @@ use function memory_get_usage;
 
 final readonly class TestFinishedSubscriber implements FinishedSubscriber
 {
+    /**
+     * OTel semconv-advised bucket boundaries for short operation durations in seconds.
+     */
+    private const array DURATION_BOUNDARIES = [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.075,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        2.5,
+        5.0,
+        7.5,
+        10.0,
+    ];
+
     public function __construct(
         private Telemetry $telemetry,
         private SpanStack $spanStack,
         private Configuration $config,
         private TestStatusRegistry $statusRegistry,
         private TestMemoryRegistry $memoryRegistry,
+        private SuiteOutcomeStack $suiteOutcomes,
     ) {}
 
     public function notify(Finished $event): void
@@ -33,6 +57,7 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
         try {
             $testId = $event->test()->id();
             $status = $this->statusRegistry->getStatus($testId);
+            $this->suiteOutcomes->recordStatus($status);
 
             $startBytes = $this->memoryRegistry->getStart($testId);
             $peakBytes = memory_get_peak_usage($this->config->memoryRealUsage);
@@ -43,14 +68,16 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 if ($this->config->emitMetrics) {
                     $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-                    $meter->createCounter('flow.phpunit.test.count')->add(1, ['test.status' => $status]);
-                    $meter->createHistogram('flow.phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
-                        'test.status' => $status,
+                    $meter->createCounter('flow.phpunit.test.count', '{test}')->add(1, [
+                        SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
+                    ]);
+                    $meter->createHistogram('flow.phpunit.test.memory.peak', 'By')->record($peakBytes, [
+                        SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
                     ]);
 
                     if ($deltaBytes !== null) {
-                        $meter->createHistogram('flow.phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
-                            'test.status' => $status,
+                        $meter->createHistogram('flow.phpunit.test.memory.delta', 'By')->record($deltaBytes, [
+                            SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
                         ]);
                     }
                 }
@@ -69,28 +96,20 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
             $errorMessage = $this->statusRegistry->getMessage($testId);
             $tracer = $this->telemetry->tracer('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-            $span->setAttribute('test.status', $status);
+            $span->setAttribute(SemConvAttributes::TEST_CASE_RESULT_STATUS, $status);
             $span->end();
 
             $duration = $span->duration();
 
-            if ($duration !== null) {
-                $span->setAttribute('test.duration_ms', $duration);
-            }
-
-            if ($errorMessage !== null) {
-                $span->setAttribute('exception.message', $errorMessage);
-            }
-
-            $span->setAttribute('test.memory.peak_bytes', $peakBytes);
+            $span->setAttribute(PHPUnitTelemetryAttributes::ATTR_TEST_MEMORY_PEAK, $peakBytes);
 
             if ($deltaBytes !== null) {
-                $span->setAttribute('test.memory.delta_bytes', $deltaBytes);
+                $span->setAttribute(PHPUnitTelemetryAttributes::ATTR_TEST_MEMORY_DELTA, $deltaBytes);
             }
 
             // OTEL spec: instrumentation leaves the status Unset on success; only failures set a status.
             if ($status !== 'passed') {
-                $span->setAttribute('error.type', $status);
+                $span->setAttribute(SemConvAttributes::ERROR_TYPE, $status);
                 $span->setStatus(SpanStatus::error($errorMessage ?? $status));
             }
 
@@ -98,20 +117,27 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
                 if ($duration !== null) {
-                    $meter->createHistogram('flow.phpunit.test.duration', 'ms')->record($duration, [
-                        'test.status' => $status,
+                    $meter->createHistogram(
+                        'flow.phpunit.test.duration',
+                        's',
+                        'Duration of a single test',
+                        self::DURATION_BOUNDARIES,
+                    )->record($duration / 1_000, [
+                        SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
                     ]);
 
-                    $meter->createCounter('flow.phpunit.test.count')->add(1, ['test.status' => $status]);
+                    $meter->createCounter('flow.phpunit.test.count', '{test}')->add(1, [
+                        SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
+                    ]);
                 }
 
-                $meter->createHistogram('flow.phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
-                    'test.status' => $status,
+                $meter->createHistogram('flow.phpunit.test.memory.peak', 'By')->record($peakBytes, [
+                    SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
                 ]);
 
                 if ($deltaBytes !== null) {
-                    $meter->createHistogram('flow.phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
-                        'test.status' => $status,
+                    $meter->createHistogram('flow.phpunit.test.memory.delta', 'By')->record($deltaBytes, [
+                        SemConvAttributes::TEST_CASE_RESULT_STATUS => $status,
                     ]);
                 }
             }

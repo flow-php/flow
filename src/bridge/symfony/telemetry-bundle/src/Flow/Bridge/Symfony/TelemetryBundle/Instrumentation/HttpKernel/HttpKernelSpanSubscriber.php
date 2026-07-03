@@ -14,6 +14,7 @@ use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -92,12 +93,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $controllerName = ControllerName::resolve($event->getController())?->name;
 
         if ($controllerName !== null) {
-            $span->setAttribute('controller', $controllerName);
+            $span->setAttribute(HttpKernelAttributes::ATTR_CONTROLLER, $controllerName);
         }
 
         if (is_string($route) && $route !== '') {
             $routeValue = $this->routeValue($route);
-            $span->setAttribute('http.route', $routeValue);
+            $span->setAttribute(SemConvAttributes::HTTP_ROUTE, $routeValue);
             $span->rename("{$request->getMethod()} {$routeValue}");
         } elseif ($controllerName !== null) {
             // Sub-requests (render(controller(...))) carry no route, so name them after the controller.
@@ -155,13 +156,28 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         // upgrade to "{method} {route}" once the route is resolved (see onController). The raw path stays
         // on the url.path attribute.
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
-        $span = $tracer->span($method, $kind, [
-            'http.request.method' => $method,
-            'url.full' => $request->getUri(),
-            'url.path' => $request->getRequestUri(),
-            'url.scheme' => $request->getScheme(),
-            'server.address' => $request->getHost(),
-        ]);
+        $attributes = [
+            SemConvAttributes::HTTP_REQUEST_METHOD => $method,
+            // OTEL HTTP semconv: url.path must not carry the query string; url.query is separate
+            // and url.full is a client-span attribute, so it has no place on a server span.
+            SemConvAttributes::URL_PATH => $request->getPathInfo(),
+            SemConvAttributes::URL_SCHEME => $request->getScheme(),
+            SemConvAttributes::SERVER_ADDRESS => $request->getHost(),
+        ];
+
+        $queryString = $request->server->getString('QUERY_STRING');
+
+        if ($queryString !== '') {
+            $attributes[SemConvAttributes::URL_QUERY] = $queryString;
+        }
+
+        $userAgent = $request->headers->get('User-Agent');
+
+        if ($userAgent !== null && $userAgent !== '') {
+            $attributes[SemConvAttributes::USER_AGENT_ORIGINAL] = $userAgent;
+        }
+
+        $span = $tracer->span($method, $kind, $attributes);
 
         $request->attributes->set(self::SPAN_ATTRIBUTE, $span);
         $request->attributes->set(self::TRACER_ATTRIBUTE, $tracer);
@@ -179,13 +195,13 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $response = $event->getResponse();
         $statusCode = $response->getStatusCode();
 
-        $span->setAttribute('http.response.status_code', $statusCode);
+        $span->setAttribute(SemConvAttributes::HTTP_RESPONSE_STATUS_CODE, $statusCode);
 
         // OTEL HTTP semconv: for SpanKind.SERVER the span status MUST be left unset for 1xx-4xx; only
         // 5xx (or other server-caused failures) is an Error. A 4xx is the client's fault, not the server's.
         if ($statusCode >= 500) {
             $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-            $span->setAttribute('error.type', (string) $statusCode);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $statusCode);
         }
 
         if ($event->isMainRequest() && $this->contextPropagation) {

@@ -102,7 +102,7 @@ final class ChannelLoggerPassTest extends KernelTestCase
         $logger = $this->getContainer()->get('flow.telemetry.events.logger');
 
         static::assertInstanceOf(Logger::class, $logger);
-        static::assertSame('events', $logger->instrumentationScope()->attributes->get('log.channel'));
+        static::assertSame('events', $logger->instrumentationScope()->attributes->get('flow.log.channel'));
     }
 
     public function test_named_argument_alias_resolves_to_the_channel_logger(): void

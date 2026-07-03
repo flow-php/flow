@@ -32,9 +32,9 @@ final class TimeUnitTest extends TestCase
     public function test_has_correct_string_values(): void
     {
         static::assertSame('ns', TimeUnit::NANOSECONDS->value);
-        static::assertSame('µs', TimeUnit::MICROSECONDS->value);
+        static::assertSame('us', TimeUnit::MICROSECONDS->value);
         static::assertSame('ms', TimeUnit::MILLISECONDS->value);
-        static::assertSame('sec', TimeUnit::SECONDS->value);
+        static::assertSame('s', TimeUnit::SECONDS->value);
         static::assertSame('min', TimeUnit::MINUTES->value);
     }
 

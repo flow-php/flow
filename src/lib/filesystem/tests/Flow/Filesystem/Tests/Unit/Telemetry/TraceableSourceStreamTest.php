@@ -9,6 +9,7 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Telemetry\TraceableSourceStream;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
+use Flow\Telemetry\SemConvAttributes;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -39,7 +40,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         static::assertSame(
@@ -76,10 +77,7 @@ final class TraceableSourceStreamTest extends TestCase
             $status = $spans[0]->status();
             static::assertNotNull($status);
             static::assertTrue($status->isError());
-            static::assertSame(
-                RuntimeException::class,
-                $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_ERROR_TYPE],
-            );
+            static::assertSame(RuntimeException::class, $spans[0]->attributes()[SemConvAttributes::ERROR_TYPE]);
             static::assertNotEmpty($spans[0]->events());
         }
     }
@@ -98,7 +96,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame(0, $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
@@ -122,7 +120,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame(
             strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
@@ -169,7 +167,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame(
             strlen(implode('', $chunks)),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
@@ -236,7 +234,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
     }
 
     public function test_read_tracks_bytes_read(): void
@@ -259,7 +257,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame(
             strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
@@ -299,7 +297,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('Read test.txt', $spans[0]->name());
+        static::assertSame('filesystem.read', $spans[0]->name());
         static::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         static::assertSame('file', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL]);

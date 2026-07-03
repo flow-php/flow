@@ -206,7 +206,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('analytics', $spans[0]->attributes()['db.connection.name']);
+        static::assertSame('analytics', $spans[0]->attributes()['flow.db.connection.name']);
     }
 
     public function test_span_includes_db_namespace_from_params(): void

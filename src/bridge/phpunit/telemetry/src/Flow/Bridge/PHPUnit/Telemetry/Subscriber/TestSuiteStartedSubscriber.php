@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\PHPUnitTelemetryAttributes;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Bridge\PHPUnit\Telemetry\SuiteOutcomeStack;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Event\TestSuite\Started;
 use PHPUnit\Event\TestSuite\StartedSubscriber;
@@ -21,6 +24,7 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
         private Telemetry $telemetry,
         private SpanStack $spanStack,
         private Configuration $config,
+        private SuiteOutcomeStack $suiteOutcomes,
     ) {}
 
     public function notify(Started $event): void
@@ -44,13 +48,14 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
             $tracer = $this->telemetry->tracer('phpunit', PackageVersion::get('phpunit/phpunit'));
 
             $span = $tracer->span($isRoot ? 'Test Suite Run' : $suite->name(), attributes: [
-                'test.suite' => $suite->name(),
-                'test.suite.test_count' => $suite->count(),
-                'test.suite.is_root' => $isRoot,
+                SemConvAttributes::TEST_SUITE_NAME => $suite->name(),
+                PHPUnitTelemetryAttributes::ATTR_SUITE_TEST_COUNT => $suite->count(),
+                PHPUnitTelemetryAttributes::ATTR_SUITE_IS_ROOT => $isRoot,
             ]);
 
             $this->spanStack->setSuiteSpan($suite->name(), $span);
             $this->spanStack->push($span);
+            $this->suiteOutcomes->push();
         } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }

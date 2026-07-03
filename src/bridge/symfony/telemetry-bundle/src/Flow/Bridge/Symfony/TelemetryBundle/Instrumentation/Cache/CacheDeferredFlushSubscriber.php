@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache;
 
+use Flow\Telemetry\CacheAttributes;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -61,7 +62,7 @@ final readonly class CacheDeferredFlushSubscriber implements EventSubscriberInte
     public function onFlush(object $event): void
     {
         $tracer = $this->telemetry->tracer('flow.symfony.cache', PackageVersion::get('symfony/cache'));
-        $span = $tracer->span('cache.flush', SpanKind::INTERNAL, ['cache.operation' => 'flush']);
+        $span = $tracer->span('cache.flush', SpanKind::INTERNAL, [CacheAttributes::CACHE_OPERATION => 'flush']);
 
         try {
             foreach ($this->pools as $pool) {

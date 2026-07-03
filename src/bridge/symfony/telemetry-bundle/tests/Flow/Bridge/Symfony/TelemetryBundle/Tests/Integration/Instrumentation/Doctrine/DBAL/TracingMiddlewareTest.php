@@ -93,7 +93,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         static::assertNotNull($connectionSpan, 'Connection span should exist');
         static::assertSame('sqlite', $connectionSpan->attributes()['db.system.name']);
-        static::assertSame('default', $connectionSpan->attributes()['db.connection.name']);
+        static::assertSame('default', $connectionSpan->attributes()['flow.db.connection.name']);
     }
 
     public function test_dbal_middleware_is_not_registered_when_feature_disabled(): void
@@ -636,7 +636,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $connectionSpan = $spans[0];
         static::assertSame('doctrine.dbal.connection', $connectionSpan->name());
         static::assertSame(SpanKind::CLIENT, $connectionSpan->kind());
-        static::assertSame('default', $connectionSpan->attributes()['db.connection.name']);
+        static::assertSame('default', $connectionSpan->attributes()['flow.db.connection.name']);
         static::assertNull($connectionSpan->status());
 
         $querySpan = $spans[1];

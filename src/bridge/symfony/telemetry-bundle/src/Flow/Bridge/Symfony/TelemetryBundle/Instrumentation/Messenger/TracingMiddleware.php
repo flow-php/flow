@@ -9,6 +9,8 @@ use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\SemConvAttributes;
+use Flow\Telemetry\SemConvMetrics;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -22,19 +24,38 @@ use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Throwable;
 
-use function end;
-use function explode;
 use function hrtime;
 
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
+    /**
+     * messaging.process.duration is spec-fixed at seconds; boundaries are the semconv-advised set.
+     *
+     * @see https://opentelemetry.io/docs/specs/semconv/messaging/messaging-metrics/
+     */
+    private const array PROCESS_DURATION_BOUNDARIES = [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.075,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        2.5,
+        5.0,
+        7.5,
+        10.0,
+    ];
+
     public function __construct(
         private Telemetry $telemetry,
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
         private bool $traceHandler = true,
         private bool $metrics = true,
-        private MessengerMetricDurationUnit $durationUnit = MessengerMetricDurationUnit::Seconds,
     ) {}
 
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
@@ -43,7 +64,6 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $message = $envelope->getMessage();
         $messageClass = $message::class;
-        $shortMessageClass = $this->getShortClassName($messageClass);
 
         $receivedStamp = $envelope->last(ReceivedStamp::class);
         $busNameStamp = $envelope->last(BusNameStamp::class);
@@ -55,23 +75,27 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $operation = $isReceived ? 'process' : 'send';
 
         $busName = $busNameStamp instanceof BusNameStamp ? $busNameStamp->getBusName() : 'default';
-        $spanName = "{$operation} {$shortMessageClass}";
+
+        // OTEL messaging semconv: messaging.destination.name is the queue/topic - the transport in
+        // Symfony terms. It is only known on the consume side; on dispatch the routing to a
+        // transport has not happened yet, so the producer span is named after the operation alone.
+        $transportName = $receivedStamp instanceof ReceivedStamp ? $receivedStamp->getTransportName() : null;
+        $spanName = $transportName !== null ? "{$operation} {$transportName}" : $operation;
 
         $attributes = [
-            'messaging.system' => 'symfony_messenger',
-            'messaging.destination.name' => $shortMessageClass,
-            'messaging.message.class' => $messageClass,
-            'messaging.operation.type' => $operation,
-            'messaging.operation.name' => $operation,
-            'messaging.symfony.bus' => $busName,
+            SemConvAttributes::MESSAGING_SYSTEM => 'symfony_messenger',
+            MessengerAttributes::ATTR_MESSAGE_CLASS => $messageClass,
+            SemConvAttributes::MESSAGING_OPERATION_TYPE => $operation,
+            SemConvAttributes::MESSAGING_OPERATION_NAME => $operation,
+            MessengerAttributes::ATTR_BUS => $busName,
         ];
 
-        if ($receivedStamp instanceof ReceivedStamp) {
-            $attributes['messaging.transport'] = $receivedStamp->getTransportName();
+        if ($transportName !== null) {
+            $attributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $transportName;
         }
 
         if ($transportIdStamp instanceof TransportMessageIdStamp) {
-            $attributes['messaging.message.id'] = (string) $transportIdStamp->getId();
+            $attributes[SemConvAttributes::MESSAGING_MESSAGE_ID] = (string) $transportIdStamp->getId();
         }
 
         $meter = $this->metrics
@@ -79,21 +103,20 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             : null;
 
         $metricAttributes = [
-            'messaging.system' => 'symfony_messenger',
-            'messaging.operation.name' => $operation,
-            'messaging.destination.name' => $shortMessageClass,
+            SemConvAttributes::MESSAGING_SYSTEM => 'symfony_messenger',
+            SemConvAttributes::MESSAGING_OPERATION_NAME => $operation,
         ];
 
-        if ($receivedStamp instanceof ReceivedStamp) {
-            $metricAttributes['messaging.consumer.group.name'] = $receivedStamp->getTransportName();
+        if ($transportName !== null) {
+            $metricAttributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $transportName;
         }
 
         $processDuration = $meter !== null && $isReceived
             ? $meter->createHistogram(
-                'messaging.process.duration',
-                $this->durationUnit->value,
+                SemConvMetrics::MESSAGING_PROCESS_DURATION,
+                's',
                 'Duration of processing a consumed message',
-                $this->durationUnit->histogramBoundaries(),
+                self::PROCESS_DURATION_BOUNDARIES,
             )
             : null;
 
@@ -106,7 +129,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
             $links[] = SpanLink::create(
                 SpanContext::createRemote($remote->spanContext->traceId, $remote->spanContext->spanId),
-                ['messaging.operation.type' => 'process'],
+                [SemConvAttributes::MESSAGING_OPERATION_TYPE => 'process'],
             );
         }
 
@@ -135,7 +158,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         if ($meter !== null) {
             $meter->createCounter(
-                $isReceived ? 'messaging.client.consumed.messages' : 'messaging.client.sent.messages',
+                $isReceived
+                    ? SemConvMetrics::MESSAGING_CLIENT_CONSUMED_MESSAGES
+                    : SemConvMetrics::MESSAGING_CLIENT_SENT_MESSAGES,
                 '{message}',
                 $isReceived
                     ? 'Number of messages delivered to the application'
@@ -162,7 +187,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
             if ($span !== null) {
                 $span->recordException($e, new DateTimeImmutable());
-                $span->setAttribute('error.type', $e::class);
+                $span->setAttribute(SemConvAttributes::ERROR_TYPE, $e::class);
                 $span->setStatus(SpanStatus::error($e->getMessage()));
             }
 
@@ -176,14 +201,14 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                 $durationAttributes = $metricAttributes;
 
                 if ($errorType !== null) {
-                    $durationAttributes['error.type'] = $errorType;
+                    $durationAttributes[SemConvAttributes::ERROR_TYPE] = $errorType;
                 }
 
                 $durationMs = $startedAt === null
                     ? $span?->duration() ?? 0.0
                     : (float) (hrtime(true) - $startedAt) / 1_000_000;
 
-                $processDuration->record($this->durationUnit->fromMilliseconds($durationMs), $durationAttributes);
+                $processDuration->record($durationMs / 1_000, $durationAttributes);
             }
 
             $propagationScope?->detach();
@@ -203,13 +228,6 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
 
         return $this->propagator->extract(new TelemetryStampCarrier($stamp));
-    }
-
-    private function getShortClassName(string $className): string
-    {
-        $parts = explode('\\', $className);
-
-        return end($parts);
     }
 
     private function injectContext(Envelope $envelope): Envelope

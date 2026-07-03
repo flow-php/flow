@@ -6,6 +6,7 @@ namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
 use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestFinishedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\SuiteOutcomeStack;
 use Flow\Bridge\PHPUnit\Telemetry\TestMemoryRegistry;
 use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\ConfigurationMother;
 use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\TelemetryMother;
@@ -32,7 +33,14 @@ final class TestFinishedSubscriberTest extends TestCase
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'failed', 'some error');
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         static::assertNull($statusRegistry->getMessage($event->test()->id()));
@@ -54,7 +62,14 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry->setStatus($event->test()->id(), 'passed');
         $memoryRegistry->setStart($event->test()->id(), 1024);
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         static::assertNull($memoryRegistry->getStart($event->test()->id()));
@@ -75,7 +90,14 @@ final class TestFinishedSubscriberTest extends TestCase
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         static::assertFalse($spanStack->isEmpty());
@@ -97,7 +119,14 @@ final class TestFinishedSubscriberTest extends TestCase
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         static::assertTrue($spanStack->isEmpty());
@@ -119,7 +148,14 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry->setStatus($event->test()->id(), 'passed');
         $memoryRegistry->setStart($event->test()->id(), 1024);
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
         $telemetry->flush();
 
@@ -140,12 +176,63 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry->setStatus($event->test()->id(), 'passed');
         $memoryRegistry->setStart($event->test()->id(), 1024);
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
         $telemetry->flush();
 
         static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.peak'));
         static::assertNotEmpty($metricProcessor->metricsWithName('flow.phpunit.test.memory.delta'));
+    }
+
+    public function test_records_duration_metric_in_seconds(): void
+    {
+        $metricProcessor = memory_metric_processor(void_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
+        $telemetry = TelemetryMother::create($spanProcessor, $metricProcessor);
+        $spanStack = new SpanStack();
+        $config = ConfigurationMother::default();
+        $statusRegistry = new TestStatusRegistry();
+        $memoryRegistry = new TestMemoryRegistry();
+
+        $spanStack->push($telemetry->tracer('phpunit')->span('test-span'));
+
+        $event = TestEventMother::finished();
+        $statusRegistry->setStatus($event->test()->id(), 'passed');
+
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
+        $subscriber->notify($event);
+        $telemetry->flush();
+
+        $durationMetrics = $metricProcessor->metricsWithName('flow.phpunit.test.duration');
+        static::assertNotEmpty($durationMetrics);
+        static::assertSame('s', $durationMetrics[0]->unit);
+
+        $spanDurationMs = $spanProcessor->endedSpans()[0]->duration();
+        static::assertNotNull($spanDurationMs);
+        static::assertEqualsWithDelta($spanDurationMs / 1_000, $durationMetrics[0]->value, 0.000_001);
+
+        $countMetrics = $metricProcessor->metricsWithName('flow.phpunit.test.count');
+        static::assertNotEmpty($countMetrics);
+        static::assertSame('{test}', $countMetrics[0]->unit);
+        static::assertSame('passed', $countMetrics[0]->attributes->get('test.case.result.status'));
+
+        $memoryMetrics = $metricProcessor->metricsWithName('flow.phpunit.test.memory.peak');
+        static::assertNotEmpty($memoryMetrics);
+        static::assertSame('By', $memoryMetrics[0]->unit);
     }
 
     public function test_sets_error_status_and_message_on_span_for_failed_test(): void
@@ -162,14 +249,24 @@ final class TestFinishedSubscriberTest extends TestCase
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'failed', 'some error');
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         $span = $spanProcessor->endedSpans()[0];
         static::assertTrue($span->status()?->isError());
         static::assertSame('failed', $span->attributes()['error.type']);
-        static::assertArrayHasKey('exception.message', $span->attributes());
-        static::assertSame('some error', $span->attributes()['exception.message']);
+        // exception.* belongs on exception events/logs, never as a plain span attribute;
+        // the failure message travels in the span status description instead.
+        static::assertArrayNotHasKey('exception.message', $span->attributes());
+        static::assertSame('some error', $span->status()?->description);
+        static::assertSame('failed', $span->attributes()['test.case.result.status']);
     }
 
     public function test_sets_memory_attributes_on_span(): void
@@ -187,11 +284,19 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry->setStatus($event->test()->id(), 'passed');
         $memoryRegistry->setStart($event->test()->id(), 1024);
 
-        $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry);
+        $subscriber = new TestFinishedSubscriber(
+            $telemetry,
+            $spanStack,
+            $config,
+            $statusRegistry,
+            $memoryRegistry,
+            new SuiteOutcomeStack(),
+        );
         $subscriber->notify($event);
 
         $attributes = $spanProcessor->endedSpans()[0]->attributes();
-        static::assertArrayHasKey('test.memory.peak_bytes', $attributes);
-        static::assertArrayHasKey('test.memory.delta_bytes', $attributes);
+        static::assertArrayHasKey('flow.phpunit.test.memory.peak', $attributes);
+        static::assertArrayHasKey('flow.phpunit.test.memory.delta', $attributes);
+        static::assertArrayNotHasKey('test.duration_ms', $attributes);
     }
 }

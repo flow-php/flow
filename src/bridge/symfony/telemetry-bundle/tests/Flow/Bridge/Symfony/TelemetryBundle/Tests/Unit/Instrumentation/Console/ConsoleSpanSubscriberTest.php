@@ -245,7 +245,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(Command::class, $spans[0]->attributes()['command.class']);
+        static::assertSame(Command::class, $spans[0]->attributes()['flow.symfony.command.class']);
     }
 
     public function test_span_includes_command_name_attribute(): void
@@ -264,7 +264,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('app:sync', $spans[0]->attributes()['command.name']);
+        static::assertSame('app:sync', $spans[0]->attributes()['flow.symfony.command.name']);
     }
 
     public function test_span_includes_exit_code_attribute(): void
@@ -283,7 +283,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(42, $spans[0]->attributes()['process.exit_code']);
+        static::assertSame(42, $spans[0]->attributes()['process.exit.code']);
     }
 
     public function test_span_kind_is_internal(): void

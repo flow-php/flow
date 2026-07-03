@@ -9,6 +9,7 @@ use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -180,7 +181,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         try {
             $result = $execute();
             $rows = $rowCount($result);
-            $span->setAttribute(DbAttributes::DB_RESPONSE_RETURNED_ROWS, $rows);
+            $span->setAttribute(SemConvAttributes::DB_RESPONSE_RETURNED_ROWS, $rows);
             $this->queryTracer->recordQueryMetrics($startTime, $rows, $sqlAttributes);
 
             return $result;
@@ -245,7 +246,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     private function traceTransactionOperation(string $spanName, string $operation, Closure $execute): void
     {
         $tracer = $this->queryTracer->tracer();
-        $span = $tracer->span($spanName, SpanKind::CLIENT, [DbAttributes::DB_OPERATION_NAME => $operation]
+        $span = $tracer->span($spanName, SpanKind::CLIENT, [SemConvAttributes::DB_OPERATION_NAME => $operation]
         + $this->transactionSpanAttributes());
 
         try {
@@ -273,11 +274,11 @@ final class TracingConnection extends AbstractConnectionMiddleware
     private function transactionMetricAttributes(string $operation): array
     {
         $attributes = [
-            DbAttributes::DB_OPERATION_NAME => $operation,
+            SemConvAttributes::DB_OPERATION_NAME => $operation,
             DbAttributes::DB_TRANSACTION_NESTING_LEVEL => 1,
         ];
 
-        foreach ([DbAttributes::DB_SYSTEM_NAME, DbAttributes::DB_NAMESPACE] as $key) {
+        foreach ([SemConvAttributes::DB_SYSTEM_NAME, SemConvAttributes::DB_NAMESPACE] as $key) {
             if (array_key_exists($key, $this->transactionAttributes)) {
                 $attributes[$key] = $this->transactionAttributes[$key];
             }

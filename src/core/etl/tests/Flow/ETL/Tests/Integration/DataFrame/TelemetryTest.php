@@ -106,7 +106,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($loadingSpans as $span) {
             // OTEL spec: instrumentation leaves the status Unset on success.
             static::assertNull($span->status());
-            static::assertArrayHasKey('loader.class', $span->attributes());
+            static::assertArrayHasKey('flow.etl.loader.class', $span->attributes());
         }
     }
 
@@ -214,10 +214,10 @@ final class TelemetryTest extends FlowTestCase
         $dataFrameSpan = $endedSpans[0];
         $attributes = $dataFrameSpan->attributes();
 
-        static::assertArrayHasKey('rows.total', $attributes);
-        static::assertSame(5, $attributes['rows.total']);
-        static::assertArrayHasKey('memory.min.mb', $attributes);
-        static::assertArrayHasKey('memory.max.mb', $attributes);
+        static::assertArrayHasKey('flow.etl.rows.total', $attributes);
+        static::assertSame(5, $attributes['flow.etl.rows.total']);
+        static::assertArrayHasKey('flow.etl.memory.min', $attributes);
+        static::assertArrayHasKey('flow.etl.memory.max', $attributes);
     }
 
     public function test_dataframe_transformations_traced_when_enabled(): void
@@ -268,7 +268,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($transformerSpans as $span) {
             // OTEL spec: instrumentation leaves the status Unset on success.
             static::assertNull($span->status());
-            static::assertArrayHasKey('transformer.class', $span->attributes());
+            static::assertArrayHasKey('flow.etl.transformer.class', $span->attributes());
         }
     }
 

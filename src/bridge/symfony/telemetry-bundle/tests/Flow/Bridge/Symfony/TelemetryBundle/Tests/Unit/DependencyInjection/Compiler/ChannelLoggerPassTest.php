@@ -178,13 +178,13 @@ final class ChannelLoggerPassTest extends TestCase
         $scope = $logger->getArgument(3);
         static::assertInstanceOf(Definition::class, $scope);
         static::assertSame(Attributes::class, $scope->getClass());
-        static::assertSame(['log.channel' => 'events'], $scope->getArgument(0));
+        static::assertSame(['flow.log.channel' => 'events'], $scope->getArgument(0));
 
         // @mago-expect analysis:mixed-assignment
         $signal = $logger->getArgument(4);
         static::assertInstanceOf(Definition::class, $signal);
         static::assertSame(Attributes::class, $signal->getClass());
-        static::assertSame(['log.channel' => 'events'], $signal->getArgument(0));
+        static::assertSame(['flow.log.channel' => 'events'], $signal->getArgument(0));
     }
 
     public function test_channel_attribute_target_scope_places_log_channel_on_scope_only(): void
@@ -199,7 +199,7 @@ final class ChannelLoggerPassTest extends TestCase
         // @mago-expect analysis:mixed-assignment
         $scope = $logger->getArgument(3);
         static::assertInstanceOf(Definition::class, $scope);
-        static::assertSame(['log.channel' => 'events'], $scope->getArgument(0));
+        static::assertSame(['flow.log.channel' => 'events'], $scope->getArgument(0));
         static::assertNull($logger->getArgument(4));
     }
 
@@ -216,7 +216,7 @@ final class ChannelLoggerPassTest extends TestCase
         // @mago-expect analysis:mixed-assignment
         $signal = $logger->getArgument(4);
         static::assertInstanceOf(Definition::class, $signal);
-        static::assertSame(['log.channel' => 'events'], $signal->getArgument(0));
+        static::assertSame(['flow.log.channel' => 'events'], $signal->getArgument(0));
     }
 
     public function test_captures_framework_monolog_logger_channel(): void

@@ -67,7 +67,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Clear', $span->name());
+        static::assertSame('cache.clear', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -87,7 +87,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Delete test-key', $span->name());
+        static::assertSame('cache.delete', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -110,7 +110,8 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $hitMetrics);
         static::assertCount(0, $missMetrics);
         static::assertSame(1, $hitMetrics[0]->value);
-        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
+        static::assertSame('{operation}', $hitMetrics[0]->unit);
+        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('flow.etl.dataframe.name'));
     }
 
     public function test_get_increments_miss_counter_and_throws_on_non_existing_key(): void
@@ -130,7 +131,7 @@ final class TraceableCacheTest extends FlowTestCase
             static::assertCount(0, $hitMetrics);
             static::assertCount(1, $missMetrics);
             static::assertSame(1, $missMetrics[0]->value);
-            static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
+            static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('flow.etl.dataframe.name'));
         }
     }
 
@@ -151,7 +152,8 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $hitMetrics);
         static::assertCount(0, $missMetrics);
         static::assertSame(1, $hitMetrics[0]->value);
-        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
+        static::assertSame('{operation}', $hitMetrics[0]->unit);
+        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('flow.etl.dataframe.name'));
     }
 
     public function test_has_increments_miss_counter_when_key_does_not_exist(): void
@@ -170,7 +172,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(0, $hitMetrics);
         static::assertCount(1, $missMetrics);
         static::assertSame(1, $missMetrics[0]->value);
-        static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
+        static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('flow.etl.dataframe.name'));
     }
 
     public function test_set_creates_span_with_cache_index_value_type(): void
@@ -186,7 +188,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame('cache.set', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -208,7 +210,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame('cache.set', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -230,7 +232,7 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame('cache.set', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

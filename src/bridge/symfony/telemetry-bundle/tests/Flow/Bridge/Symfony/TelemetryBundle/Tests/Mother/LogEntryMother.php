@@ -17,7 +17,7 @@ final class LogEntryMother
     public static function onChannel(Severity $severity, string $channel): LogEntry
     {
         return new LogEntry(new LogRecord($severity, 'message', [
-            'log.channel' => $channel,
+            'flow.log.channel' => $channel,
         ]), resource(), instrumentation_scope($channel), new DateTimeImmutable());
     }
 

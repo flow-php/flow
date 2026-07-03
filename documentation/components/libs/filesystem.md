@@ -232,15 +232,18 @@ automatically wrap all mounted filesystems with telemetry.
 
 **Spans:**
 
-- `SourceStream` - spans the lifecycle of a read stream from creation to close
-- `DestinationStream` - spans the lifecycle of a write stream from creation to close
+- `filesystem.read` - spans the lifecycle of a read stream from creation to close
+- `filesystem.write` - spans the lifecycle of a write stream from creation to close
+
+Spans carry `flow.filesystem.path.uri`, `flow.filesystem.protocol`, `flow.filesystem.stream.type` and, on close,
+`flow.filesystem.bytes.total_read` / `flow.filesystem.bytes.total_written`.
 
 **Metrics:**
 
-- `filesystem.source.bytes_read` - total bytes read from source streams
-- `filesystem.source.operations` - number of read operations
-- `filesystem.destination.bytes_written` - total bytes written to destination streams
-- `filesystem.destination.operations` - number of write operations
+- `flow.filesystem.read.size` (`By`) - total bytes read from source streams
+- `flow.filesystem.read.operations` (`{operation}`) - number of read operations
+- `flow.filesystem.write.size` (`By`) - total bytes written to destination streams
+- `flow.filesystem.write.operations` (`{operation}`) - number of write operations
 
 Metadata operations (list, status, rm, mv) are logged but do not create spans.
 

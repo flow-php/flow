@@ -12,6 +12,7 @@ use Flow\Telemetry\ErrorHandler\NullErrorHandler;
 use Flow\Telemetry\ErrorHandler\StreamHandler;
 use Flow\Telemetry\ErrorHandler\SyslogHandler;
 use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
+use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 
@@ -57,6 +58,7 @@ final class TelemetryFactory
                 'service.name' => $config->serviceName,
                 'telemetry.sdk.name' => 'flow-php-phpunit-telemetry',
                 'telemetry.sdk.language' => 'php',
+                'telemetry.sdk.version' => PackageVersion::get('flow-php/telemetry'),
             ]))
             ->merge(resource($config->resourceAttributes));
 
