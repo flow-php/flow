@@ -113,7 +113,7 @@ flow_postgresql:
         service_id: "flow.telemetry"         # Required: Telemetry service ID
         clock_service_id: null               # Optional: PSR-20 clock service (defaults to SystemClock)
         trace_queries: true                  # Record query execution in traces
-        trace_transactions: true             # Record transaction boundaries
+        transaction_spans: grouped           # grouped | per_operation | off
         collect_metrics: true                # Collect query metrics (duration, row count)
         log_queries: false                   # Log all queries
         max_query_length: 1000               # Truncate queries longer than this (chars)
@@ -905,7 +905,7 @@ flow_postgresql:
       telemetry:
         service_id: "flow.telemetry"
         trace_queries: true
-        trace_transactions: true
+        transaction_spans: grouped
         collect_metrics: true
         log_queries: false
         max_query_length: 1000

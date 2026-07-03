@@ -8,6 +8,7 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
@@ -206,7 +207,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
-            traceTransactions: true,
+            transactionSpans: TransactionSpanMode::GROUPED,
             traceQueries: false,
         ));
         $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
@@ -262,7 +263,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
-            traceTransactions: true,
+            transactionSpans: TransactionSpanMode::GROUPED,
             traceQueries: false,
         ));
         $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);

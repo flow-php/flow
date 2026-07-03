@@ -18,9 +18,13 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private Telemetry $telemetry,
         private string $driverClass,
         private string $connectionName,
-        private bool $logSql = true,
         private int $maxSqlLength = 1000,
         private array $excludeTables = [],
+        private TransactionSpanMode $transactionSpanMode = TransactionSpanMode::GROUPED,
+        private bool $collectMetrics = true,
+        private bool $includeParameters = false,
+        private int $maxParameters = 10,
+        private int $maxParameterLength = 100,
     ) {}
 
     public function wrap(DriverInterface $driver): DriverInterface
@@ -30,9 +34,13 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $this->telemetry,
             $driver,
             $this->connectionName,
-            $this->logSql,
             $this->maxSqlLength,
             $this->excludeTables,
+            $this->transactionSpanMode,
+            $this->collectMetrics,
+            $this->includeParameters,
+            $this->maxParameters,
+            $this->maxParameterLength,
         );
     }
 }

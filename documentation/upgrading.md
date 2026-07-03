@@ -83,6 +83,44 @@ An excluded path now attaches the OpenTelemetry suppression key for the request'
 orphan root spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its response). If you relied on
 those child spans being recorded for an excluded path, remove the path from `exclude_paths`.
 
+### 7) `flow-php/postgresql`, `flow-php/symfony-postgresql-bundle` - `traceTransactions` bool replaced by
+`transactionSpans` mode
+
+| Before                                                         | After                                                                          |
+|----------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `postgresql_telemetry_options(traceTransactions: true)`        | `postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED)` |
+| `postgresql_telemetry_options(traceTransactions: false)`       | `postgresql_telemetry_options(transactionSpans: TransactionSpanMode::OFF)`     |
+| `PostgreSqlTelemetryOptions` 2nd arg `bool $traceTransactions` | `TransactionSpanMode $transactionSpans`                                        |
+| `$options->traceTransactions(false)`                           | `$options->transactionSpans(TransactionSpanMode::OFF)`                         |
+| `$options->traceTransactions` (property)                       | `$options->transactionSpans` (`TransactionSpanMode`)                           |
+| config `telemetry.trace_transactions: true`                    | config `telemetry.transaction_spans: grouped`                                  |
+| config `telemetry.trace_transactions: false`                   | config `telemetry.transaction_spans: off`                                      |
+
+`TransactionSpanMode::PER_OPERATION` emits a short span per `BEGIN`/`COMMIT`/`ROLLBACK`; `GROUPED` (default) keeps
+the single long-lived transaction span.
+
+The `db.client.operation.duration` metric now uses only low-cardinality dimensions: queries are tagged with
+`db.system.name`, `db.namespace`, `db.operation.name`, `db.collection.name`; transactions with `db.system.name`,
+`db.namespace`, `db.operation.name` (`begin`/`commit`/`rollback`), `db.transaction.nesting_level`. `db.query.text`,
+`db.query.parameter.*`, `server.address` and `db.transaction.savepoint` are no longer metric dimensions.
+
+### 8) `flow-php/symfony-telemetry-bundle` - DBAL spans, metrics and config aligned with the PostgreSQL client
+
+| Before                                                           | After                                                                                      |
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `doctrine.dbal.transaction.begin`/`.commit`/`.rollback` (always) | one `BEGIN TRANSACTION` span per transaction (`grouped`)                                   |
+| `doctrine.dbal.connection.exec`/`.query` span names              | semconv `{db.operation.name} {db.collection.name}` (e.g. `SELECT users`)                   |
+| `doctrine.dbal.statement.execute`/`.prepare` span names          | semconv `{db.operation.name} {db.collection.name}`                                         |
+| config `instrumentation.dbal.log_sql`                            | removed — `db.query.text` is always recorded (bounded by `max_sql_length`)                 |
+| —                                                                | config `instrumentation.dbal.transaction_spans`: `grouped` (default)/`per_operation`/`off` |
+| —                                                                | config `instrumentation.dbal.collect_metrics` (default `true`)                             |
+| —                                                                | config `instrumentation.dbal.include_parameters`/`max_parameters`/`max_parameter_length`   |
+
+Query spans now carry `db.system.name`, `db.namespace`, `server.address`, `server.port`, `db.operation.name`,
+`db.collection.name`, `db.response.returned_rows` and (on error) `db.response.status_code`, and the instrumentation
+emits `db.client.operation.duration` and `db.client.response.returned_rows` metrics. If you matched DBAL spans by
+their `doctrine.dbal.*` names, switch to the semantic names above.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

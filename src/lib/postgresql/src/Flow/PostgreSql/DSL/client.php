@@ -20,6 +20,7 @@ use Flow\PostgreSql\Client\RowMapper\TypeMapper;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Client\Telemetry\TraceableClient;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Client\Types\ValueType;
@@ -150,7 +151,7 @@ function postgresql_context(array $data = [], ?Catalog $catalog = null): Context
  * and how query information is captured.
  *
  * @param bool $traceQueries Create spans for query execution (default: true)
- * @param bool $traceTransactions Create spans for transactions (default: true)
+ * @param TransactionSpanMode $transactionSpans How transactions are traced: GROUPED (default), PER_OPERATION or OFF
  * @param bool $collectMetrics Collect duration and row count metrics (default: true)
  * @param bool $logQueries Log executed queries (default: false)
  * @param null|int $maxQueryLength Maximum query text length in telemetry (default: 1000, null = unlimited)
@@ -163,17 +164,17 @@ function postgresql_context(array $data = [], ?Catalog $catalog = null): Context
  * // Enable query logging
  * $options = postgresql_telemetry_options(logQueries: true);
  *
- * // Disable all but metrics
+ * // Metrics only, no spans
  * $options = postgresql_telemetry_options(
  *     traceQueries: false,
- *     traceTransactions: false,
+ *     transactionSpans: TransactionSpanMode::OFF,
  *     collectMetrics: true,
  * );
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function postgresql_telemetry_options(
     bool $traceQueries = true,
-    bool $traceTransactions = true,
+    TransactionSpanMode $transactionSpans = TransactionSpanMode::GROUPED,
     bool $collectMetrics = true,
     bool $logQueries = false,
     ?int $maxQueryLength = 1000,
@@ -183,7 +184,7 @@ function postgresql_telemetry_options(
 ): PostgreSqlTelemetryOptions {
     return new PostgreSqlTelemetryOptions(
         traceQueries: $traceQueries,
-        traceTransactions: $traceTransactions,
+        transactionSpans: $transactionSpans,
         collectMetrics: $collectMetrics,
         logQueries: $logQueries,
         maxQueryLength: $maxQueryLength,
@@ -240,7 +241,7 @@ function postgresql_telemetry_config(
  *         new SystemClock(),
  *         postgresql_telemetry_options(
  *             traceQueries: true,
- *             traceTransactions: true,
+ *             transactionSpans: TransactionSpanMode::GROUPED,
  *             collectMetrics: true,
  *             logQueries: true,
  *             maxQueryLength: 500,

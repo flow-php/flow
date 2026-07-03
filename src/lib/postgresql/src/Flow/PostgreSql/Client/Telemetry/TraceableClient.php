@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
+use Closure;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
@@ -23,11 +24,13 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
 use Throwable;
 
+use function array_keys;
 use function array_merge;
 use function count;
 use function Flow\PostgreSql\DSL\listen;
 use function Flow\PostgreSql\DSL\unlisten;
 use function hrtime;
+use function rsort;
 use function strlen;
 use function substr;
 
@@ -63,7 +66,10 @@ final class TraceableClient implements Client
         $this->queryAttributesExtractor = new QueryAttributesExtractor();
         $this->parameterFormatter = new ParameterFormatter();
 
-        if ($this->telemetryConfig->options->traceQueries || $this->telemetryConfig->options->traceTransactions) {
+        if (
+            $this->telemetryConfig->options->traceQueries
+            || $this->telemetryConfig->options->transactionSpans !== TransactionSpanMode::OFF
+        ) {
             $this->tracer = $telemetryConfig->telemetry->tracer(
                 'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
@@ -103,20 +109,26 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel() + 1;
 
         try {
-            $this->client->beginTransaction();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('BEGIN', $nestingLevel, fn() => $this->client->beginTransaction());
+            } else {
+                $this->client->beginTransaction();
 
-            if ($this->telemetryConfig->options->traceTransactions && $this->tracer !== null) {
-                $span = $this->tracer->span(
-                    $this->buildTransactionSpanName('BEGIN', $nestingLevel),
-                    SpanKind::CLIENT,
-                    $this->buildTransactionAttributes($nestingLevel),
-                );
-                $this->transactionSpans[$nestingLevel] = $span;
+                if (
+                    $this->telemetryConfig->options->transactionSpans === TransactionSpanMode::GROUPED
+                    && $this->tracer !== null
+                ) {
+                    $this->transactionSpans[$nestingLevel] = $this->tracer->span(
+                        $this->buildTransactionSpanName('BEGIN', $nestingLevel),
+                        SpanKind::CLIENT,
+                        $this->buildTransactionAttributes($nestingLevel),
+                    );
+                }
             }
 
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'begin'));
         } catch (Throwable $e) {
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'begin'));
 
             throw $e;
         }
@@ -124,6 +136,18 @@ final class TraceableClient implements Client
 
     public function close(): void
     {
+        $levels = array_keys($this->transactionSpans);
+        rsort($levels);
+
+        foreach ($levels as $level) {
+            $span = $this->transactionSpans[$level];
+            $span->setStatus(SpanStatus::error(
+                'Transaction was neither committed nor rolled back before the connection was closed',
+            ));
+            $this->tracer?->complete($span);
+            unset($this->transactionSpans[$level]);
+        }
+
         $this->client->close();
     }
 
@@ -133,13 +157,17 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
-            $this->client->commit();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('COMMIT', $nestingLevel, fn() => $this->client->commit());
+            } else {
+                $this->client->commit();
+                $this->completeTransactionSpan($nestingLevel);
+            }
 
-            $this->completeTransactionSpan($nestingLevel);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'commit'));
         } catch (Throwable $e) {
             $this->completeTransactionSpan($nestingLevel, $e);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'commit'));
 
             throw $e;
         }
@@ -443,13 +471,17 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
-            $this->client->rollBack();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('ROLLBACK', $nestingLevel, fn() => $this->client->rollBack());
+            } else {
+                $this->client->rollBack();
+                $this->completeAllTransactionSpans($nestingLevel);
+            }
 
-            $this->completeAllTransactionSpans($nestingLevel);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'rollback'));
         } catch (Throwable $e) {
             $this->completeAllTransactionSpans($nestingLevel, $e);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'rollback'));
 
             throw $e;
         }
@@ -541,6 +573,30 @@ final class TraceableClient implements Client
         return $attributes;
     }
 
+    /**
+     * Low-cardinality attribute subset for metrics. Query text and parameter values are deliberately
+     * excluded so each distinct SQL string does not spawn its own metric series.
+     *
+     * @return array<string, string>
+     */
+    private function buildQueryMetricAttributes(QueryAttributes $queryAttrs): array
+    {
+        $attributes = [
+            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+        ];
+
+        if ($queryAttrs->operation !== null) {
+            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
+        }
+
+        if ($queryAttrs->target !== null) {
+            $attributes[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME] = $queryAttrs->target;
+        }
+
+        return $attributes;
+    }
+
     private function buildSpanName(QueryAttributes $queryAttrs): string
     {
         if ($queryAttrs->operation !== null && $queryAttrs->target !== null) {
@@ -579,6 +635,22 @@ final class TraceableClient implements Client
         return $attributes;
     }
 
+    /**
+     * Low-cardinality attribute subset for the transaction duration metric. Excludes server.address and the
+     * savepoint label so the metric stays low-cardinality.
+     *
+     * @return array<string, int|string>
+     */
+    private function buildTransactionMetricAttributes(int $nestingLevel, string $operation): array
+    {
+        return [
+            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+            PostgreSqlTelemetryAttributes::DB_OPERATION_NAME => $operation,
+            PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL => $nestingLevel,
+        ];
+    }
+
     private function buildTransactionSpanName(string $operation, int $nestingLevel): string
     {
         if ($nestingLevel > 1) {
@@ -592,6 +664,36 @@ final class TraceableClient implements Client
     {
         for ($level = $fromLevel; $level >= 1; $level--) {
             $this->completeTransactionSpan($level, $exception);
+        }
+    }
+
+    /**
+     * @param \Closure(): void $execute
+     */
+    private function traceTransactionOperation(string $operation, int $nestingLevel, Closure $execute): void
+    {
+        $tracer = $this->tracer;
+
+        if ($tracer === null) {
+            $execute();
+
+            return;
+        }
+
+        $span = $tracer->span(
+            $this->buildTransactionSpanName($operation, $nestingLevel),
+            SpanKind::CLIENT,
+            $this->buildTransactionAttributes($nestingLevel),
+        );
+
+        try {
+            $execute();
+        } catch (Throwable $e) {
+            $this->recordFailure($span, $e);
+
+            throw $e;
+        } finally {
+            $tracer->complete($span);
         }
     }
 
@@ -665,16 +767,7 @@ final class TraceableClient implements Client
             return;
         }
 
-        $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
-        ];
-
-        if ($queryAttrs->operation !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
-        }
-
-        $this->returnedRows->record($rowCount, $attributes);
+        $this->returnedRows->record($rowCount, $this->buildQueryMetricAttributes($queryAttrs));
     }
 
     /**
@@ -694,11 +787,15 @@ final class TraceableClient implements Client
     ): mixed {
         $startTime = hrtime(true);
         $queryAttrs = $this->queryAttributesExtractor->extract($query);
-        $attributes = $this->buildQueryAttributes($query, $parameters, $queryAttrs);
+        $metricAttributes = $this->buildQueryMetricAttributes($queryAttrs);
         $span = null;
 
         if ($this->telemetryConfig->options->traceQueries && $this->tracer !== null) {
-            $span = $this->tracer->span($this->buildSpanName($queryAttrs), SpanKind::CLIENT, $attributes);
+            $span = $this->tracer->span(
+                $this->buildSpanName($queryAttrs),
+                SpanKind::CLIENT,
+                $this->buildQueryAttributes($query, $parameters, $queryAttrs),
+            );
         }
 
         try {
@@ -711,7 +808,7 @@ final class TraceableClient implements Client
             }
             // OTEL spec: instrumentation leaves the status Unset on success.
 
-            $this->recordDuration($startTime, $attributes);
+            $this->recordDuration($startTime, $metricAttributes);
 
             return $result;
         } catch (Throwable $e) {
@@ -719,7 +816,7 @@ final class TraceableClient implements Client
                 $this->recordFailure($span, $e);
             }
 
-            $this->recordDuration($startTime, $attributes);
+            $this->recordDuration($startTime, $metricAttributes);
 
             throw $e;
         } finally {

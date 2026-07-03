@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -15,7 +16,7 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
         $options = postgresql_telemetry_options();
 
         static::assertTrue($options->traceQueries);
-        static::assertTrue($options->traceTransactions);
+        static::assertSame(TransactionSpanMode::GROUPED, $options->transactionSpans);
         static::assertTrue($options->collectMetrics);
         static::assertFalse($options->logQueries);
         static::assertSame(1000, $options->maxQueryLength);
@@ -28,7 +29,7 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
     {
         $options = postgresql_telemetry_options()
             ->traceQueries(false)
-            ->traceTransactions(false)
+            ->transactionSpans(TransactionSpanMode::OFF)
             ->collectMetrics(false)
             ->logQueries(true)
             ->maxQueryLength(500)
@@ -37,7 +38,7 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
             ->maxParameterLength(50);
 
         static::assertFalse($options->traceQueries);
-        static::assertFalse($options->traceTransactions);
+        static::assertSame(TransactionSpanMode::OFF, $options->transactionSpans);
         static::assertFalse($options->collectMetrics);
         static::assertTrue($options->logQueries);
         static::assertSame(500, $options->maxQueryLength);
@@ -50,7 +51,7 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
     {
         $options = postgresql_telemetry_options(
             traceQueries: false,
-            traceTransactions: false,
+            transactionSpans: TransactionSpanMode::OFF,
             collectMetrics: false,
             logQueries: true,
             maxQueryLength: null,
@@ -60,7 +61,7 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
         );
 
         static::assertFalse($options->traceQueries);
-        static::assertFalse($options->traceTransactions);
+        static::assertSame(TransactionSpanMode::OFF, $options->transactionSpans);
         static::assertFalse($options->collectMetrics);
         static::assertTrue($options->logQueries);
         static::assertNull($options->maxQueryLength);
@@ -159,12 +160,12 @@ final class PostgreSqlTelemetryOptionsTest extends TestCase
         static::assertFalse($modified->traceQueries);
     }
 
-    public function test_with_trace_transactions_creates_new_instance(): void
+    public function test_with_transaction_spans_creates_new_instance(): void
     {
         $original = postgresql_telemetry_options();
-        $modified = $original->traceTransactions(false);
+        $modified = $original->transactionSpans(TransactionSpanMode::PER_OPERATION);
 
-        static::assertTrue($original->traceTransactions);
-        static::assertFalse($modified->traceTransactions);
+        static::assertSame(TransactionSpanMode::GROUPED, $original->transactionSpans);
+        static::assertSame(TransactionSpanMode::PER_OPERATION, $modified->transactionSpans);
     }
 }
