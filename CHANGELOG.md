@@ -1,3 +1,34 @@
+## [Unreleased] - 2026-07-03
+
+### Added
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Shared SemConvAttributes and SemConvMetrics constants for OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - SuppressingSampler to suppress spans for excluded paths and commands.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - TransactionSpanMode (grouped/per_operation/off) to control transaction spans.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - DBAL transaction_spans, collect_metrics and parameter-capture config options.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Simplify messenger tracing to true/false and auto-inject the middleware into all buses.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Align cache, DBAL and HTTP span names and attributes with stable OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Move flow-custom attribute keys out of reserved OTel namespaces under flow.*.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Sampler::shouldSample() now receives the parent Context.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Switch TimeUnit values to UCUM (s/us/ms).** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Replace traceTransactions bool with transactionSpans mode and low-cardinality metric dimensions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - Align test.* keys with the OTel test registry and report durations in seconds.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/filesystem - Namespace flow-custom telemetry keys under flow.* and switch to UCUM units.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/etl - Namespace flow-custom telemetry keys under flow.* and switch to UCUM units.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Preserve traceparent across messenger JSON serialization.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Excluded http_kernel paths now suppress the whole request, removing orphan root spans.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Remove ResettableContextStorage and MemoryContextStorage::reset().** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Remove messenger link config, worker-cycle span, metrics_duration_unit and dbal.log_sql config.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Remove duplicated official-key telemetry attribute constants.** - [@norberttech](https://github.com/norberttech)
+
 ## [0.41.1] - 2026-07-01
 
 ### Added
