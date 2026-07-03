@@ -25,6 +25,7 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Context;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Client\Telemetry\TraceableClient;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
@@ -1721,7 +1722,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertTrue($options->includeParameters);
         static::assertSame(500, $options->maxQueryLength);
         static::assertTrue($options->traceQueries);
-        static::assertTrue($options->traceTransactions);
+        static::assertSame(TransactionSpanMode::GROUPED, $options->transactionSpans);
         static::assertTrue($options->collectMetrics);
     }
 }

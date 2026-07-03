@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +30,7 @@ final class PostgreSqlTelemetryConfigTest extends TestCase
         $tel = $this->createTelemetry($clock);
         $options = postgresql_telemetry_options(
             traceQueries: false,
-            traceTransactions: false,
+            transactionSpans: TransactionSpanMode::OFF,
             collectMetrics: false,
             logQueries: true,
         );
@@ -40,7 +41,7 @@ final class PostgreSqlTelemetryConfigTest extends TestCase
         static::assertSame($clock, $config->clock);
         static::assertSame($options, $config->options);
         static::assertFalse($config->options->traceQueries);
-        static::assertFalse($config->options->traceTransactions);
+        static::assertSame(TransactionSpanMode::OFF, $config->options->transactionSpans);
         static::assertFalse($config->options->collectMetrics);
         static::assertTrue($config->options->logQueries);
     }
@@ -55,7 +56,7 @@ final class PostgreSqlTelemetryConfigTest extends TestCase
         static::assertSame($tel, $config->telemetry);
         static::assertSame($clock, $config->clock);
         static::assertTrue($config->options->traceQueries);
-        static::assertTrue($config->options->traceTransactions);
+        static::assertSame(TransactionSpanMode::GROUPED, $config->options->transactionSpans);
         static::assertTrue($config->options->collectMetrics);
         static::assertFalse($config->options->logQueries);
     }

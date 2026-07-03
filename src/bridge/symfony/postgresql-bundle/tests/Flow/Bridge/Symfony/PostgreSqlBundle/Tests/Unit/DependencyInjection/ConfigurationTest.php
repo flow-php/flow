@@ -725,7 +725,7 @@ final class ConfigurationTest extends TestCase
                         'service_id' => 'my.telemetry',
                         'clock_service_id' => 'my.clock',
                         'trace_queries' => false,
-                        'trace_transactions' => false,
+                        'transaction_spans' => 'off',
                         'collect_metrics' => false,
                         'log_queries' => true,
                         'max_query_length' => 500,
@@ -741,7 +741,7 @@ final class ConfigurationTest extends TestCase
         static::assertSame('my.telemetry', $telemetry['service_id']);
         static::assertSame('my.clock', $telemetry['clock_service_id']);
         static::assertFalse($telemetry['trace_queries']);
-        static::assertFalse($telemetry['trace_transactions']);
+        static::assertSame('off', $telemetry['transaction_spans']);
         static::assertFalse($telemetry['collect_metrics']);
         static::assertTrue($telemetry['log_queries']);
         static::assertSame(500, $telemetry['max_query_length']);
@@ -767,7 +767,7 @@ final class ConfigurationTest extends TestCase
         static::assertSame('flow.telemetry', $telemetry['service_id']);
         static::assertNull($telemetry['clock_service_id']);
         static::assertTrue($telemetry['trace_queries']);
-        static::assertTrue($telemetry['trace_transactions']);
+        static::assertSame('grouped', $telemetry['transaction_spans']);
         static::assertTrue($telemetry['collect_metrics']);
         static::assertFalse($telemetry['log_queries']);
         static::assertSame(1000, $telemetry['max_query_length']);

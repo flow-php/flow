@@ -14,7 +14,7 @@ final readonly class PostgreSqlTelemetryOptions
 {
     /**
      * @param bool $traceQueries Whether to create spans for query execution
-     * @param bool $traceTransactions Whether to create spans for transactions
+     * @param TransactionSpanMode $transactionSpans How transactions are traced (grouped, per_operation or off)
      * @param bool $collectMetrics Whether to collect metrics (duration, row counts)
      * @param bool $logQueries Whether to log executed queries
      * @param null|int $maxQueryLength Maximum length of query text in telemetry (null = unlimited)
@@ -24,7 +24,7 @@ final readonly class PostgreSqlTelemetryOptions
      */
     public function __construct(
         public bool $traceQueries = true,
-        public bool $traceTransactions = true,
+        public TransactionSpanMode $transactionSpans = TransactionSpanMode::GROUPED,
         public bool $collectMetrics = true,
         public bool $logQueries = false,
         public ?int $maxQueryLength = 1000,
@@ -37,7 +37,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $collect,
             $this->logQueries,
             $this->maxQueryLength,
@@ -51,7 +51,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $this->logQueries,
             $this->maxQueryLength,
@@ -65,7 +65,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $log,
             $this->maxQueryLength,
@@ -79,7 +79,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $this->logQueries,
             $this->maxQueryLength,
@@ -93,7 +93,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $this->logQueries,
             $this->maxQueryLength,
@@ -107,7 +107,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $this->traceQueries,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $this->logQueries,
             $length,
@@ -121,7 +121,7 @@ final readonly class PostgreSqlTelemetryOptions
     {
         return new self(
             $trace,
-            $this->traceTransactions,
+            $this->transactionSpans,
             $this->collectMetrics,
             $this->logQueries,
             $this->maxQueryLength,
@@ -131,11 +131,11 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function traceTransactions(bool $trace = true): self
+    public function transactionSpans(TransactionSpanMode $mode = TransactionSpanMode::GROUPED): self
     {
         return new self(
             $this->traceQueries,
-            $trace,
+            $mode,
             $this->collectMetrics,
             $this->logQueries,
             $this->maxQueryLength,

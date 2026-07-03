@@ -36,9 +36,13 @@ final class TracingDriver extends AbstractDriverMiddleware
         private readonly Telemetry $telemetry,
         DriverInterface $driver,
         private readonly string $connectionName,
-        private readonly bool $logSql,
         private readonly int $maxSqlLength,
         private readonly array $excludeTables = [],
+        private readonly TransactionSpanMode $transactionSpanMode = TransactionSpanMode::GROUPED,
+        private readonly bool $collectMetrics = true,
+        private readonly bool $includeParameters = false,
+        private readonly int $maxParameters = 10,
+        private readonly int $maxParameterLength = 100,
     ) {
         parent::__construct($driver);
     }
@@ -51,26 +55,54 @@ final class TracingDriver extends AbstractDriverMiddleware
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
+        $namespace = $params['dbname'] ?? 'default';
+
         $span = $tracer->span('doctrine.dbal.connection', SpanKind::CLIENT, [
-            'db.namespace' => $params['dbname'] ?? 'default',
-            'db.connection.name' => $this->connectionName,
+            DbAttributes::DB_NAMESPACE => $namespace,
+            DbAttributes::DB_CONNECTION_NAME => $this->connectionName,
         ]);
 
         try {
             $connection = parent::connect($params);
 
-            $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
+            $dbSystem = $this->getSemanticDbSystem($connection->getServerVersion());
+            $span->setAttribute(DbAttributes::DB_SYSTEM_NAME, $dbSystem);
+
+            $baseAttributes = [
+                DbAttributes::DB_SYSTEM_NAME => $dbSystem,
+                DbAttributes::DB_NAMESPACE => $namespace,
+            ];
+
+            $host = $params['host'] ?? null;
+
+            if ($host !== null) {
+                $baseAttributes[DbAttributes::SERVER_ADDRESS] = $host;
+            }
+
+            $port = $params['port'] ?? null;
+
+            if ($port !== null) {
+                $baseAttributes[DbAttributes::SERVER_PORT] = $port;
+            }
 
             return new TracingConnection(
                 $connection,
-                $this->telemetry,
-                $this->logSql,
-                $this->maxSqlLength,
+                new QueryTracer(
+                    $this->telemetry,
+                    $baseAttributes,
+                    $this->maxSqlLength,
+                    $this->collectMetrics,
+                    $this->includeParameters,
+                    $this->maxParameters,
+                    $this->maxParameterLength,
+                ),
+                $this->transactionSpanMode,
+                $baseAttributes + [DbAttributes::DB_CONNECTION_NAME => $this->connectionName],
                 $this->excludeTables,
             );
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(DbAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

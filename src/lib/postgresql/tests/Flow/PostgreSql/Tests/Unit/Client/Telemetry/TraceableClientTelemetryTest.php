@@ -8,6 +8,7 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Explain\Plan\Cost;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
@@ -59,7 +60,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $config = postgresql_telemetry_config(
             $tel,
             $clock,
-            postgresql_telemetry_options(traceQueries: true, traceTransactions: true),
+            postgresql_telemetry_options(traceQueries: true, transactionSpans: TransactionSpanMode::GROUPED),
         );
 
         $mockClient = $this->createMockClient();
@@ -88,7 +89,7 @@ final class TraceableClientTelemetryTest extends TestCase
             $logProcessor,
             postgresql_telemetry_options(
                 traceQueries: true,
-                traceTransactions: true,
+                transactionSpans: TransactionSpanMode::GROUPED,
                 collectMetrics: true,
                 logQueries: true,
             ),
@@ -133,7 +134,10 @@ final class TraceableClientTelemetryTest extends TestCase
     public function test_begin_transaction_creates_span_when_tracing_enabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceTransactions: true));
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED),
+        );
 
         $nestingLevel = 0;
         $mockClient = $this->createMockClient();
@@ -166,7 +170,10 @@ final class TraceableClientTelemetryTest extends TestCase
     public function test_commit_completes_transaction_span(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceTransactions: true));
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED),
+        );
 
         $nestingLevel = 0;
         $mockClient = $this->createMockClient();
@@ -196,6 +203,147 @@ final class TraceableClientTelemetryTest extends TestCase
         static::assertNull($spans[0]->status());
     }
 
+    public function test_per_operation_mode_creates_a_short_span_for_each_transaction_call(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::PER_OPERATION),
+        );
+
+        $nestingLevel = 0;
+        $mockClient = $this->createMockClient();
+        $mockClient->method('getTransactionNestingLevel')->willReturnCallback(static fn(): int => $nestingLevel);
+        $mockClient
+            ->method('beginTransaction')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel++;
+            });
+        $mockClient
+            ->method('commit')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel--;
+            });
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->beginTransaction();
+        $client->commit();
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertSame(['BEGIN TRANSACTION', 'COMMIT TRANSACTION'], array_map(static fn($s) => $s->name(), $spans));
+    }
+
+    public function test_off_mode_creates_no_transaction_spans(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::OFF),
+        );
+
+        $nestingLevel = 0;
+        $mockClient = $this->createMockClient();
+        $mockClient->method('getTransactionNestingLevel')->willReturnCallback(static fn(): int => $nestingLevel);
+        $mockClient
+            ->method('beginTransaction')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel++;
+            });
+        $mockClient
+            ->method('commit')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel--;
+            });
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->beginTransaction();
+        $client->commit();
+
+        static::assertCount(0, $spanProcessor->endedSpans());
+    }
+
+    public function test_close_completes_a_transaction_span_left_open(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED),
+        );
+
+        $nestingLevel = 0;
+        $mockClient = $this->createMockClient();
+        $mockClient->method('getTransactionNestingLevel')->willReturnCallback(static fn(): int => $nestingLevel);
+        $mockClient
+            ->method('beginTransaction')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel++;
+            });
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->beginTransaction();
+
+        static::assertCount(
+            0,
+            $spanProcessor->endedSpans(),
+            'grouped transaction span stays open until commit/rollBack',
+        );
+
+        $client->close();
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame('BEGIN TRANSACTION', $spans[0]->name());
+        static::assertTrue($spans[0]->status()?->isError());
+    }
+
+    public function test_transaction_duration_metric_uses_operation_and_nesting_level(): void
+    {
+        $metricProcessor = memory_metric_processor(void_exporter());
+        $config = $this->createConfig(metricProcessor: $metricProcessor, options: postgresql_telemetry_options(
+            transactionSpans: TransactionSpanMode::OFF,
+            traceQueries: false,
+            collectMetrics: true,
+        ));
+
+        $nestingLevel = 0;
+        $mockClient = $this->createMockClient();
+        $mockClient
+            ->method('getTransactionNestingLevel')
+            ->willReturnCallback(static function () use (&$nestingLevel): int {
+                return $nestingLevel;
+            });
+        $mockClient
+            ->method('beginTransaction')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel++;
+            });
+        $mockClient
+            ->method('commit')
+            ->willReturnCallback(static function () use (&$nestingLevel): void {
+                $nestingLevel--;
+            });
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->beginTransaction();
+        $client->commit();
+
+        $this->collectMetrics($config);
+
+        $durations = $metricProcessor->metricsWithName('db.client.operation.duration');
+        $operations = array_map(static fn($m) => $m->attributes->get('db.operation.name'), $durations);
+        static::assertContains('begin', $operations);
+        static::assertContains('commit', $operations);
+
+        foreach ($durations as $metric) {
+            static::assertSame('postgresql', $metric->attributes->get('db.system.name'));
+            static::assertSame(1, $metric->attributes->get('db.transaction.nesting_level'));
+            static::assertFalse(
+                $metric->attributes->has('server.address'),
+                'server.address must not be a metric dimension',
+            );
+        }
+    }
+
     public function test_duration_metric_is_recorded_when_metrics_enabled(): void
     {
         $metricProcessor = memory_metric_processor(void_exporter());
@@ -216,6 +364,30 @@ final class TraceableClientTelemetryTest extends TestCase
         static::assertCount(1, $durationMetrics);
         static::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         static::assertGreaterThan(0, $durationMetrics[0]->value);
+    }
+
+    public function test_duration_metric_uses_low_cardinality_attributes(): void
+    {
+        $metricProcessor = memory_metric_processor(void_exporter());
+        $config = $this->createConfig(metricProcessor: $metricProcessor, options: postgresql_telemetry_options(
+            traceQueries: false,
+            collectMetrics: true,
+            includeParameters: true,
+        ));
+
+        $mockClient = $this->createMockClient();
+        $mockClient->method('execute')->willReturn(1);
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $client->execute('UPDATE users SET active = true WHERE id = $1', [42]);
+
+        $this->collectMetrics($config);
+
+        $attributes = $metricProcessor->metricsWithName('db.client.operation.duration')[0]->attributes;
+        static::assertFalse($attributes->has('db.query.text'), 'query text must not be a metric dimension');
+        static::assertFalse($attributes->has('db.query.parameter.0'), 'parameters must not be a metric dimension');
+        static::assertSame('postgresql', $attributes->get('db.system.name'));
+        static::assertSame('UPDATE', $attributes->get('db.operation.name'));
     }
 
     public function test_explain_creates_span(): void
@@ -372,7 +544,10 @@ final class TraceableClientTelemetryTest extends TestCase
     public function test_nested_transaction_creates_savepoint_span(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceTransactions: true));
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED),
+        );
 
         $nestingLevel = 0;
         $mockClient = $this->createMockClient();
@@ -452,7 +627,10 @@ final class TraceableClientTelemetryTest extends TestCase
     public function test_rollback_completes_all_nested_transaction_spans(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceTransactions: true));
+        $config = $this->createConfig(
+            $spanProcessor,
+            options: postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED),
+        );
 
         $nestingLevel = 0;
         $mockClient = $this->createMockClient();
@@ -516,7 +694,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
-            traceTransactions: true,
+            transactionSpans: TransactionSpanMode::GROUPED,
         ));
 
         $nestingLevel = 0;

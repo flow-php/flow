@@ -46,6 +46,8 @@ Configure telemetry behavior with `postgresql_telemetry_options()`:
 ```php
 <?php
 
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
+
 use function Flow\PostgreSql\DSL\{postgresql_telemetry_config, postgresql_telemetry_options};
 
 $config = postgresql_telemetry_config(
@@ -53,7 +55,7 @@ $config = postgresql_telemetry_config(
     $clock,
     postgresql_telemetry_options(
         traceQueries: true,       // Create spans for queries
-        traceTransactions: true,  // Create spans for transactions
+        transactionSpans: TransactionSpanMode::GROUPED, // grouped | per_operation | off
         collectMetrics: true,     // Record duration and row count histograms
         logQueries: false,        // Log executed queries
         maxQueryLength: 1000,     // Truncate query text (null = unlimited)
@@ -69,7 +71,7 @@ $config = postgresql_telemetry_config(
 | Option              | Default | Description                                                                 |
 |---------------------|---------|-----------------------------------------------------------------------------|
 | `traceQueries`      | `true`  | Create spans for each query operation                                       |
-| `traceTransactions` | `true`  | Create spans for transaction lifecycle (BEGIN, COMMIT, ROLLBACK)            |
+| `transactionSpans`  | `TransactionSpanMode::GROUPED` | `GROUPED` = one span per transaction; `PER_OPERATION` = a span per BEGIN/COMMIT/ROLLBACK; `OFF` = none |
 | `collectMetrics`    | `true`  | Record duration and row count histograms                                    |
 | `logQueries`        | `false` | Log executed queries via the telemetry logger                               |
 | `maxQueryLength`    | `1000`  | Maximum query text length in span attributes (`null` = unlimited)           |
@@ -84,11 +86,13 @@ Options can be configured fluently:
 ```php
 <?php
 
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
+
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
 
 $options = postgresql_telemetry_options()
     ->traceQueries(true)
-    ->traceTransactions(true)
+    ->transactionSpans(TransactionSpanMode::GROUPED)
     ->collectMetrics(true)
     ->logQueries(true)
     ->maxQueryLength(500)
@@ -219,6 +223,8 @@ Number of rows returned by database operations.
 ```php
 <?php
 
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
+
 use function Flow\PostgreSql\DSL\{
     pgsql_client,
     pgsql_connection,
@@ -323,7 +329,7 @@ $client = traceable_postgresql_client(
         $clock,
         postgresql_telemetry_options(
             traceQueries: false,
-            traceTransactions: false,
+            transactionSpans: TransactionSpanMode::OFF,
             collectMetrics: true,
         ),
     ),

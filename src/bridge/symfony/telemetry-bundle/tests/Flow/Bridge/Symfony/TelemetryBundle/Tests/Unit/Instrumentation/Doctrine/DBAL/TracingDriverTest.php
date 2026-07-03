@@ -46,7 +46,7 @@ final class TracingDriverTest extends TestCase
         $platform = $this->createMock(AbstractPlatform::class);
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -63,7 +63,7 @@ final class TracingDriverTest extends TestCase
         $platform = new DB2Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -80,7 +80,7 @@ final class TracingDriverTest extends TestCase
         $platform = new MariaDBPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -97,7 +97,7 @@ final class TracingDriverTest extends TestCase
         $platform = new SQLServerPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -115,7 +115,7 @@ final class TracingDriverTest extends TestCase
         $platform = new MySQL80Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -132,7 +132,7 @@ final class TracingDriverTest extends TestCase
         $platform = new OraclePlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -149,7 +149,7 @@ final class TracingDriverTest extends TestCase
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -166,7 +166,7 @@ final class TracingDriverTest extends TestCase
         $platform = new SQLitePlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -183,7 +183,7 @@ final class TracingDriverTest extends TestCase
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -200,7 +200,7 @@ final class TracingDriverTest extends TestCase
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'analytics', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'analytics', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -217,7 +217,7 @@ final class TracingDriverTest extends TestCase
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect(['dbname' => 'my_database']);
 
@@ -234,7 +234,7 @@ final class TracingDriverTest extends TestCase
         $driver = $this->createStub(Driver::class);
         $driver->method('connect')->willThrowException(new RuntimeException('connection refused'));
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $caught = false;
 

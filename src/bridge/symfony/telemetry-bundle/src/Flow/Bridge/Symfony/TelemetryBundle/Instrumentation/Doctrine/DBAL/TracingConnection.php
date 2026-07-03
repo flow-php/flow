@@ -4,78 +4,104 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL;
 
-use DateTimeImmutable;
+use Closure;
 use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
-use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Override;
 use Throwable;
 
-use function mb_strlen;
-use function mb_substr;
+use function array_key_exists;
+use function hrtime;
 use function preg_match;
 use function preg_quote;
 
 final class TracingConnection extends AbstractConnectionMiddleware
 {
     /**
+     * The open span for the current transaction in GROUPED mode, held between
+     * beginTransaction() and commit()/rollBack() so query spans nest under it.
+     */
+    private ?Span $transactionSpan = null;
+
+    /**
+     * @param array<string, int|string> $transactionAttributes db.system.name, db.namespace, server.address,
+     *                                                          server.port, db.connection.name
      * @param list<string> $excludeTables queries referencing any of these tables are not traced, so
      *                                     high-churn internals (e.g. the cache_items table behind a
      *                                     Doctrine DBAL cache pool) do not surface as orphan spans
      */
     public function __construct(
         ConnectionInterface $connection,
-        private readonly Telemetry $telemetry,
-        private readonly bool $logSql,
-        private readonly int $maxSqlLength,
+        private readonly QueryTracer $queryTracer,
+        private readonly TransactionSpanMode $transactionSpanMode = TransactionSpanMode::GROUPED,
+        private readonly array $transactionAttributes = [],
         private readonly array $excludeTables = [],
     ) {
         parent::__construct($connection);
     }
 
+    public function __destruct()
+    {
+        if ($this->transactionSpan === null) {
+            return;
+        }
+
+        $span = $this->transactionSpan;
+        $this->transactionSpan = null;
+        $span->setStatus(SpanStatus::error('Transaction was neither committed nor rolled back'));
+        $this->queryTracer->tracer()->complete($span);
+    }
+
     #[Override]
     public function beginTransaction(): void
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
-
-        $span = $tracer->span('doctrine.dbal.transaction.begin', SpanKind::CLIENT);
+        $startTime = hrtime(true);
 
         try {
-            parent::beginTransaction();
-        } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
+            if ($this->transactionSpanMode === TransactionSpanMode::OFF) {
+                parent::beginTransaction();
 
-            throw $exception;
+                return;
+            }
+
+            if ($this->transactionSpanMode === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('BEGIN TRANSACTION', 'begin', fn() => parent::beginTransaction());
+
+                return;
+            }
+
+            $tracer = $this->queryTracer->tracer();
+            $span = $tracer->span('BEGIN TRANSACTION', SpanKind::CLIENT, $this->transactionSpanAttributes());
+
+            try {
+                parent::beginTransaction();
+                $this->transactionSpan = $span;
+            } catch (Throwable $exception) {
+                $this->queryTracer->recordError($span, $exception);
+                $tracer->complete($span);
+
+                throw $exception;
+            }
         } finally {
-            $tracer->complete($span);
+            $this->queryTracer->recordDuration($startTime, $this->transactionMetricAttributes('begin'));
         }
     }
 
     #[Override]
     public function commit(): void
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
+        $this->completeTransaction('COMMIT TRANSACTION', 'commit', fn() => parent::commit());
+    }
 
-        $span = $tracer->span('doctrine.dbal.transaction.commit', SpanKind::CLIENT);
-
-        try {
-            parent::commit();
-        } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $tracer->complete($span);
-        }
+    #[Override]
+    public function rollBack(): void
+    {
+        $this->completeTransaction('ROLLBACK TRANSACTION', 'rollback', fn() => parent::rollBack());
     }
 
     #[Override]
@@ -85,27 +111,11 @@ final class TracingConnection extends AbstractConnectionMiddleware
             return parent::exec($sql);
         }
 
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
-
-        $attributes = [];
-
-        if ($this->logSql) {
-            $attributes['db.query.text'] = $this->truncateSql($sql);
-        }
-
-        $span = $tracer->span('doctrine.dbal.connection.exec', SpanKind::CLIENT, $attributes);
-
-        try {
-            return parent::exec($sql);
-        } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $tracer->complete($span);
-        }
+        return $this->traceQuery(
+            $sql,
+            fn() => parent::exec($sql),
+            static fn(int|string $affected): int => (int) $affected,
+        );
     }
 
     #[Override]
@@ -115,24 +125,18 @@ final class TracingConnection extends AbstractConnectionMiddleware
             return parent::prepare($sql);
         }
 
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
-
-        $attributes = [];
-
-        if ($this->logSql) {
-            $attributes['db.query.text'] = $this->truncateSql($sql);
-        }
-
-        $span = $tracer->span('doctrine.dbal.statement.prepare', SpanKind::CLIENT, $attributes);
+        $sqlAttributes = $this->queryTracer->extract($sql);
+        $tracer = $this->queryTracer->tracer();
+        $span = $tracer->span(
+            $this->queryTracer->spanName($sqlAttributes),
+            SpanKind::CLIENT,
+            $this->queryTracer->queryAttributes($sql, $sqlAttributes),
+        );
 
         try {
-            $statement = parent::prepare($sql);
-
-            return new TracingStatement($statement, $this->telemetry);
+            return new TracingStatement(parent::prepare($sql), $this->queryTracer, $sql, $sqlAttributes);
         } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $this->queryTracer->recordError($span, $exception);
 
             throw $exception;
         } finally {
@@ -147,22 +151,42 @@ final class TracingConnection extends AbstractConnectionMiddleware
             return parent::query($sql);
         }
 
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
+        return $this->traceQuery(
+            $sql,
+            fn() => parent::query($sql),
+            static fn(Result $result): int => (int) $result->rowCount(),
+        );
+    }
 
-        $attributes = [];
-
-        if ($this->logSql) {
-            $attributes['db.query.text'] = $this->truncateSql($sql);
-        }
-
-        $span = $tracer->span('doctrine.dbal.connection.query', SpanKind::CLIENT, $attributes);
+    /**
+     * @template T
+     *
+     * @param \Closure(): T $execute
+     * @param \Closure(T): int $rowCount
+     *
+     * @return T
+     */
+    private function traceQuery(string $sql, Closure $execute, Closure $rowCount): mixed
+    {
+        $sqlAttributes = $this->queryTracer->extract($sql);
+        $startTime = hrtime(true);
+        $tracer = $this->queryTracer->tracer();
+        $span = $tracer->span(
+            $this->queryTracer->spanName($sqlAttributes),
+            SpanKind::CLIENT,
+            $this->queryTracer->queryAttributes($sql, $sqlAttributes),
+        );
 
         try {
-            return parent::query($sql);
+            $result = $execute();
+            $rows = $rowCount($result);
+            $span->setAttribute(DbAttributes::DB_RESPONSE_RETURNED_ROWS, $rows);
+            $this->queryTracer->recordQueryMetrics($startTime, $rows, $sqlAttributes);
+
+            return $result;
         } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $this->queryTracer->recordError($span, $exception);
+            $this->queryTracer->recordQueryMetrics($startTime, null, $sqlAttributes);
 
             throw $exception;
         } finally {
@@ -170,24 +194,96 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[Override]
-    public function rollBack(): void
+    /**
+     * @param \Closure(): void $execute
+     */
+    private function completeTransaction(string $operationSpanName, string $operation, Closure $execute): void
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
-
-        $span = $tracer->span('doctrine.dbal.transaction.rollback', SpanKind::CLIENT);
+        $startTime = hrtime(true);
 
         try {
-            parent::rollBack();
+            if ($this->transactionSpanMode === TransactionSpanMode::OFF) {
+                $execute();
+
+                return;
+            }
+
+            if ($this->transactionSpanMode === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation($operationSpanName, $operation, $execute);
+
+                return;
+            }
+
+            $span = $this->transactionSpan;
+            $this->transactionSpan = null;
+
+            if ($span === null) {
+                $execute();
+
+                return;
+            }
+
+            $tracer = $this->queryTracer->tracer();
+
+            try {
+                $execute();
+            } catch (Throwable $exception) {
+                $this->queryTracer->recordError($span, $exception);
+
+                throw $exception;
+            } finally {
+                $tracer->complete($span);
+            }
+        } finally {
+            $this->queryTracer->recordDuration($startTime, $this->transactionMetricAttributes($operation));
+        }
+    }
+
+    /**
+     * @param \Closure(): void $execute
+     */
+    private function traceTransactionOperation(string $spanName, string $operation, Closure $execute): void
+    {
+        $tracer = $this->queryTracer->tracer();
+        $span = $tracer->span($spanName, SpanKind::CLIENT, [DbAttributes::DB_OPERATION_NAME => $operation]
+        + $this->transactionSpanAttributes());
+
+        try {
+            $execute();
         } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $this->queryTracer->recordError($span, $exception);
 
             throw $exception;
         } finally {
             $tracer->complete($span);
         }
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function transactionSpanAttributes(): array
+    {
+        return $this->transactionAttributes + [DbAttributes::DB_TRANSACTION_NESTING_LEVEL => 1];
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function transactionMetricAttributes(string $operation): array
+    {
+        $attributes = [
+            DbAttributes::DB_OPERATION_NAME => $operation,
+            DbAttributes::DB_TRANSACTION_NESTING_LEVEL => 1,
+        ];
+
+        foreach ([DbAttributes::DB_SYSTEM_NAME, DbAttributes::DB_NAMESPACE] as $key) {
+            if (array_key_exists($key, $this->transactionAttributes)) {
+                $attributes[$key] = $this->transactionAttributes[$key];
+            }
+        }
+
+        return $attributes;
     }
 
     private function isExcluded(string $sql): bool
@@ -199,18 +295,5 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
 
         return false;
-    }
-
-    private function truncateSql(string $sql): string
-    {
-        if ($this->maxSqlLength <= 0) {
-            return $sql;
-        }
-
-        if (mb_strlen($sql) <= $this->maxSqlLength) {
-            return $sql;
-        }
-
-        return mb_substr($sql, 0, $this->maxSqlLength) . '...';
     }
 }

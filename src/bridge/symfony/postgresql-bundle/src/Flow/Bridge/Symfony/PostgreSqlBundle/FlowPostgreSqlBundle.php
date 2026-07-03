@@ -31,6 +31,7 @@ use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Client\Telemetry\TraceableClient;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
@@ -188,8 +189,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->booleanNode('trace_queries')
             ->defaultTrue()
             ->end()
-            ->booleanNode('trace_transactions')
-            ->defaultTrue()
+            ->enumNode('transaction_spans')
+            ->info('How transactions are traced: "grouped" (one span holding the queries), "per_operation" (a short span per BEGIN/COMMIT/ROLLBACK), or "off" (no transaction spans)')
+            ->values(['grouped', 'per_operation', 'off'])
+            ->defaultValue('grouped')
             ->end()
             ->booleanNode('collect_metrics')
             ->defaultTrue()
@@ -495,7 +498,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, migrations?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -750,7 +753,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool} $connectionConfig
+     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool} $connectionConfig
      */
     private function registerConnection(
         string $name,
@@ -1141,13 +1144,13 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int} $telemetryConfig
+     * @param array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int} $telemetryConfig
      */
     private function registerTelemetry(string $name, array $telemetryConfig, ContainerBuilder $container): void
     {
         $optionsDef = new Definition(PostgreSqlTelemetryOptions::class, [
             $telemetryConfig['trace_queries'],
-            $telemetryConfig['trace_transactions'],
+            TransactionSpanMode::from($telemetryConfig['transaction_spans']),
             $telemetryConfig['collect_metrics'],
             $telemetryConfig['log_queries'],
             $telemetryConfig['max_query_length'],

@@ -1388,8 +1388,12 @@ flow_telemetry:
   instrumentation:
     dbal:
       enabled: true
-      log_sql: true           # Include SQL in span attributes
-      max_sql_length: 1000    # Max SQL length (0 = no limit)
+      max_sql_length: 1000          # Max db.query.text length (0 = no limit)
+      collect_metrics: true         # Emit db.client.operation.duration + db.client.response.returned_rows
+      include_parameters: false     # Include bound statement parameters (security consideration)
+      max_parameters: 10            # Max parameters to include when include_parameters is enabled
+      max_parameter_length: 100     # Max length per included parameter value
+      transaction_spans: grouped    # grouped (one span per transaction) | per_operation | off
       exclude_connections:
         - 'legacy'
         - '/^test_.*/'
@@ -1416,7 +1420,7 @@ flow_telemetry:
 
 A cache pool backed by `cache.adapter.doctrine_dbal` defers writes and flushes them from the pool's own
 commit path at process shutdown — outside any request/message span. Each such write then surfaces as an
-orphan `doctrine.dbal.*` trace (`statement.prepare`/`execute`, `transaction.begin`/`commit`), one per query.
+orphan `doctrine.dbal.*` trace (a `BEGIN TRANSACTION` span wrapping `statement.prepare`/`execute`), one per query.
 
 `flush_deferred: true` drains those deferred writes at request/command termination and after each consumed
 message, inside a single `cache.flush` span, so they group under one trace instead of orphaning (and the pool
@@ -2001,7 +2005,6 @@ flow_telemetry:
       trace: true
     dbal:
       enabled: true
-      log_sql: true
       max_sql_length: 500
     cache:
       enabled: true
