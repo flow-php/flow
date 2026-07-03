@@ -17,8 +17,10 @@ use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Route;
@@ -885,6 +887,67 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame(TestController::class . '::index', $attributes['flow.symfony.controller']);
         // OTEL HTTP semconv: url.full is a client-span attribute and must not appear on server spans.
         static::assertArrayNotHasKey('url.full', $attributes);
+    }
+
+    public function test_names_span_from_route_when_response_is_returned_before_the_controller(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => ['utf8' => true, 'resource' => __DIR__ . '/../../../Fixtures/config/routes.php'],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => 'memory']],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('login_check_google', new Route('/login/check-google', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        // The security firewall listens on kernel.request at priority 8 — after RouterListener (32) has
+        // matched the route — and answers authentication check paths with a redirect itself, so the
+        // request never reaches kernel.controller.
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = $container->get('event_dispatcher');
+        $dispatcher->addListener(
+            KernelEvents::REQUEST,
+            static function (RequestEvent $event): void {
+                $event->setResponse(new RedirectResponse('/dashboard'));
+            },
+            8,
+        );
+
+        $request = Request::create('/login/check-google', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        static::assertSame(302, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $span = array_values(array_filter(
+            $processor->endedSpans(),
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+
+        static::assertSame('GET /login/check-google', $span->name());
+        static::assertSame('/login/check-google', $span->attributes()['http.route']);
     }
 
     public function test_span_name_falls_back_to_method_without_a_matched_route(): void
