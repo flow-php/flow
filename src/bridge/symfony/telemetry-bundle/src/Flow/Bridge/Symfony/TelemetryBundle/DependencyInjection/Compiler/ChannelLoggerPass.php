@@ -42,13 +42,18 @@ use function ucwords;
  * invalid-behavior flag. Per channel, both a "LoggerInterface $<channel>Logger" and
  * a "Logger $<channel>Logger" autowiring alias are registered so any service can
  * request a channel logger by named argument. Each channel is synthesized on demand
- * carrying a "log.channel" attribute; where it is placed - the instrumentation scope,
+ * carrying a "flow.log.channel" attribute; where it is placed - the instrumentation scope,
  * every emitted record, or both - is governed by the
  * "flow.telemetry.channel_attribute_target" parameter (default "both"). A logger
  * already declared under that name (e.g. the always-present "default") is reused as-is.
  */
 final class ChannelLoggerPass implements CompilerPassInterface
 {
+    /**
+     * log.* is a reserved OTel namespace, so the flow-custom channel key carries the flow prefix.
+     */
+    public const string ATTR_LOG_CHANNEL = 'flow.log.channel';
+
     public const string TAG = 'flow.telemetry.channel';
 
     private const string CAPTURE_PARAMETER = 'flow.telemetry.capture_framework_channels';
@@ -140,7 +145,7 @@ final class ChannelLoggerPass implements CompilerPassInterface
      */
     private function channelAttributes(string $channel, ContainerBuilder $container): array
     {
-        $value = ['log.channel' => $channel];
+        $value = [self::ATTR_LOG_CHANNEL => $channel];
 
         return match ($this->channelAttributeTarget($container)) {
             'scope' => ['scope' => $value],

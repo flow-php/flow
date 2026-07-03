@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -63,20 +64,20 @@ final readonly class ControllerSpanSubscriber implements EventSubscriberInterfac
 
         if ($resolved !== null) {
             $name = $resolved->name;
-            $attributes['controller'] = $resolved->name;
+            $attributes[HttpKernelAttributes::ATTR_CONTROLLER] = $resolved->name;
 
-            if ($resolved->namespace !== null) {
-                $attributes['code.namespace'] = $resolved->namespace;
-            }
-
+            // OTEL code semconv: code.function.name is the single stable, fully-qualified
+            // replacement for the deprecated code.namespace/code.function pair.
             if ($resolved->function !== null) {
-                $attributes['code.function'] = $resolved->function;
+                $attributes[SemConvAttributes::CODE_FUNCTION_NAME] = $resolved->namespace !== null
+                    ? "{$resolved->namespace}::{$resolved->function}"
+                    : $resolved->function;
             }
         }
 
         // @mago-expect analysis:mixed-assignment
         if (is_string($route = $request->attributes->get('_route'))) {
-            $attributes['http.route'] = $route;
+            $attributes[SemConvAttributes::HTTP_ROUTE] = $route;
         }
 
         $span = $this->tracer()->span($name, SpanKind::INTERNAL, $attributes);
@@ -110,7 +111,7 @@ final readonly class ControllerSpanSubscriber implements EventSubscriberInterfac
 
         $throwable = $event->getThrowable();
         $span->recordException($throwable, new DateTimeImmutable());
-        $span->setAttribute('error.type', $throwable::class);
+        $span->setAttribute(SemConvAttributes::ERROR_TYPE, $throwable::class);
         $span->setStatus(SpanStatus::error($throwable->getMessage()));
         $this->tracer()->complete($span);
 

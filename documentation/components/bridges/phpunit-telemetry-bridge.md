@@ -258,21 +258,24 @@ When enabled, the extension creates spans for:
 
 Each span includes attributes like:
 
-- `test.suite` - Test suite name
-- `test.id` - Test identifier
-- `test.name` - Test name
-- `test.class` - Test class name
-- `test.method` - Test method name
-- `test.status` - Test result status (passed, failed, errored, skipped, incomplete)
+- `test.suite.name` - Test suite name
+- `test.suite.run.status` - Suite outcome (success, failure, skipped)
+- `test.case.name` - Test name
+- `test.case.result.status` - Test result status (passed, failed, errored, skipped, incomplete)
+- `flow.phpunit.test.id` - Test identifier
+- `flow.phpunit.test.class` - Test class name
+- `flow.phpunit.test.method` - Test method name
+- `flow.phpunit.test.memory.peak` / `flow.phpunit.test.memory.delta` - Memory usage in bytes
 
 ### Metrics
 
 When enabled, the extension records:
 
-- `flow.phpunit.suite.duration` - Histogram of suite execution time
-- `flow.phpunit.suite.test_count` - Counter of tests per suite
-- `flow.phpunit.test.duration` - Histogram of individual test execution time
-- `flow.phpunit.test.count` - Counter of tests by status
+- `flow.phpunit.suite.duration` - Histogram of suite execution time (seconds)
+- `flow.phpunit.suite.test_count` - Counter of tests per suite (`{test}`)
+- `flow.phpunit.test.duration` - Histogram of individual test execution time (seconds)
+- `flow.phpunit.test.count` - Counter of tests by status (`{test}`)
+- `flow.phpunit.test.memory.peak` / `flow.phpunit.test.memory.delta` - Memory histograms (`By`)
 
 ## Running with Docker Compose
 

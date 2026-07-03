@@ -89,8 +89,9 @@ final class ControllerSpanSubscriberTest extends KernelTestCase
         static::assertSame($requestSpan->context()->traceId->toHex(), $controllerSpan->context()->traceId->toHex());
 
         $attributes = $controllerSpan->attributes();
-        static::assertSame(TestController::class, $attributes['code.namespace']);
-        static::assertSame('index', $attributes['code.function']);
+        static::assertSame(TestController::class . '::index', $attributes['code.function.name']);
+        static::assertArrayNotHasKey('code.namespace', $attributes);
+        static::assertArrayNotHasKey('code.function', $attributes);
         static::assertSame('test_index', $attributes['http.route']);
     }
 

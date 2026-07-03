@@ -47,8 +47,8 @@ final class TracingValueResolverTest extends TestCase
         static::assertCount(1, $spans);
         static::assertSame('controller.argument_value_resolver', $spans[0]->name());
         static::assertSame(SpanKind::INTERNAL, $spans[0]->kind());
-        static::assertSame($inner::class, $spans[0]->attributes()['code.namespace']);
-        static::assertSame('id', $spans[0]->attributes()['controller.argument']);
+        static::assertSame($inner::class . '::resolve', $spans[0]->attributes()['code.function.name']);
+        static::assertSame('id', $spans[0]->attributes()['flow.symfony.controller.argument']);
         static::assertSame($requestSpan->context()->spanId->toHex(), $spans[0]->context()->parentSpanId?->toHex());
     }
 

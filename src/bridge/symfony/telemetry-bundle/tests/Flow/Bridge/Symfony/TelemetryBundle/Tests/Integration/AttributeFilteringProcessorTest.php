@@ -339,7 +339,11 @@ final class AttributeFilteringProcessorTest extends KernelTestCase
                                         'any' => [
                                             [
                                                 'all' => [
-                                                    ['path' => 'log.channel', 'mode' => 'equal', 'value' => 'payments'],
+                                                    [
+                                                        'path' => 'flow.log.channel',
+                                                        'mode' => 'equal',
+                                                        'value' => 'payments',
+                                                    ],
                                                     [
                                                         'path' => AttributeFilteringLogMiddleware::SEVERITY_KEY,
                                                         'mode' => 'greater_than_equal',
@@ -349,7 +353,11 @@ final class AttributeFilteringProcessorTest extends KernelTestCase
                                             ],
                                             [
                                                 'all' => [
-                                                    ['path' => 'log.channel', 'mode' => 'equal', 'value' => 'importer'],
+                                                    [
+                                                        'path' => 'flow.log.channel',
+                                                        'mode' => 'equal',
+                                                        'value' => 'importer',
+                                                    ],
                                                     [
                                                         'path' => AttributeFilteringLogMiddleware::SEVERITY_KEY,
                                                         'mode' => 'greater_than_equal',

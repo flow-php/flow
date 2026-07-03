@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\PHPUnitTelemetryAttributes;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
 use Flow\Bridge\PHPUnit\Telemetry\TestMemoryRegistry;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\Test\PreparationStartedSubscriber;
@@ -50,10 +52,10 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
             }
 
             $span = $tracer->span($test->name(), attributes: [
-                'test.id' => $test->id(),
-                'test.name' => $test->name(),
-                'test.class' => $className,
-                'test.method' => $methodName,
+                PHPUnitTelemetryAttributes::ATTR_TEST_ID => $test->id(),
+                SemConvAttributes::TEST_CASE_NAME => $test->name(),
+                PHPUnitTelemetryAttributes::ATTR_TEST_CLASS => $className,
+                PHPUnitTelemetryAttributes::ATTR_TEST_METHOD => $methodName,
             ]);
 
             $this->spanStack->push($span);

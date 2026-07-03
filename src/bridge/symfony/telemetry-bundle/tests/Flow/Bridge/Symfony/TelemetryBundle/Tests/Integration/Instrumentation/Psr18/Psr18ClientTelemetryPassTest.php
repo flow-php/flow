@@ -212,7 +212,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('POST localhost', $span->name());
+        static::assertSame('POST', $span->name());
         static::assertSame(500, $span->attributes()['http.response.status_code']);
 
         $status = $span->status();
@@ -261,7 +261,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET api.example.com', $span->name());
+        static::assertSame('GET', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -328,7 +328,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET unreachable.example.com', $span->name());
+        static::assertSame('GET', $span->name());
 
         $status = $span->status();
         static::assertNotNull($status);

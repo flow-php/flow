@@ -227,7 +227,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('POST localhost', $span->name());
+        static::assertSame('POST', $span->name());
         static::assertSame(500, $span->attributes()['http.response.status_code']);
 
         $status = $span->status();
@@ -280,7 +280,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET api.example.com', $span->name());
+        static::assertSame('GET', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -288,7 +288,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertSame('https://api.example.com/users?page=1', $attributes['url.full']);
         static::assertSame('https', $attributes['url.scheme']);
         static::assertSame('api.example.com', $attributes['server.address']);
-        static::assertSame('test.api_client', $attributes['http.client.name']);
+        static::assertSame('test.api_client', $attributes['flow.http.client.name']);
         static::assertSame(200, $attributes['http.response.status_code']);
         static::assertArrayNotHasKey('error.type', $attributes);
 
@@ -350,7 +350,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET unreachable.example.com', $span->name());
+        static::assertSame('GET', $span->name());
 
         $status = $span->status();
         static::assertNotNull($status);

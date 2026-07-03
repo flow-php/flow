@@ -174,10 +174,10 @@ Spans include attributes following [OpenTelemetry database semantic conventions]
 
 ### Transaction-Specific Attributes
 
-| Attribute                       | Description                   | Example        |
-|---------------------------------|-------------------------------|----------------|
-| `db.transaction.nesting_level`  | Current nesting depth         | `1`, `2`       |
-| `db.transaction.savepoint`      | Savepoint name (nested txns)  | `savepoint_1`  |
+| Attribute                            | Description                   | Example        |
+|--------------------------------------|-------------------------------|----------------|
+| `flow.db.transaction.nesting_level`  | Current nesting depth         | `1`, `2`       |
+| `flow.db.transaction.savepoint`      | Savepoint name (nested txns)  | `savepoint_1`  |
 
 ## Security Considerations
 

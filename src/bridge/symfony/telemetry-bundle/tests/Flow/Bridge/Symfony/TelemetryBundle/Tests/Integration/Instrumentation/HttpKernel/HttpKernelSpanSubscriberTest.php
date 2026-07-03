@@ -882,7 +882,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame('GET', $attributes['http.request.method']);
         static::assertSame(200, $attributes['http.response.status_code']);
         static::assertSame('/test', $attributes['http.route']);
-        static::assertSame(TestController::class . '::index', $attributes['controller']);
+        static::assertSame(TestController::class . '::index', $attributes['flow.symfony.controller']);
+        // OTEL HTTP semconv: url.full is a client-span attribute and must not appear on server spans.
+        static::assertArrayNotHasKey('url.full', $attributes);
     }
 
     public function test_span_name_falls_back_to_method_without_a_matched_route(): void

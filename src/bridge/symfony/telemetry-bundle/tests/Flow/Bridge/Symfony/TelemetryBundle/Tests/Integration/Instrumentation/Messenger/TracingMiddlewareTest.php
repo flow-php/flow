@@ -723,16 +723,17 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('send TestMessage', $span->name());
+        static::assertSame('send', $span->name());
         static::assertSame(SpanKind::PRODUCER, $span->kind());
 
         $attributes = $span->attributes();
         static::assertSame('symfony_messenger', $attributes['messaging.system']);
-        static::assertSame('TestMessage', $attributes['messaging.destination.name']);
-        static::assertSame(TestMessage::class, $attributes['messaging.message.class']);
+        // OTEL messaging semconv: destination = queue/topic (the transport), unknown at dispatch time.
+        static::assertArrayNotHasKey('messaging.destination.name', $attributes);
+        static::assertSame(TestMessage::class, $attributes['flow.messenger.message.class']);
         static::assertSame('send', $attributes['messaging.operation.type']);
         static::assertSame('send', $attributes['messaging.operation.name']);
-        static::assertSame('command.bus', $attributes['messaging.symfony.bus']);
+        static::assertSame('command.bus', $attributes['flow.messenger.bus']);
 
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($span->status());

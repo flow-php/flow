@@ -87,7 +87,7 @@ final class ThroughputTest extends TestCase
         );
 
         static::assertSame('dataframe_throughput', $throughput->name());
-        static::assertSame('rows/sec', $throughput->unit());
+        static::assertSame('rows/s', $throughput->unit());
         static::assertSame('Rows processed per second', $throughput->description());
     }
 
@@ -134,7 +134,7 @@ final class ThroughputTest extends TestCase
             unit: 'rows',
         );
 
-        static::assertSame('rows/sec', $throughput->unit());
+        static::assertSame('rows/s', $throughput->unit());
     }
 
     public function test_different_attribute_sets_produce_separate_metrics(): void
@@ -203,7 +203,7 @@ final class ThroughputTest extends TestCase
 
         static::assertCount(1, $metrics);
         static::assertSame('dataframe_throughput', $metrics[0]->name);
-        static::assertSame('rows/sec', $metrics[0]->unit);
+        static::assertSame('rows/s', $metrics[0]->unit);
         static::assertSame('Rows processed per second', $metrics[0]->description);
     }
 

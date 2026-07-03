@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Driver\Exception as DriverException;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
+use Flow\Telemetry\SemConvMetrics;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -51,13 +53,13 @@ final class QueryTracer
         if ($collectMetrics) {
             $meter = $this->telemetry->meter('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
             $this->operationDuration = $meter->createHistogram(
-                DbAttributes::METRIC_OPERATION_DURATION,
+                SemConvMetrics::DB_CLIENT_OPERATION_DURATION,
                 's',
                 'Duration of database client operations',
                 [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
             );
             $this->returnedRows = $meter->createHistogram(
-                DbAttributes::METRIC_RETURNED_ROWS,
+                SemConvMetrics::DB_CLIENT_RESPONSE_RETURNED_ROWS,
                 '{row}',
                 'Number of rows returned by database operations',
                 [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0],
@@ -92,14 +94,14 @@ final class QueryTracer
         $result = $this->baseAttributes;
 
         if ($attributes->operation !== null) {
-            $result[DbAttributes::DB_OPERATION_NAME] = $attributes->operation;
+            $result[SemConvAttributes::DB_OPERATION_NAME] = $attributes->operation;
         }
 
         if ($attributes->collection !== null) {
-            $result[DbAttributes::DB_COLLECTION_NAME] = $attributes->collection;
+            $result[SemConvAttributes::DB_COLLECTION_NAME] = $attributes->collection;
         }
 
-        $result[DbAttributes::DB_QUERY_TEXT] = $this->truncateSql($sql);
+        $result[SemConvAttributes::DB_QUERY_TEXT] = $this->truncateSql($sql);
 
         return $result;
     }
@@ -121,13 +123,13 @@ final class QueryTracer
     public function recordError(Span $span, Throwable $exception): void
     {
         $span->recordException($exception, new DateTimeImmutable());
-        $span->setAttribute(DbAttributes::ERROR_TYPE, $exception::class);
+        $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
 
         if ($exception instanceof DriverException) {
             $sqlState = $exception->getSQLState();
 
             if ($sqlState !== null) {
-                $span->setAttribute(DbAttributes::DB_RESPONSE_STATUS_CODE, $sqlState);
+                $span->setAttribute(SemConvAttributes::DB_RESPONSE_STATUS_CODE, $sqlState);
             }
         }
 
@@ -173,18 +175,18 @@ final class QueryTracer
     {
         $result = [];
 
-        foreach ([DbAttributes::DB_SYSTEM_NAME, DbAttributes::DB_NAMESPACE] as $key) {
+        foreach ([SemConvAttributes::DB_SYSTEM_NAME, SemConvAttributes::DB_NAMESPACE] as $key) {
             if (array_key_exists($key, $this->baseAttributes)) {
                 $result[$key] = $this->baseAttributes[$key];
             }
         }
 
         if ($attributes->operation !== null) {
-            $result[DbAttributes::DB_OPERATION_NAME] = $attributes->operation;
+            $result[SemConvAttributes::DB_OPERATION_NAME] = $attributes->operation;
         }
 
         if ($attributes->collection !== null) {
-            $result[DbAttributes::DB_COLLECTION_NAME] = $attributes->collection;
+            $result[SemConvAttributes::DB_COLLECTION_NAME] = $attributes->collection;
         }
 
         return $result;

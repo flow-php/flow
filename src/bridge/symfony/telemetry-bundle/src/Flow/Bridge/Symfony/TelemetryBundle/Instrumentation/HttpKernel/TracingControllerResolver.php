@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -34,7 +35,7 @@ final readonly class TracingControllerResolver implements ControllerResolverInte
             return $this->resolver->getController($request);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

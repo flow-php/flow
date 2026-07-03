@@ -6,6 +6,7 @@ namespace Flow\Bridge\Psr18\Telemetry;
 
 use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -39,34 +40,34 @@ final readonly class PSR18TraceableClient implements ClientInterface
         $url = (string) $uri;
 
         $attributes = [
-            'http.request.method' => $method,
-            'url.full' => $url,
-            'url.scheme' => $scheme,
-            'server.address' => $host,
+            SemConvAttributes::HTTP_REQUEST_METHOD => $method,
+            SemConvAttributes::URL_FULL => $url,
+            SemConvAttributes::URL_SCHEME => $scheme,
+            SemConvAttributes::SERVER_ADDRESS => $host,
+            // OTEL HTTP semconv: server.port is Required on client spans; fall back to the
+            // scheme default when the URI carries no explicit port.
+            SemConvAttributes::SERVER_PORT => $port ?? ($scheme === 'https' ? 443 : 80),
         ];
 
-        if ($port !== null && $port !== 80 && $port !== 443) {
-            $attributes['server.port'] = $port;
-        }
-
-        $span = $this->tracer->span("{$method} {$host}", SpanKind::CLIENT, $attributes);
+        // OTEL HTTP semconv: client span name is "{method}" - host would be per-host cardinality.
+        $span = $this->tracer->span($method, SpanKind::CLIENT, $attributes);
 
         try {
             $response = $this->client->sendRequest($request);
 
             $statusCode = $response->getStatusCode();
-            $span->setAttribute('http.response.status_code', $statusCode);
+            $span->setAttribute(SemConvAttributes::HTTP_RESPONSE_STATUS_CODE, $statusCode);
 
             // OTEL HTTP semconv: for SpanKind.CLIENT both 4xx and 5xx are Errors; 1xx-3xx leaves status unset.
             if ($statusCode >= 400) {
                 $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-                $span->setAttribute('error.type', (string) $statusCode);
+                $span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $statusCode);
             }
 
             return $response;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute('error.type', $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

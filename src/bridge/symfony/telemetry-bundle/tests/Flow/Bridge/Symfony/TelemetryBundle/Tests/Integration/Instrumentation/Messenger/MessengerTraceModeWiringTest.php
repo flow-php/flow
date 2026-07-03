@@ -56,7 +56,7 @@ final class MessengerTraceModeWiringTest extends KernelTestCase
         $names = MessengerWorkerHarness::drive($container, $subscriber);
 
         static::assertNotContains('poll.query', $names, 'the transport poll is suppressed');
-        static::assertContains('process TestMessage', $names, 'the handler span is still recorded');
+        static::assertContains('process async', $names, 'the handler span is still recorded');
         static::assertContains('handler.work', $names, 'work inside the handler is still recorded');
     }
 
@@ -86,7 +86,7 @@ final class MessengerTraceModeWiringTest extends KernelTestCase
         $names = MessengerWorkerHarness::drive($container, $subscriber);
 
         static::assertNotContains('poll.query', $names);
-        static::assertNotContains('process TestMessage', $names, 'no handler span when trace is disabled');
+        static::assertNotContains('process async', $names, 'no handler span when trace is disabled');
         static::assertNotContains('handler.work', $names, 'handler work is suppressed when trace is disabled');
     }
 }

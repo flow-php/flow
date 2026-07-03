@@ -8,6 +8,7 @@ use Doctrine\DBAL\Driver\Middleware\AbstractStatementMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as StatementInterface;
 use Doctrine\DBAL\ParameterType;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\SpanKind;
 use Override;
 use Throwable;
@@ -53,7 +54,7 @@ final class TracingStatement extends AbstractStatementMiddleware
         try {
             $result = parent::execute();
             $rows = (int) $result->rowCount();
-            $span->setAttribute(DbAttributes::DB_RESPONSE_RETURNED_ROWS, $rows);
+            $span->setAttribute(SemConvAttributes::DB_RESPONSE_RETURNED_ROWS, $rows);
             $this->queryTracer->recordQueryMetrics($startTime, $rows, $this->sqlAttributes);
 
             return $result;

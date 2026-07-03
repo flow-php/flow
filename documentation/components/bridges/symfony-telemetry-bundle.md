@@ -780,7 +780,7 @@ per-channel (or per-attribute) severity thresholds are expressible alongside any
 These keys exist only for the filter decision — they are never exported (severity already travels in the native OTLP
 `severityNumber`/`severityText` fields) and they shadow any user attribute of the same name. Because they live on the
 `signal` source, an `all` node that combines severity with another attribute needs that attribute on `signal` too — the
-channel's `log.channel` attribute is on `signal` under the default `channel_attribute_target: both`.
+channel's `flow.log.channel` attribute is on `signal` under the default `channel_attribute_target: both`.
 
 Keep `error`+ from the `payments` channel but `debug`+ from the `importer` channel (`exclude: false` keeps only
 matching records — exactly the case a single global [`severity_filtering`](#pipeline-logger_provider-only) threshold
@@ -797,10 +797,10 @@ flow_telemetry:
           matcher:
             any:
               - all:
-                  - { path: log.channel, mode: equal, value: payments }
+                  - { path: flow.log.channel, mode: equal, value: payments }
                   - { path: log.severity, mode: greater_than_equal, value: 17 }   # error+
               - all:
-                  - { path: log.channel, mode: equal, value: importer }
+                  - { path: flow.log.channel, mode: equal, value: importer }
                   - { path: log.severity, mode: greater_than_equal, value: 5 }    # debug+
       sink:
         type: batching
@@ -1181,8 +1181,8 @@ the request span (same instrumentation scope, kind `INTERNAL`). They are emitted
 exists, so disabling `http_kernel` or excluding the path produces none.
 
 - `trace_controller` (default **true**) — the controller **body** execution. The span is named after the
-  resolved controller (e.g. `App\Controller\OrderController::import`) and carries `code.namespace`,
-  `code.function` and `controller` attributes. It starts after argument resolution and completes at
+  resolved controller (e.g. `App\Controller\OrderController::import`) and carries `code.function.name`
+  and `flow.symfony.controller` attributes. It starts after argument resolution and completes at
   `kernel.view`/`kernel.response`, so it excludes resolution time and appears in both the OTLP export and the
   Flow Telemetry profiler panel.
 - `trace_controller_resolution` (default **false**) — controller resolution
@@ -1281,7 +1281,6 @@ flow_telemetry:
       context_propagation: true    # Propagate context across message boundaries
       trace: true                  # Emit a per-message span (default true)
       metrics: true                # Emit messaging metrics (default true)
-      metrics_duration_unit: s     # process.duration histogram unit: 's' (OTEL semconv, default) or 'ms'
 ```
 
 The tracing middleware is injected into **every** message bus automatically — no manual `framework.messenger`
@@ -1328,12 +1327,11 @@ in-flight requests complete in the background.
 
 | Metric                               | Instrument | Unit          | Emitted                       | Attributes                                                                                                                        |
 |--------------------------------------|------------|---------------|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `messaging.client.consumed.messages` | Counter    | `{message}`   | once per **received** message | `messaging.system`, `messaging.operation.name=process`, `messaging.destination.name`, `messaging.consumer.group.name` (transport) |
-| `messaging.process.duration`         | Histogram  | `s` (or `ms`) | per **received** message      | same as above, plus `error.type` when the handler fails                                                                           |
-| `messaging.client.sent.messages`     | Counter    | `{message}`   | once per **sent** message     | `messaging.system`, `messaging.operation.name=send`, `messaging.destination.name`                                                 |
+| `messaging.client.consumed.messages` | Counter    | `{message}`   | once per **received** message | `messaging.system`, `messaging.operation.name=process`, `messaging.destination.name` (transport) |
+| `messaging.process.duration`         | Histogram  | `s`           | per **received** message      | same as above, plus `error.type` when the handler fails                                                                           |
+| `messaging.client.sent.messages`     | Counter    | `{message}`   | once per **sent** message     | `messaging.system`, `messaging.operation.name=send`                                                                                |
 
-`metrics_duration_unit` controls the `messaging.process.duration` histogram: `s` (default) uses seconds with the
-OTEL-recommended bucket boundaries; `ms` uses milliseconds with Flow's native histogram buckets.
+`messaging.process.duration` is recorded in seconds with the OTEL-recommended bucket boundaries.
 
 #### Twig
 
@@ -1550,7 +1548,7 @@ flow_telemetry:
 
 Channels let you route different parts of your application to different telemetry loggers — the Flow Telemetry
 equivalent of Monolog channels — without installing Monolog. Each channel is a [named logger](#named-instruments);
-messages emitted through it carry a `log.channel` attribute, so you can filter and group them per channel in your
+messages emitted through it carry a `flow.log.channel` attribute, so you can filter and group them per channel in your
 backend. Where that attribute is placed — the instrumentation scope, every emitted record, or both — is controlled by
 [`channel_attribute_target`](#channel-attribute-placement).
 
@@ -1592,10 +1590,10 @@ services:
 **Behavior:**
 
 - Each distinct channel is synthesized on demand as `flow.telemetry.<channel>.logger` (+ its PSR-3 wrapper
-  `flow.telemetry.<channel>.logger.psr3`), carrying a `log.channel: <channel>` attribute placed per
+  `flow.telemetry.<channel>.logger.psr3`), carrying a `flow.log.channel: <channel>` attribute placed per
   [`channel_attribute_target`](#channel-attribute-placement) — unless a logger of that name already exists, which is
   then
-  reused untouched (so the `log.channel` attribute is only added to loggers the bundle creates).
+  reused untouched (so the `flow.log.channel` attribute is only added to loggers the bundle creates).
 - To route a service to the bundle's main logger, use the `default` channel (`#[WithTelemetryChannel('default')]`).
   A `default` logger always exists, so it is reused as-is rather than re-created. Every channel name — including `app`,
   which carries no special meaning here — behaves the same way.
@@ -1605,7 +1603,7 @@ services:
 - On a tagged service, an explicit `@logger` reference is rewritten to the channel logger as well — in both constructor
   arguments and method calls (e.g. `setLogger()`), preserving the reference's invalid-behavior flag.
 - A channel already declared under `loggers` is **not** overwritten, so you can customise its `version`, `schema_url`,
-  or `attributes`. Because declaring it opts out of synthesis, set `log.channel` yourself if you want it:
+  or `attributes`. Because declaring it opts out of synthesis, set `flow.log.channel` yourself if you want it:
 
 ```yaml
 flow_telemetry:
@@ -1614,7 +1612,7 @@ flow_telemetry:
       version: '1.0.0'
       attributes:
         scope:
-          log.channel: events    # not auto-added for a declared logger — set it explicitly
+          flow.log.channel: events    # not auto-added for a declared logger — set it explicitly
           team: checkout
 ```
 
@@ -1636,7 +1634,7 @@ flow_telemetry:
 ```
 
 Each framework channel becomes `flow.telemetry.<channel>.logger` (e.g. `flow.telemetry.router.logger`,
-`flow.telemetry.http_client.logger`), carries the `log.channel` attribute (placed per
+`flow.telemetry.http_client.logger`), carries the `flow.log.channel` attribute (placed per
 [`channel_attribute_target`](#channel-attribute-placement)), and gets the
 `LoggerInterface $<channel>Logger` / `Logger $<channel>Logger` autowiring aliases — the same treatment as an explicitly
 tagged service. A channel you declare under `loggers` still wins, so you can customise any framework channel's scope.
@@ -1646,7 +1644,7 @@ regardless of this flag.
 
 #### Channel Attribute Placement
 
-The synthesized `log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal**
+The synthesized `flow.log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal**
 (log record), or to **both**. `channel_attribute_target` controls this for **all** synthesized channel loggers —
 framework-captured and `#[WithTelemetryChannel]` alike:
 
@@ -1655,15 +1653,15 @@ flow_telemetry:
   channel_attribute_target: both   # both (default) | scope | signal
 ```
 
-- **`scope`** — `log.channel` sits on the instrumentation scope. Filter by channel with an
+- **`scope`** — `flow.log.channel` sits on the instrumentation scope. Filter by channel with an
   [`attribute_filtering`](#attribute_filtering) processor using `sources: [scope]`. Not present on individual records.
-- **`signal`** — `log.channel` is merged into every emitted record, so it is visible per-record and filterable with the
+- **`signal`** — `flow.log.channel` is merged into every emitted record, so it is visible per-record and filterable with the
   default `sources: [signal]` (the closest match to how Monolog stamps the channel on each record).
 - **`both`** (default) — placed on the scope *and* every record, so it is filterable either way at the cost of storing
   the attribute on each record.
 
 This only governs channels the bundle synthesizes; a channel you declare yourself under `loggers` opts out of synthesis,
-so set `log.channel` explicitly on whichever of `attributes.scope` / `attributes.signal` you want.
+so set `flow.log.channel` explicitly on whichever of `attributes.scope` / `attributes.signal` you want.
 
 > [!NOTE]
 > `capture_framework_channels` rewrites the `logger` reference on framework services to their channel logger. A

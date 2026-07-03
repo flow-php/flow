@@ -43,7 +43,7 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET 127.0.0.1', $span->name());
+        static::assertSame('GET', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

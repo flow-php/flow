@@ -7,7 +7,6 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Cursor;
-use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Client\Telemetry\TraceableCursor;
@@ -15,6 +14,7 @@ use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\SemConvAttributes;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -113,7 +113,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::SERVER_PORT, $spans[0]->attributes());
+        static::assertArrayNotHasKey(SemConvAttributes::SERVER_PORT, $spans[0]->attributes());
     }
 
     public function test_execute_creates_span_with_correct_attributes(): void
@@ -134,12 +134,12 @@ final class TraceableClientTest extends TestCase
 
         $span = $spans[0];
         static::assertSame('UPDATE users', $span->name());
-        static::assertSame('postgresql', $span->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
-        static::assertSame('testdb', $span->attributes()[PostgreSqlTelemetryAttributes::DB_NAMESPACE]);
-        static::assertSame('localhost', $span->attributes()[PostgreSqlTelemetryAttributes::SERVER_ADDRESS]);
-        static::assertSame('UPDATE', $span->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
-        static::assertSame('users', $span->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME]);
-        static::assertSame(5, $span->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame('postgresql', $span->attributes()[SemConvAttributes::DB_SYSTEM_NAME]);
+        static::assertSame('testdb', $span->attributes()[SemConvAttributes::DB_NAMESPACE]);
+        static::assertSame('localhost', $span->attributes()[SemConvAttributes::SERVER_ADDRESS]);
+        static::assertSame('UPDATE', $span->attributes()[SemConvAttributes::DB_OPERATION_NAME]);
+        static::assertSame('users', $span->attributes()[SemConvAttributes::DB_COLLECTION_NAME]);
+        static::assertSame(5, $span->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_execute_rethrows_exception_and_records_error(): void
@@ -215,7 +215,7 @@ final class TraceableClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('SELECT users', $spans[0]->name());
-        static::assertSame(3, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(3, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_fetch_creates_span_with_row_count(): void
@@ -233,7 +233,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(1, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_fetch_null_result_records_zero_rows(): void
@@ -251,7 +251,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(0, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(0, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_get_transaction_nesting_level_delegates(): void
@@ -320,7 +320,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(5433, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::SERVER_PORT]);
+        static::assertSame(5433, $spans[0]->attributes()[SemConvAttributes::SERVER_PORT]);
     }
 
     public function test_parameter_count_is_limited_by_default(): void
@@ -340,17 +340,11 @@ final class TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 10; $i++) {
-            static::assertArrayHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
 
         for ($i = 11; $i <= 20; $i++) {
-            static::assertArrayNotHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayNotHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
     }
 
@@ -374,10 +368,7 @@ final class TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 20; $i++) {
-            static::assertArrayHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
     }
 
@@ -398,14 +389,8 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertArrayNotHasKey(
-            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1',
-            $spans[0]->attributes(),
-        );
-        static::assertArrayNotHasKey(
-            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2',
-            $spans[0]->attributes(),
-        );
+        static::assertArrayNotHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1', $spans[0]->attributes());
+        static::assertArrayNotHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '2', $spans[0]->attributes());
     }
 
     public function test_parameter_values_are_truncated_by_default(): void
@@ -424,7 +409,7 @@ final class TraceableClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        $paramValue = $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
         static::assertSame(103, strlen($paramValue));
         static::assertStringEndsWith('...', $paramValue);
@@ -449,7 +434,7 @@ final class TraceableClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        $paramValue = $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
         static::assertSame(200, strlen($paramValue));
         static::assertSame($longValue, $paramValue);
@@ -468,14 +453,8 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(
-            'John',
-            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'],
-        );
-        static::assertSame(
-            '123',
-            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2'],
-        );
+        static::assertSame('John', $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1']);
+        static::assertSame('123', $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '2']);
     }
 
     public function test_parameters_are_not_included_by_default(): void
@@ -491,10 +470,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertArrayNotHasKey(
-            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1',
-            $spans[0]->attributes(),
-        );
+        static::assertArrayNotHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1', $spans[0]->attributes());
     }
 
     public function test_query_text_is_not_truncated_when_max_length_null(): void
@@ -511,7 +487,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame($longQuery, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT]);
+        static::assertSame($longQuery, $spans[0]->attributes()[SemConvAttributes::DB_QUERY_TEXT]);
     }
 
     public function test_query_text_is_truncated_when_max_length_set(): void
@@ -527,10 +503,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(
-            'SELECT * FROM users ...',
-            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT],
-        );
+        static::assertSame('SELECT * FROM users ...', $spans[0]->attributes()[SemConvAttributes::DB_QUERY_TEXT]);
     }
 
     public function test_set_auto_commit_delegates(): void

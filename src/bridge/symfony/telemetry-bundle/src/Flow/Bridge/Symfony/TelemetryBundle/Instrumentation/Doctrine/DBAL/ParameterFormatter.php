@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL;
 
 use DateTimeInterface;
+use Flow\Telemetry\SemConvAttributes;
 
 use function array_combine;
 use function array_keys;
@@ -39,7 +40,7 @@ final readonly class ParameterFormatter
 
         return array_combine(
             array_map(
-                static fn(int|string $key): string => DbAttributes::DB_QUERY_PARAMETER_PREFIX . $key,
+                static fn(int|string $key): string => SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $key,
                 array_keys($slice),
             ),
             array_map(fn(mixed $value): string => $this->truncate(

@@ -137,7 +137,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('my_api_client', $spans[0]->attributes()['http.client.name']);
+        static::assertSame('my_api_client', $spans[0]->attributes()['flow.http.client.name']);
     }
 
     public function test_request_includes_http_status_code_attribute(): void
@@ -282,7 +282,7 @@ final class TracableHttpClientTest extends TestCase
         static::assertNull($spans[0]->status());
     }
 
-    public function test_request_span_name_includes_method_and_host(): void
+    public function test_request_span_name_is_the_bare_method(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracable = new TracableHttpClient(
@@ -295,7 +295,10 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('POST api.example.com', $spans[0]->name());
+        // OTEL HTTP semconv: client span name is "{method}"; host would be per-host cardinality.
+        static::assertSame('POST', $spans[0]->name());
+        // OTEL HTTP semconv: server.port is Required on client spans, even for scheme defaults.
+        static::assertSame(443, $spans[0]->attributes()['server.port']);
     }
 
     public function test_span_kind_is_client(): void

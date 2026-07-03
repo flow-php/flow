@@ -135,7 +135,7 @@ final class CommandSuppressionSubscriberTest extends KernelTestCase
             $names[] = $span->name();
         }
 
-        $handlerSpans = array_filter($names, static fn(string $n): bool => $n === 'process TestMessage');
+        $handlerSpans = array_filter($names, static fn(string $n): bool => $n === 'process async');
 
         static::assertCount(2, $handlerSpans, 'both handler spans are recorded');
         static::assertNotContains('doctrine.dbal.bootstrap', $names, 'the bootstrap window is suppressed');

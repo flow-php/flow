@@ -74,9 +74,10 @@ final class ControllerSpanSubscriberTest extends TestCase
         static::assertSame(SpanKind::INTERNAL, $span->kind());
 
         $attributes = $span->attributes();
-        static::assertSame(TestController::class, $attributes['code.namespace']);
-        static::assertSame('index', $attributes['code.function']);
-        static::assertSame(TestController::class . '::index', $attributes['controller']);
+        static::assertSame(TestController::class . '::index', $attributes['code.function.name']);
+        static::assertArrayNotHasKey('code.namespace', $attributes);
+        static::assertArrayNotHasKey('code.function', $attributes);
+        static::assertSame(TestController::class . '::index', $attributes['flow.symfony.controller']);
         static::assertSame('test_index', $attributes['http.route']);
 
         static::assertSame($requestSpan->context()->spanId->toHex(), $span->context()->parentSpanId?->toHex());

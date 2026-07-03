@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Messenger;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerMetricDurationUnit;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessageHandler;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
-use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
@@ -43,7 +41,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
+            new TracingMiddleware($telemetry, null, null, true, true),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -56,10 +54,10 @@ final class TracingMiddlewareTest extends TestCase
         static::assertEquals(1, $counters[0]->value);
         static::assertSame('{message}', $counters[0]->unit);
         static::assertSame('process', $counters[0]->attributes->get('messaging.operation.name'));
-        static::assertSame('async', $counters[0]->attributes->get('messaging.consumer.group.name'));
-        static::assertSame('TestMessage', $counters[0]->attributes->get('messaging.destination.name'));
+        static::assertSame('async', $counters[0]->attributes->get('messaging.destination.name'));
+        static::assertFalse($counters[0]->attributes->has('messaging.consumer.group.name'));
         static::assertFalse($counters[0]->attributes->has('messaging.message.id'));
-        static::assertFalse($counters[0]->attributes->has('messaging.message.class'));
+        static::assertFalse($counters[0]->attributes->has('flow.messenger.message.class'));
     }
 
     public function test_consumer_emits_process_duration_histogram(): void
@@ -68,7 +66,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
+            new TracingMiddleware($telemetry, null, null, true, true),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -92,7 +90,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
+            new TracingMiddleware($telemetry, null, null, true, true),
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [static fn(TestMessage $message): never => throw new RuntimeException('boom')],
             ])),
@@ -120,7 +118,7 @@ final class TracingMiddlewareTest extends TestCase
         $telemetry = TelemetryMother::withMetricProcessor($memory);
 
         $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Seconds),
+            new TracingMiddleware($telemetry, null, null, true, true),
             new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
         ]);
 
@@ -131,28 +129,10 @@ final class TracingMiddlewareTest extends TestCase
         static::assertCount(1, $sent);
         static::assertEquals(1, $sent[0]->value);
         static::assertSame('send', $sent[0]->attributes->get('messaging.operation.name'));
+        static::assertFalse($sent[0]->attributes->has('messaging.destination.name'));
         static::assertFalse($sent[0]->attributes->has('messaging.consumer.group.name'));
         static::assertCount(0, $memory->metricsWithName('messaging.client.consumed.messages'));
         static::assertCount(0, $memory->metricsWithName('messaging.process.duration'));
-    }
-
-    public function test_milliseconds_unit_uses_native_buckets(): void
-    {
-        $memory = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = TelemetryMother::withMetricProcessor($memory);
-
-        $bus = new MessageBus([
-            new TracingMiddleware($telemetry, null, null, true, true, MessengerMetricDurationUnit::Milliseconds),
-            new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
-        ]);
-
-        $bus->dispatch(new Envelope(new TestMessage('hello'), [new ReceivedStamp('async')]));
-        $telemetry->flush();
-
-        $histograms = $memory->metricsWithName('messaging.process.duration');
-        static::assertCount(1, $histograms);
-        static::assertSame('ms', $histograms[0]->unit);
-        static::assertSame(Histogram::DEFAULT_BOUNDARIES, $histograms[0]->attributes->get('histogram.explicitBounds'));
     }
 
     public function test_no_metrics_emitted_when_disabled(): void

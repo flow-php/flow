@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
 use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -56,11 +57,11 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $this->tracer = $this->telemetry->tracer('flow.symfony.console', PackageVersion::get('symfony/console'));
 
         $attributes = [
-            'command.name' => $commandName,
+            ConsoleAttributes::ATTR_COMMAND_NAME => $commandName,
         ];
 
         if ($command !== null) {
-            $attributes['command.class'] = $command::class;
+            $attributes[ConsoleAttributes::ATTR_COMMAND_CLASS] = $command::class;
         }
 
         $this->span = $this->tracer->span($commandName, SpanKind::INTERNAL, $attributes);
@@ -81,7 +82,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->span->setAttribute('process.signal', $event->getHandlingSignal());
+        $this->span->setAttribute(ConsoleAttributes::ATTR_COMMAND_SIGNAL, $event->getHandlingSignal());
     }
 
     public function onTerminate(ConsoleTerminateEvent $event): void
@@ -91,11 +92,11 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         }
 
         $exitCode = $event->getExitCode();
-        $this->span->setAttribute('process.exit_code', $exitCode);
+        $this->span->setAttribute(SemConvAttributes::PROCESS_EXIT_CODE, $exitCode);
 
         // OTEL spec: instrumentation leaves the status Unset on success; only a non-zero exit is an error.
         if ($exitCode !== 0) {
-            $this->span->setAttribute('error.type', (string) $exitCode);
+            $this->span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $exitCode);
             $this->span->setStatus(SpanStatus::error("Exit code: {$exitCode}"));
         }
 

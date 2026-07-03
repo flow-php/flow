@@ -87,7 +87,7 @@ final class MessengerMiddlewareInjectionTest extends KernelTestCase
         $names = array_map(static fn($span): string => $span->name(), $processor->endedSpans());
 
         static::assertContains(
-            'send TestMessage',
+            'send',
             $names,
             'the tracing middleware was injected into the framework-configured bus and ran on dispatch',
         );

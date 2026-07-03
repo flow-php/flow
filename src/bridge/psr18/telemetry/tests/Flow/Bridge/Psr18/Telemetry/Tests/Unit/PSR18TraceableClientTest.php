@@ -217,7 +217,9 @@ final class PSR18TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
         $span = $spans[0];
 
-        static::assertSame('GET api.example.com', $span->name());
+        static::assertSame('GET', $span->name());
+        // OTEL HTTP semconv: server.port is Required on client spans, even for scheme defaults.
+        static::assertSame(443, $span->attributes()['server.port']);
 
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($span->status());

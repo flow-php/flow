@@ -17,6 +17,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -58,7 +59,7 @@ final class TracingDriver extends AbstractDriverMiddleware
         $namespace = $params['dbname'] ?? 'default';
 
         $span = $tracer->span('doctrine.dbal.connection', SpanKind::CLIENT, [
-            DbAttributes::DB_NAMESPACE => $namespace,
+            SemConvAttributes::DB_NAMESPACE => $namespace,
             DbAttributes::DB_CONNECTION_NAME => $this->connectionName,
         ]);
 
@@ -66,23 +67,23 @@ final class TracingDriver extends AbstractDriverMiddleware
             $connection = parent::connect($params);
 
             $dbSystem = $this->getSemanticDbSystem($connection->getServerVersion());
-            $span->setAttribute(DbAttributes::DB_SYSTEM_NAME, $dbSystem);
+            $span->setAttribute(SemConvAttributes::DB_SYSTEM_NAME, $dbSystem);
 
             $baseAttributes = [
-                DbAttributes::DB_SYSTEM_NAME => $dbSystem,
-                DbAttributes::DB_NAMESPACE => $namespace,
+                SemConvAttributes::DB_SYSTEM_NAME => $dbSystem,
+                SemConvAttributes::DB_NAMESPACE => $namespace,
             ];
 
             $host = $params['host'] ?? null;
 
             if ($host !== null) {
-                $baseAttributes[DbAttributes::SERVER_ADDRESS] = $host;
+                $baseAttributes[SemConvAttributes::SERVER_ADDRESS] = $host;
             }
 
             $port = $params['port'] ?? null;
 
             if ($port !== null) {
-                $baseAttributes[DbAttributes::SERVER_PORT] = $port;
+                $baseAttributes[SemConvAttributes::SERVER_PORT] = $port;
             }
 
             return new TracingConnection(
@@ -102,7 +103,7 @@ final class TracingDriver extends AbstractDriverMiddleware
             );
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
-            $span->setAttribute(DbAttributes::ERROR_TYPE, $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
