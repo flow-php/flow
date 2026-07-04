@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\QueryTrace
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingConnection;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingStatement;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TransactionSpanMode;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -44,7 +45,7 @@ final class TracingConnectionTest extends TestCase
     public function test_prepare_uses_truncation(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 15);
@@ -87,7 +88,7 @@ final class TracingConnectionTest extends TestCase
     public function test_query_uses_truncation(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 10);
@@ -103,7 +104,7 @@ final class TracingConnectionTest extends TestCase
     public function test_query_text_is_always_recorded(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 100);
@@ -119,7 +120,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_exact_boundary_case(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 10);
@@ -135,7 +136,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_handles_multibyte_characters(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 15);
@@ -154,7 +155,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_returns_full_sql_when_max_length_negative(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: -1);
@@ -170,7 +171,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_returns_full_sql_when_max_length_zero(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 0);
@@ -186,7 +187,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_returns_sql_when_shorter_than_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 100);
@@ -202,7 +203,7 @@ final class TracingConnectionTest extends TestCase
     public function test_truncate_sql_truncates_and_appends_ellipsis(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createMockConnection();
         $tracing = $this->tracingConnection($connection, $telemetry, maxSqlLength: 20);
@@ -220,7 +221,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             excludeTables: ['cache_items'],
         );
@@ -235,7 +236,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             excludeTables: ['cache_items'],
         );
@@ -250,7 +251,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             excludeTables: ['cache_items'],
         );
@@ -267,7 +268,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             excludeTables: ['cache_items'],
         );
@@ -282,7 +283,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             excludeTables: ['cache'],
         );
@@ -295,7 +296,7 @@ final class TracingConnectionTest extends TestCase
     public function test_records_exception_when_operation_fails(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $connection = $this->createStub(ConnectionInterface::class);
         $connection->method('beginTransaction')->willThrowException(new RuntimeException('boom'));
@@ -345,7 +346,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             transactionAttributes: ['db.system.name' => 'mysql', 'db.namespace' => 'app'],
         );
@@ -375,7 +376,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
         );
 
@@ -395,7 +396,11 @@ final class TracingConnectionTest extends TestCase
         $connection = $this->createStub(ConnectionInterface::class);
         $connection->method('rollBack')->willThrowException(new RuntimeException('rollback boom'));
 
-        $tracing = $this->tracingConnection($connection, $this->createTelemetry($spanProcessor), maxSqlLength: 100);
+        $tracing = $this->tracingConnection(
+            $connection,
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            maxSqlLength: 100,
+        );
 
         $tracing->beginTransaction();
 
@@ -416,7 +421,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
         );
 
@@ -431,7 +436,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             transactionSpanMode: TransactionSpanMode::PER_OPERATION,
         );
@@ -450,7 +455,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
             transactionSpanMode: TransactionSpanMode::OFF,
         );
@@ -468,7 +473,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             maxSqlLength: 100,
         );
 
@@ -489,7 +494,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             baseAttributes: [
                 'db.system.name' => 'postgresql',
                 'db.namespace' => 'app',
@@ -519,7 +524,7 @@ final class TracingConnectionTest extends TestCase
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor, $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors($spanProcessor, $metricProcessor);
 
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
@@ -548,7 +553,7 @@ final class TracingConnectionTest extends TestCase
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor, $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors($spanProcessor, $metricProcessor);
 
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
@@ -582,7 +587,7 @@ final class TracingConnectionTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracing = $this->tracingConnection(
             $this->createMockConnection(),
-            $this->createTelemetry($spanProcessor),
+            TelemetryMother::withSpanProcessor($spanProcessor),
             includeParameters: true,
         );
 
@@ -770,21 +775,6 @@ final class TracingConnectionTest extends TestCase
 
             public function rollBack(): void {}
         };
-    }
-
-    private function createTelemetry(
-        MemorySpanProcessor $spanProcessor,
-        ?MemoryMetricProcessor $metricProcessor = null,
-    ): Telemetry {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
-
-        return new Telemetry(
-            Resource::create(['service.name' => 'test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor ?? new VoidMetricProcessor(), $clock),
-            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
-        );
     }
 
     /**

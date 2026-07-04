@@ -12,19 +12,27 @@ use Flow\Telemetry\Propagation\Propagator;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\SemConvMetrics;
 use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\WrappedExceptionsInterface;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Middleware\StackInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
+use Symfony\Component\Messenger\Stamp\ConsumedByWorkerStamp;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
+use Symfony\Component\Messenger\Stamp\SentStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Throwable;
 
+use function array_values;
+use function count;
 use function hrtime;
+use function strrpos;
+use function substr;
 
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
@@ -56,6 +64,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private ?Propagator $propagator = null,
         private bool $traceHandler = true,
         private bool $metrics = true,
+        private MessageNaming $messageNaming = MessageNaming::Transport,
     ) {}
 
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
@@ -71,6 +80,10 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $isReceived = $receivedStamp !== null;
 
+        // SyncTransport adds ReceivedStamp but only the Worker adds ConsumedByWorkerStamp: a received
+        // message without it is handled synchronously inside the current request/command.
+        $isWorkerConsumed = $isReceived && $envelope->last(ConsumedByWorkerStamp::class) !== null;
+
         $kind = $isReceived ? SpanKind::CONSUMER : SpanKind::PRODUCER;
         $operation = $isReceived ? 'process' : 'send';
 
@@ -78,9 +91,14 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         // OTEL messaging semconv: messaging.destination.name is the queue/topic - the transport in
         // Symfony terms. It is only known on the consume side; on dispatch the routing to a
-        // transport has not happened yet, so the producer span is named after the operation alone.
+        // transport has not happened yet.
         $transportName = $receivedStamp instanceof ReceivedStamp ? $receivedStamp->getTransportName() : null;
-        $spanName = $transportName !== null ? "{$operation} {$transportName}" : $operation;
+
+        $spanName = match ($this->messageNaming) {
+            MessageNaming::MessageName => "{$operation} " . self::shortClassName($messageClass),
+            MessageNaming::MessageFqcn => "{$operation} {$messageClass}",
+            MessageNaming::Transport => $transportName !== null ? "{$operation} {$transportName}" : $operation,
+        };
 
         $attributes = [
             SemConvAttributes::MESSAGING_SYSTEM => 'symfony_messenger',
@@ -120,7 +138,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             )
             : null;
 
-        $remote = $isReceived ? $this->extractRemoteContext($envelope) : null;
+        // A synchronously received message keeps the live context — its producer span is already the
+        // active span, so the stamp context would only duplicate the parent as a link.
+        $remote = $isWorkerConsumed ? $this->extractRemoteContext($envelope) : null;
         $links = [];
         $remoteBaggage = null;
 
@@ -156,21 +176,11 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             }
         }
 
-        if ($meter !== null) {
-            $meter->createCounter(
-                $isReceived
-                    ? SemConvMetrics::MESSAGING_CLIENT_CONSUMED_MESSAGES
-                    : SemConvMetrics::MESSAGING_CLIENT_SENT_MESSAGES,
-                '{message}',
-                $isReceived
-                    ? 'Number of messages delivered to the application'
-                    : 'Number of messages sent to the broker',
-            )->add(1, $metricAttributes);
-        }
-
-        // A consumed message starts its own trace (linked to the producer), per the OTEL messaging conventions.
+        // A worker-consumed message starts its own trace (linked to the producer), per the OTEL messaging
+        // conventions — the queue wait must not be absorbed into the producer's trace. A synchronously
+        // received message is handled in-process, so it stays a child of the current trace.
         $span = $this->traceHandler
-            ? $tracer->span($spanName, $kind, $attributes, $links, $isReceived ? false : null)
+            ? $tracer->span($spanName, $kind, $attributes, $links, $isWorkerConsumed ? false : null)
             : null;
 
         if (!$isReceived) {
@@ -179,22 +189,75 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $startedAt = $span === null ? hrtime(true) : null;
         $errorType = null;
+        $handlingFailure = false;
+        $resultEnvelope = null;
 
         try {
-            return $stack->next()->handle($envelope, $stack);
+            $resultEnvelope = $stack->next()->handle($envelope, $stack);
         } catch (Throwable $e) {
-            $errorType = $e::class;
+            // HandleMessageMiddleware wraps handler exceptions in HandlerFailedException (and
+            // dispatch_after_current_bus in DelayedMessageHandlingException) — record the actual
+            // failures, not the wrapper every failed message shares.
+            $causes = $e instanceof WrappedExceptionsInterface
+                ? array_values($e->getWrappedExceptions(recursive: true))
+                : [];
+            $handlingFailure = $causes !== [];
+
+            if ($causes === []) {
+                $causes = [$e];
+            }
+
+            $errorType = $causes[0]::class;
 
             if ($span !== null) {
-                $span->recordException($e, new DateTimeImmutable());
-                $span->setAttribute(SemConvAttributes::ERROR_TYPE, $e::class);
-                $span->setStatus(SpanStatus::error($e->getMessage()));
+                foreach ($causes as $cause) {
+                    $span->recordException($cause, new DateTimeImmutable());
+                }
+
+                $span->setAttribute(SemConvAttributes::ERROR_TYPE, $errorType);
+                $span->setStatus(SpanStatus::error($causes[0]->getMessage()));
             }
 
             throw $e;
         } finally {
+            $destination = !$isReceived && $resultEnvelope !== null ? self::sentDestination($resultEnvelope) : null;
+
             if ($span !== null) {
+                if (!$isReceived && $resultEnvelope !== null) {
+                    $this->finalizeProducerSpan($span, $resultEnvelope, $destination);
+                }
+
                 $tracer->complete($span);
+            }
+
+            if ($meter !== null) {
+                $counterAttributes = $metricAttributes;
+
+                if ($destination !== null) {
+                    $counterAttributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $destination;
+                }
+
+                if ($errorType !== null) {
+                    $counterAttributes[SemConvAttributes::ERROR_TYPE] = $errorType;
+                }
+
+                // A dispatch without a SentStamp was handled in-process, never sent to a broker; a failed
+                // dispatch counts as a send attempt unless the failure happened in handling.
+                $wasSent = $resultEnvelope !== null
+                    ? $resultEnvelope->last(SentStamp::class) !== null
+                    : !$handlingFailure;
+
+                if ($isReceived || $wasSent) {
+                    $meter->createCounter(
+                        $isReceived
+                            ? SemConvMetrics::MESSAGING_CLIENT_CONSUMED_MESSAGES
+                            : SemConvMetrics::MESSAGING_CLIENT_SENT_MESSAGES,
+                        '{message}',
+                        $isReceived
+                            ? 'Number of messages delivered to the application'
+                            : 'Number of messages sent to the broker',
+                    )->add(1, $counterAttributes);
+                }
             }
 
             if ($processDuration !== null) {
@@ -213,6 +276,61 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
             $propagationScope?->detach();
         }
+
+        return $resultEnvelope;
+    }
+
+    /**
+     * Routing to a transport happens deeper in the middleware stack, so the bus name, transport message
+     * id and destination only exist on the envelope the stack returns — the producer span is finalized
+     * from it, mirroring how the HTTP request span picks up the route once it is known.
+     */
+    private function finalizeProducerSpan(Span $span, Envelope $result, ?string $destination): void
+    {
+        $busNameStamp = $result->last(BusNameStamp::class);
+
+        if ($busNameStamp instanceof BusNameStamp) {
+            $span->setAttribute(MessengerAttributes::ATTR_BUS, $busNameStamp->getBusName());
+        }
+
+        $transportIdStamp = $result->last(TransportMessageIdStamp::class);
+
+        if ($transportIdStamp instanceof TransportMessageIdStamp) {
+            $span->setAttribute(SemConvAttributes::MESSAGING_MESSAGE_ID, (string) $transportIdStamp->getId());
+        }
+
+        if ($destination !== null) {
+            $span->setAttribute(SemConvAttributes::MESSAGING_DESTINATION_NAME, $destination);
+
+            if ($this->messageNaming === MessageNaming::Transport) {
+                $span->rename("send {$destination}");
+            }
+        }
+    }
+
+    /**
+     * A message routed to multiple transports has no single semconv destination, so only a sole
+     * SentStamp yields one.
+     */
+    private static function sentDestination(Envelope $result): ?string
+    {
+        $sentStamps = array_values($result->all(SentStamp::class));
+
+        if (count($sentStamps) !== 1) {
+            return null;
+        }
+
+        return $sentStamps[0]->getSenderAlias();
+    }
+
+    /**
+     * @param class-string $fqcn
+     */
+    private static function shortClassName(string $fqcn): string
+    {
+        $position = strrpos($fqcn, '\\');
+
+        return $position === false ? $fqcn : substr($fqcn, $position + 1);
     }
 
     private function extractRemoteContext(Envelope $envelope): ?PropagationContext

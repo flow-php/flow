@@ -1232,7 +1232,7 @@ flow_telemetry:
   instrumentation:
     console:
       enabled: true
-      exclude_commands:   # default: ['messenger:consume']
+      exclude_commands: # default: ['messenger:consume']
         - 'messenger:consume'
         - 'app:my-worker'
         - '/^debug:.*/'   # Regex: exclude all debug commands
@@ -1262,16 +1262,32 @@ flow_telemetry:
       context_propagation: true    # Propagate context across message boundaries
       trace: true                  # Emit a per-message span (default true)
       metrics: true                # Emit messaging metrics (default true)
+      span_naming: transport       # Span name suffix: 'transport' (default), 'message_name' or 'message_fqcn'
 ```
 
 The tracing middleware is injected into **every** message bus automatically — no manual `framework.messenger`
 middleware configuration is needed.
 
 `trace: true` (default) emits one span per message — `process` for consumed messages, `send` for produced
-ones. The whole `messenger:consume` command is **suppressed** (via
+ones. What follows the operation in the span name is controlled by `span_naming`:
+
+- `transport` (default) — the OTEL semconv destination, e.g. `process async` / `send async`. The transport
+  is unknown when a dispatch starts (routing happens deeper in the middleware stack), so the producer span is
+  renamed once the message has been sent; a message routed to multiple transports (or handled in-process)
+  keeps the operation-only name (`send`).
+- `message_name` — the message short class name, e.g. `send CreateOrderMessage` /
+  `process CreateOrderMessage`. Deviates from the OTEL messaging semconv pattern (`{operation} {destination}`)
+  but is far more descriptive; the official OTel Symfony contrib instrumentation names its messenger spans
+  the same way.
+- `message_fqcn` — the fully qualified class name, e.g. `send App\Message\CreateOrderMessage`.
+
+The transport stays on the `messaging.destination.name` attribute and the message class on
+`flow.messenger.message.class` regardless of the naming mode. The whole `messenger:consume` command is **suppressed** (
+via
 [`console.exclude_commands`](#console), default `['messenger:consume']`) so the worker's between-message
 work (transport poll, idle-tick co-listeners) does not surface: a suppression flag is set on the telemetry
-context when the command starts and cleared when it terminates. Suppression is tracing-scoped (matching OpenTelemetry) and
+context when the command starts and cleared when it terminates. Suppression is tracing-scoped (matching OpenTelemetry)
+and
 enforced by a sampler — metrics and logs are unaffected. `TracingMiddleware` lifts the suppression per
 message, so the `process` span and everything it calls are traced normally. Because the command is
 suppressed, the long-lived `messenger:consume` console span is not emitted in the worker; worker liveness is
@@ -1283,9 +1299,14 @@ covered by the messenger metrics.
 When `context_propagation` is on, a consumed message's `process` span is linked back to the producing span
 (carried in the message's telemetry stamp).
 
-A consumed message is always the **root of its own trace** (per the OpenTelemetry messaging conventions):
+A **worker-consumed** message is the **root of its own trace** (per the OpenTelemetry messaging conventions):
 producer and consumer get separate traces connected by a span link, so a long-running worker never
 collapses every message into one trace and the queue wait time is never absorbed into a span's duration.
+A **synchronously received** message (the `sync://` transport) is handled inside the current request or
+command, so its `process` span stays a child of the current trace instead.
+
+When handling fails, the span's `error.type` and recorded exception are the **actual handler failure(s)**,
+not the `HandlerFailedException` wrapper Messenger throws.
 
 Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
 consumer-side traces/logs/metrics export promptly instead of only when the worker stops. Failures flush too,
@@ -1304,13 +1325,13 @@ to keep that sub-millisecond (see [Timeouts](#timeouts)).
 With the `async_curl` transport, the subscriber also pumps each transport's `tick()` on every `WorkerRunningEvent`, so
 in-flight requests complete in the background.
 
-**Metrics.** 
+**Metrics.**
 
-| Metric                               | Instrument | Unit          | Emitted                       | Attributes                                                                                                                        |
-|--------------------------------------|------------|---------------|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `messaging.client.consumed.messages` | Counter    | `{message}`   | once per **received** message | `messaging.system`, `messaging.operation.name=process`, `messaging.destination.name` (transport) |
-| `messaging.process.duration`         | Histogram  | `s`           | per **received** message      | same as above, plus `error.type` when the handler fails                                                                           |
-| `messaging.client.sent.messages`     | Counter    | `{message}`   | once per **sent** message     | `messaging.system`, `messaging.operation.name=send`                                                                                |
+| Metric                               | Instrument | Unit        | Emitted                                                                                  | Attributes                                                                                                                             |
+|--------------------------------------|------------|-------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `messaging.client.consumed.messages` | Counter    | `{message}` | once per **received** message                                                            | `messaging.system`, `messaging.operation.name=process`, `messaging.destination.name` (transport), `error.type` when handling fails     |
+| `messaging.process.duration`         | Histogram  | `s`         | per **received** message                                                                 | same as above                                                                                                                          |
+| `messaging.client.sent.messages`     | Counter    | `{message}` | once per message **sent to a transport** (in-process handled dispatches are not counted) | `messaging.system`, `messaging.operation.name=send`, `messaging.destination.name` (single transport), `error.type` when the send fails |
 
 `messaging.process.duration` is recorded in seconds with the OTEL-recommended bucket boundaries.
 
@@ -1376,7 +1397,7 @@ flow_telemetry:
       exclude_connections:
         - 'legacy'
         - '/^test_.*/'
-      exclude_tables:         # Queries referencing these tables are not traced
+      exclude_tables: # Queries referencing these tables are not traced
         - 'cache_items'      
 ```
 
@@ -1625,7 +1646,8 @@ regardless of this flag.
 
 #### Channel Attribute Placement
 
-The synthesized `flow.log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal**
+The synthesized `flow.log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal
+**
 (log record), or to **both**. `channel_attribute_target` controls this for **all** synthesized channel loggers —
 framework-captured and `#[WithTelemetryChannel]` alike:
 
@@ -1636,7 +1658,8 @@ flow_telemetry:
 
 - **`scope`** — `flow.log.channel` sits on the instrumentation scope. Filter by channel with an
   [`attribute_filtering`](#attribute_filtering) processor using `sources: [scope]`. Not present on individual records.
-- **`signal`** — `flow.log.channel` is merged into every emitted record, so it is visible per-record and filterable with the
+- **`signal`** — `flow.log.channel` is merged into every emitted record, so it is visible per-record and filterable with
+  the
   default `sources: [signal]` (the closest match to how Monolog stamps the channel on each record).
 - **`both`** (default) — placed on the scope *and* every record, so it is filterable either way at the cost of storing
   the attribute on each record.

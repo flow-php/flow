@@ -30,6 +30,7 @@ use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
+use Symfony\Component\Messenger\Stamp\ConsumedByWorkerStamp;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Messenger\Worker;
 
@@ -111,13 +112,13 @@ final class CommandSuppressionSubscriberTest extends KernelTestCase
         // Transport poll — suppressed.
         $dbalTracer->complete($dbalTracer->span('doctrine.dbal.poll'));
 
-        $bus->dispatch(new Envelope(new TestMessage('a'), [new ReceivedStamp('async')]));
+        $bus->dispatch(new Envelope(new TestMessage('a'), [new ReceivedStamp('async'), new ConsumedByWorkerStamp()]));
 
         // Tick between messages: the co-listener leak attempt must be suppressed.
         $dispatcher->dispatch(new WorkerRunningEvent($worker, true));
 
         // Second message — handler tracing must still work.
-        $bus->dispatch(new Envelope(new TestMessage('b'), [new ReceivedStamp('async')]));
+        $bus->dispatch(new Envelope(new TestMessage('b'), [new ReceivedStamp('async'), new ConsumedByWorkerStamp()]));
 
         $dispatcher->dispatch(
             new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 0),
