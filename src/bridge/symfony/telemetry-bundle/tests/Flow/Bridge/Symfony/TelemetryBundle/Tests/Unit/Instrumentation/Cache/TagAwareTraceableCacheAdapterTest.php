@@ -25,8 +25,11 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
     public function test_emits_no_spans_when_tracing_is_suppressed(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $innerAdapter = $this->createMock(TagAwareAdapterInterface::class);
+        $innerAdapter->method('deleteItem')->willReturn(true);
+        $innerAdapter->method('save')->willReturn(true);
         $adapter = new TagAwareTraceableCacheAdapter(
-            $this->createMock(TagAwareAdapterInterface::class),
+            $innerAdapter,
             TelemetryMother::suppressed($spanProcessor),
             'test.pool',
         );
