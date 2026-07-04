@@ -10,13 +10,16 @@ use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_schema;
 
 final class SchemaValidationLoaderTest extends FlowTestCase
 {
@@ -48,6 +51,22 @@ final class SchemaValidationLoaderTest extends FlowTestCase
         $loader = new SchemaValidationLoader(schema(integer_schema('id')), new StrictValidator());
 
         $loader->load(rows(row(str_entry('name', '1'))), flow_context(config()));
+    }
+
+    public function test_schema_validation_failure_message_lists_only_definitions_rejected_by_validator(): void
+    {
+        $loader = new SchemaValidationLoader(
+            schema(string_schema('id'), datetime_schema('deleted_at', nullable: true)),
+            new StrictValidator(),
+        );
+
+        try {
+            $loader->load(rows(row(int_entry('id', 1), null_entry('deleted_at'))), flow_context(config()));
+            static::fail('SchemaValidationException was not thrown');
+        } catch (SchemaValidationException $exception) {
+            static::assertStringContainsString('expected: id<string>, given: id<integer>', $exception->getMessage());
+            static::assertStringNotContainsString('deleted_at', $exception->getMessage());
+        }
     }
 
     public function test_schema_validation_succeed(): void

@@ -217,6 +217,7 @@ use Flow\ETL\Schema\SortingStrategy\TypeStrategy\TypePriorities as SchemaTypePri
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Schema\Validator\StrictValidator;
+use Flow\ETL\Schema\Validator\ValidationContext;
 use Flow\ETL\SchemaValidator;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Time\Duration;
@@ -1900,9 +1901,12 @@ function schema_to_ascii(Schema $schema, ?SchemaFormatter $formatter = null): st
  * @param Schema $given
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_validate(Schema $expected, Schema $given, SchemaValidator $validator = new StrictValidator()): bool
-{
-    return $validator->isValid($expected, $given);
+function schema_validate(
+    Schema $expected,
+    Schema $given,
+    SchemaValidator $validator = new StrictValidator(),
+): ValidationContext {
+    return $validator->validate($expected, $given);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

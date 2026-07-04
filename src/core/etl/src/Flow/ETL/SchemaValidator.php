@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Schema\Validator\ValidationContext;
+
 interface SchemaValidator
 {
-    public function isValid(Schema $expected, Schema $given): bool;
+    public function validate(Schema $expected, Schema $given): ValidationContext;
 }
