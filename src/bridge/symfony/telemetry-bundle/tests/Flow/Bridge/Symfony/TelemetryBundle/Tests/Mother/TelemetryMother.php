@@ -65,4 +65,17 @@ final class TelemetryMother
             new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
         );
     }
+
+    public static function withProcessors(SpanProcessor $spanProcessor, MetricProcessor $metricProcessor): Telemetry
+    {
+        $clock = new SystemClock();
+        $contextStorage = new MemoryContextStorage();
+
+        return new Telemetry(
+            Resource::create(['service.name' => 'test']),
+            new TracerProvider($spanProcessor, $clock, $contextStorage),
+            new MeterProvider($metricProcessor, $clock),
+            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
+        );
+    }
 }

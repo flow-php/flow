@@ -29,6 +29,7 @@ use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
+use Symfony\Component\Messenger\Stamp\ConsumedByWorkerStamp;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Messenger\Worker;
 use Throwable;
@@ -92,6 +93,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $bus->dispatch(new Envelope(new TestMessage('test'), [
             new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
             new TelemetryStamp(['traceparent' => $traceparent]),
         ]));
 
@@ -165,12 +167,14 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $bus->dispatch(new Envelope(new TestMessage('a'), [
             new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
             new TelemetryStamp(['traceparent' => "00-{$producerTraceA}-1111111111111111-01", 'baggage' => 'user.id=1']),
         ]));
         $dispatcher->dispatch(new WorkerRunningEvent($worker, false));
 
         $bus->dispatch(new Envelope(new TestMessage('b'), [
             new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
             new TelemetryStamp(['traceparent' => "00-{$producerTraceB}-2222222222222222-01", 'baggage' => 'user.id=2']),
         ]));
         $dispatcher->dispatch(new WorkerRunningEvent($worker, false));
@@ -273,6 +277,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $bus->dispatch(new Envelope(new TestMessage('test'), [
             new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
             new TelemetryStamp(['traceparent' => $traceparent, 'baggage' => 'user.id=42']),
         ]));
 
@@ -495,7 +500,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             ])),
         ]);
 
-        $envelope = new Envelope(new TestMessage('test'), [new ReceivedStamp('async')]);
+        $envelope = new Envelope(new TestMessage('test'), [new ReceivedStamp('async'), new ConsumedByWorkerStamp()]);
 
         $bus->dispatch($envelope);
 
@@ -739,6 +744,53 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertNull($span->status());
     }
 
+    public function test_span_naming_message_name_names_spans_after_the_message_class(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => ['enabled' => true, 'span_naming' => 'message_name'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var MiddlewareInterface $middleware */
+        $middleware = $container->get('flow.telemetry.messenger.middleware');
+
+        $bus = new MessageBus([
+            $middleware,
+            new HandleMessageMiddleware(new HandlersLocator([
+                TestMessage::class => [new TestMessageHandler()],
+            ])),
+        ]);
+
+        $bus->dispatch(new Envelope(new TestMessage('test'), [
+            new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
+        ]));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertCount(1, $spans);
+        static::assertSame('process TestMessage', $spans[0]->name());
+    }
+
     public function test_traces_message_with_exception(): void
     {
         $this->bootKernel([
@@ -849,7 +901,10 @@ final class TracingMiddlewareTest extends KernelTestCase
             ])),
         ]);
 
-        $bus->dispatch(new Envelope(new TestMessage('test'), [new ReceivedStamp('async')]));
+        $bus->dispatch(new Envelope(new TestMessage('test'), [
+            new ReceivedStamp('async'),
+            new ConsumedByWorkerStamp(),
+        ]));
         $telemetry->flush();
 
         $metrics = $this->symfonyContext()->getService(

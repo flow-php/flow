@@ -11,8 +11,8 @@ use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+use function array_map;
 use function array_pop;
-use function preg_match;
 
 /**
  * Suppresses tracing for the entire execution of the configured commands (long-running worker commands),
@@ -35,6 +35,9 @@ final class CommandSuppressionSubscriber implements EventSubscriberInterface
 
     private const CLEAR_PRIORITY = -20000;
 
+    /** @var array<CommandExclusionRule> */
+    private readonly array $suppressRules;
+
     /**
      * @var array<null|Scope>
      */
@@ -45,8 +48,13 @@ final class CommandSuppressionSubscriber implements EventSubscriberInterface
      */
     public function __construct(
         private readonly ContextStorage $contextStorage,
-        private readonly array $suppressCommands,
-    ) {}
+        array $suppressCommands,
+    ) {
+        $this->suppressRules = array_map(
+            static fn(string $pattern): CommandExclusionRule => new CommandExclusionRule($pattern),
+            $suppressCommands,
+        );
+    }
 
     public static function getSubscribedEvents(): array
     {
@@ -80,23 +88,12 @@ final class CommandSuppressionSubscriber implements EventSubscriberInterface
 
     private function shouldSuppress(string $commandName): bool
     {
-        foreach ($this->suppressCommands as $pattern) {
-            if ($this->matchesPattern($commandName, $pattern)) {
+        foreach ($this->suppressRules as $rule) {
+            if ($rule->matches($commandName)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private function matchesPattern(string $command, string $pattern): bool
-    {
-        $result = @preg_match($pattern, $command);
-
-        if ($result !== false) {
-            return (bool) $result;
-        }
-
-        return $command === $pattern;
     }
 }

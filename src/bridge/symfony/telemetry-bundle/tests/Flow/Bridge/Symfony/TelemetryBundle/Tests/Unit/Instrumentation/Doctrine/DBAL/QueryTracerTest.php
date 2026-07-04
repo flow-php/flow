@@ -7,21 +7,14 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrin
 use Doctrine\DBAL\Driver\Exception as DriverException;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\QueryTracer;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\SqlAttributes;
-use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\LoggerProvider;
-use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
-use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
-use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -37,14 +30,18 @@ final class QueryTracerTest extends TestCase
     #[TestWith([null, null, 'query'])]
     public function test_span_name(?string $operation, ?string $collection, string $expected): void
     {
-        $queryTracer = $this->queryTracer($this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor(new MemorySpanProcessor(
+            new MemoryExporter(),
+        )));
 
         static::assertSame($expected, $queryTracer->spanName(new SqlAttributes($operation, $collection)));
     }
 
     public function test_extract_delegates_to_the_sql_extractor(): void
     {
-        $queryTracer = $this->queryTracer($this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor(new MemorySpanProcessor(
+            new MemoryExporter(),
+        )));
 
         $attributes = $queryTracer->extract('SELECT * FROM users');
 
@@ -55,7 +52,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_duration_noop_when_start_time_is_false(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
         $queryTracer = $this->queryTracer($telemetry, collectMetrics: true);
 
         $queryTracer->recordDuration(false, ['db.operation.name' => 'begin']);
@@ -67,7 +64,7 @@ final class QueryTracerTest extends TestCase
     public function test_query_attributes_merge_base_operation_collection_and_query_text(): void
     {
         $queryTracer = $this->queryTracer(
-            $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())),
+            TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter())),
             baseAttributes: ['db.system.name' => 'postgresql', 'db.namespace' => 'app', 'server.port' => 5432],
         );
 
@@ -88,7 +85,9 @@ final class QueryTracerTest extends TestCase
 
     public function test_query_attributes_omit_operation_and_collection_when_absent(): void
     {
-        $queryTracer = $this->queryTracer($this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor(new MemorySpanProcessor(
+            new MemoryExporter(),
+        )));
 
         $attributes = $queryTracer->queryAttributes('BADSQL', new SqlAttributes(null, null));
 
@@ -100,7 +99,7 @@ final class QueryTracerTest extends TestCase
     public function test_query_attributes_truncate_query_text(): void
     {
         $queryTracer = $this->queryTracer(
-            $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())),
+            TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter())),
             maxSqlLength: 6,
         );
 
@@ -111,7 +110,9 @@ final class QueryTracerTest extends TestCase
 
     public function test_parameter_attributes_empty_when_disabled(): void
     {
-        $queryTracer = $this->queryTracer($this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor(new MemorySpanProcessor(
+            new MemoryExporter(),
+        )));
 
         static::assertSame([], $queryTracer->parameterAttributes([1, 2]));
     }
@@ -119,7 +120,7 @@ final class QueryTracerTest extends TestCase
     public function test_parameter_attributes_formatted_and_capped_when_enabled(): void
     {
         $queryTracer = $this->queryTracer(
-            $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter())),
+            TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter())),
             includeParameters: true,
             maxParameters: 2,
         );
@@ -136,7 +137,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_error_sets_error_type_and_status(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $queryTracer = $this->queryTracer($this->createTelemetry($spanProcessor));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor($spanProcessor));
 
         $span = $this->openSpan($queryTracer);
         $queryTracer->recordError($span, new RuntimeException('boom'));
@@ -150,7 +151,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_error_sets_status_code_from_driver_exception(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $queryTracer = $this->queryTracer($this->createTelemetry($spanProcessor));
+        $queryTracer = $this->queryTracer(TelemetryMother::withSpanProcessor($spanProcessor));
 
         $exception = $this->createStub(DriverException::class);
         $exception->method('getSQLState')->willReturn('23505');
@@ -165,7 +166,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_query_metrics_uses_low_cardinality_attributes(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
         $queryTracer = $this->queryTracer(
             $telemetry,
             baseAttributes: ['db.system.name' => 'postgresql', 'db.namespace' => 'app'],
@@ -187,7 +188,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_query_metrics_noop_when_metrics_disabled(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
         $queryTracer = $this->queryTracer($telemetry, collectMetrics: false);
 
         $queryTracer->recordQueryMetrics(hrtime(true), 5, new SqlAttributes('SELECT', 'users'));
@@ -199,7 +200,7 @@ final class QueryTracerTest extends TestCase
     public function test_record_duration_records_given_attributes(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
+        $telemetry = TelemetryMother::withProcessors(new MemorySpanProcessor(new MemoryExporter()), $metricProcessor);
         $queryTracer = $this->queryTracer($telemetry, collectMetrics: true);
 
         $queryTracer->recordDuration(hrtime(true), ['db.operation.name' => 'begin']);
@@ -235,21 +236,6 @@ final class QueryTracerTest extends TestCase
             $includeParameters,
             $maxParameters,
             $maxParameterLength,
-        );
-    }
-
-    private function createTelemetry(
-        MemorySpanProcessor $spanProcessor,
-        ?MemoryMetricProcessor $metricProcessor = null,
-    ): Telemetry {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
-
-        return new Telemetry(
-            Resource::create(['service.name' => 'test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor ?? new VoidMetricProcessor(), $clock),
-            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
         );
     }
 

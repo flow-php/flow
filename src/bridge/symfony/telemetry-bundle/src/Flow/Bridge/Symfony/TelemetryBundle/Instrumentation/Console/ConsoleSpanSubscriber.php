@@ -18,22 +18,38 @@ use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\Console\Event\ConsoleSignalEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Throwable;
 
-use function preg_match;
+use function array_key_last;
+use function array_map;
+use function array_pop;
 
 final class ConsoleSpanSubscriber implements EventSubscriberInterface
 {
-    private ?Span $span = null;
+    /** @var array<CommandExclusionRule> */
+    private readonly array $excludeRules;
 
-    private ?Tracer $tracer = null;
+    /**
+     * Commands nested via Application::run() dispatch balanced COMMAND/TERMINATE pairs, so entries are
+     * stacked — a nested command's TERMINATE completes its own span, not the enclosing command's.
+     * Excluded commands push null to keep the pairs balanced.
+     *
+     * @var array<null|array{span: Span, tracer: Tracer, error: null|Throwable}>
+     */
+    private array $stack = [];
 
     /**
      * @param array<string> $excludeCommands
      */
     public function __construct(
         private readonly Telemetry $telemetry,
-        private readonly array $excludeCommands = [],
-    ) {}
+        array $excludeCommands = [],
+    ) {
+        $this->excludeRules = array_map(
+            static fn(string $pattern): CommandExclusionRule => new CommandExclusionRule($pattern),
+            $excludeCommands,
+        );
+    }
 
     public static function getSubscribedEvents(): array
     {
@@ -51,10 +67,12 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $commandName = $command?->getName() ?? 'unknown';
 
         if (!$this->shouldTrace($commandName)) {
+            $this->stack[] = null;
+
             return;
         }
 
-        $this->tracer = $this->telemetry->tracer('flow.symfony.console', PackageVersion::get('symfony/console'));
+        $tracer = $this->telemetry->tracer('flow.symfony.console', PackageVersion::get('symfony/console'));
 
         $attributes = [
             ConsoleAttributes::ATTR_COMMAND_NAME => $commandName,
@@ -64,63 +82,68 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             $attributes[ConsoleAttributes::ATTR_COMMAND_CLASS] = $command::class;
         }
 
-        $this->span = $this->tracer->span($commandName, SpanKind::INTERNAL, $attributes);
+        $this->stack[] = [
+            'span' => $tracer->span($commandName, SpanKind::INTERNAL, $attributes),
+            'tracer' => $tracer,
+            'error' => null,
+        ];
     }
 
     public function onError(ConsoleErrorEvent $event): void
     {
-        if ($this->span === null) {
+        $index = array_key_last($this->stack);
+
+        if ($index === null || $this->stack[$index] === null) {
             return;
         }
 
-        $this->span->recordException($event->getError(), new DateTimeImmutable());
+        $this->stack[$index]['error'] = $event->getError();
+        $this->stack[$index]['span']->recordException($event->getError(), new DateTimeImmutable());
     }
 
     public function onSignal(ConsoleSignalEvent $event): void
     {
-        if ($this->span === null) {
+        $index = array_key_last($this->stack);
+
+        if ($index === null || $this->stack[$index] === null) {
             return;
         }
 
-        $this->span->setAttribute(ConsoleAttributes::ATTR_COMMAND_SIGNAL, $event->getHandlingSignal());
+        $this->stack[$index]['span']->setAttribute(ConsoleAttributes::ATTR_COMMAND_SIGNAL, $event->getHandlingSignal());
     }
 
     public function onTerminate(ConsoleTerminateEvent $event): void
     {
-        if ($this->span === null || $this->tracer === null) {
+        if ($this->stack === []) {
             return;
         }
 
+        $entry = array_pop($this->stack);
+
+        if ($entry === null) {
+            return;
+        }
+
+        $span = $entry['span'];
         $exitCode = $event->getExitCode();
-        $this->span->setAttribute(SemConvAttributes::PROCESS_EXIT_CODE, $exitCode);
+        $span->setAttribute(SemConvAttributes::PROCESS_EXIT_CODE, $exitCode);
 
         // OTEL spec: instrumentation leaves the status Unset on success; only a non-zero exit is an error.
+        // When an exception caused the failure, error.type is its class; the exit code is the fallback for
+        // exception-less failures.
         if ($exitCode !== 0) {
-            $this->span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $exitCode);
-            $this->span->setStatus(SpanStatus::error("Exit code: {$exitCode}"));
+            $error = $entry['error'];
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $error !== null ? $error::class : (string) $exitCode);
+            $span->setStatus(SpanStatus::error($error !== null ? $error->getMessage() : "Exit code: {$exitCode}"));
         }
 
-        $this->tracer->complete($this->span);
-
-        $this->span = null;
-        $this->tracer = null;
-    }
-
-    private function matchesPattern(string $command, string $pattern): bool
-    {
-        $result = @preg_match($pattern, $command);
-
-        if ($result !== false) {
-            return (bool) $result;
-        }
-
-        return $command === $pattern;
+        $entry['tracer']->complete($span);
     }
 
     private function shouldTrace(string $commandName): bool
     {
-        foreach ($this->excludeCommands as $pattern) {
-            if ($this->matchesPattern($commandName, $pattern)) {
+        foreach ($this->excludeRules as $rule) {
+            if ($rule->matches($commandName)) {
                 return false;
             }
         }

@@ -872,6 +872,31 @@ final class ConfigurationTest extends TestCase
         static::assertNull($config['logger_provider']['processor']['max_batch_age']);
     }
 
+    public function test_messenger_span_naming_defaults_to_transport_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true]],
+        ]);
+        static::assertSame('transport', $default['instrumentation']['messenger']['span_naming']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'span_naming' => 'message_name']],
+        ]);
+        static::assertSame('message_name', $custom['instrumentation']['messenger']['span_naming']);
+    }
+
+    public function test_messenger_span_naming_rejects_unknown_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'span_naming' => 'handler']],
+        ]);
+    }
+
     public function test_messenger_metrics_default_to_enabled(): void
     {
         $config = $this->context->processConfig([

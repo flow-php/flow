@@ -92,4 +92,53 @@ final class MessengerMiddlewareInjectionTest extends KernelTestCase
             'the tracing middleware was injected into the framework-configured bus and ran on dispatch',
         );
     }
+
+    public function test_producer_span_records_the_framework_bus_name(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                    'messenger' => [
+                        'default_bus' => 'command.bus',
+                        'buses' => ['command.bus' => null],
+                    ],
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => 'memory']],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => false],
+                        'messenger' => ['enabled' => true],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $handler = new Definition(TestMessageHandler::class);
+                    $handler->addTag('messenger.message_handler', ['handles' => TestMessage::class]);
+                    $container->setDefinition('test.message_handler', $handler);
+
+                    $container->setAlias('test.message_bus', 'command.bus')->setPublic(true);
+                });
+            },
+        ]);
+
+        $bus = $this->getContainer()->get('test.message_bus');
+        static::assertInstanceOf(MessageBusInterface::class, $bus);
+
+        $bus->dispatch(new TestMessage('x'));
+
+        $processor = $this->symfonyContext()->getService(
+            'flow.telemetry.tracer_provider.processor',
+            MemorySpanProcessor::class,
+        );
+
+        // The tracing middleware is outermost, so BusNameStamp (added by add_bus_name_stamp_middleware,
+        // the first default bus middleware) is not on the envelope yet when the span starts — the bus
+        // name must be picked up from the envelope returned by the rest of the stack.
+        static::assertSame('command.bus', $processor->endedSpans()[0]->attributes()['flow.messenger.bus']);
+    }
 }
