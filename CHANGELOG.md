@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-07-04
 
 ### Added
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **code>flow-php/etl - support for brick/math 0.18** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - ValidationContext and MismatchedDefinition value objects with schema diff rendering via ValidationContext::toString()** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException::context() accessor** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger.span_naming option (transport/message_name/message_fqcn) to control messenger span names.** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - Telemetry::registerShutdownFunction() that shuts transports down at real process end.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Shared SemConvAttributes and SemConvMetrics constants for OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +13,9 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidator::isValid() replaced by validate() returning ValidationContext** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - schema_validate() returns ValidationContext instead of bool** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - allowed brick/math ^0.18** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - terminate events now flush telemetry; transport shutdown happens once at process end.** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - registerShutdownFunction() holds a weak reference so garbage-collected instances are not shut down.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Simplify messenger tracing to true/false and auto-inject the middleware into all buses.** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +30,8 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException message no longer lists FROM_NULL columns accepted by the validator** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException message renders the nullable ? marker on expected types** - [@norberttech](https://github.com/norberttech)
 - [7b585d](https://github.com/flow-php/flow/commit/7b585d4b6e0e795f89788bd315f9909ede38976c) - **failing scheduled tests** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - nested console commands no longer shut telemetry down mid-worker.** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - request spans are named from the route when the response is produced before the controller.** - [@norberttech](https://github.com/norberttech)
