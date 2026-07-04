@@ -16,21 +16,19 @@ use function Flow\Types\DSL\type_string;
  */
 final class StrictValidator implements SchemaValidator
 {
-    /**
-     * @param Schema $expected
-     * @param Schema $given
-     */
-    public function isValid(Schema $expected, Schema $given): bool
+    public function validate(Schema $expected, Schema $given): ValidationContext
     {
-        if ($expected->count() !== $given->count()) {
-            return false;
-        }
+        $missingDefinitions = [];
+        $mismatchedDefinitions = [];
+        $unexpectedDefinitions = [];
 
-        foreach ($given->definitions() as $givenDefinition) {
-            $expectedDefinition = $expected->findDefinition($givenDefinition->entry());
+        foreach ($expected->definitions() as $expectedDefinition) {
+            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
-            if ($expectedDefinition === null) {
-                return false;
+            if ($givenDefinition === null) {
+                $missingDefinitions[] = $expectedDefinition;
+
+                continue;
             }
 
             if (
@@ -42,10 +40,16 @@ final class StrictValidator implements SchemaValidator
             }
 
             if (!$expectedDefinition->isCompatible($givenDefinition)) {
-                return false;
+                $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
             }
         }
 
-        return true;
+        foreach ($given->definitions() as $givenDefinition) {
+            if ($expected->findDefinition($givenDefinition->entry()) === null) {
+                $unexpectedDefinitions[] = $givenDefinition;
+            }
+        }
+
+        return new ValidationContext($missingDefinitions, $mismatchedDefinitions, $unexpectedDefinitions);
     }
 }

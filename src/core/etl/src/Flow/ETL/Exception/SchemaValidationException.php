@@ -5,98 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\Exception;
 
 use Flow\ETL\Schema;
-
-use function count;
+use Flow\ETL\Schema\Validator\ValidationContext;
 
 final class SchemaValidationException extends RuntimeException
 {
     public function __construct(
         private readonly Schema $expected,
         private readonly Schema $given,
+        private readonly ValidationContext $context,
     ) {
-        /**
-         * @var array<string> $missingDefinitions
-         */
-        $missingDefinitions = [];
+        parent::__construct("Schema validation failed: \n" . $this->context->toString());
+    }
 
-        /**
-         * @var array<string> $mismatchedDefinitions
-         */
-        $mismatchedDefinitions = [];
-
-        /**
-         * @var array<string> $unexpectedDefinitions
-         */
-        $unexpectedDefinitions = [];
-
-        foreach ($this->expected->definitions() as $expectedDefinition) {
-            $givenDefinition = $this->given->findDefinition($expectedDefinition->entry());
-
-            if ($givenDefinition === null) {
-                $missingDefinitions[] =
-                    $expectedDefinition->entry()->name()
-                    . '<'
-                    . ($expectedDefinition->isNullable() ? '?' : '')
-                    . $expectedDefinition->type()->toString()
-                    . '>';
-
-                continue;
-            }
-
-            if (!$expectedDefinition->isCompatible($givenDefinition)) {
-                $mismatchedDefinitions[] =
-                    'expected: '
-                    . $expectedDefinition->entry()->name()
-                    . '<'
-                    . $expectedDefinition->type()->toString()
-                    . '>, '
-                    . 'given: '
-                    . $givenDefinition->entry()->name()
-                    . '<'
-                    . ($givenDefinition->isNullable() ? '?' : '')
-                    . $givenDefinition->type()->toString()
-                    . '>';
-            }
-        }
-
-        foreach ($this->given->definitions() as $givenDefinition) {
-            if ($this->expected->findDefinition($givenDefinition->entry()) === null) {
-                $unexpectedDefinitions[] =
-                    $givenDefinition->entry()->name()
-                    . '<'
-                    . ($givenDefinition->isNullable() ? '?' : '')
-                    . $givenDefinition->type()->toString()
-                    . '>';
-            }
-        }
-
-        $message = '';
-
-        if (count($missingDefinitions)) {
-            $message .= "  Missing Definitions: \n";
-
-            foreach ($missingDefinitions as $missingDefinition) {
-                $message .= '    |-- ' . $missingDefinition . "\n";
-            }
-        }
-
-        if (count($mismatchedDefinitions)) {
-            $message .= "  Mismatched Definitions: \n";
-
-            foreach ($mismatchedDefinitions as $mismatchedDefinition) {
-                $message .= '    |-- ' . $mismatchedDefinition . "\n";
-            }
-        }
-
-        if (count($unexpectedDefinitions)) {
-            $message .= "  Unexpected Definitions: \n";
-
-            foreach ($unexpectedDefinitions as $unexpectedDefinition) {
-                $message .= '    |-- ' . $unexpectedDefinition . "\n";
-            }
-        }
-
-        parent::__construct("Schema validation failed: \n" . $message);
+    public function context(): ValidationContext
+    {
+        return $this->context;
     }
 
     /**

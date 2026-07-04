@@ -27,8 +27,10 @@ final readonly class SchemaValidationLoader implements Loader
         try {
             $given = $rows->schema();
 
-            if (!$this->validator->isValid($this->expected, $given)) {
-                throw new SchemaValidationException($this->expected, $given);
+            $validation = $this->validator->validate($this->expected, $given);
+
+            if (!$validation->isValid()) {
+                throw new SchemaValidationException($this->expected, $given, $validation);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

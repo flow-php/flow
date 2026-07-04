@@ -16,13 +16,18 @@ use function Flow\Types\DSL\type_string;
  */
 final class SelectiveValidator implements SchemaValidator
 {
-    public function isValid(Schema $expected, Schema $given): bool
+    public function validate(Schema $expected, Schema $given): ValidationContext
     {
+        $missingDefinitions = [];
+        $mismatchedDefinitions = [];
+
         foreach ($expected->definitions() as $expectedDefinition) {
             $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
             if ($givenDefinition === null) {
-                return false;
+                $missingDefinitions[] = $expectedDefinition;
+
+                continue;
             }
 
             if (
@@ -34,10 +39,10 @@ final class SelectiveValidator implements SchemaValidator
             }
 
             if (!$expectedDefinition->isCompatible($givenDefinition)) {
-                return false;
+                $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
             }
         }
 
-        return true;
+        return new ValidationContext($missingDefinitions, $mismatchedDefinitions);
     }
 }
