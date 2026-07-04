@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-07-03
+## [Unreleased] - 2026-07-04
 
 ### Added
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger.span_naming option (transport/message_name/message_fqcn) to control messenger span names.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - Telemetry::registerShutdownFunction() that shuts transports down at real process end.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Shared SemConvAttributes and SemConvMetrics constants for OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - SuppressingSampler to suppress spans for excluded paths and commands.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - TransactionSpanMode (grouped/per_operation/off) to control transaction spans.** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +10,8 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - terminate events now flush telemetry; transport shutdown happens once at process end.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - registerShutdownFunction() holds a weak reference so garbage-collected instances are not shut down.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Simplify messenger tracing to true/false and auto-inject the middleware into all buses.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Align cache, DBAL and HTTP span names and attributes with stable OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Move flow-custom attribute keys out of reserved OTel namespaces under flow.*.** - [@norberttech](https://github.com/norberttech)
@@ -20,11 +24,17 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - nested console commands no longer shut telemetry down mid-worker.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - request spans are named from the route when the response is produced before the controller.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger span errors report the actual handler failure instead of the HandlerFailedException wrapper.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - synchronously received messages stay a child of the current trace instead of starting a new root.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - sent-message metrics only count messages actually dispatched to a transport.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Preserve traceparent across messenger JSON serialization.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Excluded http_kernel paths now suppress the whole request, removing orphan root spans.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - runtime_mode config and the WorkerModeDetector/RuntimeModeResolver runtime classes.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Remove ResettableContextStorage and MemoryContextStorage::reset().** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Remove messenger link config, worker-cycle span, metrics_duration_unit and dbal.log_sql config.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Remove duplicated official-key telemetry attribute constants.** - [@norberttech](https://github.com/norberttech)
