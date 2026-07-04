@@ -24,6 +24,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [7b585d](https://github.com/flow-php/flow/commit/7b585d4b6e0e795f89788bd315f9909ede38976c) - **failing scheduled tests** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - nested console commands no longer shut telemetry down mid-worker.** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - request spans are named from the route when the response is produced before the controller.** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger span errors report the actual handler failure instead of the HandlerFailedException wrapper.** - [@norberttech](https://github.com/norberttech)
