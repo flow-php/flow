@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-07-05
 
 ### Added
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - {column} partition placeholders in paths with extraction, glob listing and filter support** - [@norberttech](https://github.com/norberttech)
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - writing partitions into file/directory names via placeholders in destination paths** - [@norberttech](https://github.com/norberttech)
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - reading placeholder paths recovers partitions from file names, including partition pruning** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **code>flow-php/etl - support for brick/math 0.18** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - ValidationContext and MismatchedDefinition value objects with schema diff rendering via ValidationContext::toString()** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException::context() accessor** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +16,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - Partition name and value now forbid { and } characters** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidator::isValid() replaced by validate() returning ValidationContext** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - schema_validate() returns ValidationContext instead of bool** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - allowed brick/math ^0.18** - [@norberttech](https://github.com/norberttech)
