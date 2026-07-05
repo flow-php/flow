@@ -16,11 +16,14 @@ use function Flow\ETL\DSL\schema_strict_validator;
 use function Flow\ETL\DSL\schema_validate;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
 
 final class StrictValidatorTest extends FlowTestCase
 {
@@ -93,6 +96,38 @@ final class StrictValidatorTest extends FlowTestCase
         );
         static::assertSame([], $context->missingDefinitions());
         static::assertSame([], $context->unexpectedDefinitions());
+    }
+
+    public function test_given_schema_with_matching_union_definition(): void
+    {
+        static::assertTrue(
+            schema_validate(
+                expected: schema(
+                    integer_schema('id'),
+                    union_schema('value', type_union(type_string(), type_integer())),
+                ),
+                given: schema(integer_schema('id'), union_schema('value', type_union(type_string(), type_integer()))),
+                validator: schema_strict_validator(),
+            )->isValid(),
+        );
+    }
+
+    public function test_given_schema_with_mismatched_union_definition(): void
+    {
+        $context = schema_validate(
+            expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
+            given: schema(string_schema('value')),
+            validator: schema_strict_validator(),
+        );
+
+        static::assertFalse($context->isValid());
+        static::assertEquals(
+            [new MismatchedDefinition(
+                union_schema('value', type_union(type_string(), type_integer())),
+                string_schema('value'),
+            )],
+            $context->mismatchedDefinitions(),
+        );
     }
 
     public function test_rows_with_a_missing_entry(): void

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "John",
+        "age": 30,
+        "address": {"street": "Main Street 1", "city": "New York", "zip": "10001"},
+        "location": {"lat": 40.7, "lon": -74.0}
+    },
+    {
+        "name": "Jane",
+        "age": null,
+        "address": {"street": "Broad Street 2", "city": "Los Angeles", "zip": "90001"},
+        "location": {"lat": 34.0, "lon": -118.2}
+    }
+]

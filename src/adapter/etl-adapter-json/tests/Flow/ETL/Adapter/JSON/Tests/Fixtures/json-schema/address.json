@@ -1,0 +1,12 @@
+{
+    "type": "object",
+    "required": ["street", "city"],
+    "properties": {
+        "street": {"type": "string"},
+        "city": {"type": "string"},
+        "zip": {"$ref": "#/$defs/zip"}
+    },
+    "$defs": {
+        "zip": {"type": "string"}
+    }
+}
