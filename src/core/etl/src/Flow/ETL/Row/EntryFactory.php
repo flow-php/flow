@@ -66,6 +66,13 @@ use function Flow\Types\DSL\type_string;
 
 final readonly class EntryFactory
 {
+    private EntryTypeResolver $typeResolver;
+
+    public function __construct()
+    {
+        $this->typeResolver = new EntryTypeResolver();
+    }
+
     /**
      * @param null|Definition<mixed>|Schema $schema
      *
@@ -80,7 +87,7 @@ final readonly class EntryFactory
             return $this->createAs(
                 $schema->entry()->name(),
                 $value,
-                $schema->isNullable() ? type_optional($schema->type()) : $schema->type(),
+                $this->typeResolver->fromDefinition($schema),
                 $schema->metadata(),
             );
         }
@@ -91,7 +98,7 @@ final readonly class EntryFactory
             return $this->createAs(
                 $definition->entry()->name(),
                 $value,
-                $definition->isNullable() ? type_optional($definition->type()) : $definition->type(),
+                $this->typeResolver->fromDefinition($definition),
                 $definition->metadata(),
             );
         }
@@ -156,6 +163,10 @@ final readonly class EntryFactory
                 }
 
                 $type = $reduced;
+            }
+
+            if ($type instanceof UnionType) {
+                $type = $this->typeResolver->fromUnion($type, $value, $entryName);
             }
 
             if ($type instanceof StringType) {
