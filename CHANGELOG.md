@@ -1,6 +1,11 @@
 ## [Unreleased] - 2026-07-05
 
 ### Added
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - bidirectional JSON Schema converter with schema_from_json_schema() and schema_to_json_schema() DSL functions** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - $ref resolution for internal pointers, local files and remote http(s) documents via PSR-18 client, with circular reference detection** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - combinator support: allOf deep merge, anyOf/oneOf as nullable or union types, boolean schemas** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - JSON Schema annotations preserved in definition metadata under json_schema.* keys** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl - UnionDefinition and union_schema() DSL function for union type schema definitions** - [@norberttech](https://github.com/norberttech)
 - [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - {column} partition placeholders in paths with extraction, glob listing and filter support** - [@norberttech](https://github.com/norberttech)
 - [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - writing partitions into file/directory names via placeholders in destination paths** - [@norberttech](https://github.com/norberttech)
 - [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - reading placeholder paths recovers partitions from file names, including partition pruning** - [@norberttech](https://github.com/norberttech)
