@@ -92,6 +92,55 @@ $dataFrame
     ->run();
 ```
 
+## Partition Placeholders
+
+By default every partition becomes a `column=value` directory. With `{column}` placeholders in the destination path, selected partitions can become part of the file (or directory) name instead:
+
+```php
+<?php
+
+data_frame()
+    ->read(from_array([
+        ['date' => '2024-01-01', 'department' => 'sales', 'amount' => 100],
+        ['date' => '2024-01-01', 'department' => 'marketing', 'amount' => 200],
+    ]))
+    ->partitionBy('date', 'department')
+    ->write(to_parquet(__DIR__ . '/output/{department}.parquet'))
+    ->run();
+```
+
+**File structure:**
+```
+output/
+├── date=2024-01-01/
+│   ├── sales.parquet
+│   └── marketing.parquet
+```
+
+Partitions consumed by placeholders are removed from the `column=value` directory chain; all remaining partitions still become directories. Placeholders can appear in any path segment and can be combined, for example `to_csv(__DIR__ . '/output/{date}/{department}_report.csv')`.
+
+Rules:
+
+- Every placeholder must match a `partitionBy()` column, otherwise the write fails.
+- A destination path with placeholders requires partitioned rows - without `partitionBy()` the write fails.
+- Save modes behave exactly like with directory partitions, applied to the resolved file path.
+
+### Reading Data Partitioned with Placeholders
+
+Placeholders work in extractor paths too - matching files like a wildcard and re-attaching the partition value from the file name:
+
+```php
+<?php
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/output/date=*/{department}.parquet'))
+    ->filterPartitions(ref('department')->equals(lit('sales'))) // partition pruning works too
+    ->write(to_output())
+    ->run();
+```
+
+Keep in mind that a placeholder matches any file in that location, and the partition value is taken from the file name as-is. Files appended to an existing location get randomized suffixes (`sales_a1b2c3.parquet`), which become part of the recovered partition value.
+
 ## Performance Considerations
 
 ### Choosing Partition Columns

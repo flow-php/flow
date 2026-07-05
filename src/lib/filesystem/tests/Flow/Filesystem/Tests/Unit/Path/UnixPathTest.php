@@ -68,6 +68,65 @@ final class UnixPathTest extends PathTestCase
         static::assertEquals('txt', $path->extension());
     }
 
+    public function test_add_partitions_consuming_all_partitions_into_placeholders(): void
+    {
+        $path = new UnixPath('/output/{year}_{month}.csv');
+
+        static::assertEquals(
+            '/output/2024_03.csv',
+            $path->addPartitions(partition('year', '2024'), partition('month', '03'))->path(),
+        );
+    }
+
+    public function test_add_partitions_with_placeholder_and_remaining_partitions(): void
+    {
+        $path = new UnixPath('/output/{order-name}.csv');
+
+        static::assertEquals(
+            '/output/order-year=2024/123456-PL.csv',
+            $path->addPartitions(partition('order-year', '2024'), partition('order-name', '123456-PL'))->path(),
+        );
+    }
+
+    public function test_add_partitions_with_placeholder_in_directory(): void
+    {
+        $path = new UnixPath('/output/{year}/file.csv');
+
+        static::assertEquals(
+            '/output/2024/country=PL/file.csv',
+            $path->addPartitions(partition('year', '2024'), partition('country', 'PL'))->path(),
+        );
+    }
+
+    public function test_add_partitions_with_placeholder_next_to_glob_pattern(): void
+    {
+        $path = new UnixPath('/output/*/{order-name}.csv');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Can't add partitions to path pattern.");
+
+        $path->addPartitions(partition('order-name', '123456-PL'));
+    }
+
+    public function test_add_partitions_with_repeated_placeholder(): void
+    {
+        $path = new UnixPath('/output/{name}/{name}.csv');
+
+        static::assertEquals('/output/abc/abc.csv', $path->addPartitions(partition('name', 'abc'))->path());
+    }
+
+    public function test_add_partitions_with_unresolved_placeholder(): void
+    {
+        $path = new UnixPath('/output/{order-name}.csv');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Path partition placeholder {order-name} does not match any partition, available partitions: 'order-year'",
+        );
+
+        $path->addPartitions(partition('order-year', '2024'));
+    }
+
     public function test_basename_operations(): void
     {
         $path = new UnixPath('/path/to/file.txt');
@@ -163,6 +222,55 @@ final class UnixPathTest extends PathTestCase
         static::assertFalse($path->extension());
     }
 
+    public function test_extract_placeholder_partitions(): void
+    {
+        $pattern = new UnixPath('/output/order-year=2024/{order-name}.csv');
+
+        $partitions = $pattern->extractPlaceholderPartitions(new UnixPath('/output/order-year=2024/123456-PL.csv'));
+
+        static::assertCount(1, $partitions);
+        static::assertEquals('123456-PL', $partitions->get('order-name')->value);
+    }
+
+    public function test_extract_placeholder_partitions_from_not_matching_path(): void
+    {
+        $pattern = new UnixPath('/output/{order-name}.csv');
+
+        static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/other/123456-PL.csv')));
+    }
+
+    public function test_extract_placeholder_partitions_from_path_without_placeholders(): void
+    {
+        $pattern = new UnixPath('/output/file.csv');
+
+        static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/output/file.csv')));
+    }
+
+    public function test_extract_placeholder_partitions_skips_invalid_partition_values(): void
+    {
+        $pattern = new UnixPath('/output/{order-name}.csv');
+
+        static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/output/foo=bar.csv')));
+    }
+
+    public function test_extract_placeholder_partitions_with_conflicting_values_of_repeated_placeholder(): void
+    {
+        $pattern = new UnixPath('/output/{name}/{name}.csv');
+
+        static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/output/a/b.csv')));
+        static::assertCount(1, $pattern->extractPlaceholderPartitions(new UnixPath('/output/a/a.csv')));
+    }
+
+    public function test_extract_placeholder_partitions_with_glob_and_placeholder(): void
+    {
+        $pattern = new UnixPath('/output/order-year=*/{order-name}.csv');
+
+        $partitions = $pattern->extractPlaceholderPartitions(new UnixPath('/output/order-year=2024/123456-PL.csv'));
+
+        static::assertCount(1, $partitions);
+        static::assertEquals('123456-PL', $partitions->get('order-name')->value);
+    }
+
     public function test_fnmatch_with_hidden_files(): void
     {
         $pattern = new UnixPath('/*');
@@ -171,6 +279,13 @@ final class UnixPathTest extends PathTestCase
 
         static::assertTrue($pattern->matches($normal));
         static::assertTrue($pattern->matches($hidden));
+    }
+
+    public function test_glob(): void
+    {
+        static::assertEquals('/output/*.csv', (new UnixPath('/output/{order-name}.csv'))->glob());
+        static::assertEquals('/output/*_*/file.csv', (new UnixPath('/output/{year}_{month}/file.csv'))->glob());
+        static::assertEquals('/output/file.csv', (new UnixPath('/output/file.csv'))->glob());
     }
 
     public function test_is_equal(): void
@@ -211,6 +326,15 @@ final class UnixPathTest extends PathTestCase
         static::assertFalse($pattern1->matches($pattern2));
     }
 
+    public function test_matches_with_placeholders(): void
+    {
+        $pattern = new UnixPath('/output/{order-name}.csv');
+
+        static::assertTrue($pattern->matches(new UnixPath('/output/123456-PL.csv')));
+        static::assertFalse($pattern->matches(new UnixPath('/output/nested/123456-PL.csv')));
+        static::assertFalse($pattern->matches(new UnixPath('/output/123456-PL.json')));
+    }
+
     public function test_options_from_array(): void
     {
         $path = new UnixPath('/file.txt', ['option1' => 'value1', 'option2' => 'value2']);
@@ -242,6 +366,18 @@ final class UnixPathTest extends PathTestCase
 
         $path2 = new UnixPath('\\');
         static::assertEquals('/', $path2->parentDirectory()->path());
+    }
+
+    public function test_partition_placeholders(): void
+    {
+        static::assertEquals([], (new UnixPath('/path/to/file.csv'))->partitionPlaceholders());
+        static::assertEquals(['order-name'], (new UnixPath('/path/to/{order-name}.csv'))->partitionPlaceholders());
+        static::assertEquals(
+            ['year', 'month'],
+            (new UnixPath('/path/{year}_{month}/file.csv'))->partitionPlaceholders(),
+        );
+        static::assertEquals(['name'], (new UnixPath('/path/{name}/{name}.csv'))->partitionPlaceholders());
+        static::assertEquals([], (new UnixPath('/path/*/file.csv'))->partitionPlaceholders());
     }
 
     public function test_partitions_extraction(): void

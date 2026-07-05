@@ -21,6 +21,7 @@ final readonly class Path
 {
     public function __construct(
         private WindowsPath|UnixPath $implementation,
+        private Partitions $partitions = new Partitions(),
     ) {}
 
     /**
@@ -75,6 +76,18 @@ final readonly class Path
         return $this->implementation->extension();
     }
 
+    /**
+     * Extracts partitions from a concrete path by matching it against partition placeholders in this path.
+     */
+    public function extractPlaceholderPartitions(self $path): Partitions
+    {
+        if ($this->implementation instanceof UnixPath) {
+            return $this->implementation->extractPlaceholderPartitions(type_instance_of(UnixPath::class)->assert($path->implementation));
+        }
+
+        return $this->implementation->extractPlaceholderPartitions(type_instance_of(WindowsPath::class)->assert($path->implementation));
+    }
+
     public function filename(): string
     {
         return $this->implementation->filename();
@@ -85,6 +98,14 @@ final readonly class Path
         string|int|bool|float|UnitEnum|null $default = null,
     ): string|int|bool|float|UnitEnum|null {
         return $this->implementation->options()->get($option, $default);
+    }
+
+    /**
+     * Path with partition placeholders replaced by glob wildcards, suitable for glob-based listing.
+     */
+    public function glob(): string
+    {
+        return $this->implementation->glob();
     }
 
     public function hasOption(string|Option $option): bool
@@ -133,9 +154,21 @@ final readonly class Path
         return new self($this->implementation->parentDirectory());
     }
 
+    /**
+     * @return array<string>
+     */
+    public function partitionPlaceholders(): array
+    {
+        return $this->implementation->partitionPlaceholders();
+    }
+
     public function partitions(): Partitions
     {
-        return $this->implementation->partitions();
+        if (!$this->partitions->count()) {
+            return $this->implementation->partitions();
+        }
+
+        return new Partitions(...$this->implementation->partitions()->toArray(), ...$this->partitions->toArray());
     }
 
     /**
@@ -213,5 +246,14 @@ final readonly class Path
     public function uri(): string
     {
         return $this->implementation->uri();
+    }
+
+    /**
+     * Attach explicit partitions to the path, merged with partitions parsed from the path itself.
+     * Used to carry partitions extracted from partition placeholders on concrete, listed paths.
+     */
+    public function withPartitions(Partitions $partitions): self
+    {
+        return new self($this->implementation, $partitions);
     }
 }

@@ -258,6 +258,16 @@ Keep the registered `Telemetry` instance referenced for as long as it should be 
 Custom `SchemaValidator` implementations must return a `Flow\ETL\Schema\Validator\ValidationContext`
 built from the missing, mismatched (`MismatchedDefinition`), and unexpected definitions they reject.
 
+### 18) `flow-php/filesystem` - `Partition` name and value forbid `{` and `}`
+
+| Before                           | After                             |
+|----------------------------------|-----------------------------------|
+| `new Partition('na{me', 'a}b')`  | throws `InvalidArgumentException` |
+| `partitionBy()` values with `{}` | throws `InvalidArgumentException` |
+
+`{name}` in a path is now a partition placeholder resolved from `partitionBy()` columns; strip braces from partition
+values before partitioning.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

@@ -34,6 +34,8 @@ final class PartitionTest extends TestCase
             ['nam<e'],
             ['nam*e'],
             ['nam?e'],
+            ['nam{e'],
+            ['nam}e'],
             [''],
         ];
     }
