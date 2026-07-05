@@ -29,7 +29,7 @@ final class Partition
     /**
      * @var array<string>
      */
-    private static array $forbiddenCharacters = ['/', '\\', '=', ':', '>', '<', '|', '"', '?', '*'];
+    private static array $forbiddenCharacters = ['/', '\\', '=', ':', '>', '<', '|', '"', '?', '*', '{', '}'];
 
     public function __construct(
         public readonly string $name,
@@ -43,7 +43,7 @@ final class Partition
             throw new InvalidArgumentException("Partition value can't be empty");
         }
 
-        $regex = '/^([^\/\\\=:><|"?*]+)$/';
+        $regex = '/^([^\/\\\=:><|"?*{}]+)$/';
 
         if (!preg_match($regex, $this->name)) {
             throw new InvalidArgumentException(
@@ -80,7 +80,7 @@ final class Partition
 
     public static function fromUri(string $uri): Partitions
     {
-        $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
+        $regex = '/^([^\/\\\=:><|"?*{}]+)=([^\/\\\=:><|"?*{}]+)$/';
 
         $partitions = [];
         $matches = [];

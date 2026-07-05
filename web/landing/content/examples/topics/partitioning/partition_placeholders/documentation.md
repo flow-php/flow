@@ -1,0 +1,2 @@
+- [Partitioning](/documentation/components/core/partitioning)
+- [Save Mode](/documentation/components/core/save-mode)

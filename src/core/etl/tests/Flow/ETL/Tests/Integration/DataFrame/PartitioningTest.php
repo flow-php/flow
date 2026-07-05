@@ -216,6 +216,47 @@ final class PartitioningTest extends FlowIntegrationTestCase
             });
     }
 
+    public function test_partitioning_by_path_placeholders_only(): void
+    {
+        $output = __DIR__ . '/Fixtures/Partitioning/placeholders';
+
+        df()
+            ->read(from_array([
+                ['order-year' => '2024', 'order-month' => '03', 'order-name' => '123456-PL', 'text' => 'order 1'],
+                ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'text' => 'order 2'],
+                ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'text' => 'order 3'],
+            ]))
+            ->partitionBy('order-year', 'order-month', 'order-name')
+            ->drop('order-year', 'order-month', 'order-name')
+            ->saveMode(overwrite())
+            ->write(to_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
+            ->run();
+
+        static::assertFileExists($output . '/2024/03/123456-PL.txt');
+        static::assertFileExists($output . '/2024/03/789-DE.txt');
+        static::assertFileExists($output . '/2025/01/555-FR.txt');
+
+        df()->read(from_text($output
+        . '/{order-year}/{order-month}/{order-name}.txt'))->run(function (Rows $rows): void {
+            $this->assertSame(
+                ['order-year', 'order-month', 'order-name'],
+                array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+            );
+        });
+
+        df()->read(from_text($output . '/**/*.txt'))->run(function (Rows $rows): void {
+            $this->assertFalse($rows->isPartitioned());
+        });
+
+        $prunedRows = df()
+            ->read(from_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
+            ->filterPartitions(ref('order-month')->equals(lit('01')))
+            ->fetch();
+
+        static::assertCount(1, $prunedRows);
+        static::assertSame(['555-FR'], $prunedRows->reduceToArray('order-name'));
+    }
+
     public function test_pruning_multiple_partitions(): void
     {
         $rows = df()

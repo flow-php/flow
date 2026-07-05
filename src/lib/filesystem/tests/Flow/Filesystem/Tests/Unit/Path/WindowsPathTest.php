@@ -74,6 +74,38 @@ final class WindowsPathTest extends PathTestCase
         static::assertEquals('C:/some/path/year=2023/file.txt', $partitioned->path());
     }
 
+    public function test_add_partitions_consuming_all_partitions_into_placeholders(): void
+    {
+        $path = new WindowsPath('C:/output/{year}_{month}.csv');
+
+        static::assertEquals(
+            'C:/output/2024_03.csv',
+            $path->addPartitions(partition('year', '2024'), partition('month', '03'))->path(),
+        );
+    }
+
+    public function test_add_partitions_with_placeholder_and_remaining_partitions(): void
+    {
+        $path = new WindowsPath('C:/output/{order-name}.csv');
+
+        static::assertEquals(
+            'C:/output/order-year=2024/123456-PL.csv',
+            $path->addPartitions(partition('order-year', '2024'), partition('order-name', '123456-PL'))->path(),
+        );
+    }
+
+    public function test_add_partitions_with_unresolved_placeholder(): void
+    {
+        $path = new WindowsPath('C:/output/{order-name}.csv');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Path partition placeholder {order-name} does not match any partition, available partitions: 'order-year'",
+        );
+
+        $path->addPartitions(partition('order-year', '2024'));
+    }
+
     public function test_basename_operations(): void
     {
         $path = new WindowsPath('/path/to/file.txt');
@@ -195,6 +227,25 @@ final class WindowsPathTest extends PathTestCase
         static::assertFalse($path->extension());
     }
 
+    public function test_extract_placeholder_partitions(): void
+    {
+        $pattern = new WindowsPath('C:/output/order-year=2024/{order-name}.csv');
+
+        $partitions = $pattern->extractPlaceholderPartitions(
+            new WindowsPath('C:/output/order-year=2024/123456-PL.csv'),
+        );
+
+        static::assertCount(1, $partitions);
+        static::assertEquals('123456-PL', $partitions->get('order-name')->value);
+    }
+
+    public function test_extract_placeholder_partitions_from_not_matching_path(): void
+    {
+        $pattern = new WindowsPath('C:/output/{order-name}.csv');
+
+        static::assertCount(0, $pattern->extractPlaceholderPartitions(new WindowsPath('C:/other/123456-PL.csv')));
+    }
+
     public function test_fnmatch_with_hidden_files(): void
     {
         $pattern = new WindowsPath('/*');
@@ -203,6 +254,12 @@ final class WindowsPathTest extends PathTestCase
 
         static::assertTrue($pattern->matches($normal));
         static::assertTrue($pattern->matches($hidden));
+    }
+
+    public function test_glob(): void
+    {
+        static::assertEquals('C:/output/*.csv', (new WindowsPath('C:/output/{order-name}.csv'))->glob());
+        static::assertEquals('C:/output/file.csv', (new WindowsPath('C:/output/file.csv'))->glob());
     }
 
     public function test_is_equal(): void
@@ -243,6 +300,14 @@ final class WindowsPathTest extends PathTestCase
         static::assertFalse($pattern1->matches($pattern2));
     }
 
+    public function test_matches_with_placeholders(): void
+    {
+        $pattern = new WindowsPath('C:/output/{order-name}.csv');
+
+        static::assertTrue($pattern->matches(new WindowsPath('C:/output/123456-PL.csv')));
+        static::assertFalse($pattern->matches(new WindowsPath('C:/output/nested/123456-PL.csv')));
+    }
+
     public function test_options_from_array(): void
     {
         $path = new WindowsPath('/file.txt', ['option1' => 'value1', 'option2' => 'value2']);
@@ -281,6 +346,16 @@ final class WindowsPathTest extends PathTestCase
         $result = $path->addPartitions($first, ...$partitions);
 
         static::assertEquals($expected, $result->path());
+    }
+
+    public function test_partition_placeholders(): void
+    {
+        static::assertEquals([], (new WindowsPath('C:/path/to/file.csv'))->partitionPlaceholders());
+        static::assertEquals(['order-name'], (new WindowsPath('C:/path/to/{order-name}.csv'))->partitionPlaceholders());
+        static::assertEquals(
+            ['year', 'month'],
+            (new WindowsPath('C:/path/{year}_{month}/file.csv'))->partitionPlaceholders(),
+        );
     }
 
     public function test_partitions_extraction(): void

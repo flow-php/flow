@@ -11,6 +11,8 @@ use function file_exists;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function mkdir;
@@ -40,5 +42,66 @@ final class CSVTest extends FlowTestCase
         if (file_exists($path)) {
             unlink($path);
         }
+    }
+
+    public function test_writing_and_reading_csv_files_with_partition_placeholders(): void
+    {
+        $dir = __DIR__ . '/var/test_writing_and_reading_csv_files_with_partition_placeholders';
+
+        df()
+            ->read(from_array([
+                ['year' => '2024', 'name' => '123456-PL', 'total' => 100],
+                ['year' => '2024', 'name' => '789-DE', 'total' => 200],
+                ['year' => '2025', 'name' => '555-FR', 'total' => 300],
+            ]))
+            ->partitionBy('year', 'name')
+            ->saveMode(overwrite())
+            ->load(to_csv($dir . '/{name}.csv'))
+            ->run();
+
+        static::assertFileExists($dir . '/year=2024/123456-PL.csv');
+        static::assertFileExists($dir . '/year=2024/789-DE.csv');
+        static::assertFileExists($dir . '/year=2025/555-FR.csv');
+
+        $rows = df()
+            ->read(from_csv($dir . '/year=*/{name}.csv'))
+            ->sortBy(ref('total'))
+            ->fetch();
+
+        static::assertCount(3, $rows);
+        static::assertEquals(['2024', '2024', '2025'], $rows->reduceToArray(ref('year')));
+        static::assertEquals(['123456-PL', '789-DE', '555-FR'], $rows->reduceToArray(ref('name')));
+
+        $prunedRows = df()
+            ->read(from_csv($dir . '/year=*/{name}.csv'))
+            ->filterPartitions(ref('name')->equals(lit('789-DE')))
+            ->fetch();
+
+        static::assertCount(1, $prunedRows);
+        static::assertEquals(['789-DE'], $prunedRows->reduceToArray(ref('name')));
+    }
+
+    /**
+     * https://github.com/flow-php/flow/issues/2238
+     */
+    public function test_writing_csv_files_with_last_partition_as_file_name(): void
+    {
+        $output = __DIR__ . '/var/test_writing_csv_files_with_last_partition_as_file_name/output';
+
+        df()
+            ->read(from_array([
+                ['order-year' => '2024', 'order-month' => '03', 'order-name' => '123456-PL', 'total' => 100],
+                ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'total' => 200],
+                ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'total' => 300],
+            ]))
+            ->partitionBy('order-year', 'order-month', 'order-name')
+            ->saveMode(overwrite())
+            ->load(to_csv($output . '/{order-name}.csv'))
+            ->run();
+
+        static::assertFileExists($output . '/order-year=2024/order-month=03/123456-PL.csv');
+        static::assertFileExists($output . '/order-year=2024/order-month=03/789-DE.csv');
+        static::assertFileExists($output . '/order-year=2025/order-month=01/555-FR.csv');
+        static::assertFileDoesNotExist($output . '/order-year=2024/order-month=03/order-name=123456-PL');
     }
 }

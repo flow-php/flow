@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Path;
 
+use Flow\ETL\Exception\InvalidArgumentException as EtlInvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Partition;
@@ -14,6 +15,8 @@ use function array_key_exists;
 use function array_map;
 use function array_pop;
 use function array_slice;
+use function array_unique;
+use function array_values;
 use function count;
 use function explode;
 use function Flow\Types\DSL\type_string;
@@ -26,6 +29,7 @@ use function md5;
 use function parse_url;
 use function pathinfo;
 use function preg_match;
+use function preg_match_all;
 use function preg_quote;
 use function preg_replace;
 use function random_int;
@@ -42,6 +46,10 @@ use const PHP_INT_MAX;
 
 final readonly class WindowsPath
 {
+    private const string PARTITION_PLACEHOLDER_PATTERN = '/\{([^\/\\\\{}*?\[\]]+)\}/';
+
+    private const string PLACEHOLDER_SENTINEL = "\x01";
+
     private Options $options;
 
     private string $path;
@@ -139,16 +147,49 @@ final readonly class WindowsPath
 
     public function addPartitions(Partition $partition, Partition ...$partitions): self
     {
-        if ($this->isPattern()) {
+        if ($this->isPathPattern(preg_replace(self::PARTITION_PLACEHOLDER_PATTERN, '', $this->path) ?? $this->path)) {
             throw new InvalidArgumentException("Can't add partitions to path pattern.");
         }
 
-        $pathInfo = pathinfo($this->path);
+        $partitions = [$partition, ...$partitions];
+        $partitionNames = array_map(static fn(Partition $p) => $p->name, $partitions);
+        $path = $this->path;
+
+        foreach ($this->partitionPlaceholders() as $placeholder) {
+            $placeholderPartition = null;
+
+            foreach ($partitions as $index => $nextPartition) {
+                if ($nextPartition->name === $placeholder) {
+                    $placeholderPartition = $nextPartition;
+                    unset($partitions[$index]);
+
+                    break;
+                }
+            }
+
+            if ($placeholderPartition === null) {
+                throw new InvalidArgumentException(
+                    'Path partition placeholder {'
+                    . $placeholder
+                    . "} does not match any partition, available partitions: '"
+                    . implode("', '", $partitionNames)
+                    . "'",
+                );
+            }
+
+            $path = str_replace('{' . $placeholder . '}', $placeholderPartition->value, $path);
+        }
+
+        if (count($partitions) === 0) {
+            return new self($this->protocol . '://' . $path, $this->options);
+        }
+
+        $pathInfo = pathinfo($path);
         $dirname = $pathInfo['dirname'] ?? '';
         $basename = $pathInfo['basename'];
         $partitionsString = implode('/', array_map(
             static fn(Partition $p) => $p->name . '=' . $p->value,
-            [$partition, ...$partitions],
+            array_values($partitions),
         ));
 
         return match ($dirname) {
@@ -198,9 +239,70 @@ final readonly class WindowsPath
         return ($extension = pathinfo($this->path, PATHINFO_EXTENSION)) === '' ? false : strtolower($extension);
     }
 
+    /**
+     * Extracts partitions from a concrete path by matching it against partition placeholders in this path.
+     * Values that would not be valid partitions (e.g. produced by files not written through partitioning) are skipped.
+     */
+    public function extractPlaceholderPartitions(self $path): Partitions
+    {
+        $matches = [];
+        preg_match_all(self::PARTITION_PLACEHOLDER_PATTERN, $this->path, $matches);
+        $names = array_values($matches[1]);
+
+        if ([] === $names || $path->isPattern()) {
+            return new Partitions();
+        }
+
+        $rx = preg_quote(
+            preg_replace(self::PARTITION_PLACEHOLDER_PATTERN, self::PLACEHOLDER_SENTINEL, $this->path) ?? $this->path,
+            null,
+        );
+        $rx = str_replace('\\*\\*', '(?:.*)?', $rx);
+        $rx = str_replace('\\*', '[^/]*', $rx);
+        $rx = strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
+        $rx = str_replace(self::PLACEHOLDER_SENTINEL, '([^/]+)', $rx);
+
+        $valueMatches = [];
+
+        if (!preg_match('{^' . $rx . '$}', $path->path, $valueMatches)) {
+            return new Partitions();
+        }
+
+        $values = [];
+
+        foreach ($names as $index => $name) {
+            $value = $valueMatches[$index + 1];
+
+            if (array_key_exists($name, $values) && $values[$name] !== $value) {
+                return new Partitions();
+            }
+
+            $values[$name] = $value;
+        }
+
+        $partitionsList = [];
+
+        foreach ($values as $name => $value) {
+            try {
+                $partitionsList[] = new Partition($name, $value);
+            } catch (EtlInvalidArgumentException) {
+            }
+        }
+
+        return new Partitions(...$partitionsList);
+    }
+
     public function filename(): string
     {
         return pathinfo($this->path, PATHINFO_FILENAME);
+    }
+
+    /**
+     * Path with partition placeholders replaced by glob wildcards, suitable for glob-based listing.
+     */
+    public function glob(): string
+    {
+        return preg_replace(self::PARTITION_PLACEHOLDER_PATTERN, '*', $this->path) ?? $this->path;
     }
 
     public function isEqual(self $path): bool
@@ -248,6 +350,17 @@ final readonly class WindowsPath
                 $this->options,
             ),
         };
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function partitionPlaceholders(): array
+    {
+        $matches = [];
+        preg_match_all(self::PARTITION_PLACEHOLDER_PATTERN, $this->path, $matches);
+
+        return array_values(array_unique($matches[1]));
     }
 
     public function partitions(): Partitions
@@ -450,10 +563,14 @@ final readonly class WindowsPath
             }
         }
 
-        $rx = preg_quote($pattern, null);
+        $rx = preg_quote(
+            preg_replace(self::PARTITION_PLACEHOLDER_PATTERN, self::PLACEHOLDER_SENTINEL, $pattern) ?? $pattern,
+            null,
+        );
         $rx = str_replace('\\*\\*', '(.*)?', $rx);
         $rx = str_replace('\\*', '[^/]*', $rx);
         $rx = strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
+        $rx = str_replace(self::PLACEHOLDER_SENTINEL, '[^/]+', $rx);
         $rx = '{^' . $rx . '$}' . ($flags & 16 ? 'i' : '');
 
         return (bool) preg_match($rx, $filename);
