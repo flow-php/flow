@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["name", "address"],
+    "properties": {
+        "name": {"type": "string"},
+        "age": {"type": ["integer", "null"]},
+        "address": {"$ref": "address.json"},
+        "location": {"$ref": "types/geo.json#/$defs/coordinates"}
+    }
+}

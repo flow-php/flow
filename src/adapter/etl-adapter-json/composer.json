@@ -14,7 +14,10 @@
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "ext-json": "*",
         "flow-php/etl": "self.version",
-        "halaxa/json-machine": "^1.1"
+        "flow-php/filesystem": "self.version",
+        "halaxa/json-machine": "^1.1",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0"
     },
     "config": {
         "optimize-autoloader": true,

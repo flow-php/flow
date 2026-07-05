@@ -7,12 +7,15 @@ namespace Flow\ETL\Adapter\JSON;
 use DateTimeInterface;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
+use Flow\ETL\Adapter\JSON\JsonSchema\ReferenceResolver;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 
 use function Flow\Filesystem\DSL\path_real;
 use function is_string;
@@ -83,4 +86,31 @@ function to_json(
 function to_json_lines(string|Path $path): JsonLinesLoader
 {
     return new JsonLinesLoader(is_string($path) ? path_real($path) : $path);
+}
+
+/**
+ * Convert a JSON Schema (https://json-schema.org) document into a Flow Schema.
+ *
+ * @param array<string, mixed>|Path|string $json_schema - decoded document, raw JSON document or a path to a schema file
+ * @param null|ClientInterface $client - PSR-18 http client, required to resolve remote http(s) references
+ * @param null|RequestFactoryInterface $request_factory - PSR-17 request factory, required to resolve remote http(s) references
+ */
+#[DocumentationDSL(module: Module::JSON, type: Type::HELPER)]
+function schema_from_json_schema(
+    string|array|Path $json_schema,
+    ?ClientInterface $client = null,
+    ?RequestFactoryInterface $request_factory = null,
+): Schema {
+    return (new SchemaConverter(new ReferenceResolver($client, $request_factory)))->toFlow($json_schema);
+}
+
+/**
+ * Convert a Flow Schema into a JSON Schema (https://json-schema.org, draft 2020-12) document.
+ *
+ * @return array<string, mixed>
+ */
+#[DocumentationDSL(module: Module::JSON, type: Type::HELPER)]
+function schema_to_json_schema(Schema $schema): array
+{
+    return (new SchemaConverter())->toJsonSchema($schema);
 }

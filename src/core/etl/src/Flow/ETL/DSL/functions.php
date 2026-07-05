@@ -199,6 +199,7 @@ use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -271,6 +272,7 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
@@ -2113,6 +2115,20 @@ function structure_schema(
     return new StructureDefinition($name, $type, $nullable, $metadata);
 }
 
+/**
+ * @param Type<mixed>|UnionType<mixed, mixed> $type
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function union_schema(
+    string $name,
+    UnionType|Type $type,
+    bool $nullable = false,
+    ?Metadata $metadata = null,
+): UnionDefinition {
+    /** @var UnionType<mixed, mixed> $type */
+    return new UnionDefinition($name, $type, $nullable, $metadata);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): UuidDefinition
 {
@@ -2180,6 +2196,7 @@ function definition_from_type(
         $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
         $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
         $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
+        $type instanceof UnionType => new UnionDefinition($ref, $type, $nullable, $metadata),
         $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
         $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
