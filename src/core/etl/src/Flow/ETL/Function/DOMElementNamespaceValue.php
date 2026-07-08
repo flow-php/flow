@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Dom\HTMLElement;
+use Dom\XPath;
 use DOMDocument;
 use DOMNode;
 use DOMXPath;
@@ -64,10 +65,21 @@ final class DOMElementNamespaceValue extends ScalarFunctionChain
             return $node->namespaceURI;
         }
 
-        $xpath = new DOMXPath($node->ownerDocument);
+        if (null === $node->ownerDocument) {
+            return null;
+        }
+
+        if (class_exists('\Dom\XPath')) {
+            // @mago-ignore analysis:possibly-invalid-argument
+            $xpath = new XPath($node->ownerDocument);
+        } else {
+            // @mago-ignore analysis:possibly-invalid-argument
+            $xpath = new DOMXPath($node->ownerDocument);
+        }
 
         /** @var \DOMNameSpaceNode $nsNode */
-        foreach ($xpath->query('namespace::*') as $nsNode) {
+        // @mago-ignore analysis:invalid-iterator
+        foreach ($xpath->query('namespace::*') ?: [] as $nsNode) {
             if ($nsNode->nodeName === $attributeName || str_starts_with($nsNode->nodeName, $attributeName . ':')) {
                 return $nsNode->nodeValue;
             }
