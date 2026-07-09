@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Dom\Document;
+use Dom\Element;
 use Dom\HTMLElement;
 use Dom\XPath;
 use DOMDocument;
@@ -34,9 +36,9 @@ final class DOMElementNamespaceValue extends ScalarFunctionChain
             type_list(type_instance_of(DOMNode::class)),
         ];
 
-        if (class_exists('\Dom\HTMLElement')) {
-            $types[] = type_instance_of(HTMLElement::class);
-            $types[] = type_list(type_instance_of(HTMLElement::class));
+        if (class_exists('\Dom\Element')) {
+            $types[] = type_instance_of(Element::class);
+            $types[] = type_list(type_instance_of(Element::class));
         }
 
         $node = (new Parameter($this->domElement))->as($row, $context, ...$types);
@@ -55,7 +57,7 @@ final class DOMElementNamespaceValue extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('DOMElementNamespaceValue requires non-null DOMNode'));
         }
 
-        if (!$node instanceof DOMNode && !$node instanceof HTMLElement) {
+        if (!$node instanceof DOMNode && !$node instanceof Element) {
             return null;
         }
 
@@ -69,13 +71,9 @@ final class DOMElementNamespaceValue extends ScalarFunctionChain
             return null;
         }
 
-        if (class_exists('\Dom\XPath')) {
-            // @mago-ignore analysis:possibly-invalid-argument
-            $xpath = new XPath($node->ownerDocument);
-        } else {
-            // @mago-ignore analysis:possibly-invalid-argument
-            $xpath = new DOMXPath($node->ownerDocument);
-        }
+        $document = $node->ownerDocument;
+
+        $xpath = $document instanceof Document ? new XPath($document) : new DOMXPath($document);
 
         /** @var \DOMNameSpaceNode $nsNode */
         // @mago-ignore analysis:invalid-iterator

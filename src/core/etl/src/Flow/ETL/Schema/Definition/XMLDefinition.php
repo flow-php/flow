@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
+use Dom\XMLDocument;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
@@ -18,7 +19,7 @@ use function Flow\Types\DSL\type_xml;
 use function sprintf;
 
 /**
- * @implements Definition<\DOMDocument>
+ * @implements Definition<\DOMDocument|XMLDocument>
  */
 final class XMLDefinition implements Definition
 {
@@ -27,7 +28,7 @@ final class XMLDefinition implements Definition
     private readonly Reference $ref;
 
     /**
-     * @var Type<\DOMDocument>
+     * @var Type<\DOMDocument|XMLDocument>
      */
     private readonly Type $type;
 

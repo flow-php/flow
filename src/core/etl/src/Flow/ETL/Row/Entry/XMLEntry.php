@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use Dom\XMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
@@ -23,7 +24,7 @@ use function gzuncompress;
 use function sprintf;
 
 /**
- * @template-covariant T of \DOMDocument|null
+ * @template-covariant T of \DOMDocument|XMLDocument|null
  *
  * @implements Entry<T>
  */
@@ -38,7 +39,7 @@ final class XMLEntry implements Entry
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?DOMDocument $value,
+        private readonly DOMDocument|XMLDocument|null $value,
         ?Metadata $metadata = null,
     ) {
         $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
@@ -153,7 +154,12 @@ final class XMLEntry implements Entry
             return '';
         }
 
-        $serialized = $this->value->saveXML($this->value->documentElement);
+        if ($this->value instanceof XMLDocument) {
+            $serialized = $this->value->saveXml($this->value->documentElement);
+        } else {
+            // @mago-ignore analysis:possibly-invalid-argument,possibly-invalid-argument
+            $serialized = $this->value->saveXML($this->value->documentElement);
+        }
 
         if ($serialized === false) {
             throw new RuntimeException('Failed to serialize XML document.');
@@ -163,7 +169,7 @@ final class XMLEntry implements Entry
     }
 
     /**
-     * @return Type<DOMDocument>
+     * @return Type<DOMDocument|XMLDocument>
      */
     public function type(): Type
     {
@@ -173,7 +179,7 @@ final class XMLEntry implements Entry
     /**
      * @return T
      */
-    public function value(): ?DOMDocument
+    public function value(): DOMDocument|XMLDocument|null
     {
         return $this->value;
     }

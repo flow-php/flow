@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use Dom\HTMLDocument;
-use Dom\HTMLElement;
+use Dom\Element;
+use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use PHPUnit\Framework\Attributes\RequiresPhp;
@@ -35,9 +35,9 @@ final class DOMElementNamespaceTest extends TestCase
     public function test_html_getting_element_namespace(): void
     {
         // @mago-ignore analysis:unavailable-method
-        $element = HTMLDocument::createFromString(self::XML, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
+        $element = XMLDocument::createFromString(self::XML, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
-        static::assertInstanceOf(HTMLElement::class, $element->documentElement);
+        static::assertInstanceOf(Element::class, $element->documentElement);
         static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', ref('node')
             ->domElementNamespace()
             ->eval(

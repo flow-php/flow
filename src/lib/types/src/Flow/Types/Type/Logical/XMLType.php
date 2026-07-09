@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use Dom\XMLDocument;
 use DOMDocument;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
@@ -14,11 +15,11 @@ use function Flow\Types\DSL\type_xml;
 use function is_string;
 
 /**
- * @implements Type<\DOMDocument>
+ * @implements Type<\DOMDocument|XMLDocument>
  */
 final readonly class XMLType implements Type
 {
-    public function assert(mixed $value): DOMDocument
+    public function assert(mixed $value): DOMDocument|XMLDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -27,7 +28,7 @@ final readonly class XMLType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value): DOMDocument
+    public function cast(mixed $value): DOMDocument|XMLDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -60,11 +61,7 @@ final readonly class XMLType implements Type
 
     public function isValid(mixed $value): bool
     {
-        if ($value instanceof DOMDocument) {
-            return true;
-        }
-
-        return false;
+        return $value instanceof DOMDocument || $value instanceof XMLDocument;
     }
 
     public function normalize(): array

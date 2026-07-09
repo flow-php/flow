@@ -18,7 +18,7 @@ use function Flow\Types\DSL\type_xml_element;
 use function sprintf;
 
 /**
- * @implements Definition<\DOMElement>
+ * @implements Definition<\DOMElement|\Dom\Element>
  */
 final class XMLElementDefinition implements Definition
 {
@@ -27,7 +27,7 @@ final class XMLElementDefinition implements Definition
     private readonly Reference $ref;
 
     /**
-     * @var Type<\DOMElement>
+     * @var Type<\DOMElement|\Dom\Element>
      */
     private readonly Type $type;
 
