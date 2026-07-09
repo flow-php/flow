@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Types\DSL;
 
+use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Attribute\DocumentationDSL;
@@ -263,7 +265,7 @@ function type_time_zone(): Type
 }
 
 /**
- * @return Type<\DOMDocument>
+ * @return Type<\DOMDocument|XMLDocument>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_xml(): Type
@@ -272,7 +274,7 @@ function type_xml(): Type
 }
 
 /**
- * @return Type<\DOMElement>
+ * @return Type<\DOMElement|Element>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_xml_element(): Type

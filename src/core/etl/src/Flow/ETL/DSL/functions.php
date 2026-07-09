@@ -11,8 +11,10 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Exception;
@@ -892,16 +894,16 @@ function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metada
 /**
  * @throws InvalidArgumentException
  *
- * @return ($value is null ? Entry<null> : Entry<\DOMDocument>)
+ * @return ($value is null ? Entry<null> : Entry<\DOMDocument|XMLDocument>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $metadata = null): Entry
+function xml_entry(string $name, DOMDocument|XMLDocument|string|null $value, ?Metadata $metadata = null): Entry
 {
     if ($value === null) {
         return new XMLEntry($name, null, $metadata);
     }
 
-    if ($value instanceof DOMDocument) {
+    if ($value instanceof DOMDocument || $value instanceof XMLDocument) {
         return new XMLEntry($name, $value, $metadata);
     }
 
@@ -917,16 +919,16 @@ function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $meta
 /**
  * @throws InvalidArgumentException
  *
- * @return ($value is null ? Entry<null> : Entry<\DOMElement>)
+ * @return ($value is null ? Entry<null> : Entry<\DOMElement|Element>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, DOMElement|string|null $value, ?Metadata $metadata = null): Entry
+function xml_element_entry(string $name, DOMElement|Element|string|null $value, ?Metadata $metadata = null): Entry
 {
     if ($value === null) {
         return new XMLElementEntry($name, null, $metadata);
     }
 
-    if ($value instanceof DOMElement) {
+    if ($value instanceof DOMElement || $value instanceof Element) {
         return new XMLElementEntry($name, $value, $metadata);
     }
 
