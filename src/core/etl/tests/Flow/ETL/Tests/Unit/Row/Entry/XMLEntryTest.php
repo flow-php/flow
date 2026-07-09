@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use Dom\XmlDocument;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -11,6 +12,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\Types\DSL\type_instance_of;
@@ -105,6 +107,22 @@ final class XMLEntryTest extends FlowTestCase
         static::assertNotEquals(xml_entry('row', $doc), xml_entry('row', $doc2));
     }
 
+    #[RequiresPhp('>= 8.4')]
+    public function test_canonicalization_with_dom_xmldocument(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $doc = XmlDocument::createFromString('<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>');
+
+        // @mago-ignore analysis:unavailable-method
+        $doc2 = XmlDocument::createFromString(<<<'XML'
+            <item item_attribute_01="1">
+                        <id id_attribute_01="1">1</id>
+                    </item>
+            XML);
+
+        static::assertEquals(xml_entry('row', $doc), xml_entry('row', $doc2));
+    }
+
     public function test_creating_entry_from_invalid_xml_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -129,6 +147,18 @@ final class XMLEntryTest extends FlowTestCase
         static::assertSame('name', $entry->name());
         static::assertSame($doc, $entry->value());
         static::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    public function test_creating_xml_entry_with_empty_dom_xmldocument(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $doc = XmlDocument::createEmpty();
+        $entry = xml_entry('name', $doc);
+
+        static::assertSame('name', $entry->name());
+        static::assertSame($doc, $entry->value());
+        static::assertSame("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", $entry->__toString());
     }
 
     /**
