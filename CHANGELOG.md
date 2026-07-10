@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-07-05
+## [Unreleased] - 2026-07-09
 
 ### Added
+- [#2516](https://github.com/flow-php/flow/pull/2516) - **Add a new `ref()->domElementNamespace()` function** - [@stloyd](https://github.com/stloyd)
+- [#2516](https://github.com/flow-php/flow/pull/2516) - **Add support for a new `\Dom\XmlDocument` (PHP 8.4+) in XML handling** - [@stloyd](https://github.com/stloyd)
 - [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - bidirectional JSON Schema converter with schema_from_json_schema() and schema_to_json_schema() DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - $ref resolution for internal pointers, local files and remote http(s) documents via PSR-18 client, with circular reference detection** - [@norberttech](https://github.com/norberttech)
 - [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - combinator support: allOf deep merge, anyOf/oneOf as nullable or union types, boolean schemas** - [@norberttech](https://github.com/norberttech)
