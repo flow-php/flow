@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-09
+## [Unreleased] - 2026-07-10
 
 ### Added
 - [#2516](https://github.com/flow-php/flow/pull/2516) - **Add a new `ref()->domElementNamespace()` function** - [@stloyd](https://github.com/stloyd)
