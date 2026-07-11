@@ -128,35 +128,13 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function chunks(int $size): Generator
     {
-        $chunk = [];
+        foreach (array_chunk($this->rows, $size) as $chunk) {
+            $rows = new self();
+            $rows->rows = $chunk;
+            $rows->partitions = $this->partitions;
 
-        foreach ($this->rows as $row) {
-            $chunk[] = $row;
-
-            if (count($chunk) === $size) {
-                yield self::fromList($chunk, $this->partitions);
-                $chunk = [];
-            }
+            yield $rows;
         }
-
-        if (count($chunk)) {
-            yield self::fromList($chunk, $this->partitions);
-        }
-    }
-
-    /**
-     * Adopts an already-built list of rows without the variadic re-copy - chunking
-     * a large Rows must not copy every row pointer three times.
-     *
-     * @param array<int, Row> $rows
-     */
-    private static function fromList(array $rows, Partitions $partitions): self
-    {
-        $instance = new self();
-        $instance->rows = $rows;
-        $instance->partitions = $partitions;
-
-        return $instance;
     }
 
     public function count(): int

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\ExternalSort\BucketsCache;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -18,15 +19,25 @@ use function count;
 
 final readonly class FilesystemBucketsCache implements BucketsCache
 {
-    private const int WRITE_BATCH_SIZE = 1000;
-
     private Path $cacheDir;
 
+    private FloeReader $reader;
+
+    /**
+     * @param int<1, max> $batchSize
+     */
     public function __construct(
         private Filesystem $filesystem,
         ?Path $cacheDir = null,
+        private int $batchSize = 1000,
     ) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($this->batchSize < 1) {
+            throw new InvalidArgumentException('Batch size must be at least 1');
+        }
+
         $this->cacheDir = ($cacheDir ?? $this->filesystem->getSystemTmpDir())->suffix('/flow-php-external-sort/');
+        $this->reader = new FloeReader($this->filesystem);
     }
 
     /**
@@ -40,9 +51,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
             return;
         }
 
-        foreach ((new FloeReader($this->filesystem))
-            ->read($path)
-            ->recover() as $batch) {
+        foreach ($this->reader->read($path)->recover($this->batchSize) as $batch) {
             yield from $batch->all();
         }
     }
@@ -67,7 +76,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         foreach ($rows as $row) {
             $batch[] = $row;
 
-            if (count($batch) >= self::WRITE_BATCH_SIZE) {
+            if (count($batch) >= $this->batchSize) {
                 $writer->write(new Rows(...$batch));
                 $batch = [];
             }

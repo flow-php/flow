@@ -15,6 +15,17 @@ use function iterator_to_array;
 
 final class FilesystemBucketsCacheTest extends FlowIntegrationTestCase
 {
+    public function test_custom_batch_size_round_trips_all_rows(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_batch_size');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir, batchSize: 2);
+        $cache->set('bucket', [row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))]);
+
+        static::assertCount(3, iterator_to_array($cache->get('bucket'), false));
+    }
+
     public function test_get_missing_bucket_yields_nothing(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_missing');

@@ -82,6 +82,13 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame($custom, $config->cache->cache);
     }
 
+    public function test_external_sort_batch_size_flows_into_cache_config(): void
+    {
+        $config = config_builder()->externalSortBatchSize(250)->build();
+
+        static::assertSame(250, $config->cache->externalSortBatchSize);
+    }
+
     public function test_config_builder_with_analyze(): void
     {
         $analyze = analyze()->withSchema()->withColumnStatistics();

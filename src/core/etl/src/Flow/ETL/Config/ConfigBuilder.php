@@ -161,6 +161,16 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param int<1, max> $externalSortBatchSize
+     */
+    public function externalSortBatchSize(int $externalSortBatchSize): self
+    {
+        $this->cache->externalSortBatchSize($externalSortBatchSize);
+
+        return $this;
+    }
+
     public function externalSortFilesystem(string $protocol): self
     {
         $this->sort->filesystemProtocol($protocol);

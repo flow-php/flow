@@ -56,6 +56,7 @@ final readonly class SortingProcessor implements Processor
             new FilesystemBucketsCache(
                 $context->filesystem($context->config->sort->filesystemProtocol),
                 cacheDir: $context->config->cache->localFilesystemCacheDir->suffix('/flow-php-external-sort/'),
+                batchSize: $context->config->cache->externalSortBatchSize,
             ),
             $context->config->cache->externalSortBucketsCount,
         ))->sortGenerator($rows, $context, $this->refs);
