@@ -268,6 +268,32 @@ built from the missing, mismatched (`MismatchedDefinition`), and unexpected defi
 `{name}` in a path is now a partition placeholder resolved from `partitionBy()` columns; strip braces from partition
 values before partitioning.
 
+### 19) `flow-php/etl` - `Cache` stores only `Rows` and gained `read()`; cache indexes are stored as `Rows`
+
+| Before                                            | After                                                         |
+|---------------------------------------------------|---------------------------------------------------------------|
+| `Cache::get(string): Row\|Rows\|CacheIndex`       | `Cache::get(string): Rows`                                    |
+| `Cache::set(string, Row\|Rows\|CacheIndex): void` | `Cache::set(string, Rows): void`                              |
+| —                                                 | `Cache::read(string $key): Generator` (yields `Rows` batches) |
+| `$cache->set($id, $row)`                          | `$cache->set($id, rows($row))`                                |
+| `$cache->set($id, $cacheIndex)`                   | `$cache->set($id, $cacheIndex->toRows())`                     |
+| `$cache->get($id)` returning `CacheIndex`         | `CacheIndex::fromRows($id, $cache->get($id))`                 |
+
+Custom `Cache` implementations must adopt the `Rows`-only signatures and add `read()`; the minimal
+implementation is `yield $this->get($key);`.
+
+### 20) `flow-php/etl` - cache and serialization use the Floe (`.floe`) binary format; datetime subclasses rejected
+
+| Before                                                                                 | After                                         |
+|----------------------------------------------------------------------------------------|-----------------------------------------------|
+| `config_builder()->serializer()` default `Base64Serializer(new NativePHPSerializer())` | `Flow\Floe\FloeSerializer`                    |
+| `filesystem_cache($cache_dir, $filesystem, $serializer)`                               | `filesystem_cache($cache_dir, $filesystem)`   |
+| `new FilesystemCache($filesystem, $serializer, $cacheDir)`                             | `new FilesystemCache($filesystem, $cacheDir)` |
+| `CacheConfigBuilder::build($fstab, $serializer, …)`                                    | `CacheConfigBuilder::build($fstab, …)`        |
+| caching or serializing a `DateTime`/`DateTimeImmutable` subclass (e.g. Carbon)         | throws `Flow\Floe\Exception\FloeException`    |
+
+Convert `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

@@ -41,7 +41,7 @@ final class ExternalSortTest extends FlowIntegrationTestCase
         $randomizedInput = $input;
         shuffle($randomizedInput);
 
-        $sort = new ExternalSort(new FilesystemBucketsCache($this->fs(), $this->serializer(), 100, $cacheDir));
+        $sort = new ExternalSort(new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir));
 
         $context = flow_context();
         $pipeline = new Pipeline(from_array($randomizedInput));

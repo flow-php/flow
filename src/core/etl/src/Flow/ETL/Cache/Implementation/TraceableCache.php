@@ -6,10 +6,8 @@ namespace Flow\ETL\Cache\Implementation;
 
 use DateTimeImmutable;
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\KeyNotInCacheException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Telemetry\CacheAttributes;
 use Flow\Telemetry\Meter\Instrument\Counter;
@@ -19,6 +17,7 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Generator;
 use Throwable;
 
 final readonly class TraceableCache implements Cache
@@ -79,7 +78,7 @@ final readonly class TraceableCache implements Cache
         }
     }
 
-    public function get(string $key): Row|Rows|CacheIndex
+    public function get(string $key): Rows
     {
         $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
 
@@ -93,6 +92,29 @@ final readonly class TraceableCache implements Cache
 
             throw $exception;
         }
+    }
+
+    /**
+     * @throws KeyNotInCacheException
+     *
+     * @return Generator<int, Rows>
+     */
+    public function read(string $key): Generator
+    {
+        $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
+        $batches = $this->cache->read($key);
+
+        try {
+            $batches->rewind();
+        } catch (KeyNotInCacheException $exception) {
+            $this->missCounter->add(1, $attributes);
+
+            throw $exception;
+        }
+
+        $this->hitCounter->add(1, $attributes);
+
+        yield from $batches;
     }
 
     public function has(string $key): bool
@@ -109,18 +131,12 @@ final readonly class TraceableCache implements Cache
         return $exists;
     }
 
-    public function set(string $key, Row|Rows|CacheIndex $value): void
+    public function set(string $key, Rows $value): void
     {
-        $valueType = match (true) {
-            $value instanceof Row => 'Row',
-            $value instanceof Rows => 'Rows',
-            $value instanceof CacheIndex => 'CacheIndex',
-        };
-
         $span = $this->tracer->span(CacheAttributes::SPAN_SET, SpanKind::CLIENT, [
             CacheAttributes::CACHE_OPERATION => 'set',
             CacheAttributes::CACHE_KEY => $key,
-            CacheAttributes::CACHE_VALUE_TYPE => $valueType,
+            CacheAttributes::CACHE_VALUE_TYPE => 'Rows',
         ]);
 
         try {

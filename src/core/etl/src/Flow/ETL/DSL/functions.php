@@ -253,8 +253,6 @@ use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
-use Flow\Serializer\NativePHPSerializer;
-use Flow\Serializer\Serializer;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -411,13 +409,20 @@ function files(string|Path $directory): FilesExtractor
     return new FilesExtractor(is_string($directory) ? path($directory) : $directory);
 }
 
+/**
+ * @param int<1, max> $serializer_batch_size
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(
     Path|string|null $cache_dir = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-    Serializer $serializer = new NativePHPSerializer(),
+    int $serializer_batch_size = 1000,
 ): FilesystemCache {
-    return new FilesystemCache($filesystem, $serializer, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
+    return new FilesystemCache(
+        $filesystem,
+        is_string($cache_dir) ? path_real($cache_dir) : $cache_dir,
+        $serializer_batch_size,
+    );
 }
 
 /**

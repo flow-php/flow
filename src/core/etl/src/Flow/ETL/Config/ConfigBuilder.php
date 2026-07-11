@@ -22,8 +22,7 @@ use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
-use Flow\Serializer\Base64Serializer;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
@@ -89,7 +88,7 @@ final class ConfigBuilder
     public function build(EntryFactory $entryFactory = new EntryFactory()): Config
     {
         $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
-        $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
+        $this->serializer ??= new FloeSerializer();
         $this->optimizer ??= new Optimizer(new LimitOptimization(), new BatchSizeOptimization(batchSize: 1000));
 
         $serializer = $this->serializer;
@@ -107,7 +106,7 @@ final class ConfigBuilder
             $optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $serializer, $this->telemetryConfig, $dataframeName),
+            $this->cache->build($this->fstab(), $this->telemetryConfig, $dataframeName),
             $this->sort->build(),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
@@ -123,7 +122,17 @@ final class ConfigBuilder
 
     public function cacheFilesystem(string $protocol): self
     {
-        $this->cache->filesystemProtocol($protocol);
+        $this->cache->filesystemMount($protocol);
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $serializerBatchSize
+     */
+    public function cacheSerializerBatchSize(int $serializerBatchSize): self
+    {
+        $this->cache->serializerBatchSize($serializerBatchSize);
 
         return $this;
     }
@@ -148,6 +157,16 @@ final class ConfigBuilder
     public function externalSortBucketsCount(int $externalSortBucketsCount): self
     {
         $this->cache->externalSortBucketsCount($externalSortBucketsCount);
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $externalSortBatchSize
+     */
+    public function externalSortBatchSize(int $externalSortBatchSize): self
+    {
+        $this->cache->externalSortBatchSize($externalSortBatchSize);
 
         return $this;
     }

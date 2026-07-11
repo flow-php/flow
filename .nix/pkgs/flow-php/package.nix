@@ -7,11 +7,13 @@
     php-zstd,
     php-pg-query-ext,
     php-arrow-ext,
+    php-flow-php-ext,
     with-pcov ? true,
     with-xdebug ? false,
     with-blackfire ? false,
     with-pg-query-ext ? false,
     with-arrow-ext ? false,
+    with-flow-php-ext ? false,
     with-grpc ? false,
     with-protobuf ? true
 }:
@@ -38,6 +40,7 @@ let
         ++ (if with-blackfire then [blackfire] else [])
         ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
         ++ (if with-arrow-ext then [(php-arrow-ext.override { inherit php; })] else [])
+        ++ (if with-flow-php-ext then [(php-flow-php-ext.override { inherit php; })] else [])
         ++ (if with-grpc then [grpc] else [])
         ++ (if with-protobuf then [
             (protobuf.overrideAttrs (old: {

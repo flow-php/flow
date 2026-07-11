@@ -36,6 +36,23 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         memory_filesystem()->appendTo(path('file:///var/foo.txt'));
     }
 
+    public function test_appending_after_ranged_read_appends_at_the_end(): void
+    {
+        $fs = memory_filesystem();
+
+        $stream = $fs->writeTo($path = path('memory://file'));
+        $stream->append('AAAABBBB');
+        $stream->close();
+
+        static::assertSame('BBBB', $fs->readFrom($path)->read(4, 4));
+
+        $stream = $fs->appendTo($path);
+        $stream->append('CCCC');
+        $stream->close();
+
+        static::assertSame('AAAABBBBCCCC', $fs->readFrom($path)->content());
+    }
+
     public function test_appending_to_existing_blob(): void
     {
         $fs = memory_filesystem();

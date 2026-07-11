@@ -6,12 +6,12 @@ namespace Flow\ETL\Cache\Implementation;
 
 use DateInterval;
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\Floe\FloeSerializer;
+use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
+use Generator;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
@@ -22,7 +22,7 @@ final readonly class PSRSimpleCache implements Cache
     public function __construct(
         private CacheInterface $cache,
         private int|DateInterval|null $ttl = null,
-        private Serializer $serializer = new NativePHPSerializer(),
+        private Serializer $serializer = new FloeSerializer(),
     ) {}
 
     public function clear(): void
@@ -35,7 +35,7 @@ final readonly class PSRSimpleCache implements Cache
         $this->cache->delete($key);
     }
 
-    public function get(string $key): Row|Rows|CacheIndex
+    public function get(string $key): Rows
     {
         // @mago-ignore analysis:mixed-assignment
         $serializedValue = $this->cache->get($key);
@@ -44,10 +44,11 @@ final readonly class PSRSimpleCache implements Cache
             throw new KeyNotInCacheException($key);
         }
 
-        return $this->serializer->unserialize(
-            is_string($serializedValue) ? $serializedValue : '',
-            [Row::class, Rows::class, CacheIndex::class],
-        );
+        try {
+            return $this->serializer->unserialize(is_string($serializedValue) ? $serializedValue : '', [Rows::class]);
+        } catch (SerializationException $e) {
+            throw new KeyNotInCacheException($key, $e);
+        }
     }
 
     public function has(string $key): bool
@@ -59,7 +60,17 @@ final readonly class PSRSimpleCache implements Cache
         }
     }
 
-    public function set(string $key, CacheIndex|Rows|Row $value): void
+    /**
+     * @throws KeyNotInCacheException
+     *
+     * @return Generator<int, Rows>
+     */
+    public function read(string $key): Generator
+    {
+        yield $this->get($key);
+    }
+
+    public function set(string $key, Rows $value): void
     {
         $this->cache->set($key, $this->serializer->serialize($value), $this->ttl);
     }

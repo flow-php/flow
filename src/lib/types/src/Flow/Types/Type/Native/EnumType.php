@@ -55,11 +55,18 @@ final readonly class EnumType implements Type
             'class' => type_class_string(),
         ])->assert($data);
 
-        if (!is_subclass_of($data['class'], UnitEnum::class)) {
+        if (
+            $data['class'] !== UnitEnum::class
+            && $data['class'] !== BackedEnum::class
+            && !is_subclass_of($data['class'], UnitEnum::class)
+        ) {
             throw new InvalidArgumentException(sprintf('Class %s is not a UnitEnum', $data['class']));
         }
 
-        return new self($data['class']);
+        /** @var class-string<\UnitEnum> $class */
+        $class = $data['class'];
+
+        return new self($class);
     }
 
     public function assert(mixed $value): UnitEnum

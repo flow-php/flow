@@ -47,6 +47,6 @@ final readonly class CachingProcessor implements Processor
             yield $batch;
         }
 
-        $context->cache()->set($id, $index);
+        $context->cache()->set($id, $index->toRows());
     }
 }

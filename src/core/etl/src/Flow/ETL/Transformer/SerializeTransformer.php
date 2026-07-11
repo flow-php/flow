@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Flow\Serializer\Base64Serializer;
 use Throwable;
 
 use function Flow\ETL\DSL\ref;
@@ -29,10 +30,12 @@ final readonly class SerializeTransformer implements Transformer
 
         try {
             $target = $this->target instanceof Reference ? $this->target : ref($this->target);
+            // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
+            $serializer = new Base64Serializer($context->config->serializer());
 
             $result = $rows->map(fn(Row $row) => $this->standalone
-                ? row(str_entry($target->name(), $context->config->serializer()->serialize($row)))
-                : $row->add(str_entry($target->name(), $context->config->serializer()->serialize($row))));
+                ? row(str_entry($target->name(), $serializer->serialize($row)))
+                : $row->add(str_entry($target->name(), $serializer->serialize($row))));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

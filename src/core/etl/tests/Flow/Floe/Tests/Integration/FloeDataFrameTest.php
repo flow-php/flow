@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Floe\Tests\Integration;
+
+use Flow\ETL\Tests\FlowIntegrationTestCase;
+
+use function Flow\ETL\DSL\append;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\Floe\DSL\from_floe;
+use function Flow\Floe\DSL\to_floe;
+
+final class FloeDataFrameTest extends FlowIntegrationTestCase
+{
+    public function test_append_writes_sibling_files_read_as_union(): void
+    {
+        $dir = $this->cacheDir->path() . '/appended';
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($dir . '/data.floe'))
+            ->run();
+
+        data_frame()
+            ->read(from_array([['id' => 2]]))
+            ->saveMode(append())
+            ->write(to_floe($dir . '/data.floe'))
+            ->run();
+
+        static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
+    }
+
+    public function test_input_file_uri_is_added_when_configured(): void
+    {
+        $path = $this->cacheDir->suffix('input-uri.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        $rows = data_frame(config_builder()->putInputIntoRows())->read(from_floe($path))->fetch();
+
+        static::assertTrue($rows->first()->entries()->has('_input_file_uri'));
+    }
+
+    public function test_offset_and_limit_pushdown(): void
+    {
+        $path = $this->cacheDir->suffix('pushdown.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        static::assertSame(2, data_frame()->read(from_floe($path))->limit(2)->fetch()->count());
+        static::assertSame(2, data_frame()->read(from_floe($path)->withOffset(3))->fetch()->count());
+    }
+
+    public function test_overwrite_replaces_the_dataset(): void
+    {
+        $path = $this->cacheDir->suffix('overwrite.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        data_frame()
+            ->read(from_array([['id' => 9]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        static::assertSame(1, data_frame()->read(from_floe($path))->count());
+    }
+
+    public function test_partitioned_round_trip_with_pruning(): void
+    {
+        $dir = $this->cacheDir->path() . '/parts';
+
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'country' => 'PL'],
+                ['id' => 2, 'country' => 'US'],
+                ['id' => 3, 'country' => 'PL'],
+            ]))
+            ->partitionBy('country')
+            ->saveMode(overwrite())
+            ->write(to_floe($dir . '/data.floe'))
+            ->run();
+
+        static::assertFileExists($dir . '/country=PL/data.floe');
+        static::assertFileExists($dir . '/country=US/data.floe');
+
+        static::assertSame(3, data_frame()->read(from_floe($dir . '/country=*/data.floe'))->count());
+        static::assertSame(2, data_frame()->read(from_floe($dir . '/country=PL/data.floe'))->count());
+    }
+
+    public function test_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('roundtrip.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        $result = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame(2, $result->count());
+        static::assertSame(['id', 'name'], $result->first()->entries()->names());
+    }
+}

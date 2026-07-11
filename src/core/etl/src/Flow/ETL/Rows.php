@@ -30,7 +30,6 @@ use Generator;
 use Iterator;
 use IteratorAggregate;
 
-use function array_chunk;
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -60,7 +59,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     /**
      * @var array<int, Row>
      */
-    private readonly array $rows;
+    private array $rows;
 
     private ?Schema $schema = null;
 
@@ -130,7 +129,11 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function chunks(int $size): Generator
     {
         foreach (array_chunk($this->rows, $size) as $chunk) {
-            yield self::partitioned($chunk, $this->partitions);
+            $rows = new self();
+            $rows->rows = $chunk;
+            $rows->partitions = $this->partitions;
+
+            yield $rows;
         }
     }
 

@@ -13,11 +13,13 @@ final readonly class CacheConfig
 
     /**
      * @param int<1, max> $externalSortBucketsCount
+     * @param int<1, max> $externalSortBatchSize
      */
     public function __construct(
         public Cache $cache,
         public Path $localFilesystemCacheDir,
         public int $externalSortBucketsCount,
-        public string $filesystemProtocol = 'file',
+        public int $externalSortBatchSize = 1000,
+        public string $filesystemMount = 'file',
     ) {}
 }

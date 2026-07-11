@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 790
+ * Total functions: 793
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -4033,12 +4033,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Serializer\\NativePHPSerializer::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemCache</span>
+                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SerializerMode</span> <span class=\"fn-param\">$serializer_mode</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemCache</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer_mode" + "}" + ")"),
         boost: 10
     },                {
         label: "filesystem_telemetry_config",
@@ -4549,6 +4549,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\from_excel(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_floe",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param Path|string $path
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Floe\\DSL\\from_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ", " + "$" + "{" + "3:chunk_size" + "}" + ")"),
         boost: 10
     },                {
         label: "from_google_sheet",
@@ -6271,15 +6289,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryExporter</span>
+                    <span class=\"fn-name\">memory_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxEntriesPerSignal</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemoryExporter.<br>Unified exporter that stores logs, metrics, and spans in memory for direct access.<br>Useful for testing and inspection without serialization.
+                    Create a MemoryExporter.<br>Unified exporter that stores logs, metrics, and spans in memory for direct access.<br>Useful for testing and inspection without serialization.<br>@param null|int $maxEntriesPerSignal maximum entries retained per signal type; null keeps everything
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_exporter()"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_exporter(" + "$" + "{" + "1:maxEntriesPerSignal" + "}" + ")"),
         boost: 10
     },                {
         label: "memory_filesystem",
@@ -6370,6 +6388,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\merge(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:alias" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "merge_floe",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">merge_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$sources</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$dest</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$compact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Merges several Floe files (same or append-compatible evolving schema) into one, on the local<br>filesystem. Byte-splices frame regions by default (O(bytes), no re-encode); compact re-encodes<br>all rows into fewer sections. For non-local filesystems use FloeMerger directly.<br>@param array<int, Path|string> $sources
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Floe\\DSL\\merge_floe(" + "$" + "{" + "1:sources" + "}" + ", " + "$" + "{" + "2:dest" + "}" + ", " + "$" + "{" + "3:compact" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },                {
         label: "meter_provider",
@@ -7504,15 +7540,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">postgresql_telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceTransactions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collectMetrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$logQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxQueryLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$includeParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameterLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlTelemetryOptions</span>
+                    <span class=\"fn-name\">postgresql_telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TransactionSpanMode</span> <span class=\"fn-param\">$transactionSpans</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\Client\\Telemetry\\TransactionSpanMode::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collectMetrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$logQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxQueryLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$includeParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameterLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlTelemetryOptions</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create telemetry options for PostgreSQL client instrumentation.<br>Controls which telemetry signals (traces, metrics, logs) are enabled<br>and how query information is captured.<br>@param bool $traceQueries Create spans for query execution (default: true)<br>@param bool $traceTransactions Create spans for transactions (default: true)<br>@param bool $collectMetrics Collect duration and row count metrics (default: true)<br>@param bool $logQueries Log executed queries (default: false)<br>@param null|int $maxQueryLength Maximum query text length in telemetry (default: 1000, null = unlimited)<br>@param bool $includeParameters Include query parameters in telemetry (default: false, security consideration)<br>@example<br>// Default options (traces and metrics enabled)<br>$options = postgresql_telemetry_options();<br>// Enable query logging<br>$options = postgresql_telemetry_options(logQueries: true);<br>// Disable all but metrics<br>$options = postgresql_telemetry_options(<br>    traceQueries: false,<br>    traceTransactions: false,<br>    collectMetrics: true,<br>);
+                    Create telemetry options for PostgreSQL client instrumentation.<br>Controls which telemetry signals (traces, metrics, logs) are enabled<br>and how query information is captured.<br>@param bool $traceQueries Create spans for query execution (default: true)<br>@param TransactionSpanMode $transactionSpans How transactions are traced: GROUPED (default), PER_OPERATION or OFF<br>@param bool $collectMetrics Collect duration and row count metrics (default: true)<br>@param bool $logQueries Log executed queries (default: false)<br>@param null|int $maxQueryLength Maximum query text length in telemetry (default: 1000, null = unlimited)<br>@param bool $includeParameters Include query parameters in telemetry (default: false, security consideration)<br>@example<br>// Default options (traces and metrics enabled)<br>$options = postgresql_telemetry_options();<br>// Enable query logging<br>$options = postgresql_telemetry_options(logQueries: true);<br>// Metrics only, no spans<br>$options = postgresql_telemetry_options(<br>    traceQueries: false,<br>    transactionSpans: TransactionSpanMode::OFF,<br>    collectMetrics: true,<br>);
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\postgresql_telemetry_options(" + "$" + "{" + "1:traceQueries" + "}" + ", " + "$" + "{" + "2:traceTransactions" + "}" + ", " + "$" + "{" + "3:collectMetrics" + "}" + ", " + "$" + "{" + "4:logQueries" + "}" + ", " + "$" + "{" + "5:maxQueryLength" + "}" + ", " + "$" + "{" + "6:includeParameters" + "}" + ", " + "$" + "{" + "7:maxParameters" + "}" + ", " + "$" + "{" + "8:maxParameterLength" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\postgresql_telemetry_options(" + "$" + "{" + "1:traceQueries" + "}" + ", " + "$" + "{" + "2:transactionSpans" + "}" + ", " + "$" + "{" + "3:collectMetrics" + "}" + ", " + "$" + "{" + "4:logQueries" + "}" + ", " + "$" + "{" + "5:maxQueryLength" + "}" + ", " + "$" + "{" + "6:includeParameters" + "}" + ", " + "$" + "{" + "7:maxParameters" + "}" + ", " + "$" + "{" + "8:maxParameterLength" + "}" + ")"),
         boost: 10
     },                {
         label: "postgresql_update_options",
@@ -9412,7 +9448,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_validate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$expected</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$given</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\Validator\\StrictValidator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
+                    <span class=\"fn-name\">schema_validate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$expected</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$given</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\Validator\\StrictValidator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ValidationContext</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Schema $expected<br>@param Schema $given
@@ -10986,6 +11022,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\to_excel(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },                {
+        label: "to_floe",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param Path|string $path
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Floe\\DSL\\to_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ", " + "$" + "{" + "3:codec" + "}" + ")"),
+        boost: 10
+    },                {
         label: "to_json",
         type: "function",
         detail: "flow\u002Ddsl\u002Dloaders",
@@ -11254,7 +11308,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">traceable_postgresql_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PostgreSqlTelemetryConfig</span> <span class=\"fn-param\">$telemetryConfig</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TraceableClient</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Wrap a PostgreSQL client with telemetry instrumentation.<br>Returns a decorator that adds spans, metrics, and logs to all<br>query and transaction operations following OpenTelemetry conventions.<br>@param Client\\Client $client The PostgreSQL client to instrument<br>@param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration<br>@example<br>$client = pgsql_client(pgsql_connection(\'host=localhost dbname=mydb\'));<br>$traceableClient = traceable_postgresql_client(<br>    $client,<br>    postgresql_telemetry_config(<br>        telemetry(resource([\'service.name\' => \'my-app\'])),<br>        new SystemClock(),<br>        postgresql_telemetry_options(<br>            traceQueries: true,<br>            traceTransactions: true,<br>            collectMetrics: true,<br>            logQueries: true,<br>            maxQueryLength: 500,<br>        ),<br>    ),<br>);<br>// All operations now traced<br>$traceableClient->transaction(function (Client $client) {<br>    $user = $client->fetchSingle(\'SELECT * FROM users WHERE id = $1\', [123]);<br>    $client->execute(\'UPDATE users SET last_login = NOW() WHERE id = $1\', [123]);<br>});
+                    Wrap a PostgreSQL client with telemetry instrumentation.<br>Returns a decorator that adds spans, metrics, and logs to all<br>query and transaction operations following OpenTelemetry conventions.<br>@param Client\\Client $client The PostgreSQL client to instrument<br>@param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration<br>@example<br>$client = pgsql_client(pgsql_connection(\'host=localhost dbname=mydb\'));<br>$traceableClient = traceable_postgresql_client(<br>    $client,<br>    postgresql_telemetry_config(<br>        telemetry(resource([\'service.name\' => \'my-app\'])),<br>        new SystemClock(),<br>        postgresql_telemetry_options(<br>            traceQueries: true,<br>            transactionSpans: TransactionSpanMode::GROUPED,<br>            collectMetrics: true,<br>            logQueries: true,<br>            maxQueryLength: 500,<br>        ),<br>    ),<br>);<br>// All operations now traced<br>$traceableClient->transaction(function (Client $client) {<br>    $user = $client->fetchSingle(\'SELECT * FROM users WHERE id = $1\', [123]);<br>    $client->execute(\'UPDATE users SET last_login = NOW() WHERE id = $1\', [123]);<br>});
                 </div>
                             `
             return div

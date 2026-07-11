@@ -470,6 +470,14 @@
             }
         },
         {
+            "name": "flow-php/flow-php-ext",
+            "path": "src/extension/flow-php-ext",
+            "type": "extension",
+            "links": {
+                "documentation": "/documentation/components/extensions/flow-php-ext"
+            }
+        },
+        {
             "name": "flow-php/postgresql-valinor-bridge",
             "path": "src/bridge/postgresql/valinor",
             "type": "bridge",

@@ -10,8 +10,7 @@ use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Serializer\Base64Serializer;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use RuntimeException;
 
@@ -63,7 +62,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
-        $this->serializer = new Base64Serializer(new NativePHPSerializer());
+        $this->serializer = new FloeSerializer();
 
         $this->cleanupCacheDir($this->cacheDir);
         mkdir($this->cacheDir->path(), recursive: true);

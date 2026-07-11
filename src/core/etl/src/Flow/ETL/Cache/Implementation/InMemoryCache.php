@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Cache\Implementation;
 
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Generator;
 
 use function array_key_exists;
 
 final class InMemoryCache implements Cache
 {
     /**
-     * @var array<string, CacheIndex|Row|Rows>
+     * @var array<string, Rows>
      */
     private array $cache = [];
 
@@ -38,7 +37,7 @@ final class InMemoryCache implements Cache
     /**
      * @throws KeyNotInCacheException
      */
-    public function get(string $key): Row|Rows|CacheIndex
+    public function get(string $key): Rows
     {
         if (!array_key_exists($key, $this->cache)) {
             throw new KeyNotInCacheException($key);
@@ -52,7 +51,17 @@ final class InMemoryCache implements Cache
         return array_key_exists($key, $this->cache);
     }
 
-    public function set(string $key, CacheIndex|Rows|Row $value): void
+    /**
+     * @throws KeyNotInCacheException
+     *
+     * @return Generator<int, Rows>
+     */
+    public function read(string $key): Generator
+    {
+        yield $this->get($key);
+    }
+
+    public function set(string $key, Rows $value): void
     {
         $this->cache[$key] = $value;
     }

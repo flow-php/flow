@@ -60,5 +60,10 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  flow-php-extension:
+    uses: ./.github/workflows/job-flow-php-extension.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   mutation-tests:
     uses: ./.github/workflows/job-mutation-tests.yml

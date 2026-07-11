@@ -36,17 +36,15 @@ final class CacheExtractor implements Extractor
                 }
             }
         } else {
-            /** @var CacheIndex $index */
-            $index = $context->cache()->get($this->id);
+            $index = CacheIndex::fromRows($this->id, $context->cache()->get($this->id));
 
             foreach ($index->values() as $cacheKey) {
-                /** @var Rows $rows */
-                $rows = $context->cache()->get($cacheKey);
+                foreach ($context->cache()->read($cacheKey) as $rows) {
+                    $signal = yield $rows;
 
-                $signal = yield $rows;
-
-                if ($signal === Signal::STOP) {
-                    return;
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
                 }
 
                 if ($this->clear) {

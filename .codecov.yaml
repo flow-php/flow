@@ -16,6 +16,8 @@ flag_management:
       carryforward: true
     - name: arrow-extension
       carryforward: true
+    - name: flow-php-extension
+      carryforward: true
     - name: telemetry-tests
       carryforward: true
 

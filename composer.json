@@ -200,7 +200,8 @@
                 "src/lib/telemetry/src/Flow",
                 "src/lib/types/src/Flow",
                 "src/tools/documentation/src/Flow",
-                "src/extension/arrow-ext/php/Flow"
+                "src/extension/arrow-ext/php/Flow",
+                "src/extension/flow-php-ext/php/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
                 "src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk"
@@ -245,6 +246,7 @@
             "src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
+            "src/core/etl/src/Flow/Floe/DSL/functions.php",
             "src/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
             "src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php",

@@ -45,6 +45,7 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     public function append(string $data): DestinationStream
     {
+        fseek($this->handle, 0, SEEK_END);
         $written = fwrite($this->handle, $data);
 
         if ($written === false || $written !== strlen($data)) {
@@ -79,6 +80,7 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     public function fromResource($resource): DestinationStream
     {
+        fseek($this->handle, 0, SEEK_END);
         stream_copy_to_stream($resource, $this->handle, null);
 
         return $this;

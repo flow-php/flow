@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -16,6 +17,9 @@ use Override;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Filesystem\DSL\native_local_filesystem;
@@ -29,6 +33,7 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
+use function iterator_to_array;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -48,7 +53,40 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
             ->cacheFilesystem('custom-cache')
             ->build();
 
-        static::assertSame('custom-cache', $config->cache->filesystemProtocol);
+        static::assertSame('custom-cache', $config->cache->filesystemMount);
+    }
+
+    public function test_cache_serializer_mode_reaches_the_default_cache(): void
+    {
+        putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-serializer-mode');
+
+        $config = config_builder()->cacheSerializerBatchSize(2)->build();
+
+        $config->cache->cache->set('key', rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        ));
+
+        static::assertCount(2, iterator_to_array($config->cache->cache->read('key')));
+
+        $config->cache->cache->clear();
+    }
+
+    public function test_custom_cache_wins_over_serializer_mode(): void
+    {
+        $custom = new InMemoryCache();
+
+        $config = config_builder()->cache($custom)->cacheSerializerBatchSize(500)->build();
+
+        static::assertSame($custom, $config->cache->cache);
+    }
+
+    public function test_external_sort_batch_size_flows_into_cache_config(): void
+    {
+        $config = config_builder()->externalSortBatchSize(250)->build();
+
+        static::assertSame(250, $config->cache->externalSortBatchSize);
     }
 
     public function test_config_builder_with_analyze(): void
@@ -93,7 +131,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->build();
 
-        static::assertSame('file', $config->cache->filesystemProtocol);
+        static::assertSame('file', $config->cache->filesystemMount);
     }
 
     public function test_default_external_sort_filesystem_protocol_is_file(): void
