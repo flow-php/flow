@@ -12,7 +12,6 @@ use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
-use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Pipeline\Optimizer;
@@ -171,6 +170,16 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param int<1, max> $externalSortBucketSize
+     */
+    public function externalSortBucketSize(int $externalSortBucketSize): self
+    {
+        $this->cache->externalSortBucketSize($externalSortBucketSize);
+
+        return $this;
+    }
+
     public function externalSortFilesystem(string $protocol): self
     {
         $this->sort->filesystemProtocol($protocol);
@@ -225,13 +234,6 @@ final class ConfigBuilder
     public function serializer(Serializer $serializer): self
     {
         $this->serializer = $serializer;
-
-        return $this;
-    }
-
-    public function sortMemoryLimit(Unit $unit): self
-    {
-        $this->sort->sortMemoryLimit($unit);
 
         return $this;
     }

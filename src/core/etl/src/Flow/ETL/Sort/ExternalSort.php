@@ -18,6 +18,7 @@ use function abs;
 use function array_chunk;
 use function bin2hex;
 use function count;
+use function iterator_to_array;
 use function max;
 use function random_bytes;
 
@@ -33,16 +34,24 @@ final class ExternalSort implements SortingAlgorithm
 
     /**
      * @param BucketsCache $bucketsCache
-     * @param int<1,max> $bucketsCount - Buckets counts defines how many rows are compared at time. Higher number can reduce IO but increase memory consumption
+     * @param int<1,max> $bucketsCount - how many buckets are merged at once; higher number reduces IO but increases memory consumption
+     * @param int<1,max> $bucketSize - rows buffered and sorted in memory before they are spilled as one bucket
      */
     public function __construct(
         private readonly BucketsCache $bucketsCache,
         private readonly int $bucketsCount = 10,
+        private readonly int $bucketSize = 10_000,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->bucketsCount < 1) {
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
+        }
+
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($this->bucketSize < 1) {
+            throw new InvalidArgumentException('Bucket size must be greater than 0, given: ' . $this->bucketSize);
         }
     }
 
@@ -51,28 +60,41 @@ final class ExternalSort implements SortingAlgorithm
      */
     public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
-        $sortedBuckets = [];
+        $buckets = iterator_to_array($this->createBucketsFromGenerator($rows, $refs));
 
-        foreach ($this->createBucketsFromGenerator($rows, $refs) as $buckets) {
-            $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
+        while (count($buckets) > $this->bucketsCount) {
+            $merged = [];
+
+            foreach (array_chunk($buckets, $this->bucketsCount) as $bucketsChunk) {
+                $merged[] = $this->mergeToBucket(new Buckets($bucketsChunk), $refs);
+            }
+
+            $buckets = $merged;
         }
 
-        yield from $this->extractSortedBuckets($this->mergeBuckets($sortedBuckets, $refs));
+        yield from $this->extractSortedRows(new Buckets($buckets), $refs);
+    }
+
+    /**
+     * @param array<Row> $buffer
+     */
+    private function createBucket(array $buffer, References $refs): Bucket
+    {
+        $bucketId = bin2hex(random_bytes(16));
+        $this->bucketsCache->set($bucketId, (new Rows(...$buffer))->sortBy(...$refs));
+
+        return new Bucket($bucketId, $this->bucketsCache->get($bucketId));
     }
 
     /**
      * @param \Generator<Rows> $generator
      *
-     * @return \Generator<int, Buckets>
+     * @return \Generator<Bucket>
      */
     private function createBucketsFromGenerator(Generator $generator, References $refs): Generator
     {
-        /** @var array<Bucket> $buckets */
-        $buckets = [];
-
         /** @var array<Row> $buffer */
         $buffer = [];
-        $minBatchSize = 500;
 
         foreach ($generator as $batch) {
             if ($this->batchSize === -1) {
@@ -81,91 +103,55 @@ final class ExternalSort implements SortingAlgorithm
 
             foreach ($batch as $row) {
                 $buffer[] = $row;
+            }
 
-                if (count($buffer) >= $minBatchSize) {
-                    $batchRows = new Rows(...$buffer);
-                    $buffer = [];
-
-                    $bucketId = bin2hex(random_bytes(16));
-                    $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
-                    $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
-
-                    if (count($buckets) >= $this->bucketsCount) {
-                        yield new Buckets($buckets);
-                        $buckets = [];
-                    }
-                }
+            if (count($buffer) >= $this->bucketSize) {
+                yield $this->createBucket($buffer, $refs);
+                $buffer = [];
             }
         }
 
         if ($buffer !== []) {
-            $batchRows = new Rows(...$buffer);
-            $bucketId = bin2hex(random_bytes(16));
-            $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
-            $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
-        }
-
-        if ($buckets !== []) {
-            yield new Buckets($buckets);
+            yield $this->createBucket($buffer, $refs);
         }
     }
 
     /**
-     * @param array<Bucket> $sortBuckets
+     * Final merge streams rows straight from the remaining buckets instead of writing the fully
+     * sorted dataset back to the cache and reading it again.
      *
      * @return \Generator<Rows>
      */
-    private function extractSortedBuckets(array $sortBuckets): Generator
+    private function extractSortedRows(Buckets $buckets, References $refs): Generator
     {
         $outputBatchSize = max(1, abs($this->batchSize));
 
-        foreach ($sortBuckets as $bucket) {
-            $rows = new Rows();
+        /** @var array<Row> $buffer */
+        $buffer = [];
 
-            foreach ($bucket->rows as $row) {
-                $rows = $rows->add($row);
+        foreach ($buckets->sort(...$refs->all()) as $row) {
+            $buffer[] = $row;
 
-                if ($rows->count() >= $outputBatchSize) {
-                    yield $rows;
-                    $rows = new Rows();
-                }
+            if (count($buffer) >= $outputBatchSize) {
+                yield new Rows(...$buffer);
+                $buffer = [];
             }
+        }
 
-            if ($rows->count() > 0) {
-                yield $rows;
-            }
+        if ($buffer !== []) {
+            yield new Rows(...$buffer);
+        }
 
-            $this->bucketsCache->remove($bucket->id);
+        foreach ($buckets->bucketIds() as $bucketId) {
+            $this->bucketsCache->remove($bucketId);
         }
     }
 
-    /**
-     * @param array<Bucket> $buckets
-     *
-     * @return array<Bucket>
-     */
-    private function mergeBuckets(array $buckets, References $refs): array
+    private function mergeToBucket(Buckets $buckets, References $refs): Bucket
     {
-        $bucketChunks = array_chunk($buckets, $this->bucketsCount, true);
+        $this->bucketsCache->set($nextBucketId = bin2hex(random_bytes(16)), $buckets->sort(...$refs->all()));
 
-        $buckets = [];
-
-        foreach ($bucketChunks as $runBuckets) {
-            $buckets[] = $this->sortBuckets(new Buckets($runBuckets), $refs);
-        }
-
-        while (count($buckets) > 1) {
-            $buckets = $this->mergeBuckets($buckets, $refs);
-        }
-
-        return $buckets;
-    }
-
-    private function sortBuckets(Buckets $sortBuckets, References $refs): Bucket
-    {
-        $this->bucketsCache->set($nextBucketId = bin2hex(random_bytes(16)), $sortBuckets->sort(...$refs->all()));
-
-        foreach ($sortBuckets->bucketIds() as $bucketId) {
+        foreach ($buckets->bucketIds() as $bucketId) {
             $this->bucketsCache->remove($bucketId);
         }
 

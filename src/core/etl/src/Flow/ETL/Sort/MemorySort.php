@@ -4,47 +4,47 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\Dataset\Memory\Configuration;
-use Flow\ETL\Dataset\Memory\Consumption;
-use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\Filesystem\Partitions;
 use Generator;
 
 use function max;
 
 final class MemorySort implements SortingAlgorithm
 {
-    private readonly Configuration $configuration;
-
-    public function __construct(
-        private Unit $maximumMemory,
-    ) {
-        $this->configuration = new Configuration(10);
-        $limit = $this->configuration->limit();
-
-        if ($limit !== null && $this->configuration->isLessThan($maximumMemory)) {
-            $this->maximumMemory = $limit->percentage(90);
-        }
-    }
-
     public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
-        $memoryConsumption = new Consumption();
-        $mergedRows = new Rows();
+        /** @var array<Row> $buffer */
+        $buffer = [];
+        $partitions = null;
+        $partitionsId = null;
         $maxSize = 1;
 
         foreach ($rows as $batch) {
-            $maxSize = max($batch->count(), $maxSize);
-            $mergedRows = $mergedRows->merge($batch);
+            if ($batch->empty()) {
+                continue;
+            }
 
-            if ($memoryConsumption->currentDiff()->isGreaterThan($this->maximumMemory)) {
-                throw new OutOfMemoryException();
+            $maxSize = max($batch->count(), $maxSize);
+
+            if ($partitions === null) {
+                $partitions = $batch->partitions();
+                $partitionsId = $partitions->id();
+            } elseif ($partitionsId !== $batch->partitions()->id()) {
+                $partitions = new Partitions();
+                $partitionsId = $partitions->id();
+            }
+
+            foreach ($batch->all() as $row) {
+                $buffer[] = $row;
             }
         }
 
-        yield from $mergedRows->sortBy(...$refs->all())->chunks($maxSize);
+        yield from Rows::partitioned($buffer, $partitions ?? new Partitions())
+            ->sortBy(...$refs->all())
+            ->chunks($maxSize);
     }
 }

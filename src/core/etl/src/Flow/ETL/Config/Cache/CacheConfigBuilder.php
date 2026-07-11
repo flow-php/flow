@@ -29,6 +29,11 @@ final class CacheConfigBuilder
      */
     private int $externalSortBatchSize = 1000;
 
+    /**
+     * @var int<1, max>
+     */
+    private int $externalSortBucketSize = 10_000;
+
     private string $filesystemMount = 'file';
 
     /**
@@ -59,6 +64,7 @@ final class CacheConfigBuilder
             localFilesystemCacheDir: $cachePath,
             externalSortBucketsCount: $this->externalSortBucketsCount,
             externalSortBatchSize: $this->externalSortBatchSize,
+            externalSortBucketSize: $this->externalSortBucketSize,
             filesystemMount: $this->filesystemMount,
         );
     }
@@ -98,6 +104,23 @@ final class CacheConfigBuilder
         }
 
         $this->externalSortBatchSize = $externalSortBatchSize;
+
+        return $this;
+    }
+
+    /**
+     * Rows buffered and sorted in memory before the external sort spills them as one bucket.
+     *
+     * @param int<1, max> $externalSortBucketSize
+     */
+    public function externalSortBucketSize(int $externalSortBucketSize): self
+    {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($externalSortBucketSize < 1) {
+            throw new InvalidArgumentException('External sort bucket size must be at least 1');
+        }
+
+        $this->externalSortBucketSize = $externalSortBucketSize;
 
         return $this;
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Processor\SortingProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Sort\SortAlgorithms;
@@ -25,8 +24,7 @@ final class SortingProcessorTest extends FlowTestCase
         $processor = new SortingProcessor(refs(ref('id')));
 
         $configBuilder = config_builder();
-        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT);
-        $configBuilder->sortMemoryLimit(Unit::fromMb(10));
+        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_SORT);
         $context = flow_context($configBuilder->build());
 
         $generator = (static function () {
@@ -43,8 +41,7 @@ final class SortingProcessorTest extends FlowTestCase
         $processor = new SortingProcessor(refs(ref('id')));
 
         $configBuilder = config_builder();
-        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT);
-        $configBuilder->sortMemoryLimit(Unit::fromMb(10));
+        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_SORT);
         $context = flow_context($configBuilder->build());
 
         $generator = (static function () {
@@ -78,8 +75,7 @@ final class SortingProcessorTest extends FlowTestCase
         $processor = new SortingProcessor(refs(ref('id')));
 
         $configBuilder = config_builder();
-        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT);
-        $configBuilder->sortMemoryLimit(Unit::fromMb(10));
+        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_SORT);
         $context = flow_context($configBuilder->build());
 
         $generator = (static function () {
@@ -111,8 +107,7 @@ final class SortingProcessorTest extends FlowTestCase
         $processor = new SortingProcessor(refs(ref('id')->desc()));
 
         $configBuilder = config_builder();
-        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT);
-        $configBuilder->sortMemoryLimit(Unit::fromMb(10));
+        $configBuilder->sort->algorithm(SortAlgorithms::MEMORY_SORT);
         $context = flow_context($configBuilder->build());
 
         $generator = (static function () {
