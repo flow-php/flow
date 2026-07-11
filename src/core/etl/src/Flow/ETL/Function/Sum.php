@@ -116,7 +116,6 @@ final class Sum implements AggregatingFunction, WindowFunction
 
         $result = $sum + $value;
 
-        // mirror Calculator::add() which returns int whenever the result has no fractional part
         if (
             is_float($result)
             && floor($result) === $result

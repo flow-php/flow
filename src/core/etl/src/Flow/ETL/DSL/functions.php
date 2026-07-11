@@ -1823,9 +1823,6 @@ function window(): Window
     return new Window();
 }
 
-/**
- * @param bool $exact - when true, sums through arbitrary-precision decimal arithmetic (slower, exact for decimal fractions); by default native int/float arithmetic is used
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function sum(EntryReference|string $ref, bool $exact = false): Sum
 {
