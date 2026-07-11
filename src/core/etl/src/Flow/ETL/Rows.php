@@ -7,8 +7,6 @@ namespace Flow\ETL;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use DateInterval;
-use DateTimeInterface;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\OutOfMemoryException;
@@ -24,6 +22,7 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Sort\ValueComparator;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Types\Exception\InvalidTypeException;
@@ -44,8 +43,6 @@ use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_integer;
 use function is_array;
 use function is_int;
-use function is_numeric;
-use function is_string;
 use function iterator_to_array;
 use function range;
 use function usort;
@@ -872,31 +869,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         return self::partitioned($this->sortedByValues([$this->valuesOf($reference)], [true]), $this->partitions);
     }
 
-    private static function compareValues(mixed $left, mixed $right): int
-    {
-        if (is_numeric($left) && is_numeric($right)) {
-            return (float) $left <=> (float) $right;
-        }
-
-        if (is_string($left) && is_string($right)) {
-            return $left <=> $right;
-        }
-
-        if ($left instanceof DateTimeInterface && $right instanceof DateTimeInterface) {
-            return $left <=> $right;
-        }
-
-        if ($left instanceof DateInterval && $right instanceof DateInterval) {
-            return $left <=> $right;
-        }
-
-        if (is_array($left) && is_array($right)) {
-            return $left <=> $right;
-        }
-
-        return 0;
-    }
-
     /**
      * @param array<int, array<int, mixed>> $columns
      * @param array<int, bool> $descending
@@ -912,7 +884,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $descendingColumn = $descending[$index];
 
             usort($order, static function (int $left, int $right) use ($column, $descendingColumn): int {
-                $comparison = self::compareValues($column[$left], $column[$right]);
+                $comparison = ValueComparator::compare($column[$left], $column[$right]);
 
                 return $descendingColumn ? -$comparison : $comparison;
             });

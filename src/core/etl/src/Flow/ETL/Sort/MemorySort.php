@@ -17,8 +17,6 @@ use function max;
 
 final class MemorySort implements SortingAlgorithm
 {
-    private const int MINIMUM_OUTPUT_BATCH_SIZE = 1_000;
-
     private readonly Configuration $configuration;
 
     public function __construct(
@@ -52,6 +50,6 @@ final class MemorySort implements SortingAlgorithm
 
         yield from Rows::mergeAll($guardedRows)
             ->sortBy(...$refs->all())
-            ->chunks(max($maxSize, self::MINIMUM_OUTPUT_BATCH_SIZE));
+            ->chunks(max($maxSize, $context->config->cache->externalSortBatchSize));
     }
 }

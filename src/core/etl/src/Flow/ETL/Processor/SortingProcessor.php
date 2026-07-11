@@ -25,8 +25,6 @@ use Generator;
  */
 final readonly class SortingProcessor implements Processor
 {
-    private const int FALLBACK_BATCH_SIZE = 10_000;
-
     public function __construct(
         private References $refs,
     ) {}
@@ -77,6 +75,7 @@ final readonly class SortingProcessor implements Processor
                 batchSize: $context->config->cache->externalSortBatchSize,
             ),
             $context->config->cache->externalSortBucketsCount,
+            $context->config->cache->externalSortBatchSize,
         ))->sortGenerator($rows, $context, $this->refs);
     }
 
@@ -87,8 +86,8 @@ final readonly class SortingProcessor implements Processor
      */
     private static function resume(?Rows $collectedRows, Generator $rows): Generator
     {
-        if ($collectedRows !== null) {
-            yield from $collectedRows->chunks(self::FALLBACK_BATCH_SIZE);
+        if ($collectedRows !== null && !$collectedRows->empty()) {
+            yield $collectedRows;
         }
 
         yield from $rows;

@@ -17,13 +17,7 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
 
     public function extract(FlowContext $context): Generator
     {
-        $collectedRows = new Rows();
-
-        foreach ($this->extractor->extract($context) as $rows) {
-            $collectedRows = $collectedRows->merge($rows);
-        }
-
-        yield $collectedRows;
+        yield Rows::mergeAll($this->extractor->extract($context));
     }
 
     public function extractors(): array

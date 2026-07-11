@@ -9,6 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Sort\ValueComparator;
 use SplMinHeap;
 
 /**
@@ -92,8 +93,7 @@ final class RowsMinHeap extends SplMinHeap
     protected function compare($value1, $value2): int
     {
         foreach ($this->descending as $index => $descending) {
-            // @mago-ignore analysis:mixed-operand,mixed-operand
-            $comparison = $value2->sortValues[$index] <=> $value1->sortValues[$index];
+            $comparison = ValueComparator::compare($value2->sortValues[$index], $value1->sortValues[$index]);
 
             if ($descending) {
                 $comparison = -$comparison;
