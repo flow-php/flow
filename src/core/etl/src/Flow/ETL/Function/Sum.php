@@ -26,7 +26,7 @@ final class Sum implements AggregatingFunction, WindowFunction
 
     public function __construct(
         private readonly Reference $ref,
-        private readonly bool $exact = false,
+        private readonly ScalarFunction|bool $exact = false,
     ) {
         $this->sum = 0;
         $this->window = null;
@@ -38,7 +38,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $value = $row->valueOf($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = $this->add($this->sum, $value, $context);
+                $this->sum = $this->add($this->sum, $value, $row, $context);
             }
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
@@ -54,7 +54,7 @@ final class Sum implements AggregatingFunction, WindowFunction
                 $value = $partitionRow->valueOf($this->ref);
 
                 if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                    $sum = $this->add($sum, $value, $context);
+                    $sum = $this->add($sum, $value, $partitionRow, $context);
                 }
             } catch (InvalidArgumentException $e) {
                 $context
@@ -108,9 +108,9 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @param float|int|numeric-string $value
      */
-    private function add(float|int $sum, float|int|string $value, FlowContext $context): float|int
+    private function add(float|int $sum, float|int|string $value, Row $row, FlowContext $context): float|int
     {
-        if ($this->exact) {
+        if ($this->isExact($row, $context)) {
             return $context->calculator()->add($sum, $value);
         }
 
@@ -126,5 +126,14 @@ final class Sum implements AggregatingFunction, WindowFunction
         }
 
         return $result;
+    }
+
+    private function isExact(Row $row, FlowContext $context): bool
+    {
+        if (is_bool($this->exact)) {
+            return $this->exact;
+        }
+
+        return (new Parameter($this->exact))->asBoolean($row, $context);
     }
 }

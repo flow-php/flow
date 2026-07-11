@@ -8,10 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -123,6 +125,30 @@ final class SumTest extends FlowTestCase
         );
 
         $sum = sum(ref('value'), exact: true)->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_exact_mode_from_column(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1), bool_entry('is_exact', true)),
+            row(int_entry('id', 2), float_entry('value', 0.2), bool_entry('is_exact', true)),
+        );
+
+        $sum = sum(ref('value'), exact: ref('is_exact'))->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_exact_mode_from_literal(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1)),
+            row(int_entry('id', 2), float_entry('value', 0.2)),
+        );
+
+        $sum = sum(ref('value'), exact: lit(true))->over(window()->orderBy(ref('id')->desc()));
 
         static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
     }
