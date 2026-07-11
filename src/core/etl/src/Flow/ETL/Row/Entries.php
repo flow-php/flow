@@ -16,6 +16,7 @@ use Iterator;
 use IteratorAggregate;
 
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function array_merge;
 use function array_values;
@@ -207,6 +208,14 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
         }
 
         return self::recreate($newEntries);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function names(): array
+    {
+        return array_keys($this->entries);
     }
 
     /**
@@ -430,11 +439,14 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      * Internal function used to create entries that are already indexed and validated against duplicates.
-     * It comes with a significant performance boost, only to be used inside of this collection.
+     * It comes with a significant performance boost, only to be used on trusted hot paths where the
+     * caller guarantees keys equal entry names and are unique (this collection, Floe row hydration).
      *
      * @param array<string, Entry<mixed>> $entries
+     *
+     * @internal
      */
-    private static function recreate(array $entries): self
+    public static function recreate(array $entries): self
     {
         $instance = new self();
         $instance->entries = $entries;

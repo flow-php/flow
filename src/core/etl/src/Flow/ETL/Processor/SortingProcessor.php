@@ -55,9 +55,7 @@ final readonly class SortingProcessor implements Processor
         return (new ExternalSort(
             new FilesystemBucketsCache(
                 $context->filesystem($context->config->sort->filesystemProtocol),
-                $context->config->serializer(),
-                100,
-                $context->config->cache->localFilesystemCacheDir->suffix('/flow-php-external-sort/'),
+                cacheDir: $context->config->cache->localFilesystemCacheDir->suffix('/flow-php-external-sort/'),
             ),
             $context->config->cache->externalSortBucketsCount,
         ))->sortGenerator($rows, $context, $this->refs);

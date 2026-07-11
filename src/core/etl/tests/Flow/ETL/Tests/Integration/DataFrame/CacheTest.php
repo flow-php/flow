@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -31,6 +32,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\telemetry_options;
+use function Flow\Filesystem\DSL\path;
 use function range;
 
 final class CacheTest extends FlowIntegrationTestCase
@@ -63,7 +65,7 @@ final class CacheTest extends FlowIntegrationTestCase
             ->run();
 
         static::assertEquals(1, $spyExtractor->extractions);
-        static::assertInstanceOf(CacheIndex::class, $cache->get('test_etl_cache'));
+        static::assertInstanceOf(Rows::class, $cache->get('test_etl_cache'));
 
         df(config_builder()->cache($cache))->read(from_cache('test_etl_cache', $spyExtractor, clear: true))->run();
 
@@ -81,8 +83,11 @@ final class CacheTest extends FlowIntegrationTestCase
             ->cache('test')
             ->run();
 
-        /** @var CacheIndex $cacheIndex */
-        $cacheIndex = $cache->get('test');
+        $indexRows = $cache->get('test');
+
+        static::assertInstanceOf(Rows::class, $indexRows);
+
+        $cacheIndex = CacheIndex::fromRows('test', $indexRows);
 
         static::assertCount(5, $cacheIndex->values());
 
@@ -91,6 +96,26 @@ final class CacheTest extends FlowIntegrationTestCase
             static::assertInstanceOf(Rows::class, $rows);
             static::assertCount(20, $rows);
         }
+    }
+
+    public function test_cache_streaming_serializer_mode_end_to_end(): void
+    {
+        $input = array_map(static fn(int $i) => ['id' => $i], range(1, 25));
+
+        $bulkCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-bulk'));
+        $streamingCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-streaming'), 4);
+
+        df(config_builder()->cache($bulkCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
+        df(config_builder()->cache($streamingCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
+
+        $bulkRows = df(config_builder()->cache($bulkCache))->read(from_cache('parity'))->fetch();
+        $streamingRows = df(config_builder()->cache($streamingCache))->read(from_cache('parity'))->fetch();
+
+        static::assertSame($input, $bulkRows->toArray());
+        static::assertSame($input, $streamingRows->toArray());
+
+        $bulkCache->clear();
+        $streamingCache->clear();
     }
 
     public function test_cache_with_telemetry_collects_spans_and_metrics(): void
@@ -139,8 +164,11 @@ final class CacheTest extends FlowIntegrationTestCase
             ->cache('test')
             ->run();
 
-        /** @var CacheIndex $cacheIndex */
-        $cacheIndex = $cache->get('test');
+        $indexRows = $cache->get('test');
+
+        static::assertInstanceOf(Rows::class, $indexRows);
+
+        $cacheIndex = CacheIndex::fromRows('test', $indexRows);
 
         static::assertCount(100, $cacheIndex->values());
 

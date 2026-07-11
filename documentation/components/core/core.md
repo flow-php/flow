@@ -109,6 +109,7 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Batch Processing](/documentation/components/core/batch-processing.md)** - Controlling batch sizes and memory collection
 - **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
 - **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
+- **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing binary row format
 - **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
 
 ### Data Quality & Validation

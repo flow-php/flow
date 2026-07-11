@@ -5,6 +5,7 @@
     with-pcov ? !with-blackfire,
     with-pg-query-ext ? !with-c,
     with-arrow-ext ? !with-rust,
+    with-flow-php-ext ? !with-rust,
     with-c ? false,
     with-rust ? false,
     with-terraform ? false,
@@ -15,6 +16,7 @@
 }:
 
 assert (!(with-rust && with-arrow-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-arrow-ext true together. Use: --arg with-arrow-ext false --arg with-rust true";
+assert (!(with-rust && with-flow-php-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-flow-php-ext true together. Use: --arg with-flow-php-ext false --arg with-rust true";
 assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with-c true and --arg with-pg-query-ext true together. Use: --arg with-pg-query-ext false --arg with-c true";
 
 let
@@ -62,11 +64,12 @@ let
     php-zstd = pkgs.callPackage ./.nix/pkgs/php-zstd/package.nix { php = base-php; };
     php-pg-query-ext = pkgs.callPackage ./.nix/pkgs/php-pg-query-ext/package.nix { php = base-php; };
     php-arrow-ext = pkgs.callPackage ./.nix/pkgs/php-arrow-ext/package.nix { php = base-php; };
+    php-flow-php-ext = pkgs.callPackage ./.nix/pkgs/php-flow-php-ext/package.nix { php = base-php; };
 
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
-        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext php-arrow-ext
-                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-grpc with-protobuf;
+        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext php-arrow-ext php-flow-php-ext
+                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-flow-php-ext with-grpc with-protobuf;
     };
 in
 pkgs.mkShell {

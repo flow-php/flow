@@ -171,6 +171,20 @@ final class EnumTypeTest extends TestCase
         static::assertEquals($type, $recreated);
     }
 
+    public function test_normalization_of_backed_enum_interface(): void
+    {
+        $type = type_enum(BackedEnum::class);
+
+        static::assertEquals($type, type_from_array($type->normalize()));
+    }
+
+    public function test_normalization_of_unit_enum_interface(): void
+    {
+        $type = type_enum(UnitEnum::class);
+
+        static::assertEquals($type, type_from_array($type->normalize()));
+    }
+
     public function test_to_string(): void
     {
         static::assertSame(

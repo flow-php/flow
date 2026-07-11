@@ -1,0 +1,250 @@
+name: Release Precompiled Binaries
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)build and publish precompiled binaries for'
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  EXTENSION_NAME: flow_php
+  RUST_BACKTRACE: 1
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Get tag
+        id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            echo "Release $TAG already exists, reusing it."
+          else
+            gh release create "$TAG" \
+              --repo "$REPO" \
+              --draft \
+              --title "$TAG" \
+              --generate-notes
+          fi
+
+  build-linux:
+    name: "Linux ${{ matrix.arch }} - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
+    needs: create-release
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        arch: ['x86_64', 'arm64']
+        ts: ['nts', 'zts']
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Set build variables
+        id: build-vars
+        env:
+          TS: ${{ matrix.ts }}
+          PHP: ${{ matrix.php }}
+        run: |
+          if [ "$TS" = "zts" ]; then
+            echo "php-image=${PHP}-zts" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          else
+            echo "php-image=${PHP}-cli" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create output directory
+        run: mkdir -p dist
+
+      - name: Build in Docker container
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          FLOW_PHP_EXT_VERSION: ${{ needs.create-release.outputs.tag }}
+          PHP_IMAGE: ${{ steps.build-vars.outputs.php-image }}
+        run: |
+          docker run --rm \
+            -v "$WORKSPACE:/workspace" \
+            -w /workspace \
+            -e FLOW_PHP_EXT_VERSION="$FLOW_PHP_EXT_VERSION" \
+            "php:$PHP_IMAGE" \
+            bash -c '
+              set -euo pipefail
+
+              echo "::group::Install system dependencies"
+              apt-get update
+              apt-get install -y build-essential clang libclang-dev curl pkg-config
+              echo "::endgroup::"
+
+              echo "::group::Install Rust"
+              curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              source "$HOME/.cargo/env"
+              echo "::endgroup::"
+
+              echo "::group::Build extension"
+              cargo build --release
+              echo "::endgroup::"
+
+              echo "::group::Verify extension loads"
+              php -n -d extension=/workspace/target/release/libflow_php.so -m | grep -q flow_php || { echo "ERROR: flow_php extension failed to load"; exit 1; }
+              echo "flow_php extension loaded successfully"
+              echo "::endgroup::"
+
+              echo "::group::Package artifact"
+              cp /workspace/target/release/libflow_php.so /workspace/dist/flow_php.so
+              echo "::endgroup::"
+            '
+
+      - name: Create ZIP archive
+        env:
+          TAG: ${{ needs.create-release.outputs.tag }}
+          PHP: ${{ matrix.php }}
+          ARCH: ${{ matrix.arch }}
+          TS_SUFFIX: ${{ steps.build-vars.outputs.ts-suffix }}
+        run: |
+          cd dist
+          ARTIFACT_NAME="php_${EXTENSION_NAME}-${TAG}_php${PHP}-${ARCH}-linux-glibc${TS_SUFFIX}.zip"
+          zip "$ARTIFACT_NAME" flow_php.so
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release upload "$TAG" \
+            "$ARTIFACT_PATH" \
+            --repo "$REPO" \
+            --clobber
+
+  build-macos:
+    name: "macOS arm64 - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
+    needs: create-release
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        ts: ['nts', 'zts']
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+        env:
+          phpts: ${{ matrix.ts }}
+
+      - name: Set build variables
+        id: build-vars
+        env:
+          TS: ${{ matrix.ts }}
+        run: |
+          if [ "$TS" = "zts" ]; then
+            echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          else
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Install build dependencies
+        run: |
+          brew install llvm
+          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+          echo "CLANG_PATH=$(brew --prefix llvm)/bin/clang" >> "$GITHUB_ENV"
+
+      - name: Build extension
+        env:
+          FLOW_PHP_EXT_VERSION: ${{ needs.create-release.outputs.tag }}
+        run: cargo build --release
+
+      - name: Verify extension loads
+        run: |
+          php -n -d extension=./target/release/libflow_php.dylib -m | grep -q flow_php || { echo "ERROR: flow_php extension failed to load"; exit 1; }
+          echo "flow_php extension loaded successfully"
+
+      - name: Create ZIP archive
+        env:
+          TAG: ${{ needs.create-release.outputs.tag }}
+          PHP: ${{ matrix.php }}
+          TS_SUFFIX: ${{ steps.build-vars.outputs.ts-suffix }}
+        run: |
+          mkdir -p dist
+          cp target/release/libflow_php.dylib dist/flow_php.so
+          cd dist
+          ARTIFACT_NAME="php_${EXTENSION_NAME}-${TAG}_php${PHP}-arm64-darwin-bsdlibc${TS_SUFFIX}.zip"
+          zip "$ARTIFACT_NAME" flow_php.so
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release upload "$TAG" \
+            "$ARTIFACT_PATH" \
+            --repo "$REPO" \
+            --clobber
+
+  publish-release:
+    name: Publish Release
+    needs: [create-release, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Mark release as published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "$REPO" \
+            --draft=false

@@ -17,6 +17,7 @@ enum Module: string
     case ELASTIC_SEARCH = 'ELASTIC_SEARCH';
     case EXCEL = 'EXCEL';
     case FILESYSTEM = 'FILESYSTEM';
+    case FLOE = 'FLOE';
     case GOOGLE_SHEET = 'GOOGLE_SHEET';
     case HTTP = 'HTTP';
     case JSON = 'JSON';

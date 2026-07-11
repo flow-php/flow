@@ -30,7 +30,6 @@ use Generator;
 use Iterator;
 use IteratorAggregate;
 
-use function array_chunk;
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -60,7 +59,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     /**
      * @var array<int, Row>
      */
-    private readonly array $rows;
+    private array $rows;
 
     private ?Schema $schema = null;
 
@@ -129,9 +128,35 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function chunks(int $size): Generator
     {
-        foreach (array_chunk($this->rows, $size) as $chunk) {
-            yield self::partitioned($chunk, $this->partitions);
+        $chunk = [];
+
+        foreach ($this->rows as $row) {
+            $chunk[] = $row;
+
+            if (count($chunk) === $size) {
+                yield self::fromList($chunk, $this->partitions);
+                $chunk = [];
+            }
         }
+
+        if (count($chunk)) {
+            yield self::fromList($chunk, $this->partitions);
+        }
+    }
+
+    /**
+     * Adopts an already-built list of rows without the variadic re-copy - chunking
+     * a large Rows must not copy every row pointer three times.
+     *
+     * @param array<int, Row> $rows
+     */
+    private static function fromList(array $rows, Partitions $partitions): self
+    {
+        $instance = new self();
+        $instance->rows = $rows;
+        $instance->partitions = $partitions;
+
+        return $instance;
     }
 
     public function count(): int

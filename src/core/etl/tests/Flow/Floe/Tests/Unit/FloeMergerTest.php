@@ -1,0 +1,315 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Floe\Tests\Unit;
+
+use Flow\ETL\Rows;
+use Flow\ETL\Schema\Metadata;
+use Flow\Filesystem\Partition;
+use Flow\Floe\Exception\FloeException;
+use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\FloeMerger;
+use Flow\Floe\FloeReader;
+use Flow\Floe\Tests\Context\FloeFileContext;
+use Flow\Floe\Tests\Double\UnsizedFilesystem;
+use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function pack;
+use function str_repeat;
+
+final class FloeMergerTest extends TestCase
+{
+    public function test_compact_reads_identically_to_splice(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 3))));
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://splice.floe'));
+        (new FloeMerger($fs))->merge(
+            [path('memory://a.floe'), path('memory://b.floe')],
+            path('memory://compact.floe'),
+            compact: true,
+        );
+
+        static::assertEquals(
+            FloeFileContext::readAll($fs, path('memory://splice.floe')),
+            FloeFileContext::readAll($fs, path('memory://compact.floe')),
+        );
+    }
+
+    public function test_compact_coalesces_same_schema_sources_into_one_section(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+
+        (new FloeMerger($fs))->merge(
+            [path('memory://a.floe'), path('memory://b.floe')],
+            path('memory://compact.floe'),
+            compact: true,
+        );
+
+        static::assertCount(1, (new FloeReader($fs))->read(path('memory://compact.floe'))->footer()->sections);
+    }
+
+    public function test_empty_source_contributes_no_rows(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeFileContext::write($fs, path('memory://empty.floe'), rows());
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+
+        (new FloeMerger($fs))->merge([
+            path('memory://a.floe'),
+            path('memory://empty.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
+
+        static::assertEquals(
+            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+            FloeFileContext::readAll($fs, path('memory://out.floe')),
+        );
+    }
+
+    public function test_empty_sources_list_throws(): void
+    {
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('at least one source');
+
+        (new FloeMerger(memory_filesystem()))->merge([], path('memory://out.floe'));
+    }
+
+    public function test_evolving_schema_pads_missing_columns(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2), str_entry('email', 'x@y'))));
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+
+        // merging A then B must read back exactly like writing A's rows then B's rows to one file:
+        // the id-only section is padded with a from_null email, same as any heterogeneous Floe file.
+        FloeFileContext::write(
+            $fs,
+            path('memory://reference.floe'),
+            rows(row(int_entry('id', 1)), row(int_entry('id', 2), str_entry('email', 'x@y'))),
+        );
+
+        static::assertEquals(
+            FloeFileContext::readAll($fs, path('memory://reference.floe')),
+            FloeFileContext::readAll($fs, path('memory://out.floe')),
+        );
+    }
+
+    public function test_metadata_is_merged_with_new_keys_winning(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))), [
+            'a' => '1',
+            'shared' => 'from-a',
+        ]);
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))), [
+            'b' => '2',
+            'shared' => 'from-b',
+        ]);
+
+        (new FloeMerger($fs))->merge(
+            [path('memory://a.floe'), path('memory://b.floe')],
+            path('memory://out.floe'),
+            metadata: Metadata::fromArray(['shared' => 'override']),
+        );
+
+        static::assertSame(
+            ['a' => '1', 'shared' => 'override', 'b' => '2'],
+            (new FloeReader($fs))
+                ->read(path('memory://out.floe'))
+                ->metadata()
+                ->normalize(),
+        );
+    }
+
+    public function test_missing_source_throws(): void
+    {
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('does not exist');
+
+        (new FloeMerger(memory_filesystem()))->merge([path('memory://missing.floe')], path('memory://out.floe'));
+    }
+
+    public function test_offset_read_after_merge_seeks_across_sources(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 3)), row(int_entry('id', 4))));
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+
+        $read = [];
+
+        foreach ((new FloeReader($fs))
+            ->read(path('memory://out.floe'))
+            ->rows(batchSize: 100, offset: 3) as $batch) {
+            foreach ($batch as $r) {
+                $read[] = $r->valueOf('id');
+            }
+        }
+
+        static::assertSame([4], $read);
+    }
+
+    public function test_partition_combination_mismatch_throws(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write(
+            $fs,
+            path('memory://pl.floe'),
+            Rows::partitioned([row(int_entry('id', 1), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+        );
+        FloeFileContext::write(
+            $fs,
+            path('memory://us.floe'),
+            Rows::partitioned([row(int_entry('id', 2), str_entry('c', 'US'))], [new Partition('c', 'US')]),
+        );
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('one partition combination');
+
+        (new FloeMerger($fs))->merge([path('memory://pl.floe'), path('memory://us.floe')], path('memory://out.floe'));
+    }
+
+    public function test_partitioned_sources_merge_and_preserve_partition(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write(
+            $fs,
+            path('memory://a.floe'),
+            Rows::partitioned([row(int_entry('id', 1), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+        );
+        FloeFileContext::write(
+            $fs,
+            path('memory://b.floe'),
+            Rows::partitioned([row(int_entry('id', 2), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+        );
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+
+        $file = (new FloeReader($fs))->read(path('memory://out.floe'));
+
+        static::assertSame(['c' => 'PL'], $file->footer()->partitions);
+        static::assertSame(2, $file->totalRows());
+    }
+
+    public function test_single_source_is_a_copy(): void
+    {
+        $fs = memory_filesystem();
+        $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        FloeFileContext::write($fs, path('memory://a.floe'), $value);
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe')], path('memory://out.floe'));
+
+        static::assertEquals($value, FloeFileContext::readAll($fs, path('memory://out.floe')));
+    }
+
+    public function test_splices_three_files(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+        FloeFileContext::write($fs, path('memory://c.floe'), rows(row(int_entry('id', 3))));
+
+        (new FloeMerger($fs))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+            path('memory://c.floe'),
+        ], path('memory://out.floe'));
+
+        static::assertEquals(
+            rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))),
+            FloeFileContext::readAll($fs, path('memory://out.floe')),
+        );
+    }
+
+    public function test_splices_two_files_with_the_same_schema(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 3)), row(int_entry('id', 4))));
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+
+        static::assertEquals(
+            rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)), row(int_entry('id', 4))),
+            FloeFileContext::readAll($fs, path('memory://out.floe')),
+        );
+    }
+
+    public function test_type_conflict_throws(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeFileContext::write($fs, path('memory://b.floe'), rows(row(str_entry('id', 'x'))));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('not compatible');
+
+        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+    }
+
+    public function test_unsized_source_throws(): void
+    {
+        $fs = memory_filesystem();
+        FloeFileContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('does not report its size');
+
+        (new FloeMerger(new UnsizedFilesystem($fs)))->merge([path('memory://a.floe')], path('memory://out.floe'));
+    }
+
+    public function test_source_smaller_than_header_and_trailer_throws(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://tiny.floe'))->append("FLOE\x01\x00")->close();
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('too small');
+
+        (new FloeMerger($fs))->merge([path('memory://tiny.floe')], path('memory://out.floe'));
+    }
+
+    public function test_non_noop_codec_source_throws(): void
+    {
+        $fs = memory_filesystem();
+        $fs
+            ->writeTo(path('memory://codec.floe'))
+            ->append("FLOE\x01\x05" . str_repeat("\0", 10))
+            ->close();
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('no-op codec');
+
+        (new FloeMerger($fs))->merge([path('memory://codec.floe')], path('memory://out.floe'));
+    }
+
+    public function test_source_with_footer_larger_than_file_throws(): void
+    {
+        $fs = memory_filesystem();
+        $fs
+            ->writeTo(path('memory://torn.floe'))
+            ->append("FLOE\x01\x00" . pack('V', 1_000_000) . 'FLOE')
+            ->close();
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('footer does not fit');
+
+        (new FloeMerger($fs))->merge([path('memory://torn.floe')], path('memory://out.floe'));
+    }
+}

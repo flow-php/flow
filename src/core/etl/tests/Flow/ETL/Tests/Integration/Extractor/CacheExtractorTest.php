@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Extractor;
 
 use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_map;
 use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
@@ -15,6 +19,7 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
@@ -32,7 +37,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
         $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
 
-        $cache->set('key', $index);
+        $cache->set('key', $index->toRows());
 
         $extractor = from_cache($cacheKey);
 
@@ -58,7 +63,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
         $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
 
-        $cache->set('key', $index);
+        $cache->set('key', $index->toRows());
 
         $extractor = from_cache($cacheKey)->withClearOnFinish(true);
 
@@ -69,6 +74,81 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         static::assertFalse($cache->has('rows_02'));
         static::assertFalse($cache->has('rows_03'));
         static::assertFalse($cache->has('key'));
+    }
+
+    public function test_extracting_rows_from_streaming_cache_in_batches(): void
+    {
+        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming'), 2);
+        $cache->clear();
+
+        $index = new CacheIndex($cacheKey = 'key');
+        $index->add('rows_01');
+
+        $cache->set('rows_01', array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+            ['id' => 4],
+            ['id' => 5],
+        ], flow_context(config())->entryFactory()));
+        $cache->set('key', $index->toRows());
+
+        $extractor = from_cache($cacheKey);
+
+        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
+
+        static::assertCount(3, $rows);
+        static::assertEquals(
+            [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]],
+            array_merge(...array_map(static fn(Rows $batch): array => $batch->toArray(), $rows)),
+        );
+
+        $cache->clear();
+    }
+
+    public function test_stop_signal_stops_streaming_batches_and_skips_clearing(): void
+    {
+        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming-stop'), 2);
+        $cache->clear();
+
+        $index = new CacheIndex($cacheKey = 'key');
+        $index->add('rows_01');
+
+        $cache->set('rows_01', array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+            ['id' => 4],
+            ['id' => 5],
+        ], flow_context(config())->entryFactory()));
+        $cache->set('key', $index->toRows());
+
+        $generator = from_cache($cacheKey)
+            ->withClearOnFinish(true)
+            ->extract(flow_context(config_builder()->cache($cache)->build()));
+
+        static::assertTrue($generator->valid());
+
+        $generator->send(Signal::STOP);
+
+        static::assertFalse($generator->valid());
+        static::assertTrue($cache->has('rows_01'));
+        static::assertTrue($cache->has('key'));
+
+        $cache->clear();
+    }
+
+    public function test_stop_signal_stops_fallback_extractor(): void
+    {
+        $generator = from_cache('missing')
+            ->withFallbackExtractor(from_array([['id' => 1], ['id' => 2]]))
+            ->extract(flow_context(config_builder()->cache(new InMemoryCache())->build()));
+
+        static::assertTrue($generator->valid());
+
+        $generator->send(Signal::STOP);
+
+        static::assertFalse($generator->valid());
     }
 
     public function test_fallback_extractor(): void

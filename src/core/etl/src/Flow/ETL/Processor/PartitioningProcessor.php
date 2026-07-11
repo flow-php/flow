@@ -83,7 +83,7 @@ final readonly class PartitioningProcessor implements Processor
         }
 
         foreach ($partitionIndexes as $partitionIndex) {
-            $context->cache()->set($partitionIndex->key, $partitionIndex);
+            $context->cache()->set($partitionIndex->key, $partitionIndex->toRows());
         }
 
         yield from from_all(...array_map(

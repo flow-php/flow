@@ -4,37 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\ExternalSort\BucketsCache;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
-use Flow\Serializer\NativePHPSerializer;
-use Flow\Serializer\Serializer;
+use Flow\Floe\FloeReader;
+use Flow\Floe\FloeWriter;
 use Generator;
+
+use function count;
 
 final readonly class FilesystemBucketsCache implements BucketsCache
 {
+    private const int WRITE_BATCH_SIZE = 1000;
+
     private Path $cacheDir;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param Serializer $serializer
-     * @param int<1, max> $chunkSize - number of rows to be written into cache in one go, higher number can reduce IO but increase memory consumption
-     */
     public function __construct(
         private Filesystem $filesystem,
-        private Serializer $serializer = new NativePHPSerializer(),
-        private int $chunkSize = 100,
         ?Path $cacheDir = null,
     ) {
-        // @mago-ignore analysis:impossible-condition,redundant-comparison
-        if ($this->chunkSize < 1) {
-            throw new InvalidArgumentException('Chunk size must be greater than 0');
-        }
-
         $this->cacheDir = ($cacheDir ?? $this->filesystem->getSystemTmpDir())->suffix('/flow-php-external-sort/');
     }
 
@@ -49,13 +40,11 @@ final readonly class FilesystemBucketsCache implements BucketsCache
             return;
         }
 
-        $stream = $this->filesystem->readFrom($path);
-
-        foreach ($stream->readLines() as $serializedRow) {
-            yield $this->serializer->unserialize($serializedRow, [Row::class]);
+        foreach ((new FloeReader($this->filesystem))
+            ->read($path)
+            ->recover() as $batch) {
+            yield from $batch->all();
         }
-
-        $stream->close();
     }
 
     public function remove(string $bucketId): void
@@ -70,33 +59,29 @@ final readonly class FilesystemBucketsCache implements BucketsCache
      */
     public function set(string $bucketId, iterable $rows): void
     {
-        $path = $this->keyPath($bucketId);
+        $writer = new FloeWriter($this->filesystem);
+        $writer->create($this->keyPath($bucketId));
 
-        $stream = $this->filesystem->writeTo($path);
-
-        $serializedRows = '';
-        $counter = 0;
+        $batch = [];
 
         foreach ($rows as $row) {
-            $serializedRows .= $this->serializer->serialize($row) . "\n";
-            $counter++;
+            $batch[] = $row;
 
-            if ($counter >= $this->chunkSize) {
-                $stream->append($serializedRows);
-                $serializedRows = '';
-                $counter = 0;
+            if (count($batch) >= self::WRITE_BATCH_SIZE) {
+                $writer->write(new Rows(...$batch));
+                $batch = [];
             }
         }
 
-        if ($counter > 0) {
-            $stream->append($serializedRows);
+        if ($batch !== []) {
+            $writer->write(new Rows(...$batch));
         }
 
-        $stream->close();
+        $writer->close();
     }
 
     private function keyPath(string $key): Path
     {
-        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.php.cache');
+        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.floe');
     }
 }

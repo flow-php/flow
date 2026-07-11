@@ -48,7 +48,7 @@ lint-links:
 # Audit GitHub Actions workflows (actionlint static checks + zizmor security audit).
 # Workflows that live under src/ are split out to their own repos, so they are not
 # auto-discovered with the root .github/workflows and must be listed explicitly:
-#   - the arrow-ext release workflow (custom, full audit);
+#   - the extension release workflows (custom, full audit);
 #   - every per-package subtree-split readonly.yaml (added by hand per package, so all
 #     are audited to catch drift; dangerous-triggers is exempted for them in
 #     .github/zizmor.yml — they only run `gh pr close`, never check out PR code).
@@ -56,7 +56,7 @@ lint-actions:
     #!/usr/bin/env bash
     set -uo pipefail
     rc=0
-    extra_workflows=(src/extension/arrow-ext/.github/workflows/release.yml)
+    extra_workflows=(src/extension/arrow-ext/.github/workflows/release.yml src/extension/flow-php-ext/.github/workflows/release.yml)
     while IFS= read -r workflow; do
         extra_workflows+=("$workflow")
     done < <(find src -path '*/.github/workflows/readonly.yaml' | sort)

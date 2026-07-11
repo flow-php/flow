@@ -19,6 +19,7 @@ enum Module: string
     case DOCTRINE = 'Doctrine';
     case EXCEL = 'Excel';
     case FILESYSTEM = 'Filesystem';
+    case FLOE = 'Floe';
     case GOOGLE_SHEET = 'Google Sheet';
     case HTTP = 'HTTP';
     case JSON = 'JSON';
@@ -56,6 +57,7 @@ enum Module: string
             self::CSV => 2,
             self::DOCTRINE => 3,
             self::POSTGRESQL => 4,
+            self::FLOE => 5,
             self::GOOGLE_SHEET => 6,
             self::CHART_JS => 7,
             self::JSON => 8,

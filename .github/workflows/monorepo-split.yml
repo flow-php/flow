@@ -128,6 +128,8 @@ jobs:
             split_repository: 'pg-query-ext'
           - local_path: 'src/extension/arrow-ext'
             split_repository: 'arrow-ext'
+          - local_path: 'src/extension/flow-php-ext'
+            split_repository: 'flow-php-ext'
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

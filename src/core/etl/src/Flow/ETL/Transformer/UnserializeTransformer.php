@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Flow\Serializer\Base64Serializer;
 use Flow\Serializer\Exception\SerializationException;
 use Throwable;
 
@@ -35,8 +36,10 @@ final readonly class UnserializeTransformer implements Transformer
 
         try {
             $source = $this->source instanceof Reference ? $this->source : ref($this->source);
+            // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
+            $serializer = new Base64Serializer($context->config->serializer());
 
-            $result = $rows->map(function (Row $row) use ($source, $context): Row {
+            $result = $rows->map(function (Row $row) use ($source, $serializer): Row {
                 if (!$row->has($source->name())) {
                     return $row;
                 }
@@ -50,11 +53,8 @@ final readonly class UnserializeTransformer implements Transformer
                 try {
                     return (
                         $this->merge
-                            ? $row->merge(
-                                $context->config->serializer()->unserialize($serialized, [Row::class]),
-                                $this->mergePrefix,
-                            )
-                            : $context->config->serializer()->unserialize($serialized, [Row::class])
+                            ? $row->merge($serializer->unserialize($serialized, [Row::class]), $this->mergePrefix)
+                            : $serializer->unserialize($serialized, [Row::class])
                     );
                 } catch (SerializationException) {
                     return $row;

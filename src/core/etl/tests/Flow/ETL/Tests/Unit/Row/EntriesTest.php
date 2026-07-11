@@ -204,6 +204,22 @@ final class EntriesTest extends FlowTestCase
         );
     }
 
+    public function test_names(): void
+    {
+        $entries = new Entries(
+            integer_entry('integer', 100),
+            string_entry('string', 'new string entry'),
+            boolean_entry('bool', true),
+        );
+
+        static::assertSame(['integer', 'string', 'bool'], $entries->names());
+    }
+
+    public function test_names_of_empty_entries(): void
+    {
+        static::assertSame([], (new Entries())->names());
+    }
+
     public function test_order_entries(): void
     {
         $entries = new Entries(
@@ -277,6 +293,23 @@ final class EntriesTest extends FlowTestCase
         $this->expectExceptionMessage('Entry "unknown" does not exist');
 
         $entries->get('unknown');
+    }
+
+    public function test_recreate_from_name_keyed_entries(): void
+    {
+        $integerEntry = integer_entry('integer-entry', 100);
+        $stringEntry = string_entry('string-entry', 'just a string');
+
+        $entries = Entries::recreate(['integer-entry' => $integerEntry, 'string-entry' => $stringEntry]);
+
+        static::assertEquals(new Entries($integerEntry, $stringEntry), $entries);
+        static::assertSame(['integer-entry', 'string-entry'], $entries->names());
+        static::assertSame([$integerEntry, $stringEntry], $entries->all());
+    }
+
+    public function test_recreate_with_empty_array(): void
+    {
+        static::assertEquals(new Entries(), Entries::recreate([]));
     }
 
     public function test_remove_entry(): void

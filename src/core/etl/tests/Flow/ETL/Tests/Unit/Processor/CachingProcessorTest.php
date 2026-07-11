@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Processor\CachingProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config_builder;
@@ -33,6 +34,18 @@ final class CachingProcessorTest extends FlowTestCase
 
         static::assertCount(2, $result);
         static::assertTrue($cache->has('test-cache'));
+
+        $indexRows = $cache->get('test-cache');
+
+        static::assertInstanceOf(Rows::class, $indexRows);
+
+        $index = CacheIndex::fromRows('test-cache', $indexRows);
+
+        static::assertCount(2, $index->values());
+
+        foreach ($index->values() as $cacheKey) {
+            static::assertTrue($cache->has($cacheKey));
+        }
     }
 
     public function test_handles_empty_input(): void
@@ -57,7 +70,7 @@ final class CachingProcessorTest extends FlowTestCase
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
 
-        $cache->set('test-cache', new CacheIndex('test-cache'));
+        $cache->set('test-cache', (new CacheIndex('test-cache'))->toRows());
 
         $processor = new CachingProcessor('test-cache');
 

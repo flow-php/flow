@@ -10,7 +10,6 @@ use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
-use Flow\Serializer\Serializer;
 
 use function Flow\Filesystem\DSL\path_real;
 use function getenv;
@@ -25,11 +24,15 @@ final class CacheConfigBuilder
      */
     private int $externalSortBucketsCount = 100;
 
-    private string $filesystemProtocol = 'file';
+    private string $filesystemMount = 'file';
+
+    /**
+     * @var int<1, max>
+     */
+    private int $serializerBatchSize = 1000;
 
     public function build(
         FilesystemTable $fstab,
-        Serializer $serializer,
         ?TelemetryConfig $telemetryConfig = null,
         string $dataframeName = 'flow_dataframe',
     ): CacheConfig {
@@ -37,9 +40,9 @@ final class CacheConfigBuilder
         $cachePath = path_real($cachePath !== '' ? $cachePath : sys_get_temp_dir() . '/flow_php/cache');
 
         $cache = $this->cache ?? new FilesystemCache(
-            $fstab->for($this->filesystemProtocol),
-            $serializer,
+            $fstab->for($this->filesystemMount),
             cacheDir: $cachePath,
+            serializerBatchSize: $this->serializerBatchSize,
         );
 
         if ($telemetryConfig !== null && $telemetryConfig->options->traceCache) {
@@ -50,7 +53,7 @@ final class CacheConfigBuilder
             cache: $cache,
             localFilesystemCacheDir: $cachePath,
             externalSortBucketsCount: $this->externalSortBucketsCount,
-            filesystemProtocol: $this->filesystemProtocol,
+            filesystemMount: $this->filesystemMount,
         );
     }
 
@@ -76,9 +79,22 @@ final class CacheConfigBuilder
         return $this;
     }
 
-    public function filesystemProtocol(string $protocol): self
+    public function filesystemMount(string $mount): self
     {
-        $this->filesystemProtocol = $protocol;
+        $this->filesystemMount = $mount;
+
+        return $this;
+    }
+
+    /**
+     * Serializer batch size for the default FilesystemCache; ignored when a custom Cache was
+     * injected via cache().
+     *
+     * @param int<1, max> $serializerBatchSize
+     */
+    public function serializerBatchSize(int $serializerBatchSize): self
+    {
+        $this->serializerBatchSize = $serializerBatchSize;
 
         return $this;
     }

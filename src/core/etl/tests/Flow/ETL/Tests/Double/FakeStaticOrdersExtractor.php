@@ -66,8 +66,10 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
 
     public function extract(FlowContext $context): Generator
     {
+        $schema = self::schema();
+
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
+            yield array_to_rows($row, $context->entryFactory(), schema: $schema);
         }
     }
 
@@ -128,9 +130,10 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
     public function toRows(EntryFactory $entryFactory = new EntryFactory()): Rows
     {
         $rows = rows();
+        $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, entryFactory: $entryFactory, schema: self::schema()));
+            $rows = $rows->merge(array_to_rows($row, entryFactory: $entryFactory, schema: $schema));
         }
 
         return $rows;

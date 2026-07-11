@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\UnserializeTransformer;
+use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
-use Flow\Serializer\NativePHPSerializer;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\flow_context;
@@ -37,8 +37,8 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
 
         $rows = rows(
-            row(str_entry('serialized', (new Base64Serializer(new NativePHPSerializer()))->serialize($row1))),
-            row(str_entry('serialized', (new Base64Serializer(new NativePHPSerializer()))->serialize($row2))),
+            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row1))),
+            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row2))),
         );
 
         $transformer = new UnserializeTransformer('serialized');
@@ -48,14 +48,14 @@ final class UnserializeTransformerTest extends FlowTestCase
         static::assertEquals(
             [
                 [
-                    'serialized' => (new Base64Serializer(new NativePHPSerializer()))->serialize($row1),
+                    'serialized' => (new Base64Serializer(new FloeSerializer()))->serialize($row1),
                     'id' => 1,
                     'name' => 'John',
                     'active' => true,
                     'tags' => ['tag1', 'tag2'],
                 ],
                 [
-                    'serialized' => (new Base64Serializer(new NativePHPSerializer()))->serialize($row2),
+                    'serialized' => (new Base64Serializer(new FloeSerializer()))->serialize($row2),
                     'id' => 2,
                     'name' => 'Jane',
                     'active' => false,
@@ -93,8 +93,8 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
 
         $rows = rows(
-            row(str_entry('serialized', (new Base64Serializer(new NativePHPSerializer()))->serialize($row1))),
-            row(str_entry('serialized', (new Base64Serializer(new NativePHPSerializer()))->serialize($row2))),
+            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row1))),
+            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row2))),
         );
 
         $transformer = new UnserializeTransformer('serialized', false);
