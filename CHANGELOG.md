@@ -23,6 +23,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2519](https://github.com/flow-php/flow/pull/2519) - **Make `NativePHPHash` singleton** - [@stloyd](https://github.com/stloyd)
 - [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader reuses a single php://temp row buffer per loader instance (released in the closure() hook) instead of opening and closing a temporary stream for every written
 row** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader appends the whole normalized batch to the destination stream once per Rows batch instead of once per row, and resolves the destination stream once per batch
