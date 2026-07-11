@@ -8,10 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -58,6 +60,48 @@ final class SumTest extends FlowTestCase
         static::assertSame(360.25, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
+    public function test_aggregation_sum_of_decimal_fractions(): void
+    {
+        $aggregator = sum(ref('value'));
+
+        $aggregator->aggregate(row(float_entry('value', 0.1)), flow_context());
+        $aggregator->aggregate(row(float_entry('value', 0.2)), flow_context());
+
+        static::assertSame(0.3, $aggregator->result(flow_context(config())->entryFactory())->value());
+    }
+
+    public function test_window_function_sum_of_decimal_fractions_uses_float_arithmetic_by_default(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1)),
+            row(int_entry('id', 2), float_entry('value', 0.2)),
+        );
+
+        $sum = sum(ref('value'))->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.1 + 0.2, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_aggregation_sum_of_floats_returns_int_when_sum_is_whole(): void
+    {
+        $aggregator = sum(ref('value'));
+
+        $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
+        $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
+
+        static::assertSame(5, $aggregator->result(flow_context(config())->entryFactory())->value());
+    }
+
+    public function test_exact_aggregation_sum_of_decimal_fractions(): void
+    {
+        $aggregator = sum(ref('value'), exact: true);
+
+        $aggregator->aggregate(row(float_entry('value', 0.1)), flow_context());
+        $aggregator->aggregate(row(float_entry('value', 0.2)), flow_context());
+
+        static::assertSame(0.3, $aggregator->result(flow_context(config())->entryFactory())->value());
+    }
+
     public function test_window_function_sum_on_partitioned_rows(): void
     {
         $rows = rows(
@@ -71,6 +115,42 @@ final class SumTest extends FlowTestCase
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
         static::assertSame(15, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_of_decimal_fractions_in_exact_mode(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1)),
+            row(int_entry('id', 2), float_entry('value', 0.2)),
+        );
+
+        $sum = sum(ref('value'), exact: true)->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_exact_mode_from_column(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1), bool_entry('is_exact', true)),
+            row(int_entry('id', 2), float_entry('value', 0.2), bool_entry('is_exact', true)),
+        );
+
+        $sum = sum(ref('value'), exact: ref('is_exact'))->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_exact_mode_from_literal(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), float_entry('value', 0.1)),
+            row(int_entry('id', 2), float_entry('value', 0.2)),
+        );
+
+        $sum = sum(ref('value'), exact: lit(true))->over(window()->orderBy(ref('id')->desc()));
+
+        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
     }
 
     public function test_window_function_sum_with_missing_reference_in_strict_mode(): void

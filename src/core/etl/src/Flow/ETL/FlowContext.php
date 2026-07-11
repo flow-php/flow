@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
@@ -35,6 +36,11 @@ final class FlowContext
     public function cache(): Cache
     {
         return $this->config->cache->cache;
+    }
+
+    public function calculator(): Calculator
+    {
+        return $this->config->calculator();
     }
 
     public function entryFactory(): EntryFactory

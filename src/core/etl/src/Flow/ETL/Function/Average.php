@@ -47,7 +47,7 @@ final class Average implements AggregatingFunction, WindowFunction
 
             if (is_numeric($value)) {
                 // @mago-ignore analysis:possibly-invalid-argument
-                $this->sum = (new Calculator())->add($this->sum, $value);
+                $this->sum = $context->calculator()->add($this->sum, $value);
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
@@ -67,7 +67,7 @@ final class Average implements AggregatingFunction, WindowFunction
 
                 if (is_numeric($value)) {
                     // @mago-ignore analysis:possibly-invalid-argument
-                    $sum = (new Calculator())->add($sum, $value);
+                    $sum = $context->calculator()->add($sum, $value);
                     $count++;
                 }
             } catch (InvalidArgumentException $e) {
@@ -79,7 +79,7 @@ final class Average implements AggregatingFunction, WindowFunction
             }
         }
 
-        return (new Calculator())->divide($sum, $count, $this->scale, $this->rounding);
+        return $context->calculator()->divide($sum, $count, $this->scale, $this->rounding);
     }
 
     public function over(Window $window): WindowFunction

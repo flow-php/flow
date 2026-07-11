@@ -1824,9 +1824,9 @@ function window(): Window
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(EntryReference|string $ref): Sum
+function sum(EntryReference|string $ref, ScalarFunction|bool $exact = false): Sum
 {
-    return new Sum(is_string($ref) ? ref($ref) : $ref);
+    return new Sum(is_string($ref) ? ref($ref) : $ref, $exact);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -27,6 +26,7 @@ final class Sum implements AggregatingFunction, WindowFunction
 
     public function __construct(
         private readonly Reference $ref,
+        private readonly ScalarFunction|bool $exact = false,
     ) {
         $this->sum = 0;
         $this->window = null;
@@ -38,7 +38,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $value = $row->valueOf($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = (new Calculator())->add($this->sum, $value);
+                $this->sum = $this->add($this->sum, $value, $row, $context);
             }
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
@@ -54,7 +54,7 @@ final class Sum implements AggregatingFunction, WindowFunction
                 $value = $partitionRow->valueOf($this->ref);
 
                 if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                    $sum = (new Calculator())->add($sum, $value);
+                    $sum = $this->add($sum, $value, $partitionRow, $context);
                 }
             } catch (InvalidArgumentException $e) {
                 $context
@@ -103,5 +103,37 @@ final class Sum implements AggregatingFunction, WindowFunction
         }
 
         return $this->window;
+    }
+
+    /**
+     * @param float|int|numeric-string $value
+     */
+    private function add(float|int $sum, float|int|string $value, Row $row, FlowContext $context): float|int
+    {
+        if ($this->isExact($row, $context)) {
+            return $context->calculator()->add($sum, $value);
+        }
+
+        $result = $sum + $value;
+
+        if (
+            is_float($result)
+            && floor($result) === $result
+            && $result >= (float) PHP_INT_MIN
+            && $result < (float) PHP_INT_MAX
+        ) {
+            return (int) $result;
+        }
+
+        return $result;
+    }
+
+    private function isExact(Row $row, FlowContext $context): bool
+    {
+        if (is_bool($this->exact)) {
+            return $this->exact;
+        }
+
+        return (new Parameter($this->exact))->asBoolean($row, $context);
     }
 }
