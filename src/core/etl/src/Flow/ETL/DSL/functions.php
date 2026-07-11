@@ -2475,7 +2475,7 @@ function is_type(Type|array $type, mixed $value): bool
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function generate_random_string(
     int $length = 32,
-    NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
+    RandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
 ): string {
     return $generator->string($length);
 }
@@ -2484,7 +2484,7 @@ function generate_random_string(
 function generate_random_int(
     int $start = PHP_INT_MIN,
     int $end = PHP_INT_MAX,
-    NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
+    RandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
 ): int {
     return $generator->int($start, $end);
 }
