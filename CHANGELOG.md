@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-07-11
 
 ### Added
+- [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - RouteNamePathMap optional cache warmer building a [route name => path] map at cache:warmup, rebuilt lazily when missing** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Floe binary row serialization format with writer, reader, merger, extractor, loader and DSL.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/flow-php-ext - new Rust-based PHP extension for native Floe encoding/decoding.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Cache::read() for streaming cached Rows in batches.** - [@norberttech](https://github.com/norberttech)
@@ -28,6 +29,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - HttpKernelSpanSubscriber constructor takes ?RouteNamePathMap instead of ?RouterInterface** - [@norberttech](https://github.com/norberttech)
 - [#2524](https://github.com/flow-php/flow/pull/2524) - **Replaced switch statements with match expressions across core ETL, parquet lib and http/parquet/seal adapters (no behavior change, outputs byte-identical)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Cache stores only Rows; cache indexes are stored as Rows.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - cache implementations and external sort buckets serialize with Floe instead of PHP serializer.** - [@norberttech](https://github.com/norberttech)
@@ -58,6 +60,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - route_naming: path no longer calls Router::getRouteCollection() (full route collection rebuild) on every traced request** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/filesystem - MemoryStream appends at end of stream after ranged reads.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/types - EnumType normalization accepts UnitEnum/BackedEnum interfaces.** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException message no longer lists FROM_NULL columns accepted by the validator** - [@norberttech](https://github.com/norberttech)
