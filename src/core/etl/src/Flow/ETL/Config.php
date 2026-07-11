@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfig;
@@ -36,6 +37,7 @@ final readonly class Config
         public SortConfig $sort,
         private ?Analyze $analyze,
         public TelemetryConfig $telemetry,
+        private Calculator $calculator = new Calculator(),
     ) {}
 
     public static function builder(): ConfigBuilder
@@ -51,6 +53,11 @@ final readonly class Config
     public function analyze(): ?Analyze
     {
         return $this->analyze;
+    }
+
+    public function calculator(): Calculator
+    {
+        return $this->calculator;
     }
 
     public function clock(): ClockInterface
