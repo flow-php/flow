@@ -22,7 +22,11 @@ use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
 use function fclose;
+use function fopen;
 use function fputcsv;
+use function ftruncate;
+use function is_resource;
+use function rewind;
 use function stream_get_contents;
 
 final class CSVLoader implements Closure, FileLoader, Loader
@@ -39,6 +43,11 @@ final class CSVLoader implements Closure, FileLoader, Loader
 
     private readonly Path $path;
 
+    /**
+     * @var null|closed-resource|resource
+     */
+    private $rowBuffer = null;
+
     private string $separator = ',';
 
     public function __construct(Path $path)
@@ -48,6 +57,12 @@ final class CSVLoader implements Closure, FileLoader, Loader
 
     public function closure(FlowContext $context): void
     {
+        if (is_resource($this->rowBuffer)) {
+            fclose($this->rowBuffer);
+        }
+
+        $this->rowBuffer = null;
+
         $context->streams()->closeStreams($this->path);
     }
 
@@ -141,41 +156,60 @@ final class CSVLoader implements Closure, FileLoader, Loader
         array $partitions,
         RowsNormalizer $normalizer,
     ): void {
-        if ($this->header && !$context->streams()->isOpen($this->path, $partitions)) {
-            $this->writeCSV($headers, $context->streams()->writeTo($this->path, $partitions));
+        $streams = $context->streams();
+
+        if ($this->header && !$streams->isOpen($this->path, $partitions)) {
+            $this->writeCSV([$headers], $streams->writeTo($this->path, $partitions));
         }
 
-        foreach ($normalizer->normalize($nextRows) as $normalizedRow) {
-            $this->writeCSV($normalizedRow, $context->streams()->writeTo($this->path, $partitions));
-        }
+        $this->writeCSV($normalizer->normalize($nextRows), $streams->writeTo($this->path, $partitions));
     }
 
     /**
-     * @param array<array-key, null|bool|float|int|string> $row
+     * @param iterable<array<array-key, null|bool|float|int|string>> $rows
      */
-    private function writeCSV(array $row, DestinationStream $stream): void
+    private function writeCSV(iterable $rows, DestinationStream $stream): void
     {
-        $tmpHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
+        $buffer = $this->rowBuffer();
 
-        if ($tmpHandle === false) {
-            throw new RuntimeException('Failed to open temporary stream for CSV row');
+        ftruncate($buffer, 0);
+        rewind($buffer);
+
+        foreach ($rows as $row) {
+            fputcsv(
+                stream: $buffer,
+                fields: $row,
+                separator: $this->separator,
+                enclosure: $this->enclosure,
+                escape: $this->escape,
+                eol: $this->newLineSeparator,
+            );
         }
 
-        fputcsv(
-            stream: $tmpHandle,
-            fields: $row,
-            separator: $this->separator,
-            enclosure: $this->enclosure,
-            escape: $this->escape,
-            eol: $this->newLineSeparator,
-        );
-        $csvRowData = stream_get_contents($tmpHandle, offset: 0);
-        fclose($tmpHandle);
+        $csvData = stream_get_contents($buffer, offset: 0);
 
-        if ($csvRowData === false) {
-            throw new RuntimeException('Failed to read temporary stream for CSV row');
+        if ($csvData === false) {
+            throw new RuntimeException('Failed to read temporary stream for CSV rows');
         }
 
-        $stream->append($csvRowData);
+        $stream->append($csvData);
+    }
+
+    /**
+     * @return resource
+     */
+    private function rowBuffer()
+    {
+        if (!is_resource($this->rowBuffer)) {
+            $handle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
+
+            if ($handle === false) {
+                throw new RuntimeException('Failed to open temporary stream for CSV rows');
+            }
+
+            $this->rowBuffer = $handle;
+        }
+
+        return $this->rowBuffer;
     }
 }
