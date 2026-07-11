@@ -28,6 +28,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2524](https://github.com/flow-php/flow/pull/2524) - **Replaced switch statements with match expressions across core ETL, parquet lib and http/parquet/seal adapters (no behavior change, outputs byte-identical)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Cache stores only Rows; cache indexes are stored as Rows.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - cache implementations and external sort buckets serialize with Floe instead of PHP serializer.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - serialize/unserialize transformers use Floe serializer.** - [@norberttech](https://github.com/norberttech)
