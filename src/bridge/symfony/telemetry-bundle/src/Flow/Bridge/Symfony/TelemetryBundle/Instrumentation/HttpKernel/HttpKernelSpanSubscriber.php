@@ -30,7 +30,6 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Routing\RouterInterface;
 
 use function array_key_exists;
 use function array_map;
@@ -59,7 +58,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private Propagator $propagator,
         private bool $contextPropagation = true,
         private bool $contextPropagationQuery = false,
-        private ?RouterInterface $router = null,
+        private ?RouteNamePathMap $routePaths = null,
         private RouteNaming $routeNaming = RouteNaming::Path,
     ) {
         $this->excludePathRules = array_map(
@@ -98,11 +97,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private function routeValue(string $routeName): string
     {
-        if ($this->routeNaming !== RouteNaming::Path || $this->router === null) {
+        if ($this->routeNaming !== RouteNaming::Path) {
             return $routeName;
         }
 
-        return $this->router->getRouteCollection()->get($routeName)?->getPath() ?? $routeName;
+        return $this->routePaths?->pathFor($routeName) ?? $routeName;
     }
 
     public function onException(ExceptionEvent $event): void

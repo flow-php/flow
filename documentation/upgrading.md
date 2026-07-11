@@ -294,6 +294,16 @@ implementation is `yield $this->get($key);`.
 
 Convert `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
 
+### 21) `flow-php/symfony-telemetry-bundle` - `HttpKernelSpanSubscriber` takes a
+`RouteNamePathMap` instead of the router
+
+| Before                                                | After                                                               |
+|-------------------------------------------------------|---------------------------------------------------------------------|
+| `new HttpKernelSpanSubscriber(…, router: $router, …)` | `new HttpKernelSpanSubscriber(…, routePaths: $routeNamePathMap, …)` |
+| `?RouterInterface $router = null`                     | `?RouteNamePathMap $routePaths = null`                              |
+
+Applies only to direct construction; services wired by the bundle need no change.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x
