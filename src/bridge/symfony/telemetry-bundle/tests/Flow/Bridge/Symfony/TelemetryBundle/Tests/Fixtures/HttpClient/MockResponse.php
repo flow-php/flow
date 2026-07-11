@@ -27,12 +27,17 @@ final readonly class MockResponse implements ResponseInterface
         return [];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getInfo(?string $type = null): mixed
     {
-        return [];
+        if ($type === 'http_code') {
+            return $this->statusCode;
+        }
+
+        if ($type === null) {
+            return ['http_code' => $this->statusCode];
+        }
+
+        return null;
     }
 
     public function getStatusCode(): int

@@ -7,7 +7,270 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
-## [Unreleased]
+## Upgrading from 0.41.x to 0.42.x
+
+### 1) `flow-php/symfony-telemetry-bundle` - messenger tracing simplified
+
+| Before (0.41)                                                        | After (0.42)                                                       |
+|----------------------------------------------------------------------|--------------------------------------------------------------------|
+| `instrumentation.messenger.trace`: `worker`/`handlers`/`both`/`none` | `instrumentation.messenger.trace`: `true`/`false` (default `true`) |
+| `instrumentation.messenger.link`: `dispatcher`/`worker`/`both`       | removed                                                            |
+| `messenger.receive` worker-cycle span                                | removed                                                            |
+
+The worker-cycle span and the `trace: worker`/`both` modes are gone; a consumed message is a `process` span and a
+produced one a `send` span. The `messenger:consume` worker loop is suppressed via
+`instrumentation.console.exclude_commands` — which now **fully suppresses** matching commands (previously it only
+skipped the console span) and defaults to `['messenger:consume']` — so transport-poll/idle-tick work does not
+surface and the long-lived `messenger:consume` console span is dropped. Per-message handler traces are still
+recorded. Set `console.exclude_commands: []` to trace the worker loop.
+
+### 2) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
+
+| Before                                                                | After                                                    |
+|-----------------------------------------------------------------------|----------------------------------------------------------|
+| `Cache Commit {pool}`                                                 | `cache.commit`                                           |
+| `Cache Save {key} {pool}`                                             | `cache.save`                                             |
+| `Cache SaveDeferred {key} {pool}`                                     | `cache.save_deferred`                                    |
+| `Cache Delete {key} {pool}`                                           | `cache.delete`                                           |
+| `Cache DeleteItem {key} {pool}`                                       | `cache.delete_item`                                      |
+| `Cache DeleteItems {pool}`                                            | `cache.delete_items`                                     |
+| `Cache Clear {pool}`                                                  | `cache.clear`                                            |
+| `Cache Prune {pool}`                                                  | `cache.prune`                                            |
+| `Cache Reset {pool}`                                                  | `cache.reset`                                            |
+| `Cache InvalidateTags {pool}`                                         | `cache.invalidate_tags`                                  |
+| `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
+
+Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
+that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
+attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
+values.
+
+### 3) `flow-php/telemetry` - `Sampler::shouldSample()` receives the parent `Context`
+
+| Before                                     | After                                                              |
+|--------------------------------------------|--------------------------------------------------------------------|
+| `shouldSample(Span $span): SamplingResult` | `shouldSample(Context $parentContext, Span $span): SamplingResult` |
+| `$sampler->shouldSample($span)`            | `$sampler->shouldSample($context, $span)`                          |
+
+Custom `Sampler` implementations (including a `sampler: { type: service }` service in
+`flow-php/symfony-telemetry-bundle`) must update the signature and forward `$parentContext` to any delegated sampler.
+
+### 4) `flow-php/telemetry` - `ResettableContextStorage` removed; `MemoryContextStorage::reset()` removed
+
+| Before                                            | After   |
+|---------------------------------------------------|---------|
+| `Flow\Telemetry\Context\ResettableContextStorage` | removed |
+| `MemoryContextStorage::reset()`                   | removed |
+
+The context storage is no longer tagged `kernel.reset` in `flow-php/symfony-telemetry-bundle`; scope balance is
+maintained by attach/detach alone. A custom `context_storage` service no longer needs a `reset()` method.
+
+### 5) `flow-php/symfony-telemetry-bundle` - messenger tracing middleware auto-injected into all buses
+
+The tracing middleware is now injected into every message bus automatically. If you previously added
+`flow.telemetry.messenger.middleware` to a bus's `framework.messenger.buses.*.middleware` list by hand,
+remove it to avoid duplicate spans.
+
+### 6) `flow-php/symfony-telemetry-bundle` - `http_kernel.exclude_paths` now suppresses the whole request
+
+| Before                                            | After                                                   |
+|---------------------------------------------------|---------------------------------------------------------|
+| Excluded path only skips its own request span     | Excluded path suppresses tracing for the entire request |
+| DBAL/cache/`kernel.terminate` work still recorded | DBAL/cache/`kernel.terminate` work produces no spans    |
+
+An excluded path now attaches the OpenTelemetry suppression key for the request's duration (through
+`kernel.terminate`), so lower-level auto-instrumentation and terminate-phase database writes no longer emit
+orphan root spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its response). If you relied on
+those child spans being recorded for an excluded path, remove the path from `exclude_paths`.
+
+### 7) `flow-php/postgresql`, `flow-php/symfony-postgresql-bundle` - `traceTransactions` bool replaced by
+
+`transactionSpans` mode
+
+| Before                                                         | After                                                                          |
+|----------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `postgresql_telemetry_options(traceTransactions: true)`        | `postgresql_telemetry_options(transactionSpans: TransactionSpanMode::GROUPED)` |
+| `postgresql_telemetry_options(traceTransactions: false)`       | `postgresql_telemetry_options(transactionSpans: TransactionSpanMode::OFF)`     |
+| `PostgreSqlTelemetryOptions` 2nd arg `bool $traceTransactions` | `TransactionSpanMode $transactionSpans`                                        |
+| `$options->traceTransactions(false)`                           | `$options->transactionSpans(TransactionSpanMode::OFF)`                         |
+| `$options->traceTransactions` (property)                       | `$options->transactionSpans` (`TransactionSpanMode`)                           |
+| config `telemetry.trace_transactions: true`                    | config `telemetry.transaction_spans: grouped`                                  |
+| config `telemetry.trace_transactions: false`                   | config `telemetry.transaction_spans: off`                                      |
+
+`TransactionSpanMode::PER_OPERATION` emits a short span per `BEGIN`/`COMMIT`/`ROLLBACK`; `GROUPED` (default) keeps
+the single long-lived transaction span.
+
+The `db.client.operation.duration` metric now uses only low-cardinality dimensions: queries are tagged with
+`db.system.name`, `db.namespace`, `db.operation.name`, `db.collection.name`; transactions with `db.system.name`,
+`db.namespace`, `db.operation.name` (`begin`/`commit`/`rollback`), `db.transaction.nesting_level`. `db.query.text`,
+`db.query.parameter.*`, `server.address` and `db.transaction.savepoint` are no longer metric dimensions.
+
+### 8) `flow-php/symfony-telemetry-bundle` - DBAL spans, metrics and config aligned with the PostgreSQL client
+
+| Before                                                           | After                                                                                      |
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `doctrine.dbal.transaction.begin`/`.commit`/`.rollback` (always) | one `BEGIN TRANSACTION` span per transaction (`grouped`)                                   |
+| `doctrine.dbal.connection.exec`/`.query` span names              | semconv `{db.operation.name} {db.collection.name}` (e.g. `SELECT users`)                   |
+| `doctrine.dbal.statement.execute`/`.prepare` span names          | semconv `{db.operation.name} {db.collection.name}`                                         |
+| config `instrumentation.dbal.log_sql`                            | removed — `db.query.text` is always recorded (bounded by `max_sql_length`)                 |
+| —                                                                | config `instrumentation.dbal.transaction_spans`: `grouped` (default)/`per_operation`/`off` |
+| —                                                                | config `instrumentation.dbal.collect_metrics` (default `true`)                             |
+| —                                                                | config `instrumentation.dbal.include_parameters`/`max_parameters`/`max_parameter_length`   |
+
+Query spans now carry `db.system.name`, `db.namespace`, `server.address`, `server.port`, `db.operation.name`,
+`db.collection.name`, `db.response.returned_rows` and (on error) `db.response.status_code`, and the instrumentation
+emits `db.client.operation.duration` and `db.client.response.returned_rows` metrics. If you matched DBAL spans by
+their `doctrine.dbal.*` names, switch to the semantic names above.
+
+### 9) `flow-php/symfony-telemetry-bundle` - custom attribute keys moved out of reserved OTel namespaces
+
+| Before                             | After                                  |
+|------------------------------------|----------------------------------------|
+| `controller`                       | `flow.symfony.controller`              |
+| `controller.argument`              | `flow.symfony.controller.argument`     |
+| `code.namespace` + `code.function` | `code.function.name` (`Class::method`) |
+| `command.name`                     | `flow.symfony.command.name`            |
+| `command.class`                    | `flow.symfony.command.class`           |
+| `process.signal`                   | `flow.symfony.command.signal`          |
+| `process.exit_code`                | `process.exit.code`                    |
+| `db.connection.name`               | `flow.db.connection.name`              |
+| `db.transaction.nesting_level`     | `flow.db.transaction.nesting_level`    |
+| `http.client.name`                 | `flow.http.client.name`                |
+| `log.channel`                      | `flow.log.channel`                     |
+
+### 10) `flow-php/symfony-telemetry-bundle` - HTTP spans aligned with the stable HTTP semconv
+
+| Before                                          | After                                        |
+|-------------------------------------------------|----------------------------------------------|
+| server span `url.full`                          | removed                                      |
+| server span `url.path` = URI incl. query        | path only; query moves to `url.query`        |
+| —                                               | server span `user_agent.original`            |
+| client span name `{method} {host}`              | `{method}`                                   |
+| client span `server.port` only when non-default | always set (scheme default 80/443 filled in) |
+
+Applies to the HttpKernel server span and to the `http_client`/`psr18_client` client spans.
+
+### 11) `flow-php/symfony-telemetry-bundle` - messenger destination is the transport; `metrics_duration_unit` removed
+
+| Before                                                             | After                                                    |
+|--------------------------------------------------------------------|----------------------------------------------------------|
+| `messaging.destination.name` = short message class                 | transport name (consume side); absent on dispatch        |
+| `messaging.transport`                                              | removed (folded into `messaging.destination.name`)       |
+| `messaging.consumer.group.name` (metric attribute)                 | removed                                                  |
+| `messaging.message.class`                                          | `flow.messenger.message.class`                           |
+| `messaging.symfony.bus`                                            | `flow.messenger.bus`                                     |
+| consume span `process {ShortClass}`                                | `process {transport}`                                    |
+| dispatch span `send {ShortClass}`                                  | `send`                                                   |
+| config `instrumentation.messenger.metrics_duration_unit`: `s`/`ms` | removed — `messaging.process.duration` is always seconds |
+| `Instrumentation\Messenger\MessengerMetricDurationUnit`            | removed                                                  |
+
+### 12) `flow-php/phpunit-telemetry-bridge` - `test.*` keys aligned with the OTel test registry; durations in seconds
+
+| Before                                            | After                                                  |
+|---------------------------------------------------|--------------------------------------------------------|
+| `test.name`                                       | `test.case.name`                                       |
+| `test.status`                                     | `test.case.result.status`                              |
+| `test.suite`                                      | `test.suite.name`                                      |
+| —                                                 | `test.suite.run.status`: `success`/`failure`/`skipped` |
+| `test.id`                                         | `flow.phpunit.test.id`                                 |
+| `test.class`                                      | `flow.phpunit.test.class`                              |
+| `test.method`                                     | `flow.phpunit.test.method`                             |
+| `test.suite.test_count`                           | `flow.phpunit.suite.test_count`                        |
+| `test.suite.is_root`                              | `flow.phpunit.suite.is_root`                           |
+| `test.memory.peak_bytes`                          | `flow.phpunit.test.memory.peak`                        |
+| `test.memory.delta_bytes`                         | `flow.phpunit.test.memory.delta`                       |
+| `test.duration_ms` span attribute                 | removed (use the span duration)                        |
+| `exception.message` span attribute                | removed (message stays in the span status description) |
+| `flow.phpunit.test.duration` unit `ms`            | `s` (values rescaled)                                  |
+| `flow.phpunit.suite.duration` unit `ms`           | `s` (values rescaled)                                  |
+| `flow.phpunit.test.memory.*` unit `bytes`         | `By`                                                   |
+| `flow.phpunit.test.count`/`suite.test_count` unit | `{test}`                                               |
+| —                                                 | resource attribute `telemetry.sdk.version`             |
+
+### 13) `flow-php/filesystem`, `flow-php/etl`, `flow-php/postgresql` - flow-custom keys under `flow.*`; UCUM units
+
+| Before                                                     | After                                                |
+|------------------------------------------------------------|------------------------------------------------------|
+| `path.uri`/`path.to`                                       | `flow.filesystem.path.uri`/`.path.to`                |
+| `stream.type`                                              | `flow.filesystem.stream.type`                        |
+| `bytes.total_read`/`bytes.total_written`                   | `flow.filesystem.bytes.total_read`/`.total_written`  |
+| `filesystem.operation`/`filesystem.protocol`               | `flow.filesystem.operation`/`.protocol`              |
+| spans `Read {file}`/`Write {file}`                         | `filesystem.read`/`filesystem.write`                 |
+| `flow.filesystem.*.size` unit `bytes`                      | `By`                                                 |
+| `flow.filesystem.*.operations` unit `operations`           | `{operation}`                                        |
+| `dataframe.id`/`dataframe.name`                            | `flow.etl.dataframe.id`/`.dataframe.name`            |
+| `rows.total`/`rows.throughput.per_second`                  | `flow.etl.rows.total`/`.rows.throughput.per_second`  |
+| `memory.min.mb`/`memory.max.mb`                            | `flow.etl.memory.min`/`.memory.max` (values stay MB) |
+| `loader.class`/`transformer.class`                         | `flow.etl.loader.class`/`.transformer.class`         |
+| `destination.uri`/`loading.rows`                           | `flow.etl.destination.uri`/`.loading.rows`           |
+| `transformation.input_rows`/`.output_rows`                 | `flow.etl.transformation.input_rows`/`.output_rows`  |
+| `join.type`/`scalar.function`                              | `flow.etl.join.type`/`.scalar.function`              |
+| spans `Cache Set {key}`/`Cache Delete {key}`/`Cache Clear` | `cache.set`/`cache.delete`/`cache.clear`             |
+| `flow.cache.hits`/`.misses` unit `operations`              | `{operation}`                                        |
+| `flow.etl.rows.processed` unit `rows`                      | `{row}`                                              |
+| `flow.etl.rows.throughput` unit `rows/s/sec`               | `{row}/s`                                            |
+| `db.transaction.savepoint`                                 | `flow.db.transaction.savepoint`                      |
+| `db.transaction.nesting_level`                             | `flow.db.transaction.nesting_level`                  |
+
+### 14) `flow-php/telemetry`, `flow-php/psr18-telemetry-bridge` - shared semconv constants; UCUM time units
+
+| Before                                                                                                                          | After                                                 |
+|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| official keys duplicated per package (`DbAttributes`, `PostgreSqlTelemetryAttributes`, inline strings)                          | `Flow\Telemetry\SemConvAttributes` / `SemConvMetrics` |
+| `TimeUnit::SECONDS->value` = `'sec'`                                                                                            | `'s'`                                                 |
+| `TimeUnit::MICROSECONDS->value` = `'µs'`                                                                                        | `'us'`                                                |
+| PSR-18 client span name `{method} {host}`                                                                                       | `{method}`                                            |
+| PSR-18 `server.port` only when non-default                                                                                      | always set (scheme default 80/443 filled in)          |
+| `FilesystemTelemetryAttributes::ATTR_BYTES_READ`/`ATTR_BYTES_WRITTEN`/`ATTR_PATH_FROM`/`ATTR_PATH_IS_PATTERN`/`ATTR_ERROR_TYPE` | removed                                               |
+| `PostgreSqlTelemetryAttributes::DB_QUERY_SUMMARY` + official-key constants                                                      | removed (officials via `SemConvAttributes`)           |
+
+### 15) `flow-php/symfony-telemetry-bundle` - `runtime_mode` removed; terminate flushes, process end shuts down
+
+| Before                                                                      | After                                       |
+|-----------------------------------------------------------------------------|---------------------------------------------|
+| `flow_telemetry.runtime_mode: auto`/`classic`/`worker`                      | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\RuntimeModeResolver`           | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\RuntimeMode`                   | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\WorkerModeDetector`            | removed                                     |
+| `Flow\Bridge\Symfony\TelemetryBundle\Runtime\EnvironmentWorkerModeDetector` | removed                                     |
+| shutdown on `kernel.terminate`/`console.terminate` (classic mode)           | flush on terminate; shutdown at process end |
+
+Drop the `runtime_mode` key from `flow_telemetry` config and remove any `WorkerModeDetector` service overrides.
+
+### 16) `flow-php/telemetry` - `Telemetry::registerShutdownFunction()` holds a weak reference
+
+| Before                                           | After                                                         |
+|--------------------------------------------------|---------------------------------------------------------------|
+| strong reference; instance kept alive until exit | weak reference; garbage-collected instances are not shut down |
+
+Keep the registered `Telemetry` instance referenced for as long as it should be shut down at process end.
+
+### 17) `flow-php/etl` - `SchemaValidator::isValid()` replaced by `validate(): ValidationContext`
+
+| Before                                        | After                                                            |
+|-----------------------------------------------|------------------------------------------------------------------|
+| `SchemaValidator::isValid(...): bool`         | `SchemaValidator::validate(...): ValidationContext`              |
+| `$validator->isValid($expected, $given)`      | `$validator->validate($expected, $given)->isValid()`             |
+| `schema_validate(...): bool`                  | `schema_validate(...): ValidationContext`                        |
+| `new SchemaValidationException($exp, $given)` | `new SchemaValidationException($exp, $given, ValidationContext)` |
+| —                                             | `SchemaValidationException::context(): ValidationContext`        |
+
+Custom `SchemaValidator` implementations must return a `Flow\ETL\Schema\Validator\ValidationContext`
+built from the missing, mismatched (`MismatchedDefinition`), and unexpected definitions they reject.
+
+### 18) `flow-php/filesystem` - `Partition` name and value forbid `{` and `}`
+
+| Before                           | After                             |
+|----------------------------------|-----------------------------------|
+| `new Partition('na{me', 'a}b')`  | throws `InvalidArgumentException` |
+| `partitionBy()` values with `{}` | throws `InvalidArgumentException` |
+
+`{name}` in a path is now a partition placeholder resolved from `partitionBy()` columns; strip braces from partition
+values before partitioning.
+
+---
+
+## Upgrading from 0.40.x to 0.41.x
 
 ### 1) Removal of Elasticsearch Adapter
 
@@ -55,6 +318,125 @@ incoming and injecting outgoing W3C trace headers:
 ```
 composer require flow-php/symfony-http-foundation-telemetry-bridge
 ```
+
+### 3) `flow-php/telemetry` - trace id derived from the active span; root spans start a new trace
+
+| Before                                  | After                                                          |
+|-----------------------------------------|----------------------------------------------------------------|
+| `Context::create()`                     | `Context::root()`                                              |
+| `Context::withTraceId(TraceId)`         | removed                                                        |
+| `$context->traceId` (property)          | `$context->traceId(): ?TraceId` (derived from the active span) |
+| `Context::withActiveSpan(SpanId)`       | `Context::withActiveSpan(SpanContext)`                         |
+| `context(?TraceId, ?Baggage)` (DSL)     | `context(?Baggage)`                                            |
+| a root span reused the context trace id | each root span generates a new `TraceId`                       |
+
+`Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep
+subsequent spans in the same trace.
+
+### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
+
+| Before                                                     | After                                                            |
+|------------------------------------------------------------|------------------------------------------------------------------|
+| all messages in a `messenger:consume` run shared one trace | each handled message is a new trace root, linked to the producer |
+
+### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to
+
+`async_curl`
+
+| Before                                                         | After                                                                                           |
+|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `CurlTransport` async (`curl_multi`, fire-and-forget `send()`) | `CurlTransport` synchronous; `send()` blocks and throws on failure                              |
+| async via `CurlTransport`                                      | async via `AsyncCurlTransport` / `otlp_async_curl_transport()` / `transport.type: 'async_curl'` |
+| `CurlTransportOptions::DEFAULT_TIMEOUT_MS` `250`               | `10000`                                                                                         |
+| bundle `curl` `timeout_ms` `250`                               | `10000`                                                                                         |
+| —                                                              | `async_curl` `connect_timeout_ms` `1500`, `pump_timeout_ms` `100`                               |
+
+### 6) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
+
+| Before                                         | After                                                                              |
+|------------------------------------------------|------------------------------------------------------------------------------------|
+| `flow:migrations:* --connection=<name>` (`-c`) | removed — every migration command uses the configured migrations connection        |
+| migrator stack registered for every connection | registered only for the migrations connection                                      |
+| —                                              | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection) |
+
+To run migrations against a non-default connection, set `migrations.connection` instead of passing `-c`:
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    connection: analytics
+```
+
+### 7) `flow-php/symfony-telemetry-bundle` - static resource cache file is keyed by kernel environment
+
+| Before                                             | After                                                           |
+|----------------------------------------------------|-----------------------------------------------------------------|
+| `sys_get_temp_dir()/flow_telemetry_resource.cache` | `sys_get_temp_dir()/flow_telemetry_resource_<kernel.env>.cache` |
+
+Delete the orphaned `flow_telemetry_resource.cache` from the temp dir; a per-env file is written on the next run.
+
+### 8) `flow-php/symfony-telemetry-bundle` - messenger worker receive cycle is traced; `link_to_worker` config removed
+
+| Before                                             | After                                                    |
+|----------------------------------------------------|----------------------------------------------------------|
+| `instrumentation.messenger.link_to_worker: true`   | removed (always on under `messenger:consume`)            |
+| `flow.messenger.worker` link → console worker span | → per-pass `messenger.receive` span                      |
+| transport poll query = one standalone trace each   | grouped under one `messenger.receive` root span per pass |
+
+Remove the `link_to_worker` key from config. Idle passes (no message received) are marked
+`messaging.symfony.worker.idle: true`.
+
+### 9) `flow-php/symfony-telemetry-bundle` - messenger instrumentation also emits messaging metrics
+
+| Before                                       | After                                                                                                           |
+|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| messenger instrumentation emitted spans only | also emits `messaging.client.consumed.messages`, `messaging.client.sent.messages`, `messaging.process.duration` |
+
+Disable with `instrumentation.messenger.metrics: false`; set the `messaging.process.duration` unit via
+`instrumentation.messenger.metrics_duration_unit` (`s` default, or `ms`).
+
+### 10) `flow-php/etl`, `flow-php/filesystem`, `flow-php/postgresql`, `flow-php/symfony-telemetry-bundle`,
+
+`flow-php/phpunit-telemetry-bridge` - emitted metric names standardized
+
+| Before                      | After                              |
+|-----------------------------|------------------------------------|
+| `rows_processed`            | `flow.etl.rows.processed`          |
+| `rows_throughput`           | `flow.etl.rows.throughput`         |
+| `cache_hits`                | `flow.cache.hits`                  |
+| `cache_misses`              | `flow.cache.misses`                |
+| `cache.hits`                | `flow.cache.hits`                  |
+| `cache.misses`              | `flow.cache.misses`                |
+| `write_size`                | `flow.filesystem.write.size`       |
+| `write_operations`          | `flow.filesystem.write.operations` |
+| `read_size`                 | `flow.filesystem.read.size`        |
+| `read_operations`           | `flow.filesystem.read.operations`  |
+| `operation_duration`        | `db.client.operation.duration`     |
+| `response_returned_rows`    | `db.client.response.returned_rows` |
+| `phpunit.test.duration`     | `flow.phpunit.test.duration`       |
+| `phpunit.test.count`        | `flow.phpunit.test.count`          |
+| `phpunit.test.memory.peak`  | `flow.phpunit.test.memory.peak`    |
+| `phpunit.test.memory.delta` | `flow.phpunit.test.memory.delta`   |
+| `phpunit.suite.duration`    | `flow.phpunit.suite.duration`      |
+| `phpunit.suite.test_count`  | `flow.phpunit.suite.test_count`    |
+
+Rename these series in dashboards and alerts.
+
+### 11) `flow-php/symfony-telemetry-bundle` - messenger `trace`/`link` config; `propagation_style` removed
+
+| Before                                        | After                                                                          |
+|-----------------------------------------------|--------------------------------------------------------------------------------|
+| `instrumentation.messenger.propagation_style` | removed (consumed messages always start their own trace)                       |
+| (no span selection)                           | `instrumentation.messenger.trace`: `worker`/`handlers`/`both` (default)/`none` |
+| (no link selection)                           | `instrumentation.messenger.link`: `dispatcher`/`worker`/`both` (default)       |
+
+Remove `propagation_style` from config — `continue` mode is gone (it made the consumer span absorb the queue wait
+time). `trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
+`link` selects the consumer span's links. `link: worker`/`both` requires `trace` to include the worker, otherwise the
+config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP client,
+…) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span, no
+orphans either way.
 
 ---
 

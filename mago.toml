@@ -114,6 +114,7 @@ no-redundant-file = { enabled = false }
 no-sprintf-concat = { enabled = false }
 no-global = { enabled = false }
 no-redundant-method-override = { enabled = false }
+no-duplicate-match-arm = { enabled = false }
 no-redundant-else = { enabled = true, level = "warning" }
 no-redundant-variable = { enabled = true, level = "warning" }
 strict-types = { enabled = true, level = "error" }

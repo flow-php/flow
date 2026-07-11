@@ -32,7 +32,6 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\telemetry_options;
 use function range;
-use function str_starts_with;
 
 final class CacheTest extends FlowIntegrationTestCase
 {
@@ -121,13 +120,12 @@ final class CacheTest extends FlowIntegrationTestCase
         $telemetry->flush();
 
         $spans = $spanProcessor->endedSpans();
-        // @mago-ignore analysis:redundant-cast
-        $setSpans = array_filter($spans, static fn($span) => str_starts_with((string) $span->name(), 'Cache Set '));
+        $setSpans = array_filter($spans, static fn($span) => $span->name() === 'cache.set');
 
-        static::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
+        static::assertNotEmpty($setSpans, 'Expected cache.set spans to be recorded');
 
-        $metricProcessor->metricsWithName('cache_hits');
-        $missMetrics = $metricProcessor->metricsWithName('cache_misses');
+        $metricProcessor->metricsWithName('flow.cache.hits');
+        $missMetrics = $metricProcessor->metricsWithName('flow.cache.misses');
 
         static::assertNotEmpty($missMetrics, 'Expected cache miss metrics to be recorded (from has() checks)');
     }

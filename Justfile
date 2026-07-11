@@ -86,6 +86,18 @@ phar:
 wasm: && phar
     cd wasm && ./build.sh
 
+# Idempotent — both tools recompress losslessly, so it is safe to re-run over the whole folder.
+# Requires nix-shell (oxipng/jpegoptim).
+# Losslessly optimize landing-site images in place: oxipng for PNG, jpegoptim for JPEG.
+optimize-images:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    images_dir="web/landing/assets/images"
+    oxipng --opt max --strip safe --recursive "$images_dir"
+    while IFS= read -r -d '' f; do
+        jpegoptim --strip-all --all-progressive "$f"
+    done < <(find "$images_dir" -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0)
+
 # Build the Docker image.
 docker:
     docker buildx build -t flow-php/flow:latest . --progress=plain --load

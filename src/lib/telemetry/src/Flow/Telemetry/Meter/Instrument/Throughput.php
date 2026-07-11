@@ -35,7 +35,7 @@ use function round;
  *
  * Example usage:
  * ```php
- * $throughput = $meter->createThroughput('dataframe_throughput', 'rows', 'Rows processed per second');
+ * $throughput = $meter->createThroughput('flow.etl.rows.throughput', 'rows', 'Rows processed per second');
  * $throughput->add(100, ['source' => 'csv']); // Process 100 rows
  * $throughput->add(150, ['source' => 'csv']); // Process 150 more rows
  * $metrics = $throughput->collect(); // Returns rate as value (rows/s)

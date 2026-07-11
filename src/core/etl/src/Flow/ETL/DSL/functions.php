@@ -11,8 +11,10 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Exception;
@@ -199,6 +201,7 @@ use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -217,6 +220,7 @@ use Flow\ETL\Schema\SortingStrategy\TypeStrategy\TypePriorities as SchemaTypePri
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Schema\Validator\StrictValidator;
+use Flow\ETL\Schema\Validator\ValidationContext;
 use Flow\ETL\SchemaValidator;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Time\Duration;
@@ -270,6 +274,7 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
@@ -889,16 +894,16 @@ function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metada
 /**
  * @throws InvalidArgumentException
  *
- * @return ($value is null ? Entry<null> : Entry<\DOMDocument>)
+ * @return ($value is null ? Entry<null> : Entry<\DOMDocument|XMLDocument>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $metadata = null): Entry
+function xml_entry(string $name, DOMDocument|XMLDocument|string|null $value, ?Metadata $metadata = null): Entry
 {
     if ($value === null) {
         return new XMLEntry($name, null, $metadata);
     }
 
-    if ($value instanceof DOMDocument) {
+    if ($value instanceof DOMDocument || $value instanceof XMLDocument) {
         return new XMLEntry($name, $value, $metadata);
     }
 
@@ -914,16 +919,16 @@ function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $meta
 /**
  * @throws InvalidArgumentException
  *
- * @return ($value is null ? Entry<null> : Entry<\DOMElement>)
+ * @return ($value is null ? Entry<null> : Entry<\DOMElement|Element>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, DOMElement|string|null $value, ?Metadata $metadata = null): Entry
+function xml_element_entry(string $name, DOMElement|Element|string|null $value, ?Metadata $metadata = null): Entry
 {
     if ($value === null) {
         return new XMLElementEntry($name, null, $metadata);
     }
 
-    if ($value instanceof DOMElement) {
+    if ($value instanceof DOMElement || $value instanceof Element) {
         return new XMLElementEntry($name, $value, $metadata);
     }
 
@@ -1900,9 +1905,12 @@ function schema_to_ascii(Schema $schema, ?SchemaFormatter $formatter = null): st
  * @param Schema $given
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_validate(Schema $expected, Schema $given, SchemaValidator $validator = new StrictValidator()): bool
-{
-    return $validator->isValid($expected, $given);
+function schema_validate(
+    Schema $expected,
+    Schema $given,
+    SchemaValidator $validator = new StrictValidator(),
+): ValidationContext {
+    return $validator->validate($expected, $given);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
@@ -2109,6 +2117,20 @@ function structure_schema(
     return new StructureDefinition($name, $type, $nullable, $metadata);
 }
 
+/**
+ * @param Type<mixed>|UnionType<mixed, mixed> $type
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function union_schema(
+    string $name,
+    UnionType|Type $type,
+    bool $nullable = false,
+    ?Metadata $metadata = null,
+): UnionDefinition {
+    /** @var UnionType<mixed, mixed> $type */
+    return new UnionDefinition($name, $type, $nullable, $metadata);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): UuidDefinition
 {
@@ -2176,6 +2198,7 @@ function definition_from_type(
         $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
         $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
         $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
+        $type instanceof UnionType => new UnionDefinition($ref, $type, $nullable, $metadata),
         $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
         $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),

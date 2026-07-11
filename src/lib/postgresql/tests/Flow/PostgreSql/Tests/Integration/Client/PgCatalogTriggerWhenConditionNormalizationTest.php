@@ -114,7 +114,7 @@ final class PgCatalogTriggerWhenConditionNormalizationTest extends PostgreSqlTes
                 PHP_EOL,
                 $expected->whenCondition ?? '<null>',
                 PHP_EOL,
-                $dbTrigger->whenCondition ?? '<null>',
+                $dbTrigger->whenCondition,
             ),
         );
     }

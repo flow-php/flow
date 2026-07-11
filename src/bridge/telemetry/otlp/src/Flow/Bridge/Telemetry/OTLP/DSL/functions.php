@@ -7,6 +7,8 @@ namespace Flow\Bridge\Telemetry\OTLP\DSL;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
@@ -109,18 +111,19 @@ function otlp_curl_options(): CurlTransportOptions
 }
 
 /**
- * Create an async curl transport for OTLP endpoints.
+ * Create a synchronous curl transport for OTLP endpoints.
  *
- * Creates a CurlTransport that uses curl_multi for non-blocking I/O.
- * Requests are queued and executed asynchronously. OTLP/HTTP allows JSON
- * or Protobuf encoding; defaults to JSON.
+ * Creates a CurlTransport that drives each request to completion and reports the
+ * outcome immediately (returns on success, throws on failure). OTLP/HTTP allows
+ * JSON or Protobuf encoding; defaults to JSON. Keeping export off the application
+ * hot path is the job of the batching processor in front of the exporter.
  *
  * Requires: ext-curl PHP extension
  *
  * @param string $endpoint OTLP endpoint URL (e.g., 'http://localhost:4318')
  * @param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
  * @param CurlTransportOptions $options Transport configuration options
- * @param ?Transport $failover Optional failover transport receiving prior batches when primary fails
+ * @param ?Transport $failover Optional failover transport receiving the batch when the primary fails
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_curl_transport(
@@ -130,6 +133,35 @@ function otlp_curl_transport(
     ?Transport $failover = null,
 ): Transport {
     return new CurlTransport($endpoint, $serializer, $options, $failover);
+}
+
+/**
+ * Create async curl transport options for OTLP.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
+function otlp_async_curl_options(): AsyncCurlTransportOptions
+{
+    return new AsyncCurlTransportOptions();
+}
+
+/**
+ * Create an asynchronous curl transport for OTLP endpoints.
+ *
+ * @param string $endpoint OTLP endpoint URL (e.g., 'http://localhost:4318')
+ * @param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
+ * @param AsyncCurlTransportOptions $options Transport configuration options
+ * @param ?Transport $failover Optional failover transport receiving prior batches when primary fails
+ * @param ErrorHandler $error_handler Handler for failures reaped on send()/tick()/shutdown() (no failover)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
+function otlp_async_curl_transport(
+    string $endpoint,
+    JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
+    AsyncCurlTransportOptions $options = new AsyncCurlTransportOptions(),
+    ?Transport $failover = null,
+    ErrorHandler $error_handler = new ErrorLogHandler(),
+): Transport {
+    return new AsyncCurlTransport($endpoint, $serializer, $options, $failover, $error_handler);
 }
 
 /**

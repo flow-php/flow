@@ -56,31 +56,38 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         $spanNames = array_map(static fn($span) => $span->name(), $spans);
 
-        static::assertContains('Write test_file.txt', $spanNames);
-        static::assertContains('Read test_file.txt', $spanNames);
+        static::assertContains('filesystem.write', $spanNames);
+        static::assertContains('filesystem.read', $spanNames);
         static::assertCount(2, $spans);
 
         foreach ($spans as $span) {
-            $status = $span->status();
-            static::assertNotNull($status);
-            static::assertTrue($status->isOk());
+            // OTEL spec: instrumentation leaves the status Unset on success.
+            static::assertNull($span->status());
         }
 
         $destinationSpans = array_values(array_filter(
             $spans,
-            static fn($span) => $span->name() === 'Write test_file.txt',
+            static fn($span) => $span->name() === 'filesystem.write',
         ));
         static::assertCount(1, $destinationSpans);
         static::assertSame(
             strlen($content),
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
+        static::assertSame(
+            $testFile->uri(),
+            $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI],
+        );
 
-        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'Read test_file.txt'));
+        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'filesystem.read'));
         static::assertCount(1, $sourceSpans);
         static::assertSame(
             strlen($content),
             $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
+        );
+        static::assertSame(
+            $testFile->uri(),
+            $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI],
         );
     }
 
@@ -124,13 +131,12 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         $destinationSpans = array_values(array_filter(
             $spans,
-            static fn($span) => $span->name() === 'Write from_resource_test.txt',
+            static fn($span) => $span->name() === 'filesystem.write',
         ));
 
         static::assertCount(1, $destinationSpans);
-        $status = $destinationSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($destinationSpans[0]->status());
         static::assertSame(
             'destination',
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE],
@@ -159,10 +165,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertSame($content, implode('', $chunks));
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpans = array_values(array_filter(
-            $spans,
-            static fn($span) => $span->name() === 'Read iterate_test.txt',
-        ));
+        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'filesystem.read'));
 
         static::assertCount(1, $sourceSpans);
         static::assertSame(
@@ -223,10 +226,10 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $metrics = $metricProcessor->metrics();
         $metricNames = array_map(static fn($m) => $m->name, $metrics);
 
-        static::assertContains('write_size', $metricNames);
-        static::assertContains('write_operations', $metricNames);
-        static::assertContains('read_size', $metricNames);
-        static::assertContains('read_operations', $metricNames);
+        static::assertContains('flow.filesystem.write.size', $metricNames);
+        static::assertContains('flow.filesystem.write.operations', $metricNames);
+        static::assertContains('flow.filesystem.read.size', $metricNames);
+        static::assertContains('flow.filesystem.read.operations', $metricNames);
     }
 
     public function test_multiple_appends_create_single_span_with_cumulative_metrics(): void
@@ -249,7 +252,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertCount(1, $spans);
 
         $destinationSpan = $spans[0];
-        static::assertSame('Write multiple_appends.txt', $destinationSpan->name());
+        static::assertSame('filesystem.write', $destinationSpan->name());
         static::assertSame(
             strlen($chunk) * 10,
             $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
@@ -294,12 +297,11 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertCount(3, $lines);
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'Read lines_test.txt'));
+        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'filesystem.read'));
 
         static::assertCount(1, $sourceSpans);
-        $status = $sourceSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($sourceSpans[0]->status());
     }
 
     public function test_rm_operation_does_not_create_span(): void
@@ -342,7 +344,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem(
             $spanProcessor,
-            filesystem_telemetry_options(traceStreams: false),
+            filesystem_telemetry_options(trace_streams: false),
         );
 
         $testFile = path(__DIR__ . '/var/no_stream_trace.txt');

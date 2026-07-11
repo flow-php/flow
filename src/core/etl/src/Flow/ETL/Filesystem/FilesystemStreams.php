@@ -12,6 +12,7 @@ use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\PlaceholderPartitions;
 use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\VoidStream;
 use Generator;
@@ -58,7 +59,7 @@ final class FilesystemStreams implements Countable, IteratorAggregate
                     }
 
                     if ($this->saveMode === SaveMode::Overwrite) {
-                        if ($fileStream->path()->partitions()->count()) {
+                        if ($fileStream->path()->partitions()->count() || [] !== $path->partitionPlaceholders()) {
                             $filename = str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->filename());
 
                             $partitionFilesPattern = path(
@@ -134,9 +135,18 @@ final class FilesystemStreams implements Countable, IteratorAggregate
     public function list(Path $path, Filter $pathFilter): Generator
     {
         $fs = $this->fstab->for($path);
+        $hasPlaceholders = [] !== $path->partitionPlaceholders();
+
+        if ($hasPlaceholders) {
+            $pathFilter = new PlaceholderPartitions($path, $pathFilter);
+        }
 
         foreach ($fs->list($path, $pathFilter) as $file) {
-            yield $fs->readFrom($file->path);
+            yield $fs->readFrom(
+                $hasPlaceholders
+                    ? $file->path->withPartitions($path->extractPlaceholderPartitions($file->path))
+                    : $file->path,
+            );
         }
     }
 
@@ -163,8 +173,16 @@ final class FilesystemStreams implements Countable, IteratorAggregate
      */
     public function read(Path $path, array $partitions = []): SourceStream
     {
-        if ($path->isPattern()) {
+        $placeholders = $path->partitionPlaceholders();
+
+        if ($path->isPattern() && [] === $placeholders) {
             throw new RuntimeException("Path can't be pattern, given: " . $path->uri());
+        }
+
+        if ([] !== $placeholders && !count($partitions)) {
+            throw new RuntimeException(
+                'Path "' . $path->uri() . '" contains partition placeholders but no partitions were given',
+            );
         }
 
         $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
@@ -203,8 +221,18 @@ final class FilesystemStreams implements Countable, IteratorAggregate
             throw new RuntimeException('Stream path must have an extension, given: ' . $path->uri());
         }
 
-        if ($path->isPattern()) {
-            throw new RuntimeException("Destination path can't be patter, given:" . $path->uri());
+        $placeholders = $path->partitionPlaceholders();
+
+        if ($path->isPattern() && [] === $placeholders) {
+            throw new RuntimeException("Destination path can't be pattern, given: " . $path->uri());
+        }
+
+        if ([] !== $placeholders && !count($partitions)) {
+            throw new RuntimeException(
+                'Destination path "'
+                . $path->uri()
+                . '" contains partition placeholders but rows are not partitioned, add partitionBy() to your pipeline',
+            );
         }
 
         $pathUri = $path->uri();

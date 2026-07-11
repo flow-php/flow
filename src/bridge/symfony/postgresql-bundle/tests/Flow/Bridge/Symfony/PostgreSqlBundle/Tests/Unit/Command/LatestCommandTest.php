@@ -19,25 +19,20 @@ use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\Container;
 
 final class LatestCommandTest extends TestCase
 {
     public function test_no_migrations_message(): void
     {
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                new FakeMigrationRepository(),
-                new FakeMigrationStore(),
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            new FakeMigrationRepository(),
+            new FakeMigrationStore(),
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new LatestCommand($container, 'default'));
+        $tester = new CommandTester(new LatestCommand($migrator));
         $tester->execute([]);
 
         static::assertStringContainsString('No migrations available.', $tester->getDisplay());
@@ -64,19 +59,15 @@ final class LatestCommandTest extends TestCase
             ),
         );
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                $store,
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            $store,
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new LatestCommand($container, 'default'));
+        $tester = new CommandTester(new LatestCommand($migrator));
         $tester->execute([]);
 
         $display = $tester->getDisplay();

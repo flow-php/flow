@@ -46,7 +46,7 @@ final class CurlTransportOptions
 
     public const int DEFAULT_SHUTDOWN_TIMEOUT_MS = 5000;
 
-    public const int DEFAULT_TIMEOUT_MS = 250;
+    public const int DEFAULT_TIMEOUT_MS = 10000;
 
     private ?string $caInfoPath = null;
 

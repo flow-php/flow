@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
 use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -37,45 +38,39 @@ final readonly class TracableHttpClient implements HttpClientInterface
         $tracer = $this->telemetry->tracer('flow.symfony.http_client', PackageVersion::get('symfony/http-client'));
 
         $attributes = [
-            'http.request.method' => $method,
-            'url.full' => $url,
-            'url.scheme' => $scheme,
-            'server.address' => $host,
-            'http.client.name' => $this->clientName,
+            SemConvAttributes::HTTP_REQUEST_METHOD => $method,
+            SemConvAttributes::URL_FULL => $url,
+            SemConvAttributes::URL_SCHEME => $scheme,
+            SemConvAttributes::SERVER_ADDRESS => $host,
+            HttpClientAttributes::ATTR_CLIENT_NAME => $this->clientName,
+            // OTEL HTTP semconv: server.port is Required on client spans; fall back to the
+            // scheme default when the URL carries no explicit port.
+            SemConvAttributes::SERVER_PORT => $port ?? ($scheme === 'https' ? 443 : 80),
         ];
 
-        if ($port !== null && $port !== 80 && $port !== 443) {
-            $attributes['server.port'] = $port;
-        }
-
-        $span = $tracer->span("{$method} {$host}", SpanKind::CLIENT, $attributes);
+        // OTEL HTTP semconv: client span name is "{method}" - host would be per-host cardinality.
+        $span = $tracer->span($method, SpanKind::CLIENT, $attributes);
 
         try {
             $response = $this->client->request($method, $url, $options);
-
-            $statusCode = $response->getStatusCode();
-            $span->setAttribute('http.response.status_code', $statusCode);
-
-            if ($statusCode >= 400) {
-                $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-            } else {
-                $span->setStatus(SpanStatus::ok());
-            }
-
-            return $response;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $tracer->complete($span);
 
             throw $exception;
-        } finally {
-            $tracer->complete($span);
         }
+
+        return new TraceableResponse($tracer, $response, $span);
     }
 
     public function stream(ResponseInterface|iterable $responses, ?float $timeout = null): ResponseStreamInterface
     {
-        return $this->client->stream($responses, $timeout);
+        if ($responses instanceof ResponseInterface) {
+            $responses = [$responses];
+        }
+
+        return new ResponseStream(TraceableResponse::stream($this->client, $responses, $timeout));
     }
 
     /**

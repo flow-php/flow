@@ -32,17 +32,25 @@ final class TelemetryExtension implements Extension
             $spanStack = new SpanStack();
             $statusRegistry = new TestStatusRegistry();
             $memoryRegistry = new TestMemoryRegistry();
+            $suiteOutcomes = new SuiteOutcomeStack();
 
             $facade->registerSubscribers(
-                new TestSuiteStartedSubscriber($telemetry, $spanStack, $config),
-                new TestSuiteFinishedSubscriber($telemetry, $spanStack, $config),
+                new TestSuiteStartedSubscriber($telemetry, $spanStack, $config, $suiteOutcomes),
+                new TestSuiteFinishedSubscriber($telemetry, $spanStack, $config, $suiteOutcomes),
                 new TestPreparationStartedSubscriber($telemetry, $spanStack, $config, $memoryRegistry),
                 new TestPassedSubscriber($statusRegistry),
                 new TestFailedSubscriber($statusRegistry),
                 new TestErroredSubscriber($statusRegistry),
                 new TestSkippedSubscriber($statusRegistry),
                 new TestMarkedIncompleteSubscriber($statusRegistry),
-                new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry, $memoryRegistry),
+                new TestFinishedSubscriber(
+                    $telemetry,
+                    $spanStack,
+                    $config,
+                    $statusRegistry,
+                    $memoryRegistry,
+                    $suiteOutcomes,
+                ),
             );
         } catch (Throwable) {
             // Silent failure - telemetry must never break tests

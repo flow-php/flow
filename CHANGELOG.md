@@ -1,26 +1,155 @@
-## [Unreleased] - 2026-06-19
+## [Unreleased] - 2026-07-10
 
 ### Added
+- [#2516](https://github.com/flow-php/flow/pull/2516) - **Add a new `ref()->domElementNamespace()` function** - [@stloyd](https://github.com/stloyd)
+- [#2516](https://github.com/flow-php/flow/pull/2516) - **Add support for a new `\Dom\XmlDocument` (PHP 8.4+) in XML handling** - [@stloyd](https://github.com/stloyd)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - bidirectional JSON Schema converter with schema_from_json_schema() and schema_to_json_schema() DSL functions** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - $ref resolution for internal pointers, local files and remote http(s) documents via PSR-18 client, with circular reference detection** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - combinator support: allOf deep merge, anyOf/oneOf as nullable or union types, boolean schemas** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - JSON Schema annotations preserved in definition metadata under json_schema.* keys** - [@norberttech](https://github.com/norberttech)
+- [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl - UnionDefinition and union_schema() DSL function for union type schema definitions** - [@norberttech](https://github.com/norberttech)
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - {column} partition placeholders in paths with extraction, glob listing and filter support** - [@norberttech](https://github.com/norberttech)
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - writing partitions into file/directory names via placeholders in destination paths** - [@norberttech](https://github.com/norberttech)
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/etl - reading placeholder paths recovers partitions from file names, including partition pruning** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **code>flow-php/etl - support for brick/math 0.18** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - ValidationContext and MismatchedDefinition value objects with schema diff rendering via ValidationContext::toString()** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException::context() accessor** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger.span_naming option (transport/message_name/message_fqcn) to control messenger span names.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - Telemetry::registerShutdownFunction() that shuts transports down at real process end.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Shared SemConvAttributes and SemConvMetrics constants for OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - SuppressingSampler to suppress spans for excluded paths and commands.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - TransactionSpanMode (grouped/per_operation/off) to control transaction spans.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - DBAL transaction_spans, collect_metrics and parameter-capture config options.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - Partition name and value now forbid { and } characters** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidator::isValid() replaced by validate() returning ValidationContext** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - schema_validate() returns ValidationContext instead of bool** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - allowed brick/math ^0.18** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - terminate events now flush telemetry; transport shutdown happens once at process end.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/telemetry - registerShutdownFunction() holds a weak reference so garbage-collected instances are not shut down.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Simplify messenger tracing to true/false and auto-inject the middleware into all buses.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Align cache, DBAL and HTTP span names and attributes with stable OTel semantic conventions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Move flow-custom attribute keys out of reserved OTel namespaces under flow.*.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Sampler::shouldSample() now receives the parent Context.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Switch TimeUnit values to UCUM (s/us/ms).** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Replace traceTransactions bool with transactionSpans mode and low-cardinality metric dimensions.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - Align test.* keys with the OTel test registry and report durations in seconds.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/filesystem - Namespace flow-custom telemetry keys under flow.* and switch to UCUM units.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/etl - Namespace flow-custom telemetry keys under flow.* and switch to UCUM units.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException message no longer lists FROM_NULL columns accepted by the validator** - [@norberttech](https://github.com/norberttech)
+- [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidationException message renders the nullable ? marker on expected types** - [@norberttech](https://github.com/norberttech)
+- [7b585d](https://github.com/flow-php/flow/commit/7b585d4b6e0e795f89788bd315f9909ede38976c) - **failing scheduled tests** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - nested console commands no longer shut telemetry down mid-worker.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - request spans are named from the route when the response is produced before the controller.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - messenger span errors report the actual handler failure instead of the HandlerFailedException wrapper.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - synchronously received messages stay a child of the current trace instead of starting a new root.** - [@norberttech](https://github.com/norberttech)
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - sent-message metrics only count messages actually dispatched to a transport.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Preserve traceparent across messenger JSON serialization.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Excluded http_kernel paths now suppress the whole request, removing orphan root spans.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - runtime_mode config and the WorkerModeDetector/RuntimeModeResolver runtime classes.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Remove ResettableContextStorage and MemoryContextStorage::reset().** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Remove messenger link config, worker-cycle span, metrics_duration_unit and dbal.log_sql config.** - [@norberttech](https://github.com/norberttech)
+- [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Remove duplicated official-key telemetry attribute constants.** - [@norberttech](https://github.com/norberttech)
+
+## [0.41.1] - 2026-07-01
+
+### Added
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - configurable messenger trace (worker/handlers/both/none) and link (dispatcher/worker/both) modes** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - worker receive cycle traced as one messenger.receive span per pass, idle passes marked** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - transport poll instrumentation suppressed during the receive loop to avoid orphan spans** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - context-scoped tracing suppression producing non-recording spans** - [@norberttech](https://github.com/norberttech)
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - opt-in per-signal entry cap on MemoryExporter** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - messenger instrumentation emits messaging metrics (consumed/sent counters, process duration histogram) with configurable unit and on/off toggle** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - Flow PHP 0.41.0 release blog post** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - optimize-images Just task with oxipng/jpegoptim nix deps** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/etl - emitted metric names standardized to flow.etl.* and flow.cache.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/filesystem - emitted metric names standardized to flow.filesystem.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - metric names aligned to OTEL db.client.* semantic conventions** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/symfony-telemetry-bundle - cache metric names changed to flow.cache.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/phpunit-telemetry-bridge - metric names folded under flow.phpunit.** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/telemetry - docblock metric name examples updated** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - widen blog post and changelog layout, add figure/image prose styles** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - losslessly recompress landing images** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - regenerate DSL autocompletion functions** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/telemetry - profiler signal store no longer grows unbounded in long-running messenger workers (OOM)** - [@norberttech](https://github.com/norberttech)
+- [#2495](https://github.com/flow-php/flow/pull/2495) - **flow-php/postgresql - operation duration histogram uses correct second-scale bucket boundaries** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2499](https://github.com/flow-php/flow/pull/2499) - **flow-php/symfony-telemetry-bundle - messenger propagation_style config and its continue mode** - [@norberttech](https://github.com/norberttech)
+
+## [0.41.0] - 2026-06-29
+
+### Added
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - security instrumentation** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - enriched web profiler panel** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - trace context propagation and route-aware span naming** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - long-running worker runtime support** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-http-foundation-telemetry-bridge - query string trace context carrier** - [@norberttech](https://github.com/norberttech)
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/telemetry - ConditionalExporter that gates a wrapped exporter behind a runtime flag** - [@norberttech](https://github.com/norberttech)
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - per-exporter enabled flag supporting literal booleans and %env(bool:...)%** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - AsyncCurlTransport (curl_multi) with bounded select-driven tick()** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - otlp_async_curl_transport() and otlp_async_curl_options() DSL helpers** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - transport.type 'async_curl', auto-pumped on WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
+- [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/symfony-filesystem-cache-bridge - accept an optional PSR-20 clock** - [@norberttech](https://github.com/norberttech)
+- [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/psr3-telemetry-bridge - interpolate {placeholder} tokens in telemetry log messages** - [@norberttech](https://github.com/norberttech)
+- [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/monolog-telemetry-bridge - interpolate {placeholder} tokens in telemetry log messages** - [@norberttech](https://github.com/norberttech)
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/symfony-postgresql-bundle - Flow Migrations profiler panel showing executed/pending/unavailable migrations per connection** - [@norberttech](https://github.com/norberttech)
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/symfony-postgresql-bundle - profiler.migrations config toggle (default: true)** - [@norberttech](https://github.com/norberttech)
+- [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to telemetry** - [@jdecool](https://github.com/jdecool)
+- [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to phpunit telemetry** - [@jdecool](https://github.com/jdecool)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - controller body span, default on, as child of the request span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_callable resolution span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_arguments aggregate span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in per-resolver controller.argument_value_resolver spans** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - non-blocking CurlTransport::tick() to drive in-flight requests** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/symfony-telemetry-bundle - pump curl transports on Messenger WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - time-based flush for batching log, metric and span processors** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - per-message telemetry flush on Messenger worker events** - [@norberttech](https://github.com/norberttech)
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - console log output aligned with CLI verbosity (-v/-vv/-vvv), off by default.** - [@norberttech](https://github.com/norberttech)
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - opt-in logger_provider.console_output config with overridable verbosity_levels.** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - messenger propagation_style option (continue/link) with new MessengerTracePropagation enum** - [@norberttech](https://github.com/norberttech)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Flow\ETL\Schema::sort() accepting a pluggable SortingStrategy (defaults to AlphabeticalStrategy)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via
-sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **PostgreSqlSortingStrategy (primary-key columns first, then by PostgreSQL type, then by name) exposed via the pgsql_sort_strategy() DSL helper** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - inject trace context into outgoing response headers** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - cleanup subscriber completing Twig spans orphaned by a render exception on terminate/kernel.reset** - [@norberttech](https://github.com/norberttech)
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
-Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr, Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **from_seal() extractor and to_seal() loader, working with any SEAL EngineInterface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **to_seal_schema() and seal_schema_to_flow() DSL — recursive, bi-directional Flow Schema ↔ SEAL Schema conversion (nested structures, lists and
-maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **to_seal_schema() and seal_schema_to_flow() DSL — recursive, bi-directional Flow Schema ↔ SEAL Schema conversion (nested structures, lists and maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **seal_create_index(), seal_drop_index(), seal_create_schema() and seal_drop_schema() DSL index-lifecycle helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - inject individual mounted filesystems via named-argument aliases** - [@norberttech](https://github.com/norberttech)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - #[AsFilesystem] attribute to select a mount to inject** - [@norberttech](https://github.com/norberttech)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [c335cb](https://github.com/flow-php/flow/commit/c335cb2d927e73e68082778dd34d32e43ae9eef3) - **chore: update dependencies and fix mago lint/analyze finding** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-postgresql-bundle - lazy connections by default** - [@norberttech](https://github.com/norberttech)
+- [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/postgresql - report decoded node and parse-result PostgreSQL version on SelectStmt mismatch** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CurlTransport is now synchronous; send() blocks and throws on failure** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - curl request timeout default raised to 10000ms** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - async_curl connect_timeout default 1500ms, pump_timeout 100ms** - [@norberttech](https://github.com/norberttech)
+- [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client span now completes when the response is consumed, not at request() return** - [@norberttech](https://github.com/norberttech)
+- [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/symfony-postgresql-bundle - migrations target a single configured connection** - [@norberttech](https://github.com/norberttech)
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/postgresql - expose migration execution time via MigrationStatus::executionTimeMs** - [@norberttech](https://github.com/norberttech)
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector reads git via a non-blocking, timeout-bounded subprocess.** - [@norberttech](https://github.com/norberttech)
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/phpunit-telemetry-bridge - resource detectors are now wired explicitly through resource_detector().** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - extract shared ControllerName helper from the request span subscriber** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - curl per-request timeout_ms default raised 250 to 5000** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - span parent is now derived solely from the Context** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - trace id is derived from the active span; each root span starts a new trace** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - each consumed Messenger message is its own trace, linked to the producer** - [@norberttech](https://github.com/norberttech)
 - [#2464](https://github.com/flow-php/flow/pull/2464) - **flow-php/symfony-telemetry-bundle - messenger span name now follows OTEL {operation} {message} convention** - [@norberttech](https://github.com/norberttech)
 - [#2464](https://github.com/flow-php/flow/pull/2464) - **flow-php/symfony-telemetry-bundle - messaging.operation.name now holds the operation verb, destination is the message class, bus moved to messaging.symfony.bus** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - consumer span now defaults to a linked trace instead of continuing the producer trace** - [@norberttech](https://github.com/norberttech)
@@ -28,13 +157,30 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - browser trace-context helpers emit the request span** - [@norberttech](https://github.com/norberttech)
+- [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - leaked context scopes in HTTP and messenger instrumentation** - [@norberttech](https://github.com/norberttech)
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - profiler reports total trace time as wall-clock window instead of summed span durations** - [@norberttech](https://github.com/norberttech)
+- [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/pg-query-ext - reject system libpg_query whose PostgreSQL major differs from the pinned version** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CollectorMetrics test parser reads scientific-notation counters** - [@norberttech](https://github.com/norberttech)
+- [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client decorator no longer reads the response inside request(), restoring async and concurrency** - [@norberttech](https://github.com/norberttech)
+- [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/etl - respect limit push-down across non-expanding processors** - [@norberttech](https://github.com/norberttech)
+- [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/postgresql - migration status checks no longer create the tracking table** - [@norberttech](https://github.com/norberttech)
+- [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/symfony-telemetry-bundle - DBAL spans now emitted regardless of bundle registration order** - [@norberttech](https://github.com/norberttech)
+- [#2476](https://github.com/flow-php/flow/pull/2476) - **DBALTelemetryPass is now registered at priority 10 to guarantee it runs before DoctrineBundle's MiddlewaresPass, fixing silent DBAL tracing failure when DoctrineBundle precedes FlowTelemetryBundle in the kernel.** - [@darenas31415](https://github.com/darenas31415)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - telemetry lost in long-running workers when requests stalled between messages** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - unbounded failure accumulation by surfacing export failures to the ErrorHandler as reaped** - [@norberttech](https://github.com/norberttech)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - metric attributes render as a toggleable table row in the profiler panel** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - successful Twig spans now report OK status** - [@norberttech](https://github.com/norberttech)
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend
-(cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - per-tracer span stack** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - Context::withTraceId() and the standalone context trace id** - [@norberttech](https://github.com/norberttech)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend (cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+
+### Security
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector kills hanging git commands and caps output to resist hostile repositories.** - [@norberttech](https://github.com/norberttech)
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - remote URL sanitizer now strips query and fragment so embedded tokens are never reported.** - [@norberttech](https://github.com/norberttech)
 
 ## [0.40.0] - 2026-06-16
 
@@ -3490,6 +3636,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - @broncha
 - @christianc1
 - @codedmonkey
+- @darenas31415
 - @DawidSajdak
 - @drupol
 - @f-lapinski

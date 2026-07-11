@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\CacheDeferredFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TagAwareTraceableCacheAdapter;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -34,6 +36,8 @@ final class CacheTelemetryPass implements CompilerPassInterface
             : [];
 
         $taggedServices = $container->findTaggedServiceIds('cache.pool');
+
+        $innerPools = [];
 
         foreach ($taggedServices as $serviceId => $_tags) {
             if ($this->isExcluded($serviceId, $excludePools)) {
@@ -66,7 +70,26 @@ final class CacheTelemetryPass implements CompilerPassInterface
             $definition->setArgument(2, $serviceId);
 
             $container->setDefinition($decoratorId, $definition);
+
+            $innerPools[] = new Reference($decoratedId);
         }
+
+        if ($this->flushDeferredEnabled($container) && $innerPools !== []) {
+            $subscriber = new Definition(CacheDeferredFlushSubscriber::class);
+            $subscriber->setArgument(0, new IteratorArgument($innerPools));
+            $subscriber->setArgument(1, new Reference(Telemetry::class));
+            $subscriber->addTag('kernel.event_subscriber');
+
+            $container->setDefinition('flow.telemetry.cache.deferred_flush_subscriber', $subscriber);
+        }
+    }
+
+    private function flushDeferredEnabled(ContainerBuilder $container): bool
+    {
+        return (
+            $container->hasParameter('flow.telemetry.cache.flush_deferred')
+            && $container->getParameter('flow.telemetry.cache.flush_deferred') === true
+        );
     }
 
     /**

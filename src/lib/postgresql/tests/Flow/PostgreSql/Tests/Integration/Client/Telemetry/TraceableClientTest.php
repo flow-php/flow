@@ -8,6 +8,7 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TransactionSpanMode;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
@@ -15,6 +16,7 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\SemConvAttributes;
 use Throwable;
 
 use function array_filter;
@@ -80,7 +82,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
         static::assertNotEmpty($cursorSpan);
 
         $cursorSpan = array_values($cursorSpan)[0];
-        static::assertSame(2, $cursorSpan->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(2, $cursorSpan->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_execute_creates_span_with_database_attributes(): void
@@ -103,14 +105,11 @@ final class TraceableClientTest extends PostgreSqlTestCase
 
         $insertSpan = $spans[1];
         static::assertSame('INSERT test_execute_span', $insertSpan->name());
-        static::assertSame('postgresql', $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
-        static::assertSame('INSERT', $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
-        static::assertSame(
-            'test_execute_span',
-            $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME],
-        );
-        static::assertArrayHasKey(PostgreSqlTelemetryAttributes::DB_NAMESPACE, $insertSpan->attributes());
-        static::assertArrayHasKey(PostgreSqlTelemetryAttributes::SERVER_ADDRESS, $insertSpan->attributes());
+        static::assertSame('postgresql', $insertSpan->attributes()[SemConvAttributes::DB_SYSTEM_NAME]);
+        static::assertSame('INSERT', $insertSpan->attributes()[SemConvAttributes::DB_OPERATION_NAME]);
+        static::assertSame('test_execute_span', $insertSpan->attributes()[SemConvAttributes::DB_COLLECTION_NAME]);
+        static::assertArrayHasKey(SemConvAttributes::DB_NAMESPACE, $insertSpan->attributes());
+        static::assertArrayHasKey(SemConvAttributes::SERVER_ADDRESS, $insertSpan->attributes());
     }
 
     public function test_failed_query_records_error_in_span(): void
@@ -129,7 +128,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
         $status = $spans[0]->status();
         static::assertNotNull($status);
         static::assertTrue($status->isError());
-        static::assertArrayHasKey(PostgreSqlTelemetryAttributes::ERROR_TYPE, $spans[0]->attributes());
+        static::assertArrayHasKey(SemConvAttributes::ERROR_TYPE, $spans[0]->attributes());
     }
 
     public function test_fetch_creates_span_with_row_count(): void
@@ -157,7 +156,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
         $selectSpan = array_filter($spans, static fn($s) => str_contains($s->name(), 'SELECT'));
         $selectSpan = array_values($selectSpan)[0];
 
-        static::assertSame(3, $selectSpan->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(3, $selectSpan->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_logging_records_query_execution(): void
@@ -196,7 +195,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
 
         $this->collectMetrics($config);
 
-        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
+        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
         static::assertCount(1, $durationMetrics);
         static::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         static::assertGreaterThan(0, $durationMetrics[0]->value);
@@ -206,7 +205,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
-            traceTransactions: true,
+            transactionSpans: TransactionSpanMode::GROUPED,
             traceQueries: false,
         ));
         $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
@@ -252,17 +251,14 @@ final class TraceableClientTest extends PostgreSqlTestCase
         $insertSpan = array_filter($spans, static fn($s) => str_contains($s->name(), 'INSERT'));
         $insertSpan = array_values($insertSpan)[0];
 
-        static::assertSame(
-            'John',
-            $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'],
-        );
+        static::assertSame('John', $insertSpan->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1']);
     }
 
     public function test_transaction_creates_span(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
-            traceTransactions: true,
+            transactionSpans: TransactionSpanMode::GROUPED,
             traceQueries: false,
         ));
         $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);

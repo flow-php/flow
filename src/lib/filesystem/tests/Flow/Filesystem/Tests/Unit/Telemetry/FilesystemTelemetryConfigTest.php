@@ -17,7 +17,7 @@ final class FilesystemTelemetryConfigTest extends TestCase
     {
         $clock = new SystemClock();
         $tel = FilesystemTelemetryConfigMother::createTelemetry($clock);
-        $options = filesystem_telemetry_options(traceStreams: false, collectMetrics: false);
+        $options = filesystem_telemetry_options(trace_streams: false, collect_metrics: false);
 
         $config = filesystem_telemetry_config($tel, $clock, $options);
 

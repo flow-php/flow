@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Version;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,7 +15,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -24,8 +22,7 @@ use function sprintf;
 final class ExecuteCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly string $defaultConnection,
+        private readonly Migrator $migrator,
     ) {
         parent::__construct();
     }
@@ -34,7 +31,6 @@ final class ExecuteCommand extends Command
     {
         $this
             ->addArgument('version', InputArgument::REQUIRED, 'The migration version to execute')
-            ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Execute migration as a dry run')
             ->addOption('up', null, InputOption::VALUE_NONE, 'Execute the migration up (default)')
             ->addOption('down', null, InputOption::VALUE_NONE, 'Execute the migration down');
@@ -43,10 +39,6 @@ final class ExecuteCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $migrator = type_instance_of(Migrator::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.migrator",
-        ));
         $versionString = type_string()->assert($input->getArgument('version'));
         $version = Version::fromString($versionString);
         $dryRun = $input->getOption('dry-run') === true;
@@ -71,7 +63,7 @@ final class ExecuteCommand extends Command
             return Command::SUCCESS;
         }
 
-        $result = $migrator->executeVersion($version, $direction, $dryRun);
+        $result = $this->migrator->executeVersion($version, $direction, $dryRun);
 
         if ($result->error !== null) {
             $io->error(sprintf(

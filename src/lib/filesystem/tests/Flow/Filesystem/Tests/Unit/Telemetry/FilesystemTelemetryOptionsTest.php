@@ -28,7 +28,7 @@ final class FilesystemTelemetryOptionsTest extends TestCase
 
     public function test_options_can_be_created_with_custom_values(): void
     {
-        $options = filesystem_telemetry_options(traceStreams: false, collectMetrics: false);
+        $options = filesystem_telemetry_options(trace_streams: false, collect_metrics: false);
 
         static::assertFalse($options->traceStreams);
         static::assertFalse($options->collectMetrics);

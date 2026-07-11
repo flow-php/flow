@@ -263,6 +263,10 @@ final class MemoryBufferTest extends TestCase
         static::assertSame(0, $buffer->available());
     }
 
+    /**
+     * @param int<0, max> $dataLength
+     * @param int<0, max> $expectedReadLength
+     */
     #[DataProvider('read_length_provider')]
     public function test_read_various_lengths(int $dataLength, int $readLength, int $expectedReadLength): void
     {

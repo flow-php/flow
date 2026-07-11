@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
+use Flow\Bridge\Monolog\Telemetry\Tests\Fixtures\InterpolationBackedEnumFixture;
+use Flow\Bridge\Monolog\Telemetry\Tests\Fixtures\InterpolationUnitEnumFixture;
 use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use Generator;
@@ -206,6 +209,210 @@ final class LogRecordConverterTest extends TestCase
         static::assertSame(RuntimeException::class, $telemetryRecord->attributes->get('exception.type'));
         static::assertSame('Something went wrong', $telemetryRecord->attributes->get('exception.message'));
         static::assertNotNull($telemetryRecord->attributes->get('exception.stacktrace'));
+    }
+
+    public function test_interpolates_message_placeholders_from_context(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'User {user_id} performed {action}',
+            context: [
+                'user_id' => 123,
+                'action' => 'login',
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('User 123 performed login', $telemetryRecord->body);
+        static::assertSame(123, $telemetryRecord->attributes->get('context.user_id'));
+        static::assertSame('login', $telemetryRecord->attributes->get('context.action'));
+    }
+
+    public function test_interpolation_leaves_absent_placeholders_intact(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'User {user_id} did {missing}',
+            context: [
+                'user_id' => 123,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('User 123 did {missing}', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_array_as_json(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'Tags {tags}',
+            context: [
+                'tags' => ['a', 'b'],
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('Tags array["a","b"]', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_datetime(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'At {when}',
+            context: [
+                'when' => new DateTimeImmutable('2024-06-15 14:30:00', new DateTimeZone('UTC')),
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('At 2024-06-15T14:30:00.000000+00:00', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_enums(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'backed {backed} pure {pure}',
+            context: [
+                'backed' => InterpolationBackedEnumFixture::Active,
+                'pure' => InterpolationUnitEnumFixture::First,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('backed active pure First', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_plain_object_as_object_tag(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'obj {obj}',
+            context: [
+                'obj' => new stdClass(),
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('obj [object stdClass]', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_null_as_empty_string(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'val={item}',
+            context: [
+                'item' => null,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('val=', $telemetryRecord->body);
+    }
+
+    public function test_interpolation_renders_resource_with_type_fallback(): void
+    {
+        $converter = new LogRecordConverter();
+        $resource = fopen('php://memory', 'rb');
+        static::assertIsResource($resource);
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'res={res}',
+            context: [
+                'res' => $resource,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('res=[resource]', $telemetryRecord->body);
+
+        fclose($resource);
+    }
+
+    public function test_interpolation_uses_stringable_objects(): void
+    {
+        $converter = new LogRecordConverter();
+        $stringable = new class {
+            public function __toString(): string
+            {
+                return 'CTX';
+            }
+        };
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'value={item}',
+            context: [
+                'item' => $stringable,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('value=CTX', $telemetryRecord->body);
+    }
+
+    public function test_message_without_braces_is_returned_verbatim(): void
+    {
+        $converter = new LogRecordConverter();
+
+        $record = new LogRecord(
+            datetime: new DateTimeImmutable(),
+            channel: 'test',
+            level: Level::Info,
+            message: 'no placeholders here',
+            context: [
+                'user_id' => 5,
+            ],
+        );
+
+        $telemetryRecord = $converter->convert($record);
+
+        static::assertSame('no placeholders here', $telemetryRecord->body);
     }
 
     public function test_includes_channel_attribute(): void

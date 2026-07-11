@@ -17,6 +17,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -29,12 +30,20 @@ use Throwable;
  */
 final class TracingDriver extends AbstractDriverMiddleware
 {
+    /**
+     * @param list<string> $excludeTables queries referencing any of these tables are not traced
+     */
     public function __construct(
         private readonly Telemetry $telemetry,
         DriverInterface $driver,
         private readonly string $connectionName,
-        private readonly bool $logSql,
         private readonly int $maxSqlLength,
+        private readonly array $excludeTables = [],
+        private readonly TransactionSpanMode $transactionSpanMode = TransactionSpanMode::GROUPED,
+        private readonly bool $collectMetrics = true,
+        private readonly bool $includeParameters = false,
+        private readonly int $maxParameters = 10,
+        private readonly int $maxParameterLength = 100,
     ) {
         parent::__construct($driver);
     }
@@ -47,20 +56,54 @@ final class TracingDriver extends AbstractDriverMiddleware
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
+        $namespace = $params['dbname'] ?? 'default';
+
         $span = $tracer->span('doctrine.dbal.connection', SpanKind::CLIENT, [
-            'db.namespace' => $params['dbname'] ?? 'default',
-            'db.connection.name' => $this->connectionName,
+            SemConvAttributes::DB_NAMESPACE => $namespace,
+            DbAttributes::DB_CONNECTION_NAME => $this->connectionName,
         ]);
 
         try {
             $connection = parent::connect($params);
 
-            $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
-            $span->setStatus(SpanStatus::ok());
+            $dbSystem = $this->getSemanticDbSystem($connection->getServerVersion());
+            $span->setAttribute(SemConvAttributes::DB_SYSTEM_NAME, $dbSystem);
 
-            return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
+            $baseAttributes = [
+                SemConvAttributes::DB_SYSTEM_NAME => $dbSystem,
+                SemConvAttributes::DB_NAMESPACE => $namespace,
+            ];
+
+            $host = $params['host'] ?? null;
+
+            if ($host !== null) {
+                $baseAttributes[SemConvAttributes::SERVER_ADDRESS] = $host;
+            }
+
+            $port = $params['port'] ?? null;
+
+            if ($port !== null) {
+                $baseAttributes[SemConvAttributes::SERVER_PORT] = $port;
+            }
+
+            return new TracingConnection(
+                $connection,
+                new QueryTracer(
+                    $this->telemetry,
+                    $baseAttributes,
+                    $this->maxSqlLength,
+                    $this->collectMetrics,
+                    $this->includeParameters,
+                    $this->maxParameters,
+                    $this->maxParameterLength,
+                ),
+                $this->transactionSpanMode,
+                $baseAttributes + [DbAttributes::DB_CONNECTION_NAME => $this->connectionName],
+                $this->excludeTables,
+            );
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

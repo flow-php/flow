@@ -149,6 +149,16 @@ final class PathTest extends TestCase
         static::assertSame('php', path('/var/file/code.PhP')->extension());
     }
 
+    public function test_extract_placeholder_partitions(): void
+    {
+        $pattern = path('/output/order-year=2024/{order-name}.csv');
+
+        static::assertEquals(
+            partitions(partition('order-name', '123456-PL')),
+            $pattern->extractPlaceholderPartitions(path('/output/order-year=2024/123456-PL.csv')),
+        );
+    }
+
     public function test_file_prefix(): void
     {
         $path = path('flow-file://var/dir/file.csv', []);
@@ -179,6 +189,12 @@ final class PathTest extends TestCase
         static::assertEquals(path($staticPart), path($uri)->staticPart());
     }
 
+    public function test_glob(): void
+    {
+        static::assertSame('/output/*.csv', path('/output/{order-name}.csv')->glob());
+        static::assertSame('/output/file.csv', path('/output/file.csv')->glob());
+    }
+
     public function test_local_file(): void
     {
         static::assertNull(path(__FILE__)->context()->resource());
@@ -203,6 +219,12 @@ final class PathTest extends TestCase
     {
         static::assertEquals($schema, path($uri)->protocol());
         static::assertEquals($parsedUri, path($uri)->uri());
+    }
+
+    public function test_partition_placeholders(): void
+    {
+        static::assertEquals(['order-name'], path('/output/{order-name}.csv')->partitionPlaceholders());
+        static::assertEquals([], path('/output/file.csv')->partitionPlaceholders());
     }
 
     #[DataProvider('paths_with_partitions')]
@@ -317,5 +339,18 @@ final class PathTest extends TestCase
         static::assertSame('flow-file://var/dir/test.csv', $path->suffix('test.csv')->uri());
 
         static::assertSame('flow-file://var/dir/test.csv', $path->suffix('/test.csv')->uri());
+    }
+
+    public function test_with_partitions(): void
+    {
+        $path = path('/output/order-year=2024/123456-PL.csv')->withPartitions(partitions(partition(
+            'order-name',
+            '123456-PL',
+        )));
+
+        static::assertEquals(
+            partitions(partition('order-year', '2024'), partition('order-name', '123456-PL')),
+            $path->partitions(),
+        );
     }
 }

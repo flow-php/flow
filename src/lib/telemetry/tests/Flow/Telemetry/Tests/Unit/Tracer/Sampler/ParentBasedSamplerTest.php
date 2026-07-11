@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
 use DateTimeImmutable;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
@@ -26,7 +27,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler(), null, null, null, new AlwaysOnSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::default(), isRemote: false);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
     }
@@ -36,7 +37,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler(), null, null, new AlwaysOffSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::sampled(), isRemote: false);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }
@@ -46,7 +47,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler(), null, new AlwaysOnSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::default(), isRemote: true);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
     }
@@ -56,7 +57,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler(), new AlwaysOffSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::sampled(), isRemote: true);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }
@@ -66,7 +67,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::default(), isRemote: false);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }
@@ -76,7 +77,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOffSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::sampled(), isRemote: false);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
     }
@@ -86,7 +87,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::default(), isRemote: true);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }
@@ -96,7 +97,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOffSampler());
 
         $span = $this->createSpanWithParent(TraceFlags::sampled(), isRemote: true);
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
     }
@@ -106,7 +107,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOffSampler());
 
         $span = $this->createRootSpan();
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::DROP, $result->decision);
     }
@@ -116,7 +117,7 @@ final class ParentBasedSamplerTest extends TestCase
         $sampler = new ParentBasedSampler(new AlwaysOnSampler());
 
         $span = $this->createRootSpan();
-        $result = $sampler->shouldSample($span);
+        $result = $sampler->shouldSample(Context::root(), $span);
 
         static::assertSame(SamplingDecision::RECORD_AND_SAMPLE, $result->decision);
     }

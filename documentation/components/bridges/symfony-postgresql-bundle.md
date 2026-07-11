@@ -113,7 +113,7 @@ flow_postgresql:
         service_id: "flow.telemetry"         # Required: Telemetry service ID
         clock_service_id: null               # Optional: PSR-20 clock service (defaults to SystemClock)
         trace_queries: true                  # Record query execution in traces
-        trace_transactions: true             # Record transaction boundaries
+        transaction_spans: grouped           # grouped | per_operation | off
         collect_metrics: true                # Collect query metrics (duration, row count)
         log_queries: false                   # Log all queries
         max_query_length: 1000               # Truncate queries longer than this (chars)
@@ -133,10 +133,9 @@ and failures.
 ```yaml
 flow_postgresql:
   profiler:
-    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
-    # (throws if WebProfilerBundle is absent); false forces it off entirely.
     enabled: ~
     include_parameters: true # show bound query parameters in the panel
+    migrations: true         # show the Flow Migrations panel (requires migrations enabled)
 ```
 
 Recording is dev-only and adds nothing in production: when the profiler is disabled — or
@@ -151,10 +150,22 @@ flow_postgresql:
       profiler: false # do not record queries in selected connection (default: true)
 ```
 
+When `migrations` are enabled, a separate **Flow Migrations** panel reports the migrations connection's
+executed, pending and unavailable migrations (with execution time) — like the Doctrine Migrations
+bundle's panel. It queries the database on every profiled request; set `profiler.migrations: false`
+to disable it while keeping the query panel:
+
+```yaml
+flow_postgresql:
+  profiler:
+    migrations: false # do not query/show migration status in the profiler (default: true)
+```
+
 ### Migrations
 
-Migrations are configured at the top level, not per connection. Use `--connection` to target a specific connection
-when running migration commands.
+Migrations are configured at the top level, not per connection, and always run against a single connection.
+Set `connection` to choose which one; when omitted it defaults to the default (first) connection. Every migration
+command operates on that connection — there is no per-command connection override.
 
 ```yaml
 flow_postgresql:
@@ -164,6 +175,7 @@ flow_postgresql:
 
   migrations:
     enabled: true
+    connection: ~                                  # Connection migrations run against (default: the first/default connection)
     directory: "%kernel.project_dir%/migrations"  # Where migration files are stored
     namespace: "App\\Migrations"                   # PHP namespace for generated migrations
     table_name: "flow_migrations"                  # Database table tracking executed migrations
@@ -408,7 +420,8 @@ These commands are always available, regardless of migration configuration.
 | `flow:database:drop`   | Drop the configured database (requires `--force`) |
 | `flow:sql:run`         | Execute SQL directly on the database              |
 
-All commands accept `--connection` (`-c`) to target a specific connection.
+The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not —
+they always run against the configured migrations connection.
 
 ### Migration Commands
 
@@ -430,7 +443,6 @@ These commands are available when `migrations.enabled: true` for at least one co
 
 | Option                | Description                                           |
 |-----------------------|-------------------------------------------------------|
-| `--connection` (`-c`) | Target a specific connection                          |
 | `--dry-run`           | Preview changes without applying (migrate, execute)   |
 | `--all-or-nothing`    | Wrap all migrations in a single transaction (migrate) |
 | `--up` / `--down`     | Migration direction (execute)                         |
@@ -893,7 +905,7 @@ flow_postgresql:
       telemetry:
         service_id: "flow.telemetry"
         trace_queries: true
-        trace_transactions: true
+        transaction_spans: grouped
         collect_metrics: true
         log_queries: false
         max_query_length: 1000

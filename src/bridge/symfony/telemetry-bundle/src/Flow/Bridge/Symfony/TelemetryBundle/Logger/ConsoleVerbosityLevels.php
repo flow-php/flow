@@ -31,6 +31,9 @@ use function sprintf;
  */
 final readonly class ConsoleVerbosityLevels
 {
+    /**
+     * @var array<string, int>
+     */
     private const array CONSTANT_NAMES = [
         'VERBOSITY_QUIET' => OutputInterface::VERBOSITY_QUIET,
         'VERBOSITY_NORMAL' => OutputInterface::VERBOSITY_NORMAL,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Sampler;
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Tracer\Span;
 
 use function sprintf;
@@ -24,7 +25,7 @@ use function sprintf;
  * $sampler = new ParentBasedSampler(
  *     new TraceIdRatioBasedSampler(0.01), // 1% for root spans
  * );
- * $result = $sampler->shouldSample($span);
+ * $result = $sampler->shouldSample($context, $span);
  * ```
  */
 final readonly class ParentBasedSampler implements Sampler
@@ -49,17 +50,17 @@ final readonly class ParentBasedSampler implements Sampler
         return sprintf('ParentBased{root=%s}', (string) $this->rootSampler);
     }
 
-    public function shouldSample(Span $span): SamplingResult
+    public function shouldSample(Context $parentContext, Span $span): SamplingResult
     {
         $context = $span->context();
 
         if ($context->parentSpanId === null) {
-            return $this->rootSampler->shouldSample($span);
+            return $this->rootSampler->shouldSample($parentContext, $span);
         }
 
         $sampler = $this->getSamplerForParent($context->traceFlags->isSampled(), $context->isRemote);
 
-        return $sampler->shouldSample($span);
+        return $sampler->shouldSample($parentContext, $span);
     }
 
     private function getSamplerForParent(bool $isSampled, bool $isRemote): Sampler

@@ -99,7 +99,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
     }
 
     /**
-     * @param Schema $schema
+     * @param int<0, max> $level
      */
     private function formatSchema(Schema $schema, int $level = 1): string
     {

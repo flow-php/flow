@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
 use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
+use Flow\Bridge\Psr3\Telemetry\Tests\Fixtures\InterpolationBackedEnumFixture;
+use Flow\Bridge\Psr3\Telemetry\Tests\Fixtures\InterpolationUnitEnumFixture;
 use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use PHPUnit\Framework\TestCase;
@@ -77,15 +81,65 @@ final class LogRecordConverterTest extends TestCase
         static::assertSame('login', $record->attributes->get('action'));
     }
 
-    public function test_interpolation_skips_arrays_and_throwables_and_plain_objects(): void
+    public function test_interpolation_renders_arrays_and_plain_objects(): void
     {
-        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'Tags {tags} error {exception} obj {obj}', [
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'Tags {tags} obj {obj}', [
             'tags' => ['a', 'b'],
-            'exception' => new RuntimeException('x'),
             'obj' => new stdClass(),
         ]);
 
-        static::assertSame('Tags {tags} error {exception} obj {obj}', $record->body);
+        static::assertSame('Tags array["a","b"] obj [object stdClass]', $record->body);
+    }
+
+    public function test_interpolation_leaves_absent_placeholders_intact(): void
+    {
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'User {user_id} did {missing}', [
+            'user_id' => 7,
+        ]);
+
+        static::assertSame('User 7 did {missing}', $record->body);
+    }
+
+    public function test_interpolation_renders_datetime(): void
+    {
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'At {when}', [
+            'when' => new DateTimeImmutable('2024-06-15 14:30:00', new DateTimeZone('UTC')),
+        ]);
+
+        static::assertSame('At 2024-06-15T14:30:00.000000+00:00', $record->body);
+    }
+
+    public function test_interpolation_renders_enums(): void
+    {
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'backed {backed} pure {pure}', [
+            'backed' => InterpolationBackedEnumFixture::Active,
+            'pure' => InterpolationUnitEnumFixture::First,
+        ]);
+
+        static::assertSame('backed active pure First', $record->body);
+    }
+
+    public function test_interpolation_renders_null_as_empty_string(): void
+    {
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'val={item}', [
+            'item' => null,
+        ]);
+
+        static::assertSame('val=', $record->body);
+    }
+
+    public function test_interpolation_renders_resource_with_type_fallback(): void
+    {
+        $resource = fopen('php://memory', 'rb');
+        static::assertIsResource($resource);
+
+        $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'res={res}', [
+            'res' => $resource,
+        ]);
+
+        static::assertSame('res=[resource]', $record->body);
+
+        fclose($resource);
     }
 
     public function test_interpolation_uses_stringable_objects(): void

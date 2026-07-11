@@ -72,7 +72,7 @@ final class TelemetryContextTest extends FlowTestCase
         $metrics = $metricProcessor->metrics();
         static::assertNotEmpty($metrics);
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
         static::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         static::assertSame(3, $counterMetrics[0]->value);
     }
@@ -115,15 +115,14 @@ final class TelemetryContextTest extends FlowTestCase
 
         $span = $spans[0];
         static::assertSame('DataFrame flow_dataframe', $span->name());
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
 
         $attributes = $span->attributes();
-        static::assertArrayHasKey('rows.total', $attributes);
-        static::assertSame(2, $attributes['rows.total']);
-        static::assertArrayHasKey('memory.min.mb', $attributes);
-        static::assertArrayHasKey('memory.max.mb', $attributes);
+        static::assertArrayHasKey('flow.etl.rows.total', $attributes);
+        static::assertSame(2, $attributes['flow.etl.rows.total']);
+        static::assertArrayHasKey('flow.etl.memory.min', $attributes);
+        static::assertArrayHasKey('flow.etl.memory.max', $attributes);
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
         static::assertGreaterThanOrEqual(2, count($debugLogs));
@@ -173,10 +172,11 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('Processing failed due to invalid data', $status->description);
+        static::assertSame(RuntimeException::class, $endedSpans[0]->attributes()['error.type']);
 
         $attributes = $endedSpans[0]->attributes();
-        static::assertArrayHasKey('rows.total', $attributes);
-        static::assertSame(1, $attributes['rows.total']);
+        static::assertArrayHasKey('flow.etl.rows.total', $attributes);
+        static::assertSame(1, $attributes['flow.etl.rows.total']);
     }
 
     public function test_dataframe_started_creates_span_and_logs_debug_message(): void
@@ -253,10 +253,9 @@ final class TelemetryContextTest extends FlowTestCase
 
         static::assertCount(1, $endedSpans);
         static::assertSame('StreamLoader', $endedSpans[0]->name());
-        static::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['loader.class']);
-        $status = $endedSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        static::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['flow.etl.loader.class']);
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($endedSpans[0]->status());
     }
 
     public function test_loading_failed_logs_error_and_sets_span_status(): void
@@ -303,6 +302,7 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('Loading failed due to disk error', $status->description);
+        static::assertSame(RuntimeException::class, $endedSpans[0]->attributes()['error.type']);
     }
 
     public function test_loading_started_creates_span_when_trace_loading_enabled(): void
@@ -339,7 +339,7 @@ final class TelemetryContextTest extends FlowTestCase
         $startedSpans = $spanProcessor->startedSpans();
         static::assertCount(2, $startedSpans);
         static::assertSame('StreamLoader', $startedSpans[1]->name());
-        static::assertSame(StreamLoader::class, $startedSpans[1]->attributes()['loader.class']);
+        static::assertSame(StreamLoader::class, $startedSpans[1]->attributes()['flow.etl.loader.class']);
     }
 
     public function test_loading_started_does_not_create_span_when_trace_loading_disabled(): void
@@ -411,8 +411,8 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
-        $throughputMetrics = $metricProcessor->metricsWithName('rows_throughput');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
+        $throughputMetrics = $metricProcessor->metricsWithName('flow.etl.rows.throughput');
 
         static::assertNotEmpty($counterMetrics, 'Counter should be created when metrics enabled');
         static::assertNotEmpty($throughputMetrics, 'Throughput should be created when metrics enabled');
@@ -454,15 +454,17 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
-        $throughputMetrics = $metricProcessor->metricsWithName('rows_throughput');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
+        $throughputMetrics = $metricProcessor->metricsWithName('flow.etl.rows.throughput');
 
         static::assertCount(1, $counterMetrics);
         static::assertSame(3, $counterMetrics[0]->value);
-        static::assertSame('my_custom_dataframe', $counterMetrics[0]->attributes->get('dataframe.name'));
+        static::assertSame('{row}', $counterMetrics[0]->unit);
+        static::assertSame('my_custom_dataframe', $counterMetrics[0]->attributes->get('flow.etl.dataframe.name'));
 
         static::assertCount(1, $throughputMetrics);
-        static::assertSame('my_custom_dataframe', $throughputMetrics[0]->attributes->get('dataframe.name'));
+        static::assertSame('{row}/s', $throughputMetrics[0]->unit);
+        static::assertSame('my_custom_dataframe', $throughputMetrics[0]->attributes->get('flow.etl.dataframe.name'));
     }
 
     public function test_metrics_not_collected_when_collect_metrics_disabled(): void
@@ -538,10 +540,9 @@ final class TelemetryContextTest extends FlowTestCase
 
         static::assertCount(1, $endedSpans);
         static::assertSame('LimitTransformer', $endedSpans[0]->name());
-        static::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['transformer.class']);
-        $status = $endedSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        static::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['flow.etl.transformer.class']);
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($endedSpans[0]->status());
     }
 
     public function test_transformation_failed_logs_error_and_sets_span_status(): void
@@ -588,6 +589,7 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('Transformation failed', $status->description);
+        static::assertSame(RuntimeException::class, $endedSpans[0]->attributes()['error.type']);
     }
 
     public function test_transformation_started_creates_span_when_trace_transformations_enabled(): void
@@ -624,7 +626,7 @@ final class TelemetryContextTest extends FlowTestCase
         $startedSpans = $spanProcessor->startedSpans();
         static::assertCount(2, $startedSpans);
         static::assertSame('LimitTransformer', $startedSpans[1]->name());
-        static::assertSame(LimitTransformer::class, $startedSpans[1]->attributes()['transformer.class']);
+        static::assertSame(LimitTransformer::class, $startedSpans[1]->attributes()['flow.etl.transformer.class']);
     }
 
     public function test_transformation_started_does_not_create_span_when_trace_transformations_disabled(): void

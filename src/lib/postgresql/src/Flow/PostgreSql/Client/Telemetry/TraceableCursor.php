@@ -10,6 +10,8 @@ use Flow\PostgreSql\Client\RowMapper;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
+use Flow\Telemetry\SemConvMetrics;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -75,9 +77,10 @@ final class TraceableCursor implements Cursor
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->returnedRows = $this->meter->createHistogram(
-                'response_returned_rows',
+                SemConvMetrics::DB_CLIENT_RESPONSE_RETURNED_ROWS,
                 '{row}',
                 'Number of rows returned by database operations',
+                [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0],
             );
         }
     }
@@ -91,9 +94,9 @@ final class TraceableCursor implements Cursor
     {
         try {
             $this->cursor->free();
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -116,9 +119,9 @@ final class TraceableCursor implements Cursor
                 yield $row;
             }
 
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -140,9 +143,9 @@ final class TraceableCursor implements Cursor
                 yield $object;
             }
 
-            $this->completeSpan(SpanStatus::ok());
+            $this->completeSpan();
         } catch (Throwable $e) {
-            $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
+            $this->completeSpan($e);
 
             throw $e;
         }
@@ -165,23 +168,23 @@ final class TraceableCursor implements Cursor
     private function buildQueryAttributes(): array
     {
         $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->connectionParameters->database(),
-            PostgreSqlTelemetryAttributes::SERVER_ADDRESS => $this->connectionParameters->host(),
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->connectionParameters->database(),
+            SemConvAttributes::SERVER_ADDRESS => $this->connectionParameters->host(),
         ];
 
         $port = $this->connectionParameters->port();
 
         if ($port !== 5432) {
-            $attributes[PostgreSqlTelemetryAttributes::SERVER_PORT] = $port;
+            $attributes[SemConvAttributes::SERVER_PORT] = $port;
         }
 
         if ($this->queryAttrs->operation !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $this->queryAttrs->operation;
+            $attributes[SemConvAttributes::DB_OPERATION_NAME] = $this->queryAttrs->operation;
         }
 
         if ($this->queryAttrs->target !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME] = $this->queryAttrs->target;
+            $attributes[SemConvAttributes::DB_COLLECTION_NAME] = $this->queryAttrs->target;
         }
 
         $maxLength = $this->telemetryConfig->options->maxQueryLength;
@@ -189,7 +192,7 @@ final class TraceableCursor implements Cursor
             $maxLength !== null && strlen($this->query) > $maxLength
                 ? substr($this->query, 0, $maxLength) . '...'
                 : $this->query;
-        $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
+        $attributes[SemConvAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $this->parameters !== []) {
             $attributes = array_merge($attributes, $this->parameterFormatter->formatList(
@@ -215,7 +218,7 @@ final class TraceableCursor implements Cursor
         return 'cursor';
     }
 
-    private function completeSpan(SpanStatus $status, ?Throwable $exception = null): void
+    private function completeSpan(?Throwable $exception = null): void
     {
         $span = $this->span;
 
@@ -225,14 +228,14 @@ final class TraceableCursor implements Cursor
             return;
         }
 
-        $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $this->rowsIterated);
+        $span->setAttribute(SemConvAttributes::DB_RESPONSE_RETURNED_ROWS, $this->rowsIterated);
 
+        // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
         if ($exception !== null) {
             $span->recordException($exception, $this->telemetryConfig->clock->now());
-            $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $exception::class);
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
+            $span->setStatus(SpanStatus::error($exception->getMessage()));
         }
-
-        $span->setStatus($status);
 
         $tracer = $this->tracer;
 
@@ -251,12 +254,12 @@ final class TraceableCursor implements Cursor
         }
 
         $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->connectionParameters->database(),
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->connectionParameters->database(),
         ];
 
         if ($this->queryAttrs->operation !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $this->queryAttrs->operation;
+            $attributes[SemConvAttributes::DB_OPERATION_NAME] = $this->queryAttrs->operation;
         }
 
         $this->returnedRows->record($this->rowsIterated, $attributes);

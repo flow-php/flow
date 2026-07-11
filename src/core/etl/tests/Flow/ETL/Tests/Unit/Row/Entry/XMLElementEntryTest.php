@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use Dom\Element;
+use Dom\XmlDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\Types\DSL\type_instance_of;
@@ -18,6 +21,23 @@ use function unserialize;
 
 final class XMLElementEntryTest extends FlowTestCase
 {
+    #[RequiresPhp('>= 8.4')]
+    public function test_create_from_dom_xmldocument(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $document = XmlDocument::createFromString('<root><name>User Name</name><id>01</id></root>');
+        static::assertNotNull($document->documentElement);
+
+        $firstChild = $document->documentElement->firstChild;
+        static::assertInstanceOf(Element::class, $firstChild);
+
+        $entry = xml_element_entry('node', $firstChild);
+        $value = $entry->value();
+        static::assertInstanceOf(Element::class, $value);
+        static::assertSame('<name>User Name</name>', $entry->toString());
+        static::assertSame($document->documentElement, $value->parentNode);
+    }
+
     public function test_create_from_dom_document(): void
     {
         $document = new DOMDocument();

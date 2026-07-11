@@ -9,6 +9,7 @@ use Flow\Filesystem\SourceStream;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -42,7 +43,7 @@ final class TraceableSourceStream implements SourceStream
                 PackageVersion::get('flow-php/filesystem'),
             );
 
-            $this->span = $this->tracer->span('Read ' . $this->stream->path()->basename(), SpanKind::INTERNAL, [
+            $this->span = $this->tracer->span('filesystem.read', SpanKind::INTERNAL, [
                 FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
                 FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
                 FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
@@ -55,13 +56,13 @@ final class TraceableSourceStream implements SourceStream
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesReadCounter = $this->meter->createCounter(
-                'read_size',
-                'bytes',
+                'flow.filesystem.read.size',
+                'By',
                 'Total bytes read from source streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'read_operations',
-                'operations',
+                'flow.filesystem.read.operations',
+                '{operation}',
                 'Number of read operations',
             );
         }
@@ -76,11 +77,11 @@ final class TraceableSourceStream implements SourceStream
 
             if ($span !== null) {
                 $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
-                $span->setStatus(SpanStatus::ok());
             }
         } catch (Throwable $e) {
             if ($span !== null) {
                 $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $span->setAttribute(SemConvAttributes::ERROR_TYPE, $e::class);
                 $span->recordException($e, $this->telemetryConfig->clock->now());
                 $span->setStatus(SpanStatus::error($e->getMessage()));
             }

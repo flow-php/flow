@@ -26,8 +26,8 @@
             <span class="sf-toolbar-status">{{ collector.spanCount }}</span>
         </div>
         <div class="sf-toolbar-info-piece">
-            <b>Span time</b>
-            <span>{{ collector.totalDurationMs|number_format(2) }} ms</span>
+            <b>Trace time</b>
+            <span>{{ collector.timelineDurationMs|number_format(2) }} ms</span>
         </div>
         <div class="sf-toolbar-info-piece">
             <b>Metrics</b>
@@ -65,8 +65,8 @@
             <span class="label">Spans</span>
         </div>
         <div class="metric">
-            <span class="value">{{ collector.totalDurationMs|number_format(2) }} <span class="unit">ms</span></span>
-            <span class="label">Total span time</span>
+            <span class="value">{{ collector.timelineDurationMs|number_format(2) }} <span class="unit">ms</span></span>
+            <span class="label">Total trace time</span>
         </div>
         <div class="metric">
             <span class="value">{{ collector.metricCount }}</span>
@@ -79,6 +79,84 @@
             </div>
         {% endif %}
     </div>
+
+    {% if collector.resourceAttributes is not empty %}
+        <h3>Resource</h3>
+        <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#flow-resource-attr" data-toggle-alt-content="Hide resource attributes">Show resource attributes ({{ collector.resourceAttributes|length }})</a>
+        <div id="flow-resource-attr" class="hidden">
+            <p class="text-small text-muted">Attributes attached to every signal emitted during this request.</p>
+            {{ _self.attribute_table(collector.resourceAttributes) }}
+        </div>
+    {% endif %}
+
+    {% if collector.scopes is not empty %}
+        <h3>Scopes</h3>
+        <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#flow-scopes" data-toggle-alt-content="Hide scopes">Show scopes ({{ collector.scopes|length }})</a>
+        <div id="flow-scopes" class="hidden">
+            <p class="text-small text-muted">Instrumentation scopes that produced the signals in this request.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Attributes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scope in collector.scopes %}
+                        <tr>
+                            <td>{{ scope.name }}</td>
+                            <td>{{ scope.version }}</td>
+                            <td>
+                                {% if scope.attributes is empty %}
+                                    —
+                                {% else %}
+                                    <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#scope-attr-{{ loop.index }}" data-toggle-alt-content="Hide attributes">Attributes ({{ scope.attributes|length }})</a>
+                                    <div id="scope-attr-{{ loop.index }}" class="hidden">
+                                        {{ _self.attribute_table(scope.attributes) }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if collector.configuredInstruments is not empty %}
+        <h3>Configured instruments</h3>
+        <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#flow-configured-instruments" data-toggle-alt-content="Hide configured instruments">Show configured instruments ({{ collector.configuredInstruments|length }})</a>
+        <div id="flow-configured-instruments" class="hidden">
+            <p class="text-small text-muted">Named tracers, meters, and loggers from your configuration and their scope attributes — shown whether or not they emitted a signal this request.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Scope attributes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for instrument in collector.configuredInstruments %}
+                        <tr>
+                            <td>{{ instrument.type }}</td>
+                            <td>{{ instrument.name }}</td>
+                            <td>{{ instrument.version }}</td>
+                            <td>
+                                {% if instrument.attributes is empty %}
+                                    —
+                                {% else %}
+                                    {{ _self.attribute_table(instrument.attributes) }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
 
     <h3>Timeline</h3>
 
@@ -118,7 +196,7 @@
                 {% endfor %}
             </tbody>
         </table>
-        <p class="text-small text-muted">Total window: {{ collector.timelineDurationMs|number_format(2) }} ms · bars are positioned relative to the first captured span.</p>
+        <p class="text-small text-muted">Bars are positioned relative to the first captured span.</p>
     {% endif %}
 
     <h3>Spans</h3>

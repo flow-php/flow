@@ -15,17 +15,18 @@ capabilities.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/telemetry-otlp-bridge.md).
+For detailed installation instructions, see
+the [installation page](/documentation/installation/packages/telemetry-otlp-bridge.md).
 
 ## Transports
 
 The bridge provides three transport options for sending telemetry data to OTLP endpoints.
 
-| Transport  | Protocol      | Use Case                                                                 | Requirements  |
-|------------|---------------|--------------------------------------------------------------------------|---------------|
-| **Curl**   | HTTP (async)  | Production, low latency                                                  | ext-curl      |
-| **gRPC**   | gRPC          | High-performance binary protocol                                         | ext-grpc      |
-| **Stream** | JSONL         | Sidecar collectors, log shippers, FaaS / Kubernetes stdout/err scraping  | None          |
+| Transport  | Protocol     | Use Case                                                                | Requirements |
+|------------|--------------|-------------------------------------------------------------------------|--------------|
+| **Curl**   | HTTP (async) | Production, low latency                                                 | ext-curl     |
+| **gRPC**   | gRPC         | High-performance binary protocol                                        | ext-grpc     |
+| **Stream** | JSONL        | Sidecar collectors, log shippers, FaaS / Kubernetes stdout/err scraping | None         |
 
 ### Curl Transport (Recommended)
 
@@ -82,11 +83,13 @@ $transport = otlp_grpc_transport(
 );
 ```
 
-> **Note**: gRPC has no separate connect timeout — `timeoutMs` is the per-call deadline that bounds DNS, connect, send, and receive together. See [Timeouts](#timeouts).
+> **Note**: gRPC has no separate connect timeout — `timeoutMs` is the per-call deadline that bounds DNS, connect, send,
+> and receive together. See [Timeouts](#timeouts).
 
 ### Stream Transport
 
-The Stream transport implements the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/).
+The Stream transport implements
+the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/).
 It writes JSONL to either an absolute file path or a `php://` stream wrapper. The handle is opened once in
 the constructor and reused across `send()` calls; each call appends one JSON Line under `LOCK_EX` so concurrent
 writers interleave at line boundaries.
@@ -125,11 +128,11 @@ Collector handles mixed JSONL just fine), reuse the same destination across expo
 
 The OTLP spec defines fixed encodings per transport. The bridge enforces them.
 
-| Transport | JSON | Protobuf | Notes                                                                |
-|-----------|:----:|:--------:|----------------------------------------------------------------------|
-| Curl      | ✅   | ✅       | OTLP/HTTP supports both; pick a serializer when constructing the transport |
-| gRPC      | ❌   | ✅       | OTLP/gRPC mandates Protobuf; the transport builds it internally      |
-| Stream    | ✅   | ❌       | OTLP File Exporter spec only supports JSON                           |
+| Transport | JSON | Protobuf | Notes                                                                      |
+|-----------|:----:|:--------:|----------------------------------------------------------------------------|
+| Curl      |  ✅   |    ✅     | OTLP/HTTP supports both; pick a serializer when constructing the transport |
+| gRPC      |  ❌   |    ✅     | OTLP/gRPC mandates Protobuf; the transport builds it internally            |
+| Stream    |  ✅   |    ❌     | OTLP File Exporter spec only supports JSON                                 |
 
 For curl, pass `otlp_json_serializer()` (default) or `otlp_protobuf_serializer()`:
 
@@ -149,25 +152,28 @@ The Protobuf serializer requires the `google/protobuf` package.
 
 ## Timeouts
 
-Both the curl and gRPC transports default to **aggressive, local-collector-friendly timeouts**: the production
-recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or sidecar), so the
-roundtrip is sub-millisecond and a stuck collector should not freeze your PHP process at shutdown.
+The production recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or
+sidecar), so the roundtrip is sub-millisecond and a stuck collector never freezes your PHP process at shutdown.
 
-| Transport | Setting                  | Default | Unit         | Bounds                                                       |
-|-----------|--------------------------|--------:|--------------|--------------------------------------------------------------|
-| Curl      | `withTimeout()`          |   250   | milliseconds | Per-request: connect + send + receive                        |
-| Curl      | `withConnectTimeout()`   |   250   | milliseconds | TCP/TLS connection establishment only                        |
-| Curl      | `withShutdownTimeout()`  |  5000   | milliseconds | Wall-clock budget for draining pending requests at shutdown  |
-| gRPC      | `timeoutMs`              |   250   | milliseconds | Per-call deadline (no separate connect bound)                |
-| gRPC      | `shutdownTimeoutMs`      |  5000   | milliseconds | Wall-clock budget for draining pending calls at shutdown     |
+The curl transport is **synchronous**: each `send()` blocks up to `timeout_ms`, then returns or throws. Keeping export
+off the hot path is the batching processor's job — it flushes only every `batch_size` signals (or on age / flush /
+shutdown). gRPC progresses in the background, so its per-call deadline stays at **250 ms**.
 
-`timeout_ms` is the per-request deadline. `shutdown_timeout_ms` is a separate wall-clock budget enforced only when
-draining pending requests during `shutdown()` — it lets you keep `timeout_ms` tight without freezing graceful exit
-under load. Pending requests still in flight after the shutdown deadline are abandoned and reported as failed (via
-the failover transport if configured, otherwise via the shutdown `TransportException`).
+| Transport   | Setting                 | Default | Unit         | Bounds                                                           |
+|-------------|-------------------------|--------:|--------------|------------------------------------------------------------------|
+| Curl (sync) | `withTimeout()`         |   10000 | milliseconds | Per-request: connect + send + receive (max time `send()` blocks) |
+| Curl (sync) | `withConnectTimeout()`  |     250 | milliseconds | TCP/TLS connection establishment only                            |
+| Curl (sync) | `withShutdownTimeout()` |    5000 | milliseconds | Reserved for the failover drain budget at shutdown               |
+| Async curl  | `withTimeout()`         |    5000 | milliseconds | Per-request wall-clock; must span the gap between pumps          |
+| Async curl  | `withConnectTimeout()`  |    1500 | milliseconds | TCP/TLS connect; larger default tolerates infrequent pumping     |
+| Async curl  | `withPumpTimeout()`     |     100 | milliseconds | Per-`tick()` bounded drive budget (`0` = single exec round)      |
+| Async curl  | `withShutdownTimeout()` |    5000 | milliseconds | Wall-clock budget for draining pending requests at shutdown      |
+| gRPC        | `timeoutMs`             |     250 | milliseconds | Per-call deadline (no separate connect bound)                    |
+| gRPC        | `shutdownTimeoutMs`     |    5000 | milliseconds | Wall-clock budget for draining pending calls at shutdown         |
 
-**Tune the defaults up only when you have a remote collector.** For a collector across regions or a managed SaaS
-endpoint, 5000–10000 ms for both timeouts is reasonable.
+Against a local collector each send is sub-millisecond, so the defaults are only ceilings. On failure `send()` throws
+synchronously — `TransportException`, or `FailoverTransportException` once the batch is forwarded to the failover. Async
+curl is tuned differently — see [Asynchronous transport](#async-curl-transport).
 
 ```php
 <?php
@@ -197,6 +203,43 @@ $remoteGrpc = otlp_grpc_transport(
 > earlier versions could not express tight, realistic deadlines. A negative value to `withTimeout()` /
 > `withConnectTimeout()` raises `\InvalidArgumentException`.
 
+## Long-running workers {#long-running-workers}
+
+The synchronous curl transport completes each request before `send()` returns, so nothing ages out between messages.
+Keeping export off the worker's hot path is the **batching processor** — it flushes per `batch_size` signals or age
+limit. In a Symfony Messenger worker the bundle flushes after each message and on stop (see the
+[Symfony telemetry bundle](/documentation/components/bridges/symfony-telemetry-bundle.md)); keep a local Collector so
+each flush stays sub-millisecond. For non-blocking dispatch, see [Asynchronous transport](#async-curl-transport).
+
+## Asynchronous transport (`AsyncCurlTransport`) {#async-curl-transport}
+
+`AsyncCurlTransport` uses `curl_multi` for non-blocking I/O: `send()` queues the request and returns without waiting.
+Opt in with `otlp_async_curl_transport()` or the bundle's `transport.type: 'async_curl'`.
+
+A queued request only advances while the host pumps the handle — on the next `send()`, `shutdown()`, or `tick()`.
+`tick()` is bounded and select-driven: it drives pending requests for up to `pump_timeout_ms` (default **100 ms**), so a
+local backend completes within a single tick. `0` falls back to one non-blocking exec round (rarely enough — prefer the
+default).
+
+```php
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_async_curl_transport;
+
+$transport = otlp_async_curl_transport('http://localhost:4318');
+
+// Pump once per worker loop so in-flight requests complete:
+$transport->tick();
+```
+
+In a Symfony Messenger worker with `messenger` instrumentation enabled, the bundle pumps every `async_curl` transport on
+`WorkerRunningEvent` (~1s when idle) — the cadence the **1500 ms** `connect_timeout_ms` default is sized for. Elsewhere
+you must call `tick()` yourself.
+
+Failures surface on a later `send()`/`tick()`/`shutdown()` (no caller on the stack), so they go to the failover
+transport or, without one, the injected `ErrorHandler` (5th constructor arg, default `ErrorLogHandler`) — which is why
+the async transport takes an error handler and the synchronous one just throws.
+
+Prefer the synchronous `curl` transport unless you need non-blocking dispatch and can guarantee a pump cadence.
+
 ## Failover Transport
 
 Both `CurlTransport` and `GrpcTransport` accept an optional `Transport $failover` argument. When set, batches that
@@ -224,11 +267,11 @@ separately.
 
 ### Behavior matrix
 
-| Primary  | Failover send | Outcome                                                 | Exception                             |
-|----------|---------------|---------------------------------------------------------|---------------------------------------|
-| OK       | —             | Data delivered                                          | none                                  |
-| Failed   | OK            | Data preserved via failover                             | `FailoverTransportException` (1 entry, `failover: null`) |
-| Failed   | Failed        | Data lost; both errors surfaced                         | `FailoverTransportException` (1 entry, both errors)      |
+| Primary | Failover send | Outcome                         | Exception                                                |
+|---------|---------------|---------------------------------|----------------------------------------------------------|
+| OK      | —             | Data delivered                  | none                                                     |
+| Failed  | OK            | Data preserved via failover     | `FailoverTransportException` (1 entry, `failover: null`) |
+| Failed  | Failed        | Data lost; both errors surfaced | `FailoverTransportException` (1 entry, both errors)      |
 
 `FailoverTransportException` extends `TransportException`, so existing `catch (TransportException $e)` blocks in
 exporters keep working. The structured `$exception->failures` list is available when you want per-batch detail:
@@ -402,10 +445,14 @@ $telemetry = telemetry(
 
 ## OpenTelemetry Collector
 
-The recommended production architecture is to deploy an [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) close to your application (same network, Kubernetes cluster, or sidecar container). This approach provides several benefits:
+The recommended production architecture is to deploy
+an [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) close to your application (same network,
+Kubernetes cluster, or sidecar container). This approach provides several benefits:
 
-- **Decouple application from backends** - Your application sends telemetry to a single local endpoint, unaware of the final destinations
-- **Change APM backends without code changes** - Switch from Jaeger to Grafana or add Datadog by updating collector configuration only
+- **Decouple application from backends** - Your application sends telemetry to a single local endpoint, unaware of the
+  final destinations
+- **Change APM backends without code changes** - Switch from Jaeger to Grafana or add Datadog by updating collector
+  configuration only
 - **Fan-out to multiple backends** - Send the same telemetry data to multiple APM systems simultaneously
 - **Offload processing** - Batching, retry logic, filtering, and sampling happen in the collector, not your application
 - **Reduce network latency** - Local collector accepts data quickly; it handles slow or unreliable external connections
@@ -449,17 +496,17 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp/jaeger, otlp/grafana, otlp/honeycomb]
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlp/jaeger, otlp/grafana, otlp/honeycomb ]
     metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp/grafana]
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlp/grafana ]
     logs:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp/grafana]
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlp/grafana ]
 ```
 
 ### Docker Compose Example
@@ -469,7 +516,7 @@ service:
 services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otel-collector-config.yaml"]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
@@ -487,25 +534,26 @@ services:
       - otel-collector
 ```
 
-With this setup, your PHP application only needs to know about `http://otel-collector:4318`. Adding or removing APM backends becomes a configuration change in the collector, requiring no application redeployment.
+With this setup, your PHP application only needs to know about `http://otel-collector:4318`. Adding or removing APM
+backends becomes a configuration change in the collector, requiring no application redeployment.
 
 ## Configuration Options
 
 The `CurlTransportOptions` class provides a fluent interface for configuring the curl transport.
 
-| Method                                                    | Description                            | Default    |
-|-----------------------------------------------------------|----------------------------------------|------------|
-| `withTimeout(int $milliseconds)`                          | Per-request total timeout (ms)         | 1000       |
-| `withConnectTimeout(int $milliseconds)`                   | TCP/TLS connect timeout (ms)           | 250        |
-| `withShutdownTimeout(int $milliseconds)`                  | Wall-clock drain budget at shutdown    | 5000       |
-| `withHeader(string $name, string $value)`                 | Add a single header                    | -          |
-| `withHeaders(array $headers)`                             | Set all headers                        | []         |
-| `withCompression(bool $enabled)`                          | Enable gzip compression                | false      |
-| `withSslVerification(bool $verifyPeer, bool $verifyHost)` | SSL verification                       | true, true |
-| `withSslCertificate(string $certPath, ?string $keyPath)`  | Client certificate                     | -          |
-| `withCaInfo(string $caInfoPath)`                          | CA certificate bundle                  | -          |
-| `withProxy(string $proxy)`                                | Proxy server                           | -          |
-| `withFollowRedirects(bool $follow, int $maxRedirects)`    | Redirect behavior                      | true, 3    |
+| Method                                                    | Description                         | Default    |
+|-----------------------------------------------------------|-------------------------------------|------------|
+| `withTimeout(int $milliseconds)`                          | Per-request total timeout (ms)      | 5000       |
+| `withConnectTimeout(int $milliseconds)`                   | TCP/TLS connect timeout (ms)        | 250        |
+| `withShutdownTimeout(int $milliseconds)`                  | Wall-clock drain budget at shutdown | 5000       |
+| `withHeader(string $name, string $value)`                 | Add a single header                 | -          |
+| `withHeaders(array $headers)`                             | Set all headers                     | []         |
+| `withCompression(bool $enabled)`                          | Enable gzip compression             | false      |
+| `withSslVerification(bool $verifyPeer, bool $verifyHost)` | SSL verification                    | true, true |
+| `withSslCertificate(string $certPath, ?string $keyPath)`  | Client certificate                  | -          |
+| `withCaInfo(string $caInfoPath)`                          | CA certificate bundle               | -          |
+| `withProxy(string $proxy)`                                | Proxy server                        | -          |
+| `withFollowRedirects(bool $follow, int $maxRedirects)`    | Redirect behavior                   | true, 3    |
 
 See [Timeouts](#timeouts) for guidance on the default values.
 

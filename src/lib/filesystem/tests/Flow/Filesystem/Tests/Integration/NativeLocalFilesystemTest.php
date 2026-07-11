@@ -170,6 +170,22 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertTrue($status->isDirectory());
     }
 
+    public function test_list_files_matching_partition_placeholder_pattern(): void
+    {
+        $fs = native_local_filesystem();
+
+        $fs->writeTo(path(__DIR__ . '/var/placeholders/order-year=2024/123456-PL.csv'))->append('data');
+        $fs->writeTo(path(__DIR__ . '/var/placeholders/order-year=2024/789-DE.csv'))->append('data');
+        $fs->writeTo(path(__DIR__ . '/var/placeholders/order-year=2024/ignored.txt'))->append('data');
+
+        $files = iterator_to_array($fs->list(path(__DIR__ . '/var/placeholders/order-year=2024/{order-name}.csv')));
+
+        $basenames = array_map(static fn(FileStatus $status) => $status->path->basename(), $files);
+        sort($basenames);
+
+        static::assertSame(['123456-PL.csv', '789-DE.csv'], $basenames);
+    }
+
     public function test_list_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);

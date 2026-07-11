@@ -55,6 +55,7 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
@@ -68,6 +69,7 @@ use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time_zone;
+use function Flow\Types\DSL\type_union;
 
 final class EntryFactoryTest extends TestCase
 {
@@ -518,6 +520,74 @@ final class EntryFactoryTest extends TestCase
         static::assertEquals(
             str_entry('e', 'America/New_York'),
             $this->entryFactory->createAs('e', 'America/New_York', type_time_zone()),
+        );
+    }
+
+    public function test_union_with_schema_falls_back_to_first_castable_member(): void
+    {
+        static::assertEquals(
+            int_entry('e', 1),
+            $this->entryFactory->create(
+                'e',
+                true,
+                schema(union_schema('e', type_union(type_integer(), type_string()))),
+            ),
+        );
+    }
+
+    public function test_union_with_schema_keeps_numeric_string_as_string(): void
+    {
+        static::assertEquals(
+            str_entry('e', '123'),
+            $this->entryFactory->create(
+                'e',
+                '123',
+                schema(union_schema('e', type_union(type_integer(), type_string()))),
+            ),
+        );
+    }
+
+    public function test_union_with_schema_resolves_to_complex_member(): void
+    {
+        static::assertEquals(
+            list_entry('e', [1, 2, 3], type_list(type_integer())),
+            $this->entryFactory->create(
+                'e',
+                [1, 2, 3],
+                schema(union_schema('e', type_union(type_list(type_integer()), type_string()))),
+            ),
+        );
+    }
+
+    public function test_union_with_schema_resolves_to_integer(): void
+    {
+        static::assertEquals(
+            int_entry('e', 1),
+            $this->entryFactory->create('e', 1, schema(union_schema('e', type_union(type_integer(), type_string())))),
+        );
+    }
+
+    public function test_union_with_schema_resolves_to_string(): void
+    {
+        static::assertEquals(
+            str_entry('e', 'flow'),
+            $this->entryFactory->create(
+                'e',
+                'flow',
+                schema(union_schema('e', type_union(type_integer(), type_string()))),
+            ),
+        );
+    }
+
+    public function test_union_with_schema_with_null_value_creates_first_member_entry(): void
+    {
+        static::assertEquals(
+            int_entry('e', null),
+            $this->entryFactory->create(
+                'e',
+                null,
+                schema(union_schema('e', type_union(type_integer(), type_string()), true)),
+            ),
         );
     }
 

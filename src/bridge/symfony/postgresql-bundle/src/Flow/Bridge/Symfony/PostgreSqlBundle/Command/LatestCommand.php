@@ -6,19 +6,15 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function array_slice;
 use function count;
 use function end;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 use function sprintf;
 
@@ -26,26 +22,16 @@ use function sprintf;
 final class LatestCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly string $defaultConnection,
+        private readonly Migrator $migrator,
     ) {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $migrator = type_instance_of(Migrator::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.migrator",
-        ));
 
-        $statuses = $migrator->status();
+        $statuses = $this->migrator->status();
 
         if (count($statuses) === 0) {
             $io->note('No migrations available.');

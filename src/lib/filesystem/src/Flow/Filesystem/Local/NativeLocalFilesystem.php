@@ -103,7 +103,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
             return;
         }
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
+        foreach (new GlobIterator($path->glob()) as $filePath) {
             $filePath = type_string()->assert($filePath);
             $status = self::statFor(path_real($filePath, $path->options()), $filePath);
 
@@ -182,7 +182,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         $deletedCount = 0;
 
-        foreach ($this->matchChildFirst($path->path()) as $filePath) {
+        foreach ($this->matchChildFirst($path->glob()) as $filePath) {
             $filePath = type_string()->assert($filePath);
 
             if (is_dir($filePath)) {
@@ -211,7 +211,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
             return self::statFor($path, $path->path());
         }
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
+        foreach (new GlobIterator($path->glob()) as $filePath) {
             $filePath = type_string()->assert($filePath);
 
             if (file_exists($filePath)) {

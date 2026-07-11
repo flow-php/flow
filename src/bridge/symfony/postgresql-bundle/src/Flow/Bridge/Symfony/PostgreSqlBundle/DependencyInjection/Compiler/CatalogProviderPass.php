@@ -34,7 +34,7 @@ final class CatalogProviderPass implements CompilerPassInterface
             }
         }
 
-        if ($providerRefs === [] && $container->hasParameter('flow.postgresql.migrations.connections')) {
+        if ($providerRefs === [] && $container->hasParameter('flow.postgresql.migrations.connection')) {
             throw new LogicException(
                 'No catalog providers found. Register at least one catalog provider using #[AsCatalogProvider] attribute, "flow.postgresql.catalog_provider" tag, or "catalog_providers" configuration.',
             );

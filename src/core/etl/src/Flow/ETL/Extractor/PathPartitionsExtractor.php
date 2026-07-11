@@ -8,6 +8,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter\PlaceholderPartitions;
 use Generator;
 
 use function array_map;
@@ -34,8 +35,16 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
      */
     public function extract(FlowContext $context): Generator
     {
-        foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
-            $partitions = $fileStatus->path->partitions();
+        $hasPlaceholders = [] !== $this->path->partitionPlaceholders();
+        $filter = $hasPlaceholders ? new PlaceholderPartitions($this->path, $this->filter()) : $this->filter();
+
+        foreach ($context->filesystem($this->path)->list($this->path, $filter) as $fileStatus) {
+            $partitions = $hasPlaceholders
+                ? $fileStatus
+                    ->path
+                    ->withPartitions($this->path->extractPlaceholderPartitions($fileStatus->path))
+                    ->partitions()
+                : $fileStatus->path->partitions();
 
             $row = row(
                 string_entry('path', $fileStatus->path->uri()),

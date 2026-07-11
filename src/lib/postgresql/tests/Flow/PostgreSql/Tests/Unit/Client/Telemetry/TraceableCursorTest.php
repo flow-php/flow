@@ -6,13 +6,13 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Cursor;
-use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Client\Telemetry\TraceableCursor;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\SemConvAttributes;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -68,7 +68,7 @@ final class TraceableCursorTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('SELECT users (cursor)', $spans[0]->name());
-        static::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(2, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_free_rethrows_exception_and_records_error(): void
@@ -122,7 +122,7 @@ final class TraceableCursorTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(3, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(3, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_iterate_records_error_on_exception(): void
@@ -152,7 +152,7 @@ final class TraceableCursorTest extends TestCase
             $status = $spans[0]->status();
             static::assertNotNull($status);
             static::assertTrue($status->isError());
-            static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+            static::assertSame(1, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
         }
     }
 
@@ -181,7 +181,37 @@ final class TraceableCursorTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(2, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
+    }
+
+    public function test_map_records_error_on_exception(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig($spanProcessor);
+
+        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor
+            ->method('map')
+            ->willReturnCallback(static function (): Generator {
+                yield new stdClass();
+
+                throw new RuntimeException('Mapping failed');
+            });
+
+        $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
+
+        $this->expectException(RuntimeException::class);
+
+        try {
+            foreach ($cursor->map(new SpyRowMapper()) as $_object) {
+            }
+        } finally {
+            $spans = $spanProcessor->endedSpans();
+            static::assertCount(1, $spans);
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
+        }
     }
 
     public function test_next_increments_row_count(): void
@@ -202,7 +232,7 @@ final class TraceableCursorTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame(2, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_parameter_count_is_limited_by_default(): void
@@ -226,17 +256,11 @@ final class TraceableCursorTest extends TestCase
         static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 10; $i++) {
-            static::assertArrayHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
 
         for ($i = 11; $i <= 20; $i++) {
-            static::assertArrayNotHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayNotHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
     }
 
@@ -264,10 +288,7 @@ final class TraceableCursorTest extends TestCase
         static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 20; $i++) {
-            static::assertArrayHasKey(
-                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
-                $spans[0]->attributes(),
-            );
+            static::assertArrayHasKey(SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
         }
     }
 
@@ -291,7 +312,7 @@ final class TraceableCursorTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        $paramValue = $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
         static::assertSame(103, strlen($paramValue));
         static::assertStringEndsWith('...', $paramValue);
@@ -320,7 +341,7 @@ final class TraceableCursorTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        $paramValue = $spans[0]->attributes()[SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
         static::assertSame(200, strlen($paramValue));
         static::assertSame($longValue, $paramValue);
@@ -347,11 +368,11 @@ final class TraceableCursorTest extends TestCase
 
         $span = $spans[0];
         static::assertSame('SELECT users (cursor)', $span->name());
-        static::assertSame('postgresql', $span->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
-        static::assertSame('testdb', $span->attributes()[PostgreSqlTelemetryAttributes::DB_NAMESPACE]);
-        static::assertSame('localhost', $span->attributes()[PostgreSqlTelemetryAttributes::SERVER_ADDRESS]);
-        static::assertSame('SELECT', $span->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
-        static::assertSame('users', $span->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME]);
+        static::assertSame('postgresql', $span->attributes()[SemConvAttributes::DB_SYSTEM_NAME]);
+        static::assertSame('testdb', $span->attributes()[SemConvAttributes::DB_NAMESPACE]);
+        static::assertSame('localhost', $span->attributes()[SemConvAttributes::SERVER_ADDRESS]);
+        static::assertSame('SELECT', $span->attributes()[SemConvAttributes::DB_OPERATION_NAME]);
+        static::assertSame('users', $span->attributes()[SemConvAttributes::DB_COLLECTION_NAME]);
     }
 
     public function test_tracing_disabled_does_not_create_span(): void

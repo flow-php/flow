@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller;
 
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 final class TestController
@@ -23,5 +24,15 @@ final class TestController
     public function index(): Response
     {
         return new JsonResponse(['status' => 'ok']);
+    }
+
+    public function serverError(): Response
+    {
+        return new JsonResponse(['error' => 'boom'], 500);
+    }
+
+    public function withArgument(Request $request): Response
+    {
+        return new JsonResponse(['method' => $request->getMethod()]);
     }
 }

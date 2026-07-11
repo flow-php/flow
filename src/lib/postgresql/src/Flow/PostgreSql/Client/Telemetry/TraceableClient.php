@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
+use Closure;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
@@ -17,17 +18,21 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
+use Flow\Telemetry\SemConvMetrics;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
 use Throwable;
 
+use function array_keys;
 use function array_merge;
 use function count;
 use function Flow\PostgreSql\DSL\listen;
 use function Flow\PostgreSql\DSL\unlisten;
 use function hrtime;
+use function rsort;
 use function strlen;
 use function substr;
 
@@ -63,7 +68,10 @@ final class TraceableClient implements Client
         $this->queryAttributesExtractor = new QueryAttributesExtractor();
         $this->parameterFormatter = new ParameterFormatter();
 
-        if ($this->telemetryConfig->options->traceQueries || $this->telemetryConfig->options->traceTransactions) {
+        if (
+            $this->telemetryConfig->options->traceQueries
+            || $this->telemetryConfig->options->transactionSpans !== TransactionSpanMode::OFF
+        ) {
             $this->tracer = $telemetryConfig->telemetry->tracer(
                 'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
@@ -76,14 +84,16 @@ final class TraceableClient implements Client
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->operationDuration = $meter->createHistogram(
-                'operation_duration',
+                SemConvMetrics::DB_CLIENT_OPERATION_DURATION,
                 's',
                 'Duration of database client operations',
+                [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
             );
             $this->returnedRows = $meter->createHistogram(
-                'response_returned_rows',
+                SemConvMetrics::DB_CLIENT_RESPONSE_RETURNED_ROWS,
                 '{row}',
                 'Number of rows returned by database operations',
+                [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0],
             );
         }
 
@@ -101,20 +111,26 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel() + 1;
 
         try {
-            $this->client->beginTransaction();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('BEGIN', $nestingLevel, fn() => $this->client->beginTransaction());
+            } else {
+                $this->client->beginTransaction();
 
-            if ($this->telemetryConfig->options->traceTransactions && $this->tracer !== null) {
-                $span = $this->tracer->span(
-                    $this->buildTransactionSpanName('BEGIN', $nestingLevel),
-                    SpanKind::CLIENT,
-                    $this->buildTransactionAttributes($nestingLevel),
-                );
-                $this->transactionSpans[$nestingLevel] = $span;
+                if (
+                    $this->telemetryConfig->options->transactionSpans === TransactionSpanMode::GROUPED
+                    && $this->tracer !== null
+                ) {
+                    $this->transactionSpans[$nestingLevel] = $this->tracer->span(
+                        $this->buildTransactionSpanName('BEGIN', $nestingLevel),
+                        SpanKind::CLIENT,
+                        $this->buildTransactionAttributes($nestingLevel),
+                    );
+                }
             }
 
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'begin'));
         } catch (Throwable $e) {
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'begin'));
 
             throw $e;
         }
@@ -122,6 +138,18 @@ final class TraceableClient implements Client
 
     public function close(): void
     {
+        $levels = array_keys($this->transactionSpans);
+        rsort($levels);
+
+        foreach ($levels as $level) {
+            $span = $this->transactionSpans[$level];
+            $span->setStatus(SpanStatus::error(
+                'Transaction was neither committed nor rolled back before the connection was closed',
+            ));
+            $this->tracer?->complete($span);
+            unset($this->transactionSpans[$level]);
+        }
+
         $this->client->close();
     }
 
@@ -131,13 +159,17 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
-            $this->client->commit();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('COMMIT', $nestingLevel, fn() => $this->client->commit());
+            } else {
+                $this->client->commit();
+                $this->completeTransactionSpan($nestingLevel);
+            }
 
-            $this->completeTransactionSpan($nestingLevel, SpanStatus::ok());
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'commit'));
         } catch (Throwable $e) {
-            $this->completeTransactionSpan($nestingLevel, SpanStatus::error($e->getMessage()), $e);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->completeTransactionSpan($nestingLevel, $e);
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'commit'));
 
             throw $e;
         }
@@ -441,13 +473,17 @@ final class TraceableClient implements Client
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
-            $this->client->rollBack();
+            if ($this->telemetryConfig->options->transactionSpans === TransactionSpanMode::PER_OPERATION) {
+                $this->traceTransactionOperation('ROLLBACK', $nestingLevel, fn() => $this->client->rollBack());
+            } else {
+                $this->client->rollBack();
+                $this->completeAllTransactionSpans($nestingLevel);
+            }
 
-            $this->completeAllTransactionSpans($nestingLevel, SpanStatus::ok());
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'rollback'));
         } catch (Throwable $e) {
-            $this->completeAllTransactionSpans($nestingLevel, SpanStatus::error($e->getMessage()), $e);
-            $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
+            $this->completeAllTransactionSpans($nestingLevel, $e);
+            $this->recordDuration($startTime, $this->buildTransactionMetricAttributes($nestingLevel, 'rollback'));
 
             throw $e;
         }
@@ -504,29 +540,29 @@ final class TraceableClient implements Client
     private function buildQueryAttributes(string $query, array $parameters, QueryAttributes $queryAttrs): array
     {
         $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
-            PostgreSqlTelemetryAttributes::SERVER_ADDRESS => $this->client->parameters()->host(),
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+            SemConvAttributes::SERVER_ADDRESS => $this->client->parameters()->host(),
         ];
 
         $port = $this->client->parameters()->port();
 
         if ($port !== 5432) {
-            $attributes[PostgreSqlTelemetryAttributes::SERVER_PORT] = $port;
+            $attributes[SemConvAttributes::SERVER_PORT] = $port;
         }
 
         if ($queryAttrs->operation !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
+            $attributes[SemConvAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
         }
 
         if ($queryAttrs->target !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME] = $queryAttrs->target;
+            $attributes[SemConvAttributes::DB_COLLECTION_NAME] = $queryAttrs->target;
         }
 
         $maxLength = $this->telemetryConfig->options->maxQueryLength;
         $queryText =
             $maxLength !== null && strlen($query) > $maxLength ? substr($query, 0, $maxLength) . '...' : $query;
-        $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
+        $attributes[SemConvAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $parameters !== []) {
             $attributes = array_merge($attributes, $this->parameterFormatter->formatList(
@@ -534,6 +570,30 @@ final class TraceableClient implements Client
                 $this->telemetryConfig->options->maxParameters,
                 $this->telemetryConfig->options->maxParameterLength,
             ));
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Low-cardinality attribute subset for metrics. Query text and parameter values are deliberately
+     * excluded so each distinct SQL string does not spawn its own metric series.
+     *
+     * @return array<string, string>
+     */
+    private function buildQueryMetricAttributes(QueryAttributes $queryAttrs): array
+    {
+        $attributes = [
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+        ];
+
+        if ($queryAttrs->operation !== null) {
+            $attributes[SemConvAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
+        }
+
+        if ($queryAttrs->target !== null) {
+            $attributes[SemConvAttributes::DB_COLLECTION_NAME] = $queryAttrs->target;
         }
 
         return $attributes;
@@ -558,16 +618,16 @@ final class TraceableClient implements Client
     private function buildTransactionAttributes(int $nestingLevel): array
     {
         $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
-            PostgreSqlTelemetryAttributes::SERVER_ADDRESS => $this->client->parameters()->host(),
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+            SemConvAttributes::SERVER_ADDRESS => $this->client->parameters()->host(),
             PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL => $nestingLevel,
         ];
 
         $port = $this->client->parameters()->port();
 
         if ($port !== 5432) {
-            $attributes[PostgreSqlTelemetryAttributes::SERVER_PORT] = $port;
+            $attributes[SemConvAttributes::SERVER_PORT] = $port;
         }
 
         if ($nestingLevel > 1) {
@@ -575,6 +635,22 @@ final class TraceableClient implements Client
         }
 
         return $attributes;
+    }
+
+    /**
+     * Low-cardinality attribute subset for the transaction duration metric. Excludes server.address and the
+     * savepoint label so the metric stays low-cardinality.
+     *
+     * @return array<string, int|string>
+     */
+    private function buildTransactionMetricAttributes(int $nestingLevel, string $operation): array
+    {
+        return [
+            SemConvAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
+            SemConvAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
+            SemConvAttributes::DB_OPERATION_NAME => $operation,
+            PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL => $nestingLevel,
+        ];
     }
 
     private function buildTransactionSpanName(string $operation, int $nestingLevel): string
@@ -586,14 +662,44 @@ final class TraceableClient implements Client
         return $operation . ' TRANSACTION';
     }
 
-    private function completeAllTransactionSpans(int $fromLevel, SpanStatus $status, ?Throwable $exception = null): void
+    private function completeAllTransactionSpans(int $fromLevel, ?Throwable $exception = null): void
     {
         for ($level = $fromLevel; $level >= 1; $level--) {
-            $this->completeTransactionSpan($level, $status, $exception);
+            $this->completeTransactionSpan($level, $exception);
         }
     }
 
-    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?Throwable $exception = null): void
+    /**
+     * @param \Closure(): void $execute
+     */
+    private function traceTransactionOperation(string $operation, int $nestingLevel, Closure $execute): void
+    {
+        $tracer = $this->tracer;
+
+        if ($tracer === null) {
+            $execute();
+
+            return;
+        }
+
+        $span = $tracer->span(
+            $this->buildTransactionSpanName($operation, $nestingLevel),
+            SpanKind::CLIENT,
+            $this->buildTransactionAttributes($nestingLevel),
+        );
+
+        try {
+            $execute();
+        } catch (Throwable $e) {
+            $this->recordFailure($span, $e);
+
+            throw $e;
+        } finally {
+            $tracer->complete($span);
+        }
+    }
+
+    private function completeTransactionSpan(int $nestingLevel, ?Throwable $exception = null): void
     {
         $tracer = $this->tracer;
 
@@ -603,10 +709,9 @@ final class TraceableClient implements Client
 
         $span = $this->transactionSpans[$nestingLevel];
 
+        // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
         if ($exception !== null) {
             $this->recordFailure($span, $exception);
-        } else {
-            $span->setStatus($status);
         }
 
         $tracer->complete($span);
@@ -649,10 +754,10 @@ final class TraceableClient implements Client
     private function recordFailure(Span $span, Throwable $e): void
     {
         $span->recordException($e, $this->telemetryConfig->clock->now());
-        $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $e::class);
+        $span->setAttribute(SemConvAttributes::ERROR_TYPE, $e::class);
 
         if ($e instanceof QueryException) {
-            $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_STATUS_CODE, $e->error()->sqlState);
+            $span->setAttribute(SemConvAttributes::DB_RESPONSE_STATUS_CODE, $e->error()->sqlState);
         }
 
         $span->setStatus(SpanStatus::error($e->getMessage()));
@@ -664,16 +769,7 @@ final class TraceableClient implements Client
             return;
         }
 
-        $attributes = [
-            PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
-            PostgreSqlTelemetryAttributes::DB_NAMESPACE => $this->client->parameters()->database(),
-        ];
-
-        if ($queryAttrs->operation !== null) {
-            $attributes[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME] = $queryAttrs->operation;
-        }
-
-        $this->returnedRows->record($rowCount, $attributes);
+        $this->returnedRows->record($rowCount, $this->buildQueryMetricAttributes($queryAttrs));
     }
 
     /**
@@ -693,27 +789,28 @@ final class TraceableClient implements Client
     ): mixed {
         $startTime = hrtime(true);
         $queryAttrs = $this->queryAttributesExtractor->extract($query);
-        $attributes = $this->buildQueryAttributes($query, $parameters, $queryAttrs);
+        $metricAttributes = $this->buildQueryMetricAttributes($queryAttrs);
         $span = null;
 
         if ($this->telemetryConfig->options->traceQueries && $this->tracer !== null) {
-            $span = $this->tracer->span($this->buildSpanName($queryAttrs), SpanKind::CLIENT, $attributes);
+            $span = $this->tracer->span(
+                $this->buildSpanName($queryAttrs),
+                SpanKind::CLIENT,
+                $this->buildQueryAttributes($query, $parameters, $queryAttrs),
+            );
         }
 
         try {
             $result = $operation();
 
-            if ($span !== null) {
-                if ($rowCountExtractor !== null) {
-                    $rowCount = $rowCountExtractor($result);
-                    $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $rowCount);
-                    $this->recordRowCount($rowCount, $queryAttrs);
-                }
-
-                $span->setStatus(SpanStatus::ok());
+            if ($span !== null && $rowCountExtractor !== null) {
+                $rowCount = $rowCountExtractor($result);
+                $span->setAttribute(SemConvAttributes::DB_RESPONSE_RETURNED_ROWS, $rowCount);
+                $this->recordRowCount($rowCount, $queryAttrs);
             }
+            // OTEL spec: instrumentation leaves the status Unset on success.
 
-            $this->recordDuration($startTime, $attributes);
+            $this->recordDuration($startTime, $metricAttributes);
 
             return $result;
         } catch (Throwable $e) {
@@ -721,7 +818,7 @@ final class TraceableClient implements Client
                 $this->recordFailure($span, $e);
             }
 
-            $this->recordDuration($startTime, $attributes);
+            $this->recordDuration($startTime, $metricAttributes);
 
             throw $e;
         } finally {

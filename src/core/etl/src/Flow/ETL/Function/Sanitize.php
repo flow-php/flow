@@ -41,7 +41,7 @@ final class Sanitize extends ScalarFunctionChain
         $size = mb_strlen($val);
 
         if ($skipCharacters !== null && $size > $skipCharacters) {
-            return mb_substr($val, 0, $skipCharacters) . str_repeat($placeholder, $size - $skipCharacters);
+            return mb_substr($val, 0, $skipCharacters) . str_repeat($placeholder, max(0, $size - $skipCharacters));
         }
 
         return str_repeat($placeholder, $size);

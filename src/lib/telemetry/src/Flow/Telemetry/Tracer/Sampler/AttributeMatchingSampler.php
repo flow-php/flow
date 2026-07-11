@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tracer\Sampler;
 
 use Closure;
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Filter\AttributeFilter;
 use Flow\Telemetry\Filter\AttributeSource;
 use Flow\Telemetry\Tracer\Span;
@@ -51,13 +52,13 @@ final readonly class AttributeMatchingSampler implements Sampler
         return 'AttributeMatchingSampler';
     }
 
-    public function shouldSample(Span $span): SamplingResult
+    public function shouldSample(Context $parentContext, Span $span): SamplingResult
     {
         if (($this->shouldDrop)(...$this->attributesFor($span))) {
             return SamplingResult::drop();
         }
 
-        return $this->delegate->shouldSample($span);
+        return $this->delegate->shouldSample($parentContext, $span);
     }
 
     /**

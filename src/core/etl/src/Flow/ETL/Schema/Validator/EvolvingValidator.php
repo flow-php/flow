@@ -20,38 +20,31 @@ use function Flow\Types\DSL\type_equals;
  */
 final class EvolvingValidator implements SchemaValidator
 {
-    /**
-     * @param Schema $expected
-     * @param Schema $given
-     */
-    public function isValid(Schema $expected, Schema $given): bool
+    public function validate(Schema $expected, Schema $given): ValidationContext
     {
-        if ($given->count() < $expected->count()) {
-            return false;
-        }
+        $missingDefinitions = [];
+        $mismatchedDefinitions = [];
 
-        foreach ($expected->definitions() as $definition) {
-            if ($given->findDefinition($definition->entry()) === null) {
-                return false;
-            }
-        }
+        foreach ($expected->definitions() as $expectedDefinition) {
+            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
-        foreach ($given->definitions() as $rightDefinition) {
-            $leftDefinition = $expected->findDefinition($rightDefinition->entry());
+            if ($givenDefinition === null) {
+                $missingDefinitions[] = $expectedDefinition;
 
-            if ($leftDefinition === null) {
                 continue;
             }
 
-            if (!$rightDefinition->isNullable() && $leftDefinition->isNullable()) {
-                return false;
+            if (!$givenDefinition->isNullable() && $expectedDefinition->isNullable()) {
+                $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
+
+                continue;
             }
 
-            if (!type_equals($rightDefinition->type(), $leftDefinition->type())) {
-                return false;
+            if (!type_equals($givenDefinition->type(), $expectedDefinition->type())) {
+                $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
             }
         }
 
-        return true;
+        return new ValidationContext($missingDefinitions, $mismatchedDefinitions);
     }
 }

@@ -252,6 +252,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new DOMElementAttributeValue($this, $attribute);
     }
 
+    public function domElementNamespace(ScalarFunction|string|null $attribute = null): DOMElementNamespaceValue
+    {
+        return new DOMElementNamespaceValue($this, $attribute);
+    }
+
     public function domElementNextSibling(bool $allowOnlyElement = false): DOMElementNextSibling
     {
         return new DOMElementNextSibling($this, $allowOnlyElement);

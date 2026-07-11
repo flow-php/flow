@@ -84,6 +84,7 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\ChainDetector;
 use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
+use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Resource\Detector\HostDetector;
 use Flow\Telemetry\Resource\Detector\ManualDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
@@ -163,21 +164,17 @@ function baggage(array $entries = []): Baggage
 }
 
 /**
- * Create a Context.
+ * Create a root Context (no active span).
  *
- * If no TraceId is provided, generates a new one.
- * If no Baggage is provided, creates an empty one.
+ * A span created in this context becomes a new trace root. Attach an active span with
+ * Context::withActiveSpan() to make subsequent spans its children.
  *
- * @param null|TraceId $traceId Optional TraceId to use
  * @param null|Baggage $baggage Optional Baggage to use
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function context(?TraceId $traceId = null, ?Baggage $baggage = null): Context
+function context(?Baggage $baggage = null): Context
 {
-    $traceId ??= TraceId::generate();
-    $baggage ??= new Baggage();
-
-    return new Context($traceId, $baggage);
+    return new Context(null, $baggage ?? new Baggage());
 }
 
 /**
@@ -344,11 +341,13 @@ function void_exporter(): VoidExporter
  *
  * Unified exporter that stores logs, metrics, and spans in memory for direct access.
  * Useful for testing and inspection without serialization.
+ *
+ * @param null|int $maxEntriesPerSignal maximum entries retained per signal type; null keeps everything
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_exporter(): MemoryExporter
+function memory_exporter(?int $maxEntriesPerSignal = null): MemoryExporter
 {
-    return new MemoryExporter();
+    return new MemoryExporter($maxEntriesPerSignal);
 }
 
 /**
@@ -1025,6 +1024,18 @@ function environment_detector(): EnvironmentDetector
 function composer_detector(): ComposerDetector
 {
     return new ComposerDetector();
+}
+
+/**
+ * Create a GitDetector.
+ *
+ * @param null|string $workingDirectory Directory to run git in (default: current working directory)
+ * @param string $gitBinary Path to the git binary (default: "git", resolved from $PATH)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function git_detector(?string $workingDirectory = null, string $gitBinary = 'git'): GitDetector
+{
+    return new GitDetector($workingDirectory, $gitBinary);
 }
 
 /**

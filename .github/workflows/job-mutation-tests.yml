@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0  # Need full history for git-diff-filter
           persist-credentials: false
@@ -33,7 +33,7 @@ jobs:
         run: "mkdir -p var/infection/cache"
 
       - name: "Cache infection results"
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
         with:
           path: "var/infection/cache"
           key: "php-${{ matrix.php-version }}-infection-cache-${{ hashFiles('infection.json', 'tools/infection/phpunit.xml', 'composer.lock') }}"

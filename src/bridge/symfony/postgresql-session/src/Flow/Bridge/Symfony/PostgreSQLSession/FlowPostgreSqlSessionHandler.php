@@ -191,7 +191,6 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
      * Otherwise long-lived sessions whose payload never changes would be
      * garbage-collected even if still in active use.
      */
-    // @mago-expect analysis:incompatible-parameter-name
     #[Override]
     public function updateTimestamp(#[SensitiveParameter] string $sessionId, string $data): bool
     {

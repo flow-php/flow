@@ -218,7 +218,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
         /** @var HttpClientInterface $client */
         $client = $container->get('test.error_client');
-        $client->request('POST', 'http://localhost:8080/api/data');
+        $client->request('POST', 'http://localhost:8080/api/data')->getContent();
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -227,7 +227,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('POST localhost', $span->name());
+        static::assertSame('POST', $span->name());
         static::assertSame(500, $span->attributes()['http.response.status_code']);
 
         $status = $span->status();
@@ -271,7 +271,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
         /** @var HttpClientInterface $client */
         $client = $container->get('test.api_client');
-        $client->request('GET', 'https://api.example.com/users?page=1');
+        $client->request('GET', 'https://api.example.com/users?page=1')->getContent();
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -280,7 +280,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET api.example.com', $span->name());
+        static::assertSame('GET', $span->name());
         static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -288,12 +288,12 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertSame('https://api.example.com/users?page=1', $attributes['url.full']);
         static::assertSame('https', $attributes['url.scheme']);
         static::assertSame('api.example.com', $attributes['server.address']);
-        static::assertSame('test.api_client', $attributes['http.client.name']);
+        static::assertSame('test.api_client', $attributes['flow.http.client.name']);
         static::assertSame(200, $attributes['http.response.status_code']);
+        static::assertArrayNotHasKey('error.type', $attributes);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL semconv: 1xx-3xx leaves the span status unset.
+        static::assertNull($span->status());
     }
 
     public function test_wrapped_client_records_exception_and_creates_error_span(): void
@@ -350,7 +350,7 @@ final class TracableHttpClientTest extends KernelTestCase
         static::assertCount(1, $spans);
 
         $span = $spans[0];
-        static::assertSame('GET unreachable.example.com', $span->name());
+        static::assertSame('GET', $span->name());
 
         $status = $span->status();
         static::assertNotNull($status);

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
-
-use function Flow\Telemetry\DSL\context;
 
 final class VoidTracerProviderTest extends TestCase
 {
@@ -26,14 +28,14 @@ final class VoidTracerProviderTest extends TestCase
 
     public function test_context_storage_applies_to_new_tracers(): void
     {
-        $ctx = context();
-        $storage = new MemoryContextStorage($ctx);
+        $span = SpanContext::create(TraceId::generate(), SpanId::generate());
+        $storage = new MemoryContextStorage(Context::root()->withActiveSpan($span));
 
         $provider = new TracerProvider(new VoidSpanProcessor(), ClockMother::frozen(), $storage);
 
         static::assertSame(
-            $ctx->traceId->toHex(),
-            $provider->tracer($this->resource, 'test')->context()->traceId->toHex(),
+            $span->spanId->toHex(),
+            $provider->tracer($this->resource, 'test')->context()->activeSpanId()?->toHex(),
         );
     }
 

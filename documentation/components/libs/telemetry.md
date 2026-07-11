@@ -165,6 +165,10 @@ $telemetry->flush();    // Export any buffered data
 $telemetry->shutdown(); // Flush and close transports
 ```
 
+`registerShutdownFunction()` holds only a **weak reference**: it does not keep the `Telemetry` instance
+alive, and an instance that was garbage collected before process end is skipped. Keep the instance
+referenced (e.g. in your container) for as long as it should be shut down at exit.
+
 > For production OTLP export setup, see
 > the [OTLP Bridge documentation](/documentation/components/bridges/telemetry-otlp-bridge.md).
 
@@ -291,6 +295,31 @@ $result = $tracer->trace('fetch-user', function () use ($userId) {
     return $userRepository->find($userId);
 });
 ```
+
+**Suppressing tracing for a region:**
+
+Set the tracing-suppression flag on the active context to make any spans created within a region **non-recording**
+(never sampled, never exported). This is OpenTelemetry's tracing-scoped suppression (the equivalent of `suppressTracing`)
+— useful to silence noisy background work such as a queue worker's transport polling. Only traces are affected;
+**metrics and logs still flow**.
+
+```php
+<?php
+
+$scope = $contextStorage->attach($contextStorage->current()->withSuppressedTracing());
+
+try {
+    // Any $tracer->span(...) created here is non-recording and never exported.
+    $poll();
+} finally {
+    $scope->detach();
+}
+
+// $contextStorage->current()->isTracingSuppressed() is false again here.
+```
+
+Use `withoutSuppressedTracing()` to lift suppression for a nested region (e.g. to trace real work inside an otherwise
+suppressed loop).
 
 ### Metrics
 

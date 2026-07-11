@@ -32,7 +32,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this, [
-            'scalar.function' => $this->function::class,
+            TelemetryAttributes::ATTR_SCALAR_FUNCTION => $this->function::class,
         ]);
 
         try {

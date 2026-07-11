@@ -6,8 +6,10 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache;
 
 use BadMethodCallException;
 use DateTimeImmutable;
+use Flow\Telemetry\CacheAttributes;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -45,30 +47,28 @@ final readonly class TagAwareTraceableCacheAdapter implements
     ) {
         $this->tracer = $this->telemetry->tracer('flow.symfony.cache', PackageVersion::get('symfony/cache'));
         $meter = $this->telemetry->meter('flow.symfony.cache', PackageVersion::get('symfony/cache'));
-        $this->hitCounter = $meter->createCounter('cache.hits', 'operations', 'Number of cache hits');
-        $this->missCounter = $meter->createCounter('cache.misses', 'operations', 'Number of cache misses');
+        $this->hitCounter = $meter->createCounter('flow.cache.hits', '{operation}', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('flow.cache.misses', '{operation}', 'Number of cache misses');
     }
 
     public function clear(string $prefix = ''): bool
     {
         $attributes = [
-            'cache.operation' => 'clear',
-            'cache.pool' => $this->poolName,
+            CacheAttributes::CACHE_OPERATION => 'clear',
+            CacheAttributes::CACHE_POOL => $this->poolName,
         ];
 
         if ($prefix !== '') {
-            $attributes['cache.prefix'] = $prefix;
+            $attributes[CacheAttributes::CACHE_PREFIX] = $prefix;
         }
 
-        $span = $this->tracer->span("Cache Clear {$this->poolName}", SpanKind::CLIENT, $attributes);
+        $span = $this->tracer->span('cache.clear', SpanKind::CLIENT, $attributes);
 
         try {
-            $result = $this->adapter->clear($prefix);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->clear($prefix);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -79,18 +79,16 @@ final readonly class TagAwareTraceableCacheAdapter implements
 
     public function commit(): bool
     {
-        $span = $this->tracer->span("Cache Commit {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'commit',
-            'cache.pool' => $this->poolName,
+        $span = $this->tracer->span('cache.commit', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'commit',
+            CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
 
         try {
-            $result = $this->adapter->commit();
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->commit();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -109,19 +107,17 @@ final readonly class TagAwareTraceableCacheAdapter implements
             ));
         }
 
-        $span = $this->tracer->span("Cache Delete {$key} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'delete',
-            'cache.pool' => $this->poolName,
-            'cache.key' => $key,
+        $span = $this->tracer->span('cache.delete', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'delete',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_KEY => $key,
         ]);
 
         try {
-            $result = $this->adapter->delete($key);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->delete($key);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -134,19 +130,17 @@ final readonly class TagAwareTraceableCacheAdapter implements
     {
         $keyString = is_string($key) ? $key : (string) $key;
 
-        $span = $this->tracer->span("Cache DeleteItem {$keyString} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'deleteItem',
-            'cache.pool' => $this->poolName,
-            'cache.key' => $keyString,
+        $span = $this->tracer->span('cache.delete_item', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'delete_item',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_KEY => $keyString,
         ]);
 
         try {
-            $result = $this->adapter->deleteItem($keyString);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->deleteItem($keyString);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -160,19 +154,17 @@ final readonly class TagAwareTraceableCacheAdapter implements
      */
     public function deleteItems(array $keys): bool
     {
-        $span = $this->tracer->span("Cache DeleteItems {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'deleteItems',
-            'cache.pool' => $this->poolName,
-            'cache.key_count' => count($keys),
+        $span = $this->tracer->span('cache.delete_items', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'delete_items',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_KEY_COUNT => count($keys),
         ]);
 
         try {
-            $result = $this->adapter->deleteItems($keys);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->deleteItems($keys);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -204,9 +196,9 @@ final readonly class TagAwareTraceableCacheAdapter implements
         $result = $this->adapter->get($key, $wrappedCallback, $beta, $metadata);
 
         if ($hit) {
-            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->hitCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         } else {
-            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->missCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         }
 
         return $result;
@@ -217,9 +209,9 @@ final readonly class TagAwareTraceableCacheAdapter implements
         $item = $this->adapter->getItem($key);
 
         if ($item->isHit()) {
-            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->hitCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         } else {
-            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->missCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         }
 
         return $item;
@@ -246,11 +238,11 @@ final readonly class TagAwareTraceableCacheAdapter implements
         }
 
         if ($hits > 0) {
-            $this->hitCounter->add($hits, ['cache.pool' => $this->poolName]);
+            $this->hitCounter->add($hits, [CacheAttributes::CACHE_POOL => $this->poolName]);
         }
 
         if ($misses > 0) {
-            $this->missCounter->add($misses, ['cache.pool' => $this->poolName]);
+            $this->missCounter->add($misses, [CacheAttributes::CACHE_POOL => $this->poolName]);
         }
     }
 
@@ -260,9 +252,9 @@ final readonly class TagAwareTraceableCacheAdapter implements
         $exists = $this->adapter->hasItem($keyString);
 
         if ($exists) {
-            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->hitCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         } else {
-            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
+            $this->missCounter->add(1, [CacheAttributes::CACHE_POOL => $this->poolName]);
         }
 
         return $exists;
@@ -273,20 +265,18 @@ final readonly class TagAwareTraceableCacheAdapter implements
      */
     public function invalidateTags(array $tags): bool
     {
-        $span = $this->tracer->span("Cache InvalidateTags {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'invalidateTags',
-            'cache.pool' => $this->poolName,
-            'cache.tags' => $tags,
-            'cache.tag_count' => count($tags),
+        $span = $this->tracer->span('cache.invalidate_tags', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'invalidate_tags',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_TAGS => $tags,
+            CacheAttributes::CACHE_TAG_COUNT => count($tags),
         ]);
 
         try {
-            $result = $this->adapter->invalidateTags($tags);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->invalidateTags($tags);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -301,18 +291,16 @@ final readonly class TagAwareTraceableCacheAdapter implements
             return false;
         }
 
-        $span = $this->tracer->span("Cache Prune {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'prune',
-            'cache.pool' => $this->poolName,
+        $span = $this->tracer->span('cache.prune', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'prune',
+            CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
 
         try {
-            $result = $this->adapter->prune();
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->prune();
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -327,16 +315,16 @@ final readonly class TagAwareTraceableCacheAdapter implements
             return;
         }
 
-        $span = $this->tracer->span("Cache Reset {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'reset',
-            'cache.pool' => $this->poolName,
+        $span = $this->tracer->span('cache.reset', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'reset',
+            CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
 
         try {
             $this->adapter->reset();
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -348,19 +336,17 @@ final readonly class TagAwareTraceableCacheAdapter implements
     public function save(CacheItemInterface $item): bool
     {
         $key = $item->getKey();
-        $span = $this->tracer->span("Cache Save {$key} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'save',
-            'cache.pool' => $this->poolName,
-            'cache.key' => $key,
+        $span = $this->tracer->span('cache.save', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'save',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_KEY => $key,
         ]);
 
         try {
-            $result = $this->adapter->save($item);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->save($item);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -372,19 +358,17 @@ final readonly class TagAwareTraceableCacheAdapter implements
     public function saveDeferred(CacheItemInterface $item): bool
     {
         $key = $item->getKey();
-        $span = $this->tracer->span("Cache SaveDeferred {$key} {$this->poolName}", SpanKind::CLIENT, [
-            'cache.operation' => 'saveDeferred',
-            'cache.pool' => $this->poolName,
-            'cache.key' => $key,
+        $span = $this->tracer->span('cache.save_deferred', SpanKind::CLIENT, [
+            CacheAttributes::CACHE_OPERATION => 'save_deferred',
+            CacheAttributes::CACHE_POOL => $this->poolName,
+            CacheAttributes::CACHE_KEY => $key,
         ]);
 
         try {
-            $result = $this->adapter->saveDeferred($item);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $this->adapter->saveDeferred($item);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

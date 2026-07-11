@@ -47,7 +47,9 @@ final readonly class JoinEachRowsTransformer implements Transformer
      */
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        $context->telemetry()->transformationStarted($this, ['join.type' => $this->type->value]);
+        $context->telemetry()->transformationStarted($this, [
+            TelemetryAttributes::ATTR_JOIN_TYPE => $this->type->value,
+        ]);
 
         try {
             $rightRows = $this->factory->from($rows)->fetch();

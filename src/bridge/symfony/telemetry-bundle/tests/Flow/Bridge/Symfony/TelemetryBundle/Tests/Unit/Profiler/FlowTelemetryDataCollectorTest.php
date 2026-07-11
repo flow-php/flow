@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Profiler;
 
 use DateTimeImmutable;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Profiler\FlowTelemetryDataCollector;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
@@ -19,8 +20,12 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
+use function array_filter;
 use function array_map;
+use function array_values;
 use function Flow\Telemetry\DSL\telemetry;
 use function sprintf;
 
@@ -95,17 +100,6 @@ final class FlowTelemetryDataCollectorTest extends TestCase
         $collector->lateCollect();
 
         static::assertSame(50.0, $collector->getTimelineDurationMs());
-    }
-
-    public function test_late_collect_totals_span_durations(): void
-    {
-        $store = $this->storeWithSpanTree();
-        $collector = $this->collector($store);
-
-        $collector->lateCollect();
-
-        static::assertSame(3, $collector->getSpanCount());
-        static::assertSame(69.0, $collector->getTotalDurationMs());
     }
 
     public function test_late_collect_normalizes_metric_rows(): void
@@ -197,6 +191,163 @@ final class FlowTelemetryDataCollectorTest extends TestCase
         static::assertSame([], $collector->getSpans());
         static::assertSame(0, $collector->getSpanCount());
         static::assertSame(0.0, $collector->getTimelineDurationMs());
+    }
+
+    public function test_resource_attributes_are_read_from_spans(): void
+    {
+        $collector = $this->collector($this->storeWithSpanTree());
+
+        $collector->lateCollect();
+
+        static::assertSame(
+            ['service.name' => 'test-service', 'service.version' => '1.0.0'],
+            $collector->getResourceAttributes(),
+        );
+    }
+
+    public function test_resource_attributes_fall_back_to_metrics(): void
+    {
+        $store = new MemoryExporter();
+        $store->export(Signals::metrics([MetricMother::counter('app.requests', 1)]));
+        $collector = $this->collector($store);
+
+        $collector->lateCollect();
+
+        static::assertSame('test-service', $collector->getResourceAttributes()['service.name']);
+    }
+
+    public function test_resource_attributes_fall_back_to_logs(): void
+    {
+        $store = new MemoryExporter();
+        $store->export(Signals::logs([LogEntryMother::create('hello', Severity::INFO)]));
+        $collector = $this->collector($store);
+
+        $collector->lateCollect();
+
+        static::assertSame('test-service', $collector->getResourceAttributes()['service.name']);
+    }
+
+    public function test_resource_attributes_are_empty_without_signals(): void
+    {
+        $collector = $this->collector(new MemoryExporter());
+
+        $collector->lateCollect();
+
+        static::assertSame([], $collector->getResourceAttributes());
+    }
+
+    public function test_late_collect_collects_distinct_scopes_sorted_by_name(): void
+    {
+        $store = $this->storeWithSpanTree();
+        $store->export(Signals::metrics([MetricMother::counter('app.requests', 1)]));
+        $store->export(Signals::logs([LogEntryMother::create('hello', Severity::INFO)]));
+        $collector = $this->collector($store);
+
+        $collector->lateCollect();
+
+        static::assertSame(
+            [
+                ['name' => 'test', 'version' => '1.0.0', 'attributes' => []],
+                ['name' => 'test-instrumentation', 'version' => '1.0.0', 'attributes' => []],
+            ],
+            $collector->getScopes(),
+        );
+    }
+
+    public function test_scopes_are_empty_without_signals(): void
+    {
+        $collector = $this->collector(new MemoryExporter());
+
+        $collector->lateCollect();
+
+        static::assertSame([], $collector->getScopes());
+    }
+
+    public function test_configured_instruments_are_exposed(): void
+    {
+        $instruments = [
+            [
+                'type' => 'tracer',
+                'name' => 'checkout',
+                'version' => '1.0.0',
+                'attributes' => ['flow.component' => 'checkout'],
+            ],
+            ['type' => 'logger', 'name' => 'app', 'version' => 'unknown', 'attributes' => []],
+        ];
+        $collector = new FlowTelemetryDataCollector(
+            telemetry(ResourceMother::default()),
+            new MemoryExporter(),
+            $instruments,
+        );
+
+        $collector->lateCollect();
+
+        static::assertSame($instruments, $collector->getConfiguredInstruments());
+    }
+
+    public function test_configured_instruments_default_to_empty(): void
+    {
+        $collector = $this->collector(new MemoryExporter());
+
+        $collector->lateCollect();
+
+        static::assertSame([], $collector->getConfiguredInstruments());
+    }
+
+    public function test_in_flight_request_span_is_captured_for_the_panel(): void
+    {
+        $collector = $this->collector(new MemoryExporter());
+
+        $request = Request::create('/orders', 'GET');
+        $span = SpanMother::create(
+            'GET /orders',
+            null,
+            null,
+            null,
+            SpanKind::SERVER,
+            new DateTimeImmutable('-100 milliseconds'),
+        );
+        $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $span);
+
+        $collector->collect($request, new Response());
+        $collector->lateCollect();
+
+        $row = array_values(array_filter(
+            $collector->getSpans(),
+            static fn(array $r): bool => $r['name'] === 'GET /orders',
+        ));
+
+        static::assertCount(1, $row);
+        static::assertNotNull($row[0]['durationMs']);
+        static::assertGreaterThan(0.0, $row[0]['durationMs']);
+    }
+
+    public function test_request_span_is_not_duplicated_when_already_exported(): void
+    {
+        $start = new DateTimeImmutable('2024-01-01T00:00:00.000000+00:00');
+        $span = SpanMother::create(
+            'GET /dup',
+            TraceId::fromHex(self::TRACE_ID),
+            SpanId::fromHex(self::ROOT_ID),
+            null,
+            SpanKind::SERVER,
+            $start,
+        )->end($start->modify('+10000 microseconds'));
+
+        $store = new MemoryExporter();
+        $store->export(Signals::traces([$span]));
+
+        $collector = $this->collector($store);
+
+        $request = Request::create('/dup', 'GET');
+        $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $span);
+
+        $collector->collect($request, new Response());
+        $collector->lateCollect();
+
+        $matching = array_filter($collector->getSpans(), static fn(array $r): bool => $r['name'] === 'GET /dup');
+
+        static::assertCount(1, $matching);
     }
 
     private function collector(MemoryExporter $store): FlowTelemetryDataCollector

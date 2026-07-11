@@ -66,7 +66,7 @@ final class ConsoleOutput
 
     public function border(int $width): string
     {
-        return '+' . str_repeat('-', $width - 2) . '+';
+        return '+' . str_repeat('-', max(0, $width - 2)) . '+';
     }
 
     public function cyan(string $text): string
@@ -152,13 +152,13 @@ final class ConsoleOutput
         return match ($padType) {
             STR_PAD_LEFT => mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired) . $input,
             STR_PAD_BOTH => mb_substr(
-                str_repeat($padding, (int) floor($paddingRequired / 2)),
+                str_repeat($padding, max(0, (int) floor($paddingRequired / 2))),
                 0,
                 (int) floor($paddingRequired / 2),
             )
                 . $input
                 . mb_substr(
-                    str_repeat($padding, $paddingRequired - (int) floor($paddingRequired / 2)),
+                    str_repeat($padding, max(0, $paddingRequired - (int) floor($paddingRequired / 2))),
                     0,
                     $paddingRequired - (int) floor($paddingRequired / 2),
                 ),

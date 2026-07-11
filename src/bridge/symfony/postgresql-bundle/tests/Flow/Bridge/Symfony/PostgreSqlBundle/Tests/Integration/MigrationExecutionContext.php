@@ -105,7 +105,7 @@ final class MigrationExecutionContext
 
     public function migrator(): Migrator
     {
-        return $this->symfony->getService('flow.postgresql.default.migrations.migrator', Migrator::class);
+        return $this->symfony->getService('flow.postgresql.migrations.migrator', Migrator::class);
     }
 
     public function shutdown(): void

@@ -19,17 +19,9 @@ use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\DBAL\ServerVersionProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingDriver;
-use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\LoggerProvider;
-use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
-use Flow\Telemetry\Resource;
-use Flow\Telemetry\Telemetry;
-use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -41,12 +33,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_defaults_to_other_sql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = $this->createMock(AbstractPlatform::class);
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -58,12 +50,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_db2(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new DB2Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -75,12 +67,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_mariadb_as_mysql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new MariaDBPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -92,12 +84,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_mssql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new SQLServerPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -109,13 +101,13 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_mysql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         // @mago-expect analysis:deprecated-class
         $platform = new MySQL80Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -127,12 +119,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_oracle(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new OraclePlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -144,12 +136,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_postgresql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -161,12 +153,12 @@ final class TracingDriverTest extends TestCase
     public function test_get_semantic_db_system_detects_sqlite(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new SQLitePlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -178,12 +170,12 @@ final class TracingDriverTest extends TestCase
     public function test_span_defaults_db_namespace_to_default(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
@@ -195,35 +187,61 @@ final class TracingDriverTest extends TestCase
     public function test_span_includes_connection_name(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'analytics', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'analytics', maxSqlLength: 100);
 
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('analytics', $spans[0]->attributes()['db.connection.name']);
+        static::assertSame('analytics', $spans[0]->attributes()['flow.db.connection.name']);
     }
 
     public function test_span_includes_db_namespace_from_params(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
-        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
 
         $tracingDriver->connect(['dbname' => 'my_database']);
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('my_database', $spans[0]->attributes()['db.namespace']);
+    }
+
+    public function test_records_exception_when_connect_fails(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
+
+        $driver = $this->createStub(Driver::class);
+        $driver->method('connect')->willThrowException(new RuntimeException('connection refused'));
+
+        $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);
+
+        $caught = false;
+
+        try {
+            $tracingDriver->connect([]);
+        } catch (RuntimeException) {
+            $caught = true;
+        }
+
+        static::assertTrue($caught);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertTrue($spans[0]->status()?->isError());
+        static::assertSame(RuntimeException::class, $spans[0]->attributes()['error.type']);
     }
 
     private function createMockDriverWithPlatform(AbstractPlatform $platform): Driver
@@ -289,18 +307,5 @@ final class TracingDriverTest extends TestCase
                 throw new RuntimeException('Not implemented');
             }
         };
-    }
-
-    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
-    {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
-
-        return new Telemetry(
-            Resource::create(['service.name' => 'test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new VoidMetricProcessor(), $clock),
-            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
-        );
     }
 }

@@ -79,10 +79,15 @@ final readonly class ExpressionParser
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 
-        $selectStmt = $stmts[0]->getStmt()?->getSelectStmt();
+        $stmt = $stmts[0]->getStmt();
+        $selectStmt = $stmt?->getSelectStmt();
 
         if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
+            throw InvalidAstException::unexpectedNodeType(
+                'SelectStmt',
+                $stmt?->getNode() ?: 'unknown',
+                $parsed->raw()->getVersion(),
+            );
         }
 
         $targetList = $selectStmt->getTargetList();

@@ -83,7 +83,11 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         if (is_array($partitions)) {
             $allArePartitions =
                 count($partitions) > 0
-                && array_reduce($partitions, static fn($carry, $item) => $carry && $item instanceof Partition, true);
+                && array_reduce(
+                    $partitions,
+                    static fn(bool $carry, $item) => $carry && $item instanceof Partition,
+                    true,
+                );
 
             if ($allArePartitions) {
                 // All elements are Partition objects, safe to spread

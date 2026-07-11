@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Client\Telemetry;
 
 use DateTimeInterface;
 use Flow\PostgreSql\Client\TypedValue;
+use Flow\Telemetry\SemConvAttributes;
 
 use function array_combine;
 use function array_keys;
@@ -98,9 +99,7 @@ final readonly class ParameterFormatter
 
         return array_combine(
             array_map(
-                static fn(int $index): string => (
-                    PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1)
-                ),
+                static fn(int $index): string => SemConvAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1),
                 array_keys($slice),
             ),
             array_map(fn(mixed $value): string => $this->format($value, $maxLength), $slice),

@@ -239,7 +239,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         static::assertSame('test:failing', $span->name());
 
         $attributes = $span->attributes();
-        static::assertSame(1, $attributes['process.exit_code']);
+        static::assertSame(1, $attributes['process.exit.code']);
 
         $status = $span->status();
         static::assertNotNull($status);
@@ -301,12 +301,11 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         static::assertSame(SpanKind::INTERNAL, $span->kind());
 
         $attributes = $span->attributes();
-        static::assertSame('test:command', $attributes['command.name']);
-        static::assertSame(TestCommand::class, $attributes['command.class']);
-        static::assertSame(0, $attributes['process.exit_code']);
+        static::assertSame('test:command', $attributes['flow.symfony.command.name']);
+        static::assertSame(TestCommand::class, $attributes['flow.symfony.command.class']);
+        static::assertSame(0, $attributes['process.exit.code']);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 }

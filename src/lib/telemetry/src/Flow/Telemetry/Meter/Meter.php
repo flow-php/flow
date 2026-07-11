@@ -118,7 +118,7 @@ final class Meter
      * Counters are monotonically increasing - they only go up.
      * Use for counting occurrences: requests, errors, items processed.
      *
-     * @param string $name Metric name (e.g., 'http.requests', 'flow.rows.processed')
+     * @param string $name Metric name (e.g., 'http.requests', 'flow.etl.rows.processed')
      * @param null|string $unit Unit of measurement (e.g., 'rows', 'bytes')
      * @param null|string $description Human-readable description
      */

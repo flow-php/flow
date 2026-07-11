@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Sampler;
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Tracer\Span;
 use InvalidArgumentException;
@@ -23,7 +24,7 @@ use function substr;
  * ```php
  * // Sample 10% of traces
  * $sampler = new TraceIdRatioBasedSampler(0.1);
- * $result = $sampler->shouldSample($span);
+ * $result = $sampler->shouldSample($context, $span);
  * ```
  */
 final readonly class TraceIdRatioBasedSampler implements Sampler
@@ -50,7 +51,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
         return sprintf('TraceIdRatioBasedSampler{%.6f}', $this->ratio);
     }
 
-    public function shouldSample(Span $span): SamplingResult
+    public function shouldSample(Context $parentContext, Span $span): SamplingResult
     {
         if ($this->ratio >= 1.0) {
             return SamplingResult::recordAndSample();

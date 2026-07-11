@@ -30,6 +30,42 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.custom_clock', $config['clock_service_id']);
     }
 
+    public function test_git_detector_can_be_configured(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [
+                'detectors' => [
+                    'static' => [
+                        'git' => [
+                            'enabled' => true,
+                            'binary' => '/usr/bin/git',
+                            'working_directory' => '/srv/app',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $git = $config['resource']['detectors']['static']['git'];
+
+        static::assertTrue($git['enabled']);
+        static::assertSame('/usr/bin/git', $git['binary']);
+        static::assertSame('/srv/app', $git['working_directory']);
+    }
+
+    public function test_git_detector_defaults_to_disabled(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+        ]);
+
+        $git = $config['resource']['detectors']['static']['git'];
+
+        static::assertFalse($git['enabled']);
+        static::assertSame('git', $git['binary']);
+        static::assertNull($git['working_directory']);
+    }
+
     public function test_clock_service_id_defaults_to_null(): void
     {
         $config = $this->context->processConfig([
@@ -267,6 +303,123 @@ final class ConfigurationTest extends TestCase
         static::assertSame('http://localhost:4318', $config['exporters']['otlp']['otlp']['transport']['endpoint']);
         static::assertSame('protobuf', $config['exporters']['otlp']['otlp']['transport']['encoding']);
         static::assertSame('otlp', $config['tracer_provider']['processor']['exporter']);
+    }
+
+    public function test_async_curl_transport_is_accepted(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'async_curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'encoding' => 'protobuf',
+                            'connect_timeout_ms' => 500,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame('async_curl', $config['exporters']['otlp']['otlp']['transport']['type']);
+        static::assertSame('protobuf', $config['exporters']['otlp']['otlp']['transport']['encoding']);
+        static::assertSame(500, $config['exporters']['otlp']['otlp']['transport']['connect_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_defaults_connect_timeout_to_1500ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(1500, $config['exporters']['otlp']['otlp']['transport']['connect_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_accepts_pump_timeout_ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'async_curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'pump_timeout_ms' => 50,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(50, $config['exporters']['otlp']['otlp']['transport']['pump_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_defaults_pump_timeout_to_100ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(100, $config['exporters']['otlp']['otlp']['transport']['pump_timeout_ms']);
+    }
+
+    #[TestWith(['curl'])]
+    #[TestWith(['grpc'])]
+    #[TestWith(['stream'])]
+    public function test_pump_timeout_ms_is_rejected_for_non_async_curl_transports(string $type): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(
+            'The "pump_timeout_ms" parameter is only supported when transport.type is "async_curl"',
+        );
+
+        $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => $type,
+                            'endpoint' => $type === 'stream' ? '/var/log/otel/logs.jsonl' : 'http://localhost:4318',
+                            'pump_timeout_ms' => 100,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_curl_transport_defaults_request_timeout_to_10000ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(10000, $config['exporters']['otlp']['otlp']['transport']['timeout_ms']);
     }
 
     public function test_otlp_exporter_error_handler_defaults_to_default(): void
@@ -537,7 +690,9 @@ final class ConfigurationTest extends TestCase
     public function test_transport_failover_rejected_for_stream_primary(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('"failover" block is only supported for transport.type "curl" or "grpc"');
+        $this->expectExceptionMessage(
+            '"failover" block is only supported for transport.type "curl", "async_curl" or "grpc"',
+        );
 
         $this->context->processConfig([
             'resource' => [],
@@ -603,5 +758,187 @@ final class ConfigurationTest extends TestCase
 
         static::assertSame('service', $config['exporters']['custom_otlp']['otlp']['transport']['type']);
         static::assertSame('app.my_transport', $config['exporters']['custom_otlp']['otlp']['transport']['service_id']);
+    }
+
+    public function test_security_fields_default_to_semconv_keys_and_are_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['security' => ['enabled' => true]],
+        ]);
+        $fields = $default['instrumentation']['security']['fields'];
+
+        static::assertTrue($fields['id']['enabled']);
+        static::assertSame('user.id', $fields['id']['attribute']);
+        static::assertFalse($fields['roles']['enabled']);
+        static::assertSame('user.roles', $fields['roles']['attribute']);
+        static::assertFalse($fields['email']['enabled']);
+        static::assertSame('user.email', $fields['email']['attribute']);
+        static::assertSame('getEmail', $fields['email']['getter']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'security' => [
+                    'enabled' => true,
+                    'fields' => [
+                        'id' => ['enabled' => false, 'attribute' => 'app.actor'],
+                        'roles' => ['enabled' => true, 'attribute' => 'app.actor_roles'],
+                        'email' => ['enabled' => true, 'getter' => 'getEmailAddress'],
+                    ],
+                ],
+            ],
+        ]);
+        $customFields = $custom['instrumentation']['security']['fields'];
+
+        static::assertFalse($customFields['id']['enabled']);
+        static::assertSame('app.actor', $customFields['id']['attribute']);
+        static::assertTrue($customFields['roles']['enabled']);
+        static::assertSame('app.actor_roles', $customFields['roles']['attribute']);
+        static::assertTrue($customFields['email']['enabled']);
+        static::assertSame('getEmailAddress', $customFields['email']['getter']);
+    }
+
+    public function test_http_kernel_route_naming_defaults_to_path_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true]],
+        ]);
+        static::assertSame('path', $default['instrumentation']['http_kernel']['route_naming']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'name']],
+        ]);
+        static::assertSame('name', $custom['instrumentation']['http_kernel']['route_naming']);
+    }
+
+    public function test_http_kernel_route_naming_rejects_unknown_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'controller']],
+        ]);
+    }
+
+    public function test_security_is_disabled_by_default(): void
+    {
+        $config = $this->context->processConfig(['resource' => []]);
+
+        static::assertFalse($config['instrumentation']['security']['enabled']);
+    }
+
+    public function test_max_batch_age_is_parsed_for_span_metric_and_log_processors(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 15.0],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 30.0],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 5.5],
+            ],
+        ]);
+
+        static::assertSame(15.0, $config['tracer_provider']['processor']['max_batch_age']);
+        static::assertSame(30.0, $config['meter_provider']['processor']['max_batch_age']);
+        static::assertSame(5.5, $config['logger_provider']['processor']['max_batch_age']);
+    }
+
+    public function test_max_batch_age_defaults_to_null_when_omitted(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+        ]);
+
+        static::assertArrayHasKey('max_batch_age', $config['tracer_provider']['processor']);
+        static::assertNull($config['tracer_provider']['processor']['max_batch_age']);
+        static::assertNull($config['meter_provider']['processor']['max_batch_age']);
+        static::assertNull($config['logger_provider']['processor']['max_batch_age']);
+    }
+
+    public function test_messenger_span_naming_defaults_to_transport_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true]],
+        ]);
+        static::assertSame('transport', $default['instrumentation']['messenger']['span_naming']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'span_naming' => 'message_name']],
+        ]);
+        static::assertSame('message_name', $custom['instrumentation']['messenger']['span_naming']);
+    }
+
+    public function test_messenger_span_naming_rejects_unknown_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'span_naming' => 'handler']],
+        ]);
+    }
+
+    public function test_messenger_metrics_default_to_enabled(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => ['enabled' => true],
+            ],
+        ]);
+
+        static::assertTrue($config['instrumentation']['messenger']['metrics']);
+        // messaging.process.duration is spec-fixed at seconds; the former
+        // metrics_duration_unit option no longer exists.
+        static::assertArrayNotHasKey('metrics_duration_unit', $config['instrumentation']['messenger']);
+    }
+
+    public function test_messenger_metrics_can_be_disabled(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'metrics' => false,
+                ],
+            ],
+        ]);
+
+        static::assertFalse($config['instrumentation']['messenger']['metrics']);
+    }
+
+    public function test_messenger_metrics_duration_unit_option_was_removed(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'metrics_duration_unit' => 's',
+                ],
+            ],
+        ]);
     }
 }
