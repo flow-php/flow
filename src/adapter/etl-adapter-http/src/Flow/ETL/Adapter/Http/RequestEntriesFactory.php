@@ -60,28 +60,20 @@ final class RequestEntriesFactory
             }
 
             if (!empty($requestBodyContent)) {
-                switch ($requestType) {
-                    case 'json':
-                        if (class_exists(JsonEntry::class)) {
-                            $decodedJson = type_array()->assert(json_decode(
+                $requestBodyEntry = match ($requestType) {
+                    'json' => class_exists(JsonEntry::class)
+                        ? new JsonEntry(
+                            'request_body',
+                            Json::fromArray(type_array()->assert(json_decode(
                                 $requestBodyContent,
                                 true,
                                 512,
                                 JSON_THROW_ON_ERROR,
-                            ));
-
-                            $requestBodyEntry = new JsonEntry('request_body', Json::fromArray($decodedJson));
-                        } else {
-                            $requestBodyEntry = string_entry('request_body', $requestBodyContent);
-                        }
-
-                        break;
-
-                    default:
-                        $requestBodyEntry = string_entry('request_body', $requestBodyContent);
-
-                        break;
-                }
+                            ))),
+                        )
+                        : string_entry('request_body', $requestBodyContent),
+                    default => string_entry('request_body', $requestBodyContent),
+                };
             }
         }
 

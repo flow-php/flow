@@ -95,95 +95,58 @@ final class SchemaConverter
      */
     private function flowToParquet(string $name, Type $type, bool $nullable): Column
     {
-        switch ($type::class) {
-            case FloatType::class:
-                return FlatColumn::float(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case IntegerType::class:
-                return FlatColumn::int64(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case HTMLType::class:
-            case HTMLElementType::class:
-            case XMLElementType::class:
-            case XMLType::class:
-            case StringType::class:
-                return FlatColumn::string(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case BooleanType::class:
-                return FlatColumn::boolean(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case TimeType::class:
-                return FlatColumn::time(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case DateType::class:
-                return FlatColumn::date(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case DateTimeType::class:
-                return FlatColumn::datetime(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case UuidType::class:
-                return FlatColumn::uuid(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case JsonType::class:
-                return FlatColumn::json(
-                    $name,
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case ListType::class:
-                $elementType = $type->element();
-                $elementOptional = $elementType instanceof OptionalType;
-                $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
+        $repetition = $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED;
 
-                return NestedColumn::list(
-                    $name,
-                    new ListElement($this->flowToParquet('element', $elementType, $elementOptional)),
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case MapType::class:
-                $valueType = $type->value();
-                $valueOptional = $valueType instanceof OptionalType;
-                $valueType = $valueType instanceof OptionalType ? $valueType->base() : $valueType;
+        return match ($type::class) {
+            FloatType::class => FlatColumn::float($name, $repetition),
+            IntegerType::class => FlatColumn::int64($name, $repetition),
+            HTMLType::class,
+            HTMLElementType::class,
+            XMLElementType::class,
+            XMLType::class,
+            StringType::class,
+                => FlatColumn::string($name, $repetition),
+            BooleanType::class => FlatColumn::boolean($name, $repetition),
+            TimeType::class => FlatColumn::time($name, $repetition),
+            DateType::class => FlatColumn::date($name, $repetition),
+            DateTimeType::class => FlatColumn::datetime($name, $repetition),
+            UuidType::class => FlatColumn::uuid($name, $repetition),
+            JsonType::class => FlatColumn::json($name, $repetition),
+            ListType::class => NestedColumn::list(
+                $name,
+                new ListElement($this->flowToParquet(
+                    'element',
+                    $this->unwrapOptional($type->element()),
+                    $type->element() instanceof OptionalType,
+                )),
+                $repetition,
+            ),
+            MapType::class => NestedColumn::map(
+                $name,
+                new ParquetSchema\MapKey($this->flowToParquet('key', $type->key(), false)),
+                new ParquetSchema\MapValue($this->flowToParquet(
+                    'value',
+                    $this->unwrapOptional($type->value()),
+                    $type->value() instanceof OptionalType,
+                )),
+                $repetition,
+            ),
+            StructureType::class => NestedColumn::struct(
+                $name,
+                array_map(
+                    function (int|string $elementName, Type $elementType) {
+                        $elementOptional = $elementType instanceof OptionalType;
+                        $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
 
-                return NestedColumn::map(
-                    $name,
-                    new ParquetSchema\MapKey($this->flowToParquet('key', $type->key(), false)),
-                    new ParquetSchema\MapValue($this->flowToParquet('value', $valueType, $valueOptional)),
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-            case StructureType::class:
-                return NestedColumn::struct(
-                    $name,
-                    array_map(
-                        function (int|string $elementName, Type $elementType) {
-                            $elementOptional = $elementType instanceof OptionalType;
-                            $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
-
-                            return $this->flowToParquet((string) $elementName, $elementType, $elementOptional);
-                        },
-                        array_keys($type->elements()),
-                        $type->elements(),
-                    ),
-                    $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,
-                );
-        }
-
-        throw new RuntimeException($type::class . ' is not supported.');
+                        return $this->flowToParquet((string) $elementName, $elementType, $elementOptional);
+                    },
+                    array_keys($type->elements()),
+                    $type->elements(),
+                ),
+                $repetition,
+            ),
+            default => throw new RuntimeException($type::class . ' is not supported.'),
+        };
     }
 
     /**
@@ -332,5 +295,15 @@ final class SchemaConverter
         }
 
         return $nullable ? type_optional(type_structure($elements)) : type_structure($elements);
+    }
+
+    /**
+     * @param Type<mixed> $type
+     *
+     * @return Type<mixed>
+     */
+    private function unwrapOptional(Type $type): Type
+    {
+        return $type instanceof OptionalType ? $type->base() : $type;
     }
 }

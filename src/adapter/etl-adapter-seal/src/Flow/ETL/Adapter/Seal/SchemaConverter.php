@@ -102,73 +102,60 @@ final class SchemaConverter
      */
     private function flowToSealField(string $name, Type $type, bool $multiple, Metadata $metadata): AbstractField
     {
-        switch ($type::class) {
-            case EnumType::class:
-            case HTMLElementType::class:
-            case HTMLType::class:
-            case StringType::class:
-            case UuidType::class:
-            case XMLElementType::class:
-            case XMLType::class:
-                return new Field\TextField(
-                    $name,
-                    multiple: $multiple,
-                    searchable: $this->flag($metadata, SealMetadata::SEARCHABLE, true),
-                    filterable: $this->flag($metadata, SealMetadata::FILTERABLE, false),
-                    sortable: $this->flag($metadata, SealMetadata::SORTABLE, false),
-                    distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
-                    facet: $this->flag($metadata, SealMetadata::FACET, false),
-                );
-            case IntegerType::class:
-                return new Field\IntegerField(
-                    $name,
-                    multiple: $multiple,
-                    filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
-                    sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
-                    distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
-                    facet: $this->flag($metadata, SealMetadata::FACET, false),
-                );
-            case FloatType::class:
-                return new Field\FloatField(
-                    $name,
-                    multiple: $multiple,
-                    filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
-                    sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
-                    distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
-                    facet: $this->flag($metadata, SealMetadata::FACET, false),
-                );
-            case BooleanType::class:
-                return new Field\BooleanField(
-                    $name,
-                    multiple: $multiple,
-                    filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
-                    sortable: $this->flag($metadata, SealMetadata::SORTABLE, false),
-                    distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
-                    facet: $this->flag($metadata, SealMetadata::FACET, false),
-                );
-            case DateTimeType::class:
-            case DateType::class:
-                return new Field\DateTimeField(
-                    $name,
-                    multiple: $multiple,
-                    filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
-                    sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
-                    distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
-                    facet: $this->flag($metadata, SealMetadata::FACET, false),
-                );
-            case JsonType::class:
-            case MapType::class:
-                return new Field\JsonObjectField($name);
-            case ListType::class:
-                $element = $type->element();
-                $element = $element instanceof OptionalType ? $element->base() : $element;
-
-                return $this->flowToSealField($name, $element, true, $metadata);
-            case StructureType::class:
-                return new Field\ObjectField($name, $this->structureFields($type), multiple: $multiple);
-        }
-
-        throw new RuntimeException($type::class . ' is not supported.');
+        return match ($type::class) {
+            EnumType::class,
+            HTMLElementType::class,
+            HTMLType::class,
+            StringType::class,
+            UuidType::class,
+            XMLElementType::class,
+            XMLType::class,
+                => new Field\TextField(
+                $name,
+                multiple: $multiple,
+                searchable: $this->flag($metadata, SealMetadata::SEARCHABLE, true),
+                filterable: $this->flag($metadata, SealMetadata::FILTERABLE, false),
+                sortable: $this->flag($metadata, SealMetadata::SORTABLE, false),
+                distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
+                facet: $this->flag($metadata, SealMetadata::FACET, false),
+            ),
+            IntegerType::class => new Field\IntegerField(
+                $name,
+                multiple: $multiple,
+                filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
+                sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
+                distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
+                facet: $this->flag($metadata, SealMetadata::FACET, false),
+            ),
+            FloatType::class => new Field\FloatField(
+                $name,
+                multiple: $multiple,
+                filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
+                sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
+                distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
+                facet: $this->flag($metadata, SealMetadata::FACET, false),
+            ),
+            BooleanType::class => new Field\BooleanField(
+                $name,
+                multiple: $multiple,
+                filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
+                sortable: $this->flag($metadata, SealMetadata::SORTABLE, false),
+                distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
+                facet: $this->flag($metadata, SealMetadata::FACET, false),
+            ),
+            DateTimeType::class, DateType::class => new Field\DateTimeField(
+                $name,
+                multiple: $multiple,
+                filterable: $this->flag($metadata, SealMetadata::FILTERABLE, true),
+                sortable: $this->flag($metadata, SealMetadata::SORTABLE, true),
+                distinct: $this->flag($metadata, SealMetadata::DISTINCT, false),
+                facet: $this->flag($metadata, SealMetadata::FACET, false),
+            ),
+            JsonType::class, MapType::class => new Field\JsonObjectField($name),
+            ListType::class => $this->flowToSealField($name, $this->unwrapOptional($type->element()), true, $metadata),
+            StructureType::class => new Field\ObjectField($name, $this->structureFields($type), multiple: $multiple),
+            default => throw new RuntimeException($type::class . ' is not supported.'),
+        };
     }
 
     /**
@@ -225,5 +212,15 @@ final class SchemaConverter
         }
 
         return $fields;
+    }
+
+    /**
+     * @param Type<mixed> $type
+     *
+     * @return Type<mixed>
+     */
+    private function unwrapOptional(Type $type): Type
+    {
+        return $type instanceof OptionalType ? $type->base() : $type;
     }
 }

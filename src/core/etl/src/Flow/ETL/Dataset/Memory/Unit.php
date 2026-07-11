@@ -48,24 +48,16 @@ final readonly class Unit
 
         $unit = substr($limit, -1);
 
-        switch (strtoupper($unit)) {
-            case 'K':
-            case 'B':
-                return self::fromKb((int) substr($limit, 0, -1));
-            case 'M':
-            case 'MB':
-                return self::fromMb((int) substr($limit, 0, -1));
-            case 'G':
-            case 'GB':
-                return self::fromGb((int) substr($limit, 0, -1));
-
-            default:
-                if (ctype_digit($limit)) {
-                    return self::fromBytes((int) $limit);
-                }
-
-                throw new InvalidArgumentException("Can't extract memory limit in bytes from php ini value: {$limit}");
-        }
+        return match (strtoupper($unit)) {
+            'K', 'B' => self::fromKb((int) substr($limit, 0, -1)),
+            'M', 'MB' => self::fromMb((int) substr($limit, 0, -1)),
+            'G', 'GB' => self::fromGb((int) substr($limit, 0, -1)),
+            default => ctype_digit($limit)
+                ? self::fromBytes((int) $limit)
+                : throw new InvalidArgumentException(
+                    "Can't extract memory limit in bytes from php ini value: {$limit}",
+                ),
+        };
     }
 
     public function absolute(): self
