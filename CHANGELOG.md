@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-07-11
 
 ### Added
+- [#2522](https://github.com/flow-php/flow/pull/2522) - **FlowContext::calculator() backed by a shared Calculator instance held in Config** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2522](https://github.com/flow-php/flow/pull/2522) - **sum(ref('x'), exact: true) - opt-in arbitrary-precision (brick/math) summation; exact accepts ScalarFunction|bool, so the flag can also be driven per row by a scalar expression or a boolean column** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2516](https://github.com/flow-php/flow/pull/2516) - **Add a new `ref()->domElementNamespace()` function** - [@stloyd](https://github.com/stloyd)
 - [#2516](https://github.com/flow-php/flow/pull/2516) - **Add support for a new `\Dom\XmlDocument` (PHP 8.4+) in XML handling** - [@stloyd](https://github.com/stloyd)
 - [#2510](https://github.com/flow-php/flow/pull/2510) - **flow-php/etl-adapter-json - bidirectional JSON Schema converter with schema_from_json_schema() and schema_to_json_schema() DSL functions** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +25,8 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2522](https://github.com/flow-php/flow/pull/2522) - **sum() aggregation accumulates through native int/float arithmetic by default (returning int whenever the sum has no fractional part) instead of routing every addition through BigDecimal** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2522](https://github.com/flow-php/flow/pull/2522) - **Sum (exact mode) and Average reuse the shared Calculator from FlowContext instead of constructing a new Calculator for every aggregated row** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2520](https://github.com/flow-php/flow/pull/2520) - **Use `RandomValueGenerator` in `generate_random_string()` & `generate_random_int()`** - [@stloyd](https://github.com/stloyd)
 - [#2519](https://github.com/flow-php/flow/pull/2519) - **Make `NativePHPHash` singleton** - [@stloyd](https://github.com/stloyd)
 - [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader reuses a single php://temp row buffer per loader instance (released in the closure() hook) instead of opening and closing a temporary stream for every written
