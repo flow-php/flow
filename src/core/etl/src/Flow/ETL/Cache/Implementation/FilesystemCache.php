@@ -25,6 +25,8 @@ final readonly class FilesystemCache implements Cache
 {
     private Path $cacheDir;
 
+    private FloeReader $reader;
+
     /**
      * @param int<1, max> $serializerBatchSize
      */
@@ -39,6 +41,7 @@ final readonly class FilesystemCache implements Cache
         }
 
         $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir();
+        $this->reader = new FloeReader($this->filesystem);
     }
 
     public function clear(): void
@@ -59,7 +62,7 @@ final readonly class FilesystemCache implements Cache
             throw new KeyNotInCacheException($key);
         }
 
-        $file = (new FloeReader($this->filesystem))->read($path);
+        $file = $this->reader->read($path);
 
         try {
             $footer = $file->footer();
@@ -76,8 +79,8 @@ final readonly class FilesystemCache implements Cache
             }
 
             return RowsValueMapper::wrap(RowsValueMapper::reconstructFrom($rows, $footer));
-        } catch (FloeException) {
-            throw new KeyNotInCacheException($key);
+        } catch (FloeException $e) {
+            throw new KeyNotInCacheException($key, $e);
         }
     }
 
@@ -94,12 +97,12 @@ final readonly class FilesystemCache implements Cache
             throw new KeyNotInCacheException($key);
         }
 
-        $file = (new FloeReader($this->filesystem))->read($path);
+        $file = $this->reader->read($path);
 
         try {
             $partitions = RowsValueMapper::partitionsFrom($file->footer());
-        } catch (FloeException) {
-            throw new KeyNotInCacheException($key);
+        } catch (FloeException $e) {
+            throw new KeyNotInCacheException($key, $e);
         }
 
         foreach ($file->recover($this->serializerBatchSize) as $batch) {

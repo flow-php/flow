@@ -11,7 +11,6 @@ use Flow\Filesystem\Path;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
-use function array_values;
 use function count;
 use function sprintf;
 use function strlen;
@@ -38,7 +37,6 @@ final readonly class FloeMerger
             throw new FloeException('Floe merge requires at least one source file');
         }
 
-        $sources = array_values($sources);
         $reconciled = $this->reconcile($sources);
 
         $metadata ??= Metadata::empty();
@@ -80,7 +78,7 @@ final readonly class FloeMerger
             $layout = $this->readLayout($source);
             $footer = $layout['footer'];
 
-            if ($index === 0) {
+            if ($partitions === null) {
                 $partitions = $footer->partitions;
             } elseif ($footer->partitions !== $partitions) {
                 throw new IncompatibleSchemaException(sprintf(
@@ -144,10 +142,10 @@ final readonly class FloeMerger
         $writer = new FloeWriter($this->filesystem, useExtension: $this->useExtension);
         $writer->create($dest, $mergedMetadata->merge($metadata));
 
+        $reader = new FloeReader($this->filesystem, useExtension: $this->useExtension);
+
         foreach ($sources as $source) {
-            foreach ((new FloeReader($this->filesystem, useExtension: $this->useExtension))
-                ->read($source)
-                ->rows() as $batch) {
+            foreach ($reader->read($source)->rows() as $batch) {
                 $writer->write($batch);
             }
         }
