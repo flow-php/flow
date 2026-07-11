@@ -17,6 +17,8 @@ use function max;
 
 final class MemorySort implements SortingAlgorithm
 {
+    private const int MINIMUM_OUTPUT_BATCH_SIZE = 1_000;
+
     private readonly Configuration $configuration;
 
     public function __construct(
@@ -33,18 +35,23 @@ final class MemorySort implements SortingAlgorithm
     public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
         $memoryConsumption = new Consumption();
-        $mergedRows = new Rows();
         $maxSize = 1;
 
-        foreach ($rows as $batch) {
-            $maxSize = max($batch->count(), $maxSize);
-            $mergedRows = $mergedRows->merge($batch);
+        /** @var \Generator<int, Rows> $guardedRows */
+        $guardedRows = (function () use ($rows, $memoryConsumption, &$maxSize): Generator {
+            foreach ($rows as $batch) {
+                $maxSize = max($batch->count(), $maxSize);
 
-            if ($memoryConsumption->currentDiff()->isGreaterThan($this->maximumMemory)) {
-                throw new OutOfMemoryException();
+                yield $batch;
+
+                if ($memoryConsumption->currentDiff()->isGreaterThan($this->maximumMemory)) {
+                    throw new OutOfMemoryException();
+                }
             }
-        }
+        })();
 
-        yield from $mergedRows->sortBy(...$refs->all())->chunks($maxSize);
+        yield from Rows::mergeAll($guardedRows)
+            ->sortBy(...$refs->all())
+            ->chunks(max($maxSize, self::MINIMUM_OUTPUT_BATCH_SIZE));
     }
 }

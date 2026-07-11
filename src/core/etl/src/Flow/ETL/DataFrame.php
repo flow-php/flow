@@ -361,12 +361,8 @@ final class DataFrame
             $this->limit($limit);
         }
 
-        $rows = new Rows();
-
         try {
-            foreach ($this->pipeline->process($this->context) as $nextRows) {
-                $rows = $rows->merge($nextRows);
-            }
+            $rows = Rows::mergeAll($this->pipeline->process($this->context));
             $this->context->telemetry()->dataFrameCompleted($this->context);
         } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);

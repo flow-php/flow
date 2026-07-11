@@ -14,7 +14,6 @@ use Flow\ETL\Sort\ExternalSort\Buckets;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Generator;
 
-use function abs;
 use function array_chunk;
 use function bin2hex;
 use function count;
@@ -29,6 +28,10 @@ use function random_bytes;
  */
 final class ExternalSort implements SortingAlgorithm
 {
+    private const int MINIMUM_OUTPUT_BATCH_SIZE = 1_000;
+
+    private const int RUN_SIZE = 10_000;
+
     private int $batchSize = -1;
 
     /**
@@ -72,17 +75,14 @@ final class ExternalSort implements SortingAlgorithm
 
         /** @var array<Row> $buffer */
         $buffer = [];
-        $minBatchSize = 500;
 
         foreach ($generator as $batch) {
-            if ($this->batchSize === -1) {
-                $this->batchSize = $batch->count();
-            }
+            $this->batchSize = max($this->batchSize, $batch->count());
 
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
-                if (count($buffer) >= $minBatchSize) {
+                if (count($buffer) >= self::RUN_SIZE) {
                     $batchRows = new Rows(...$buffer);
                     $buffer = [];
 
@@ -117,22 +117,23 @@ final class ExternalSort implements SortingAlgorithm
      */
     private function extractSortedBuckets(array $sortBuckets): Generator
     {
-        $outputBatchSize = max(1, abs($this->batchSize));
+        $outputBatchSize = max(self::MINIMUM_OUTPUT_BATCH_SIZE, $this->batchSize);
 
         foreach ($sortBuckets as $bucket) {
-            $rows = new Rows();
+            /** @var array<Row> $buffer */
+            $buffer = [];
 
             foreach ($bucket->rows as $row) {
-                $rows = $rows->add($row);
+                $buffer[] = $row;
 
-                if ($rows->count() >= $outputBatchSize) {
-                    yield $rows;
-                    $rows = new Rows();
+                if (count($buffer) >= $outputBatchSize) {
+                    yield new Rows(...$buffer);
+                    $buffer = [];
                 }
             }
 
-            if ($rows->count() > 0) {
-                yield $rows;
+            if ($buffer !== []) {
+                yield new Rows(...$buffer);
             }
 
             $this->bucketsCache->remove($bucket->id);

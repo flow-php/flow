@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
@@ -15,11 +16,28 @@ use SplMinHeap;
  */
 final class RowsMinHeap extends SplMinHeap
 {
-    private readonly References $ref;
+    /**
+     * @var array<int, bool>
+     */
+    private readonly array $descending;
+
+    /**
+     * @var array<int, string>
+     */
+    private readonly array $names;
 
     public function __construct(Reference ...$refs)
     {
-        $this->ref = References::init(...$refs);
+        $names = [];
+        $descending = [];
+
+        foreach (References::init(...$refs) as $ref) {
+            $names[] = $ref->name();
+            $descending[] = $ref->sort() === SortOrder::DESC;
+        }
+
+        $this->names = $names;
+        $this->descending = $descending;
     }
 
     public function __debugInfo(): array
@@ -56,28 +74,36 @@ final class RowsMinHeap extends SplMinHeap
         return true;
     }
 
+    public function insertRow(Row $row, string $bucketId): void
+    {
+        $sortValues = [];
+
+        foreach ($this->names as $name) {
+            $sortValues[] = $row->valueOf($name);
+        }
+
+        $this->insert(new BucketRow($row, $bucketId, $sortValues));
+    }
+
     /**
      * @param BucketRow $value1
      * @param BucketRow $value2
      */
     protected function compare($value1, $value2): int
     {
-        $leftValues = [];
-        $rightValues = [];
+        foreach ($this->descending as $index => $descending) {
+            // @mago-ignore analysis:mixed-operand,mixed-operand
+            $comparison = $value2->sortValues[$index] <=> $value1->sortValues[$index];
 
-        foreach ($this->ref as $entry) {
-            $row1Value = $value1->row->valueOf($entry->name());
-            $row2Value = $value2->row->valueOf($entry->name());
+            if ($descending) {
+                $comparison = -$comparison;
+            }
 
-            if ($entry->sort() === SortOrder::DESC) {
-                $leftValues[] = $row1Value;
-                $rightValues[] = $row2Value;
-            } else {
-                $leftValues[] = $row2Value;
-                $rightValues[] = $row1Value;
+            if ($comparison !== 0) {
+                return $comparison;
             }
         }
 
-        return $leftValues <=> $rightValues;
+        return 0;
     }
 }

@@ -20,14 +20,13 @@ use Generator;
  */
 final readonly class CollectingProcessor implements Processor
 {
+    /**
+     * @param \Generator<Rows> $rows
+     *
+     * @return \Generator<Rows>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $collected = new Rows();
-
-        foreach ($rows as $batch) {
-            $collected = $collected->merge($batch);
-        }
-
-        yield $collected;
+        yield Rows::mergeAll($rows);
     }
 }

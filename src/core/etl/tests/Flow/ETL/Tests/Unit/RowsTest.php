@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator;
@@ -550,6 +551,120 @@ final class RowsTest extends FlowTestCase
 
         static::assertNotNull($lastRow);
         static::assertSame(42, $lastRow->valueOf('id'));
+    }
+
+    public function test_merge_all_attaches_partitioned_rows_collected_before_out_of_memory(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+
+        /** @var Generator<int, Rows> $generator */
+        $generator = (static function () use ($rows1, $rows2): Generator {
+            yield $rows1;
+            yield $rows2;
+
+            throw new OutOfMemoryException();
+        })();
+
+        try {
+            Rows::mergeAll($generator);
+            static::fail('OutOfMemoryException was not thrown');
+        } catch (OutOfMemoryException $exception) {
+            static::assertNotNull($exception->collectedRows);
+            static::assertSame([1, 2], $exception->collectedRows->reduceToArray('id'));
+            static::assertEquals(partitions(partition('group', 'a')), $exception->collectedRows->partitions());
+            static::assertNotNull($exception->getPrevious());
+        }
+    }
+
+    public function test_merge_all_batches_from_different_partitions(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
+
+        $merged = Rows::mergeAll([$rows1, $rows2]);
+
+        static::assertEquals(partitions(), $merged->partitions());
+        static::assertSame([1, 2], $merged->reduceToArray('id'));
+    }
+
+    public function test_merge_all_batches_from_same_partition(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows3 = rows(row(int_entry('id', 3), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+
+        $merged = Rows::mergeAll([$rows1, $rows2, $rows3]);
+
+        static::assertEquals(partitions(partition('group', 'a')), $merged->partitions());
+        static::assertSame([1, 2, 3], $merged->reduceToArray('id'));
+    }
+
+    public function test_merge_all_drops_partitions_when_unpartitioned_batch_is_mixed_in(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')));
+
+        static::assertEquals(partitions(), Rows::mergeAll([$rows1, $rows2])->partitions());
+        static::assertEquals(partitions(), Rows::mergeAll([$rows2, $rows1])->partitions());
+    }
+
+    public function test_merge_all_equals_chained_merge(): void
+    {
+        $partitionedA1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $partitionedA2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $partitionedB = rows(row(int_entry('id', 3), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
+        $unpartitioned = rows(row(int_entry('id', 4), str_entry('group', 'a')));
+
+        $combos = [
+            [],
+            [$partitionedA1],
+            [$partitionedA1, $partitionedA2],
+            [$partitionedA1, $partitionedB],
+            [$partitionedA1, rows(), $partitionedA2],
+            [rows(), $partitionedA1],
+            [$unpartitioned, $partitionedA1],
+            [$partitionedA1, $unpartitioned, $partitionedB],
+            [$unpartitioned, $unpartitioned],
+            [rows(), rows()],
+        ];
+
+        foreach ($combos as $comboIndex => $batches) {
+            $chained = rows();
+
+            foreach ($batches as $batch) {
+                $chained = $chained->merge($batch);
+            }
+
+            static::assertEquals($chained, Rows::mergeAll($batches), "combo {$comboIndex}");
+        }
+    }
+
+    public function test_merge_all_on_empty_input(): void
+    {
+        static::assertEquals(rows(), Rows::mergeAll([]));
+        static::assertEquals(partitions(), Rows::mergeAll([])->partitions());
+    }
+
+    public function test_merge_all_preserves_partitions_of_a_single_partitioned_batch(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+
+        $merged = Rows::mergeAll([$rows1]);
+
+        static::assertEquals(partitions(partition('group', 'a')), $merged->partitions());
+        static::assertSame([1], $merged->reduceToArray('id'));
+    }
+
+    public function test_merge_all_skips_empty_batches_between_partitioned_batches(): void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+
+        $merged = Rows::mergeAll([rows(), $rows1, rows(), $rows2, rows()]);
+
+        static::assertEquals(partitions(partition('group', 'a')), $merged->partitions());
+        static::assertSame([1, 2], $merged->reduceToArray('id'));
     }
 
     public function test_merge_empty_rows_with_partitioned_rows(): void

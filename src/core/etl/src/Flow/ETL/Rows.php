@@ -11,6 +11,7 @@ use DateInterval;
 use DateTimeInterface;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
@@ -46,6 +47,7 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function iterator_to_array;
+use function range;
 use function usort;
 
 /**
@@ -606,6 +608,48 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
+     * @param iterable<self> $rows
+     */
+    public static function mergeAll(iterable $rows): self
+    {
+        /** @var array<Row> $buffer */
+        $buffer = [];
+        $firstBatch = null;
+        $samePartitions = true;
+
+        try {
+            foreach ($rows as $batch) {
+                if ($batch->empty()) {
+                    continue;
+                }
+
+                if ($firstBatch === null) {
+                    $firstBatch = $batch;
+                } elseif ($samePartitions && $firstBatch->partitions()->id() !== $batch->partitions()->id()) {
+                    $samePartitions = false;
+                }
+
+                foreach ($batch->rows as $row) {
+                    $buffer[] = $row;
+                }
+            }
+        } catch (OutOfMemoryException $exception) {
+            throw new OutOfMemoryException(
+                $samePartitions && $firstBatch !== null
+                    ? self::partitioned($buffer, $firstBatch->partitions())
+                    : new self(...$buffer),
+                $exception,
+            );
+        }
+
+        if ($firstBatch === null) {
+            return new self();
+        }
+
+        return $samePartitions ? self::partitioned($buffer, $firstBatch->partitions()) : new self(...$buffer);
+    }
+
+    /**
      * @param int $offset
      *
      * @throws InvalidArgumentException
@@ -797,35 +841,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortAscending(string|Reference $reference): self
     {
-        $rows = $this->rows;
-        usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            $valueA = $a->valueOf($reference);
-            $valueB = $b->valueOf($reference);
-
-            if (is_numeric($valueA) && is_numeric($valueB)) {
-                return (float) $valueA <=> (float) $valueB;
-            }
-
-            if (is_string($valueA) && is_string($valueB)) {
-                return $valueA <=> $valueB;
-            }
-
-            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
-                return $valueA <=> $valueB;
-            }
-
-            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
-                return $valueA <=> $valueB;
-            }
-
-            if (is_array($valueA) && is_array($valueB)) {
-                return $valueA <=> $valueB;
-            }
-
-            return 0;
-        });
-
-        return self::partitioned($rows, $this->partitions);
+        return self::partitioned($this->sortedByValues([$this->valuesOf($reference)], [false]), $this->partitions);
     }
 
     /**
@@ -833,13 +849,19 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortBy(Reference ...$references): self
     {
-        $rows = $this;
-
-        foreach (array_reverse($references) as $ref) {
-            $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
+        if ($references === []) {
+            return $this;
         }
 
-        return $rows;
+        $columns = [];
+        $descending = [];
+
+        foreach ($references as $reference) {
+            $columns[] = $this->valuesOf($reference);
+            $descending[] = $reference->sort() === SortOrder::DESC;
+        }
+
+        return self::partitioned($this->sortedByValues($columns, $descending), $this->partitions);
     }
 
     /**
@@ -847,35 +869,78 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortDescending(string|Reference $reference): self
     {
-        $rows = $this->rows;
-        usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            $valueA = $a->valueOf($reference);
-            $valueB = $b->valueOf($reference);
+        return self::partitioned($this->sortedByValues([$this->valuesOf($reference)], [true]), $this->partitions);
+    }
 
-            if (is_numeric($valueA) && is_numeric($valueB)) {
-                return -((float) $valueA <=> (float) $valueB);
-            }
+    private static function compareValues(mixed $left, mixed $right): int
+    {
+        if (is_numeric($left) && is_numeric($right)) {
+            return (float) $left <=> (float) $right;
+        }
 
-            if (is_string($valueA) && is_string($valueB)) {
-                return -($valueA <=> $valueB);
-            }
+        if (is_string($left) && is_string($right)) {
+            return $left <=> $right;
+        }
 
-            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
-                return -($valueA <=> $valueB);
-            }
+        if ($left instanceof DateTimeInterface && $right instanceof DateTimeInterface) {
+            return $left <=> $right;
+        }
 
-            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
-                return -($valueA <=> $valueB);
-            }
+        if ($left instanceof DateInterval && $right instanceof DateInterval) {
+            return $left <=> $right;
+        }
 
-            if (is_array($valueA) && is_array($valueB)) {
-                return -($valueA <=> $valueB);
-            }
+        if (is_array($left) && is_array($right)) {
+            return $left <=> $right;
+        }
 
-            return 0;
-        });
+        return 0;
+    }
 
-        return self::partitioned($rows, $this->partitions);
+    /**
+     * @param array<int, array<int, mixed>> $columns
+     * @param array<int, bool> $descending
+     *
+     * @return array<Row>
+     */
+    private function sortedByValues(array $columns, array $descending): array
+    {
+        $order = $this->rows === [] ? [] : range(0, count($this->rows) - 1);
+
+        for ($index = count($columns) - 1; $index >= 0; $index--) {
+            $column = $columns[$index];
+            $descendingColumn = $descending[$index];
+
+            usort($order, static function (int $left, int $right) use ($column, $descendingColumn): int {
+                $comparison = self::compareValues($column[$left], $column[$right]);
+
+                return $descendingColumn ? -$comparison : $comparison;
+            });
+        }
+
+        $sorted = [];
+
+        foreach ($order as $index) {
+            $sorted[] = $this->rows[$index];
+        }
+
+        return $sorted;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     *
+     * @return array<int, mixed>
+     */
+    private function valuesOf(string|Reference $reference): array
+    {
+        $values = [];
+
+        foreach ($this->rows as $index => $row) {
+            $values[$index] = $row->valueOf($reference);
+        }
+
+        return $values;
     }
 
     public function sortEntries(): self

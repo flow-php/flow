@@ -8,8 +8,12 @@ use Flow\ETL\Row;
 
 final readonly class BucketRow
 {
+    /**
+     * @param array<int, mixed> $sortValues
+     */
     public function __construct(
         public Row $row,
         public string $bucketId,
+        public array $sortValues,
     ) {}
 }

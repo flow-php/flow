@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Dataset\Memory\Unit;
+use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Row\References;
@@ -12,6 +13,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Sort\MemorySort;
+use Flow\ETL\Sort\SortAlgorithms;
 use Generator;
 
 /**
@@ -23,6 +25,8 @@ use Generator;
  */
 final readonly class SortingProcessor implements Processor
 {
+    private const int FALLBACK_BATCH_SIZE = 10_000;
+
     public function __construct(
         private References $refs,
     ) {}
@@ -35,14 +39,28 @@ final readonly class SortingProcessor implements Processor
             $context->config->sort->algorithm->useMemory()
             && $context->config->sort->memoryLimit->isGreaterThan($minMemoryForMemorySort)
         ) {
-            yield from (new MemorySort($context->config->sort->memoryLimit))->sortGenerator(
-                $rows,
-                $context,
-                $this->refs,
-            );
-        } else {
-            yield from $this->externalSort($rows, $context);
+            try {
+                yield from (new MemorySort($context->config->sort->memoryLimit))->sortGenerator(
+                    $rows,
+                    $context,
+                    $this->refs,
+                );
+
+                return;
+            } catch (OutOfMemoryException $exception) {
+                if ($context->config->sort->algorithm !== SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT) {
+                    throw $exception;
+                }
+
+                $rows->next();
+
+                yield from $this->externalSort(self::resume($exception->collectedRows, $rows), $context);
+
+                return;
+            }
         }
+
+        yield from $this->externalSort($rows, $context);
     }
 
     /**
@@ -60,5 +78,19 @@ final readonly class SortingProcessor implements Processor
             ),
             $context->config->cache->externalSortBucketsCount,
         ))->sortGenerator($rows, $context, $this->refs);
+    }
+
+    /**
+     * @param \Generator<Rows> $rows
+     *
+     * @return \Generator<Rows>
+     */
+    private static function resume(?Rows $collectedRows, Generator $rows): Generator
+    {
+        if ($collectedRows !== null) {
+            yield from $collectedRows->chunks(self::FALLBACK_BATCH_SIZE);
+        }
+
+        yield from $rows;
     }
 }

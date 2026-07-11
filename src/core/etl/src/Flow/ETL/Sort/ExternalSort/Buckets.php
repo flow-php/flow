@@ -63,8 +63,7 @@ final class Buckets
         foreach ($bucketsCopy as $bucketId => $bucket) {
             if ($bucket->valid()) {
                 // @mago-ignore analysis:possibly-null-argument
-                $row = new BucketRow($bucket->current(), $bucketId);
-                $heap->insert($row);
+                $heap->insertRow($bucket->current(), $bucketId);
                 $bucket->next();
             } else {
                 unset($bucketsCopy[$bucketId]);
@@ -81,8 +80,7 @@ final class Buckets
 
                 if ($bucket->valid()) {
                     // @mago-ignore analysis:possibly-null-argument
-                    $row = new BucketRow($bucket->current(), $cachedRow->bucketId);
-                    $heap->insert($row);
+                    $heap->insertRow($bucket->current(), $cachedRow->bucketId);
                     $bucket->next();
                 } else {
                     unset($bucketsCopy[$cachedRow->bucketId]); // Remove the empty generator
