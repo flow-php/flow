@@ -1151,7 +1151,9 @@ The request (SERVER) span follows the OpenTelemetry HTTP semantic conventions fo
 controlled by `route_naming`:
 
 - `path` (default) — the route **path template**, e.g. `GET /orders/{id}` (low cardinality, semconv value
-  for `http.route`); resolved from the router.
+  for `http.route`); resolved from a `[route name => path]` map built once per deployment by an optional
+  cache warmer (`cache:warmup`) and rebuilt lazily when missing, so the router is never queried on the
+  request path.
 - `name` — the Symfony **route name**, e.g. `GET order_show`.
 - Sub-requests (`render(controller(...))`) have no route, so they are named after the **controller**
   (`GET App\Controller\NavigationController::top`); a request that matches no route at all uses the method

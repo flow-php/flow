@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\ControllerSpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\RouteNamePathMap;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -15,6 +16,15 @@ return static function (ContainerConfigurator $container): void {
     $services = $container->services();
 
     $services
+        ->set('flow.telemetry.http_kernel.route_name_path_map', RouteNamePathMap::class)
+        ->args([
+            service('router')->ignoreOnInvalid(),
+            '%kernel.build_dir%',
+            '%kernel.debug%',
+        ])
+        ->tag('kernel.cache_warmer');
+
+    $services
         ->set('flow.telemetry.http_kernel.span_subscriber', HttpKernelSpanSubscriber::class)
         ->args([
             service(Telemetry::class),
@@ -23,7 +33,7 @@ return static function (ContainerConfigurator $container): void {
             service('flow.telemetry.propagator'),
             '%flow.telemetry.http_kernel.context_propagation%',
             '%flow.telemetry.http_kernel.context_propagation_query%',
-            service('router')->ignoreOnInvalid(),
+            service('flow.telemetry.http_kernel.route_name_path_map'),
             // arg $routeNaming (RouteNaming enum) is set in FlowTelemetryBundle::registerInstrumentation.
         ])
         ->tag('kernel.event_subscriber');
