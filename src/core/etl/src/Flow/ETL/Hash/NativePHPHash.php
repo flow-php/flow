@@ -11,24 +11,31 @@ use function hash_algos;
 use function in_array;
 use function sprintf;
 
-final readonly class NativePHPHash implements Algorithm
+final class NativePHPHash implements Algorithm
 {
+    private static ?self $instance = null;
+    private static ?array $algorithms = null;
+
     /**
      * @param array<array-key, mixed> $options
      */
     public function __construct(
-        private string $algorithm = 'xxh128',
-        private bool $binary = false,
-        private array $options = [],
+        private readonly string $algorithm = 'xxh128',
+        private readonly bool $binary = false,
+        private readonly array $options = [],
     ) {
-        if (!in_array($algorithm, hash_algos(), true)) {
+        self::$algorithms ??= hash_algos();
+
+        if (!in_array($algorithm, self::$algorithms, true)) {
             throw new InvalidArgumentException(sprintf('Hashing algorithm "%s" is not supported', $algorithm));
         }
     }
 
     public static function xxh128(string $string): string
     {
-        return (new self('xxh128'))->hash($string);
+        self::$instance ??= new self('xxh128');
+
+        return self::$instance->hash($string);
     }
 
     public function hash(string $value): string
