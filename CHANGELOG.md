@@ -23,6 +23,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2520](https://github.com/flow-php/flow/pull/2520) - **Use `RandomValueGenerator` in `generate_random_string()` & `generate_random_int()`** - [@stloyd](https://github.com/stloyd)
 - [#2519](https://github.com/flow-php/flow/pull/2519) - **Make `NativePHPHash` singleton** - [@stloyd](https://github.com/stloyd)
 - [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader reuses a single php://temp row buffer per loader instance (released in the closure() hook) instead of opening and closing a temporary stream for every written
 row** - [@MrHDOLEK](https://github.com/MrHDOLEK)
