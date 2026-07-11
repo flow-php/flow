@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-10
+## [Unreleased] - 2026-07-11
 
 ### Added
 - [#2516](https://github.com/flow-php/flow/pull/2516) - **Add a new `ref()->domElementNamespace()` function** - [@stloyd](https://github.com/stloyd)
@@ -23,6 +23,10 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader reuses a single php://temp row buffer per loader instance (released in the closure() hook) instead of opening and closing a temporary stream for every written
+row** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2518](https://github.com/flow-php/flow/pull/2518) - **CSVLoader appends the whole normalized batch to the destination stream once per Rows batch instead of once per row, and resolves the destination stream once per batch
+instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2509](https://github.com/flow-php/flow/pull/2509) - **flow-php/filesystem - Partition name and value now forbid { and } characters** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - SchemaValidator::isValid() replaced by validate() returning ValidationContext** - [@norberttech](https://github.com/norberttech)
 - [#2504](https://github.com/flow-php/flow/pull/2504) - **flow-php/etl - schema_validate() returns ValidationContext instead of bool** - [@norberttech](https://github.com/norberttech)
