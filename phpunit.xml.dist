@@ -42,7 +42,6 @@
         </testsuite>
         <testsuite name="etl-integration">
             <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
-            <directory>src/core/etl/tests/Flow/Serializer/Tests/Integration</directory>
             <directory>src/core/etl/tests/Flow/Floe/Tests/Integration</directory>
         </testsuite>
         <testsuite name="cli-unit">

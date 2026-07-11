@@ -78,6 +78,12 @@ jobs:
         working-directory: src/extension/flow-php-ext
         run: make build
 
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: locked
+
       - name: Run PHPT tests
         working-directory: src/extension/flow-php-ext
         run: make test
@@ -89,12 +95,6 @@ jobs:
           sudo cp ext/modules/flow_php.so "$EXT_DIR/"
           echo "extension=flow_php.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
           php -m | grep flow_php
-
-      - name: Install Composer Dependencies
-        uses: ./.github/actions/composer-install
-        with:
-          php-version: ${{ matrix.php }}
-          dependencies: locked
 
       - name: Run ETL Unit Tests with Flow PHP Extension
         run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && matrix.os == 'ubuntu-latest') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
@@ -186,6 +186,10 @@ jobs:
           sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/flow-php-ext
           sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" ${CLANG_PATH:+"CLANG_PATH=$CLANG_PATH"} "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/flow-php-ext:0.0.9999@dev
+
+      - name: Enable extension
+        run: |
+          php -m | grep -q flow_php || echo "extension=flow_php" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
 
       - name: Verify extension is loaded
         run: |
