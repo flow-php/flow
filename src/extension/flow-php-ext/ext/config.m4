@@ -32,6 +32,8 @@ if test "$PHP_FLOW_PHP" != "no"; then
   fi
   AC_MSG_RESULT([$RUSTC])
 
+  PHP_SUBST(CARGO)
+
   dnl Create a dummy C file so phpize/configure infrastructure does not complain
   FLOW_PHP_EXT_DIR=$(pwd)
   if test ! -f "$FLOW_PHP_EXT_DIR/flow_php.c"; then

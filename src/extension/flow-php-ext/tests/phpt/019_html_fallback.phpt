@@ -24,14 +24,15 @@ $rows = rows(
 $frames = php_frames($rows);
 $actual = decoder_decode_frames(new RowsDecoder(), $frames);
 
-assert_rows_identical(php_decode_frames($frames), $actual);
+$expected = php_decode_frames($frames);
+var_dump(php_frames(rows(...$actual)) === php_frames(rows(...$expected)));
 
 var_dump(get_class($actual[0]->get('doc')->value()));
 var_dump($actual[0]->get('doc')->value()->getElementById('x')->textContent);
 var_dump($actual[0]->get('el')->value()->getAttribute('class'));
 ?>
 --EXPECT--
-identical
+bool(true)
 string(16) "Dom\HTMLDocument"
 string(5) "hello"
 string(1) "c"
