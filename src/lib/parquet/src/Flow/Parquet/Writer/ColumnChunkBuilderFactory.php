@@ -86,35 +86,24 @@ final class ColumnChunkBuilderFactory
         $encodingName = $encoding->name;
         $flatPath = $column->flatPath();
 
-        switch ($encoding) {
-            case Encodings::DELTA_BINARY_PACKED:
-                if ($columnType !== PhysicalType::INT32 && $columnType !== PhysicalType::INT64) {
-                    throw new InvalidArgumentException(
-                        'DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. '
-                        . "Column '{$flatPath}' has type: {$columnType->name}",
-                    );
-                }
-
-                break;
-
-            case Encodings::RLE_DICTIONARY:
-                if ($columnType === PhysicalType::FIXED_LEN_BYTE_ARRAY) {
-                    throw new InvalidArgumentException(
-                        'RLE_DICTIONARY encoding is not supported for FIXED_LEN_BYTE_ARRAY columns. '
-                        . "Column '{$flatPath}' has type: {$columnType->name}",
-                    );
-                }
-
-                break;
-
-            case Encodings::PLAIN:
-                break;
-
-            default:
-                throw new InvalidArgumentException(
-                    "Encoding '{$encodingName}' is not implemented. "
-                    . 'Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED',
-                );
-        }
+        match ($encoding) {
+            Encodings::DELTA_BINARY_PACKED => $columnType !== PhysicalType::INT32 && $columnType !== PhysicalType::INT64
+                ? throw new InvalidArgumentException(
+                    'DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. '
+                    . "Column '{$flatPath}' has type: {$columnType->name}",
+                )
+                : null,
+            Encodings::RLE_DICTIONARY => $columnType === PhysicalType::FIXED_LEN_BYTE_ARRAY
+                ? throw new InvalidArgumentException(
+                    'RLE_DICTIONARY encoding is not supported for FIXED_LEN_BYTE_ARRAY columns. '
+                    . "Column '{$flatPath}' has type: {$columnType->name}",
+                )
+                : null,
+            Encodings::PLAIN => null,
+            default => throw new InvalidArgumentException(
+                "Encoding '{$encodingName}' is not implemented. "
+                . 'Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED',
+            ),
+        };
     }
 }

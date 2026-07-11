@@ -54,26 +54,24 @@ final class ASCIIValue
         $result = $input;
 
         if (($paddingRequired = $length - mb_strlen($input, $encoding)) > 0) {
-            switch ($padType) {
-                case STR_PAD_LEFT:
-                    return mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding) . $input;
-                case STR_PAD_RIGHT:
-                    return $input . mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding);
-                case STR_PAD_BOTH:
-                    $leftPaddingLength = (int) floor($paddingRequired / 2);
-                    $rightPaddingLength = $paddingRequired - $leftPaddingLength;
+            $leftPaddingLength = (int) floor($paddingRequired / 2);
+            $rightPaddingLength = $paddingRequired - $leftPaddingLength;
 
-                    return (
-                        mb_substr(str_repeat($padding, max(0, $leftPaddingLength)), 0, $leftPaddingLength, $encoding)
-                        . $input
-                        . mb_substr(
-                            str_repeat($padding, max(0, $rightPaddingLength)),
-                            0,
-                            $rightPaddingLength,
-                            $encoding,
-                        )
-                    );
-            }
+            return match ($padType) {
+                STR_PAD_LEFT => mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding)
+                    . $input,
+                STR_PAD_RIGHT => $input
+                    . mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding),
+                STR_PAD_BOTH => mb_substr(
+                    str_repeat($padding, max(0, $leftPaddingLength)),
+                    0,
+                    $leftPaddingLength,
+                    $encoding,
+                )
+                    . $input
+                    . mb_substr(str_repeat($padding, max(0, $rightPaddingLength)), 0, $rightPaddingLength, $encoding),
+                default => $result,
+            };
         }
 
         return $result;

@@ -26,19 +26,19 @@ final class Writer
         private readonly Options $options = new Options(),
         private readonly ParquetEngine $engine = new AdaptiveParquetEngine(),
     ) {
-        switch ($this->compression) {
-            case Compressions::UNCOMPRESSED:
-            case Compressions::SNAPPY:
-            case Compressions::BROTLI:
-            case Compressions::GZIP:
-            case Compressions::LZ4:
-            case Compressions::LZ4_RAW:
-            case Compressions::ZSTD:
-                break;
-
-            default:
-                throw new InvalidArgumentException("Compression \"{$this->compression->name}\" is not supported yet");
-        }
+        match ($this->compression) {
+            Compressions::UNCOMPRESSED,
+            Compressions::SNAPPY,
+            Compressions::BROTLI,
+            Compressions::GZIP,
+            Compressions::LZ4,
+            Compressions::LZ4_RAW,
+            Compressions::ZSTD,
+                => null,
+            default => throw new InvalidArgumentException(
+                "Compression \"{$this->compression->name}\" is not supported yet",
+            ),
+        };
     }
 
     public static function arrow(

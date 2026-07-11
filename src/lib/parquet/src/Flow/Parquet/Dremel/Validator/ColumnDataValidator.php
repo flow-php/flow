@@ -131,77 +131,47 @@ final class ColumnDataValidator implements Validator
         $type = $column->type();
         $logicalTypeName = $column->logicalType()?->name();
 
-        switch ($type) {
-            case PhysicalType::BOOLEAN:
-                if (!is_bool($data)) {
-                    throw new ValidationException(sprintf('Column "%s" is not boolean', $column->flatPath()));
-                }
-
-                break;
-            case PhysicalType::INT64:
-            case PhysicalType::INT32:
-                switch ($logicalTypeName) {
-                    case LogicalType::DATE:
-                    case LogicalType::TIMESTAMP:
-                        if (!$data instanceof DateTimeInterface) {
-                            throw new ValidationException(sprintf(
-                                'Column "%s" require \DateTimeInterface as value',
-                                $column->flatPath(),
-                            ));
-                        }
-
-                        break;
-                    case LogicalType::TIME:
-                        if (!$data instanceof DateInterval) {
-                            throw new ValidationException(sprintf(
-                                'Column "%s" require \DateInterval as value',
-                                $column->flatPath(),
-                            ));
-                        }
-
-                        break;
-                    case null:
-                        if (!is_int($data)) {
-                            throw new ValidationException(sprintf(
-                                'Column "%s" require integer as value, got: %s instead',
-                                $column->flatPath(),
-                                gettype($data),
-                            ));
-                        }
-
-                        break;
-                }
-
-                break;
-            case PhysicalType::FLOAT:
-            case PhysicalType::DOUBLE:
-                if (!is_float($data)) {
-                    throw new ValidationException(sprintf('Column "%s" is not float', $column->flatPath()));
-                }
-
-                break;
-            case PhysicalType::BYTE_ARRAY:
-                switch ($logicalTypeName) {
-                    case LogicalType::STRING:
-                    case LogicalType::JSON:
-                    case LogicalType::UUID:
-                        if (!is_string($data)) {
-                            throw new ValidationException(sprintf(
-                                'Column "%s" is not string, got "%s" instead',
-                                $column->flatPath(),
-                                gettype($data),
-                            ));
-                        }
-
-                        break;
-                }
-
-                break;
-            case PhysicalType::FIXED_LEN_BYTE_ARRAY:
-                break;
-
-            default:
-                throw new ValidationException(sprintf('Unknown column type "%s"', $type->name));
-        }
+        match ($type) {
+            PhysicalType::BOOLEAN => is_bool($data)
+                ? null
+                : throw new ValidationException(sprintf('Column "%s" is not boolean', $column->flatPath())),
+            PhysicalType::INT64, PhysicalType::INT32 => match ($logicalTypeName) {
+                LogicalType::DATE, LogicalType::TIMESTAMP => $data instanceof DateTimeInterface
+                    ? null
+                    : throw new ValidationException(sprintf(
+                        'Column "%s" require \DateTimeInterface as value',
+                        $column->flatPath(),
+                    )),
+                LogicalType::TIME => $data instanceof DateInterval
+                    ? null
+                    : throw new ValidationException(sprintf(
+                        'Column "%s" require \DateInterval as value',
+                        $column->flatPath(),
+                    )),
+                null => is_int($data)
+                    ? null
+                    : throw new ValidationException(sprintf(
+                        'Column "%s" require integer as value, got: %s instead',
+                        $column->flatPath(),
+                        gettype($data),
+                    )),
+                default => null,
+            },
+            PhysicalType::FLOAT, PhysicalType::DOUBLE => is_float($data)
+                ? null
+                : throw new ValidationException(sprintf('Column "%s" is not float', $column->flatPath())),
+            PhysicalType::BYTE_ARRAY => match ($logicalTypeName) {
+                LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => is_string($data)
+                    ? null
+                    : throw new ValidationException(sprintf(
+                        'Column "%s" is not string, got "%s" instead',
+                        $column->flatPath(),
+                        gettype($data),
+                    )),
+                default => null,
+            },
+            PhysicalType::FIXED_LEN_BYTE_ARRAY => null,
+            default => throw new ValidationException(sprintf('Unknown column type "%s"', $type->name)),
+        };
     }
 }
