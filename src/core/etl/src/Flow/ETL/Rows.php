@@ -797,11 +797,13 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortAscending(string|Reference $reference): self
     {
-        $rows = $this->rows;
-        usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            $valueA = $a->valueOf($reference);
-            $valueB = $b->valueOf($reference);
+        $values = [];
 
+        foreach ($this->rows as $index => $row) {
+            $values[$index] = $row->valueOf($reference);
+        }
+
+        uasort($values, static function (mixed $valueA, mixed $valueB): int {
             if (is_numeric($valueA) && is_numeric($valueB)) {
                 return (float) $valueA <=> (float) $valueB;
             }
@@ -825,6 +827,12 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return 0;
         });
 
+        $rows = [];
+
+        foreach (array_keys($values) as $index) {
+            $rows[] = $this->rows[$index];
+        }
+
         return self::partitioned($rows, $this->partitions);
     }
 
@@ -847,11 +855,13 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortDescending(string|Reference $reference): self
     {
-        $rows = $this->rows;
-        usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            $valueA = $a->valueOf($reference);
-            $valueB = $b->valueOf($reference);
+        $values = [];
 
+        foreach ($this->rows as $index => $row) {
+            $values[$index] = $row->valueOf($reference);
+        }
+
+        uasort($values, static function (mixed $valueA, mixed $valueB): int {
             if (is_numeric($valueA) && is_numeric($valueB)) {
                 return -((float) $valueA <=> (float) $valueB);
             }
@@ -874,6 +884,12 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
 
             return 0;
         });
+
+        $rows = [];
+
+        foreach (array_keys($values) as $index) {
+            $rows[] = $this->rows[$index];
+        }
 
         return self::partitioned($rows, $this->partitions);
     }

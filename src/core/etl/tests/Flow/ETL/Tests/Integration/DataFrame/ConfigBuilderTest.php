@@ -145,7 +145,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->build();
 
-        static::assertSame(SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT, $config->sort->algorithm);
+        static::assertSame(SortAlgorithms::EXTERNAL_SORT, $config->sort->algorithm);
     }
 
     public function test_external_sort_filesystem_protocol_override(): void

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Sort\MemorySort;
 
-use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Sort\MemorySort;
 use Flow\ETL\Tests\FlowTestCase;
@@ -36,7 +35,7 @@ final class MemorySortTest extends FlowTestCase
         $randomizedInput = $input;
         shuffle($randomizedInput);
 
-        $sort = new MemorySort(Unit::fromMb(1024));
+        $sort = new MemorySort();
 
         $context = flow_context();
         $pipeline = new Pipeline(from_array($randomizedInput));

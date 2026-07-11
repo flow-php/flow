@@ -295,6 +295,7 @@ implementation is `yield $this->get($key);`.
 Convert `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
 
 ### 21) `flow-php/symfony-telemetry-bundle` - `HttpKernelSpanSubscriber` takes a
+
 `RouteNamePathMap` instead of the router
 
 | Before                                                | After                                                               |
@@ -303,6 +304,31 @@ Convert `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutab
 | `?RouterInterface $router = null`                     | `?RouteNamePathMap $routePaths = null`                              |
 
 Applies only to direct construction; services wired by the bundle need no change.
+
+### 22) `flow-php/etl` - sort algorithm is an explicit choice; external sort is the default
+
+| Before                                                          | After                                                          |
+|-----------------------------------------------------------------|----------------------------------------------------------------|
+| `SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT` (default)       | removed; default is `SortAlgorithms::EXTERNAL_SORT`            |
+| `SortAlgorithms::SQLITE_SORT`                                   | removed                                                        |
+| `SortAlgorithms::useMemory()`                                   | removed                                                        |
+| `ConfigBuilder::sortMemoryLimit(Unit $unit)`                    | removed                                                        |
+| `SortConfigBuilder::sortMemoryLimit(Unit $unit)`                | removed                                                        |
+| `SortConfig::$memoryLimit`                                      | removed                                                        |
+| `SortConfig::SORT_MAX_MEMORY_ENV` / `FLOW_SORT_MAX_MEMORY` env  | removed                                                        |
+| `new MemorySort(Unit $maximumMemory)`                           | `new MemorySort()`                                             |
+| `MemorySort` throwing `Flow\ETL\Exception\OutOfMemoryException` | removed                                                        |
+| `new ExternalSort($cache, $bucketsCount)`                       | `new ExternalSort($cache, $bucketsCount, $bucketSize)`         |
+| —                                                               | `ConfigBuilder::externalSortBucketSize(int)` (default `10000`) |
+
+To sort in memory, opt in explicitly:
+
+```php
+$config = config_builder();
+$config->sort->algorithm(SortAlgorithms::MEMORY_SORT);
+
+data_frame($config)->read(...)->sortBy(ref('id'))->run();
+```
 
 ---
 
