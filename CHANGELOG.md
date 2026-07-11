@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-07-11
 
 ### Added
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - externalSortBucketSize config controlling rows per external sort bucket (default 10000)** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - RouteNamePathMap optional cache warmer building a [route name => path] map at cache:warmup, rebuilt lazily when missing** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Floe binary row serialization format with writer, reader, merger, extractor, loader and DSL.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/flow-php-ext - new Rust-based PHP extension for native Floe encoding/decoding.** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +30,12 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - sorting algorithm is an explicit choice via sort config, EXTERNAL_SORT is the default** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - external sort spills fewer, larger buckets and streams the final merge instead of writing it back to cache** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - Rows::sortAscending/sortDescending resolve sort values once per row instead of twice per comparison** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - RowsMinHeap compares sort values extracted once at insert** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - MemorySort buffers rows in a plain array instead of per-batch Rows::merge** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - Floe SchemaTracker caches container type fingerprints per Type instance** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - HttpKernelSpanSubscriber constructor takes ?RouteNamePathMap instead of ?RouterInterface** - [@norberttech](https://github.com/norberttech)
 - [#2524](https://github.com/flow-php/flow/pull/2524) - **Replaced switch statements with match expressions across core ETL, parquet lib and http/parquet/seal adapters (no behavior change, outputs byte-identical)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Cache stores only Rows; cache indexes are stored as Rows.** - [@norberttech](https://github.com/norberttech)
@@ -76,6 +83,8 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT and SortAlgorithms::SQLITE_SORT** - [@norberttech](https://github.com/norberttech)
+- [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - sortMemoryLimit config, FLOW_SORT_MAX_MEMORY env var and OutOfMemoryException** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - runtime_mode config and the WorkerModeDetector/RuntimeModeResolver runtime classes.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Remove ResettableContextStorage and MemoryContextStorage::reset().** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Remove messenger link config, worker-cycle span, metrics_duration_unit and dbal.log_sql config.** - [@norberttech](https://github.com/norberttech)
