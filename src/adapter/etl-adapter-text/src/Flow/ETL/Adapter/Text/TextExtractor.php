@@ -38,6 +38,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $uri = $stream->path()->uri();
+            $partitions = $stream->path()->partitions();
 
             foreach ($stream->readLines() as $rowData) {
                 if ($shouldPutInputIntoRows) {
@@ -46,7 +47,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row = [['text' => rtrim($rowData)]];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
 
                 $this->incrementReturnedRows();
 

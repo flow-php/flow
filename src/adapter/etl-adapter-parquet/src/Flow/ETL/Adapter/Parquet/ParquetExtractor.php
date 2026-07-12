@@ -69,12 +69,6 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
         foreach ($this->readers($context) as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
-            $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
-            $uri = $fileData['stream']->path()->uri();
-
-            if (count($this->columns)) {
-                $flowSchema = $flowSchema->keep(...$this->columns);
-            }
 
             if ($fileOffset > $fileRows) {
                 $fileData['stream']->close();
@@ -82,6 +76,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
                 continue;
             }
+
+            $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
+
+            if (count($this->columns)) {
+                $flowSchema = $flowSchema->keep(...$this->columns);
+            }
+
+            $uri = $fileData['stream']->path()->uri();
 
             foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
                 $entries = [];

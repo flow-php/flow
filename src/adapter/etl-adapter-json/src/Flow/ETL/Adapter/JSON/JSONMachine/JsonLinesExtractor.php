@@ -61,6 +61,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $uri = $stream->path()->uri();
+            $partitions = $stream->path()->partitions();
 
             foreach ($stream->readLines() as $jsonLine) {
                 /**
@@ -81,12 +82,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                         continue;
                     }
 
-                    $signal = yield array_to_rows(
-                        [$row],
-                        $context->entryFactory(),
-                        $stream->path()->partitions(),
-                        $this->schema,
-                    );
+                    $signal = yield array_to_rows([$row], $context->entryFactory(), $partitions, $this->schema);
 
                     $this->incrementReturnedRows();
 

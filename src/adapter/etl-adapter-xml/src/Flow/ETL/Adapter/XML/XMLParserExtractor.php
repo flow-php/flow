@@ -114,6 +114,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $uri = $stream->path()->uri();
+            $partitions = $stream->path()->partitions();
 
             foreach ($stream->iterate($this->bufferSize) as $chunk) {
                 if (!xml_parse($this->parser(), $chunk)) {
@@ -130,12 +131,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                         $rowData['_input_file_uri'] = $uri;
                     }
 
-                    $signal = yield array_to_rows(
-                        $rowData,
-                        $context->entryFactory(),
-                        $stream->path()->partitions(),
-                        $this->schema,
-                    );
+                    $signal = yield array_to_rows($rowData, $context->entryFactory(), $partitions, $this->schema);
 
                     $this->incrementReturnedRows();
 
