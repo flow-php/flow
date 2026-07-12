@@ -22,11 +22,7 @@ use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
 use function array_key_exists;
-use function array_keys;
-use function array_map;
-use function array_values;
 use function count;
-use function implode;
 
 final class XMLLoader implements Closure, FileLoader, Loader
 {
@@ -194,13 +190,12 @@ final class XMLLoader implements Closure, FileLoader, Loader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $xmlAttributes = implode(' ', array_map(
-                static fn(string $key, string $value) => $key . '="' . $value . '"',
-                array_keys($this->xmlAttributes),
-                array_values($this->xmlAttributes),
-            ));
+            $xmlAttributes = '';
+            foreach ($this->xmlAttributes as $key => $value) {
+                $xmlAttributes .= $key . '="' . $value . '" ';
+            }
 
-            $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
+            $stream->append('<?xml ' . trim($xmlAttributes) . "?>\n<" . $this->rootElementName . ">\n");
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }

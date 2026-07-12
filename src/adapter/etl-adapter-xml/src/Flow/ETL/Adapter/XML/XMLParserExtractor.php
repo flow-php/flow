@@ -60,7 +60,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     private string $xmlNodePath = '';
 
     /**
-     * In order to iterate only over <element> nodes use `$loader->withXMLNodePath('root/elements/element')`.
+     * To iterate only over <element> nodes, use `$loader->withXMLNodePath('root/elements/element')`.
      *
      * <root>
      *   <elements>
@@ -124,51 +124,18 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     ));
                 }
 
-                if (count($this->elements)) {
-                    foreach ($this->elements as $element) {
-                        if ($shouldPutInputIntoRows) {
-                            $rowData = [
-                                'node' => $this->createDOMNode($element),
-                                '_input_file_uri' => $uri,
-                            ];
-                        } else {
-                            $rowData = ['node' => $this->createDOMNode($element)];
-                        }
-
-                        $signal = yield array_to_rows(
-                            $rowData,
-                            $context->entryFactory(),
-                            $stream->path()->partitions(),
-                            $this->schema,
-                        );
-
-                        $this->incrementReturnedRows();
-
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-                            $this->freeParser();
-
-                            return;
-                        }
-                    }
-                    $this->elements = [];
-                }
-            }
-
-            xml_parse($this->parser(), '', true);
-
-            if (count($this->elements)) {
                 foreach ($this->elements as $element) {
+                    $rowData = ['node' => $this->createDOMNode($element)];
                     if ($shouldPutInputIntoRows) {
-                        $rowData = [
-                            'node' => $this->createDOMNode($element),
-                            '_input_file_uri' => $uri,
-                        ];
-                    } else {
-                        $rowData = ['node' => $this->createDOMNode($element)];
+                        $rowData['_input_file_uri'] = $uri;
                     }
 
-                    $signal = yield array_to_rows([$rowData], $context->entryFactory(), $stream->path()->partitions());
+                    $signal = yield array_to_rows(
+                        $rowData,
+                        $context->entryFactory(),
+                        $stream->path()->partitions(),
+                        $this->schema,
+                    );
 
                     $this->incrementReturnedRows();
 
@@ -179,8 +146,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                         return;
                     }
                 }
+
                 $this->elements = [];
             }
+
+            xml_parse($this->parser(), '', true);
 
             $this->freeParser();
         }
