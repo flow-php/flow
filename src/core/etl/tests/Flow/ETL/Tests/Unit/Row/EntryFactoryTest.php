@@ -16,8 +16,11 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
@@ -48,11 +51,14 @@ use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\union_schema;
@@ -74,6 +80,52 @@ use function Flow\Types\DSL\type_union;
 final class EntryFactoryTest extends TestCase
 {
     private EntryFactory $entryFactory;
+
+    public static function provide_instantiate_cases(): Generator
+    {
+        yield 'boolean' => [bool_schema('e'), true, bool_entry('e', true)];
+        yield 'date' => [date_schema('e'), $date = new DateTimeImmutable('2024-04-01'), date_entry('e', $date)];
+        yield 'datetime' => [
+            datetime_schema('e'),
+            $datetime = new DateTimeImmutable('2024-04-01 10:00:00 UTC'),
+            datetime_entry('e', $datetime),
+        ];
+        yield 'enum' => [
+            enum_schema('e', BackedIntEnum::class),
+            BackedIntEnum::one,
+            enum_entry('e', BackedIntEnum::one),
+        ];
+        yield 'float' => [float_schema('e'), 1.5, float_entry('e', 1.5)];
+        yield 'integer' => [integer_schema('e'), 1, int_entry('e', 1)];
+        yield 'json' => [json_schema('e'), $json = new Json('{"id":1}'), json_entry('e', $json)];
+        yield 'list' => [
+            list_schema('e', type_list(type_integer())),
+            [1, 2, 3],
+            list_entry('e', [1, 2, 3], type_list(type_integer())),
+        ];
+        yield 'map' => [
+            map_schema('e', type_map(type_string(), type_integer())),
+            ['a' => 1],
+            map_entry('e', ['a' => 1], type_map(type_string(), type_integer())),
+        ];
+        yield 'string' => [string_schema('e'), 'flow', string_entry('e', 'flow')];
+        yield 'structure' => [
+            structure_schema('e', type_structure(['a' => type_integer()])),
+            ['a' => 1],
+            structure_entry('e', ['a' => 1], type_structure(['a' => type_integer()])),
+        ];
+        yield 'time' => [time_schema('e'), $time = new DateInterval('PT1H'), time_entry('e', $time)];
+        yield 'uuid' => [
+            uuid_schema('e'),
+            $uuid = new FlowUuid('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
+            uuid_entry('e', $uuid),
+        ];
+
+        $xmlDocument = new DOMDocument();
+        $xmlDocument->loadXML('<root><foo>1</foo></root>');
+
+        yield 'xml' => [xml_schema('e'), $xmlDocument, xml_entry('e', $xmlDocument)];
+    }
 
     public static function provide_recognized_data(): Generator
     {
@@ -293,6 +345,41 @@ final class EntryFactoryTest extends TestCase
             html_entry('e', $html),
             $this->entryFactory->create('e', $document, schema(html_schema('e'))),
         );
+    }
+
+    #[DataProvider('provide_instantiate_cases')]
+    public function test_instantiate_with_definition(Definition $definition, mixed $value, Entry $expected): void
+    {
+        static::assertEquals($expected, $this->entryFactory->instantiate('e', $value, $definition));
+    }
+
+    public function test_instantiate_does_not_cast_values(): void
+    {
+        $datetime = new DateTimeImmutable('2024-04-01 10:00:00 UTC');
+
+        static::assertSame($datetime, $this->entryFactory->instantiate('e', $datetime, datetime_schema('e'))->value());
+    }
+
+    public function test_instantiate_preserves_definition_instance(): void
+    {
+        $definition = integer_schema('e');
+
+        static::assertSame($definition, $this->entryFactory->instantiate('e', 1, $definition)->definition());
+    }
+
+    public function test_instantiate_with_schema(): void
+    {
+        static::assertEquals(
+            int_entry('id', 1),
+            $this->entryFactory->instantiate('id', 1, schema(integer_schema('id'), string_schema('name'))),
+        );
+    }
+
+    public function test_instantiate_with_schema_without_definition_for_entry(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        $this->entryFactory->instantiate('unknown', 1, schema(integer_schema('id')));
     }
 
     public function test_int(): void

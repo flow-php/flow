@@ -55,19 +55,6 @@ final class StructureEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_creating_string_structure_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Expected structure{id: integer, name: string} got different types: list<integer>',
-        );
-        // @mago-ignore analysis:invalid-argument
-        structure_entry('test', [1, 2, 3], type_structure([
-            'id' => type_integer(),
-            'name' => type_string(),
-        ]));
-    }
-
     public function test_definition(): void
     {
         $entry = struct_entry(

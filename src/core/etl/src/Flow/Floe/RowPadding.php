@@ -34,7 +34,7 @@ final class RowPadding
             $name = $definition->entry()->name();
             $order[] = $name;
             $column = $decoder->decode(json_encode([$definition->normalize()], JSON_THROW_ON_ERROR))[0];
-            $nulls[$name] = $column->entryFactory->create($name, null, clone $column->fromNullDefinition);
+            $nulls[$name] = $column->instantiator->instantiate($name, null, clone $column->fromNullDefinition);
         }
 
         return new self($order, $nulls);

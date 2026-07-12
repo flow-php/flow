@@ -202,4 +202,12 @@ final class TimeDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\TimeEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\TimeEntry::class;
+    }
 }

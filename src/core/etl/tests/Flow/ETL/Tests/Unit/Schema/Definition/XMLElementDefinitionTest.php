@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -90,6 +91,11 @@ final class XMLElementDefinitionTest extends FlowTestCase
         $def = xml_element_schema('col');
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(XMLElementEntry::class, xml_element_schema('element')->entryClass());
     }
 
     /**

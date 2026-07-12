@@ -195,4 +195,12 @@ final class UuidDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\UuidEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\UuidEntry::class;
+    }
 }

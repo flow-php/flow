@@ -194,4 +194,12 @@ final class BooleanDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\BooleanEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\BooleanEntry::class;
+    }
 }

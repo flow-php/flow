@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
@@ -23,6 +25,8 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 
@@ -112,6 +116,33 @@ final class UnionDefinitionTest extends FlowTestCase
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
         static::assertFalse($def->matches(bool_entry('col', true)));
+    }
+
+    public function test_entry_class_taken_from_left_union_member(): void
+    {
+        static::assertSame(
+            StringEntry::class,
+            union_schema('col', type_union(type_string(), type_integer()))->entryClass(),
+        );
+        static::assertSame(
+            IntegerEntry::class,
+            union_schema('col', type_union(type_integer(), type_string()))->entryClass(),
+        );
+    }
+
+    public function test_entry_class_with_left_union_member_without_related_entry_class(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        union_schema('col', type_union(type_null(), type_string()))->entryClass();
+    }
+
+    public function test_entry_class_with_optional_left_union_member(): void
+    {
+        static::assertSame(
+            StringEntry::class,
+            union_schema('col', type_union(type_optional(type_string()), type_integer()))->entryClass(),
+        );
     }
 
     /**

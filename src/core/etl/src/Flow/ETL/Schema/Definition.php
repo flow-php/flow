@@ -76,4 +76,9 @@ interface Definition
      * @return Type<T>
      */
     public function type(): Type;
+
+    /**
+     * @return class-string<Entry>
+     */
+    public function entryClass(): string;
 }

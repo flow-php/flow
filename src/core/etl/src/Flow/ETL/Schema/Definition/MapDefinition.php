@@ -239,4 +239,12 @@ final class MapDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\MapEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\MapEntry::class;
+    }
 }

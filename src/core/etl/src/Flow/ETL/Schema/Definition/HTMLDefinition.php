@@ -195,4 +195,12 @@ final class HTMLDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\HTMLEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\HTMLEntry::class;
+    }
 }

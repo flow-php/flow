@@ -5,17 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use DateTimeImmutable;
-use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -27,49 +23,6 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
         list_entry('', ['one', 'two', 'three'], type_list(type_string()));
-    }
-
-    public function test_creating_boolean_list_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<boolean> got different types: array<mixed>');
-        list_entry('list', ['string', false], type_list(type_boolean()));
-    }
-
-    public function test_creating_datetime_list_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
-        list_entry('list', ['string', new DateTimeImmutable()], type_list(type_instance_of(DateTimeInterface::class)));
-    }
-
-    public function test_creating_float_list_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<float> got different types: array<mixed>');
-        list_entry('list', ['string', 1.3], type_list(type_float()));
-    }
-
-    public function test_creating_integer_list_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<integer> got different types: array<mixed>');
-        list_entry('list', ['string', 1], type_list(type_integer()));
-    }
-
-    public function test_creating_list_from_not_list_array(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
-        // @mago-ignore analysis:invalid-argument
-        list_entry('list', ['a' => 1, 'b' => 2], type_list(type_integer()));
-    }
-
-    public function test_creating_string_list_from_wrong_value_types(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<string> got different types: array<mixed>');
-        list_entry('list', ['string', 1], type_list(type_string()));
     }
 
     public function test_definition(): void

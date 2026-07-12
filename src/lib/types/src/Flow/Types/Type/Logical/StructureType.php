@@ -122,10 +122,6 @@ final readonly class StructureType implements Type
 
     public function cast(mixed $value): array
     {
-        if ($this->isValid($value)) {
-            return $value;
-        }
-
         try {
             if ($value instanceof Json) {
                 $value = $value->toArray();

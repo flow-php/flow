@@ -220,4 +220,12 @@ final class EnumDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\EnumEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\EnumEntry::class;
+    }
 }

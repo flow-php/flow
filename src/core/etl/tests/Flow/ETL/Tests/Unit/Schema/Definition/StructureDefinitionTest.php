@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
@@ -117,6 +118,14 @@ final class StructureDefinitionTest extends FlowTestCase
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(
+            StructureEntry::class,
+            structure_schema('data', type_structure(['name' => type_string()]))->entryClass(),
+        );
     }
 
     /**

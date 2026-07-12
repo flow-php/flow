@@ -218,4 +218,12 @@ final class DateDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\DateEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\DateEntry::class;
+    }
 }

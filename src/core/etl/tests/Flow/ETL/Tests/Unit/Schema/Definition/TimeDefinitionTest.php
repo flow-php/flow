@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
@@ -108,6 +109,11 @@ final class TimeDefinitionTest extends FlowTestCase
         $def = time_schema('col');
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(TimeEntry::class, time_schema('duration')->entryClass());
     }
 
     /**

@@ -195,4 +195,12 @@ final class JsonDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\JsonEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\JsonEntry::class;
+    }
 }

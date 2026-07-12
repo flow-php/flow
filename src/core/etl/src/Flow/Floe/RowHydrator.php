@@ -14,7 +14,7 @@ use function sprintf;
 final class RowHydrator
 {
     /**
-     * @param array<int, HydratorColumn> $plan
+     * @param array<int, ColumnBlueprint> $plan
      */
     public function hydrate(array $plan, string $data, int &$position): Row
     {
@@ -42,7 +42,7 @@ final class RowHydrator
                 throw new SerializationException(sprintf('Floe found unknown value flag 0x%02X', $flag));
             }
 
-            $entries[$column->name] = $column->entryFactory->create($column->name, $value, $definition);
+            $entries[$column->name] = $column->instantiator->instantiate($column->name, $value, $definition);
         }
 
         return new Row(Entries::recreate($entries));

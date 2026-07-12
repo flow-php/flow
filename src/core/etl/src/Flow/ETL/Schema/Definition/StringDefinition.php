@@ -182,4 +182,12 @@ final class StringDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\StringEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\StringEntry::class;
+    }
 }
