@@ -6,10 +6,7 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
@@ -54,8 +51,10 @@ use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_element_entry;
@@ -139,7 +138,7 @@ final readonly class EntryFactory
                 DateType::class => date_entry($entryName, null, $metadata),
                 EnumType::class => enum_entry($entryName, null, $metadata),
                 ArrayType::class, JsonType::class => json_entry($entryName, null, $metadata),
-                NullType::class => StringEntry::fromNull($entryName, $metadata),
+                NullType::class => null_entry($entryName, $metadata),
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
                 HTMLType::class => html_entry($entryName, null, $metadata),
@@ -169,52 +168,6 @@ final readonly class EntryFactory
                 $type = $this->typeResolver->fromUnion($type, $value, $entryName);
             }
 
-            if ($type instanceof StringType) {
-                return string_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof IntegerType) {
-                return int_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof BooleanType) {
-                return bool_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof FloatType) {
-                return float_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof UuidType) {
-                return uuid_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof DateType) {
-                return date_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof TimeType) {
-                return time_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof DateTimeType) {
-                return datetime_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof TimeZoneType) {
-                return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
-            }
-
-            if ($type instanceof NullType) {
-                return StringEntry::fromNull($entryName, $metadata);
-            }
-
-            if ($type instanceof EnumType) {
-                $castValue = type_optional($type)->cast($value);
-
-                return enum_entry($entryName, $castValue, $metadata);
-            }
-
             if ($type instanceof JsonType) {
                 try {
                     return json_object_entry($entryName, type_optional($type)->cast($value), $metadata);
@@ -223,49 +176,43 @@ final readonly class EntryFactory
                 }
             }
 
-            if ($type instanceof HTMLType) {
-                return html_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof HTMLElementType) {
-                return html_element_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof XMLType) {
-                return xml_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof XMLElementType) {
-                return xml_element_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof ArrayType) {
-                return json_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
-            if ($type instanceof InstanceOfType) {
-                throw new InvalidArgumentException(
+            return match ($type::class) {
+                StringType::class => string_entry($entryName, type_optional($type)->cast($value), $metadata),
+                IntegerType::class => int_entry($entryName, type_optional($type)->cast($value), $metadata),
+                BooleanType::class => bool_entry($entryName, type_optional($type)->cast($value), $metadata),
+                FloatType::class => float_entry($entryName, type_optional($type)->cast($value), $metadata),
+                UuidType::class => uuid_entry($entryName, type_optional($type)->cast($value), $metadata),
+                DateType::class => date_entry($entryName, type_optional($type)->cast($value), $metadata),
+                TimeType::class => time_entry($entryName, type_optional($type)->cast($value), $metadata),
+                DateTimeType::class => datetime_entry($entryName, type_optional($type)->cast($value), $metadata),
+                TimeZoneType::class => string_entry($entryName, type_optional(type_string())->cast($value), $metadata),
+                NullType::class => null_entry($entryName, $metadata),
+                EnumType::class => enum_entry($entryName, type_optional($type)->cast($value), $metadata),
+                HTMLType::class => html_entry($entryName, type_optional($type)->cast($value), $metadata),
+                HTMLElementType::class => html_element_entry($entryName, type_optional($type)->cast($value), $metadata),
+                XMLType::class => xml_entry($entryName, type_optional($type)->cast($value), $metadata),
+                XMLElementType::class => xml_element_entry($entryName, type_optional($type)->cast($value), $metadata),
+                ArrayType::class => json_entry($entryName, type_optional($type)->cast($value), $metadata),
+                MapType::class => map_entry($entryName, $value === null ? null : $type->cast($value), $type, $metadata),
+                StructureType::class => structure_entry(
+                    $entryName,
+                    $value === null ? null : $type->cast($value),
+                    $type,
+                    $metadata,
+                ),
+                ListType::class => list_entry(
+                    $entryName,
+                    $value === null ? null : array_values($type->cast($value)),
+                    $type,
+                    $metadata,
+                ),
+                InstanceOfType::class => throw new InvalidArgumentException(
                     "{$entryName}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.",
-                );
-            }
-
-            if ($type instanceof MapType) {
-                $processedValue = $value === null ? null : $type->cast($value);
-
-                return new MapEntry($entryName, $processedValue, $type, $metadata);
-            }
-
-            if ($type instanceof StructureType) {
-                $processedValue = $value === null ? null : $type->cast($value);
-
-                return new StructureEntry($entryName, $processedValue, $type, $metadata);
-            }
-
-            if ($type instanceof ListType) {
-                $processedValue = $value === null ? null : array_values($type->cast($value));
-
-                return new ListEntry($entryName, $processedValue, $type, $metadata);
-            }
+                ),
+                default => throw new InvalidArgumentException(
+                    "Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"",
+                ),
+            };
 
             // @mago-ignore analysis:avoid-catching-error
         } catch (InvalidArgumentException|CastingException|TypeError $e) {
@@ -274,9 +221,5 @@ final readonly class EntryFactory
                 previous: $e,
             );
         }
-
-        throw new InvalidArgumentException(
-            "Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"",
-        );
     }
 }
