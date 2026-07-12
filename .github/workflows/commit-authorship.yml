@@ -29,7 +29,7 @@ jobs:
           pattern="claude|anthropic|gemini|codex|openai|cursor|copilot"
           failed=0
 
-          for sha in $(git log --format='%H' origin/$BASE_REF..HEAD); do
+          for sha in $(git log --format='%H' "origin/$BASE_REF..HEAD"); do
             author=$(git log -1 --format='%an <%ae>' "$sha")
             committer=$(git log -1 --format='%cn <%ce>' "$sha")
             body=$(git log -1 --format='%b' "$sha")
