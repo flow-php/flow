@@ -26,7 +26,7 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          pattern='claude|anthropic|gemini|codex|openai|cursor|copilot'
+          pattern="claude|anthropic|gemini|codex|openai|cursor|copilot"
           failed=0
 
           for sha in $(git log --format='%H' origin/$BASE_REF..HEAD); do
