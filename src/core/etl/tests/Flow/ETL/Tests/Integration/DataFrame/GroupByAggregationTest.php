@@ -24,7 +24,7 @@ use function iterator_to_array;
 
 final class GroupByAggregationTest extends FlowIntegrationTestCase
 {
-    public function test_memory_and_filesystem_backends_produce_identical_results(): void
+    public function test_partition_count_does_not_affect_the_result(): void
     {
         $input = [
             ['seller' => 'a', 'amount' => 10],
@@ -44,15 +44,15 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        $memory = $pipeline(config_builder());
-        $filesystem = $pipeline(config_builder()->groupingFilesystem()->groupingPartitions(3)->groupingBatchSize(2));
+        $default = $pipeline(config_builder());
+        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3)->groupingBatchSize(2));
 
-        static::assertSame($memory, $filesystem);
-        static::assertCount(3, $memory);
+        static::assertSame($default, $fewPartitions);
+        static::assertCount(3, $default);
 
         $bySeller = [];
 
-        foreach ($memory as $row) {
+        foreach ($default as $row) {
             $bySeller[$row['seller']] = ['count' => $row['seller_count'], 'sum' => $row['amount_sum']];
         }
 
@@ -75,7 +75,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingFilesystem()->groupingPartitions(3))
+            data_frame(config_builder()->groupingBucketsCount(3))
                 ->read(from_array($input))
                 ->groupBy(ref('a'), ref('b'))
                 ->aggregate(sum(ref('v')))
@@ -107,7 +107,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingFilesystem()->groupingPartitions(3))
+            data_frame(config_builder()->groupingBucketsCount(3))
                 ->read(from_array($input))
                 ->groupBy(ref('seller'), ref('region'))
                 ->aggregate(count(ref('seller')))
@@ -135,7 +135,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingFilesystem()->groupingPartitions(3))
+            data_frame(config_builder()->groupingBucketsCount(3))
                 ->read(from_array($input))
                 ->groupBy(ref('k'))
                 ->aggregate(first(ref('v')), last(ref('v')))
@@ -147,7 +147,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         static::assertSame(3, $result[0]['v_last']);
     }
 
-    public function test_collect_matches_between_backends_through_spill(): void
+    public function test_collect_matches_across_partition_counts(): void
     {
         $input = [
             ['k' => 'a', 'v' => 1],
@@ -167,14 +167,14 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        $memory = $pipeline(config_builder());
-        $filesystem = $pipeline(config_builder()->groupingFilesystem()->groupingPartitions(3));
+        $default = $pipeline(config_builder());
+        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
 
-        static::assertSame($memory, $filesystem);
+        static::assertSame($default, $fewPartitions);
 
         $byKey = [];
 
-        foreach ($memory as $row) {
+        foreach ($default as $row) {
             $byKey[$row['k']] = [
                 'collection' => $row['v_collection'],
                 'collection_unique' => $row['v_collection_unique'],
@@ -191,7 +191,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_average_matches_between_backends_through_spill(): void
+    public function test_average_matches_across_partition_counts(): void
     {
         $input = [
             ['k' => 'a', 'v' => 2],
@@ -211,21 +211,21 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        $memory = $pipeline(config_builder());
-        $filesystem = $pipeline(config_builder()->groupingFilesystem()->groupingPartitions(3));
+        $default = $pipeline(config_builder());
+        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
 
-        static::assertSame($memory, $filesystem);
+        static::assertSame($default, $fewPartitions);
 
         $byKey = [];
 
-        foreach ($memory as $row) {
+        foreach ($default as $row) {
             $byKey[$row['k']] = $row['v_avg'];
         }
 
         static::assertSame(['a' => 3, 'b' => 20, 'c' => 7], $byKey);
     }
 
-    public function test_backends_match_on_a_realistic_dataset(): void
+    public function test_partition_count_does_not_affect_a_realistic_dataset(): void
     {
         $raw = iterator_to_array((new FakeRandomOrdersExtractor(1000))->rawData(), false);
         $data = array_map(static fn(array $order): array => [
@@ -243,9 +243,6 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        static::assertSame(
-            $pipeline(config_builder()),
-            $pipeline(config_builder()->groupingFilesystem()->groupingPartitions(3)),
-        );
+        static::assertSame($pipeline(config_builder()), $pipeline(config_builder()->groupingBucketsCount(3)));
     }
 }

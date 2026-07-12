@@ -6,8 +6,7 @@ namespace Flow\ETL\Processor;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
-use Flow\ETL\GroupBy\BucketAggregation;
-use Flow\ETL\GroupBy\PartitionedAggregation;
+use Flow\ETL\GroupBy\ExternalAggregation;
 use Flow\ETL\Processor;
 use Generator;
 
@@ -32,12 +31,10 @@ final readonly class GroupByProcessor implements Processor
 
         $config = $context->config->grouping;
 
-        yield from $config->cache === null
-            ? (new BucketAggregation())->aggregate($rows, $context, $this->groupBy)
-            : (new PartitionedAggregation($config->cache, $config->partitions, $config->batchSize))->aggregate(
-                $rows,
-                $context,
-                $this->groupBy,
-            );
+        yield from (new ExternalAggregation($config->cache, $config->bucketsCount, $config->batchSize))->aggregate(
+            $rows,
+            $context,
+            $this->groupBy,
+        );
     }
 }

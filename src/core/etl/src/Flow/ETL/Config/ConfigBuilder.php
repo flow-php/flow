@@ -205,19 +205,19 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function groupingFilesystem(?BucketsCache $cache = null): self
+    /**
+     * @param int<1, max> $bucketsCount
+     */
+    public function groupingBucketsCount(int $bucketsCount): self
     {
-        $this->grouping->filesystem($cache);
+        $this->grouping->bucketsCount($bucketsCount);
 
         return $this;
     }
 
-    /**
-     * @param int<1, max> $partitions
-     */
-    public function groupingPartitions(int $partitions): self
+    public function groupingCache(BucketsCache $cache): self
     {
-        $this->grouping->partitions($partitions);
+        $this->grouping->cache($cache);
 
         return $this;
     }

@@ -17,16 +17,14 @@ final class GroupingConfigBuilder
      */
     private int $batchSize = 1000;
 
-    private ?BucketsCache $cache = null;
-
-    private string $filesystemMount = 'file';
-
     /**
      * @var int<1, max>
      */
-    private int $partitions = 64;
+    private int $bucketsCount = 64;
 
-    private bool $spillToFilesystem = false;
+    private ?BucketsCache $cache = null;
+
+    private string $filesystemMount = 'file';
 
     /**
      * @param int<1, max> $batchSize
@@ -43,47 +41,35 @@ final class GroupingConfigBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $fstab, Path $localFilesystemCacheDir): GroupingConfig
+    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): GroupingConfig
     {
-        $cache = $this->cache;
+        $cache = $this->cache ?? new FilesystemBucketsCache(
+            $filesystemTable->for($this->filesystemMount),
+            $localFilesystemCacheDir->suffix('/flow-php-group-by/'),
+            $this->batchSize,
+        );
 
-        if ($cache === null && $this->spillToFilesystem) {
-            $cache = new FilesystemBucketsCache(
-                $fstab->for($this->filesystemMount),
-                $localFilesystemCacheDir->suffix('/flow-php-group-by/'),
-                $this->batchSize,
-            );
-        }
-
-        return new GroupingConfig($cache, $this->partitions, $this->batchSize);
-    }
-
-    public function filesystem(?BucketsCache $cache = null): self
-    {
-        $this->spillToFilesystem = true;
-        $this->cache = $cache;
-
-        return $this;
-    }
-
-    public function filesystemMount(string $mount): self
-    {
-        $this->filesystemMount = $mount;
-
-        return $this;
+        return new GroupingConfig($cache, $this->bucketsCount, $this->batchSize);
     }
 
     /**
-     * @param int<1, max> $partitions
+     * @param int<1, max> $bucketsCount
      */
-    public function partitions(int $partitions): self
+    public function bucketsCount(int $bucketsCount): self
     {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
-        if ($partitions < 1) {
-            throw new InvalidArgumentException('Partitions count must be greater than 0');
+        if ($bucketsCount < 1) {
+            throw new InvalidArgumentException('Buckets count must be greater than 0');
         }
 
-        $this->partitions = $partitions;
+        $this->bucketsCount = $bucketsCount;
+
+        return $this;
+    }
+
+    public function cache(BucketsCache $cache): self
+    {
+        $this->cache = $cache;
 
         return $this;
     }

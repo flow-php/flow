@@ -20,21 +20,21 @@ use function hexdec;
 use function random_bytes;
 use function substr;
 
-final readonly class PartitionedAggregation
+final readonly class ExternalAggregation
 {
     /**
-     * @param int<1, max> $partitions
+     * @param int<1, max> $bucketsCount
      * @param int<1, max> $batchSize
      */
     public function __construct(
         private BucketsCache $cache,
-        private int $partitions,
+        private int $bucketsCount,
         private int $batchSize,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
-        if ($this->partitions < 1) {
-            throw new InvalidArgumentException('Partitions count must be greater than 0, given: ' . $this->partitions);
+        if ($this->bucketsCount < 1) {
+            throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
 
         // @mago-ignore analysis:invalid-operand
@@ -58,23 +58,25 @@ final readonly class PartitionedAggregation
 
         try {
             foreach ($rows as $batch) {
-                /** @var array<int, list<Row>> $partitioned */
-                $partitioned = [];
+                /** @var array<int, list<Row>> $bucketed */
+                $bucketed = [];
 
                 foreach ($batch as $row) {
-                    $partitioned[$this->partition((string) $groupBy->keyValues($row))][] = $row;
+                    $bucketed[$this->bucket((string) $groupBy->keyValues($row))][] = $row;
                 }
 
-                foreach ($partitioned as $partition => $partitionRows) {
-                    $buckets[$partition] ??= 'group-by-' . $runId . '-partition-' . $partition;
-                    $this->cache->append($buckets[$partition], new Rows(...$partitionRows));
+                foreach ($bucketed as $bucket => $bucketRows) {
+                    $buckets[$bucket] ??= 'group-by-' . $runId . '-bucket-' . $bucket;
+                    $this->cache->append($buckets[$bucket], new Rows(...$bucketRows));
                 }
             }
 
             $aggregation = new BucketAggregation();
 
             foreach ($buckets as $bucketId) {
-                yield from $aggregation->aggregate($this->bucketRows($bucketId), $context, $groupBy);
+                foreach ($aggregation->aggregate($this->bucketRows($bucketId), $context, $groupBy) as $resultBatch) {
+                    yield $resultBatch;
+                }
             }
         } finally {
             foreach ($buckets as $bucketId) {
@@ -84,6 +86,11 @@ final readonly class PartitionedAggregation
                 }
             }
         }
+    }
+
+    private function bucket(string $key): int
+    {
+        return (int) hexdec(substr(NativePHPHash::xxh128($key), 0, 8)) % $this->bucketsCount;
     }
 
     /**
@@ -105,10 +112,5 @@ final readonly class PartitionedAggregation
         if ($buffer !== []) {
             yield new Rows(...$buffer);
         }
-    }
-
-    private function partition(string $key): int
-    {
-        return (int) hexdec(substr(NativePHPHash::xxh128($key), 0, 8)) % $this->partitions;
     }
 }
