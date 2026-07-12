@@ -1,0 +1,60 @@
+name: Commit Authorship Check
+
+on:
+  pull_request:
+
+# See https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Code borrowed from: https://github.com/carthage-software/mago/blob/main/.github/workflows/commit-authorship.yml
+jobs:
+  check-commit-authorship:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: "Check for LLM authorship"
+        run: |
+          pattern='claude|anthropic|gemini|codex|openai|cursor|copilot'
+          failed=0
+
+          for sha in $(git log --format='%H' origin/${{ github.base_ref }}..HEAD); do
+            author=$(git log -1 --format='%an <%ae>' "$sha")
+            committer=$(git log -1 --format='%cn <%ce>' "$sha")
+            body=$(git log -1 --format='%b' "$sha")
+          
+            if echo "$author" | grep -iqE "$pattern"; then
+            echo "::error::Commit $sha has LLM author: $author"
+            failed=1
+            fi
+
+            if echo "$committer" | grep -iqE "$pattern"; then
+            echo "::error::Commit $sha has LLM committer: $committer"
+            failed=1
+            fi
+
+            if echo "$body" | grep -iqE "^co-authored-by:.*($pattern)"; then
+            trailer=$(echo "$body" | grep -iE "^co-authored-by:.*($pattern)")
+            echo "::error::Commit $sha has AI co-author: $trailer"
+            failed=1
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "Commits must be authored by humans. LLM tools are welcome, but"
+            echo "the commit author must be a real person we can reach out to."
+            echo ""
+            echo "Please rebase and amend your commits to use your own identity,"
+            echo "and remove any LLM Co-Authored-By trailers."
+            exit 1
+          fi
