@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-07-12
 
 ### Added
+- [#2530](https://github.com/flow-php/flow/pull/2530) - **Add GHA to check commit authorship** - [@stloyd](https://github.com/stloyd)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - externalSortBucketSize config controlling rows per external sort bucket (default 10000)** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - RouteNamePathMap optional cache warmer building a [route name => path] map at cache:warmup, rebuilt lazily when missing** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/etl - Floe binary row serialization format with writer, reader, merger, extractor, loader and DSL.** - [@norberttech](https://github.com/norberttech)
