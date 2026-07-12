@@ -59,6 +59,7 @@ use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 
@@ -124,7 +125,12 @@ final readonly class EntryFactory
                 FloatType::class => float_entry($entryName, null, $metadata),
                 BooleanType::class => bool_entry($entryName, null, $metadata),
                 MapType::class => map_entry($entryName, null, $type->base(), $metadata),
-                StructureType::class => struct_entry($entryName, null, $type->base(), $metadata),
+                StructureType::class => struct_entry(
+                    $entryName,
+                    null,
+                    type_instance_of(StructureType::class)->assert($type->base()),
+                    $metadata,
+                ),
                 ListType::class => list_entry($entryName, null, $type->base(), $metadata),
                 UuidType::class => uuid_entry($entryName, null, $metadata),
                 DateTimeType::class => datetime_entry($entryName, null, $metadata),
