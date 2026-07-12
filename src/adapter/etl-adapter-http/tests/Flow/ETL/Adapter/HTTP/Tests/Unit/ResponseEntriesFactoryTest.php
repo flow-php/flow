@@ -51,7 +51,7 @@ final class ResponseEntriesFactoryTest extends FlowTestCase
         static::assertInstanceOf($entryClass, $entryFactory->create($response)->get('response_body'));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_uses_html_entry_for_response_body_on_newer_php(): void
     {
         $entryFactory = new ResponseEntriesFactory();
@@ -63,7 +63,7 @@ final class ResponseEntriesFactoryTest extends FlowTestCase
         static::assertInstanceOf(HTMLEntry::class, $entryFactory->create($response)->get('response_body'));
     }
 
-    #[RequiresPhp('< 8.4')]
+    #[RequiresPhp('< 8.4.0')]
     public function test_uses_string_entry_for_response_body_on_older_php(): void
     {
         $entryFactory = new ResponseEntriesFactory();

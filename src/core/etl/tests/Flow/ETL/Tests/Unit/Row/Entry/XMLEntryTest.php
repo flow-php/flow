@@ -107,7 +107,7 @@ final class XMLEntryTest extends FlowTestCase
         static::assertNotEquals(xml_entry('row', $doc), xml_entry('row', $doc2));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_canonicalization_with_dom_xmldocument(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -149,7 +149,7 @@ final class XMLEntryTest extends FlowTestCase
         static::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_creating_xml_entry_with_empty_dom_xmldocument(): void
     {
         // @mago-ignore analysis:unavailable-method

@@ -109,7 +109,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_entries(): void
     {
         $rows = rows(row(html_entry('html', '<html><body><p>hello</p></body></html>')));

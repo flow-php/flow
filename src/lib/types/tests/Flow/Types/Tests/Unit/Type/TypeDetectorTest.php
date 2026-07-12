@@ -463,7 +463,7 @@ final class TypeDetectorTest extends TestCase
         static::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_logical_html_element_type(): void
     {
         // @mago-expect analysis:unavailable-method
@@ -477,7 +477,7 @@ final class TypeDetectorTest extends TestCase
         static::assertSame('html_element', $type->toString());
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_logical_html_type(): void
     {
         // @mago-expect analysis:unavailable-method

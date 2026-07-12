@@ -359,7 +359,7 @@ final class MemoryBufferTest extends TestCase
     }
 
     #[DataProvider('write_data_provider')]
-    public function test_write_various_data_types(string $data): void
+    public function test_write_various_data_types(string $data, string $ignored): void
     {
         $buffer = new MemoryBuffer();
 

@@ -21,7 +21,7 @@ use function unserialize;
 
 final class XMLElementEntryTest extends FlowTestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_create_from_dom_xmldocument(): void
     {
         // @mago-ignore analysis:unavailable-method

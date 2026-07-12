@@ -36,7 +36,6 @@ final class DefinitionCompatibilityTest extends FlowTestCase
             list_schema('list', type_list(type_integer())),
             list_schema('list', type_list(type_integer())),
             true,
-            false,
         ];
 
         yield [

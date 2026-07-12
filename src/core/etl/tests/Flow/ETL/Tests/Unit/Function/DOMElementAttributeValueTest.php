@@ -21,7 +21,7 @@ use const LIBXML_NOERROR;
 
 final class DOMElementAttributeValueTest extends TestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_extracting_attribute_from_dom_element_entry(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -39,7 +39,7 @@ final class DOMElementAttributeValueTest extends TestCase
             ));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_extracting_non_existing_attribute_from_dom_element_entry(): void
     {
         // @mago-ignore analysis:unavailable-method

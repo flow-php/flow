@@ -19,7 +19,7 @@ use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
 
 // @mago-ignore analysis:unavailable-method
-#[RequiresPhp('>= 8.4')]
+#[RequiresPhp('>= 8.4.0')]
 final class HTMLQuerySelectorAllTest extends TestCase
 {
     public function test_invalid_query_all_on_html_document(): void

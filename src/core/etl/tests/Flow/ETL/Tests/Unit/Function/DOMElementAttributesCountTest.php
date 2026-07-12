@@ -21,7 +21,7 @@ use const LIBXML_NOERROR;
 
 final class DOMElementAttributesCountTest extends TestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_attributes_count_on_element_with_multiple_attributes(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -39,7 +39,7 @@ final class DOMElementAttributesCountTest extends TestCase
             ));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_attributes_count_on_element_with_one_attribute(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -57,7 +57,7 @@ final class DOMElementAttributesCountTest extends TestCase
             ));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_attributes_count_on_element_with_zero_attributes(): void
     {
         // @mago-ignore analysis:unavailable-method
