@@ -11,6 +11,11 @@ use Generator;
 interface BucketsCache
 {
     /**
+     * @param iterable<Row>|Rows $rows
+     */
+    public function append(string $bucketId, iterable|Rows $rows): void;
+
+    /**
      * @return \Generator<Row>
      */
     public function get(string $bucketId): Generator;

@@ -35,14 +35,21 @@ final class GroupByProcessorTest extends FlowTestCase
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        static::assertCount(1, $result);
+        $aggregated = [];
 
-        $resultArray = $result[0]->toArray();
-        static::assertCount(2, $resultArray);
+        foreach ($result as $batch) {
+            foreach ($batch->toArray() as $groupRow) {
+                $aggregated[] = $groupRow;
+            }
+        }
 
-        $categoryA = array_values(array_filter($resultArray, static fn(array $r): bool => $r['category'] === 'a'))[0];
+        static::assertCount(2, $aggregated);
 
-        static::assertEquals(30, $categoryA['amount_sum']);
+        $categoryA = array_values(array_filter($aggregated, static fn(array $r): bool => $r['category'] === 'a'))[0];
+        $categoryB = array_values(array_filter($aggregated, static fn(array $r): bool => $r['category'] === 'b'))[0];
+
+        static::assertSame(30, $categoryA['amount_sum']);
+        static::assertSame(15, $categoryB['amount_sum']);
     }
 
     public function test_groups_and_aggregates_rows(): void
@@ -63,16 +70,21 @@ final class GroupByProcessorTest extends FlowTestCase
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        static::assertCount(1, $result);
+        $aggregated = [];
 
-        $resultArray = $result[0]->toArray();
-        static::assertCount(2, $resultArray);
+        foreach ($result as $batch) {
+            foreach ($batch->toArray() as $groupRow) {
+                $aggregated[] = $groupRow;
+            }
+        }
 
-        $categoryA = array_values(array_filter($resultArray, static fn(array $r): bool => $r['category'] === 'a'))[0];
-        $categoryB = array_values(array_filter($resultArray, static fn(array $r): bool => $r['category'] === 'b'))[0];
+        static::assertCount(2, $aggregated);
 
-        static::assertEquals(30, $categoryA['amount_sum']);
-        static::assertEquals(15, $categoryB['amount_sum']);
+        $categoryA = array_values(array_filter($aggregated, static fn(array $r): bool => $r['category'] === 'a'))[0];
+        $categoryB = array_values(array_filter($aggregated, static fn(array $r): bool => $r['category'] === 'b'))[0];
+
+        static::assertSame(30, $categoryA['amount_sum']);
+        static::assertSame(15, $categoryB['amount_sum']);
     }
 
     public function test_handles_empty_input(): void
@@ -89,7 +101,12 @@ final class GroupByProcessorTest extends FlowTestCase
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        static::assertCount(1, $result);
-        static::assertCount(0, $result[0]);
+        $total = 0;
+
+        foreach ($result as $batch) {
+            $total += $batch->count();
+        }
+
+        static::assertSame(0, $total);
     }
 }

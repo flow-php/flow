@@ -24,6 +24,7 @@ let
     with all;
     enabled
         ++ [
+            apcu
             bcmath
             dom
             mbstring

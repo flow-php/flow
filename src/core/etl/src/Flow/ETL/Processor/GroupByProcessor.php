@@ -6,6 +6,8 @@ namespace Flow\ETL\Processor;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
+use Flow\ETL\GroupBy\BucketAggregation;
+use Flow\ETL\GroupBy\PartitionedAggregation;
 use Flow\ETL\Processor;
 use Generator;
 
@@ -22,10 +24,20 @@ final readonly class GroupByProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        foreach ($rows as $batch) {
-            $this->groupBy->group($batch, $context);
+        if ($this->groupBy->isPivot()) {
+            yield from $this->groupBy->pivotResult($rows, $context);
+
+            return;
         }
 
-        yield $this->groupBy->result($context);
+        $config = $context->config->grouping;
+
+        yield from $config->cache === null
+            ? (new BucketAggregation())->aggregate($rows, $context, $this->groupBy)
+            : (new PartitionedAggregation($config->cache, $config->partitions, $config->batchSize))->aggregate(
+                $rows,
+                $context,
+                $this->groupBy,
+            );
     }
 }

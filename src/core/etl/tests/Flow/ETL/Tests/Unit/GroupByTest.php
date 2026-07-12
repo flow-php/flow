@@ -6,9 +6,12 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy;
+use Flow\ETL\Processor\GroupByProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_entry;
@@ -23,33 +26,26 @@ final class GroupByTest extends FlowTestCase
     public function test_group_by_missing_entry(): void
     {
         $groupBy = new GroupBy('type');
-
-        $groupBy->group(
-            rows(row(str_entry('type', 'a')), row(str_entry('not-type', 'b')), row(str_entry('type', 'c'))),
-            flow_context(),
-        );
+        $groupBy->aggregate(count());
 
         static::assertEquals(
-            rows(row(str_entry('type', 'a')), row(null_entry('type')), row(str_entry('type', 'c'))),
-            $groupBy->result(flow_context(config())),
+            rows(
+                row(str_entry('type', 'a'), int_entry('_count', 1)),
+                row(null_entry('type'), int_entry('_count', 1)),
+                row(str_entry('type', 'c'), int_entry('_count', 1)),
+            ),
+            $this->aggregate($groupBy, rows(
+                row(str_entry('type', 'a')),
+                row(str_entry('not-type', 'b')),
+                row(str_entry('type', 'c')),
+            )),
         );
     }
 
     public function test_group_by_with_aggregation(): void
     {
         $group = new GroupBy('type');
-
         $group->aggregate(sum(ref('id')));
-        $group->group(
-            rows(
-                row(int_entry('id', 1), str_entry('type', 'a')),
-                row(int_entry('id', 2), str_entry('type', 'b')),
-                row(int_entry('id', 3), str_entry('type', 'c')),
-                row(int_entry('id', 4), str_entry('type', 'a')),
-                row(int_entry('id', 5), str_entry('type', 'd')),
-            ),
-            flow_context(),
-        );
 
         static::assertEquals(
             rows(
@@ -58,7 +54,13 @@ final class GroupByTest extends FlowTestCase
                 row(int_entry('id_sum', 3), str_entry('type', 'c')),
                 row(int_entry('id_sum', 5), str_entry('type', 'd')),
             ),
-            $group->result(flow_context(config())),
+            $this->aggregate($group, rows(
+                row(int_entry('id', 1), str_entry('type', 'a')),
+                row(int_entry('id', 2), str_entry('type', 'b')),
+                row(int_entry('id', 3), str_entry('type', 'c')),
+                row(int_entry('id', 4), str_entry('type', 'a')),
+                row(int_entry('id', 5), str_entry('type', 'd')),
+            )),
         );
     }
 
@@ -72,26 +74,9 @@ final class GroupByTest extends FlowTestCase
 
     public function test_group_by_with_pivoting(): void
     {
-        $rows = rows(
-            row(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
-            row(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
-            row(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
-            row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-            row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-            row(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
-            row(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
-            row(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
-            row(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
-            row(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-            row(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-            row(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
-        );
-
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'));
-
-        $group->group($rows, flow_context());
 
         static::assertEquals(
             rows(
@@ -124,29 +109,52 @@ final class GroupByTest extends FlowTestCase
                     int_entry('USA', 4000),
                 ),
             ),
-            $group->result(flow_context(config()))->sortBy(ref('product')),
+            $this->aggregate($group, rows(
+                row(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
+                row(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
+                row(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
+                row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+                row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+                row(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
+                row(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
+                row(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
+                row(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
+                row(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+                row(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+                row(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
+            ))->sortBy(ref('product')),
         );
     }
 
     public function test_group_by_with_pivoting_with_null_pivot_column(): void
     {
-        $rows = rows(
-            row(str_entry('product', 'Banana'), str_entry('country', 'USA'), int_entry('amount', 1000)),
-            row(str_entry('product', 'Apple'), str_entry('country', null), int_entry('amount', 400)),
-        );
-
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'));
-
-        $group->group($rows, flow_context());
 
         static::assertEquals(
             rows(
                 row(str_entry('product', 'Apple'), null_entry('USA')),
                 row(str_entry('product', 'Banana'), int_entry('USA', 1000)),
             ),
-            $group->result(flow_context(config()))->sortBy(ref('product')),
+            $this->aggregate($group, rows(
+                row(str_entry('product', 'Banana'), str_entry('country', 'USA'), int_entry('amount', 1000)),
+                row(str_entry('product', 'Apple'), str_entry('country', null), int_entry('amount', 400)),
+            ))->sortBy(ref('product')),
         );
+    }
+
+    private function aggregate(GroupBy $groupBy, Rows $input): Rows
+    {
+        $result = new Rows();
+
+        $output = (new GroupByProcessor($groupBy))->process((static fn() => yield $input)(), flow_context(config()));
+
+        /** @var Rows $batch */
+        foreach ($output as $batch) {
+            $result = $result->merge($batch);
+        }
+
+        return $result;
     }
 }
