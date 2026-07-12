@@ -255,4 +255,12 @@ final class StructureDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\StructureEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\StructureEntry::class;
+    }
 }

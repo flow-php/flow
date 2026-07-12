@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\Floe\EntryInstantiator;
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\RowEncoder;
 use Flow\Floe\RowHydrator;
@@ -28,10 +28,7 @@ final class RowHydratorTest extends TestCase
         $encoderPlan = FloeWriter::growSectionPlan(null, $original);
         $body = (new RowEncoder())->encode($encoderPlan, $original);
 
-        $hydratorPlan = (new SchemaDecoder(
-            new ValueDecoder(),
-            new EntryInstantiator(),
-        ))->decode($encoderPlan->schemaBody);
+        $hydratorPlan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($encoderPlan->schemaBody);
         $position = 0;
         $hydrated = (new RowHydrator())->hydrate($hydratorPlan, $body, $position);
 
@@ -47,10 +44,7 @@ final class RowHydratorTest extends TestCase
         $encoderPlan = FloeWriter::growSectionPlan(null, $original);
         $body = (new RowEncoder())->encode($encoderPlan, $original);
 
-        $hydratorPlan = (new SchemaDecoder(
-            new ValueDecoder(),
-            new EntryInstantiator(),
-        ))->decode($encoderPlan->schemaBody);
+        $hydratorPlan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($encoderPlan->schemaBody);
         $hydrator = new RowHydrator();
 
         $position = 0;
@@ -65,7 +59,7 @@ final class RowHydratorTest extends TestCase
     {
         $original = row(int_entry('id', 1));
         $schemaJson = FloeWriter::growSectionPlan(null, $original)->schemaBody;
-        $hydratorPlan = (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode($schemaJson);
+        $hydratorPlan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($schemaJson);
         $position = 0;
 
         $this->expectException(SerializationException::class);

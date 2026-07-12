@@ -6,6 +6,7 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -52,6 +53,7 @@ use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\structure_entry;
@@ -66,10 +68,12 @@ use function Flow\Types\DSL\type_string;
 final readonly class EntryFactory
 {
     private EntryTypeResolver $typeResolver;
+    private Instantiators $instantiators;
 
     public function __construct()
     {
         $this->typeResolver = new EntryTypeResolver();
+        $this->instantiators = new Instantiators();
     }
 
     /**
@@ -221,5 +225,16 @@ final readonly class EntryFactory
                 previous: $e,
             );
         }
+    }
+
+    public function instantiate(string $entryName, mixed $value, Schema|Definition $schema): Entry
+    {
+        if ($schema instanceof Schema) {
+            $definition = $schema->get(ref($entryName));
+        } else {
+            $definition = $schema;
+        }
+
+        return $this->instantiators->for($definition->entryClass())->instantiate($entryName, $value, $definition);
     }
 }

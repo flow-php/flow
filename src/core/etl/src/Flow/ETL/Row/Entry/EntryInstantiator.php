@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Flow\Floe;
+namespace Flow\ETL\Row\Entry;
 
 use Closure;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Schema\Definition;
 use ReflectionClass;
 
-final class EntryFactory
+/**
+ * @template-covariant T of Entry<mixed>
+ */
+final readonly class EntryInstantiator
 {
     /**
-     * @var \Closure(string, mixed, Definition<mixed>): Entry<mixed>
+     * @var \Closure(string, mixed, Definition<mixed>): T
      */
-    private readonly Closure $instantiate;
+    private Closure $instantiate;
 
     /**
-     * @param \Closure(string, mixed, Definition<mixed>): Entry<mixed> $instantiate
+     * @param \Closure(string, mixed, Definition<mixed>): T $instantiate
      */
     private function __construct(Closure $instantiate)
     {
@@ -25,13 +28,17 @@ final class EntryFactory
     }
 
     /**
-     * @param class-string<Entry<mixed>> $entryClass
+     * @template TEntry of Entry<mixed>
+     *
+     * @param class-string<TEntry> $entryClass
+     *
+     * @return self<TEntry>
      */
-    public static function forEntryClass(string $entryClass): self
+    public static function forClass(string $entryClass): self
     {
         $reflection = new ReflectionClass($entryClass);
 
-        /** @var \Closure(string, mixed, Definition<mixed>): Entry<mixed> $instantiate */
+        /** @var \Closure(string, mixed, Definition<mixed>): TEntry $instantiate */
         $instantiate = Closure::bind(
             static function (string $name, mixed $value, Definition $definition) use ($reflection): Entry {
                 $entry = $reflection->newInstanceWithoutConstructor();
@@ -54,9 +61,9 @@ final class EntryFactory
     /**
      * @param Definition<mixed> $definition
      *
-     * @return Entry<mixed>
+     * @return T
      */
-    public function create(string $name, mixed $value, Definition $definition): Entry
+    public function instantiate(string $name, mixed $value, Definition $definition): Entry
     {
         return ($this->instantiate)($name, $value, $definition);
     }

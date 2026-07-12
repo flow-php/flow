@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\EnumDefinition;
@@ -93,6 +94,11 @@ final class EnumDefinitionTest extends FlowTestCase
         $def = enum_schema('col', BackedStringEnum::class);
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(EnumEntry::class, enum_schema('status', BackedStringEnum::class)->entryClass());
     }
 
     public function test_enum_class_accessor(): void

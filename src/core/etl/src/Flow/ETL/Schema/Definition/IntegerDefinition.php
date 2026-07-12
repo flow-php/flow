@@ -210,4 +210,12 @@ final class IntegerDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\IntegerEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\IntegerEntry::class;
+    }
 }

@@ -11,7 +11,6 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\StructureType;
-use Flow\Types\Type\TypeDetector;
 
 use function count;
 use function Flow\Types\DSL\type_equals;
@@ -59,17 +58,6 @@ final class StructureEntry implements Entry
         }
 
         $this->value = $value;
-
-        // @mago-ignore analysis:redundant-type-comparison
-        if ($this->value !== null && !$type->isValid($this->value)) {
-            throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: '
-                    . (new TypeDetector())
-                        // @mago-ignore analysis:no-value
-                        ->detectType($this->value)
-                        ->toString(),
-            );
-        }
 
         $this->definition = new StructureDefinition(
             $this->name,

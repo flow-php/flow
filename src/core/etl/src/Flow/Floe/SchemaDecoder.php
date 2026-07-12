@@ -12,6 +12,7 @@ use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\HTMLElementEntry;
 use Flow\ETL\Row\Entry\HTMLEntry;
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
@@ -76,11 +77,11 @@ final class SchemaDecoder
 
     public function __construct(
         private readonly ValueDecoder $valueDecoder,
-        private readonly EntryInstantiator $entryInstantiator,
+        private readonly Instantiators $instantiators,
     ) {}
 
     /**
-     * @return array<int, HydratorColumn>
+     * @return array<int, ColumnBlueprint>
      */
     public function decode(string $schemaJson): array
     {
@@ -126,13 +127,11 @@ final class SchemaDecoder
             );
 
             /** @var class-string<Entry<mixed>> $entryClass */
-            $plan[] = new HydratorColumn(
+            $plan[] = new ColumnBlueprint(
                 $normalized['ref'],
                 $definition,
-                $definition->makeNullable(),
-                $fromNullDefinition,
                 $this->valueDecoder->decoderFor($definition->type()),
-                $this->entryInstantiator->factoryFor($entryClass),
+                $this->instantiators->for($entryClass),
             );
         }
 

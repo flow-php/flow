@@ -11,7 +11,6 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\MapType;
-use Flow\Types\Type\TypeDetector;
 
 use function Flow\Types\DSL\type_equals;
 use function json_encode;
@@ -54,17 +53,6 @@ final class MapEntry implements Entry
         }
 
         $this->value = $value;
-
-        // @mago-ignore analysis:redundant-type-comparison
-        if ($this->value !== null && !$type->isValid($this->value)) {
-            throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: '
-                    . (new TypeDetector())
-                        // @mago-ignore analysis:no-value
-                        ->detectType($this->value)
-                        ->toString(),
-            );
-        }
 
         $this->definition = new MapDefinition(
             $this->name,

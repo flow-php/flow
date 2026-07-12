@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
@@ -115,6 +116,11 @@ final class MapDefinitionTest extends FlowTestCase
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(MapEntry::class, map_schema('data', type_map(type_string(), type_integer()))->entryClass());
     }
 
     /**

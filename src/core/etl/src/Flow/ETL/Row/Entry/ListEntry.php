@@ -11,7 +11,6 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\TypeDetector;
 
 use function Flow\Types\DSL\type_equals;
 use function json_encode;
@@ -53,15 +52,6 @@ final class ListEntry implements Entry
         }
 
         $this->value = $value;
-
-        // @mago-ignore analysis:redundant-type-comparison
-        if ($this->value !== null && !$type->isValid($this->value)) {
-            throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($this->value)
-                    ->toString(),
-            );
-        }
 
         $this->definition = new ListDefinition(
             $this->name,

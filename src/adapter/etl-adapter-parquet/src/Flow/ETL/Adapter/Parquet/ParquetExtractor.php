@@ -21,8 +21,10 @@ use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\Types\DSL\type_string;
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -42,6 +44,8 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
     private SchemaConverter $schemaConverter;
 
+    private ValueHydrator $valueHydrator;
+
     /**
      * @param Path $path
      */
@@ -50,6 +54,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     ) {
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
+        $this->valueHydrator = new ValueHydrator();
         $this->options = Options::default();
     }
 
@@ -79,16 +84,24 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
             }
 
             foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
+                $entries = [];
+
                 if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $uri;
+                    $entries[] = $context->entryFactory()->createAs('_input_file_uri', $uri, type_string());
                 }
 
-                $signal = yield rows(array_to_row(
-                    $row,
-                    $context->entryFactory(),
-                    $fileData['stream']->path()->partitions(),
-                    $flowSchema,
-                ));
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($row as $entryName => $entryValue) {
+                    $definition = $flowSchema->get(ref($entryName));
+
+                    $entries[] = $context->entryFactory()->instantiate(
+                        $entryName,
+                        $this->valueHydrator->hydrate($entryValue, $definition),
+                        $definition,
+                    );
+                }
+
+                $signal = yield rows(row(...$entries));
 
                 $this->incrementReturnedRows();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\FloatDefinition;
@@ -101,6 +102,11 @@ final class IntegerDefinitionTest extends FlowTestCase
         $def = int_schema('col');
 
         static::assertFalse($def->matches(str_entry('col', 'value')));
+    }
+
+    public function test_entry_class(): void
+    {
+        static::assertSame(IntegerEntry::class, int_schema('id')->entryClass());
     }
 
     /**

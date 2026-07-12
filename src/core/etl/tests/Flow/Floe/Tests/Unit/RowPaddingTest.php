@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Schema\Metadata;
-use Flow\Floe\EntryInstantiator;
 use Flow\Floe\RowPadding;
 use Flow\Floe\SchemaDecoder;
 use Flow\Floe\ValueDecoder;
@@ -24,7 +24,7 @@ final class RowPaddingTest extends TestCase
     {
         $padding = RowPadding::forFileSchema(
             schema(int_schema('id'), str_schema('email', nullable: true)),
-            new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()),
+            new SchemaDecoder(new ValueDecoder(), new Instantiators()),
         );
 
         $padded = $padding->apply(row(int_entry('id', 1)));
@@ -41,7 +41,7 @@ final class RowPaddingTest extends TestCase
     {
         $padding = RowPadding::forFileSchema(
             schema(int_schema('id'), str_schema('email', nullable: true)),
-            new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()),
+            new SchemaDecoder(new ValueDecoder(), new Instantiators()),
         );
 
         static::assertSame(
@@ -54,7 +54,7 @@ final class RowPaddingTest extends TestCase
     {
         $padding = RowPadding::forFileSchema(
             schema(int_schema('id'), str_schema('name')),
-            new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()),
+            new SchemaDecoder(new ValueDecoder(), new Instantiators()),
         );
 
         $padded = $padding->apply(row(str_entry('name', 'x'), int_entry('id', 1)));
@@ -68,7 +68,7 @@ final class RowPaddingTest extends TestCase
     {
         $padding = RowPadding::forFileSchema(
             schema(int_schema('id'), str_schema('name')),
-            new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()),
+            new SchemaDecoder(new ValueDecoder(), new Instantiators()),
         );
 
         $original = row(int_entry('id', 1), str_entry('name', 'x'));

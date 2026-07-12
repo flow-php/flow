@@ -6,6 +6,7 @@ namespace Flow\Floe;
 
 use Closure;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -52,7 +53,7 @@ final class FloeFile
         private readonly int $chunkSize,
         ?bool $useExtension,
     ) {
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new EntryInstantiator());
+        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
         $this->rowHydrator = new RowHydrator();
         $this->useExtension = $useExtension ?? extension_loaded('flow_php');
     }
@@ -945,7 +946,7 @@ final class FloeFile
     }
 
     /**
-     * @param null|array<int, \Flow\Floe\HydratorColumn> $plan
+     * @param null|array<int, \Flow\Floe\ColumnBlueprint> $plan
      *
      * @throws FloeException
      */

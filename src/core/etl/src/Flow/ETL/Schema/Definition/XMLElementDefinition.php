@@ -194,4 +194,12 @@ final class XMLElementDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\XMLElementEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\XMLElementEntry::class;
+    }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Metadata;
-use Flow\Floe\EntryInstantiator;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\SchemaDecoder;
@@ -23,7 +23,7 @@ final class SchemaDecoderTest extends TestCase
     {
         $schemaJson = FloeWriter::growSectionPlan(null, row(str_entry('name', 'x')))->schemaBody;
 
-        $plan = (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode($schemaJson);
+        $plan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($schemaJson);
 
         static::assertCount(1, $plan);
         static::assertSame('name', $plan[0]->name);
@@ -38,7 +38,7 @@ final class SchemaDecoderTest extends TestCase
     {
         $schemaJson = FloeWriter::growSectionPlan(null, row(StringEntry::fromNull('name')))->schemaBody;
 
-        $plan = (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode($schemaJson);
+        $plan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($schemaJson);
 
         static::assertFalse($plan[0]->definition->metadata()->has(Metadata::FROM_NULL));
         static::assertTrue($plan[0]->fromNullDefinition->metadata()->has(Metadata::FROM_NULL));
@@ -50,7 +50,7 @@ final class SchemaDecoderTest extends TestCase
             'custom' => 'meta',
         ]))))->schemaBody;
 
-        $plan = (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode($schemaJson);
+        $plan = (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode($schemaJson);
 
         static::assertSame('meta', $plan[0]->definition->metadata()->get('custom'));
     }
@@ -60,7 +60,7 @@ final class SchemaDecoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('failed to decode schema JSON');
 
-        (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode('{invalid');
+        (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode('{invalid');
     }
 
     public function test_decoding_non_list_json_throws(): void
@@ -68,6 +68,6 @@ final class SchemaDecoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('expected schema JSON to be a list');
 
-        (new SchemaDecoder(new ValueDecoder(), new EntryInstantiator()))->decode('"scalar"');
+        (new SchemaDecoder(new ValueDecoder(), new Instantiators()))->decode('"scalar"');
     }
 }

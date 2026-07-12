@@ -750,20 +750,20 @@ impl Ctx {
                 vec![],
                 "Flow\\Floe\\ValueDecoder",
             )?;
-            // EntryInstantiator declares no constructor; defaults apply on init.
-            let mut entry_instantiator =
-                ZendObject::new(find_class("Flow\\Floe\\EntryInstantiator")?);
+            // Instantiators declares no constructor; defaults apply on init.
+            let mut instantiators =
+                ZendObject::new(find_class("Flow\\ETL\\Row\\Entry\\Instantiators")?);
 
             let mut value_decoder_zv = Zval::new();
             value_decoder_zv.set_object(&mut value_decoder);
-            let mut entry_instantiator_zv = Zval::new();
-            entry_instantiator_zv.set_object(&mut entry_instantiator);
+            let mut instantiators_zv = Zval::new();
+            instantiators_zv.set_object(&mut instantiators);
 
             self.schema_decoder = Some(construct_object(
                 find_class("Flow\\Floe\\SchemaDecoder")?,
                 vec![
                     &value_decoder_zv as &dyn IntoZvalDyn,
-                    &entry_instantiator_zv as &dyn IntoZvalDyn,
+                    &instantiators_zv as &dyn IntoZvalDyn,
                 ],
                 "Flow\\Floe\\SchemaDecoder",
             )?);

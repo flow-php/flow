@@ -210,4 +210,12 @@ final class FloatDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\FloatEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\FloatEntry::class;
+    }
 }

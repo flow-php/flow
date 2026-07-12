@@ -5,8 +5,8 @@ declare(strict_types=1);
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Rows;
-use Flow\Floe\EntryInstantiator;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
 use Flow\Floe\RowEncoder;
@@ -52,7 +52,7 @@ function php_frames(Rows $rows): array
  */
 function php_decode_frames(array $frames): array
 {
-    $schemaDecoder = new SchemaDecoder(new ValueDecoder(), new EntryInstantiator());
+    $schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
     $rowHydrator = new RowHydrator();
     $plan = null;
     $rows = [];

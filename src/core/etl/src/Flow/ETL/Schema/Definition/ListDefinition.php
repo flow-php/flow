@@ -257,4 +257,12 @@ final class ListDefinition implements Definition
     {
         return $this->type;
     }
+
+    /**
+     * @return class-string<Entry\ListEntry>
+     */
+    public function entryClass(): string
+    {
+        return Entry\ListEntry::class;
+    }
 }

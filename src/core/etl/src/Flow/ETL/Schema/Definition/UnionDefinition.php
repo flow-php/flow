@@ -10,8 +10,10 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
 use function sprintf;
 
@@ -193,5 +195,19 @@ final class UnionDefinition implements Definition
     public function type(): UnionType
     {
         return $this->type;
+    }
+
+    public function entryClass(): string
+    {
+        $left = $this->type->types()->first() ?? throw new RuntimeException(sprintf(
+            'Union type of "%s" has no member types',
+            $this->ref->name(),
+        ));
+
+        if ($left instanceof OptionalType) {
+            $left = $left->base();
+        }
+
+        return definition_from_type($this->ref, $left)->entryClass();
     }
 }
