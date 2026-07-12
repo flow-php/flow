@@ -37,6 +37,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2529](https://github.com/flow-php/flow/pull/2529) - **Move out receiving partitions in extractors out of loops** - [@stloyd](https://github.com/stloyd)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl-adapter-parquet - ParquetExtractor builds entries through EntryFactory::instantiate() instead of array_to_row()** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - Floe HydratorColumn renamed to ColumnBlueprint, SchemaDecoder uses shared Instantiators** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/types - Uuid constructor validates strings directly without Ramsey fallback** - [@norberttech](https://github.com/norberttech)
