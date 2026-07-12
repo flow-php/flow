@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-07-12
 
 ### Added
+- [#2473](https://github.com/flow-php/flow/pull/2473) - **Configurable, memory-efficient GroupBy aggregation: ConfigBuilder::aggregationAlgorithm() and the AggregationAlgorithms enum select between MEMORY_AGGREGATION (default, in-memory hash map) and EXTERNAL_AGGREGATION (sorts by the group-by columns and folds, spilling to disk for bounded memory), with aggregationFilesystem() for the spill protocol.** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2473](https://github.com/flow-php/flow/pull/2473) - **GroupBy streams its result in batches instead of materializing every group into a single Rows.** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2530](https://github.com/flow-php/flow/pull/2530) - **Add GHA to check commit authorship** - [@stloyd](https://github.com/stloyd)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - externalSortBucketSize config controlling rows per external sort bucket (default 10000)** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - RouteNamePathMap optional cache warmer building a [route name => path] map at cache:warmup, rebuilt lazily when missing** - [@norberttech](https://github.com/norberttech)
