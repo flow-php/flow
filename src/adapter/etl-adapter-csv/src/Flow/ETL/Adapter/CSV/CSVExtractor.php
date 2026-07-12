@@ -73,11 +73,11 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $enclosure = $this->enclosure ?? $option->enclosure;
             $escape = $this->escape ?? $option->escape;
             $uri = $stream->path()->uri();
+            $partitions = $stream->path()->partitions();
 
             $headers = [];
             $headersCount = 0;
             $streamUri = $shouldPutInputIntoRows ? $uri : null;
-            $partitions = $stream->path()->partitions();
 
             $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM);
             $rowNormalizer = new CSVRowNormalizer($this->emptyToNull);

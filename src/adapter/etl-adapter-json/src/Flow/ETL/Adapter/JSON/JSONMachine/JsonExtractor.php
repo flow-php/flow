@@ -47,6 +47,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $uri = $stream->path()->uri();
+            $partitions = $stream->path()->partitions();
 
             /**
              * @var array<string, mixed> $rowData
@@ -66,12 +67,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     continue;
                 }
 
-                $signal = yield array_to_rows(
-                    [$row],
-                    $context->entryFactory(),
-                    $stream->path()->partitions(),
-                    $this->schema,
-                );
+                $signal = yield array_to_rows([$row], $context->entryFactory(), $partitions, $this->schema);
 
                 $this->incrementReturnedRows();
 

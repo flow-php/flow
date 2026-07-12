@@ -74,13 +74,10 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $offset = $this->offset ?? 1;
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $partitions = $stream->path()->partitions();
+
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                $signal = yield array_to_rows(
-                    $row,
-                    $context->entryFactory(),
-                    $stream->path()->partitions(),
-                    schema: $this->schema,
-                );
+                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $this->schema);
 
                 $this->incrementReturnedRows();
 
