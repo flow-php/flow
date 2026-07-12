@@ -619,10 +619,6 @@ function rename_map(array $renames): RenameMapEntryStrategy
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function bool_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
 {
-    if ($value === null) {
-        return new BooleanEntry($name, null, $metadata);
-    }
-
     return new BooleanEntry($name, $value, $metadata);
 }
 
@@ -740,10 +736,6 @@ function date_entry(string $name, DateTimeInterface|string|null $value, ?Metadat
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function int_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
 {
-    if ($value === null) {
-        return new IntegerEntry($name, null, $metadata);
-    }
-
     return new IntegerEntry($name, $value, $metadata);
 }
 
@@ -762,10 +754,6 @@ function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): E
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function enum_entry(string $name, ?UnitEnum $enum, ?Metadata $metadata = null): Entry
 {
-    if ($enum === null) {
-        return new EnumEntry($name, null, $metadata);
-    }
-
     return new EnumEntry($name, $enum, $metadata);
 }
 
@@ -845,10 +833,6 @@ function json_object_entry(string $name, array|string|Json|null $data, ?Metadata
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function str_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
 {
-    if ($value === null) {
-        return new StringEntry($name, null, $metadata);
-    }
-
     return new StringEntry($name, $value, $metadata);
 }
 
@@ -1015,10 +999,6 @@ function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metada
         ));
     }
 
-    if ($value === null) {
-        return new StructureEntry($name, null, $type, $metadata);
-    }
-
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
@@ -1042,10 +1022,6 @@ function structure_entry(string $name, ?array $value, Type $type, ?Metadata $met
         ));
     }
 
-    if ($value === null) {
-        return new StructureEntry($name, null, $type, $metadata);
-    }
-
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
@@ -1067,10 +1043,6 @@ function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata
         ));
     }
 
-    if ($value === null) {
-        return new ListEntry($name, null, $type, $metadata);
-    }
-
     return new ListEntry($name, $value, $type, $metadata);
 }
 
@@ -1090,10 +1062,6 @@ function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metada
             $name,
             $mapType::class,
         ));
-    }
-
-    if ($value === null) {
-        return new MapEntry($name, null, $mapType, $metadata);
     }
 
     return new MapEntry($name, $value, $mapType, $metadata);
