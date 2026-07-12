@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-11
+## [Unreleased] - 2026-07-12
 
 ### Added
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - externalSortBucketSize config controlling rows per external sort bucket (default 10000)** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +30,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2527](https://github.com/flow-php/flow/pull/2527) - **Change `EntryFactory::createAs()` to use `match()`** - [@stloyd](https://github.com/stloyd)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - sorting algorithm is an explicit choice via sort config, EXTERNAL_SORT is the default** - [@norberttech](https://github.com/norberttech)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - external sort spills fewer, larger buckets and streams the final merge instead of writing it back to cache** - [@norberttech](https://github.com/norberttech)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - Rows::sortAscending/sortDescending resolve sort values once per row instead of twice per comparison** - [@norberttech](https://github.com/norberttech)
