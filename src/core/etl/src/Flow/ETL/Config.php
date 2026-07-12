@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\Config\Grouping\GroupingConfig;
 use Flow\ETL\Config\Sort\SortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
@@ -37,6 +38,7 @@ final readonly class Config
         public SortConfig $sort,
         private ?Analyze $analyze,
         public TelemetryConfig $telemetry,
+        public GroupingConfig $grouping,
         private Calculator $calculator = new Calculator(),
     ) {}
 

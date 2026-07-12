@@ -4,65 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Hash\NativePHPHash;
+use Flow\ETL\GroupBy\Aggregators;
+use Flow\ETL\GroupBy\GroupKey;
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
-use Stringable;
+use Generator;
 
 use function array_filter;
 use function array_key_exists;
 use function array_unique;
 use function array_values;
 use function count;
-use function current;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
-use function implode;
-use function is_array;
-use function is_scalar;
-use function serialize;
 
 final class GroupBy
 {
-    /**
-     * @var array<AggregatingFunction>
-     */
-    private array $aggregations;
+    private const int RESULT_BATCH_SIZE = 1000;
 
-    /**
-     * @var array<string, array{values?: array<string, mixed>, aggregators: array<AggregatingFunction>}>
-     */
-    private array $groupedTable;
+    private Aggregators $aggregations;
 
-    private ?Reference $pivot;
-
-    /**
-     * @var array<int, null|array<array-key, mixed>|bool|float|int|object|string>
-     */
-    private array $pivotColumns;
-
-    /**
-     * @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>>
-     */
-    private array $pivotedTable;
+    private ?Reference $pivot = null;
 
     private readonly References $refs;
 
     public function __construct(string|Reference ...$entries)
     {
         $this->refs = References::init(...array_unique($entries));
-        $this->aggregations = [];
-        $this->groupedTable = [];
-        $this->pivotedTable = [];
-        $this->pivotColumns = [];
-        $this->pivot = null;
+        $this->aggregations = new Aggregators();
     }
 
     public function aggregate(AggregatingFunction ...$aggregator): void
@@ -77,41 +52,104 @@ final class GroupBy
             );
         }
 
-        $this->aggregations = $aggregator;
+        $this->aggregations = new Aggregators(...$aggregator);
     }
 
-    public function group(Rows $rows, FlowContext $context): void
+    public function aggregatedRow(GroupKey $key, Aggregators $aggregators, EntryFactory $entryFactory): Row
+    {
+        $entries = [];
+
+        /** @var mixed $value */
+        foreach ($key as $name => $value) {
+            $entries[] = $entryFactory->create($name, $value);
+        }
+
+        foreach ($aggregators as $aggregator) {
+            $entries[] = $aggregator->result($entryFactory);
+        }
+
+        return Row::create(...$entries);
+    }
+
+    public function aggregations(): Aggregators
+    {
+        return $this->aggregations;
+    }
+
+    public function isPivot(): bool
+    {
+        return $this->pivot !== null;
+    }
+
+    public function keyValues(Row $row): GroupKey
+    {
+        $values = [];
+
+        foreach ($this->refs as $ref) {
+            try {
+                $values[$ref->name()] = $row->valueOf($ref);
+            } catch (InvalidArgumentException) {
+                $values[$ref->name()] = null;
+            }
+        }
+
+        return new GroupKey($values);
+    }
+
+    public function pivot(Reference $ref): void
+    {
+        $this->pivot = $ref;
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
+    public function pivotResult(Generator $rows, FlowContext $context): Generator
     {
         $pivot = $this->pivot;
 
-        if ($pivot !== null) {
-            foreach ($rows as $row) {
+        if ($pivot === null) {
+            throw new RuntimeException('pivotResult() called without a pivot reference');
+        }
+
+        if ($this->aggregations->count() === 0) {
+            throw new RuntimeException('Pivot requires exactly one aggregation');
+        }
+
+        $aggregation = $this->aggregations->first();
+
+        /** @var array<int, null|array<array-key, mixed>|bool|float|int|object|string> $pivotColumns */
+        $pivotColumns = [];
+        /** @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>> $pivotedTable */
+        $pivotedTable = [];
+
+        foreach ($rows as $batch) {
+            foreach ($batch as $row) {
                 try {
-                    $this->pivotColumns[] = $row->valueOf($pivot);
+                    $pivotColumns[] = $row->valueOf($pivot);
                 } catch (InvalidArgumentException) {
-                    $this->pivotColumns[] = null;
+                    $pivotColumns[] = null;
                 }
             }
 
-            $this->pivotColumns = array_values(array_filter(array_unique($this->pivotColumns)));
-
-            foreach ($rows as $row) {
+            foreach ($batch as $row) {
                 $values = [];
 
                 foreach ($this->refs as $ref) {
                     $values[$ref->name()] = $row->valueOf($ref);
                 }
 
-                $indexValue = $this->hash($values);
-
+                $indexValue = (string) new GroupKey($values);
                 $pivotValue = $row->valueOf($pivot);
 
-                if (!array_key_exists($indexValue, $this->pivotedTable)) {
-                    $this->pivotedTable[$indexValue] = [];
+                if (!array_key_exists($indexValue, $pivotedTable)) {
+                    $pivotedTable[$indexValue] = [];
                 }
 
                 foreach ($this->refs as $ref) {
-                    $this->pivotedTable[$indexValue][$ref->name()] = $row->valueOf($ref);
+                    $pivotedTable[$indexValue][$ref->name()] = $row->valueOf($ref);
                 }
 
                 if ($pivotValue === null) {
@@ -120,132 +158,49 @@ final class GroupBy
 
                 $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
 
-                if (!array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
-                    // @mago-ignore analysis:invalid-property-assignment-value,possibly-invalid-clone
-                    $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
+                if (!array_key_exists($pivotValue, $pivotedTable[$indexValue])) {
+                    $pivotedTable[$indexValue][$pivotValue] = clone $aggregation;
                 }
 
-                $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
+                $aggregator = $pivotedTable[$indexValue][$pivotValue];
 
                 if ($aggregator instanceof AggregatingFunction) {
                     $aggregator->aggregate($row, $context);
                 }
             }
-        } else {
-            foreach ($rows as $row) {
-                /** @var array<string, null|mixed> $values */
-                $values = [];
-
-                foreach ($this->refs as $ref) {
-                    try {
-                        $values[$ref->name()] = $row->valueOf($ref);
-                    } catch (InvalidArgumentException) {
-                        $values[$ref->name()] = null;
-                    }
-                }
-
-                $valuesHash = $this->hash($values);
-
-                if (!array_key_exists($valuesHash, $this->groupedTable)) {
-                    $aggregators = [];
-
-                    foreach ($this->aggregations as $aggregator) {
-                        $aggregators[] = clone $aggregator;
-                    }
-
-                    $this->groupedTable[$valuesHash] = [
-                        'values' => $values,
-                        'aggregators' => $aggregators,
-                    ];
-                }
-
-                foreach ($this->groupedTable[$valuesHash]['aggregators'] as $aggregator) {
-                    $aggregator->aggregate($row, $context);
-                }
-            }
-        }
-    }
-
-    public function pivot(Reference $ref): void
-    {
-        $this->pivot = $ref;
-    }
-
-    public function result(FlowContext $context): Rows
-    {
-        $rows = [];
-
-        if ($this->pivot) {
-            foreach ($this->pivotedTable as $index => $columns) {
-                $row = [$this->refs->first()->name() => $index];
-
-                foreach ($columns as $rowIndex => $values) {
-                    $row[$rowIndex] = $values instanceof AggregatingFunction
-                        ? $values->result($context->entryFactory())->value()
-                        : $values;
-                }
-
-                foreach ($this->pivotColumns as $column) {
-                    $column = type_union(type_string(), type_integer())->assert($column);
-
-                    if (!array_key_exists($column, $row)) {
-                        $row[$column] = null;
-                    }
-                }
-
-                $rows[] = $row;
-            }
-
-            return array_to_rows($rows, $context->entryFactory());
         }
 
-        foreach ($this->groupedTable as $group) {
-            $entries = [];
+        $pivotColumns = array_values(array_filter(array_unique($pivotColumns)));
 
-            /** @var mixed $value */
-            foreach ($group['values'] ?? [] as $entry => $value) {
-                $entries[] = $context->entryFactory()->create($entry, $value);
+        $buffer = [];
+
+        foreach ($pivotedTable as $index => $columns) {
+            $row = [$this->refs->first()->name() => $index];
+
+            foreach ($columns as $rowIndex => $value) {
+                $row[$rowIndex] = $value instanceof AggregatingFunction
+                    ? $value->result($context->entryFactory())->value()
+                    : $value;
             }
 
-            foreach ($group['aggregators'] as $aggregator) {
-                $entries[] = $aggregator->result($context->entryFactory());
+            foreach ($pivotColumns as $column) {
+                $column = type_union(type_string(), type_integer())->assert($column);
+
+                if (!array_key_exists($column, $row)) {
+                    $row[$column] = null;
+                }
             }
 
-            if (count($entries)) {
-                $rows[] = Row::create(...$entries);
+            $buffer[] = $row;
+
+            if (count($buffer) >= self::RESULT_BATCH_SIZE) {
+                yield array_to_rows($buffer, $context->entryFactory());
+                $buffer = [];
             }
         }
 
-        return new Rows(...$rows);
-    }
-
-    /**
-     * @param array<array-key, mixed> $values
-     */
-    private function hash(array $values): string
-    {
-        /** @var array<string> $stringValues */
-        $stringValues = [];
-
-        /** @var mixed $value */
-        foreach ($values as $value) {
-            if ($value === null) {
-                $stringValues[] = 'null';
-            } elseif (is_scalar($value)) {
-                $stringValues[] = (string) $value;
-            } else {
-                if ($value instanceof Stringable) {
-                    $stringValues[] = $value->__toString();
-                } elseif ($value instanceof DateTimeInterface) {
-                    $stringValues[] = $value->format(DateTimeImmutable::ATOM);
-                } elseif (is_array($value)) {
-                    $stringValues[] = $this->hash($value);
-                } else {
-                    $stringValues[] = serialize($value);
-                }
-            }
+        if ($buffer !== []) {
+            yield array_to_rows($buffer, $context->entryFactory());
         }
-
-        return NativePHPHash::xxh128(implode('', $stringValues));
     }
 }

@@ -10,3 +10,6 @@ max_file_uploads = 20
 short_open_tag = off
 opcache.enable=1
 opcache.enable_cli=0
+apc.enabled=1
+apc.enable_cli=1
+apc.shm_size=128M

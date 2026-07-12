@@ -15,6 +15,78 @@ use function iterator_to_array;
 
 final class FilesystemBucketsCacheTest extends FlowIntegrationTestCase
 {
+    public function test_appends_accumulate_into_one_bucket_in_order(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir, batchSize: 2);
+        $cache->append('bucket', [row(int_entry('id', 1)), row(int_entry('id', 2))]);
+        $cache->append('bucket', [row(int_entry('id', 3))]);
+        $cache->append('bucket', [row(int_entry('id', 4)), row(int_entry('id', 5))]);
+
+        $ids = [];
+
+        foreach ($cache->get('bucket') as $row) {
+            $ids[] = $row->valueOf('id');
+        }
+
+        static::assertSame([1, 2, 3, 4, 5], $ids);
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_append_after_get_does_not_truncate_the_bucket(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_reopen');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir);
+        $cache->append('bucket', [row(int_entry('id', 1))]);
+
+        static::assertCount(1, iterator_to_array($cache->get('bucket'), false));
+
+        $cache->append('bucket', [row(int_entry('id', 2))]);
+
+        static::assertCount(2, iterator_to_array($cache->get('bucket'), false));
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_remove_closes_an_open_append_session(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_remove');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir);
+        $cache->append('bucket', [row(int_entry('id', 1))]);
+        $cache->remove('bucket');
+
+        static::assertSame([], iterator_to_array($cache->get('bucket')));
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_set_replaces_a_bucket_written_with_append(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_set');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir);
+        $cache->append('bucket', [row(int_entry('id', 1)), row(int_entry('id', 2))]);
+        $cache->set('bucket', [row(int_entry('id', 3))]);
+
+        $ids = [];
+
+        foreach ($cache->get('bucket') as $row) {
+            $ids[] = $row->valueOf('id');
+        }
+
+        static::assertSame([3], $ids);
+
+        $this->fs()->rm($cacheDir);
+    }
+
     public function test_custom_batch_size_round_trips_all_rows(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_batch_size');

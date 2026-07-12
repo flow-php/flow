@@ -23,6 +23,7 @@
         "symfony/string": "^6.4 || ^7.4 || ^8.0"
     },
     "suggest": {
+        "ext-apcu": "Allows using ApcuCache as a pipeline cache implementation",
         "ext-bcmath": "BCMath extension for PHP for more precise calculations"
     },
     "require-dev": {

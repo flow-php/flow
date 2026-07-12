@@ -21,15 +21,7 @@ final readonly class GroupedDataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        $pipelineAdder = function (GroupBy $groupBy): void {
-            // @mago-ignore analysis:non-existent-property,method-access-on-null
-            $this->pipeline->add(new GroupByProcessor($groupBy));
-        };
-
-        // @mago-ignore analysis:invalid-method-access
-        $pipelineAdder->bindTo($this->df, $this->df)($this->groupBy);
-
-        return $this->df;
+        return $this->addProcessor(new GroupByProcessor($this->groupBy));
     }
 
     public function pivot(Reference $ref): self
@@ -37,5 +29,18 @@ final readonly class GroupedDataFrame
         $this->groupBy->pivot($ref);
 
         return $this;
+    }
+
+    private function addProcessor(GroupByProcessor $processor): DataFrame
+    {
+        $pipelineAdder = function (GroupByProcessor $processor): void {
+            // @mago-ignore analysis:non-existent-property,method-access-on-null
+            $this->pipeline->add($processor);
+        };
+
+        // @mago-ignore analysis:invalid-method-access
+        $pipelineAdder->bindTo($this->df, $this->df)($processor);
+
+        return $this->df;
     }
 }

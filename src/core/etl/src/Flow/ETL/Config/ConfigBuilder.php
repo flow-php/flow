@@ -9,6 +9,7 @@ use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
+use Flow\ETL\Config\Grouping\GroupingConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
@@ -19,6 +20,7 @@ use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Floe\FloeSerializer;
@@ -33,6 +35,8 @@ use function Flow\Filesystem\DSL\fstab;
 final class ConfigBuilder
 {
     public readonly CacheConfigBuilder $cache;
+
+    public readonly GroupingConfigBuilder $grouping;
 
     public readonly SortConfigBuilder $sort;
 
@@ -68,6 +72,7 @@ final class ConfigBuilder
         $this->optimizer = null;
         $this->clock = null;
         $this->cache = new CacheConfigBuilder();
+        $this->grouping = new GroupingConfigBuilder();
         $this->sort = new SortConfigBuilder();
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
@@ -86,7 +91,7 @@ final class ConfigBuilder
 
     public function build(EntryFactory $entryFactory = new EntryFactory()): Config
     {
-        $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
+        $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->serializer ??= new FloeSerializer();
         $this->optimizer ??= new Optimizer(new LimitOptimization(), new BatchSizeOptimization(batchSize: 1000));
 
@@ -94,8 +99,10 @@ final class ConfigBuilder
         $optimizer = $this->optimizer;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
+        $cacheConfig = $this->cache->build($this->fstab(), $this->telemetryConfig, $dataframeName);
+
         return new Config(
-            $this->id,
+            $id,
             $dataframeName,
             $this->version,
             $serializer,
@@ -105,10 +112,11 @@ final class ConfigBuilder
             $optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $this->telemetryConfig, $dataframeName),
+            $cacheConfig,
             $this->sort->build(),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
+            $this->grouping->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
         );
     }
 
@@ -183,6 +191,33 @@ final class ConfigBuilder
     public function externalSortFilesystem(string $protocol): self
     {
         $this->sort->filesystemProtocol($protocol);
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $batchSize
+     */
+    public function groupingBatchSize(int $batchSize): self
+    {
+        $this->grouping->batchSize($batchSize);
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $bucketsCount
+     */
+    public function groupingBucketsCount(int $bucketsCount): self
+    {
+        $this->grouping->bucketsCount($bucketsCount);
+
+        return $this;
+    }
+
+    public function groupingCache(BucketsCache $cache): self
+    {
+        $this->grouping->cache($cache);
 
         return $this;
     }

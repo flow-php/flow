@@ -17,19 +17,24 @@ use Generator;
 
 use function count;
 
-final readonly class FilesystemBucketsCache implements BucketsCache
+final class FilesystemBucketsCache implements BucketsCache
 {
-    private Path $cacheDir;
+    private readonly Path $cacheDir;
 
-    private FloeReader $reader;
+    private readonly FloeReader $reader;
+
+    /**
+     * @var array<string, FloeWriter>
+     */
+    private array $writers = [];
 
     /**
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private Filesystem $filesystem,
+        private readonly Filesystem $filesystem,
         ?Path $cacheDir = null,
-        private int $batchSize = 1000,
+        private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
@@ -41,10 +46,26 @@ final readonly class FilesystemBucketsCache implements BucketsCache
     }
 
     /**
+     * @param iterable<Row>|Rows $rows
+     */
+    public function append(string $bucketId, iterable $rows): void
+    {
+        if (!isset($this->writers[$bucketId])) {
+            $writer = new FloeWriter($this->filesystem);
+            $writer->append($this->keyPath($bucketId));
+            $this->writers[$bucketId] = $writer;
+        }
+
+        $this->write($this->writers[$bucketId], $rows);
+    }
+
+    /**
      * @return \Generator<Row>
      */
     public function get(string $bucketId): Generator
     {
+        $this->closeWriter($bucketId);
+
         $path = $this->keyPath($bucketId);
 
         if (!$this->filesystem->status($path)) {
@@ -58,6 +79,8 @@ final readonly class FilesystemBucketsCache implements BucketsCache
 
     public function remove(string $bucketId): void
     {
+        $this->closeWriter($bucketId);
+
         // we want to remove not only cache file but entire directory
         $this->filesystem->rm($this->keyPath($bucketId)->parentDirectory());
     }
@@ -68,9 +91,38 @@ final readonly class FilesystemBucketsCache implements BucketsCache
      */
     public function set(string $bucketId, iterable $rows): void
     {
+        $this->closeWriter($bucketId);
+
         $writer = new FloeWriter($this->filesystem);
         $writer->create($this->keyPath($bucketId));
 
+        $this->write($writer, $rows);
+
+        $writer->close();
+    }
+
+    private function closeWriter(string $bucketId): void
+    {
+        if (!isset($this->writers[$bucketId])) {
+            return;
+        }
+
+        $writer = $this->writers[$bucketId];
+        unset($this->writers[$bucketId]);
+
+        $writer->close();
+    }
+
+    private function keyPath(string $key): Path
+    {
+        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.floe');
+    }
+
+    /**
+     * @param iterable<Row>|Rows $rows
+     */
+    private function write(FloeWriter $writer, iterable $rows): void
+    {
         $batch = [];
 
         foreach ($rows as $row) {
@@ -85,12 +137,5 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         if ($batch !== []) {
             $writer->write(new Rows(...$batch));
         }
-
-        $writer->close();
-    }
-
-    private function keyPath(string $key): Path
-    {
-        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.floe');
     }
 }
