@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-07-12
 
 ### Added
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - EntryInstantiator and Instantiators for constructor-less entry instantiation** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - EntryFactory::instantiate() creating entries from schema definitions without casting** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - Definition::entryClass() on all schema definitions, UnionDefinition resolves it from the left union member** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl-adapter-parquet - ValueHydrator restoring Json/Uuid value objects from raw parquet strings** - [@norberttech](https://github.com/norberttech)
 - [#2473](https://github.com/flow-php/flow/pull/2473) - **Configurable, memory-efficient GroupBy aggregation: ConfigBuilder::aggregationAlgorithm() and the AggregationAlgorithms enum select between MEMORY_AGGREGATION (default, in-memory hash map) and EXTERNAL_AGGREGATION (sorts by the group-by columns and folds, spilling to disk for bounded memory), with aggregationFilesystem() for the spill protocol.** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2473](https://github.com/flow-php/flow/pull/2473) - **GroupBy streams its result in batches instead of materializing every group into a single Rows.** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2530](https://github.com/flow-php/flow/pull/2530) - **Add GHA to check commit authorship** - [@stloyd](https://github.com/stloyd)
@@ -33,6 +37,10 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl-adapter-parquet - ParquetExtractor builds entries through EntryFactory::instantiate() instead of array_to_row()** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - Floe HydratorColumn renamed to ColumnBlueprint, SchemaDecoder uses shared Instantiators** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/types - Uuid constructor validates strings directly without Ramsey fallback** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/flow-php-ext - schema decoding updated to relocated core entry instantiation classes** - [@norberttech](https://github.com/norberttech)
 - [#2528](https://github.com/flow-php/flow/pull/2528) - **Reduce complexity of XML reading & writing** - [@stloyd](https://github.com/stloyd)
 - [#2527](https://github.com/flow-php/flow/pull/2527) - **Change `EntryFactory::createAs()` to use `match()`** - [@stloyd](https://github.com/stloyd)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - sorting algorithm is an explicit choice via sort config, EXTERNAL_SORT is the default** - [@norberttech](https://github.com/norberttech)
@@ -88,6 +96,8 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - runtime value type detection from List/Map/Structure entry constructors** - [@norberttech](https://github.com/norberttech)
+- [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/types - isValid() short-circuit from ListType/StructureType::cast()** - [@norberttech](https://github.com/norberttech)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT and SortAlgorithms::SQLITE_SORT** - [@norberttech](https://github.com/norberttech)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - sortMemoryLimit config, FLOW_SORT_MAX_MEMORY env var and OutOfMemoryException** - [@norberttech](https://github.com/norberttech)
 - [#2503](https://github.com/flow-php/flow/pull/2503) - **flow-php/symfony-telemetry-bundle - runtime_mode config and the WorkerModeDetector/RuntimeModeResolver runtime classes.** - [@norberttech](https://github.com/norberttech)
