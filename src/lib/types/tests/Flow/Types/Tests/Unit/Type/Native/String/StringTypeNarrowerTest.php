@@ -70,7 +70,7 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_string(), $narrower->narrow('1.0.0'));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_detecting_html(): void
     {
         $narrower = new StringTypeNarrower();

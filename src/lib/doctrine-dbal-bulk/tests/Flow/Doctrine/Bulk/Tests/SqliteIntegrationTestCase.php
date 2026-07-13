@@ -17,6 +17,8 @@ abstract class SqliteIntegrationTestCase extends IntegrationTestCase
 {
     protected function setUp(): void
     {
+        parent::setUp();
+
         $path = type_string()->assert(getenv('SQLITE_DATABASE_PATH'));
         $folder = pathinfo($path, PATHINFO_DIRNAME);
 

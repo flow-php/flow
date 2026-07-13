@@ -56,7 +56,7 @@ final class PartitionTest extends TestCase
         ));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_creating_partition_value_from_html_entry(): void
     {
         $this->expectExceptionMessage(HTMLEntry::class . ' can\'t be used as a partition');

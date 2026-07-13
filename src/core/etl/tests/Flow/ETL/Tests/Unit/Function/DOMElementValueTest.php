@@ -21,7 +21,7 @@ use const LIBXML_NOERROR;
 
 final class DOMElementValueTest extends FlowTestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_getting_element_value_with_children(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -36,7 +36,7 @@ final class DOMElementValueTest extends FlowTestCase
             ));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_getting_simple_element_value(): void
     {
         // @mago-ignore analysis:unavailable-method

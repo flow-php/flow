@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\rows;
 
 final class DOMElementParentTest extends FlowTestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_dom_element_value_from_dom_document(): void
     {
         $rows = df()

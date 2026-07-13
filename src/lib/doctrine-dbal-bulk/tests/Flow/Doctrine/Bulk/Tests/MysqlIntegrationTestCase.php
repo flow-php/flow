@@ -16,6 +16,8 @@ abstract class MysqlIntegrationTestCase extends IntegrationTestCase
 {
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->databaseContext = new DatabaseContext(DriverManager::getConnection(
             (new DsnParser(['mysql' => 'pdo_mysql']))->parse(getenv('MYSQL_DATABASE_URL') ?: ''),
             (new Configuration())->setMiddlewares([new Middleware($this->logger)]),

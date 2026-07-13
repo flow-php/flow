@@ -17,7 +17,7 @@ use function Flow\ETL\DSL\row;
 
 final class HTMLQuerySelectorTest extends TestCase
 {
-    #[RequiresPhp('< 8.4')]
+    #[RequiresPhp('< 8.4.0')]
     public function test_getting_element_for_older_versions(): void
     {
         $this->expectException(RequiredPHPVersionException::class);
@@ -26,7 +26,7 @@ final class HTMLQuerySelectorTest extends TestCase
             ->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_getting_elements_for_given_path(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -39,7 +39,7 @@ final class HTMLQuerySelectorTest extends TestCase
         static::assertInstanceOf(Element::class, $result);
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_getting_null_when_nothing_found(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -52,7 +52,7 @@ final class HTMLQuerySelectorTest extends TestCase
         static::assertNull($result);
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_invalid_value(): void
     {
         $result = ref('value')

@@ -12,16 +12,11 @@ abstract class IntegrationTestCase extends TestCase
 {
     protected DatabaseContext $databaseContext;
 
-    protected readonly ProxyLogger $logger;
+    protected ProxyLogger $logger;
 
-    /**
-     * @param non-empty-string $name
-     */
-    public function __construct(string $name)
+    protected function setUp(): void
     {
         $this->logger = new ProxyLogger();
-
-        parent::__construct($name);
     }
 
     protected function tearDown(): void

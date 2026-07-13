@@ -239,7 +239,7 @@ final class StringTypeTest extends TestCase
         }
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_cast_html_document(): void
     {
         // @mago-expect analysis:unavailable-method
@@ -248,7 +248,7 @@ final class StringTypeTest extends TestCase
         static::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_cast_html_element(): void
     {
         // @mago-expect analysis:unavailable-method

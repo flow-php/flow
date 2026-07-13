@@ -18,7 +18,7 @@ use function Flow\ETL\DSL\xml_element_entry;
 
 final class DOMElementNextSiblingTest extends FlowTestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_dom_element_sibling_text_value(): void
     {
         $rows = df()
@@ -43,7 +43,7 @@ final class DOMElementNextSiblingTest extends FlowTestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_dom_element_sibling_text_value_when_only_element_is_allowed(): void
     {
         $rows = df()

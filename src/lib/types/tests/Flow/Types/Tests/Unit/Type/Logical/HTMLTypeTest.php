@@ -20,7 +20,7 @@ use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_string;
 use function preg_replace;
 
-#[RequiresPhp('>= 8.4')]
+#[RequiresPhp('>= 8.4.0')]
 final class HTMLTypeTest extends TestCase
 {
     public static function assert_data_provider(): Generator

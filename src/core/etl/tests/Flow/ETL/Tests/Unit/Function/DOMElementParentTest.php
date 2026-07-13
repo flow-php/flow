@@ -21,7 +21,7 @@ use const LIBXML_NOERROR;
 
 final class DOMElementParentTest extends TestCase
 {
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_fails_when_parent_not_available_in_strict_mode(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -36,7 +36,7 @@ final class DOMElementParentTest extends TestCase
             ->eval(row($context->entryFactory()->create('value', $element->documentElement->parentElement)), $context);
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_getting_parent_element(): void
     {
         // @mago-ignore analysis:unavailable-method
@@ -55,7 +55,7 @@ final class DOMElementParentTest extends TestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_getting_parent_element_when_not_available(): void
     {
         // @mago-ignore analysis:unavailable-method

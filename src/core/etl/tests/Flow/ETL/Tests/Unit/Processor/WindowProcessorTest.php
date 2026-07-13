@@ -84,8 +84,7 @@ final class WindowProcessorTest extends FlowTestCase
         }
 
         static::assertCount(3, $allRows);
-        // @mago-ignore analysis:deprecated-method
-        static::assertContainsOnly('int', array_column($allRows, 'rank'));
+        static::assertContainsOnlyInt(array_column($allRows, 'rank'));
     }
 
     public function test_processes_multiple_partitions(): void

@@ -80,7 +80,7 @@ final class HTMLDefinitionTest extends FlowTestCase
         static::assertSame('value', $withMeta->metadata()->get('key'));
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_does_not_match_entry_with_different_name(): void
     {
         $def = html_schema('content');
@@ -152,7 +152,7 @@ final class HTMLDefinitionTest extends FlowTestCase
         static::assertFalse($def->isNullable());
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_matches_entry_with_same_name_and_type(): void
     {
         $def = html_schema('content');

@@ -19,7 +19,7 @@ use function Flow\ETL\DSL\str_entry;
 use function preg_replace;
 
 // @mago-ignore analysis:unavailable-method
-#[RequiresPhp('>= 8.4')]
+#[RequiresPhp('>= 8.4.0')]
 final class HTMLEntryTest extends TestCase
 {
     public static function is_equal_data_provider(): Generator

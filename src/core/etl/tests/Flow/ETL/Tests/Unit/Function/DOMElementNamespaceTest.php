@@ -31,7 +31,7 @@ final class DOMElementNamespaceTest extends TestCase
         </Invoice>
         XML;
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function test_html_getting_element_namespace(): void
     {
         // @mago-ignore analysis:unavailable-method
