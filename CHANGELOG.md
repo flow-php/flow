@@ -1,6 +1,13 @@
-## [Unreleased] - 2026-07-13
+## [Unreleased] - 2026-07-18
 
 ### Added
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - bucketed hash join with disk spilling and JoinConfig DSL** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - Row\Encoder and Row\Hydrator abstractions (PHP, native, adaptive)** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - NullEntry and NullDefinition** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - Floe stream reader/writer with PHP and Rust encoders** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - InMemoryBucketsCache for external sort** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - Serializer DSL functions** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/filesystem - in-memory string source/destination streams** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - EntryInstantiator and Instantiators for constructor-less entry instantiation** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - EntryFactory::instantiate() creating entries from schema definitions without casting** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - Definition::entryClass() on all schema definitions, UnionDefinition resolves it from the left union member** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +44,18 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - simplified Cache contract** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-csv - RowsNormalizer replaced with CSVEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-doctrine - RowsNormalizer replaced with DbalEncoder, schema-driven hydration in extractors** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-excel - ExcelRowsNormalizer replaced with ExcelEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-google-sheet - GoogleSheetEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-json - RowsNormalizer replaced with JSONEncoder, schema-driven hydration in extractors** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-parquet - RowsNormalizer replaced with ParquetEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-postgresql - PostgreSqlEncoder, schema-driven hydration in extractors** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-seal - RowsNormalizer replaced with SealEncoder** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-text - TextEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-xml - RowsNormalizer replaced with XMLEncoder, schema-driven hydration in extractors** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/flow-php-ext - reworked Rust encode/hydrate/cast pipeline** - [@norberttech](https://github.com/norberttech)
 - [#2531](https://github.com/flow-php/flow/pull/2531) - **Update PHPUnit to 12.5** - [@stloyd](https://github.com/stloyd)
 - [#2529](https://github.com/flow-php/flow/pull/2529) - **Move out receiving partitions in extractors out of loops** - [@stloyd](https://github.com/stloyd)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl-adapter-parquet - ParquetExtractor builds entries through EntryFactory::instantiate() instead of array_to_row()** - [@norberttech](https://github.com/norberttech)
@@ -98,6 +117,8 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - legacy Processor\HashJoin hash table and buckets** - [@norberttech](https://github.com/norberttech)
+- [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - FloeFile and legacy Floe encoders/serializers** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - runtime value type detection from List/Map/Structure entry constructors** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/types - isValid() short-circuit from ListType/StructureType::cast()** - [@norberttech](https://github.com/norberttech)
 - [#2526](https://github.com/flow-php/flow/pull/2526) - **flow-php/etl - SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT and SortAlgorithms::SQLITE_SORT** - [@norberttech](https://github.com/norberttech)
