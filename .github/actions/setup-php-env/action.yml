@@ -78,7 +78,10 @@ runs:
         tools: ${{ inputs.tools }}
         php-version: ${{ inputs.php-version }}
         ini-values: ${{ inputs.ini-values }}
-        extensions: ${{ inputs.extensions }}
+        # The runner image ships ext-redis 5.3.7 pre-installed, which conflicts with
+        # symfony/cache (requires ext-redis >= 6.1) and breaks `composer install`.
+        # No job in this repo uses the redis extension, so always remove it (":redis").
+        extensions: "${{ inputs.extensions }}, :redis"
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 
