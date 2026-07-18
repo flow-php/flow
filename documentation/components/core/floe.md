@@ -38,6 +38,11 @@ data_frame()
     ->run();
 ```
 
+When the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md) is loaded, the
+strict read and the write fuse frame-split + value decode/encode + hydrate/dehydrate into one native
+call per batch. It is transparent — the on-disk format is unchanged and the rows are byte-for-byte
+identical to the pure-PHP engine; the salvage path (`FloeStreamReader::recover()`) always stays pure PHP.
+
 ## Save Modes
 
 `to_floe()` honors every [Save Mode](/documentation/components/core/save-mode.md) through the same
@@ -68,9 +73,11 @@ data_frame()
     ->run();
 ```
 
-> Floe additionally supports appending seamlessly into a **single** file with schema evolution
-> through the low-level `Flow\Floe\FloeWriter::append()` API; the DataFrame `Append` save mode uses
-> the sibling-file behavior for consistency with the rest of Flow.
+> Floe additionally supports appending into a **single** file through the low-level
+> `Flow\Floe\FloeWriter::append()` API — appended batches must match the file's schema (a drifted
+> batch throws `IncompatibleSchemaException`; schema evolution is only available through
+> `merge_floe()`). The DataFrame `Append` save mode uses the sibling-file behavior for consistency
+> with the rest of Flow.
 
 ## Partitioning
 
@@ -174,19 +181,21 @@ merge_floe(
 );
 ```
 
-All sources must share one partition combination and evolve the running merged schema cleanly —
-otherwise `IncompatibleSchemaException` is thrown before anything is written. `merge_floe()` works on
-the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
+Sources must evolve the running merged schema cleanly — otherwise `IncompatibleSchemaException` is
+thrown before anything is written. Each source's per-section partition combinations are preserved
+(deduped into the merged footer table), so sources with differing combinations merge without error.
+`merge_floe()` works on the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
 
 ## Whole-Value Serialization
 
 The whole-value serialization paths — the [cache](/documentation/components/core/caching.md) and
-`Flow\Floe\FloeSerializer` (the config default serializer) — stream: encode goes through
-`FloeWriter` and decode through `FloeFile::recover()` in batches of `batchSize` rows (default
-1000), so the engine holds one batch at a time. The batch size never changes the produced bytes —
-only the memory bound. A whole-value decode verifies the recovered row count against the footer
-and rejects torn payloads. Numbers and guidance live in the
-[caching documentation](/documentation/components/core/caching.md).
+`Flow\Floe\FloeSerializer` (the config default serializer) — stream: `serialize(Rows, DestinationStream)`
+goes through `FloeStreamWriter` and `unserialize(SourceStream)` through the strict `FloeStreamReader::rows()`
+read in batches of `batchSize` rows (default 1000), so the engine holds one batch at a time. The batch size
+never changes the produced bytes — only the memory bound. String payloads round-trip through the
+`Flow\Serializer\DSL` helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value
+`unserialize()` verifies the decoded row count against the footer and rejects torn payloads. Numbers and
+guidance live in the [caching documentation](/documentation/components/core/caching.md).
 
 ## On-Disk Layout
 
@@ -199,8 +208,8 @@ reader can locate from the last 8 bytes without scanning the body. All multi-byt
 │ HEADER                              6 bytes              │
 ├──────────────────────────────────────────────────────────┤
 │ FRAMES  (repeated, in write order)                       │
-│    PARTITIONS  (0x03)   once, partitioned files only     │
-│    SCHEMA      (0x01)   emitted when the schema changes  │
+│    PARTITIONS  (0x03)   emitted when combination changes │
+│    SCHEMA      (0x01)   written once, before first ROW   │
 │    ROW         (0x02)   one frame per row                │
 │    ROW         (0x02)                                    │
 │    …                                                     │
@@ -234,19 +243,23 @@ Every frame — `SCHEMA`, `ROW`, `PARTITIONS`, `FOOTER` — shares the same enve
         0x01 SCHEMA   0x02 ROW   0x03 PARTITIONS   0x06 FOOTER
 ```
 
-- **SCHEMA (`0x01`)** — body is the JSON schema for the section that follows. A section's schema is
-  **grow-only**: it starts as the first row's schema and a new `SCHEMA` frame is written only when a row
-  introduces a new column or an incompatible type. Rows narrower than the section ride it (see the ROW
-  absent flag), so a heterogeneous stream needs far fewer sections than one frame per distinct shape.
-- **ROW (`0x02`)** — one row encoded **by column** against the current section schema: for each section
+- **SCHEMA (`0x01`)** — body is the JSON schema for the file. A file carries **exactly one schema**,
+  fixed at session start (explicit, or the first batch's union), written once before the first section.
+  Rows narrower than the schema ride it (see the ROW absent flag). A later batch that introduces a new
+  column or an incompatible type throws `IncompatibleSchemaException` — schema evolution lives only in
+  `merge_floe()`.
+- **ROW (`0x02`)** — one row encoded **by column** against the file schema: for each schema
   column, in order, a one-byte presence flag — `0x01` present (followed by the value encoded per the
   column's schema type, no per-value tag), `0x00` null, `0x02` null-from-null, or `0x03` **absent** (the
   row has no such column). Only dynamically typed values (mixed/union columns, dynamic map keys) carry a
   one-byte type tag (`NULL`, `INTEGER`, `FLOAT`, `BOOLEAN`, `STRING`, `ARRAY`, `DATETIME`, `UUID`,
   `JSON`). A row whose columns exactly match the section produces the same bytes as a plain positional
   encode. One frame per row.
-- **PARTITIONS (`0x03`)** — for a partitioned file, the partition key/value pairs, written once before
-  the first section: a 4-byte count followed by repeated `[nameLen(4), name, valueLen(4), value]`.
+- **PARTITIONS (`0x03`)** — the partition key/value pairs for the section that follows: a 4-byte count
+  followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
+  whose combination differs from the previous one (mirror of the `SCHEMA`-frame dedup); the reader
+  starts at the empty combination, so an unpartitioned first section emits none and a later change back
+  to unpartitioned emits a `count=0` frame.
 - **FOOTER (`0x06`)** — the footer JSON followed by the trailer (below).
 
 ### Footer
@@ -258,23 +271,24 @@ scanning rows**:
 {
   "version":    1,
   "writer":     "1.x-dev",
-  "schemas":    [ /* schema body per schemaId */ ],
-  "fileSchema": { /* merged schema of every section */ },
-  "sections":   [ { "offset": 6, "schemaId": 0, "rowCount": 2 } ],
-  "partitions": { "country": "PL" },
+  "schema":     { /* the file's single schema */ },
+  "sections":   [ { "offset": 6, "partitionsId": 0, "rowCount": 2 } ],
+  "partitions": [ { "country": "PL" } ],
   "totalRows":  2,
   "metadata":   { /* typed key/value, Schema\Metadata */ }
 }
 ```
 
-- **`sections`** map a byte `offset` → `schemaId` + `rowCount`, so a reader can skip whole sections
-  (offset/limit pushdown) and know each section's schema up front.
-- **`schemas`** is the deduplicated list of every schema written; **`fileSchema`** is their merge —
-  the source schema, available from the footer alone. On a seamless read, a row narrower than
-  `fileSchema` (an absent column, or a column added by a later section) is padded with null entries so
-  every yielded row conforms; `recover()` reads rows exactly as written, absent columns omitted.
-- A new column or incompatible type grows the section (new `SCHEMA` frame); this is also how a single
-  file evolves its schema across appended sections.
+- **`sections`** map a byte `offset` → `partitionsId` + `rowCount`, so a reader can skip whole sections
+  (offset/limit pushdown) and know each section's partition combination up front. Sections bound
+  partition combinations and appends only; every section shares the file's one schema.
+- **`partitions`** is the deduplicated, order-preserving table of partition combinations, indexed by
+  `partitionsId`; the unpartitioned combination is an empty object at its own id. A file can hold many
+  combinations (one per section).
+- **`schema`** is the file's single schema, available from the footer alone. On a seamless read, a row
+  narrower than it (an absent column) is padded with null entries so every yielded row conforms;
+  `recover()` reads rows exactly as written, absent columns omitted. `merge_floe()` re-encodes drifted
+  sources to their union, so a merged file is still one schema.
 
 ### Trailer (last 8 bytes)
 

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
+use Flow\ETL\Row;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
@@ -157,7 +159,13 @@ final class FilesystemBucketsCacheTest extends FlowIntegrationTestCase
 
         $cache->set('bucket', $input);
 
-        static::assertEquals($input, iterator_to_array($cache->get('bucket'), false));
+        // one write session = one schema: rows keep their own columns (unpadded) but entry
+        // types widen to the batch union, so compare values rather than exact definitions
+        $result = iterator_to_array($cache->get('bucket'), false);
+        static::assertSame(
+            array_map(static fn(Row $r): array => $r->toArray(), $input),
+            array_map(static fn(Row $r): array => $r->toArray(), $result),
+        );
 
         $this->fs()->rm($cacheDir);
     }

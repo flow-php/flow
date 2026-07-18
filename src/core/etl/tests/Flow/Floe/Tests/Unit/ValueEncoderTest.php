@@ -18,9 +18,14 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 
 use function Flow\Types\DSL\type_callable;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_time_zone;
+use function Flow\Types\DSL\type_uuid;
 use function ord;
 use function pack;
 
@@ -108,6 +113,17 @@ final class ValueEncoderTest extends TestCase
 
         static::assertSame(pack('V', 3) . pack('P*', 10, -20, 30), $encoder->encode([10, -20, 30]));
         static::assertSame(pack('V', 0), $encoder->encode([]));
+    }
+
+    public function test_stateful_encoders_are_shared_across_calls(): void
+    {
+        $factory = new ValueEncoder();
+
+        static::assertSame($factory->encoderFor(type_datetime()), $factory->encoderFor(type_datetime()));
+        static::assertSame($factory->encoderFor(type_datetime()), $factory->encoderFor(type_date()));
+        static::assertSame($factory->encoderFor(type_time_zone()), $factory->encoderFor(type_time_zone()));
+        static::assertSame($factory->encoderFor(type_uuid()), $factory->encoderFor(type_uuid()));
+        static::assertSame($factory->encoderFor(type_json()), $factory->encoderFor(type_json()));
     }
 
     public function test_round_trip_of_dynamic_values(): void

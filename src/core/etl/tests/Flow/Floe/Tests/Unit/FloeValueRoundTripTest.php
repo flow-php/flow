@@ -9,10 +9,9 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
-use Flow\Floe\Tests\Context\FloeFileContext;
+use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\RequiresPhp;
@@ -29,6 +28,7 @@ use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
@@ -76,7 +76,7 @@ final class FloeValueRoundTripTest extends TestCase
                 datetime_entry('before_epoch', new DateTimeImmutable('1969-07-20 20:17:00 UTC')),
                 date_entry('date', new DateTimeImmutable('2025-06-15', new DateTimeZone('Europe/Warsaw'))),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -87,7 +87,7 @@ final class FloeValueRoundTripTest extends TestCase
             float_entry('float', null),
             bool_entry('bool', null),
             str_entry('str', null),
-            StringEntry::fromNull('from_null'),
+            null_entry('from_null'),
             list_entry('list', null, type_list(type_integer())),
             map_entry('map', null, type_map(type_string(), type_integer())),
             json_entry('json', null),
@@ -98,14 +98,14 @@ final class FloeValueRoundTripTest extends TestCase
             xml_entry('xml', null),
         ));
 
-        static::assertEquals($rows, FloeFileContext::roundTrip($rows));
+        static::assertEquals($rows, FloeStreamReaderContext::roundTrip($rows));
     }
 
     public function test_enum_entries(): void
     {
         static::assertEquals(
             $rows = rows(row(enum_entry('backed', BackedStringEnum::two), enum_entry('basic', BasicEnum::three))),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -116,7 +116,7 @@ final class FloeValueRoundTripTest extends TestCase
 
         static::assertSame(
             $rows->first()->entries()['html']->toString(),
-            FloeFileContext::roundTrip($rows)->first()->entries()['html']->toString(),
+            FloeStreamReaderContext::roundTrip($rows)->first()->entries()['html']->toString(),
         );
     }
 
@@ -137,7 +137,7 @@ final class FloeValueRoundTripTest extends TestCase
                 time_entry('fractional', $fractional),
                 time_entry('days', new DateInterval('P3D')),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -150,7 +150,7 @@ final class FloeValueRoundTripTest extends TestCase
                 json_object_entry('empty_object', '{}'),
                 json_entry('empty_list', '[]'),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -168,7 +168,7 @@ final class FloeValueRoundTripTest extends TestCase
                 list_entry('mixed', [1, 'two', 3.5, null, true, ['nested' => 'array']], type_list(type_mixed())),
                 list_entry('list_of_lists', [[1, 2], [3]], type_list(type_list(type_integer()))),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -185,7 +185,7 @@ final class FloeValueRoundTripTest extends TestCase
                 ),
                 map_entry('empty', [], type_map(type_string(), type_integer())),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -201,7 +201,7 @@ final class FloeValueRoundTripTest extends TestCase
                 ],
                 type_list(type_mixed()),
             ))),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -221,7 +221,7 @@ final class FloeValueRoundTripTest extends TestCase
                 str_entry('string_binary', "line\nbreak\x00null\xFFbyte"),
                 str_entry('string_unicode', 'zażółć gęślą jaźń 🚀'),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -263,7 +263,7 @@ final class FloeValueRoundTripTest extends TestCase
                 ])),
                 structure_entry('with_null_type', ['nothing' => null], type_structure(['nothing' => type_null()])),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -271,7 +271,7 @@ final class FloeValueRoundTripTest extends TestCase
     {
         static::assertEquals(
             $rows = rows(row(uuid_entry('uuid', '0196aecb-b568-7e57-a381-8ec8d3e4a531'))),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
@@ -282,7 +282,7 @@ final class FloeValueRoundTripTest extends TestCase
                 xml_entry('xml', '<root attr="1"><child>text &amp; entity</child></root>'),
                 xml_element_entry('element', '<item id="5">value</item>'),
             )),
-            FloeFileContext::roundTrip($rows),
+            FloeStreamReaderContext::roundTrip($rows),
         );
     }
 }

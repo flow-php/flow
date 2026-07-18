@@ -27,7 +27,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
+        ], flow_context(config())->hydrator())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
             static::assertTrue($rows->isPartitioned());
@@ -51,7 +51,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
+        ], flow_context(config())->hydrator())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
             static::assertTrue($rows->isPartitioned());
@@ -76,7 +76,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ], flow_context(config())->entryFactory());
+        ], flow_context(config())->hydrator());
 
         static::assertSame($rows, (new DropPartitionsTransformer())->transform($rows, flow_context()));
     }

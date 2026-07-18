@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 793
+ * Total functions: 798
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -700,7 +700,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryFactory</span> <span class=\"fn-param\">$entryFactory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
+                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions<br>@param null|Schema $schema
@@ -708,7 +708,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:hydrator" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "array_to_rows",
@@ -718,7 +718,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryFactory</span> <span class=\"fn-param\">$entryFactory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions<br>@param null|Schema $schema
@@ -726,7 +726,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:hydrator" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "array_unpack",
@@ -4033,12 +4033,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SerializerMode</span> <span class=\"fn-param\">$serializer_mode</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemCache</span>
+                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeSerializer::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemCache</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer_mode" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer" + "}" + ")"),
         boost: 10
     },                {
         label: "filesystem_telemetry_config",
@@ -4897,7 +4897,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">generate_random_int</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$start</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">-9223372036854775808</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$end</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">9223372036854775807</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NativePHPRandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">int</span>
+                    <span class=\"fn-name\">generate_random_int</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$start</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">-9223372036854775808</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$end</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">9223372036854775807</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">int</span>
                 </div>
                             `
             return div
@@ -4912,7 +4912,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">generate_random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">32</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NativePHPRandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                    <span class=\"fn-name\">generate_random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">32</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
                 </div>
                             `
             return div
@@ -6724,7 +6724,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">null_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    This functions is an alias for creating string entry from null.<br>The main difference between using this function an simply str_entry with second argument null<br>is that this function will also keep a note in the metadata that type might not be final.<br>For example when we need to guess column type from rows because schema was not provided,<br>and given column in the first row is null, it might still change once we get to the second row.<br>That metadata is used to determine if string_entry was created from null or not.<br>By design flow assumes when guessing column type that null would be a string (the most flexible type).<br>@return Entry<?string>
+                    Creates an entry of the null type. Used when a column value is null and its final type is not yet known.<br>When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals a real type,<br>at which point the schema merge turns it into that type made nullable.<br>@return Entry<null>
                 </div>
                             `
             return div
@@ -6757,7 +6757,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">null_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringDefinition</span>
+                    <span class=\"fn-name\">null_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NullDefinition</span>
                 </div>
                             `
             return div
@@ -9066,6 +9066,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\schema_from_json(" + "$" + "{" + "1:schema" + "}" + ")"),
         boost: 10
     },                {
+        label: "schema_from_json_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_from_json_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|array|string</span> <span class=\"fn-param\">$json_schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestFactoryInterface</span> <span class=\"fn-param\">$request_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a JSON Schema (https://json-schema.org) document into a Flow Schema.<br>@param array<string, mixed>|Path|string $json_schema - decoded document, raw JSON document or a path to a schema file<br>@param null|ClientInterface $client - PSR-18 http client, required to resolve remote http(s) references<br>@param null|RequestFactoryInterface $request_factory - PSR-17 request factory, required to resolve remote http(s) references
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\schema_from_json_schema(" + "$" + "{" + "1:json_schema" + "}" + ", " + "$" + "{" + "2:client" + "}" + ", " + "$" + "{" + "3:request_factory" + "}" + ")"),
+        boost: 10
+    },                {
         label: "schema_from_parquet",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -9372,6 +9390,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\schema_to_json(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:pretty" + "}" + ")"),
         boost: 10
     },                {
+        label: "schema_to_json_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_to_json_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">array</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a Flow Schema into a JSON Schema (https://json-schema.org, draft 2020-12) document.<br>@return array<string, mixed>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\schema_to_json_schema(" + "$" + "{" + "1:schema" + "}" + ")"),
+        boost: 10
+    },                {
         label: "schema_to_parquet",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -9520,6 +9556,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\select(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "serialize_to_string",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">serialize_to_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Rows</span> <span class=\"fn-param\">$rows</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Serializer\\DSL\\serialize_to_string(" + "$" + "{" + "1:serializer" + "}" + ", " + "$" + "{" + "2:rows" + "}" + ")"),
         boost: 10
     },                {
         label: "set_role",
@@ -10492,12 +10543,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">sum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sum</span>
+                    <span class=\"fn-name\">sum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sum</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\sum(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\sum(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:exact" + "}" + ")"),
         boost: 10
     },                {
         label: "superglobal_carrier",
@@ -10996,7 +11047,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryFactory</span> <span class=\"fn-param\">$entryFactory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
+                    <span class=\"fn-name\">to_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryFactory</span> <span class=\"fn-param\">$entryFactory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\EntryFactory::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<mixed> $data<br>@return Entry<mixed>
@@ -12172,7 +12223,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DOMDocument>
+                    @return Type<\\DOMDocument|XMLDocument>
                 </div>
                             `
             return div
@@ -12190,7 +12241,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_xml_element</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DOMElement>
+                    @return Type<\\DOMElement|Element>
                 </div>
                             `
             return div
@@ -12231,6 +12282,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\ulid(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },                {
+        label: "union_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">union_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">UnionType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnionDefinition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param Type<mixed>|UnionType<mixed, mixed> $type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\union_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        boost: 10
+    },                {
         label: "unique_constraint",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -12265,6 +12334,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\unlisten(" + "$" + "{" + "1:channel" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "unserialize_from_string",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">unserialize_from_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$payload</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Serializer\\DSL\\unserialize_from_string(" + "$" + "{" + "1:serializer" + "}" + ", " + "$" + "{" + "2:payload" + "}" + ")"),
         boost: 10
     },                {
         label: "update",
@@ -13402,10 +13486,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">xml_element_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DOMElement|string|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
+                    <span class=\"fn-name\">xml_element_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DOMElement|Dom\\Element|string|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @throws InvalidArgumentException<br>@return ($value is null ? Entry<null> : Entry<\\DOMElement>)
+                    @throws InvalidArgumentException<br>@return ($value is null ? Entry<null> : Entry<\\DOMElement|Element>)
                 </div>
                             `
             return div
@@ -13435,10 +13519,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">xml_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DOMDocument|string|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
+                    <span class=\"fn-name\">xml_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DOMDocument|Dom\\XMLDocument|string|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @throws InvalidArgumentException<br>@return ($value is null ? Entry<null> : Entry<\\DOMDocument>)
+                    @throws InvalidArgumentException<br>@return ($value is null ? Entry<null> : Entry<\\DOMDocument|XMLDocument>)
                 </div>
                             `
             return div

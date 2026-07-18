@@ -9,12 +9,14 @@ use ArrayIterator;
 use Countable;
 use DateInterval;
 use DateTimeInterface;
-use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\Expression;
+use Flow\ETL\Join\HashJoin\Joiner;
+use Flow\ETL\Join\HashJoin\RowMerger;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Row\CartesianProduct;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
@@ -39,7 +41,6 @@ use function array_slice;
 use function array_unique;
 use function array_values;
 use function count;
-use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_integer;
 use function is_array;
 use function is_int;
@@ -371,10 +372,12 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return $right;
         }
 
+        $merger = new RowMerger($joinPrefix);
+
         foreach ($this->rows as $leftRow) {
             foreach ($right->rows as $rightRow) {
                 try {
-                    $joined[] = $leftRow->merge($rightRow, $joinPrefix);
+                    $joined[] = $merger->merge($leftRow, $rightRow);
                 } catch (InvalidArgumentException $e) {
                     throw new InvalidArgumentException($e->getMessage() . '. Please consider using join prefix option');
                 }
@@ -389,41 +392,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function joinInner(self $right, Expression $expression): self
     {
-        /**
-         * @var array<Row> $joined
-         */
-        $joined = [];
-
-        foreach ($this->rows as $leftRow) {
-            /** @var ?Row $joinedRow */
-            $joinedRow = null;
-
-            foreach ($right as $rightRow) {
-                if ($expression->meet($leftRow, $rightRow)) {
-                    try {
-                        $joinedRow = $leftRow->merge(
-                            $expression->dropDuplicateRightEntries($rightRow),
-                            $expression->prefix(),
-                        );
-                    } catch (DuplicatedEntriesException $e) {
-                        throw new DuplicatedEntriesException(
-                            $e->getMessage()
-                            . ' try to use a different join prefix than: "'
-                            . $expression->prefix()
-                            . '"',
-                        );
-                    }
-
-                    break;
-                }
-            }
-
-            if ($joinedRow) {
-                $joined[] = $joinedRow;
-            }
-        }
-
-        return new self(...$joined);
+        return $this->joinUsing($right, $expression, Join::inner, new EntryFactory());
     }
 
     /**
@@ -431,54 +400,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function joinLeft(self $right, Expression $expression, EntryFactory $entryFactory): self
     {
-        /**
-         * @var array<Row> $joined
-         */
-        $joined = [];
-
-        $rightSchema = $right->schema();
-
-        foreach ($this->rows as $leftRow) {
-            /** @var ?Row $joinedRow */
-            $joinedRow = null;
-
-            foreach ($right as $rightRow) {
-                if ($expression->meet($leftRow, $rightRow)) {
-                    try {
-                        $joinedRow = $leftRow->merge(
-                            $expression->dropDuplicateRightEntries($rightRow),
-                            $expression->prefix(),
-                        );
-                    } catch (DuplicatedEntriesException $e) {
-                        throw new DuplicatedEntriesException(
-                            $e->getMessage()
-                            . ' try to use a different join prefix than: "'
-                            . $expression->prefix()
-                            . '"',
-                        );
-                    }
-
-                    break;
-                }
-            }
-
-            if ($joinedRow === null) {
-                $entries = [];
-
-                foreach ($rightSchema->definitions() as $definition) {
-                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
-                }
-
-                $joinedRow = $leftRow->merge(
-                    $expression->dropDuplicateRightEntries(row(...$entries)),
-                    $expression->prefix(),
-                );
-            }
-
-            $joined[] = $joinedRow;
-        }
-
-        return new self(...$joined);
+        return $this->joinUsing($right, $expression, Join::left, $entryFactory);
     }
 
     /**
@@ -486,27 +408,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function joinLeftAnti(self $right, Expression $expression): self
     {
-        /**
-         * @var array<Row> $joined
-         */
-        $joined = [];
-
-        foreach ($this->rows as $leftRow) {
-            $foundRight = false;
-
-            foreach ($right as $rightRow) {
-                if (!$expression->meet($leftRow, $rightRow)) {
-                    continue;
-                }
-                $foundRight = true;
-            }
-
-            if (!$foundRight) {
-                $joined[] = $leftRow;
-            }
-        }
-
-        return new self(...$joined);
+        return $this->joinUsing($right, $expression, Join::left_anti, new EntryFactory());
     }
 
     /**
@@ -514,48 +416,26 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function joinRight(self $right, Expression $expression, EntryFactory $entryFactory): self
     {
+        return $this->joinUsing($right, $expression, Join::right, $entryFactory);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function joinUsing(self $right, Expression $expression, Join $type, EntryFactory $entryFactory): self
+    {
+        $single = static function (self $rows): Generator {
+            yield $rows;
+        };
+
         /**
          * @var array<Row> $joined
          */
         $joined = [];
 
-        $leftSchema = $this->schema();
-
-        foreach ($right->rows as $rightRow) {
-            /** @var ?Row $joinedRow */
-            $joinedRow = null;
-
-            foreach ($this->rows as $leftRow) {
-                if ($expression->meet($leftRow, $rightRow)) {
-                    try {
-                        $joinedRow = $expression->dropDuplicateLeftEntries($leftRow)->merge(
-                            $rightRow,
-                            $expression->prefix(),
-                        );
-                    } catch (DuplicatedEntriesException $e) {
-                        throw new DuplicatedEntriesException(
-                            $e->getMessage()
-                            . ' try to use a different join prefix than: "'
-                            . $expression->prefix()
-                            . '"',
-                        );
-                    }
-
-                    $joined[] = $joinedRow;
-                }
-            }
-
-            if ($joinedRow === null) {
-                $entries = [];
-
-                foreach ($leftSchema->definitions() as $definition) {
-                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
-                }
-
-                $joined[] = $expression->dropDuplicateLeftEntries(row(...$entries))->merge(
-                    $rightRow,
-                    $expression->prefix(),
-                );
+        foreach ((new Joiner($expression, $type, $entryFactory))->join($single($this), $single($right)) as $batch) {
+            foreach ($batch as $row) {
+                $joined[] = $row;
             }
         }
 

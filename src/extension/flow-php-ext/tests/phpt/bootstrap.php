@@ -5,46 +5,68 @@ declare(strict_types=1);
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\Instantiators;
+use Flow\ETL\Row\NativeRowHydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
-use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
-use Flow\Floe\RowEncoder;
-use Flow\Floe\RowHydrator;
-use Flow\Floe\RowsDecoder;
-use Flow\Floe\SchemaDecoder;
-use Flow\Floe\SchemaTracker;
-use Flow\Floe\ValueDecoder;
+use Flow\Floe\NativeFloeEncoder;
+use Flow\Floe\PhpFloeEncoder;
 
 /**
- * Pure-PHP reference framing built from the Floe encoder primitives: turns Rows
- * into the ordered list of bare SCHEMA/ROW frame bodies the extension decodes.
- * A new SCHEMA frame is emitted whenever the row no longer matches the plan.
+ * Pure-PHP reference framing built from the Floe encoder primitives: a write
+ * session carries one schema, so the whole Rows is framed as a single SCHEMA
+ * frame (its union) followed by one ROW frame per row.
  *
  * @return array<int, array{type: int, body: string}>
  */
 function php_frames(Rows $rows): array
 {
-    $rowEncoder = new RowEncoder();
-    $tracker = new SchemaTracker();
-    $plan = null;
-    $frames = [];
+    if ($rows->count() === 0) {
+        return [];
+    }
+
+    $hydrator = new PhpRowHydrator();
+    $schemaBody = json_encode($rows->schema()->normalize(), JSON_THROW_ON_ERROR);
+    $encoder = new PhpFloeEncoder(Flow\ETL\DSL\schema_from_json($schemaBody));
+
+    $frames = [['type' => Format::FRAME_SCHEMA, 'body' => $schemaBody]];
 
     foreach ($rows->all() as $row) {
-        if ($plan === null || !$tracker->fits($plan, $row)) {
-            $plan = FloeWriter::growSectionPlan(null, $row);
-            $frames[] = ['type' => Format::FRAME_SCHEMA, 'body' => $plan->schemaBody];
-        }
-
-        $frames[] = ['type' => Format::FRAME_ROW, 'body' => $rowEncoder->encode($plan, $row)];
+        $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
     }
 
     return $frames;
 }
 
 /**
- * Pure-PHP reference decode of frame bodies via the Floe schema decoder and the
- * row hydrator - the byte-for-byte oracle the extension is compared against.
+ * Native counterpart of php_frames(): identical single-schema framing (PHP owns
+ * it), ROW bodies produced by NativeFloeEncoder. Compared against php_frames()
+ * to prove the native encode is byte-identical to the pure-PHP encode.
+ *
+ * @return array<int, array{type: int, body: string}>
+ */
+function ext_frames(Rows $rows): array
+{
+    if ($rows->count() === 0) {
+        return [];
+    }
+
+    $hydrator = new NativeRowHydrator();
+    $schemaBody = json_encode($rows->schema()->normalize(), JSON_THROW_ON_ERROR);
+    $encoder = new NativeFloeEncoder(Flow\ETL\DSL\schema_from_json($schemaBody));
+
+    $frames = [['type' => Format::FRAME_SCHEMA, 'body' => $schemaBody]];
+
+    foreach ($rows->all() as $row) {
+        $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
+    }
+
+    return $frames;
+}
+
+/**
+ * Pure-PHP reference decode of frame bodies via the Floe encoder and the row
+ * hydrator - the byte-for-byte oracle the extension is compared against.
  *
  * @param array<int, array{type: int, body: string}> $frames
  *
@@ -52,19 +74,21 @@ function php_frames(Rows $rows): array
  */
 function php_decode_frames(array $frames): array
 {
-    $schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
-    $rowHydrator = new RowHydrator();
-    $plan = null;
+    $hydrator = new PhpRowHydrator();
+    $encoder = null;
+    $schema = null;
     $rows = [];
 
     foreach ($frames as $frame) {
         if ($frame['type'] === Format::FRAME_SCHEMA) {
-            $plan = $schemaDecoder->decode($frame['body']);
-        } elseif ($plan === null) {
+            $schema = Flow\ETL\DSL\schema_from_json($frame['body']);
+            $encoder = new PhpFloeEncoder($schema);
+        } elseif ($schema === null || $encoder === null) {
             throw new RuntimeException('row frame before any schema frame');
         } else {
-            $position = 0;
-            $rows[] = $rowHydrator->hydrate($plan, $frame['body'], $position);
+            foreach ($hydrator->hydrate($encoder->decode([$frame['body']]), $schema)->all() as $row) {
+                $rows[] = $row;
+            }
         }
     }
 
@@ -72,22 +96,30 @@ function php_decode_frames(array $frames): array
 }
 
 /**
- * Drives a RowsDecoder over frame bodies, priming schemas and decoding rows in
- * order (mirrors what FloeReader does on the hot path).
+ * Drives the native two-layer pipeline over frame bodies, rebinding the schema
+ * per SCHEMA frame (mirrors what FloeStreamReader does on the hot path).
  *
  * @param array<int, array{type: int, body: string}> $frames
  *
  * @return array<int, Row>
  */
-function decoder_decode_frames(RowsDecoder $decoder, array $frames): array
+function ext_decode_frames(array $frames): array
 {
+    $hydrator = new NativeRowHydrator();
+    $encoder = null;
+    $schema = null;
     $rows = [];
 
     foreach ($frames as $frame) {
         if ($frame['type'] === Format::FRAME_SCHEMA) {
-            $decoder->schema($frame['body']);
+            $schema = Flow\ETL\DSL\schema_from_json($frame['body']);
+            $encoder = new NativeFloeEncoder($schema);
+        } elseif ($schema === null || $encoder === null) {
+            throw new RuntimeException('row frame before any schema frame');
         } else {
-            $rows[] = $decoder->row($frame['body']);
+            foreach ($hydrator->hydrate($encoder->decode([$frame['body']]), $schema)->all() as $row) {
+                $rows[] = $row;
+            }
         }
     }
 

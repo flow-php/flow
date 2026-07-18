@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -13,6 +12,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\FileLoader;
 use Flow\ETL\Row;
+use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use OpenSpout\Common\Entity\Style\Style;
@@ -20,6 +20,7 @@ use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
 use Throwable;
 
+use function array_keys;
 use function is_string;
 
 final class ExcelLoader implements Closure, FileLoader, Loader
@@ -30,6 +31,8 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     private string $dateTimeFormat = 'Y-m-d H:i:s';
 
+    private ?ExcelEncoder $encoder = null;
+
     private ?Style $headerStyle = null;
 
     private readonly Path $path;
@@ -38,7 +41,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     private ?string $sheetNameEntryName = null;
 
-    private string $timeFormat = 'H:i:s';
+    private string $timeFormat = '%H:%I:%S';
 
     private bool $withHeader = true;
 
@@ -85,11 +88,8 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
-            $normalizer = new ExcelRowsNormalizer(
-                dateFormat: $this->dateFormat,
-                dateTimeFormat: $this->dateTimeFormat,
-                timeFormat: $this->timeFormat,
-            );
+            $dehydrated = $context->hydrator()->dehydrate($rows);
+            $encoder = $this->encoder();
 
             $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
 
@@ -103,14 +103,27 @@ final class ExcelLoader implements Closure, FileLoader, Loader
                     ? $row->remove($this->sheetNameEntryName)
                     : $row;
 
-                if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
-                    $headers = $normalizer->headers($rowForExcel);
-                    $manager->writeHeader($sheetName, $headers, $this->headerStyle);
+                $typed = $dehydrated[$rowIndex];
+                $values = $typed->values;
+                $types = $typed->types;
+                $metadata = $typed->metadata;
+
+                if ($this->sheetNameEntryName !== null) {
+                    unset(
+                        $values[$this->sheetNameEntryName],
+                        $types[$this->sheetNameEntryName],
+                        $metadata[$this->sheetNameEntryName],
+                    );
                 }
 
-                $values = $normalizer->normalize($rowForExcel);
+                if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
+                    $manager->writeHeader($sheetName, $encoder->encodeHeader(array_keys($values)), $this->headerStyle);
+                }
+
                 $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
-                $manager->writeRow($sheetName, $values, $styles);
+                /** @var array<int, null|bool|float|int|string> $cells */
+                $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
+                $manager->writeRow($sheetName, $cells, $styles);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -205,6 +218,15 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         $this->writerOptions = $options;
 
         return $this;
+    }
+
+    private function encoder(): ExcelEncoder
+    {
+        return $this->encoder ??= new ExcelEncoder(
+            dateTimeFormat: $this->dateTimeFormat,
+            dateFormat: $this->dateFormat,
+            timeFormat: $this->timeFormat,
+        );
     }
 
     private function getWorkbookManager(): WorkbookManager

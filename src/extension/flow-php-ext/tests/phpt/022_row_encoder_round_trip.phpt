@@ -1,18 +1,17 @@
 --TEST--
-RowsEncoder frame bodies round-trip through RowsDecoder::rows
+RustFloeEncoderNative frame bodies round-trip through the RawRowValues pipeline
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\Floe\Format;
-use Flow\Floe\FloeWriter;
-use Flow\Floe\RowsDecoder;
-use Flow\Floe\RowsEncoder;
+use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, int_entry, str_entry, float_entry, datetime_entry, uuid_entry, list_entry};
+use function Flow\ETL\DSL\{row, int_entry, str_entry, float_entry, datetime_entry, uuid_entry, list_entry, schema_from_json};
 use function Flow\Types\DSL\{type_list, type_integer};
 
 $sourceRows = [
@@ -21,22 +20,19 @@ $sourceRows = [
     row(int_entry('id', 3), str_entry('name', 'c'), float_entry('price', 99.0), datetime_entry('at', new DateTimeImmutable('2030-06-15 08:30:00', new DateTimeZone('America/New_York'))), uuid_entry('u', '11111111-2222-4333-8444-555566667777'), list_entry('nums', [-1, 0, PHP_INT_MAX], type_list(type_integer()))),
 ];
 
-$schemaBody = FloeWriter::growSectionPlan(null, $sourceRows[0])->schemaBody;
+$schemaBody = json_encode($sourceRows[0]->schema()->normalize(), JSON_THROW_ON_ERROR);
+$hydrator = new PhpRowHydrator();
 
-$encoder = new RowsEncoder();
-$encoder->schema($schemaBody);
-$bodies = array_map(fn($row) => $encoder->row($row), $sourceRows);
+$encoder = new RustFloeEncoderNative();
+$bodies = $encoder->encode($hydrator->dehydrate(new Rows(...$sourceRows)), $schemaBody);
 
-$decoder = new RowsDecoder();
-$decoder->schema($schemaBody);
-$decoded = $decoder->rows($bodies);
+$decoded = $hydrator->hydrate((new RustFloeEncoderNative())->decode($bodies, $schemaBody), schema_from_json($schemaBody));
 
 var_dump($decoded instanceof Rows);
 var_dump($decoded->count());
 
-$reEncoder = new RowsEncoder();
-$reEncoder->schema($schemaBody);
-$reBodies = array_map(fn($row) => $reEncoder->row($row), $decoded->all());
+$reEncoder = new RustFloeEncoderNative();
+$reBodies = $reEncoder->encode($hydrator->dehydrate($decoded), $schemaBody);
 var_dump($bodies === $reBodies);
 
 $frames = array_merge(

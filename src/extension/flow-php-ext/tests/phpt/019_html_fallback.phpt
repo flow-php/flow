@@ -9,7 +9,6 @@ if (!class_exists('Dom\HTMLDocument')) die("skip Dom\HTMLDocument requires PHP 8
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, html_entry, html_element_entry};
 
@@ -22,7 +21,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 $expected = php_decode_frames($frames);
 var_dump(php_frames(rows(...$actual)) === php_frames(rows(...$expected)));

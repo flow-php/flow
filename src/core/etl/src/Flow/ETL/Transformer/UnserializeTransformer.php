@@ -15,6 +15,7 @@ use Flow\Serializer\Exception\SerializationException;
 use Throwable;
 
 use function Flow\ETL\DSL\ref;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function is_string;
 
 final readonly class UnserializeTransformer implements Transformer
@@ -51,14 +52,17 @@ final readonly class UnserializeTransformer implements Transformer
                 }
 
                 try {
-                    return (
-                        $this->merge
-                            ? $row->merge($serializer->unserialize($serialized, [Row::class]), $this->mergePrefix)
-                            : $serializer->unserialize($serialized, [Row::class])
-                    );
+                    $decoded = unserialize_from_string($serializer, $serialized);
                 } catch (SerializationException) {
                     return $row;
                 }
+
+                // a payload that did not round-trip to a single Row is treated as a soft failure
+                if ($decoded->count() !== 1) {
+                    return $row;
+                }
+
+                return $this->merge ? $row->merge($decoded->first(), $this->mergePrefix) : $decoded->first();
             });
 
             $context->telemetry()->transformationCompleted($this, [

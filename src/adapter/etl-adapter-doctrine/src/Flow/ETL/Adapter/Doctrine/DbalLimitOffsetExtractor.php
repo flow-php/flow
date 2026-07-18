@@ -15,7 +15,6 @@ use Flow\ETL\Schema;
 use Generator;
 
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function is_numeric;
 
 final class DbalLimitOffsetExtractor implements Extractor
@@ -97,6 +96,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
 
         $totalFetched = 0;
+        $encoder = new DbalEncoder();
 
         for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
             $offset = ($page * $this->pageSize) + $this->offset;
@@ -107,8 +107,14 @@ final class DbalLimitOffsetExtractor implements Extractor
                 ->executeQuery($pageQuery->getSQL(), $pageQuery->getParameters(), $pageQuery->getParameterTypes())
                 ->fetchAllAssociative();
 
+            $rawBatch = [];
+
             foreach ($pageResults as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+                $rawBatch[] = $row;
+            }
+
+            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                $signal = yield new Rows($hydratedRow);
 
                 $totalFetched++;
 

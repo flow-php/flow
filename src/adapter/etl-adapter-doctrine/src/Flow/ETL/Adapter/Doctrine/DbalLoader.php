@@ -29,6 +29,8 @@ final class DbalLoader implements Loader
 
     private ?Connection $connection = null;
 
+    private ?DbalEncoder $encoder = null;
+
     private string $operation = 'insert';
 
     private InsertOptions|UpdateOptions|null $operationOptions = null;
@@ -80,13 +82,15 @@ final class DbalLoader implements Loader
 
         try {
             $sortedRows = $rows->sortEntries();
-            $normalizedData = (new RowsNormalizer())->normalize($sortedRows);
 
             // @mago-expect analysis:string-member-selector
             $this->bulk()->{$this->operation}(
                 $this->connection(),
                 $this->tableName,
-                new BulkData($normalizedData, $this->typesMap()->flowRowTypes($sortedRows->first())),
+                new BulkData(
+                    $this->encoder()->encode($context->hydrator()->dehydrate($sortedRows)),
+                    $this->typesMap()->flowSchemaTypes($sortedRows->schema()),
+                ),
                 $this->operationOptions,
             );
 
@@ -136,6 +140,11 @@ final class DbalLoader implements Loader
         }
 
         return $this->bulk;
+    }
+
+    private function encoder(): DbalEncoder
+    {
+        return $this->encoder ??= new DbalEncoder();
     }
 
     private function connection(): Connection

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
@@ -20,6 +21,7 @@ use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
@@ -130,11 +132,9 @@ final class UnionDefinitionTest extends FlowTestCase
         );
     }
 
-    public function test_entry_class_with_left_union_member_without_related_entry_class(): void
+    public function test_entry_class_with_null_left_union_member(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        union_schema('col', type_union(type_null(), type_string()))->entryClass();
+        static::assertSame(NullEntry::class, union_schema('col', type_union(type_null(), type_string()))->entryClass());
     }
 
     public function test_entry_class_with_optional_left_union_member(): void
@@ -216,42 +216,17 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertEquals($expected, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null(): void
+    public function test_merge_with_null_definition_keeps_original_type(): void
     {
-        $def1 = union_schema('col', type_union(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-        $def2 = union_schema('col', type_union(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-
-        $merged = $def1->merge($def2);
+        $merged = union_schema('col', type_union(type_string(), type_integer()), false)->merge(null_schema('col'));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
-        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null(): void
+    public function test_merge_when_this_is_null_definition(): void
     {
-        $nullDef = union_schema('col', type_union(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-        $def = union_schema('col', type_union(type_string(), type_integer()), false);
-
-        $merged = $nullDef->merge($def);
-
-        static::assertInstanceOf(UnionDefinition::class, $merged);
-        static::assertTrue($merged->isNullable());
-        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
-    }
-
-    public function test_merge_with_assumed_null_keeps_original_type(): void
-    {
-        $def = union_schema('col', type_union(type_string(), type_integer()), false);
-        $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def->merge($nullDef);
+        $merged = null_schema('col')->merge(union_schema('col', type_union(type_string(), type_integer()), false));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertTrue($merged->isNullable());

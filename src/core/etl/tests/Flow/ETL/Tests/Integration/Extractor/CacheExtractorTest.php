@@ -33,9 +33,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->entryFactory()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
+        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
+        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
+        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
 
         $cache->set('key', $index->toRows());
 
@@ -59,9 +59,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->entryFactory()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
+        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
+        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
+        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
 
         $cache->set('key', $index->toRows());
 
@@ -76,9 +76,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         static::assertFalse($cache->has('key'));
     }
 
-    public function test_extracting_rows_from_streaming_cache_in_batches(): void
+    public function test_extracting_rows_from_filesystem_cache(): void
     {
-        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming'), 2);
+        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming'));
         $cache->clear();
 
         $index = new CacheIndex($cacheKey = 'key');
@@ -90,14 +90,14 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             ['id' => 3],
             ['id' => 4],
             ['id' => 5],
-        ], flow_context(config())->entryFactory()));
+        ], flow_context(config())->hydrator()));
         $cache->set('key', $index->toRows());
 
         $extractor = from_cache($cacheKey);
 
         $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
-        static::assertCount(3, $rows);
+        static::assertCount(1, $rows);
         static::assertEquals(
             [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]],
             array_merge(...array_map(static fn(Rows $batch): array => $batch->toArray(), $rows)),
@@ -106,9 +106,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->clear();
     }
 
-    public function test_stop_signal_stops_streaming_batches_and_skips_clearing(): void
+    public function test_stop_signal_stops_extraction_and_skips_clearing(): void
     {
-        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming-stop'), 2);
+        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming-stop'));
         $cache->clear();
 
         $index = new CacheIndex($cacheKey = 'key');
@@ -120,7 +120,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             ['id' => 3],
             ['id' => 4],
             ['id' => 5],
-        ], flow_context(config())->entryFactory()));
+        ], flow_context(config())->hydrator()));
         $cache->set('key', $index->toRows());
 
         $generator = from_cache($cacheKey)

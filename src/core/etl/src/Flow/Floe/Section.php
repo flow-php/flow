@@ -10,16 +10,11 @@ use Flow\Types\Exception\InvalidTypeException;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
 
-/**
- * One schema section of a Floe file - the frames written between schema
- * changes within a single write session. Appends always start a new section,
- * even when they reuse the previous schema.
- */
 final readonly class Section
 {
     public function __construct(
         public int $offset,
-        public int $schemaId,
+        public int $partitionsId,
         public int $rowCount,
     ) {}
 
@@ -33,21 +28,25 @@ final readonly class Section
         try {
             $data = type_structure([
                 'offset' => type_integer(),
-                'schemaId' => type_integer(),
+                'partitionsId' => type_integer(),
                 'rowCount' => type_integer(),
             ])->assert($data);
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer section is malformed: ' . $e->getMessage(), 0, $e);
         }
 
-        return new self($data['offset'], $data['schemaId'], $data['rowCount']);
+        return new self($data['offset'], $data['partitionsId'], $data['rowCount']);
     }
 
     /**
-     * @return array{offset: int, schemaId: int, rowCount: int}
+     * @return array{offset: int, partitionsId: int, rowCount: int}
      */
     public function normalize(): array
     {
-        return ['offset' => $this->offset, 'schemaId' => $this->schemaId, 'rowCount' => $this->rowCount];
+        return [
+            'offset' => $this->offset,
+            'partitionsId' => $this->partitionsId,
+            'rowCount' => $this->rowCount,
+        ];
     }
 }

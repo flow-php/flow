@@ -29,6 +29,8 @@ final class PostgreSqlLoader implements Loader
 {
     private ?DeleteOptions $deleteOptions = null;
 
+    private ?PostgreSqlEncoder $encoder = null;
+
     private ?InsertOptions $insertOptions = null;
 
     private Operation $operation = Operation::INSERT;
@@ -54,9 +56,9 @@ final class PostgreSqlLoader implements Loader
 
         try {
             match ($this->operation) {
-                Operation::INSERT => $this->insertRows($rows),
-                Operation::UPDATE => $this->updateRows($rows),
-                Operation::DELETE => $this->deleteRows($rows),
+                Operation::INSERT => $this->insertRows($rows, $context),
+                Operation::UPDATE => $this->updateRows($rows, $context),
+                Operation::DELETE => $this->deleteRows($rows, $context),
             };
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -102,37 +104,51 @@ final class PostgreSqlLoader implements Loader
         return $this;
     }
 
-    private function deleteRows(Rows $rows): void
+    private function encoder(): PostgreSqlEncoder
     {
-        if ($this->deleteOptions === null) {
+        return $this->encoder ??= new PostgreSqlEncoder();
+    }
+
+    private function deleteRows(Rows $rows, FlowContext $context): void
+    {
+        $deleteOptions = $this->deleteOptions;
+
+        if ($deleteOptions === null) {
             throw new RuntimeException('DeleteOptions must be set for DELETE operation');
         }
 
         $builder = new DeleteQueryBuilder($this->table, $this->typesMap);
+        $schema = $rows->schema();
 
-        foreach ($rows as $row) {
-            [$query, $params] = $builder->build($row, $this->deleteOptions);
+        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $values) {
+            [$query, $params] = $builder->build($values, $schema, $deleteOptions);
             $this->client->execute($query, $params);
         }
     }
 
-    private function insertRows(Rows $rows): void
+    private function insertRows(Rows $rows, FlowContext $context): void
     {
+        $sorted = $rows->sortEntries();
         $builder = new InsertQueryBuilder($this->table, $this->typesMap);
-        [$query, $params] = $builder->build($rows, $this->insertOptions);
+        $values = $this->encoder()->encode($context->hydrator()->dehydrate($sorted));
+
+        [$query, $params] = $builder->build($values, $sorted->schema(), $this->insertOptions);
         $this->client->execute($query, $params);
     }
 
-    private function updateRows(Rows $rows): void
+    private function updateRows(Rows $rows, FlowContext $context): void
     {
-        if ($this->updateOptions === null) {
+        $updateOptions = $this->updateOptions;
+
+        if ($updateOptions === null) {
             throw new RuntimeException('UpdateOptions must be set for UPDATE operation');
         }
 
         $builder = new UpdateQueryBuilder($this->table, $this->typesMap);
+        $schema = $rows->schema();
 
-        foreach ($rows as $row) {
-            [$query, $params] = $builder->build($row, $this->updateOptions);
+        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $values) {
+            [$query, $params] = $builder->build($values, $schema, $updateOptions);
 
             if ($query !== null) {
                 $this->client->execute($query, $params);

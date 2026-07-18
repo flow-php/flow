@@ -1,0 +1,141 @@
+--TEST--
+NativeRowHydrator cast is serialize-identical to PhpRowHydrator
+--SKIPIF--
+<?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
+--FILE--
+<?php
+require __DIR__ . '/bootstrap.php';
+
+use Flow\ETL\Row\NativeRowHydrator;
+use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Row\RustRowHydratorNative;
+use Flow\ETL\Schema\Metadata;
+
+use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, json_schema, xml_schema};
+use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional, type_positive_integer, type_non_empty_string, type_numeric_string};
+
+enum CastSuit: string
+{
+    case Hearts = 'h';
+}
+
+$shared = new DateTimeImmutable('2025-01-01 12:00:00.123456', new DateTimeZone('Europe/Warsaw'));
+
+$datasets = [
+    'scalars' => [
+        schema(int_schema('id'), float_schema('p'), bool_schema('a'), str_schema('n')),
+        [
+            new RawRowValues(['id' => '42', 'p' => '3.14', 'a' => 'yes', 'n' => 7]),
+            new RawRowValues(['id' => ' 7', 'p' => '1e3', 'a' => 'OFF', 'n' => 1.5]),
+            new RawRowValues(['id' => 'abc', 'p' => '0x1A', 'a' => 'weird', 'n' => true]),
+            new RawRowValues(['id' => '9223372036854775808', 'p' => true, 'a' => 3.5, 'n' => null]),
+            new RawRowValues(['id' => 5, 'p' => 2.5, 'a' => true, 'n' => 'text']),
+        ],
+    ],
+    'nested_families' => [
+        schema(
+            list_schema('counts', type_list(type_positive_integer())),
+            structure_schema('labels', type_structure(['label' => type_non_empty_string()])),
+            structure_schema('codes', type_structure(['code' => type_numeric_string()])),
+        ),
+        [
+            new RawRowValues(['counts' => [5, 7], 'labels' => ['label' => 'x'], 'codes' => ['code' => '42']]),
+            new RawRowValues(['counts' => ['5', 8], 'labels' => ['label' => 9], 'codes' => ['code' => 42]]),
+        ],
+    ],
+    'temporal' => [
+        schema(datetime_schema('at'), datetime_schema('at2'), date_schema('d')),
+        [
+            new RawRowValues(['at' => $shared, 'at2' => $shared, 'd' => $shared]),
+            new RawRowValues(['at' => $shared, 'at2' => '2024-03-01 10:20:30', 'd' => new DateTimeImmutable('2025-03-01')]),
+            new RawRowValues(['at' => 1700000000, 'at2' => 1700000000.5, 'd' => '2024-03-05 08:30:00']),
+        ],
+    ],
+    'uuid_json' => [
+        schema(uuid_schema('u'), json_schema('j')),
+        [
+            new RawRowValues(['u' => '01234567-89ab-4def-8123-456789abcdef', 'j' => '["a","b"]']),
+            new RawRowValues(['u' => new Flow\Types\Value\Uuid('01234567-89ab-4def-8123-456789abcdef'), 'j' => '{"a":1}']),
+            new RawRowValues(['u' => null, 'j' => ['a' => 1]]),
+            new RawRowValues(['u' => '11234567-89ab-4def-8123-456789abcdef', 'j' => Flow\Types\Value\Json::fromArray(['x' => 1])]),
+        ],
+    ],
+    'containers' => [
+        schema(
+            list_schema('l', type_list(type_integer())),
+            map_schema('m', type_map(type_string(), type_integer())),
+            map_schema('mi', type_map(type_integer(), type_string())),
+            list_schema('lo', type_list(type_optional(type_integer()))),
+            structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()], true)),
+        ),
+        [
+            new RawRowValues([
+                'l' => ['1', 2, '3'],
+                'm' => ['a' => '1', 'b' => 2],
+                'mi' => [0 => 'x', 5 => 7],
+                'lo' => ['1', null, 3],
+                'st' => ['a' => '5', 'extra' => 'dropped'],
+            ]),
+            new RawRowValues(['l' => [], 'm' => [], 'mi' => [], 'lo' => [], 'st' => ['a' => 1, 'b' => 'kept']]),
+        ],
+    ],
+    'exotic_fallback' => [
+        schema(enum_schema('s', CastSuit::class), xml_schema('x'), time_schema('t')),
+        [
+            new RawRowValues(['s' => CastSuit::Hearts, 'x' => '<root a="1"><i>v</i></root>', 't' => new DateInterval('PT2H30M5S')]),
+            new RawRowValues(['s' => 'h', 'x' => '<other/>', 't' => 'PT2H']),
+        ],
+    ],
+    'fill_and_metadata' => [
+        schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('flag')),
+        [
+            new RawRowValues(['id' => '1'], ['id' => Metadata::fromArray(['k' => 'v1'])]),
+            new RawRowValues([]),
+            new RawRowValues(['id' => 2, 'name' => null, 'unknown' => 'dropped', 'flag' => 'on']),
+            new RawRowValues(['id' => null], ['id' => Metadata::fromArray(['k' => 'v2'])]),
+        ],
+    ],
+    'empty' => [schema(int_schema('id')), []],
+];
+
+$php = new PhpRowHydrator();
+$native = new NativeRowHydrator();
+
+foreach ($datasets as $label => [$s, $batch]) {
+    $castOk = serialize($php->cast($batch, $s)) === serialize($native->cast($batch, $s));
+    printf("%-16s cast:%s\n", $label, $castOk ? 'yes' : 'NO');
+}
+
+$mutated = schema(int_schema('id'));
+$php->cast([new RawRowValues(['id' => '1'])], $mutated);
+$native->cast([new RawRowValues(['id' => '1'])], $mutated);
+$mutated->add(str_schema('name', nullable: true))->makeNullable();
+$batch = [new RawRowValues(['id' => null, 'name' => 7])];
+printf(
+    "%-16s cast:%s\n",
+    'schema_mutation',
+    serialize($php->cast($batch, $mutated)) === serialize($native->cast($batch, $mutated)) ? 'yes' : 'NO',
+);
+
+$inferBatch = [new RawRowValues(['id' => 1, 'name' => null])];
+printf(
+    "%-16s cast:%s\n",
+    'null_schema',
+    serialize($php->cast($inferBatch)) === serialize($native->cast($inferBatch)) ? 'yes' : 'NO',
+);
+
+printf("native class registered:%s\n", class_exists(RustRowHydratorNative::class, false) ? 'yes' : 'NO');
+?>
+--EXPECT--
+scalars          cast:yes
+nested_families  cast:yes
+temporal         cast:yes
+uuid_json        cast:yes
+containers       cast:yes
+exotic_fallback  cast:yes
+fill_and_metadata cast:yes
+empty            cast:yes
+schema_mutation  cast:yes
+null_schema      cast:yes
+native class registered:yes

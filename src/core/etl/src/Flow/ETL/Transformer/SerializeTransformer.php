@@ -15,7 +15,9 @@ use Throwable;
 
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\Serializer\DSL\serialize_to_string;
 
 final readonly class SerializeTransformer implements Transformer
 {
@@ -34,8 +36,8 @@ final readonly class SerializeTransformer implements Transformer
             $serializer = new Base64Serializer($context->config->serializer());
 
             $result = $rows->map(fn(Row $row) => $this->standalone
-                ? row(str_entry($target->name(), $serializer->serialize($row)))
-                : $row->add(str_entry($target->name(), $serializer->serialize($row))));
+                ? row(str_entry($target->name(), serialize_to_string($serializer, rows($row))))
+                : $row->add(str_entry($target->name(), serialize_to_string($serializer, rows($row)))));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

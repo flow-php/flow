@@ -11,10 +11,9 @@ use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class InsertQueryBuilderTest extends TestCase
 {
@@ -22,7 +21,10 @@ final class InsertQueryBuilderTest extends TestCase
     {
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
-        [$_query, $params] = $builder->build(rows(row(int_entry('id', 1), str_entry('name', 'Alice'))));
+        [$_query, $params] = $builder->build(
+            [['id' => 1, 'name' => 'Alice']],
+            schema(int_schema('id'), str_schema('name')),
+        );
 
         static::assertCount(2, $params);
 
@@ -40,10 +42,10 @@ final class InsertQueryBuilderTest extends TestCase
     {
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
-        [$query, $params] = $builder->build(rows(
-            row(int_entry('id', 1), str_entry('name', 'Alice')),
-            row(int_entry('id', 2), str_entry('name', 'Bob')),
-        ));
+        [$query, $params] = $builder->build(
+            [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+            schema(int_schema('id'), str_schema('name')),
+        );
 
         static::assertStringContainsString('INSERT INTO "users"', $query->toSql());
         static::assertStringContainsString('("id", "name")', $query->toSql());
@@ -55,7 +57,10 @@ final class InsertQueryBuilderTest extends TestCase
     {
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
-        [$_query, $params] = $builder->build(rows(row(int_entry('id', 1), str_entry('name', null))));
+        [$_query, $params] = $builder->build(
+            [['id' => 1, 'name' => null]],
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+        );
 
         static::assertCount(2, $params);
         static::assertNull($params[1]);
@@ -66,7 +71,8 @@ final class InsertQueryBuilderTest extends TestCase
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
         [$query, $_params] = $builder->build(
-            rows(row(int_entry('id', 1), str_entry('name', 'Alice'))),
+            [['id' => 1, 'name' => 'Alice']],
+            schema(int_schema('id'), str_schema('name')),
             InsertOptions::skipConflicts(),
         );
 
@@ -78,7 +84,8 @@ final class InsertQueryBuilderTest extends TestCase
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
         [$query, $_params] = $builder->build(
-            rows(row(int_entry('id', 1), str_entry('name', 'Alice'))),
+            [['id' => 1, 'name' => 'Alice']],
+            schema(int_schema('id'), str_schema('name')),
             InsertOptions::upsertOnColumns(['id']),
         );
 
@@ -92,7 +99,8 @@ final class InsertQueryBuilderTest extends TestCase
         $builder = new InsertQueryBuilder('users', new EntryTypesMap());
 
         [$query, $_params] = $builder->build(
-            rows(row(int_entry('id', 1), str_entry('name', 'Alice'))),
+            [['id' => 1, 'name' => 'Alice']],
+            schema(int_schema('id'), str_schema('name')),
             InsertOptions::upsertOnConstraint('users_pkey'),
         );
 

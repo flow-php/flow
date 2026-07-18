@@ -1,19 +1,18 @@
 --TEST--
-RowsEncoder produces ROW frame bodies byte-identical to Flow\Floe\RowEncoder
+RustFloeEncoderNative produces ROW frame bodies byte-identical to PhpFloeEncoder
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
-use Flow\Floe\FloeWriter;
-use Flow\Floe\RowEncoder;
-use Flow\Floe\SchemaTracker;
-use Flow\Floe\RowsEncoder;
+use Flow\Floe\PhpFloeEncoder;
+use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, null_entry, enum_entry, date_entry};
+use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, null_entry, enum_entry, date_entry, schema_from_json};
 use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float, type_mixed, type_optional};
 
 enum PhptColor: string
@@ -55,51 +54,34 @@ $datasets = [
     'empty' => rows(),
 ];
 
-$rowEncoder = new RowEncoder();
-$tracker = new SchemaTracker();
-
 foreach ($datasets as $label => $data) {
-    $encoder = new RowsEncoder();
-    $plan = null;
-    $identical = true;
-
-    foreach ($data->all() as $row) {
-        if ($plan === null || !$tracker->fits($plan, $row)) {
-            $plan = FloeWriter::growSectionPlan(null, $row);
-            $encoder->schema($plan->schemaBody);
-        }
-
-        if ($encoder->row($row) !== $rowEncoder->encode($plan, $row)) {
-            $identical = false;
-        }
-    }
-
-    printf("%-14s bytes-identical:%s\n", $label, $identical ? 'yes' : 'NO');
+    printf("%-14s frames-identical:%s\n", $label, php_frames($data) === ext_frames($data) ? 'yes' : 'NO');
 }
 
 // A row narrower than the primed plan must emit VALUE_ABSENT (0x03) for the
-// missing column, byte-identical to the pure-PHP RowEncoder.
-$widePlan = FloeWriter::growSectionPlan(null, row(int_entry('a', 1), str_entry('b', 'x'), float_entry('c', 1.5)));
+// missing column, byte-identical to PhpFloeEncoder.
+$wideBody = json_encode(row(int_entry('a', 1), str_entry('b', 'x'), float_entry('c', 1.5))->schema()->normalize(), JSON_THROW_ON_ERROR);
 $narrowRow = row(int_entry('a', 7), float_entry('c', 2.5));
 
-$absentEncoder = new RowsEncoder();
-$absentEncoder->schema($widePlan->schemaBody);
-$absentIdentical = $absentEncoder->row($narrowRow) === $rowEncoder->encode($widePlan, $narrowRow);
-printf("%-14s bytes-identical:%s\n", 'absent', $absentIdentical ? 'yes' : 'NO');
+$hydrator = new PhpRowHydrator();
+$narrowTyped = $hydrator->dehydrate(new Rows($narrowRow));
 
-$badEncoder = new RowsEncoder();
+$php = new PhpFloeEncoder(schema_from_json($wideBody));
+$ext = new RustFloeEncoderNative();
+printf("%-14s frames-identical:%s\n", 'absent', $php->encode($narrowTyped) === $ext->encode($narrowTyped, $wideBody) ? 'yes' : 'NO');
+
 $badRow = row(list_entry('bad', [new SplStack()], type_list(type_mixed())));
-$badEncoder->schema(FloeWriter::growSectionPlan(null, $badRow)->schemaBody);
-expect_exception(fn() => $badEncoder->row($badRow));
+$badExt = new RustFloeEncoderNative();
+expect_exception(fn() => $badExt->encode($hydrator->dehydrate(new Rows($badRow)), json_encode($badRow->schema()->normalize(), JSON_THROW_ON_ERROR)));
 ?>
 --EXPECT--
-scalar         bytes-identical:yes
-from_null      bytes-identical:yes
-datetime       bytes-identical:yes
-containers     bytes-identical:yes
-enum_json_xml  bytes-identical:yes
-heterogeneous  bytes-identical:yes
-partitioned    bytes-identical:yes
-empty          bytes-identical:yes
-absent         bytes-identical:yes
+scalar         frames-identical:yes
+from_null      frames-identical:yes
+datetime       frames-identical:yes
+containers     frames-identical:yes
+enum_json_xml  frames-identical:yes
+heterogeneous  frames-identical:yes
+partitioned    frames-identical:yes
+empty          frames-identical:yes
+absent         frames-identical:yes
 Flow\Floe\Exception\ExtensionException: flow_php does not support values of type "SplStack" in mixed/union context

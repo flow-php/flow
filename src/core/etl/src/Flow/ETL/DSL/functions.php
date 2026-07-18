@@ -37,7 +37,6 @@ use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\BatchByExtractor;
@@ -159,6 +158,7 @@ use Flow\ETL\Retry\RetryStrategy;
 use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
+use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -172,6 +172,7 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TimeEntry;
@@ -181,6 +182,8 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
@@ -198,6 +201,7 @@ use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
@@ -253,6 +257,8 @@ use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
+use Flow\Floe\FloeSerializer;
+use Flow\Serializer\Serializer;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -271,6 +277,7 @@ use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
@@ -284,7 +291,6 @@ use UnitEnum;
 use function array_is_list;
 use function array_key_exists;
 use function array_map;
-use function array_values;
 use function class_exists;
 use function enum_exists;
 use function Flow\Filesystem\DSL\path;
@@ -409,20 +415,13 @@ function files(string|Path $directory): FilesExtractor
     return new FilesExtractor(is_string($directory) ? path($directory) : $directory);
 }
 
-/**
- * @param int<1, max> $serializer_batch_size
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(
     Path|string|null $cache_dir = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-    int $serializer_batch_size = 1000,
+    Serializer $serializer = new FloeSerializer(),
 ): FilesystemCache {
-    return new FilesystemCache(
-        $filesystem,
-        is_string($cache_dir) ? path_real($cache_dir) : $cache_dir,
-        $serializer_batch_size,
-    );
+    return new FilesystemCache($filesystem, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir, $serializer);
 }
 
 /**
@@ -837,21 +836,16 @@ function str_entry(string $name, ?string $value, ?Metadata $metadata = null): En
 }
 
 /**
- * This functions is an alias for creating string entry from null.
- * The main difference between using this function an simply str_entry with second argument null
- * is that this function will also keep a note in the metadata that type might not be final.
- * For example when we need to guess column type from rows because schema was not provided,
- * and given column in the first row is null, it might still change once we get to the second row.
- * That metadata is used to determine if string_entry was created from null or not.
+ * Creates an entry of the null type. Used when a column value is null and its final type is not yet known.
+ * When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals a real type,
+ * at which point the schema merge turns it into that type made nullable.
  *
- * By design flow assumes when guessing column type that null would be a string (the most flexible type).
- *
- * @return Entry<?string>
+ * @return Entry<null>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function null_entry(string $name, ?Metadata $metadata = null): Entry
 {
-    return StringEntry::fromNull($name, $metadata);
+    return new NullEntry($name, $metadata);
 }
 
 /**
@@ -1641,7 +1635,7 @@ function number_format(
  * @return Entry<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function to_entry(string $name, mixed $data, EntryFactory $entryFactory): Entry
+function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new EntryFactory()): Entry
 {
     return $entryFactory->create($name, $data);
 }
@@ -1654,46 +1648,25 @@ function to_entry(string $name, mixed $data, EntryFactory $entryFactory): Entry
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_row(
     array $data,
-    EntryFactory $entryFactory,
+    Hydrator $hydrator = new AdaptiveRowHydrator(),
     array|Partitions $partitions = [],
     ?Schema $schema = null,
 ): Row {
-    $entries = [];
+    $map = [];
 
     // @mago-ignore analysis:mixed-assignment
     foreach ($data as $key => $value) {
         $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-
-        try {
-            $entries[$name] = $entryFactory->create($name, $value, $schema);
-        } catch (SchemaDefinitionNotFoundException $e) {
-            if ($schema === null) {
-                throw $e;
-            }
-        }
+        $map[$name] = $value;
     }
 
     foreach ($partitions as $partition) {
-        if (!array_key_exists($partition->name, $entries)) {
-            try {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
-            } catch (SchemaDefinitionNotFoundException $e) {
-                if ($schema === null) {
-                    throw $e;
-                }
-            }
+        if (!array_key_exists($partition->name, $map)) {
+            $map[$partition->name] = $partition->value;
         }
     }
 
-    if ($schema !== null) {
-        foreach ($schema->definitions() as $definition) {
-            if (!array_key_exists($definition->entry()->name(), $entries)) {
-                $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
-            }
-        }
-    }
-
-    return Row::create(...array_values($entries));
+    return $hydrator->cast([new RawRowValues($map)], $schema)->first();
 }
 
 /**
@@ -1704,7 +1677,7 @@ function array_to_row(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_rows(
     array $data,
-    EntryFactory $entryFactory,
+    Hydrator $hydrator = new AdaptiveRowHydrator(),
     array|Partitions $partitions = [],
     ?Schema $schema = null,
 ): Rows {
@@ -1721,19 +1694,30 @@ function array_to_rows(
         }
     }
 
-    if (!$isRows) {
-        return Rows::partitioned([array_to_row($data, $entryFactory, $partitions, $schema)], $partitions);
-    }
-
-    $rows = [];
+    $rawRows = $isRows ? $data : [$data];
+    $maps = [];
 
     // @mago-ignore analysis:mixed-assignment
-    foreach ($data as $row) {
+    foreach ($rawRows as $row) {
         $row = type_array()->assert($row);
-        $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
+        $map = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($row as $key => $value) {
+            $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
+            $map[$name] = $value;
+        }
+
+        foreach ($partitions as $partition) {
+            if (!array_key_exists($partition->name, $map)) {
+                $map[$partition->name] = $partition->value;
+            }
+        }
+
+        $maps[] = new RawRowValues($map);
     }
 
-    return Rows::partitioned($rows, $partitions);
+    return Rows::partitioned($hydrator->cast($maps, $schema)->all(), $partitions);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]
@@ -2015,13 +1999,9 @@ function enum_schema(string $name, string $type, bool $nullable = false, ?Metada
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function null_schema(string $name, ?Metadata $metadata = null): StringDefinition
+function null_schema(string $name, ?Metadata $metadata = null): NullDefinition
 {
-    return new StringDefinition(
-        $name,
-        true,
-        Metadata::fromArray([Metadata::FROM_NULL => true])->merge($metadata ?? Metadata::empty()),
-    );
+    return new NullDefinition($name, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -2177,6 +2157,7 @@ function definition_from_type(
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
         $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
+        $type instanceof NullType => new NullDefinition($ref, $metadata),
         // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };

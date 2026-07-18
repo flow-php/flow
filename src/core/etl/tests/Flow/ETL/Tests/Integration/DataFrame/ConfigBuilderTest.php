@@ -6,7 +6,10 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
+use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Sort\SortAlgorithms;
+use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -33,7 +36,6 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
-use function iterator_to_array;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -56,28 +58,29 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame('custom-cache', $config->cache->filesystemMount);
     }
 
-    public function test_cache_serializer_mode_reaches_the_default_cache(): void
+    public function test_config_serializer_reaches_the_default_cache(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-serializer-mode');
 
-        $config = config_builder()->cacheSerializerBatchSize(2)->build();
+        $config = config_builder()->serializer($spy = new SpySerializer())->build();
 
-        $config->cache->cache->set('key', rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        ));
+        $config->cache->cache->set(
+            'key',
+            $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))),
+        );
 
-        static::assertCount(2, iterator_to_array($config->cache->cache->read('key')));
+        static::assertEquals($rows, $config->cache->cache->get('key'));
+        static::assertCount(1, $spy->serialized);
+        static::assertCount(1, $spy->unserialized);
 
         $config->cache->cache->clear();
     }
 
-    public function test_custom_cache_wins_over_serializer_mode(): void
+    public function test_custom_cache_is_untouched_by_config_serializer(): void
     {
         $custom = new InMemoryCache();
 
-        $config = config_builder()->cache($custom)->cacheSerializerBatchSize(500)->build();
+        $config = config_builder()->cache($custom)->serializer(new SpySerializer())->build();
 
         static::assertSame($custom, $config->cache->cache);
     }
@@ -141,11 +144,23 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame('file', $config->sort->filesystemProtocol);
     }
 
+    public function test_default_hydrator_is_the_adaptive_hydrator(): void
+    {
+        static::assertInstanceOf(AdaptiveRowHydrator::class, config_builder()->build()->hydrator());
+    }
+
     public function test_default_sorting_algorithm(): void
     {
         $config = config_builder()->build();
 
         static::assertSame(SortAlgorithms::EXTERNAL_SORT, $config->sort->algorithm);
+    }
+
+    public function test_hydrator_override_wins_over_the_default(): void
+    {
+        $hydrator = new PhpRowHydrator();
+
+        static::assertSame($hydrator, config_builder()->hydrator($hydrator)->build()->hydrator());
     }
 
     public function test_external_sort_filesystem_protocol_override(): void

@@ -11,6 +11,7 @@ use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\Functions;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Hydrator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 
@@ -61,6 +62,14 @@ final class FlowContext
     public function functions(): Functions
     {
         return $this->functions;
+    }
+
+    /**
+     * @return Hydrator
+     */
+    public function hydrator(): Hydrator
+    {
+        return $this->config->hydrator();
     }
 
     public function setErrorHandler(ErrorHandler $handler): self

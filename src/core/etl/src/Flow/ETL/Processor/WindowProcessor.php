@@ -111,11 +111,16 @@ final readonly class WindowProcessor implements Processor
 
             $entryName = $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
 
-            $newRow = $row->add($context->entryFactory()->create(
-                $entryName,
-                $value,
-                $this->entry instanceof Definition ? $this->entry : null,
-            ));
+            $newRow = $row->add(
+                $this->entry instanceof Definition
+                    ? $context->entryFactory()->create(
+                        $entryName,
+                        $value,
+                        $this->entry->type(),
+                        $this->entry->metadata(),
+                    )
+                    : $context->entryFactory()->create($entryName, $value),
+            );
 
             $processedRows[] = $newRow;
         }

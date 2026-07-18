@@ -6,7 +6,6 @@ list, map and structure columns round-trip identically to the pure-PHP decoder
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, list_entry, map_entry, structure_entry};
 use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_float, type_string, type_optional, type_mixed};
@@ -39,7 +38,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 assert_rows_identical(php_decode_frames($frames), $actual);
 

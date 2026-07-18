@@ -9,7 +9,6 @@ use Flow\ETL\Cache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
-use Generator;
 
 use function apcu_delete;
 use function apcu_enabled;
@@ -69,16 +68,6 @@ final readonly class ApcuCache implements Cache
     public function has(string $key): bool
     {
         return (bool) apcu_exists($this->namespacedKey($key));
-    }
-
-    /**
-     * @throws KeyNotInCacheException
-     *
-     * @return Generator<int, Rows>
-     */
-    public function read(string $key): Generator
-    {
-        yield $this->get($key);
     }
 
     public function set(string $key, Rows $value): void

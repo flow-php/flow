@@ -12,7 +12,6 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 
 use function current;
-use function Flow\ETL\DSL\to_entry;
 
 final class Collect implements AggregatingFunction
 {
@@ -50,6 +49,6 @@ final class Collect implements AggregatingFunction
             $this->ref->as($this->ref->name() . '_collection');
         }
 
-        return to_entry($this->ref->name(), $this->collection, $entryFactory);
+        return $entryFactory->create($this->ref->name(), $this->collection);
     }
 }

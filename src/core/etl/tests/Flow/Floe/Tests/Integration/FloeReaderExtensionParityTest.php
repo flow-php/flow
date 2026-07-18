@@ -4,21 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Floe\FloeReader;
+use Flow\Filesystem\Partition;
+use Flow\Floe\Codec;
+use Flow\Floe\Codec\NoopCodec;
+use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
-use Flow\Floe\RowEncoder;
-use Flow\Floe\Tests\Context\FloeFileContext;
+use Flow\Floe\NativeFloeEncoder;
+use Flow\Floe\PhpFloeEncoder;
+use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Context\FloeSchemaContext;
+use Flow\Floe\Tests\Context\FloeStreamReaderContext;
+use Flow\Floe\Tests\Double\PrefixingCodecStub;
 use Flow\Floe\Tests\Mother\RowsMother;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function extension_loaded;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\str_entry;
 use function iterator_to_array;
 use function pack;
@@ -45,8 +53,8 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         parent::setUp();
 
-        if (!extension_loaded('flow_php')) {
-            self::markTestSkipped('flow_php extension is not loaded.');
+        if (!NativeFloeEncoder::isSupported()) {
+            self::markTestSkipped('flow_php extension with the RawRowValues pipeline is not loaded.');
         }
     }
 
@@ -61,16 +69,8 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $writer->close();
 
         static::assertEquals(
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: false))
-                    ->read($path)
-                    ->rows(),
-            ),
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->rows(),
-            ),
+            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->rows()),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->rows()),
         );
     }
 
@@ -91,16 +91,8 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $writer->close();
 
         static::assertEquals(
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: false))
-                    ->read($path)
-                    ->rows(1000, 2, 3),
-            ),
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->rows(1000, 2, 3),
-            ),
+            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->rows(1000, 2, 3)),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->rows(1000, 2, 3)),
         );
     }
 
@@ -115,16 +107,8 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $writer->close();
 
         static::assertEquals(
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: false))
-                    ->read($path)
-                    ->recover(),
-            ),
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->recover(),
-            ),
+            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover()),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
         );
     }
 
@@ -132,23 +116,15 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('parity-recover-torn.floe');
 
-        FloeFileContext::writeWithoutFooter(
+        FloeStreamReaderContext::writeWithoutFooter(
             $this->fs(),
             $path,
             rows(row(int_entry('id', 1)), row(int_entry('id', 2), str_entry('email', 'x')), row(int_entry('id', 3))),
         );
 
         static::assertEquals(
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: false))
-                    ->read($path)
-                    ->recover(),
-            ),
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->recover(),
-            ),
+            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover()),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
         );
     }
 
@@ -156,32 +132,31 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('parity-recover-corrupt.floe');
 
-        $plan = FloeWriter::growSectionPlan(null, row(int_entry('id', 1)));
-        $rowEncoder = new RowEncoder();
+        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
+        $encoder = new PhpFloeEncoder(schema_from_json($schemaBody));
+        $hydrator = new PhpRowHydrator();
 
         $stream = $this->fs()->writeTo($path);
         $stream->append(
             Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $plan->schemaBody)
-                . Format::frame(Format::FRAME_ROW, $rowEncoder->encode($plan, row(int_entry('id', 1))))
-                . Format::frame(Format::FRAME_ROW, $rowEncoder->encode($plan, row(int_entry('id', 2))))
+                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
+                . Format::frame(
+                    Format::FRAME_ROW,
+                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 1)))))[0],
+                )
+                . Format::frame(
+                    Format::FRAME_ROW,
+                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 2)))))[0],
+                )
                 . Format::frame(Format::FRAME_ROW, "\xEE"),
         );
         $stream->close();
 
-        $pure = iterator_to_array(
-            (new FloeReader($this->fs(), useExtension: false))
-                ->read($path)
-                ->recover(),
-        );
+        $pure = iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover());
 
         static::assertEquals(
             $pure,
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->recover(),
-            ),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
         );
         static::assertCount(1, $pure);
         static::assertCount(2, $pure[0]->all());
@@ -191,63 +166,140 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('parity-recover-late-partitions.floe');
 
-        $plan = FloeWriter::growSectionPlan(null, row(int_entry('id', 1)));
-        $rowEncoder = new RowEncoder();
+        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
+        $encoder = new PhpFloeEncoder(schema_from_json($schemaBody));
+        $hydrator = new PhpRowHydrator();
         $partitionsBody = pack('V', 1) . pack('V', 1) . 'g' . pack('V', 1) . 'a';
 
         $stream = $this->fs()->writeTo($path);
         $stream->append(
             Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $plan->schemaBody)
-                . Format::frame(Format::FRAME_ROW, $rowEncoder->encode($plan, row(int_entry('id', 1))))
+                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
+                . Format::frame(
+                    Format::FRAME_ROW,
+                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 1)))))[0],
+                )
                 . Format::frame(Format::FRAME_PARTITIONS, $partitionsBody)
-                . Format::frame(Format::FRAME_ROW, $rowEncoder->encode($plan, row(int_entry('id', 2)))),
+                . Format::frame(
+                    Format::FRAME_ROW,
+                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 2)))))[0],
+                ),
         );
         $stream->close();
 
-        $pure = iterator_to_array(
-            (new FloeReader($this->fs(), useExtension: false))
-                ->read($path)
-                ->recover(),
-        );
+        $pure = iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover());
 
         static::assertEquals(
             $pure,
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->recover(),
-            ),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
         );
-        static::assertCount(1, $pure);
-        static::assertCount(2, $pure[0]->all());
+        // the partition change splits the rows into two batches so no batch mixes combinations
+        static::assertCount(2, $pure);
+        static::assertCount(1, $pure[0]->all());
+        static::assertSame([], $pure[0]->partitions()->toArray());
+        static::assertCount(1, $pure[1]->all());
+        static::assertEquals([new Partition('g', 'a')], $pure[1]->partitions()->toArray());
     }
 
-    public function test_extension_and_pure_php_pad_evolved_sections_identically(): void
+    /**
+     * @return array<string, array{Codec}>
+     */
+    public static function codec_matrix(): array
     {
+        return [
+            'noop codec' => [new NoopCodec()],
+            'transforming codec' => [new PrefixingCodecStub()],
+        ];
+    }
+
+    #[DataProvider('rows_datasets')]
+    public function test_extension_and_pure_php_read_identical_rows_with_transforming_codec(Rows $rows): void
+    {
+        $codec = new PrefixingCodecStub();
+        $path = $this->cacheDir->suffix('read-codec.floe');
+
+        $writer = new FloeWriter($this->fs(), $codec);
+        $writer->create($path);
+        $writer->write($rows);
+        $writer->close();
+
+        static::assertEquals(
+            iterator_to_array(FloeEngineContext::phpReader($this->fs(), $codec)->read($path)->rows()),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs(), $codec)->read($path)->rows()),
+        );
+    }
+
+    /**
+     * Full write->read parity across the engine switch for both codecs and for
+     * plain, partitioned and schema-evolving files: a pure-PHP round-trip and a
+     * native round-trip must yield identical rows in every cell.
+     */
+    #[DataProvider('codec_matrix')]
+    public function test_round_trip_matrix_matches_across_engines(Codec $codec): void
+    {
+        $cases = [
+            'plain' => static function (FloeWriter $writer): void {
+                $writer->write(RowsMother::heterogeneous());
+            },
+            'partitioned' => static function (FloeWriter $writer): void {
+                $writer->write(RowsMother::partitioned());
+            },
+            'multi-write' => static function (FloeWriter $writer): void {
+                $writer->write(rows(row(int_entry('id', 1), str_entry('email', 'a'))));
+                $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
+            },
+        ];
+
+        foreach ($cases as $name => $write) {
+            $purePath = $this->cacheDir->suffix("matrix-{$name}-pure.floe");
+            $extPath = $this->cacheDir->suffix("matrix-{$name}-ext.floe");
+
+            foreach ([[$purePath, false], [$extPath, true]] as [$path, $native]) {
+                $writer = $native
+                    ? FloeEngineContext::nativeWriter($this->fs(), $codec)
+                    : FloeEngineContext::phpWriter($this->fs(), $codec);
+                $writer->create($path);
+                $write($writer);
+                $writer->close();
+            }
+
+            static::assertSame(
+                $this->fs()->readFrom($purePath)->content(),
+                $this->fs()->readFrom($extPath)->content(),
+                "byte-identity failed for {$name}",
+            );
+
+            static::assertEquals(
+                iterator_to_array(FloeEngineContext::phpReader($this->fs(), $codec)->read($purePath)->rows()),
+                iterator_to_array(FloeEngineContext::nativeReader($this->fs(), $codec)->read($extPath)->rows()),
+                "row parity failed for {$name}",
+            );
+        }
+    }
+
+    public function test_extension_and_pure_php_pad_merged_sections_identically(): void
+    {
+        // a merged file re-encodes to one union schema; base rows lack email and must pad
+        // identically across engines on read
         $path = $this->cacheDir->suffix('parity-evolved.floe');
+        $base = $this->cacheDir->suffix('parity-base.floe');
+        $evolved = $this->cacheDir->suffix('parity-new.floe');
 
         $writer = new FloeWriter($this->fs());
-        $writer->create($path);
+        $writer->create($base);
         $writer->write(rows(row(int_entry('id', 1))));
         $writer->close();
 
         $writer = new FloeWriter($this->fs());
-        $writer->append($path);
+        $writer->create($evolved);
         $writer->write(rows(row(int_entry('id', 2), str_entry('email', null))));
         $writer->close();
 
+        (new FloeMerger($this->fs()))->merge([$base, $evolved], $path);
+
         static::assertEquals(
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: false))
-                    ->read($path)
-                    ->rows(),
-            ),
-            iterator_to_array(
-                (new FloeReader($this->fs(), useExtension: true))
-                    ->read($path)
-                    ->rows(),
-            ),
+            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->rows()),
+            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->rows()),
         );
     }
 }

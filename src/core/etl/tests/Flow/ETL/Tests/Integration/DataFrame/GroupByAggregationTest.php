@@ -16,10 +16,14 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\first;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\uuid_schema;
 use function iterator_to_array;
 
 final class GroupByAggregationTest extends FlowIntegrationTestCase
@@ -234,9 +238,14 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
             'discount' => $order['discount'],
         ], $raw);
 
+        // one schema per spill file: declare the source schema so a null discount carries a
+        // float (nullable) definition instead of NullType, otherwise an all-null-first spill
+        // batch would fix a bucket's schema to null and reject later float values
+        $schema = schema(uuid_schema('seller_id'), string_schema('email'), float_schema('discount', true));
+
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
-                ->read(from_array($data))
+                ->read(from_array($data, $schema))
                 ->groupBy(ref('email'))
                 ->aggregate(count(ref('email')), sum(ref('discount')))
                 ->sortBy(ref('email')->asc())

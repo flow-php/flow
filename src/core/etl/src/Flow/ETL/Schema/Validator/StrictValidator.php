@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Validator;
 
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\SchemaValidator;
-
-use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_string;
 
 /**
  * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
@@ -31,11 +28,7 @@ final class StrictValidator implements SchemaValidator
                 continue;
             }
 
-            if (
-                $expectedDefinition->isNullable()
-                && $givenDefinition->metadata()->has(Metadata::FROM_NULL)
-                && type_equals($givenDefinition->type(), type_string())
-            ) {
+            if ($givenDefinition instanceof NullDefinition && $expectedDefinition->isNullable()) {
                 continue;
             }
 

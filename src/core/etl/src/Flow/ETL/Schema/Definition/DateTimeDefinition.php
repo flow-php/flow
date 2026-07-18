@@ -115,30 +115,8 @@ final class DateTimeDefinition implements Definition
             ));
         }
 
-        $thisFromNull = $this->metadata->has(Metadata::FROM_NULL);
-        $defFromNull = $definition->metadata()->has(Metadata::FROM_NULL);
-
-        if ($thisFromNull && $defFromNull) {
+        if ($definition instanceof NullDefinition) {
             return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
-        }
-
-        if ($thisFromNull) {
-            return $definition
-                ->makeNullable()
-                ->setMetadata(
-                    $definition
-                        ->metadata()
-                        ->remove(Metadata::FROM_NULL)
-                        ->merge($this->metadata->remove(Metadata::FROM_NULL)),
-                );
-        }
-
-        if ($defFromNull) {
-            return $this->makeNullable()->setMetadata(
-                $this->metadata
-                    ->remove(Metadata::FROM_NULL)
-                    ->merge($definition->metadata()->remove(Metadata::FROM_NULL)),
-            );
         }
 
         if (

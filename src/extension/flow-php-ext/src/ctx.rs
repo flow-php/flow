@@ -7,8 +7,8 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZvalDyn;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::{
-    _zend_property_info, zend_call_known_function, zend_hash_index_update, zend_hash_str_find,
-    zend_hash_str_update, zend_objects_clone_members, zend_ulong,
+    _zend_property_info, zend_call_known_function, zend_hash_find, zend_hash_index_update,
+    zend_hash_str_update, zend_hash_update, zend_ulong,
 };
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
@@ -61,6 +61,54 @@ pub fn ht_insert(ht: &mut ZendHashTable, key: &[u8], mut value: Zval) {
     std::mem::forget(value);
 }
 
+/// A PHP array key resolved once per name: numeric-string names use index
+/// slots (PHP array-key coercion), everything else keys by an existing
+/// zend_string so the engine reuses its cached hash instead of allocating and
+/// rehashing per operation (what the `str`-based variants do).
+pub enum HtKey<'a> {
+    Index(i64),
+    Str(&'a ZendStr),
+}
+
+impl<'a> HtKey<'a> {
+    pub fn from_zend_str(name: &'a ZendStr) -> Self {
+        match array_key_index(name.as_bytes()) {
+            Some(index) => Self::Index(index),
+            None => Self::Str(name),
+        }
+    }
+}
+
+pub fn ht_find_key<'a>(ht: &'a ZendHashTable, key: &HtKey<'_>) -> Option<&'a Zval> {
+    match key {
+        HtKey::Index(index) => ht.get_index(*index),
+        HtKey::Str(name) => unsafe {
+            zend_hash_find(ht, std::ptr::from_ref(*name).cast_mut()).as_ref()
+        },
+    }
+}
+
+/// [`ht_insert`] for a pre-resolved key; ownership of `value` moves into the
+/// table.
+pub fn ht_insert_key(ht: &mut ZendHashTable, key: &HtKey<'_>, mut value: Zval) {
+    unsafe {
+        match key {
+            HtKey::Index(index) => {
+                zend_hash_index_update(ht, *index as u64, std::ptr::from_mut(&mut value));
+            }
+            HtKey::Str(name) => {
+                zend_hash_update(
+                    ht,
+                    std::ptr::from_ref(*name).cast_mut(),
+                    std::ptr::from_mut(&mut value),
+                );
+            }
+        }
+    }
+
+    std::mem::forget(value);
+}
+
 pub fn ht_insert_index(ht: &mut ZendHashTable, index: i64, mut value: Zval) {
     unsafe {
         zend_hash_index_update(ht, index as u64, std::ptr::from_mut(&mut value));
@@ -104,26 +152,6 @@ pub fn zval_long(value: i64) -> Zval {
     let mut zv = Zval::new();
     zv.set_long(value);
     zv
-}
-
-pub fn zval_null() -> Zval {
-    let mut zv = Zval::new();
-    zv.set_null();
-    zv
-}
-
-pub fn ht_contains(ht: &ZendHashTable, key: &[u8]) -> bool {
-    match array_key_index(key) {
-        Some(index) => ht.get_index(index).is_some(),
-        None => unsafe {
-            !zend_hash_str_find(
-                std::ptr::from_ref(ht).cast_mut(),
-                key.as_ptr().cast(),
-                key.len(),
-            )
-            .is_null()
-        },
-    }
 }
 
 pub fn find_class(name: &str) -> Result<&'static ClassEntry, PhpException> {
@@ -224,28 +252,6 @@ pub fn read_property(obj: &ZendObject, name: &str) -> Result<Zval, PhpException>
     Ok(value.shallow_clone())
 }
 
-/// Clone matching PHP `clone` (`zend_objects_clone_members`, including
-/// `__clone`). Only valid for plain userland classes (no `create_object` state).
-pub fn clone_object(src: &Zval, context: &str) -> Result<ZBox<ZendObject>, PhpException> {
-    let src_obj = src
-        .object()
-        .ok_or_else(|| ext_exception(format!("flow_php expected {context} to be an object")))?;
-
-    let ce = unsafe { src_obj.ce.as_ref() }
-        .ok_or_else(|| ext_exception(format!("flow_php failed to resolve {context} class")))?;
-
-    let mut cloned = ZendObject::new(ce);
-
-    unsafe {
-        zend_objects_clone_members(
-            std::ptr::from_mut(&mut *cloned),
-            std::ptr::from_ref(src_obj).cast_mut(),
-        );
-    }
-
-    Ok(cloned)
-}
-
 pub fn construct_object(
     ce: &'static ClassEntry,
     args: Vec<&dyn IntoZvalDyn>,
@@ -258,6 +264,45 @@ pub fn construct_object(
     ensure_no_pending_exception(&format!("construct {context}"))?;
 
     Ok(obj)
+}
+
+/// Constructs a fresh object and calls its `__construct` with already-owned
+/// zvals (what `construct_object` can't express - it takes `IntoZvalDyn`). Used
+/// to call the canonical `Row`/`Rows` constructors from row-object graphs.
+pub fn construct_with_zvals(
+    ce: &'static ClassEntry,
+    args: &mut [Zval],
+    context: &str,
+) -> Result<ZBox<ZendObject>, PhpException> {
+    let mut obj = ZendObject::new(ce);
+    let constructor = ce_method_ref(ce, "__construct")?;
+
+    call_handle(
+        constructor,
+        Some(&mut obj),
+        args,
+        &format!("construct {context}"),
+    )?;
+
+    Ok(obj)
+}
+
+/// Runs an object's engine `clone` handler, mirroring PHP `clone $object`: a
+/// shallow copy that shares the readonly sub-objects (ref/type) by refcount, the
+/// exact semantics `(clone $definition)->setMetadata(...)` relies on.
+pub fn clone_object(object: &ZendObject) -> Result<ZBox<ZendObject>, PhpException> {
+    let handler = unsafe { object.handlers.as_ref() }
+        .and_then(|handlers| handlers.clone_obj)
+        .ok_or_else(|| ext_exception("flow_php failed to resolve a clone handler"))?;
+
+    let cloned = unsafe { handler(std::ptr::from_ref(object).cast_mut()) };
+    ensure_no_pending_exception("clone a definition")?;
+
+    if cloned.is_null() {
+        return Err(ext_exception("flow_php failed to clone a definition"));
+    }
+
+    Ok(unsafe { ZBox::from_raw(cloned) })
 }
 
 fn method_handle(class: &str, method: &str) -> Result<Function, PhpException> {
@@ -326,6 +371,44 @@ pub fn call_handle_on(
     Ok(retval)
 }
 
+/// [`call_handle`] that surfaces a PHP exception thrown by the callee as the
+/// ORIGINAL exception object instead of wrapping it in an `ExtensionException` -
+/// the cast paths either propagate it verbatim (`Type::cast` fallback) or
+/// discard it and bail (mirroring the `catch (Throwable)` in the PHP casts).
+pub fn call_handle_transparent(
+    func: &Function,
+    object: Option<&ZendObject>,
+    args: &mut [Zval],
+) -> Result<Zval, PhpException> {
+    let mut retval = Zval::new();
+
+    let (object_ptr, called_scope) = match object {
+        Some(obj) => (std::ptr::from_ref(obj).cast_mut(), obj.ce),
+        None => (std::ptr::null_mut(), unsafe { func.common.scope }),
+    };
+
+    unsafe {
+        zend_call_known_function(
+            std::ptr::from_ref(func).cast_mut(),
+            object_ptr,
+            called_scope,
+            std::ptr::from_mut(&mut retval),
+            args.len() as u32,
+            args.as_mut_ptr(),
+            std::ptr::null_mut(),
+        );
+    }
+
+    if let Some(mut exception) = ExecutorGlobals::take_exception() {
+        let mut zv = Zval::new();
+        zv.set_object(&mut exception);
+
+        return Err(PhpException::default(String::new()).with_object(zv));
+    }
+
+    Ok(retval)
+}
+
 /// Calls a pre-resolved function handle. Argument zvals stay caller-owned
 /// (the engine copies what it keeps), so cached zvals pass as shallow clones.
 pub fn call_handle(
@@ -374,14 +457,6 @@ pub struct IntervalFns {
 }
 
 pub struct Ctx {
-    pub entries_ce: &'static ClassEntry,
-    pub row_ce: &'static ClassEntry,
-    pub rows_ce: &'static ClassEntry,
-    pub partitions_ce: &'static ClassEntry,
-    pub entries_entries_slot: u32,
-    pub row_entries_slot: u32,
-    pub rows_rows_slot: u32,
-    pub rows_partitions_slot: u32,
     uuid_ce: Option<(&'static ClassEntry, u32)>,
     json_ce: Option<(&'static ClassEntry, u32, u32)>,
     interval: Option<IntervalFns>,
@@ -395,16 +470,20 @@ pub struct Ctx {
     fn_constant: Option<Function>,
     value_decoder_statics: HashMap<&'static str, &'static Function>,
     value_encoder_statics: HashMap<&'static str, &'static Function>,
-    schema_decoder: Option<ZBox<ZendObject>>,
     fn_json_encode: Option<Function>,
-    encoder_plan_slots: Option<EncoderPlanSlots>,
-    encoder_column_slots: Option<EncoderColumnSlots>,
+    fn_json_decode: Option<Function>,
+    fn_json_validate: Option<Function>,
+    metadata_from_array: Option<&'static Function>,
     metadata_map_slot: Option<u32>,
+    typed_row_values_slots: Option<(u32, u32)>,
     timezone_get_name: Option<&'static Function>,
     datetime_encode: HashMap<usize, DateTimeEncFns>,
+    datetime_cast: HashMap<usize, DateTimeCastFns>,
     save_html: HashMap<usize, &'static Function>,
     format_u: Option<Zval>,
-    frame_segment: Option<(&'static ClassEntry, &'static Function)>,
+    format_his: Option<Zval>,
+    str_true: Option<Zval>,
+    str_false: Option<Zval>,
 }
 
 pub struct DateTimeEncFns {
@@ -413,33 +492,14 @@ pub struct DateTimeEncFns {
     pub get_timezone: &'static Function,
 }
 
-/// Property-table slot offsets on `Flow\Floe\EncoderPlan`.
-pub struct EncoderPlanSlots {
-    pub schema_body: u32,
-    pub columns: u32,
-}
-
-/// Property-table slot offsets on `Flow\Floe\EncoderColumn`.
-pub struct EncoderColumnSlots {
-    pub name: u32,
-    pub type_fingerprint: u32,
+pub struct DateTimeCastFns {
+    pub set_time: &'static Function,
+    pub format: &'static Function,
 }
 
 impl Ctx {
     pub fn new() -> Result<Self, PhpException> {
-        let entries_ce = find_class("Flow\\ETL\\Row\\Entries")?;
-        let row_ce = find_class("Flow\\ETL\\Row")?;
-        let rows_ce = find_class("Flow\\ETL\\Rows")?;
-
         Ok(Self {
-            entries_ce,
-            row_ce,
-            rows_ce,
-            partitions_ce: find_class("Flow\\Filesystem\\Partitions")?,
-            entries_entries_slot: property_offset(entries_ce, "entries")?,
-            row_entries_slot: property_offset(row_ce, "entries")?,
-            rows_rows_slot: property_offset(rows_ce, "rows")?,
-            rows_partitions_slot: property_offset(rows_ce, "partitions")?,
             uuid_ce: None,
             json_ce: None,
             interval: None,
@@ -453,29 +513,32 @@ impl Ctx {
             fn_constant: None,
             value_decoder_statics: HashMap::new(),
             value_encoder_statics: HashMap::new(),
-            schema_decoder: None,
             fn_json_encode: None,
-            encoder_plan_slots: None,
-            encoder_column_slots: None,
+            fn_json_decode: None,
+            fn_json_validate: None,
+            metadata_from_array: None,
             metadata_map_slot: None,
+            typed_row_values_slots: None,
             timezone_get_name: None,
             datetime_encode: HashMap::new(),
+            datetime_cast: HashMap::new(),
             save_html: HashMap::new(),
             format_u: None,
-            frame_segment: None,
+            format_his: None,
+            str_true: None,
+            str_false: None,
         })
     }
 
-    /// Cached `Flow\Floe\FrameSegment` class entry + constructor handle.
-    pub fn frame_segment(
-        &mut self,
-    ) -> Result<(&'static ClassEntry, &'static Function), PhpException> {
-        if self.frame_segment.is_none() {
-            let ce = find_class("Flow\\Floe\\FrameSegment")?;
-            self.frame_segment = Some((ce, ce_method_ref(ce, "__construct")?));
+    /// Property-table slot offsets `(values, metadata)` on `Flow\ETL\Row\TypedRowValues`.
+    pub fn typed_row_values_slots(&mut self) -> Result<(u32, u32), PhpException> {
+        if self.typed_row_values_slots.is_none() {
+            let ce = find_class("Flow\\ETL\\Row\\TypedRowValues")?;
+            self.typed_row_values_slots =
+                Some((property_offset(ce, "values")?, property_offset(ce, "metadata")?));
         }
 
-        Ok(self.frame_segment.expect("just initialized"))
+        Ok(self.typed_row_values_slots.expect("just initialized"))
     }
 
     pub fn metadata_map_slot(&mut self) -> Result<u32, PhpException> {
@@ -545,6 +608,50 @@ impl Ctx {
         }
 
         Ok(self.format_u.as_ref().expect("just initialized"))
+    }
+
+    /// Cached `"H:i:s"` format-string zval for the date midnight check.
+    pub fn format_his(&mut self) -> Result<&Zval, PhpException> {
+        if self.format_his.is_none() {
+            self.format_his = Some(zval_str(b"H:i:s"));
+        }
+
+        Ok(self.format_his.as_ref().expect("just initialized"))
+    }
+
+    /// Cached `"true"`/`"false"` string zvals for bool-to-string casts.
+    pub fn bool_str(&mut self, value: bool) -> Result<&Zval, PhpException> {
+        let slot = if value {
+            &mut self.str_true
+        } else {
+            &mut self.str_false
+        };
+
+        if slot.is_none() {
+            *slot = Some(zval_str(if value { b"true" } else { b"false" }));
+        }
+
+        Ok(slot.as_ref().expect("just initialized"))
+    }
+
+    /// Per-datetime-class cast handles (setTime/format), subclass-safe.
+    pub fn datetime_cast_fns(
+        &mut self,
+        ce: *const ClassEntry,
+    ) -> Result<&DateTimeCastFns, PhpException> {
+        let key = ce as usize;
+
+        if let std::collections::hash_map::Entry::Vacant(entry) = self.datetime_cast.entry(key) {
+            let ce_ref = unsafe { ce.as_ref() }
+                .ok_or_else(|| ext_exception("flow_php failed to resolve a datetime class"))?;
+
+            entry.insert(DateTimeCastFns {
+                set_time: ce_method_ref(ce_ref, "setTime")?,
+                format: ce_method_ref(ce_ref, "format")?,
+            });
+        }
+
+        Ok(self.datetime_cast.get(&key).expect("just inserted"))
     }
 
     /// Cached handles to `ValueEncoder`'s public static markup serializers.
@@ -741,37 +848,6 @@ impl Ctx {
         Ok(self.timezones.get(name).expect("just inserted"))
     }
 
-    /// The canonical PHP schema decoder, constructed lazily - schema frames are
-    /// the cold path and reusing `SchemaDecoder` prevents semantic drift.
-    pub fn schema_decoder(&mut self) -> Result<&ZBox<ZendObject>, PhpException> {
-        if self.schema_decoder.is_none() {
-            let mut value_decoder = construct_object(
-                find_class("Flow\\Floe\\ValueDecoder")?,
-                vec![],
-                "Flow\\Floe\\ValueDecoder",
-            )?;
-            // Instantiators declares no constructor; defaults apply on init.
-            let mut instantiators =
-                ZendObject::new(find_class("Flow\\ETL\\Row\\Entry\\Instantiators")?);
-
-            let mut value_decoder_zv = Zval::new();
-            value_decoder_zv.set_object(&mut value_decoder);
-            let mut instantiators_zv = Zval::new();
-            instantiators_zv.set_object(&mut instantiators);
-
-            self.schema_decoder = Some(construct_object(
-                find_class("Flow\\Floe\\SchemaDecoder")?,
-                vec![
-                    &value_decoder_zv as &dyn IntoZvalDyn,
-                    &instantiators_zv as &dyn IntoZvalDyn,
-                ],
-                "Flow\\Floe\\SchemaDecoder",
-            )?);
-        }
-
-        Ok(self.schema_decoder.as_ref().expect("just initialized"))
-    }
-
     pub fn json_encode(&mut self) -> Result<&Function, PhpException> {
         if self.fn_json_encode.is_none() {
             self.fn_json_encode = Some(function_handle("json_encode")?);
@@ -780,30 +856,30 @@ impl Ctx {
         Ok(self.fn_json_encode.as_ref().expect("just initialized"))
     }
 
-    pub fn encoder_plan_slots(&mut self) -> Result<&EncoderPlanSlots, PhpException> {
-        if self.encoder_plan_slots.is_none() {
-            let ce = find_class("Flow\\Floe\\EncoderPlan")?;
-            self.encoder_plan_slots = Some(EncoderPlanSlots {
-                schema_body: property_offset(ce, "schemaBody")?,
-                columns: property_offset(ce, "columns")?,
-            });
+    pub fn json_decode(&mut self) -> Result<&Function, PhpException> {
+        if self.fn_json_decode.is_none() {
+            self.fn_json_decode = Some(function_handle("json_decode")?);
         }
 
-        Ok(self.encoder_plan_slots.as_ref().expect("just initialized"))
+        Ok(self.fn_json_decode.as_ref().expect("just initialized"))
     }
 
-    pub fn encoder_column_slots(&mut self) -> Result<&EncoderColumnSlots, PhpException> {
-        if self.encoder_column_slots.is_none() {
-            let ce = find_class("Flow\\Floe\\EncoderColumn")?;
-            self.encoder_column_slots = Some(EncoderColumnSlots {
-                name: property_offset(ce, "name")?,
-                type_fingerprint: property_offset(ce, "typeFingerprint")?,
-            });
+    pub fn json_validate(&mut self) -> Result<&Function, PhpException> {
+        if self.fn_json_validate.is_none() {
+            self.fn_json_validate = Some(function_handle("json_validate")?);
         }
 
-        Ok(self
-            .encoder_column_slots
-            .as_ref()
-            .expect("just initialized"))
+        Ok(self.fn_json_validate.as_ref().expect("just initialized"))
+    }
+
+    /// Static `Flow\ETL\Schema\Metadata::fromArray` handle - builds a Metadata
+    /// value object from a decoded per-value metadata map (the rare path).
+    pub fn metadata_from_array(&mut self) -> Result<&'static Function, PhpException> {
+        if self.metadata_from_array.is_none() {
+            self.metadata_from_array =
+                Some(method_handle_ref("Flow\\ETL\\Schema\\Metadata", "fromArray")?);
+        }
+
+        Ok(self.metadata_from_array.expect("just initialized"))
     }
 }

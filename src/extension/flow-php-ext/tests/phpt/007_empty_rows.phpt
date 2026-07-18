@@ -6,12 +6,11 @@ empty Rows produce no frame bodies and decode to an empty row list
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\rows;
 
 $frames = php_frames(rows());
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 var_dump($frames === []);
 var_dump(count($actual));

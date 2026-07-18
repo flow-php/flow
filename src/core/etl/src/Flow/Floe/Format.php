@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
+use JsonException;
 
 use function chr;
+use function json_decode;
+use function json_encode;
 use function ord;
 use function pack;
 use function sprintf;
@@ -14,6 +18,8 @@ use function str_starts_with;
 use function strlen;
 use function substr;
 use function unpack;
+
+use const JSON_THROW_ON_ERROR;
 
 final class Format
 {
@@ -39,17 +45,21 @@ final class Format
 
     public const int VALUE_PRESENT = 0x01;
 
-    public const int VALUE_NULL_FROM_NULL = 0x02;
+    public const int VALUE_NULL_WITH_META = 0x02;
 
     public const int VALUE_ABSENT = 0x03;
+
+    public const int VALUE_PRESENT_WITH_META = 0x04;
 
     public const string VALUE_NULL_BYTE = "\x00";
 
     public const string VALUE_PRESENT_BYTE = "\x01";
 
-    public const string VALUE_NULL_FROM_NULL_BYTE = "\x02";
+    public const string VALUE_NULL_WITH_META_BYTE = "\x02";
 
     public const string VALUE_ABSENT_BYTE = "\x03";
+
+    public const string VALUE_PRESENT_WITH_META_BYTE = "\x04";
 
     public const int DATETIME_IMMUTABLE = 0x00;
 
@@ -80,6 +90,41 @@ final class Format
     public static function frame(int $type, string $body): string
     {
         return chr($type) . pack('V', strlen($body)) . $body;
+    }
+
+    /**
+     * @throws FloeException
+     */
+    public static function metadataBytes(Metadata $metadata): string
+    {
+        try {
+            $json = json_encode($metadata->normalize(), JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new FloeException('Floe failed to encode per-value metadata: ' . $e->getMessage(), 0, $e);
+        }
+
+        return pack('V', strlen($json)) . $json;
+    }
+
+    /**
+     * @throws FloeException
+     */
+    public static function readMetadata(string $body, int &$position): Metadata
+    {
+        $length = unpack('V', substr($body, $position, 4))[1];
+        $position += 4;
+
+        $json = substr($body, $position, $length);
+        $position += $length;
+
+        try {
+            /** @var array<string, array<bool|float|int|string>|bool|float|int|string> $map */
+            $map = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new FloeException('Floe failed to decode per-value metadata: ' . $e->getMessage(), 0, $e);
+        }
+
+        return Metadata::fromArray($map);
     }
 
     public static function header(int $flags): string

@@ -7,16 +7,20 @@ namespace Flow\ETL\Schema\Validator;
 use Flow\ETL\Schema;
 use Flow\ETL\SchemaValidator;
 
-use function Flow\Types\DSL\type_equals;
-
 /**
- * Rules of evolving schema matching:
- * - if schemas are the same, return true
- * - if given schema has less fields than expected schema, return false
- * - if given schema is making a nullable field non-nullable, return false
- * - if given schema is making a non-nullable field nullable, return true
- * - if given schema is changing the type of a field, return false
- * - if given schema is adding a field, return true
+ * Compatibility for combining or evolving datasets - the same invariant a merge,
+ * an append and a per-batch validation all need: combining `expected` and `given`
+ * must never leave a row holding null in a column that is non-nullable somewhere.
+ *
+ * - a shared column must keep a compatible type and must not widen to nullable
+ *   where the expected side is non-nullable (its rows would then read as null),
+ * - a column in `expected` but absent from `given` is allowed only when nullable
+ *   (given's rows read it as null),
+ * - a column in `given` but absent from `expected` is allowed only when nullable
+ *   (expected's rows read it as null).
+ *
+ * A required (non-nullable) column that is dropped, added, or type-changed is
+ * therefore incompatible.
  */
 final class EvolvingValidator implements SchemaValidator
 {
@@ -24,27 +28,30 @@ final class EvolvingValidator implements SchemaValidator
     {
         $missingDefinitions = [];
         $mismatchedDefinitions = [];
+        $unexpectedDefinitions = [];
 
         foreach ($expected->definitions() as $expectedDefinition) {
             $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
             if ($givenDefinition === null) {
-                $missingDefinitions[] = $expectedDefinition;
+                if (!$expectedDefinition->isNullable()) {
+                    $missingDefinitions[] = $expectedDefinition;
+                }
 
                 continue;
             }
 
-            if (!$givenDefinition->isNullable() && $expectedDefinition->isNullable()) {
-                $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
-
-                continue;
-            }
-
-            if (!type_equals($givenDefinition->type(), $expectedDefinition->type())) {
+            if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 $mismatchedDefinitions[] = new MismatchedDefinition($expectedDefinition, $givenDefinition);
             }
         }
 
-        return new ValidationContext($missingDefinitions, $mismatchedDefinitions);
+        foreach ($given->definitions() as $givenDefinition) {
+            if ($expected->findDefinition($givenDefinition->entry()) === null && !$givenDefinition->isNullable()) {
+                $unexpectedDefinitions[] = $givenDefinition;
+            }
+        }
+
+        return new ValidationContext($missingDefinitions, $mismatchedDefinitions, $unexpectedDefinitions);
     }
 }

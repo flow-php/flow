@@ -7,7 +7,6 @@ namespace Flow\ETL\Cache\Implementation;
 use Flow\ETL\Cache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Rows;
-use Generator;
 
 use function array_key_exists;
 
@@ -49,16 +48,6 @@ final class InMemoryCache implements Cache
     public function has(string $key): bool
     {
         return array_key_exists($key, $this->cache);
-    }
-
-    /**
-     * @throws KeyNotInCacheException
-     *
-     * @return Generator<int, Rows>
-     */
-    public function read(string $key): Generator
-    {
-        yield $this->get($key);
     }
 
     public function set(string $key, Rows $value): void

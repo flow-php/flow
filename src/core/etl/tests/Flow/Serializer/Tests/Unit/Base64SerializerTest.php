@@ -6,8 +6,8 @@ namespace Flow\Serializer\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\Serializer\Base64Serializer;
+use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +20,8 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -47,10 +49,16 @@ final class Base64SerializerTest extends TestCase
 
         $serializer = new Base64Serializer(new NativePHPSerializer());
 
-        $serialized = $serializer->serialize($rows);
+        $serialized = serialize_to_string($serializer, $rows);
 
-        $unserialized = $serializer->unserialize($serialized, [Rows::class]);
+        static::assertEquals($rows, unserialize_from_string($serializer, $serialized));
+    }
 
-        static::assertEquals($rows, $unserialized);
+    public function test_unserialize_of_invalid_base64_throws(): void
+    {
+        $this->expectException(SerializationException::class);
+        $this->expectExceptionMessage('failed to decode string');
+
+        unserialize_from_string(new Base64Serializer(new NativePHPSerializer()), '@@@ not base64 @@@');
     }
 }

@@ -138,7 +138,7 @@ final class ExcelLoaderTest extends FlowTestCase
         );
     }
 
-    public function test_round_trip_with_custom_date_formats(): void
+    public function test_round_trip_with_custom_datetime_and_time_formats(): void
     {
         $outputPath = __DIR__ . '/var/output_custom_formats.xlsx';
         $date = new DateTimeImmutable('2024-06-15');
@@ -152,19 +152,14 @@ final class ExcelLoaderTest extends FlowTestCase
                 time_entry('time_val', $time),
             ))))
             ->saveMode(overwrite())
-            ->write(
-                to_excel($outputPath)
-                    ->withDateFormat('d/m/Y')
-                    ->withDateTimeFormat('d/m/Y H:i')
-                    ->withTimeFormat('%H:%I'),
-            )
+            ->write(to_excel($outputPath)->withDateTimeFormat('d/m/Y H:i')->withTimeFormat('%H:%I'))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
 
         static::assertEquals(
             [
-                ['date_val' => '15/06/2024', 'datetime_val' => '15/06/2024 14:30', 'time_val' => '14:30'],
+                ['date_val' => '2024-06-15', 'datetime_val' => '15/06/2024 14:30', 'time_val' => '14:30'],
             ],
             $rows,
         );

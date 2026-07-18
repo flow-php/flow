@@ -13,13 +13,17 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use Generator;
 use XMLReader;
 
 use function array_pop;
-use function Flow\ETL\DSL\array_to_rows;
+use function count;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function implode;
 
 /**
@@ -63,13 +67,35 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
+        $encoder = new XMLEncoder();
+
+        $baseSchema = schema(xml_schema('node'));
+
+        if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
+            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
+        }
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $partitions = $stream->path()->partitions();
+
+            $schema = $baseSchema;
+
+            foreach ($partitions as $partition) {
+                if ($schema->findDefinition($partition->name) === null) {
+                    $schema = $schema->add(str_schema($partition->name));
+                }
+            }
+
             $xmlReader = new XMLReader();
             $xmlReader->open($stream->path()->path());
 
             $previousDepth = 0;
             $currentPathBreadCrumbs = [];
+
+            $rawNodes = [];
 
             while ($xmlReader->read()) {
                 if ($xmlReader->nodeType === XMLReader::ELEMENT) {
@@ -92,33 +118,72 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                     if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
                         $dom = new DOMDocument('1.0', '');
                         $node = $xmlReader->expand($dom);
+                        $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
 
-                        if ($shouldPutInputIntoRows) {
-                            $rowData = [
-                                'node' => $node,
-                                '_input_file_uri' => $stream->path()->uri(),
-                            ];
-                        } else {
-                            $rowData = ['node' => $node];
-                        }
+                        if (count($rawNodes) >= $batchSize) {
+                            $batch = [];
 
-                        $signal = yield array_to_rows(
-                            $rowData,
-                            $context->entryFactory(),
-                            $stream->path()->partitions(),
-                        );
+                            foreach ($encoder->decode($rawNodes) as $rowValues) {
+                                $rowData = $rowValues->values;
 
-                        $this->incrementReturnedRows();
+                                if ($streamUri !== null) {
+                                    $rowData['_input_file_uri'] = $streamUri;
+                                }
 
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $xmlReader->close();
-                            $context->streams()->closeStreams($this->path);
+                                foreach ($partitions as $partition) {
+                                    $rowData[$partition->name] = $partition->value;
+                                }
 
-                            return;
+                                $batch[] = new RawRowValues($rowData);
+                            }
+
+                            $rawNodes = [];
+
+                            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                                $this->incrementReturnedRows();
+
+                                if ($signal === Signal::STOP || $this->reachedLimit()) {
+                                    $xmlReader->close();
+                                    $context->streams()->closeStreams($this->path);
+
+                                    return;
+                                }
+                            }
                         }
                     }
 
                     $previousDepth = $xmlReader->depth;
+                }
+            }
+
+            $batch = [];
+
+            foreach ($encoder->decode($rawNodes) as $rowValues) {
+                $rowData = $rowValues->values;
+
+                if ($streamUri !== null) {
+                    $rowData['_input_file_uri'] = $streamUri;
+                }
+
+                foreach ($partitions as $partition) {
+                    $rowData[$partition->name] = $partition->value;
+                }
+
+                $batch[] = new RawRowValues($rowData);
+            }
+
+            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                $this->incrementReturnedRows();
+
+                if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $xmlReader->close();
+                    $context->streams()->closeStreams($this->path);
+
+                    return;
                 }
             }
 

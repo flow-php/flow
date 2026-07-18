@@ -9,7 +9,6 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -25,6 +24,7 @@ use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
@@ -77,7 +77,7 @@ final class RowsMother
             str_entry('string_binary', "line\nbreak\x00null\xFFbyte"),
             str_entry('string_unicode', 'zażółć gęślą jaźń 🚀'),
             str_entry('string_null', null),
-            StringEntry::fromNull('string_from_null'),
+            null_entry('string_from_null'),
             datetime_entry(
                 'datetime_immutable',
                 new DateTimeImmutable('2025-06-15 12:30:45.123456', new DateTimeZone('Europe/Warsaw')),

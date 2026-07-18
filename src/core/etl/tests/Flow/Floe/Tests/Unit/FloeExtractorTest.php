@@ -6,16 +6,21 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Rows;
+use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Floe\FloeWriter;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
@@ -124,6 +129,32 @@ final class FloeExtractorTest extends TestCase
         }
 
         static::assertSame([1, 2], $ids);
+    }
+
+    public function test_extract_yields_per_batch_partitions_on_a_multi_combination_file(): void
+    {
+        $context = flow_context(config());
+        $path = path('memory://extract-multi-combination.floe');
+
+        $writer = new FloeWriter($context->filesystem($path));
+        $writer->create($path);
+        $writer->write(Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
+            'country',
+            'PL',
+        )]));
+        $writer->write(Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
+            'country',
+            'US',
+        )]));
+        $writer->close();
+
+        $combos = [];
+
+        foreach (from_floe($path)->extract($context) as $batch) {
+            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
+        }
+
+        static::assertSame([['PL'], ['US']], $combos);
     }
 
     public function test_extract_skips_whole_files_with_offset(): void

@@ -12,22 +12,14 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Generator;
 
-use function array_combine;
-use function array_keys;
-use function array_map;
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
-use function is_numeric;
-use function is_scalar;
-use function is_string;
-use function str_getcsv;
-use function str_pad;
-use function trim;
+use function Flow\ETL\DSL\str_schema;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -65,6 +57,17 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
+        $baseSchema = $this->schema;
+
+        if (
+            $baseSchema !== null
+            && $shouldPutInputIntoRows
+            && $baseSchema->findDefinition('_input_file_uri') === null
+        ) {
+            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
+        }
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $option = csv_detect_separator($stream);
@@ -72,44 +75,93 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $separator = $this->separator ?? $option->separator;
             $enclosure = $this->enclosure ?? $option->enclosure;
             $escape = $this->escape ?? $option->escape;
-            $uri = $stream->path()->uri();
+            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $headers = [];
-            $headersCount = 0;
-            $streamUri = $shouldPutInputIntoRows ? $uri : null;
+            $schema = $baseSchema;
 
-            $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM);
-            $rowNormalizer = new CSVRowNormalizer($this->emptyToNull);
+            if ($schema !== null) {
+                foreach ($partitions as $partition) {
+                    if ($schema->findDefinition($partition->name) === null) {
+                        $schema = $schema->add(str_schema($partition->name));
+                    }
+                }
+            }
 
-            foreach ($csvLineReader->readLines($stream) as $csvLine) {
-                $rowData = array_values(array_map(
-                    static fn(mixed $field): ?string => is_string($field) ? $field : null,
-                    str_getcsv($csvLine, $separator, $enclosure, $escape),
-                ));
-                $rowDataCount = count($rowData);
+            $lines = (new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM))->readLines($stream);
 
-                if ([] === $headers) {
-                    if ($this->withHeader) {
-                        $headers = $this->mapHeaders($rowData);
-                        $headersCount = $rowDataCount;
+            if (!$lines->valid()) {
+                $stream->close();
 
-                        continue;
+                continue;
+            }
+
+            $encoder = new CSVEncoder(
+                withHeader: $this->withHeader,
+                separator: $separator,
+                enclosure: $enclosure,
+                escape: $escape,
+                emptyToNull: $this->emptyToNull,
+            );
+
+            $rawLines = [];
+
+            while (($line = $lines->current()) !== null) {
+                $rawLines[] = $line;
+
+                if (count($rawLines) >= $batchSize) {
+                    $batch = [];
+
+                    foreach ($encoder->decode($rawLines) as $rowValues) {
+                        $row = $rowValues->values;
+
+                        if ($streamUri !== null) {
+                            $row['_input_file_uri'] = $streamUri;
+                        }
+
+                        foreach ($partitions as $partition) {
+                            $row[$partition->name] = $partition->value;
+                        }
+
+                        $batch[] = new RawRowValues($row);
                     }
 
-                    $headers = $this->generateAutoHeaders($rowDataCount);
-                    $headersCount = $rowDataCount;
+                    $rawLines = [];
+
+                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                        $this->incrementReturnedRows();
+
+                        if ($signal === Signal::STOP || $this->reachedLimit()) {
+                            $context->streams()->closeStreams($this->path);
+
+                            return;
+                        }
+                    }
                 }
 
-                $rowData = $rowNormalizer->normalize($rowData, $headersCount);
+                $lines->next();
+            }
 
-                $row = array_combine($headers, $rowData);
+            $batch = [];
+
+            foreach ($encoder->decode($rawLines) as $rowValues) {
+                $row = $rowValues->values;
 
                 if ($streamUri !== null) {
                     $row['_input_file_uri'] = $streamUri;
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $this->schema);
+                foreach ($partitions as $partition) {
+                    $row[$partition->name] = $partition->value;
+                }
+
+                $batch[] = new RawRowValues($row);
+            }
+
+            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
 
                 $this->incrementReturnedRows();
 
@@ -175,9 +227,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         return $this;
     }
 
-    /**
-     * @param Schema $schema
-     */
     public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
@@ -190,42 +239,5 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $this->separator = $separator;
 
         return $this;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function generateAutoHeaders(int $count): array
-    {
-        $headers = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $headers[$i] = 'e' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @param array<array-key, mixed> $headers
-     *
-     * @return array<int, string>
-     */
-    private function mapHeaders(array $headers): array
-    {
-        $headers = array_map(static fn(mixed $header): string => trim(match (true) {
-            is_string($header) => $header,
-            is_numeric($header) => (string) $header,
-            $header === null => '',
-            default => is_scalar($header) ? (string) $header : '',
-        }), $headers);
-
-        return array_values(array_map(
-            static fn(string $header, int|string $index): string => $header !== ''
-                ? $header
-                : 'e' . str_pad((string) $index, 2, '0', STR_PAD_LEFT),
-            $headers,
-            array_keys($headers),
-        ));
     }
 }

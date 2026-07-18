@@ -10,6 +10,7 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Loader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function usort;
 
 final class JoinTest extends FlowIntegrationTestCase
 {
@@ -56,6 +58,39 @@ final class JoinTest extends FlowIntegrationTestCase
                 ['id' => 3, 'joined_name' => 'France', 'country' => 'FR', 'joined_code' => 'FR'],
             ],
             $rows->toArray(),
+        );
+    }
+
+    public function test_join_inner_with_on_disk_buckets_cache(): void
+    {
+        $rows = df(config_builder()->joinBucketsCount(4))
+            ->from(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL')),
+                row(int_entry('id', 2), str_entry('country', 'US')),
+                row(int_entry('id', 3), str_entry('country', 'FR')),
+                row(int_entry('id', 4), str_entry('country', 'UK')),
+            )))
+            ->join(
+                data_frame()->process(rows(
+                    row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                    row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                    row(str_entry('code', 'FR'), str_entry('name', 'France')),
+                )),
+                join_on(['country' => 'code'], 'joined_'),
+                Join::inner,
+            )
+            ->fetch();
+
+        $joined = $rows->toArray();
+        usort($joined, static fn(array $left, array $right): int => (int) $left['id'] <=> (int) $right['id']);
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 2, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
+                ['id' => 3, 'country' => 'FR', 'joined_code' => 'FR', 'joined_name' => 'France'],
+            ],
+            $joined,
         );
     }
 

@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
+use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Serializer\Exception\SerializationException;
+
 /**
  * @internal
  */
 interface Serializer
 {
     /**
-     * @throw RuntimeException
+     * @throws SerializationException
      */
-    public function serialize(object $serializable): string;
+    public function serialize(Rows $rows, DestinationStream $destination): void;
 
     /**
-     * @template T of object
-     *
-     * @param non-empty-array<class-string<T>> $classes
-     *
-     * @throw RuntimeException
-     *
-     * @return T
+     * @throws SerializationException
      */
-    public function unserialize(string $serialized, array $classes): object;
+    public function unserialize(SourceStream $source): Rows;
 }

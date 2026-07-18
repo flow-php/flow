@@ -10,15 +10,14 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 use Google\Service\Sheets;
 
-use function array_combine;
-use function array_slice;
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\str_schema;
 
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 {
@@ -81,10 +80,20 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         }
 
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
 
-        /** @var array<string> $headers */
-        $headers = [];
-        $headersCount = 0;
+        $schema = $this->schema;
+
+        if ($schema !== null && $shouldPutInputIntoRows) {
+            if ($schema->findDefinition('_spread_sheet_id') === null) {
+                $schema = $schema->add(str_schema('_spread_sheet_id'));
+            }
+
+            if ($schema->findDefinition('_sheet_name') === null) {
+                $schema = $schema->add(str_schema('_sheet_name'));
+            }
+        }
 
         /** @var Sheets\Resource\SpreadsheetsValues $valuesResource */
         $valuesResource = $this->service->spreadsheets_values;
@@ -93,60 +102,63 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             'ranges' => $ranges,
         ]));
 
+        $encoder = new GoogleSheetEncoder(withHeader: $this->withHeader, dropExtraColumns: $this->dropExtraColumns);
+        $rawRows = [];
+
         foreach ($response->getValueRanges() as $valueRange) {
             // @mago-ignore analysis:redundant-null-coalesce
             foreach ($valueRange->getValues() ?? [] as $rowData) {
-                $rowDataCount = count($rowData);
+                $rawRows[] = $rowData;
 
-                if ($this->withHeader) {
-                    if ([] === $headers) {
-                        if ([] === $rowData) {
-                            continue;
+                if (count($rawRows) >= $batchSize) {
+                    $batch = [];
+
+                    foreach ($encoder->decode($rawRows) as $rowValues) {
+                        $row = $rowValues->values;
+
+                        if ($shouldPutInputIntoRows) {
+                            $row['_spread_sheet_id'] = $this->spreadsheetId;
+                            $row['_sheet_name'] = $this->columnRange->sheetName;
                         }
 
-                        /** @var array<string> $headers */
-                        $headers = $rowData;
-
-                        $headersCount = $rowDataCount;
-
-                        continue;
-                    }
-                } elseif (0 === $headersCount) {
-                    $headersCount = $rowDataCount;
-                }
-
-                for ($i = $rowDataCount; $i < $headersCount; $i++) {
-                    $rowData[$i] = null;
-                }
-
-                if ($rowDataCount > $headersCount) {
-                    if (!$this->dropExtraColumns) {
-                        throw InvalidArgumentException::because(
-                            'Row has more columns (%d) than headers (%d)',
-                            $rowDataCount,
-                            $headersCount,
-                        );
+                        $batch[] = new RawRowValues($row);
                     }
 
-                    $rowData = array_slice($rowData, 0, $headersCount);
+                    $rawRows = [];
+
+                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                        $signal = yield new Rows($hydratedRow);
+
+                        $this->incrementReturnedRows();
+
+                        if ($signal === Signal::STOP || $this->reachedLimit()) {
+                            return;
+                        }
+                    }
                 }
+            }
+        }
 
-                if ($this->withHeader) {
-                    $rowData = array_combine($headers, $rowData);
-                }
+        $batch = [];
 
-                if ($shouldPutInputIntoRows) {
-                    $rowData['_spread_sheet_id'] = $this->spreadsheetId;
-                    $rowData['_sheet_name'] = $this->columnRange->sheetName;
-                }
+        foreach ($encoder->decode($rawRows) as $rowValues) {
+            $row = $rowValues->values;
 
-                $signal = yield array_to_rows($rowData, $context->entryFactory(), schema: $this->schema);
+            if ($shouldPutInputIntoRows) {
+                $row['_spread_sheet_id'] = $this->spreadsheetId;
+                $row['_sheet_name'] = $this->columnRange->sheetName;
+            }
 
-                $this->incrementReturnedRows();
+            $batch[] = new RawRowValues($row);
+        }
 
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
-                }
+        foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+            $signal = yield new Rows($hydratedRow);
+
+            $this->incrementReturnedRows();
+
+            if ($signal === Signal::STOP || $this->reachedLimit()) {
+                return;
             }
         }
     }

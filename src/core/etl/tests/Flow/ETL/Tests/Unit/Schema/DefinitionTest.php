@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\struct_entry;
@@ -85,32 +87,12 @@ final class DefinitionTest extends FlowTestCase
         static::assertEquals(datetime_schema('col'), datetime_schema('col')->merge(datetime_schema('col')));
     }
 
-    public function test_merging_anything_and_assumed_string(): void
+    public function test_merging_anything_and_null(): void
     {
-        static::assertEquals(
-            integer_schema('id', true),
-            integer_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
-                Metadata::FROM_NULL => true,
-            ]))),
-        );
-        static::assertEquals(
-            float_schema('id', true),
-            float_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
-                Metadata::FROM_NULL => true,
-            ]))),
-        );
-        static::assertEquals(
-            bool_schema('id', true),
-            bool_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
-                Metadata::FROM_NULL => true,
-            ]))),
-        );
-        static::assertEquals(
-            datetime_schema('id', true),
-            datetime_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
-                Metadata::FROM_NULL => true,
-            ]))),
-        );
+        static::assertEquals(integer_schema('id', true), integer_schema('id', false)->merge(null_schema('id')));
+        static::assertEquals(float_schema('id', true), float_schema('id', false)->merge(null_schema('id')));
+        static::assertEquals(bool_schema('id', true), bool_schema('id', false)->merge(null_schema('id')));
+        static::assertEquals(datetime_schema('id', true), datetime_schema('id', false)->merge(null_schema('id')));
     }
 
     public function test_merging_anything_and_string(): void
@@ -165,14 +147,12 @@ final class DefinitionTest extends FlowTestCase
         static::assertEquals(datetime_schema('datetime'), datetime_schema('datetime')->merge(time_schema('datetime')));
     }
 
-    public function test_merging_two_definitions_created_from_null(): void
+    public function test_merging_two_null_definitions(): void
     {
-        static::assertTrue(
-            string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true]))
-                ->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
-                ->metadata()
-                ->has(Metadata::FROM_NULL),
-        );
+        $merged = null_schema('id')->merge(null_schema('id'));
+
+        static::assertInstanceOf(NullDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
     }
 
     public function test_merging_two_different_lists(): void

@@ -6,7 +6,6 @@ array-key semantics: numeric column names coerce, non-canonical keys stay string
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, map_entry, list_entry};
 use function Flow\Types\DSL\{type_map, type_list, type_string, type_mixed};
@@ -30,7 +29,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 assert_rows_identical(php_decode_frames($frames), $actual);
 

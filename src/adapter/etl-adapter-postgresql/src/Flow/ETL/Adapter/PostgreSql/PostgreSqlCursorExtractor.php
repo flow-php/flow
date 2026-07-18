@@ -15,7 +15,6 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
 
 use function bin2hex;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\close_cursor;
 use function Flow\PostgreSql\DSL\declare_cursor;
 use function Flow\PostgreSql\DSL\fetch;
@@ -54,6 +53,7 @@ final class PostgreSqlCursorExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
+        $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
@@ -77,25 +77,27 @@ final class PostgreSqlCursorExtractor implements Extractor
                     break;
                 }
 
+                $rawBatch = [];
+
                 foreach ($cursor->iterate() as $row) {
-                    $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+                    $rawBatch[] = $row;
+                }
+
+                $cursor->free();
+
+                foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                    $signal = yield new Rows($hydratedRow);
 
                     $totalFetched++;
 
                     if ($signal === Signal::STOP) {
-                        $cursor->free();
-
                         return;
                     }
 
                     if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                        $cursor->free();
-
                         return;
                     }
                 }
-
-                $cursor->free();
 
                 if ($rowCount < $this->fetchSize) {
                     break;

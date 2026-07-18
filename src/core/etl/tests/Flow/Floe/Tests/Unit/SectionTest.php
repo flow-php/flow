@@ -14,28 +14,28 @@ final class SectionTest extends TestCase
     {
         $this->expectException(FloeException::class);
 
-        Section::fromArray(['offset' => 6, 'schemaId' => 0]);
+        Section::fromArray(['offset' => 6, 'partitionsId' => 0]);
     }
 
     public function test_from_array_with_non_integer_field_throws(): void
     {
         $this->expectException(FloeException::class);
 
-        Section::fromArray(['offset' => '6', 'schemaId' => 0, 'rowCount' => 1]);
+        Section::fromArray(['offset' => '6', 'partitionsId' => 0, 'rowCount' => 1]);
     }
 
-    public function test_from_array_with_non_integer_schema_id_throws(): void
+    public function test_from_array_with_non_integer_partitions_id_throws(): void
     {
         $this->expectException(FloeException::class);
 
-        Section::fromArray(['offset' => 6, 'schemaId' => '0', 'rowCount' => 1]);
+        Section::fromArray(['offset' => 6, 'partitionsId' => '0', 'rowCount' => 1]);
     }
 
     public function test_normalize_round_trips(): void
     {
-        $section = new Section(6, 0, 100);
+        $section = new Section(6, 2, 100);
 
         static::assertEquals($section, Section::fromArray($section->normalize()));
-        static::assertSame(['offset' => 6, 'schemaId' => 0, 'rowCount' => 100], $section->normalize());
+        static::assertSame(['offset' => 6, 'partitionsId' => 2, 'rowCount' => 100], $section->normalize());
     }
 }

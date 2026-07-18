@@ -10,6 +10,7 @@ use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
+use Flow\Serializer\Serializer;
 
 use function Flow\Filesystem\DSL\path_real;
 use function getenv;
@@ -36,13 +37,9 @@ final class CacheConfigBuilder
 
     private string $filesystemMount = 'file';
 
-    /**
-     * @var int<1, max>
-     */
-    private int $serializerBatchSize = 1000;
-
     public function build(
         FilesystemTable $fstab,
+        Serializer $serializer,
         ?TelemetryConfig $telemetryConfig = null,
         string $dataframeName = 'flow_dataframe',
     ): CacheConfig {
@@ -52,7 +49,7 @@ final class CacheConfigBuilder
         $cache = $this->cache ?? new FilesystemCache(
             $fstab->for($this->filesystemMount),
             cacheDir: $cachePath,
-            serializerBatchSize: $this->serializerBatchSize,
+            serializer: $serializer,
         );
 
         if ($telemetryConfig !== null && $telemetryConfig->options->traceCache) {
@@ -128,19 +125,6 @@ final class CacheConfigBuilder
     public function filesystemMount(string $mount): self
     {
         $this->filesystemMount = $mount;
-
-        return $this;
-    }
-
-    /**
-     * Serializer batch size for the default FilesystemCache; ignored when a custom Cache was
-     * injected via cache().
-     *
-     * @param int<1, max> $serializerBatchSize
-     */
-    public function serializerBatchSize(int $serializerBatchSize): self
-    {
-        $this->serializerBatchSize = $serializerBatchSize;
 
         return $this;
     }

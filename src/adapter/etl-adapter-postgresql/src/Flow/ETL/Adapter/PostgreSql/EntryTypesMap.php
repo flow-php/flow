@@ -5,24 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\HTMLElementEntry;
-use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\TimeEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
-use Flow\ETL\Row\Entry\XMLElementEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
@@ -64,32 +46,32 @@ use function Flow\Types\DSL\type_xml;
 final readonly class EntryTypesMap
 {
     /**
-     * Default mapping of Entry classes to PostgreSQL types.
+     * Default mapping of Flow type classes to PostgreSQL value types.
      *
-     * @var array<class-string<Entry<mixed>>, ValueType>
+     * @var array<class-string<Type<mixed>>, ValueType>
      */
     public const array DEFAULT_TYPES = [
-        StringEntry::class => ValueType::TEXT,
-        IntegerEntry::class => ValueType::INT8,
-        FloatEntry::class => ValueType::FLOAT8,
-        BooleanEntry::class => ValueType::BOOL,
-        DateEntry::class => ValueType::DATE,
-        DateTimeEntry::class => ValueType::TIMESTAMP,
-        TimeEntry::class => ValueType::TIME,
-        UuidEntry::class => ValueType::UUID,
-        JsonEntry::class => ValueType::JSONB,
-        XMLEntry::class => ValueType::XML,
-        XMLElementEntry::class => ValueType::XML,
-        HTMLEntry::class => ValueType::TEXT,
-        HTMLElementEntry::class => ValueType::TEXT,
-        EnumEntry::class => ValueType::TEXT,
-        ListEntry::class => ValueType::JSONB,
-        MapEntry::class => ValueType::JSONB,
-        StructureEntry::class => ValueType::JSONB,
+        StringType::class => ValueType::TEXT,
+        IntegerType::class => ValueType::INT8,
+        FloatType::class => ValueType::FLOAT8,
+        BooleanType::class => ValueType::BOOL,
+        DateType::class => ValueType::DATE,
+        DateTimeType::class => ValueType::TIMESTAMP,
+        TimeType::class => ValueType::TIME,
+        UuidType::class => ValueType::UUID,
+        JsonType::class => ValueType::JSONB,
+        XMLType::class => ValueType::XML,
+        LogicalXMLElementType::class => ValueType::XML,
+        HTMLType::class => ValueType::TEXT,
+        HTMLElementType::class => ValueType::TEXT,
+        EnumType::class => ValueType::TEXT,
+        ListType::class => ValueType::JSONB,
+        MapType::class => ValueType::JSONB,
+        StructureType::class => ValueType::JSONB,
     ];
 
     /**
-     * @var array<class-string<Entry<mixed>>, ValueType>
+     * @var array<class-string<Type<mixed>>, ValueType>
      */
     private array $typeMap;
 
@@ -99,7 +81,7 @@ final readonly class EntryTypesMap
     private array $columnTypeMap;
 
     /**
-     * @param array<class-string<Entry<mixed>>, ValueType> $overrides Entry class to ValueType mappings that override defaults
+     * @param array<class-string<Type<mixed>>, ValueType> $overrides Flow type class to ValueType mappings that override defaults
      * @param array<class-string<Type<mixed>>, ColumnType> $columnTypeOverrides Flow Type class to ColumnType mappings that override defaults
      */
     public function __construct(array $overrides = [], array $columnTypeOverrides = [])
@@ -109,25 +91,23 @@ final readonly class EntryTypesMap
     }
 
     /**
-     * Maps an Entry to a TypedValue suitable for PostgreSQL queries.
+     * Maps a column value + Flow type to a TypedValue suitable for PostgreSQL queries.
      *
-     * @param Entry<mixed> $entry
+     * @param Type<mixed> $type
      *
-     * @throws TypeMappingException when entry type is not in the map
+     * @throws TypeMappingException when the Flow type is not in the map
      */
-    public function mapEntry(Entry $entry): ?TypedValue
+    public function map(string $column, Type $type, mixed $value): ?TypedValue
     {
-        if ($entry->value() === null) {
+        if ($value === null) {
             return null;
         }
 
-        $entryClass = $entry::class;
-
-        if (!array_key_exists($entryClass, $this->typeMap)) {
-            throw TypeMappingException::ambiguousEntryType($entryClass);
+        if (!array_key_exists($type::class, $this->typeMap)) {
+            throw TypeMappingException::unmappedColumn($column, $type::class);
         }
 
-        return new TypedValue($entry->value(), $this->typeMap[$entryClass]);
+        return new TypedValue($value, $this->typeMap[$type::class]);
     }
 
     /**

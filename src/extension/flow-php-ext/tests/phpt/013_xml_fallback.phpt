@@ -6,7 +6,6 @@ xml and xml_element columns decode through the ValueDecoder static fallback
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, xml_entry, xml_element_entry};
 
@@ -25,7 +24,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 assert_rows_identical(php_decode_frames($frames), $actual);
 

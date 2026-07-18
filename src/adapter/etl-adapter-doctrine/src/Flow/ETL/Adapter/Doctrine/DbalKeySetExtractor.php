@@ -19,7 +19,6 @@ use Generator;
 
 use function array_key_exists;
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function sha1;
 
 /**
@@ -65,6 +64,7 @@ final class DbalKeySetExtractor implements Extractor
     {
         $totalFetched = 0;
         $lastRow = null;
+        $encoder = new DbalEncoder();
 
         while (true) {
             $qb = clone $this->queryBuilder;
@@ -129,6 +129,7 @@ final class DbalKeySetExtractor implements Extractor
             $stmt = $this->connection->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes());
 
             $hasRows = false;
+            $rawBatch = [];
 
             while ($row = $stmt->fetchAssociative()) {
                 $hasRows = true;
@@ -142,7 +143,11 @@ final class DbalKeySetExtractor implements Extractor
                     }
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+                $rawBatch[] = $row;
+            }
+
+            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                $signal = yield new Rows($hydratedRow);
 
                 $totalFetched++;
 
