@@ -574,7 +574,7 @@ final class SchemaConverter
 
         if ($metadata->has(JsonSchemaMetadata::ANY->value)) {
             $property = [];
-        } elseif ($metadata->has(Metadata::FROM_NULL)) {
+        } elseif ($definition->type() instanceof NullType) {
             $property = ['type' => 'null'];
         } else {
             $property = $metadata->has(JsonSchemaMetadata::PREFIX_ITEMS->value)

@@ -10,6 +10,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Grouping\GroupingConfigBuilder;
+use Flow\ETL\Config\Join\JoinConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
@@ -19,7 +20,8 @@ use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
@@ -38,13 +40,25 @@ final class ConfigBuilder
 
     public readonly GroupingConfigBuilder $grouping;
 
+    public readonly JoinConfigBuilder $join;
+
     public readonly SortConfigBuilder $sort;
 
     private ?Analyze $analyze;
 
     private ?ClockInterface $clock;
 
+    /**
+     * @var int<1, max>
+     */
+    private int $extractorBatchSize;
+
     private ?FilesystemTable $fstab;
+
+    /**
+     * @var null|Hydrator
+     */
+    private ?Hydrator $hydrator;
 
     private ?string $id;
 
@@ -68,11 +82,14 @@ final class ConfigBuilder
         $this->name = null;
         $this->serializer = null;
         $this->fstab = null;
+        $this->hydrator = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->clock = null;
+        $this->extractorBatchSize = 1000;
         $this->cache = new CacheConfigBuilder();
         $this->grouping = new GroupingConfigBuilder();
+        $this->join = new JoinConfigBuilder();
         $this->sort = new SortConfigBuilder();
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
@@ -89,17 +106,20 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function build(EntryFactory $entryFactory = new EntryFactory()): Config
+    public function build(): Config
     {
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
-        $this->serializer ??= new FloeSerializer();
         $this->optimizer ??= new Optimizer(new LimitOptimization(), new BatchSizeOptimization(batchSize: 1000));
+        $this->hydrator ??= new AdaptiveRowHydrator();
+        // the default serializer shares the context hydrator - one source of Row objects
+        $this->serializer ??= new FloeSerializer(hydrator: $this->hydrator);
 
         $serializer = $this->serializer;
         $optimizer = $this->optimizer;
+        $hydrator = $this->hydrator;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
-        $cacheConfig = $this->cache->build($this->fstab(), $this->telemetryConfig, $dataframeName);
+        $cacheConfig = $this->cache->build($this->fstab(), $serializer, $this->telemetryConfig, $dataframeName);
 
         return new Config(
             $id,
@@ -111,12 +131,14 @@ final class ConfigBuilder
             new FilesystemStreams($this->fstab()),
             $optimizer,
             $this->putInputIntoRows,
-            $entryFactory,
+            $hydrator,
             $cacheConfig,
             $this->sort->build(),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
             $this->grouping->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            $this->join->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            $this->extractorBatchSize,
         );
     }
 
@@ -134,19 +156,21 @@ final class ConfigBuilder
         return $this;
     }
 
-    /**
-     * @param int<1, max> $serializerBatchSize
-     */
-    public function cacheSerializerBatchSize(int $serializerBatchSize): self
+    public function clock(ClockInterface $clocks): self
     {
-        $this->cache->serializerBatchSize($serializerBatchSize);
+        $this->clock = $clocks;
 
         return $this;
     }
 
-    public function clock(ClockInterface $clocks): self
+    /**
+     * Number of rows a streaming extractor buffers before hydrating them in one batch.
+     *
+     * @param int<1, max> $extractorBatchSize
+     */
+    public function extractorBatchSize(int $extractorBatchSize): self
     {
-        $this->clock = $clocks;
+        $this->extractorBatchSize = $extractorBatchSize;
 
         return $this;
     }
@@ -222,9 +246,46 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param Hydrator $hydrator
+     */
+    public function hydrator(Hydrator $hydrator): self
+    {
+        $this->hydrator = $hydrator;
+
+        return $this;
+    }
+
     public function id(string $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $batchSize
+     */
+    public function joinBatchSize(int $batchSize): self
+    {
+        $this->join->batchSize($batchSize);
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $bucketsCount
+     */
+    public function joinBucketsCount(int $bucketsCount): self
+    {
+        $this->join->bucketsCount($bucketsCount);
+
+        return $this;
+    }
+
+    public function joinCache(BucketsCache $cache): self
+    {
+        $this->join->cache($cache);
 
         return $this;
     }

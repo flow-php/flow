@@ -34,7 +34,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
                 'is_file' => $fileStatus->isFile(),
                 'is_dir' => $fileStatus->isDirectory(),
                 'extension' => $fileStatus->path->extension(),
-            ], $context->entryFactory());
+            ], $context->hydrator());
 
             $this->incrementReturnedRows();
 

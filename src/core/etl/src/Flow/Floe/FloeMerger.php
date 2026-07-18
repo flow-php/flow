@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
 use function count;
 use function sprintf;
-use function strlen;
 
 final readonly class FloeMerger
 {
@@ -21,8 +23,11 @@ final readonly class FloeMerger
 
     public function __construct(
         private Filesystem $filesystem,
-        private ?bool $useExtension = null,
-    ) {}
+        private ?Hydrator $hydrator = null,
+        private Codec $codec = new NoopCodec(),
+    ) {
+        Format::validateCodecId($this->codec->id());
+    }
 
     /**
      * @param array<int, Path> $sources
@@ -41,97 +46,99 @@ final readonly class FloeMerger
 
         $metadata ??= Metadata::empty();
 
-        if ($compact) {
-            $this->mergeCompact($sources, $reconciled['layouts'], $dest, $metadata);
+        // a merged file carries exactly one schema; raw splicing is only valid when every
+        // source already shares it - differing (but compatible) schemas are re-encoded to
+        // the union, exactly as compaction does
+        if ($compact || !$this->sourcesShareSchema($reconciled['layouts'], $reconciled['merged'])) {
+            $this->mergeCompact($sources, $reconciled['layouts'], $reconciled['merged'], $dest, $metadata);
 
             return;
         }
 
-        $this->mergeSplice(
-            $sources,
-            $reconciled['layouts'],
-            $reconciled['merged'],
-            $reconciled['partitions'],
-            $dest,
-            $metadata,
-        );
+        $this->mergeSplice($sources, $reconciled['layouts'], $reconciled['merged'], $dest, $metadata);
     }
 
     /**
-     * Reads every source's footer/layout and validates the merge is possible:
-     * one shared partition combination and a schema that evolves cleanly.
+     * Splicing copies source frames verbatim, so it is only valid when every
+     * SCHEMA frame it copies is structurally identical to the merged footer
+     * schema - column order included, since row bytes are laid out in schema
+     * order. Sources that merely reconcile (isSame is order-insensitive) are
+     * re-encoded by the compact path instead.
      *
+     * @param array<int, array{footer: Footer, footerFrameStart: int}> $layouts
+     */
+    private function sourcesShareSchema(array $layouts, ?Schema $merged): bool
+    {
+        if ($merged === null) {
+            return true;
+        }
+
+        $mergedNormalized = $merged->normalize();
+
+        foreach ($layouts as $layout) {
+            $schema = $layout['footer']->schema();
+
+            if ($schema->count() === 0) {
+                continue;
+            }
+
+            if ($schema->normalize() !== $mergedNormalized) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param array<int, Path> $sources
      *
      * @throws FloeException
      * @throws IncompatibleSchemaException
      *
-     * @return array{layouts: array<int, array{footer: Footer, footerFrameStart: int, partitionsFrameLength: int}>, merged: null|Schema, partitions: array<string, string>}
+     * @return array{layouts: array<int, array{footer: Footer, footerFrameStart: int}>, merged: null|Schema}
      */
     private function reconcile(array $sources): array
     {
         $layouts = [];
         $merged = null;
-        $partitions = null;
 
         foreach ($sources as $index => $source) {
             $layout = $this->readLayout($source);
-            $footer = $layout['footer'];
+            $layouts[$index] = $layout;
+            $schema = $layout['footer']->schema();
 
-            if ($partitions === null) {
-                $partitions = $footer->partitions;
-            } elseif ($footer->partitions !== $partitions) {
-                throw new IncompatibleSchemaException(sprintf(
-                    'Floe merge requires all sources to share one partition combination, "%s" differs',
-                    $source->uri(),
-                ));
+            // an empty (zero-row) source has no rows and no columns to reconcile
+            if ($schema->count() === 0) {
+                continue;
             }
 
-            $schema = $footer->fileSchema();
-
             if ($merged !== null) {
-                $this->assertCompatible($merged, $schema, $source);
+                $validation = (new EvolvingValidator())->validate($merged, $schema);
+
+                if (!$validation->isValid()) {
+                    throw new IncompatibleSchemaException(sprintf(
+                        'Floe merge cannot reconcile the schema of "%s":%s',
+                        $source->uri(),
+                        $validation->toString(),
+                    ));
+                }
             }
 
             $merged = $merged === null ? $schema : $merged->merge($schema);
-            $layouts[$index] = $layout;
         }
 
-        return ['layouts' => $layouts, 'merged' => $merged, 'partitions' => $partitions ?? []];
-    }
-
-    /**
-     * Columns shared with the running merged schema must keep a compatible type;
-     * columns present in only some sources are fine - Schema::merge auto-nullables
-     * them and the reader pads the sections that lack them.
-     *
-     * @throws IncompatibleSchemaException
-     */
-    private function assertCompatible(Schema $merged, Schema $incoming, Path $source): void
-    {
-        foreach ($incoming->definitions() as $definition) {
-            $existing = $merged->findDefinition($definition->entry()->name());
-
-            if ($existing !== null && !$existing->isCompatible($definition)) {
-                throw new IncompatibleSchemaException(sprintf(
-                    'Floe merge cannot reconcile column "%s" of "%s": %s is not compatible with %s',
-                    $definition->entry()->name(),
-                    $source->uri(),
-                    $definition->type()->toString(),
-                    $existing->type()->toString(),
-                ));
-            }
-        }
+        return ['layouts' => $layouts, 'merged' => $merged];
     }
 
     /**
      * @param array<int, Path> $sources
-     * @param array<int, array{footer: Footer, footerFrameStart: int, partitionsFrameLength: int}> $layouts
+     * @param array<int, array{footer: Footer, footerFrameStart: int}> $layouts
      *
      * @throws FloeException
      * @throws IncompatibleSchemaException
      */
-    private function mergeCompact(array $sources, array $layouts, Path $dest, Metadata $metadata): void
+    private function mergeCompact(array $sources, array $layouts, ?Schema $merged, Path $dest, Metadata $metadata): void
     {
         $mergedMetadata = Metadata::empty();
 
@@ -139,10 +146,10 @@ final readonly class FloeMerger
             $mergedMetadata = $mergedMetadata->merge($layout['footer']->metadata);
         }
 
-        $writer = new FloeWriter($this->filesystem, useExtension: $this->useExtension);
-        $writer->create($dest, $mergedMetadata->merge($metadata));
+        $writer = new FloeWriter($this->filesystem, $this->codec, hydrator: $this->hydrator);
+        $writer->create($dest, $mergedMetadata->merge($metadata), schema: $merged);
 
-        $reader = new FloeReader($this->filesystem, useExtension: $this->useExtension);
+        $reader = new FloeReader($this->filesystem, $this->codec, hydrator: $this->hydrator);
 
         foreach ($sources as $source) {
             foreach ($reader->read($source)->rows() as $batch) {
@@ -155,39 +162,37 @@ final readonly class FloeMerger
 
     /**
      * @param array<int, Path> $sources
-     * @param array<int, array{footer: Footer, footerFrameStart: int, partitionsFrameLength: int}> $layouts
-     * @param array<string, string> $partitions
+     * @param array<int, array{footer: Footer, footerFrameStart: int}> $layouts
      *
      * @throws FloeException
      */
-    private function mergeSplice(
-        array $sources,
-        array $layouts,
-        ?Schema $merged,
-        array $partitions,
-        Path $dest,
-        Metadata $metadata,
-    ): void {
-        /** @var array<int, array<int, array<string, mixed>>> $schemas */
-        $schemas = [];
+    private function mergeSplice(array $sources, array $layouts, ?Schema $merged, Path $dest, Metadata $metadata): void
+    {
+        /** @var array<int, array<string, string>> $partitions */
+        $partitions = [];
         $sections = [];
         $totalRows = 0;
         $mergedMetadata = Metadata::empty();
+        $runningCombo = [];
 
-        $stream = $this->filesystem->writeTo($dest);
-        $stream->append(Format::header(0x00));
-        $destPosition = Format::HEADER_LENGTH;
+        $frameWriter = new FrameWriter($this->filesystem->writeTo($dest), $this->codec->id(), self::COPY_CHUNK_SIZE);
+        $frameWriter->header();
 
         foreach ($sources as $index => $source) {
             $layout = $layouts[$index];
             $footer = $layout['footer'];
-            $copyStart = $index === 0
-                ? Format::HEADER_LENGTH
-                : Format::HEADER_LENGTH + $layout['partitionsFrameLength'];
+            $copyStart = Format::HEADER_LENGTH;
             $regionLength = $layout['footerFrameStart'] - $copyStart;
-            $outputStart = $destPosition;
 
-            $schemaIdMap = $this->mergeSchemas($footer->schemas, $schemas);
+            $partitionsIdMap = $this->mergePartitions($footer->partitions, $partitions);
+
+            $firstCombo = $footer->sections === [] ? [] : $footer->partitionsFor($footer->sections[0]->partitionsId);
+
+            if ($firstCombo !== $runningCombo && $firstCombo === []) {
+                $frameWriter->partitions($firstCombo);
+            }
+
+            $outputStart = $frameWriter->position();
 
             if ($regionLength > 0) {
                 $sourceStream = $this->filesystem->readFrom($source);
@@ -197,10 +202,9 @@ final readonly class FloeMerger
                 while ($remaining > 0) {
                     /** @var int<1, max> $length */
                     $length = $remaining < self::COPY_CHUNK_SIZE ? $remaining : self::COPY_CHUNK_SIZE;
-                    $stream->append($sourceStream->read($length, $at));
+                    $frameWriter->raw($sourceStream->read($length, $at));
                     $at += $length;
                     $remaining -= $length;
-                    $destPosition += $length;
                 }
 
                 $sourceStream->close();
@@ -209,51 +213,54 @@ final readonly class FloeMerger
             foreach ($footer->sections as $section) {
                 $sections[] = new Section(
                     $section->offset - $copyStart + $outputStart,
-                    $schemaIdMap[$section->schemaId],
+                    $partitionsIdMap[$section->partitionsId],
                     $section->rowCount,
                 );
+            }
+
+            if ($footer->sections !== []) {
+                $runningCombo = $footer->partitionsFor($footer->sections[count($footer->sections) - 1]->partitionsId);
             }
 
             $totalRows += $footer->totalRows;
             $mergedMetadata = $mergedMetadata->merge($footer->metadata);
         }
 
-        /** @var array<int, array<string, mixed>> $fileSchema */
-        $fileSchema = $merged?->normalize() ?? [];
+        /** @var array<int, array<string, mixed>> $schema */
+        $schema = $merged?->normalize() ?? [];
 
         $footerJson = (new Footer(
             Format::VERSION,
-            FloeWriter::writerVersion(),
-            $schemas,
-            $fileSchema,
+            FloeStreamWriter::writerVersion(),
+            $schema,
             $sections,
             $partitions,
             $totalRows,
             $mergedMetadata->merge($metadata),
         ))->toJson();
 
-        $stream->append(Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))));
-        $stream->close();
+        $frameWriter->footer($footerJson);
+        $frameWriter->close();
     }
 
     /**
-     * Adds a source's schemas to the combined table (dedup by equality) and
-     * returns its old->new schema id mapping.
+     * Adds a source's partition combinations to the merged table (order-sensitive
+     * dedup) and returns its old->new partitionsId mapping.
      *
-     * @param array<int, array<int, array<string, mixed>>> $sourceSchemas
-     * @param array<int, array<int, array<string, mixed>>> $schemas combined table, updated in place
+     * @param array<int, array<string, string>> $sourceTable
+     * @param array<int, array<string, string>> $table combined table, updated in place
      *
      * @return array<int, int>
      */
-    private function mergeSchemas(array $sourceSchemas, array &$schemas): array
+    private function mergePartitions(array $sourceTable, array &$table): array
     {
         $map = [];
 
-        foreach ($sourceSchemas as $oldId => $decoded) {
+        foreach ($sourceTable as $oldId => $combo) {
             $newId = null;
 
-            foreach ($schemas as $id => $known) {
-                if ($known == $decoded) {
+            foreach ($table as $id => $known) {
+                if ($known === $combo) {
                     $newId = $id;
 
                     break;
@@ -261,8 +268,8 @@ final readonly class FloeMerger
             }
 
             if ($newId === null) {
-                $newId = count($schemas);
-                $schemas[] = $decoded;
+                $newId = count($table);
+                $table[] = $combo;
             }
 
             $map[$oldId] = $newId;
@@ -274,7 +281,7 @@ final readonly class FloeMerger
     /**
      * @throws FloeException
      *
-     * @return array{footer: Footer, footerFrameStart: int, partitionsFrameLength: int}
+     * @return array{footer: Footer, footerFrameStart: int}
      */
     private function readLayout(Path $source): array
     {
@@ -283,80 +290,12 @@ final readonly class FloeMerger
         }
 
         $stream = $this->filesystem->readFrom($source);
-        $size = $stream->size();
-
-        if ($size === null) {
-            $stream->close();
-
-            throw new FloeException(sprintf(
-                'Floe merge requires sized sources, "%s" does not report its size',
-                $source->uri(),
-            ));
-        }
-
-        if ($size < (Format::HEADER_LENGTH + Format::TRAILER_LENGTH)) {
-            $stream->close();
-
-            throw new FloeException(sprintf(
-                'Floe merge source "%s" is torn, too small to hold a header and a trailer',
-                $source->uri(),
-            ));
-        }
-
-        $flags = Format::validateHeader($stream->read(Format::HEADER_LENGTH, 0));
-
-        if ($flags !== 0x00) {
-            $stream->close();
-
-            throw new FloeException(sprintf(
-                'Floe merge supports only the no-op codec, source "%s" uses codec 0x%02X',
-                $source->uri(),
-                $flags,
-            ));
-        }
-
-        $footerLength = Format::parseTrailer($stream->read(Format::TRAILER_LENGTH, $size - Format::TRAILER_LENGTH));
-        $footerFrameStart = $size - Format::TRAILER_LENGTH - $footerLength - Format::FRAME_HEADER_LENGTH;
-
-        if ($footerFrameStart < Format::HEADER_LENGTH) {
-            $stream->close();
-
-            throw new FloeException(sprintf(
-                'Floe merge source "%s" is torn, footer does not fit inside the file',
-                $source->uri(),
-            ));
-        }
-
-        /** @var int<1, max> $footerLength */
-        $footer = Footer::fromJson($stream->read($footerLength, $size - Format::TRAILER_LENGTH - $footerLength));
+        $location = (new FooterReader())->read($stream, $this->codec);
         $stream->close();
 
         return [
-            'footer' => $footer,
-            'footerFrameStart' => $footerFrameStart,
-            'partitionsFrameLength' => $this->partitionsFrameLength($footer->partitions),
+            'footer' => $location->footer,
+            'footerFrameStart' => $location->footerFrameStart,
         ];
-    }
-
-    /**
-     * Byte length of the leading PARTITIONS frame (0 when not partitioned),
-     * computed from the footer so no frame walk is needed. Order-independent:
-     * only the summed name/value lengths matter.
-     *
-     * @param array<string, string> $partitions
-     */
-    private function partitionsFrameLength(array $partitions): int
-    {
-        if ($partitions === []) {
-            return 0;
-        }
-
-        $bodyLength = 4;
-
-        foreach ($partitions as $name => $value) {
-            $bodyLength += 4 + strlen($name) + 4 + strlen($value);
-        }
-
-        return Format::FRAME_HEADER_LENGTH + $bodyLength;
     }
 }

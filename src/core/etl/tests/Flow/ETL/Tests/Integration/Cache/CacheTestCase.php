@@ -12,13 +12,10 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
 use Override;
 
-use function array_map;
-use function array_merge;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
-use function iterator_to_array;
 
 abstract class CacheTestCase extends FlowIntegrationTestCase
 {
@@ -116,56 +113,6 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         $this->expectException(KeyNotInCacheException::class);
 
         $cache->get('non-existing');
-    }
-
-    public function test_reading_cached_value_in_batches(): void
-    {
-        $cache = $this->cache();
-
-        $cache->set('rows', $rows = rows(row(str_entry('name', 'John')), row(str_entry('name', 'Jane'))));
-
-        $batches = iterator_to_array($cache->read('rows'), preserve_keys: false);
-
-        static::assertNotEmpty($batches);
-        static::assertEquals(
-            $rows,
-            rows(...array_merge(...array_map(static fn(Rows $batch): array => $batch->all(), $batches))),
-        );
-    }
-
-    public function test_reading_non_existing_cache_key(): void
-    {
-        $cache = $this->cache();
-
-        $this->expectException(KeyNotInCacheException::class);
-
-        iterator_to_array($cache->read('non-existing'));
-    }
-
-    public function test_reading_partitioned_rows_in_batches(): void
-    {
-        $cache = $this->cache();
-
-        $cache->set(
-            'partitioned',
-            $rows = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-                'country',
-                'PL',
-            )]),
-        );
-
-        $batches = iterator_to_array($cache->read('partitioned'), preserve_keys: false);
-
-        static::assertNotEmpty($batches);
-
-        foreach ($batches as $batch) {
-            static::assertEquals($rows->partitions()->toArray(), $batch->partitions()->toArray());
-        }
-
-        static::assertEquals(
-            $rows->all(),
-            array_merge(...array_map(static fn(Rows $batch): array => $batch->all(), $batches)),
-        );
     }
 
     public function test_removing_from_cache(): void

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use DOMDocument;
-use DOMNode;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
@@ -14,6 +12,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
@@ -22,7 +21,9 @@ use XMLParser;
 use XMLWriter;
 
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_schema;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -111,10 +112,29 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
+        $encoder = new XMLEncoder();
+
+        $baseSchema = $this->schema ?? schema(xml_schema('node'));
+
+        if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
+            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
+        }
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $uri = $stream->path()->uri();
+            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
+
+            $schema = $baseSchema;
+
+            foreach ($partitions as $partition) {
+                if ($schema->findDefinition($partition->name) === null) {
+                    $schema = $schema->add(str_schema($partition->name));
+                }
+            }
+
+            $rawNodes = [];
 
             foreach ($stream->iterate($this->bufferSize) as $chunk) {
                 if (!xml_parse($this->parser(), $chunk)) {
@@ -126,24 +146,72 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                 }
 
                 foreach ($this->elements as $element) {
-                    $rowData = ['node' => $this->createDOMNode($element)];
-                    if ($shouldPutInputIntoRows) {
-                        $rowData['_input_file_uri'] = $uri;
-                    }
+                    $rawNodes[] = $element;
 
-                    $signal = yield array_to_rows($rowData, $context->entryFactory(), $partitions, $this->schema);
+                    if (count($rawNodes) >= $batchSize) {
+                        $batch = [];
 
-                    $this->incrementReturnedRows();
+                        foreach ($encoder->decode($rawNodes) as $rowValues) {
+                            $rowData = $rowValues->values;
 
-                    if ($signal === Signal::STOP || $this->reachedLimit()) {
-                        $context->streams()->closeStreams($this->path);
-                        $this->freeParser();
+                            if ($streamUri !== null) {
+                                $rowData['_input_file_uri'] = $streamUri;
+                            }
 
-                        return;
+                            foreach ($partitions as $partition) {
+                                $rowData[$partition->name] = $partition->value;
+                            }
+
+                            $batch[] = new RawRowValues($rowData);
+                        }
+
+                        $rawNodes = [];
+
+                        foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                            $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                            $this->incrementReturnedRows();
+
+                            if ($signal === Signal::STOP || $this->reachedLimit()) {
+                                $context->streams()->closeStreams($this->path);
+                                $this->freeParser();
+
+                                return;
+                            }
+                        }
                     }
                 }
 
                 $this->elements = [];
+            }
+
+            $batch = [];
+
+            foreach ($encoder->decode($rawNodes) as $rowValues) {
+                $rowData = $rowValues->values;
+
+                if ($streamUri !== null) {
+                    $rowData['_input_file_uri'] = $streamUri;
+                }
+
+                foreach ($partitions as $partition) {
+                    $rowData[$partition->name] = $partition->value;
+                }
+
+                $batch[] = new RawRowValues($rowData);
+            }
+
+            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                $this->incrementReturnedRows();
+
+                if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $context->streams()->closeStreams($this->path);
+                    $this->freeParser();
+
+                    return;
+                }
             }
 
             xml_parse($this->parser(), '', true);
@@ -223,14 +291,6 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $this->xmlNodePath = $xmlNodePath;
 
         return $this;
-    }
-
-    private function createDOMNode(string $xmlString): DOMNode
-    {
-        $doc = new DOMDocument();
-        $doc->loadXML($xmlString);
-
-        return $doc;
     }
 
     private function freeParser(): void

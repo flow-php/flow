@@ -9,6 +9,7 @@
     },
     "autoload": {
         "psr-4": {
+            "Flow\\ETL\\Row\\": "php/Flow/ETL/Row/",
             "Flow\\Floe\\": "php/Flow/Floe/"
         }
     },

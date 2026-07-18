@@ -26,7 +26,7 @@ final readonly class MemoryExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->memory->dump() as $row) {
-            $signal = yield array_to_rows([$row], $context->entryFactory());
+            $signal = yield array_to_rows([$row], $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;

@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Pipeline;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_map;
@@ -23,6 +22,7 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -76,14 +76,7 @@ final class SchemaTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
-        static::assertEquals(
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                str_schema('active', nullable: true, metadata: Metadata::fromArray([Metadata::FROM_NULL => true])),
-            ),
-            $rows->schema(),
-        );
+        static::assertEquals(schema(int_schema('id'), str_schema('name'), null_schema('active')), $rows->schema());
     }
 
     public function test_getting_schema(): void
@@ -97,7 +90,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 ],
                 range(1, 100),
             ),
-            flow_context(config())->entryFactory(),
+            flow_context(config())->hydrator(),
         );
 
         static::assertEquals(
@@ -118,7 +111,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 ],
                 range(1, 100),
             ),
-            flow_context(config())->entryFactory(),
+            flow_context(config())->hydrator(),
         );
 
         static::assertEquals(

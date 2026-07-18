@@ -9,12 +9,11 @@ use crate::exception::ext_exception;
 #[cfg(target_endian = "big")]
 compile_error!("flow_php only supports little-endian targets");
 
-pub const FRAME_ROW: u8 = 0x02;
-
 pub const VALUE_NULL: u8 = 0x00;
 pub const VALUE_PRESENT: u8 = 0x01;
-pub const VALUE_NULL_FROM_NULL: u8 = 0x02;
+pub const VALUE_NULL_WITH_META: u8 = 0x02;
 pub const VALUE_ABSENT: u8 = 0x03;
+pub const VALUE_PRESENT_WITH_META: u8 = 0x04;
 
 pub const DATETIME_IMMUTABLE: u8 = 0x00;
 pub const DATETIME_MUTABLE: u8 = 0x01;
@@ -93,11 +92,4 @@ impl<'a> Reader<'a> {
 
 pub fn write_u32(out: &mut Vec<u8>, value: u32) {
     out.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes a whole `type:u8 len:u32 body` Floe frame.
-pub fn write_frame(out: &mut Vec<u8>, frame_type: u8, body: &[u8]) {
-    out.push(frame_type);
-    write_u32(out, body.len() as u32);
-    out.extend_from_slice(body);
 }

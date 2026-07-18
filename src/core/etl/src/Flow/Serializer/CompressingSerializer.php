@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Serializer\Exception\SerializationException;
 
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function function_exists;
 use function gzcompress;
 use function gzuncompress;
@@ -17,47 +22,53 @@ final readonly class CompressingSerializer implements Serializer
         private int $compressionLevel = 9,
     ) {}
 
-    public function serialize(object $serializable): string
+    public function serialize(Rows $rows, DestinationStream $destination): void
     {
         if (!function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException("'ext-zlib' is missing in, compression impossible due to lack of gzcompress.");
+            throw new SerializationException(
+                "'ext-zlib' is missing in, compression impossible due to lack of gzcompress.",
+            );
 
             // @codeCoverageIgnoreEnd
         }
 
-        $content = gzcompress($this->serializer->serialize($serializable), $this->compressionLevel);
+        $content = gzcompress(serialize_to_string($this->serializer, $rows), $this->compressionLevel);
 
         if (false === $content) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException('Unable to compress serialized data.');
+            throw new SerializationException('Unable to compress serialized data.');
 
             // @codeCoverageIgnoreEnd
         }
 
-        return $content;
+        $destination->append($content);
+        $destination->close();
     }
 
-    public function unserialize(string $serialized, array $classes): object
+    public function unserialize(SourceStream $source): Rows
     {
         if (!function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException(
+            throw new SerializationException(
                 "'ext-zlib' is missing in, decompression impossible due to lack of gzuncompress.",
             );
 
             // @codeCoverageIgnoreEnd
         }
 
-        $content = gzuncompress($serialized);
+        $payload = $source->content();
+        $source->close();
+
+        $content = gzuncompress($payload);
 
         if (false === $content) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException('Unable to decompress unserialized data.');
+            throw new SerializationException('Unable to decompress unserialized data.');
 
             // @codeCoverageIgnoreEnd
         }
 
-        return $this->serializer->unserialize($content, $classes);
+        return unserialize_from_string($this->serializer, $content);
     }
 }

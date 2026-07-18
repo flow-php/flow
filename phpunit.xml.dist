@@ -285,6 +285,9 @@
         <testsuite name="adapter-seal-integration">
             <directory>src/adapter/etl-adapter-seal/tests/Flow/ETL/Adapter/Seal/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="adapter-text-unit">
+            <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="adapter-text-integration">
             <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
         </testsuite>

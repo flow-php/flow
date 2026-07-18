@@ -8,7 +8,8 @@ use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
@@ -69,7 +70,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->entryFactory(), schema: $schema);
+            yield array_to_rows($row, $context->hydrator(), schema: $schema);
         }
     }
 
@@ -127,13 +128,13 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         }
     }
 
-    public function toRows(EntryFactory $entryFactory = new EntryFactory()): Rows
+    public function toRows(Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
     {
         $rows = rows();
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, entryFactory: $entryFactory, schema: $schema));
+            $rows = $rows->merge(array_to_rows($row, hydrator: $hydrator, schema: $schema));
         }
 
         return $rows;

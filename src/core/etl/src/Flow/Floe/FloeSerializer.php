@@ -4,59 +4,87 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row;
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Floe\Codec\NoopCodec;
+use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 
-use function get_debug_type;
-use function implode;
-use function is_a;
+use function count;
 use function sprintf;
 
 final class FloeSerializer implements Serializer
 {
-    private readonly FloeValueSerializer $serializer;
+    private const int CHUNK_SIZE = 65_536;
 
     /**
      * @param int<1, max> $batchSize
+     * @param null|Hydrator $hydrator null uses the adaptive hydrator
      */
-    public function __construct(int $batchSize = 1000, ?bool $useExtension = null)
-    {
-        $this->serializer = new FloeValueSerializer($batchSize, $useExtension);
-    }
-
-    public function serialize(object $serializable): string
-    {
-        if (!$serializable instanceof Rows && !$serializable instanceof Row) {
-            throw new SerializationException(sprintf(
-                'FloeSerializer supports only Rows and Row, got: %s',
-                get_debug_type($serializable),
-            ));
+    public function __construct(
+        private readonly int $batchSize = 1000,
+        private readonly ?Hydrator $hydrator = null,
+    ) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($this->batchSize < 1) {
+            throw new FloeException('Serializer batch size must be at least 1');
         }
-
-        return $this->serializer->encode($serializable);
     }
 
-    public function unserialize(string $serialized, array $classes): object
+    public function serialize(Rows $rows, DestinationStream $destination): void
     {
         try {
-            $value = $this->serializer->decode($serialized);
-        } catch (FloeException $e) {
+            $writer = new FloeStreamWriter(hydrator: $this->hydrator);
+            // multi-chunk payloads need the whole-value union upfront so later chunks with columns
+            // absent from the first still fit the session; a single chunk derives the identical
+            // union inside write() - skip the second O(rows) schema pass
+            $writer->create(
+                $destination,
+                schema: $rows->count() > $this->batchSize ? FloeStreamWriter::unionSchema($rows) : null,
+            );
+
+            foreach ($rows->count() === 0 ? [$rows] : $rows->chunks($this->batchSize) as $chunk) {
+                $writer->write($chunk);
+            }
+
+            $writer->close();
+        } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         }
+    }
 
-        foreach ($classes as $class) {
-            if (is_a($value, $class)) {
-                return $value;
+    public function unserialize(SourceStream $source): Rows
+    {
+        try {
+            $reader = new FloeStreamReader($source, new NoopCodec(), self::CHUNK_SIZE, $this->hydrator);
+
+            $footer = $reader->footer();
+
+            $rows = [];
+
+            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+                foreach ($batch->all() as $row) {
+                    $rows[] = $row;
+                }
             }
-        }
 
-        throw new SerializationException(sprintf(
-            'FloeSerializer::unserialize must return instance of {%s}, got: %s',
-            implode(', ', $classes),
-            get_debug_type($value),
-        ));
+            if (count($rows) !== $footer->totalRows) {
+                throw new FloeException(sprintf(
+                    'Floe payload is corrupted, decoded %d of %d rows',
+                    count($rows),
+                    $footer->totalRows,
+                ));
+            }
+
+            return $footer->reconstructRows($rows);
+        } catch (FloeException|ExtensionException $e) {
+            throw new SerializationException($e->getMessage(), 0, $e);
+        } finally {
+            $source->close();
+        }
     }
 }

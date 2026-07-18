@@ -10,6 +10,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\FileLoader;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
@@ -24,11 +25,22 @@ final class FloeLoader implements Closure, FileLoader, Loader
      */
     private array $writers = [];
 
+    private ?Schema $schema = null;
+
+    private ?Schema $inferredSchema = null;
+
     public function __construct(
         private readonly Path $path,
         private readonly ?Metadata $metadata = null,
         private readonly Codec $codec = new NoopCodec(),
     ) {}
+
+    public function withSchema(Schema $schema): self
+    {
+        $this->schema = $schema;
+
+        return $this;
+    }
 
     public function closure(FlowContext $context): void
     {
@@ -52,6 +64,10 @@ final class FloeLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
+            if ($this->schema === null && $this->inferredSchema === null) {
+                $this->inferredSchema = FloeStreamWriter::unionSchema($rows)->makeNullable();
+            }
+
             $stream = $rows->partitions()->count()
                 ? $context->streams()->writeTo($this->path, $rows->partitions()->toArray())
                 : $context->streams()->writeTo($this->path);
@@ -59,8 +75,12 @@ final class FloeLoader implements Closure, FileLoader, Loader
             $uri = $stream->path()->uri();
 
             if (!array_key_exists($uri, $this->writers)) {
-                $writer = new FloeWriter($context->filesystem($this->path), $this->codec);
-                $writer->createOnStream($stream, $this->metadata);
+                $writer = new FloeWriter(
+                    $context->filesystem($this->path),
+                    $this->codec,
+                    hydrator: $context->hydrator(),
+                );
+                $writer->createForStream($stream, $this->metadata, schema: $this->schema ?? $this->inferredSchema);
                 $this->writers[$uri] = $writer;
             }
 

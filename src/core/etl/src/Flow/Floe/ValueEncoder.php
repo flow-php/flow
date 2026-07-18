@@ -67,6 +67,22 @@ use function strlen;
 
 final class ValueEncoder
 {
+    private readonly DateTimeEncoder $dateTimeEncoder;
+
+    private readonly JsonEncoder $jsonEncoder;
+
+    private readonly TimeZoneEncoder $timeZoneEncoder;
+
+    private readonly UuidEncoder $uuidEncoder;
+
+    public function __construct()
+    {
+        $this->dateTimeEncoder = new DateTimeEncoder();
+        $this->timeZoneEncoder = new TimeZoneEncoder();
+        $this->uuidEncoder = new UuidEncoder();
+        $this->jsonEncoder = new JsonEncoder();
+    }
+
     /**
      * @param Type<mixed> $type
      *
@@ -83,11 +99,11 @@ final class ValueEncoder
             NumericStringType::class,
             ClassStringType::class,
                 => new StringEncoder(),
-            TimeZoneType::class => new TimeZoneEncoder(),
-            DateTimeType::class, DateType::class => new DateTimeEncoder(),
+            TimeZoneType::class => $this->timeZoneEncoder,
+            DateTimeType::class, DateType::class => $this->dateTimeEncoder,
             TimeType::class => new IntervalEncoder(),
-            UuidType::class => new UuidEncoder(),
-            JsonType::class => new JsonEncoder(),
+            UuidType::class => $this->uuidEncoder,
+            JsonType::class => $this->jsonEncoder,
             EnumType::class => new EnumEncoder(),
             XMLType::class => new XmlDocumentEncoder(),
             XMLElementType::class => new XmlElementEncoder(),
@@ -103,7 +119,7 @@ final class ValueEncoder
             ScalarType::class,
             LiteralType::class,
             ArrayType::class,
-                => new DynamicEncoder(),
+                => $this->dynamicEncoder(),
             default => throw new FloeException(sprintf('Floe does not support values of type "%s"', $type->toString())),
         };
     }
@@ -149,6 +165,11 @@ final class ValueEncoder
         return $xml;
     }
 
+    private function dynamicEncoder(): DynamicEncoder
+    {
+        return new DynamicEncoder($this->dateTimeEncoder);
+    }
+
     /**
      * @param Type<mixed> $type
      */
@@ -179,7 +200,7 @@ final class ValueEncoder
         $keyEncoder = match (true) {
             $key instanceof IntegerType => new Int64Encoder(),
             $key instanceof StringType => new StringKeyEncoder(),
-            default => new DynamicEncoder(),
+            default => $this->dynamicEncoder(),
         };
 
         return new MapEncoder($keyEncoder, $this->encoderFor($type->value()));
@@ -201,6 +222,6 @@ final class ValueEncoder
             $elements[$name] = $this->encoderFor($elementType);
         }
 
-        return new StructureEncoder($elements, $type->allowsExtra(), new DynamicEncoder());
+        return new StructureEncoder($elements, $type->allowsExtra(), $this->dynamicEncoder());
     }
 }

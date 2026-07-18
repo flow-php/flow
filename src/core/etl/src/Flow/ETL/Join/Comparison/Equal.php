@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\Comparison;
 
-use DateInterval;
-use DateTimeInterface;
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Value\Uuid;
 
 use function is_array;
 use function is_bool;
 use function is_numeric;
+use function is_object;
 use function is_string;
 
 final readonly class Equal implements Comparison
@@ -44,16 +44,16 @@ final readonly class Equal implements Comparison
             return $leftValue === $rightValue;
         }
 
-        if ($leftValue instanceof DateTimeInterface && $rightValue instanceof DateTimeInterface) {
-            return $leftValue == $rightValue;
-        }
-
-        if ($leftValue instanceof DateInterval && $rightValue instanceof DateInterval) {
-            return $leftValue == $rightValue;
-        }
-
         if (is_array($leftValue) && is_array($rightValue)) {
             return $leftValue === $rightValue;
+        }
+
+        if (is_object($leftValue) && is_object($rightValue)) {
+            if ($leftValue instanceof Uuid && $rightValue instanceof Uuid) {
+                return $leftValue->isEqual($rightValue);
+            }
+
+            return $leftValue == $rightValue;
         }
 
         return false;

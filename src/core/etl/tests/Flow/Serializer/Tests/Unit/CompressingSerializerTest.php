@@ -6,7 +6,6 @@ namespace Flow\Serializer\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
@@ -20,6 +19,8 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -55,10 +56,8 @@ final class CompressingSerializerTest extends TestCase
 
         $serializer = new CompressingSerializer(new NativePHPSerializer());
 
-        $serialized = $serializer->serialize($rows);
+        $serialized = serialize_to_string($serializer, $rows);
 
-        $unserialized = $serializer->unserialize($serialized, [Rows::class]);
-
-        static::assertEquals($rows, $unserialized);
+        static::assertEquals($rows, unserialize_from_string($serializer, $serialized));
     }
 }

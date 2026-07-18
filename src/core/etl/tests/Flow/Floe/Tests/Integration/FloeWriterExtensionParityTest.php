@@ -8,12 +8,13 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\CustomDateTime;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\FloeWriter;
+use Flow\Floe\NativeFloeEncoder;
+use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Double\PrefixingCodecStub;
 use Flow\Floe\Tests\Mother\RowsMother;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function extension_loaded;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
@@ -22,8 +23,8 @@ use function Flow\ETL\DSL\str_entry;
 
 /**
  * With the flow_php extension loaded, FloeWriter encodes ROW frame bodies through
- * the extension's RowsEncoder. These tests pin the pure-PHP RowEncoder as the
- * canonical reference and assert the extension writes byte-identical files.
+ * NativeFloeEncoder. These tests pin PhpFloeEncoder as the canonical reference and
+ * assert the native engine writes byte-identical files.
  */
 final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
 {
@@ -42,7 +43,7 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
     {
         parent::setUp();
 
-        if (!extension_loaded('flow_php')) {
+        if (!NativeFloeEncoder::isSupported()) {
             self::markTestSkipped('flow_php extension is not loaded.');
         }
     }
@@ -51,9 +52,13 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
     {
         $rows = rows(row(datetime_entry('at', new CustomDateTime('2025-01-01 00:00:00 UTC'))));
 
-        foreach ([false, true] as $useExtension) {
-            $writer = new FloeWriter($this->fs(), useExtension: $useExtension);
-            $writer->create($this->cacheDir->suffix('subclass-' . ($useExtension ? 'ext' : 'php') . '.floe'));
+        $writers = [
+            'php' => FloeEngineContext::phpWriter($this->fs()),
+            'ext' => FloeEngineContext::nativeWriter($this->fs()),
+        ];
+
+        foreach ($writers as $engine => $writer) {
+            $writer->create($this->cacheDir->suffix('subclass-' . $engine . '.floe'));
 
             try {
                 $writer->write($rows);
@@ -70,15 +75,8 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         $purePath = $this->cacheDir->suffix('write-pure.floe');
         $extPath = $this->cacheDir->suffix('write-ext.floe');
 
-        $pure = new FloeWriter($this->fs(), useExtension: false);
-        $pure->create($purePath);
-        $pure->write($rows);
-        $pure->close();
-
-        $ext = new FloeWriter($this->fs(), useExtension: true);
-        $ext->create($extPath);
-        $ext->write($rows);
-        $ext->close();
+        FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs()), $purePath, [$rows]);
+        FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs()), $extPath, [$rows]);
 
         static::assertSame($this->fs()->readFrom($purePath)->content(), $this->fs()->readFrom($extPath)->content());
     }
@@ -86,24 +84,35 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
     public function test_extension_and_pure_php_write_byte_identical_files_across_multiple_writes(): void
     {
         $batches = [
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
-            rows(row(int_entry('id', 3))),
-            rows(row(int_entry('id', 4), str_entry('name', 'x')), row(int_entry('id', 5))),
+            rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b'))),
+            rows(row(int_entry('id', 3), str_entry('name', 'c'))),
+            rows(row(int_entry('id', 4), str_entry('name', 'd')), row(int_entry('id', 5), str_entry('name', 'e'))),
         ];
 
         $purePath = $this->cacheDir->suffix('multi-write-pure.floe');
         $extPath = $this->cacheDir->suffix('multi-write-ext.floe');
 
-        foreach ([[$purePath, false], [$extPath, true]] as [$path, $useExtension]) {
-            $writer = new FloeWriter($this->fs(), useExtension: $useExtension);
-            $writer->create($path);
+        FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs()), $purePath, $batches);
+        FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs()), $extPath, $batches);
 
-            foreach ($batches as $batch) {
-                $writer->write($batch);
-            }
+        static::assertSame($this->fs()->readFrom($purePath)->content(), $this->fs()->readFrom($extPath)->content());
+    }
 
-            $writer->close();
-        }
+    /**
+     * A transforming (non-identity) codec must not fork the engine: the native
+     * body-encode produces the same ROW bodies as the PHP engine, the codec runs
+     * in PHP either way, so the files stay byte-identical (the A1 fix).
+     */
+    #[DataProvider('rows_datasets')]
+    public function test_extension_and_pure_php_write_byte_identical_files_with_transforming_codec(Rows $rows): void
+    {
+        $codec = new PrefixingCodecStub();
+
+        $purePath = $this->cacheDir->suffix('write-codec-pure.floe');
+        $extPath = $this->cacheDir->suffix('write-codec-ext.floe');
+
+        FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs(), $codec), $purePath, [$rows]);
+        FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs(), $codec), $extPath, [$rows]);
 
         static::assertSame($this->fs()->readFrom($purePath)->content(), $this->fs()->readFrom($extPath)->content());
     }
@@ -113,16 +122,20 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         $purePath = $this->cacheDir->suffix('append-pure.floe');
         $extPath = $this->cacheDir->suffix('append-ext.floe');
 
-        foreach ([[$purePath, false], [$extPath, true]] as [$path, $useExtension]) {
-            $writer = new FloeWriter($this->fs(), useExtension: $useExtension);
-            $writer->create($path);
-            $writer->write(rows(row(int_entry('id', 1), str_entry('email', null))));
-            $writer->close();
+        foreach ([[$purePath, false], [$extPath, true]] as [$path, $native]) {
+            $create = $native
+                ? FloeEngineContext::nativeWriter($this->fs())
+                : FloeEngineContext::phpWriter($this->fs());
+            $create->create($path);
+            $create->write(rows(row(int_entry('id', 1), str_entry('email', null))));
+            $create->close();
 
-            $writer = new FloeWriter($this->fs(), useExtension: $useExtension);
-            $writer->append($path);
-            $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
-            $writer->close();
+            $append = $native
+                ? FloeEngineContext::nativeWriter($this->fs())
+                : FloeEngineContext::phpWriter($this->fs());
+            $append->append($path);
+            $append->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
+            $append->close();
         }
 
         static::assertSame($this->fs()->readFrom($purePath)->content(), $this->fs()->readFrom($extPath)->content());

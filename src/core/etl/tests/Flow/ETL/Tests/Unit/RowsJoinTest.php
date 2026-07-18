@@ -173,6 +173,26 @@ final class RowsJoinTest extends FlowTestCase
         );
     }
 
+    public function test_inner_join_emits_every_matching_right_row(): void
+    {
+        $joined = rows(row(int_entry('id', 1), str_entry('country', 'PL')))
+            ->joinInner(
+                rows(
+                    row(int_entry('code', 1), str_entry('city', 'Warsaw')),
+                    row(int_entry('code', 1), str_entry('city', 'Cracow')),
+                ),
+                join_on(['id' => 'code']),
+            );
+
+        static::assertSame(
+            [
+                ['id' => 1, 'country' => 'PL', 'code' => 1, 'city' => 'Warsaw'],
+                ['id' => 1, 'country' => 'PL', 'code' => 1, 'city' => 'Cracow'],
+            ],
+            $joined->toArray(),
+        );
+    }
+
     public function test_inner_join_into_empty(): void
     {
         $left = rows();

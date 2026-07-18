@@ -31,7 +31,7 @@ final class ArrayToRowTest extends FlowTestCase
 {
     public function test_building_array_to_row_with_entry_that_is_list_of_strings(): void
     {
-        $row = array_to_row(['data' => ['a', 'b', 'c', 'd']], flow_context(config())->entryFactory());
+        $row = array_to_row(['data' => ['a', 'b', 'c', 'd']], flow_context(config())->hydrator());
 
         static::assertEquals(row(list_entry('data', ['a', 'b', 'c', 'd'], type_list(type_string()))), $row);
     }
@@ -41,7 +41,7 @@ final class ArrayToRowTest extends FlowTestCase
         $row = array_to_row([
             ['id' => 1234, 'deleted' => false, 'phase' => null],
             ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
-        ], flow_context(config())->entryFactory());
+        ], flow_context(config())->hydrator());
 
         static::assertEquals(
             row(struct_entry('e00', ['id' => 1234, 'deleted' => false, 'phase' => null], type_structure([
@@ -61,7 +61,7 @@ final class ArrayToRowTest extends FlowTestCase
     {
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
-            flow_context(config())->entryFactory(),
+            flow_context(config())->hydrator(),
             schema: schema(int_schema('id'), bool_schema('deleted')),
         );
 
@@ -72,7 +72,7 @@ final class ArrayToRowTest extends FlowTestCase
     {
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false],
-            flow_context(config())->entryFactory(),
+            flow_context(config())->hydrator(),
             schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
         );
 
@@ -85,7 +85,7 @@ final class ArrayToRowTest extends FlowTestCase
             'id' => 1234,
             'deleted' => false,
             'phase' => null,
-        ], flow_context(config())->entryFactory());
+        ], flow_context(config())->hydrator());
 
         static::assertEquals(row(int_entry('id', 1234), bool_entry('deleted', false), null_entry('phase')), $row);
     }

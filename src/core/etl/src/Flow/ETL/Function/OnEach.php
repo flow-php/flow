@@ -34,7 +34,7 @@ final class OnEach extends ScalarFunctionChain
 
         $output = [];
 
-        $entryFactory = $context->entryFactory();
+        $hydrator = $context->hydrator();
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
@@ -42,7 +42,7 @@ final class OnEach extends ScalarFunctionChain
                 try {
                     $output[$key] = (new Parameter($this->function))->eval(array_to_row([
                         'element' => $item,
-                    ], $entryFactory), $context);
+                    ], $hydrator), $context);
                 } catch (InvalidArgumentException) {
                     $output[$key] = null;
                 }
@@ -50,7 +50,7 @@ final class OnEach extends ScalarFunctionChain
                 try {
                     $output[] = (new Parameter($this->function))->eval(array_to_row([
                         'element' => $item,
-                    ], $entryFactory), $context);
+                    ], $hydrator), $context);
                 } catch (InvalidArgumentException) {
                     $output[] = null;
                 }

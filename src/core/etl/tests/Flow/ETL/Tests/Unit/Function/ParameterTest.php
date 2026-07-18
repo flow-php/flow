@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\BooleanType;
@@ -22,6 +21,7 @@ use stdClass;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
@@ -341,11 +341,11 @@ final class ParameterTest extends FlowTestCase
         static::assertSame($expected, $parameter->asString(row(), flow_context(), $default));
     }
 
-    public function test_as_type_when_handling_string_entry_created_from_null(): void
+    public function test_as_type_when_handling_null_entry(): void
     {
         $parameter = new Parameter(ref('value'));
 
-        static::assertEquals(type_null(), $parameter->asType(row(StringEntry::fromNull('value')), flow_context()));
+        static::assertEquals(type_null(), $parameter->asType(row(null_entry('value')), flow_context()));
     }
 
     public function test_as_type_with_literal_value(): void

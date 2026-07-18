@@ -6,7 +6,6 @@ dynamic (mixed) values with nested arrays, datetime, uuid and json round-trip
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 
@@ -32,7 +31,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 assert_rows_identical(php_decode_frames($frames), $actual);
 

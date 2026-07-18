@@ -17,6 +17,7 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TimeEntry;
@@ -34,13 +35,13 @@ use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
-use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Types\Exception\InvalidTypeException;
 use JsonException;
@@ -73,6 +74,7 @@ final class SchemaDecoder
         UuidDefinition::class => UuidEntry::class,
         XMLDefinition::class => XMLEntry::class,
         XMLElementDefinition::class => XMLElementEntry::class,
+        NullDefinition::class => NullEntry::class,
     ];
 
     public function __construct(
@@ -106,25 +108,17 @@ final class SchemaDecoder
 
         /** @var array{ref: string, type: array<string, mixed>, nullable?: bool, metadata?: array<string, array<mixed>|bool|float|int|string>} $normalized */
         foreach ($definitions as $normalized) {
-            $metadata = $normalized['metadata'] ?? [];
-            unset($metadata[Metadata::FROM_NULL]);
-
             $definition = definition_from_array([
                 'ref' => $normalized['ref'],
                 'type' => $normalized['type'],
-                'nullable' => false,
-                'metadata' => $metadata,
+                'nullable' => $normalized['nullable'] ?? false,
+                'metadata' => $normalized['metadata'] ?? [],
             ]);
 
             $entryClass = self::ENTRY_CLASSES[$definition::class] ?? throw new FloeException(sprintf(
                 'Floe cannot hydrate entries for definition "%s"',
                 $definition::class,
             ));
-
-            $fromNullDefinition = $definition->makeNullable();
-            $fromNullDefinition->setMetadata(
-                $fromNullDefinition->metadata()->merge(Metadata::fromArray([Metadata::FROM_NULL => true])),
-            );
 
             /** @var class-string<Entry<mixed>> $entryClass */
             $plan[] = new ColumnBlueprint(

@@ -16,7 +16,6 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
-use function iterator_to_array;
 
 #[CoversClass(ApcuCache::class)]
 #[RequiresPhpExtension('apcu')]
@@ -88,20 +87,6 @@ final class ApcuCacheTest extends FlowTestCase
         $this->expectException(KeyNotInCacheException::class);
 
         $this->cache->get('non-existing');
-    }
-
-    public function test_reading_rows(): void
-    {
-        $this->cache->set('rows', $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-
-        static::assertEquals([$rows], iterator_to_array($this->cache->read('rows'), false));
-    }
-
-    public function test_reading_non_existing_cache_key(): void
-    {
-        $this->expectException(KeyNotInCacheException::class);
-
-        iterator_to_array($this->cache->read('non-existing'), false);
     }
 
     public function test_removing_from_cache(): void

@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\Serializer\DSL\serialize_to_string;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
@@ -37,8 +38,8 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
 
         $rows = rows(
-            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row1))),
-            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row2))),
+            row(str_entry('serialized', serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row1)))),
+            row(str_entry('serialized', serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row2)))),
         );
 
         $transformer = new UnserializeTransformer('serialized');
@@ -48,14 +49,14 @@ final class UnserializeTransformerTest extends FlowTestCase
         static::assertEquals(
             [
                 [
-                    'serialized' => (new Base64Serializer(new FloeSerializer()))->serialize($row1),
+                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row1)),
                     'id' => 1,
                     'name' => 'John',
                     'active' => true,
                     'tags' => ['tag1', 'tag2'],
                 ],
                 [
-                    'serialized' => (new Base64Serializer(new FloeSerializer()))->serialize($row2),
+                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row2)),
                     'id' => 2,
                     'name' => 'Jane',
                     'active' => false,
@@ -77,6 +78,37 @@ final class UnserializeTransformerTest extends FlowTestCase
         static::assertEquals($rows, $transformedRows);
     }
 
+    public function test_unserializing_row_without_source_column_is_unchanged(): void
+    {
+        $rows = rows(row(int_entry('id', 1)));
+
+        $transformer = new UnserializeTransformer('serialized');
+
+        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+    }
+
+    public function test_unserializing_non_string_value_is_unchanged(): void
+    {
+        $rows = rows(row(int_entry('serialized', 123)));
+
+        $transformer = new UnserializeTransformer('serialized');
+
+        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+    }
+
+    public function test_unserializing_multi_row_payload_returns_row_unchanged(): void
+    {
+        $payload = serialize_to_string(
+            new Base64Serializer(new FloeSerializer()),
+            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+        );
+        $rows = rows(row(str_entry('serialized', $payload)));
+
+        $transformer = new UnserializeTransformer('serialized');
+
+        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+    }
+
     public function test_unserializing_without_merge(): void
     {
         $row1 = row(
@@ -93,8 +125,8 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
 
         $rows = rows(
-            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row1))),
-            row(str_entry('serialized', (new Base64Serializer(new FloeSerializer()))->serialize($row2))),
+            row(str_entry('serialized', serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row1)))),
+            row(str_entry('serialized', serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($row2)))),
         );
 
         $transformer = new UnserializeTransformer('serialized', false);

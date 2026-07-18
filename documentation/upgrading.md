@@ -268,31 +268,37 @@ built from the missing, mismatched (`MismatchedDefinition`), and unexpected defi
 `{name}` in a path is now a partition placeholder resolved from `partitionBy()` columns; strip braces from partition
 values before partitioning.
 
-### 19) `flow-php/etl` - `Cache` stores only `Rows` and gained `read()`; cache indexes are stored as `Rows`
+### 19) `flow-php/etl` - `Cache` stores only `Rows`; cache indexes are stored as `Rows`
 
-| Before                                            | After                                                         |
-|---------------------------------------------------|---------------------------------------------------------------|
-| `Cache::get(string): Row\|Rows\|CacheIndex`       | `Cache::get(string): Rows`                                    |
-| `Cache::set(string, Row\|Rows\|CacheIndex): void` | `Cache::set(string, Rows): void`                              |
-| —                                                 | `Cache::read(string $key): Generator` (yields `Rows` batches) |
-| `$cache->set($id, $row)`                          | `$cache->set($id, rows($row))`                                |
-| `$cache->set($id, $cacheIndex)`                   | `$cache->set($id, $cacheIndex->toRows())`                     |
-| `$cache->get($id)` returning `CacheIndex`         | `CacheIndex::fromRows($id, $cache->get($id))`                 |
+| Before                                            | After                                         |
+|---------------------------------------------------|-----------------------------------------------|
+| `Cache::get(string): Row\|Rows\|CacheIndex`       | `Cache::get(string): Rows`                    |
+| `Cache::set(string, Row\|Rows\|CacheIndex): void` | `Cache::set(string, Rows): void`              |
+| `$cache->set($id, $row)`                          | `$cache->set($id, rows($row))`                |
+| `$cache->set($id, $cacheIndex)`                   | `$cache->set($id, $cacheIndex->toRows())`     |
+| `$cache->get($id)` returning `CacheIndex`         | `CacheIndex::fromRows($id, $cache->get($id))` |
 
-Custom `Cache` implementations must adopt the `Rows`-only signatures and add `read()`; the minimal
-implementation is `yield $this->get($key);`.
+Custom `Cache` implementations must adopt the `Rows`-only signatures.
 
 ### 20) `flow-php/etl` - cache and serialization use the Floe (`.floe`) binary format; datetime subclasses rejected
 
-| Before                                                                                 | After                                         |
-|----------------------------------------------------------------------------------------|-----------------------------------------------|
-| `config_builder()->serializer()` default `Base64Serializer(new NativePHPSerializer())` | `Flow\Floe\FloeSerializer`                    |
-| `filesystem_cache($cache_dir, $filesystem, $serializer)`                               | `filesystem_cache($cache_dir, $filesystem)`   |
-| `new FilesystemCache($filesystem, $serializer, $cacheDir)`                             | `new FilesystemCache($filesystem, $cacheDir)` |
-| `CacheConfigBuilder::build($fstab, $serializer, …)`                                    | `CacheConfigBuilder::build($fstab, …)`        |
-| caching or serializing a `DateTime`/`DateTimeImmutable` subclass (e.g. Carbon)         | throws `Flow\Floe\Exception\FloeException`    |
+| Before                                                                                 | After                                                                  |
+|----------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| `config_builder()->serializer()` default `Base64Serializer(new NativePHPSerializer())` | `Flow\Floe\FloeSerializer`                                             |
+| `filesystem_cache(..., Serializer $serializer = new NativePHPSerializer())`            | `filesystem_cache(..., Serializer $serializer = new FloeSerializer())` |
+| `new FilesystemCache($filesystem, $serializer, $cacheDir)`                             | `new FilesystemCache($filesystem, $cacheDir, $serializer)`             |
+| caching or serializing a `DateTime`/`DateTimeImmutable` subclass (e.g. Carbon)         | throws `Flow\Floe\Exception\FloeException`                             |
 
-Convert `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
+Delete cache directories written by 0.41 — the old serialized payloads are unreadable. Convert
+`DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
+
+A Floe file carries exactly one schema, and sort / join / group-by spill batches through it — a pipeline with a
+drifting or schemaless source must declare column types at the source so nullable columns carry a concrete type
+(`DataFrame::match($schema)` validates but does not retype values):
+
+```php
+->read(from_array($data, schema(str_schema('email'), float_schema('discount', nullable: true))))
+```
 
 ### 21) `flow-php/symfony-telemetry-bundle` - `HttpKernelSpanSubscriber` takes a
 
@@ -329,6 +335,119 @@ $config->sort->algorithm(SortAlgorithms::MEMORY_SORT);
 
 data_frame($config)->read(...)->sortBy(ref('id'))->run();
 ```
+
+### 23) `flow-php/etl` - joins emit every matching right row and follow SQL semantics
+
+| Before                                                                | After                                                                  |
+|-----------------------------------------------------------------------|------------------------------------------------------------------------|
+| inner/left/right join: first matching row per probe row               | one output row per matching pair                                       |
+| left/left_anti join: left row dropped on hash collision without match | left row kept                                                          |
+| duplicated right side rows collapsed into one                         | preserved                                                              |
+| `DataFrame::join(..., Join::inner)`: duplicated join columns kept     | duplicated join columns dropped (empty prefix)                         |
+| `Equal` on object values (Uuid, etc.): always `false`                 | compared with `==`                                                     |
+| `Flow\ETL\Processor\HashJoin\HashTable`                               | `Flow\ETL\Join\HashJoin\HashTable`                                     |
+| `Flow\ETL\Processor\HashJoin\Bucket`                                  | removed                                                                |
+| —                                                                     | `Expression::comparison()`, `All::comparisons()`, `Any::comparisons()` |
+
+`Rows::joinRight()` emits matched rows in left-probe order and unmatched right rows last.
+
+### 24) `flow-php/etl` - join buckets storage is configurable, spills to disk by default
+
+| Before                                             | After                                                                       |
+|----------------------------------------------------|-----------------------------------------------------------------------------|
+| `join()` holds right side in memory, keeps left row order | join buckets spilled to disk (Floe files), left row order not preserved |
+| —                                                  | `ConfigBuilder::joinCache(BucketsCache)` (default `FilesystemBucketsCache`) |
+| —                                                  | `ConfigBuilder::joinBucketsCount(int)` (default `64`)                       |
+| —                                                  | `ConfigBuilder::joinBatchSize(int)` (default `1000`)                        |
+| —                                                  | `Flow\ETL\Sort\ExternalSort\ResidentBucketsCache`                           |
+| —                                                  | `Flow\ETL\Sort\ExternalSort\BucketsCache\InMemoryBucketsCache`              |
+
+To keep the right side in memory and preserve left row order:
+
+```php
+data_frame(config_builder()->joinCache(new InMemoryBucketsCache()))
+    ->read(...)
+    ->join(...)
+    ->run();
+```
+
+### 25) `flow-php/etl` - `Serializer` works on `Rows` and filesystem streams
+
+| Before                                                                                    | After                                                                     |
+|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `Serializer::serialize(object $serializable): string`                                     | `Serializer::serialize(Rows $rows, DestinationStream $destination): void` |
+| `Serializer::unserialize(string $serialized, array $classes): object`                     | `Serializer::unserialize(SourceStream $source): Rows`                     |
+| `CompressingSerializer`/`NativePHPSerializer` throw `Flow\ETL\Exception\RuntimeException` | throw `Flow\Serializer\Exception\SerializationException`                  |
+| —                                                                                         | `Flow\Floe\FloeSerializer` (the default)                                  |
+
+### 26) `flow-php/etl` - `EntryFactory` API reshaped
+
+| Before                                                                                            | After                                                                                              |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| `EntryFactory::create(string $entryName, mixed $value, Schema\|Definition\|null $schema = null)`  | `EntryFactory::create(string $name, mixed $value, ?Type $type = null, ?Metadata $metadata = null)` |
+| `EntryFactory::createAs(string $entryName, mixed $value, Type $type, ?Metadata $metadata = null)` | `EntryFactory::cast(string $name, mixed $value, Type $type, ?Metadata $metadata = null)`           |
+| —                                                                                                 | `EntryFactory::fromDefinition(Definition $definition, mixed $value): Entry`                        |
+| `to_entry($name, $data, EntryFactory $entryFactory)`                                              | `to_entry($name, $data, EntryFactory $entryFactory = new EntryFactory())`                          |
+| `ConfigBuilder::build(EntryFactory $entryFactory = new EntryFactory())`                           | `ConfigBuilder::build()`                                                                           |
+
+### 27) `flow-php/etl` - `Encoder`/`Hydrator` contracts; hydrator configured on the context
+
+| Before                                                  | After                                                                                                                                                     |
+|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| —                                                       | `Flow\ETL\Row\Encoder<TPhysical>`: `encode(list<TypedRowValues>): list<TPhysical>`, `decode(list<TPhysical>): list<RawRowValues>`                         |
+| —                                                       | `Flow\ETL\Row\Hydrator`: `cast(list<RawRowValues>, ?Schema): Rows`, `hydrate(list<RawRowValues>, ?Schema): Rows`, `dehydrate(Rows): list<TypedRowValues>` |
+| —                                                       | `Flow\ETL\Row\RawRowValues`, `Flow\ETL\Row\TypedRowValues`                                                                                                |
+| —                                                       | `Flow\ETL\Row\PhpRowHydrator`, `NativeRowHydrator`, `AdaptiveRowHydrator` (the default)                                                                   |
+| —                                                       | `ConfigBuilder::hydrator(Hydrator)`, `Config::hydrator()`, `FlowContext::hydrator()`                                                                      |
+| `array_to_row($data, EntryFactory $entryFactory, ...)`  | `array_to_row($data, Hydrator $hydrator = new AdaptiveRowHydrator(), ...)`                                                                                |
+| `array_to_rows($data, EntryFactory $entryFactory, ...)` | `array_to_rows($data, Hydrator $hydrator = new AdaptiveRowHydrator(), ...)`                                                                               |
+
+`cast()` coerces untrusted values through the schema (`null` schema infers types); `hydrate()` instantiates trusted,
+already-typed values and requires a schema. A custom extractor reading raw values (CSV, JSON, XML, Excel, Text,
+Google Sheet, PostgreSQL, Doctrine) calls `$context->hydrator()->cast(...)`; a self-describing source (Parquet, Floe)
+calls `$context->hydrator()->hydrate(...)`.
+
+Under a schema, entries emit in schema-definition order (was data-key order with missing columns appended); a schema
+column missing from the source hydrates as a typed null (was a `StringEntry` null); a column absent from the schema is
+dropped. When the `flow_php` extension is loaded, `AdaptiveRowHydrator` runs hydration natively — pin the pure-PHP
+engine with `config_builder()->hydrator(new PhpRowHydrator())`.
+
+### 28) `flow-php/etl-adapter-csv`, `-json`, `-parquet`, `-xml`, `-excel`, `-doctrine`, `-postgresql`, `-seal`, `-text`,
+
+`-google-sheet` - per-format `Encoder`s replace normalizers
+
+| Before                                                                                                                       | After                                                                                                                                            |
+|------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\ETL\Adapter\CSV\RowsNormalizer`, `RowsNormalizer\EntryNormalizer`, `RowsNormalizer\ScalarCast`                         | `Flow\ETL\Adapter\CSV\CSVEncoder`                                                                                                                |
+| `Flow\ETL\Adapter\JSON\RowsNormalizer`, `RowsNormalizer\EntryNormalizer`                                                     | `Flow\ETL\Adapter\JSON\JSONEncoder`                                                                                                              |
+| `Flow\ETL\Adapter\Parquet\RowsNormalizer`                                                                                    | `Flow\ETL\Adapter\Parquet\ParquetEncoder`                                                                                                        |
+| `Flow\ETL\Adapter\XML\RowsNormalizer`, `RowsNormalizer\EntryNormalizer`, `RowsNormalizer\EntryNormalizer\PHPValueNormalizer` | `Flow\ETL\Adapter\XML\XMLEncoder`                                                                                                                |
+| `Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer`                                                                  | `Flow\ETL\Adapter\Excel\ExcelEncoder`                                                                                                            |
+| `Flow\ETL\Adapter\Doctrine\RowsNormalizer`                                                                                   | `Flow\ETL\Adapter\Doctrine\DbalEncoder`                                                                                                          |
+| `Flow\ETL\Adapter\Seal\RowsNormalizer`, `RowsNormalizer\EntryNormalizer`                                                     | `Flow\ETL\Adapter\Seal\SealEncoder`                                                                                                              |
+| —                                                                                                                            | `Flow\ETL\Adapter\Text\TextEncoder`, `Flow\ETL\Adapter\PostgreSql\PostgreSqlEncoder`, `Flow\ETL\Adapter\GoogleSheet\GoogleSheetEncoder`          |
+| `Flow\ETL\Adapter\Doctrine\TypesMap::flowRowTypes(Row)`                                                                      | `TypesMap::flowSchemaTypes(Schema)`                                                                                                              |
+| `Flow\ETL\Adapter\PostgreSql\EntryTypesMap::mapEntry(Entry)`                                                                 | `EntryTypesMap::map(string $column, Type $type, mixed $value)`                                                                                   |
+| `InsertQueryBuilder::build(Rows, ...)`                                                                                       | `InsertQueryBuilder::build(array $values, Schema, ...)`                                                                                          |
+| `UpdateQueryBuilder::build(Row, ...)`, `DeleteQueryBuilder::build(Row, ...)`                                                 | `build(array $value, Schema, ...)`                                                                                                               |
+| CSV/JSON/XML/Excel/Seal writers (no `dateFormat`)                                                                            | `dateFormat = 'Y-m-d'` encoder constructor param                                                                                                 |
+| Excel `timeFormat = 'H:i:s'`                                                                                                 | `timeFormat = '%H:%I:%S'`                                                                                                                        |
+| —                                                                                                                            | `withDateFormat()` on `CSVLoader`, `JsonLoader`, `JsonLinesLoader`, `XMLLoader`, `ExcelLoader`, `SealLoader`; `SealLoader::withDateTimeFormat()` |
+
+Behavioural changes: CSV/JSON/XML/Excel/Seal `date` columns render with `dateFormat` (`Y-m-d`, was `dateTimeFormat`);
+XML `date`/`time` columns render (was `InvalidArgumentException`); Seal `time` columns render as microseconds (was
+`null`); Google Sheet `_spread_sheet_id`/`_sheet_name` are appended to the schema under `putInputIntoRows()` (were
+dropped when a schema was set); Excel now appends `_input_file_uri` under `putInputIntoRows()`.
+
+### 29) `flow-php/etl` - null is a first-class `NullEntry`/`NullDefinition`; `from_null` metadata removed
+
+| Before                                                                    | After                                                                                |
+|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `null_entry($name)` → `StringEntry` (type `string`, `from_null` metadata) | `null_entry($name)` → `Flow\ETL\Row\Entry\NullEntry` (type `null`)                   |
+| `null_schema($name)` → `StringDefinition` + `from_null` metadata          | `null_schema($name)` → `Flow\ETL\Schema\Definition\NullDefinition` (always nullable) |
+| `Flow\ETL\Row\Entry\StringEntry::fromNull($name, $metadata)`              | `null_entry($name, $metadata)`                                                       |
+| `new StringEntry($name, $value, $metadata, fromNull: true)`               | `$fromNull` constructor flag removed                                                 |
+| `Flow\ETL\Schema\Metadata::FROM_NULL`                                     | removed                                                                              |
 
 ---
 

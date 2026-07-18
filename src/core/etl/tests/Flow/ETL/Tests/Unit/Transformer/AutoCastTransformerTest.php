@@ -29,7 +29,7 @@ final class AutoCastTransformerTest extends TestCase
                 'null' => 'null',
                 'nil' => 'nil',
             ],
-        ], flow_context(config())->entryFactory());
+        ], flow_context(config())->hydrator());
 
         static::assertEquals(
             [

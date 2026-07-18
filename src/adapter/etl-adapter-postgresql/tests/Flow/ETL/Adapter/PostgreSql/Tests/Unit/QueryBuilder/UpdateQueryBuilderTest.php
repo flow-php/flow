@@ -12,9 +12,9 @@ use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class UpdateQueryBuilderTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class UpdateQueryBuilderTest extends TestCase
     {
         $builder = new UpdateQueryBuilder('users', new EntryTypesMap());
 
-        [$query, $params] = $builder->build(row(int_entry('id', 1)), new UpdateOptions(['id']));
+        [$query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new UpdateOptions(['id']));
 
         static::assertNull($query);
         static::assertEmpty($params);
@@ -33,7 +33,8 @@ final class UpdateQueryBuilderTest extends TestCase
         $builder = new UpdateQueryBuilder('users', new EntryTypesMap());
 
         [$_query, $params] = $builder->build(
-            row(int_entry('id', 1), str_entry('name', 'Alice')),
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
             new UpdateOptions(['id']),
         );
 
@@ -51,7 +52,8 @@ final class UpdateQueryBuilderTest extends TestCase
         $builder = new UpdateQueryBuilder('users', new EntryTypesMap());
 
         [$query, $params] = $builder->build(
-            row(int_entry('id', 1), str_entry('name', 'Alice')),
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
             new UpdateOptions(['id']),
         );
 
@@ -70,7 +72,11 @@ final class UpdateQueryBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for UPDATE operation');
 
-        $builder->build(row(int_entry('id', 1), str_entry('name', 'Alice')), new UpdateOptions([]));
+        $builder->build(
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
+            new UpdateOptions([]),
+        );
     }
 
     public function test_build_throws_when_primary_key_not_in_row(): void
@@ -80,7 +86,7 @@ final class UpdateQueryBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary key "id" not found in row');
 
-        $builder->build(row(str_entry('name', 'Alice')), new UpdateOptions(['id']));
+        $builder->build(['name' => 'Alice'], schema(str_schema('name')), new UpdateOptions(['id']));
     }
 
     public function test_build_with_multiple_primary_keys(): void
@@ -88,7 +94,8 @@ final class UpdateQueryBuilderTest extends TestCase
         $builder = new UpdateQueryBuilder('order_items', new EntryTypesMap());
 
         [$query, $params] = $builder->build(
-            row(int_entry('order_id', 1), int_entry('product_id', 2), int_entry('quantity', 5)),
+            ['order_id' => 1, 'product_id' => 2, 'quantity' => 5],
+            schema(int_schema('order_id'), int_schema('product_id'), int_schema('quantity')),
             new UpdateOptions(['order_id', 'product_id']),
         );
 

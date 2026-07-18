@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 
 final class EnumDefinitionTest extends FlowTestCase
@@ -178,38 +179,17 @@ final class EnumDefinitionTest extends FlowTestCase
         static::assertEquals($expected, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null(): void
+    public function test_merge_with_null_definition_keeps_original_type(): void
     {
-        $def1 = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-        $def2 = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def1->merge($def2);
+        $merged = enum_schema('col', BackedStringEnum::class, false)->merge(null_schema('col'));
 
         static::assertInstanceOf(EnumDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
-        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null(): void
+    public function test_merge_when_this_is_null_definition(): void
     {
-        $nullDef = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-        $def = enum_schema('col', BackedStringEnum::class, false);
-
-        $merged = $nullDef->merge($def);
-
-        static::assertInstanceOf(EnumDefinition::class, $merged);
-        static::assertTrue($merged->isNullable());
-        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
-    }
-
-    public function test_merge_with_assumed_null_keeps_original_type(): void
-    {
-        $def = enum_schema('col', BackedStringEnum::class, false);
-        $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def->merge($nullDef);
+        $merged = null_schema('col')->merge(enum_schema('col', BackedStringEnum::class, false));
 
         static::assertInstanceOf(EnumDefinition::class, $merged);
         static::assertTrue($merged->isNullable());

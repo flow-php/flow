@@ -11,6 +11,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -98,24 +99,27 @@ final class CacheTest extends FlowIntegrationTestCase
         }
     }
 
-    public function test_cache_streaming_serializer_mode_end_to_end(): void
+    public function test_cache_end_to_end_with_custom_serializer(): void
     {
         $input = array_map(static fn(int $i) => ['id' => $i], range(1, 25));
 
-        $bulkCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-bulk'));
-        $streamingCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-streaming'), 4);
+        $defaultCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-default'));
+        $spy = new SpySerializer();
+        $customCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-custom'), $spy);
 
-        df(config_builder()->cache($bulkCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
-        df(config_builder()->cache($streamingCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
+        df(config_builder()->cache($defaultCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
+        df(config_builder()->cache($customCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
 
-        $bulkRows = df(config_builder()->cache($bulkCache))->read(from_cache('parity'))->fetch();
-        $streamingRows = df(config_builder()->cache($streamingCache))->read(from_cache('parity'))->fetch();
+        $defaultRows = df(config_builder()->cache($defaultCache))->read(from_cache('parity'))->fetch();
+        $customRows = df(config_builder()->cache($customCache))->read(from_cache('parity'))->fetch();
 
-        static::assertSame($input, $bulkRows->toArray());
-        static::assertSame($input, $streamingRows->toArray());
+        static::assertSame($input, $defaultRows->toArray());
+        static::assertSame($input, $customRows->toArray());
+        static::assertNotEmpty($spy->serialized);
+        static::assertNotEmpty($spy->unserialized);
 
-        $bulkCache->clear();
-        $streamingCache->clear();
+        $defaultCache->clear();
+        $customCache->clear();
     }
 
     public function test_cache_with_telemetry_collects_spans_and_metrics(): void

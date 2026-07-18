@@ -12,7 +12,7 @@ rows from the left DataFrame.
 
 ### join()
 
-Main join method that loads the right DataFrame into memory as a hash table for efficient lookups.
+Main join method that partitions the right DataFrame into buckets and probes them with left rows through a hash table.
 
 ### crossJoin() - Cartesian Product
 
@@ -33,7 +33,44 @@ Flow PHP supports four join types with specific behaviors:
 | **Right Join** (`Join::right`)         | Returns all rows from right DataFrame with matching rows from left (or NULL)               |
 | **Left Anti Join** (`Join::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
 
-> Flow uses hash join implementation where hashes are stored in sorted buckets to optimize memory usage and performance.
+Joins follow SQL semantics - every matching pair of rows produces one output row, so a left row
+that matches multiple right rows is emitted multiple times.
+
+> Flow uses hash join implementation where hashes are stored in buckets to optimize memory usage and performance.
+> Rows are bucketed by the values of the join columns and every candidate pair is verified against
+> the join expression, so non-equality expressions (like `compare_any()`) are supported as well.
+
+## Buckets Storage
+
+Like group by, `join()` always partitions the right DataFrame into buckets through a `BucketsCache` -
+the same abstraction used by external sort and group by - and the configured implementation decides
+how the join executes:
+
+| Buckets cache                          | Behavior                                                                                                                                                                                        |
+|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `FilesystemBucketsCache` - **Default** | Both sides are partitioned by join key into buckets spilled to disk (Floe files), then joined bucket by bucket. Memory usage is bounded by the largest bucket, left row order is not preserved. |
+| `InMemoryBucketsCache`                 | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                 |
+
+The implementation is swapped with `config_builder()->joinCache(BucketsCache $cache)`; any cache
+implementing `ResidentBucketsCache` (like `InMemoryBucketsCache`) enables the streaming,
+order-preserving execution:
+
+```php
+<?php
+
+data_frame(
+    config_builder()
+        ->joinCache(new InMemoryBucketsCache()) // right side fits in memory, keep left row order
+        ->joinBucketsCount(64)                  // number of disk buckets
+        ->joinBatchSize(1000)                   // rows per batch when reading buckets back
+)
+    ->read(from_parquet('orders.parquet'))
+    ->join(
+        data_frame()->read(from_parquet('sellers.parquet')),
+        join_on(['seller_id' => 'id'], join_prefix: 'seller_'),
+    )
+    ->run();
+```
 
 ## Example
 

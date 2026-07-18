@@ -1,12 +1,13 @@
 --TEST--
-RowsDecoder decodes streamed frame bodies identically to the pure-PHP decoder
+RowValues pipeline decodes streamed frame bodies identically to the pure-PHP pipeline
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
+use Flow\Floe\Format;
+use Flow\Floe\RustFloeEncoderNative;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, datetime_entry};
 
@@ -18,23 +19,27 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$expected = php_decode_frames($frames);
-$decoded = decoder_decode_frames(new RowsDecoder(), $frames);
+$decoded = ext_decode_frames($frames);
 
 var_dump(count($decoded));
 
-$identical = true;
-foreach ($expected as $i => $expectedRow) {
-    if (serialize($expectedRow) !== serialize($decoded[$i])) {
-        $identical = false;
-        echo "FAIL: row {$i} differs\n";
+assert_rows_identical(php_decode_frames($frames), $decoded);
+
+$schemaBody = null;
+$rowBody = null;
+
+foreach ($frames as $frame) {
+    if ($frame['type'] === Format::FRAME_SCHEMA) {
+        if ($schemaBody === null) {
+            $schemaBody = $frame['body'];
+        }
+    } elseif ($rowBody === null && $schemaBody !== null) {
+        $rowBody = $frame['body'];
     }
 }
-var_dump($identical);
 
-$fresh = new RowsDecoder();
 try {
-    $fresh->row("\x01");
+    (new RustFloeEncoderNative())->decode([$rowBody . "\xEF"], $schemaBody);
     echo "FAIL: no exception\n";
 } catch (Flow\Floe\Exception\ExtensionException $e) {
     echo $e->getMessage(), "\n";
@@ -42,5 +47,5 @@ try {
 ?>
 --EXPECT--
 int(4)
-bool(true)
-flow_php found a row frame before any schema frame
+identical
+flow_php row frame length does not match its content

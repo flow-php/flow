@@ -39,12 +39,10 @@ final class CacheExtractor implements Extractor
             $index = CacheIndex::fromRows($this->id, $context->cache()->get($this->id));
 
             foreach ($index->values() as $cacheKey) {
-                foreach ($context->cache()->read($cacheKey) as $rows) {
-                    $signal = yield $rows;
+                $signal = yield $context->cache()->get($cacheKey);
 
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
+                if ($signal === Signal::STOP) {
+                    return;
                 }
 
                 if ($this->clear) {

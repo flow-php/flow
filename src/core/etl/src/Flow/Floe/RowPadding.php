@@ -9,7 +9,6 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Schema;
 
-use function array_values;
 use function json_encode;
 
 use const JSON_THROW_ON_ERROR;
@@ -30,11 +29,13 @@ final class RowPadding
         $order = [];
         $nulls = [];
 
-        foreach (array_values($fileSchema->definitions()) as $definition) {
-            $name = $definition->entry()->name();
-            $order[] = $name;
-            $column = $decoder->decode(json_encode([$definition->normalize()], JSON_THROW_ON_ERROR))[0];
-            $nulls[$name] = $column->instantiator->instantiate($name, null, clone $column->fromNullDefinition);
+        foreach ($decoder->decode(json_encode($fileSchema->normalize(), JSON_THROW_ON_ERROR)) as $column) {
+            $order[] = $column->name;
+            $nulls[$column->name] = $column->instantiator->instantiate(
+                $column->name,
+                null,
+                $column->definition->makeNullable(),
+            );
         }
 
         return new self($order, $nulls);

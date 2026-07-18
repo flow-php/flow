@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Closure;
 use Flow\Filesystem\SourceStream;
 use Flow\Floe\Exception\FloeException;
 use Generator;
@@ -25,6 +26,27 @@ final class FrameReader
     ) {}
 
     /**
+     * @param \Generator<int, string> $chunks
+     *
+     * @return Closure(int): bool
+     */
+    public static function chunkFiller(string &$buffer, int &$position, Generator $chunks): Closure
+    {
+        return static function (int $bytes) use (&$buffer, &$position, $chunks): bool {
+            while ((strlen($buffer) - $position) < $bytes) {
+                if (!$chunks->valid()) {
+                    return false;
+                }
+
+                $buffer .= $chunks->current();
+                $chunks->next();
+            }
+
+            return true;
+        };
+    }
+
+    /**
      * @throws FloeException
      *
      * @return \Generator<int, array{0: int, 1: string}> frame type and frame body
@@ -37,18 +59,7 @@ final class FrameReader
         $buffer = '';
         $position = 0;
 
-        $fill = static function (int $bytes) use (&$buffer, &$position, $chunks): bool {
-            while ((strlen($buffer) - $position) < $bytes) {
-                if (!$chunks->valid()) {
-                    return false;
-                }
-
-                $buffer .= $chunks->current();
-                $chunks->next();
-            }
-
-            return true;
-        };
+        $fill = self::chunkFiller($buffer, $position, $chunks);
 
         if (!$fill(Format::HEADER_LENGTH)) {
             if (strlen($buffer) === 0 && $lenient) {

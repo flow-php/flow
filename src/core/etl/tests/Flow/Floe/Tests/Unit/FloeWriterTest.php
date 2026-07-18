@@ -11,17 +11,16 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
-use Flow\Floe\Tests\Context\FloeFileContext;
+use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
 use Flow\Floe\Tests\Double\UnsizedFilesystem;
 use PHPUnit\Framework\TestCase;
 
-use function array_map;
-use function array_values;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -30,6 +29,49 @@ use function str_repeat;
 
 final class FloeWriterTest extends TestCase
 {
+    public function test_create_for_stream_is_byte_identical_to_create_by_path(): void
+    {
+        $filesystem = memory_filesystem();
+        $viaPath = path('memory://via-path.floe');
+        $viaStream = path('memory://via-stream.floe');
+        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
+
+        $byPath = new FloeWriter($filesystem);
+        $byPath->create($viaPath);
+        $byPath->write($data);
+        $byPath->close();
+
+        $byStream = new FloeWriter($filesystem);
+        $byStream->createForStream($filesystem->writeTo($viaStream));
+        $byStream->write($data);
+        $byStream->close();
+
+        static::assertSame($filesystem->readFrom($viaPath)->content(), $filesystem->readFrom($viaStream)->content());
+    }
+
+    public function test_buffer_size_only_changes_flush_cadence_not_bytes(): void
+    {
+        $filesystem = memory_filesystem();
+        $default = path('memory://default-buffer.floe');
+        $tiny = path('memory://tiny-buffer.floe');
+        $data = rows(
+            row(int_entry('id', 1), str_entry('name', 'alpha')),
+            row(int_entry('id', 2), str_entry('name', 'beta')),
+        );
+
+        $defaultWriter = new FloeWriter($filesystem);
+        $defaultWriter->create($default);
+        $defaultWriter->write($data);
+        $defaultWriter->close();
+
+        $tinyWriter = new FloeWriter($filesystem, bufferSize: 4);
+        $tinyWriter->create($tiny);
+        $tinyWriter->write($data);
+        $tinyWriter->close();
+
+        static::assertSame($filesystem->readFrom($default)->content(), $filesystem->readFrom($tiny)->content());
+    }
+
     public function test_append_on_missing_file_behaves_like_create(): void
     {
         $filesystem = memory_filesystem();
@@ -40,7 +82,7 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(row(int_entry('id', 1))));
         $writer->close();
 
-        static::assertSame(1, FloeFileContext::footer($filesystem, $path)->totalRows);
+        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->totalRows);
     }
 
     public function test_append_on_empty_file_behaves_like_create(): void
@@ -54,7 +96,57 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(row(int_entry('id', 1))));
         $writer->close();
 
-        static::assertSame(1, FloeFileContext::footer($filesystem, $path)->totalRows);
+        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->totalRows);
+    }
+
+    public function test_append_to_a_closed_zero_row_file_derives_the_schema_from_the_first_batch(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://zero-rows.floe');
+
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path);
+        $writer->close();
+
+        $writer = new FloeWriter($filesystem);
+        $writer->append($path);
+        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->close();
+
+        static::assertSame([['id' => 1]], FloeStreamReaderContext::readAll($filesystem, $path)->toArray());
+    }
+
+    public function test_append_to_a_zero_row_file_with_an_explicit_schema_validates_against_it(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://zero-rows-schema.floe');
+
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path, schema: schema(int_schema('id')));
+        $writer->close();
+
+        $writer = new FloeWriter($filesystem);
+        $writer->append($path);
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('new column "name"');
+
+        $writer->write(rows(row(str_entry('name', 'flow'))));
+    }
+
+    public function test_create_with_an_explicit_schema_and_no_writes_records_the_schema_in_the_footer(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://schema-only.floe');
+
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path, schema: schema(int_schema('id')));
+        $writer->close();
+
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame(0, $footer->totalRows);
+        static::assertTrue($footer->schema()->isSame(schema(int_schema('id'))));
     }
 
     public function test_append_over_unsized_stream_throws(): void
@@ -100,7 +192,7 @@ final class FloeWriterTest extends TestCase
 
         static::assertSame(
             ['source' => 'append', 'kept' => 'yes'],
-            FloeFileContext::footer($filesystem, $path)->metadata->normalize(),
+            FloeStreamReaderContext::footer($filesystem, $path)->metadata->normalize(),
         );
     }
 
@@ -167,7 +259,7 @@ final class FloeWriterTest extends TestCase
 
         $writer->close();
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
         static::assertSame(1, $footer->totalRows);
         static::assertCount(1, $footer->sections);
@@ -184,14 +276,14 @@ final class FloeWriterTest extends TestCase
         $writer->close();
 
         $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessage('adds new column "email" which must be nullable');
+        $this->expectExceptionMessage('new column "email"');
 
         $writer = new FloeWriter($filesystem);
         $writer->append($path);
         $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
     }
 
-    public function test_append_with_new_nullable_column_merges_file_schema(): void
+    public function test_append_with_new_nullable_column_throws(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://merge.floe');
@@ -203,17 +295,11 @@ final class FloeWriterTest extends TestCase
 
         $writer = new FloeWriter($filesystem);
         $writer->append($path);
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('new column "email"');
+
         $writer->write(rows(row(int_entry('id', 2), str_entry('email', null))));
-        $writer->close();
-
-        $footer = FloeFileContext::footer($filesystem, $path);
-        $email = $footer->fileSchema()->findDefinition('email');
-
-        static::assertSame(2, $footer->totalRows);
-        static::assertCount(2, $footer->schemas);
-        static::assertCount(2, $footer->sections);
-        static::assertNotNull($email);
-        static::assertTrue($email->isNullable());
     }
 
     public function test_append_with_same_schema_starts_section_without_schema_frame(): void
@@ -233,15 +319,14 @@ final class FloeWriterTest extends TestCase
 
         static::assertSame(
             [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_FOOTER, Format::FRAME_ROW, Format::FRAME_FOOTER],
-            FloeFileContext::frameTypes($filesystem, $path),
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
         static::assertSame(2, $footer->totalRows);
-        static::assertCount(1, $footer->schemas);
+        static::assertNotSame([], $footer->schema);
         static::assertCount(2, $footer->sections);
-        static::assertSame($footer->sections[0]->schemaId, $footer->sections[1]->schemaId);
     }
 
     public function test_close_twice_throws(): void
@@ -276,14 +361,13 @@ final class FloeWriterTest extends TestCase
         $writer->create($path);
         $writer->close();
 
-        static::assertSame([Format::FRAME_FOOTER], FloeFileContext::frameTypes($filesystem, $path));
+        static::assertSame([Format::FRAME_FOOTER], FloeStreamReaderContext::frameTypes($filesystem, $path));
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
         static::assertSame(0, $footer->totalRows);
         static::assertSame([], $footer->sections);
-        static::assertSame([], $footer->schemas);
-        static::assertSame([], $footer->fileSchema);
+        static::assertSame([], $footer->schema);
         static::assertSame([], $footer->partitions);
     }
 
@@ -295,54 +379,25 @@ final class FloeWriterTest extends TestCase
         (new FloeWriter(memory_filesystem(), new CodecStub(0x05)))->create(path('memory://codec.floe'));
     }
 
-    public function test_open_on_stream_is_byte_identical_to_create(): void
+    public function test_two_writes_with_the_same_schema_in_one_session_emit_a_single_schema_frame(): void
     {
         $filesystem = memory_filesystem();
-        $viaCreate = path('memory://via-create.floe');
-        $viaStream = path('memory://via-stream.floe');
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-
-        $create = new FloeWriter($filesystem);
-        $create->create($viaCreate);
-        $create->write($data);
-        $create->close();
-
-        $onStream = new FloeWriter($filesystem);
-        $onStream->createOnStream($filesystem->writeTo($viaStream));
-        $onStream->write($data);
-        $onStream->close();
-
-        static::assertSame($filesystem->readFrom($viaCreate)->content(), $filesystem->readFrom($viaStream)->content());
-    }
-
-    public function test_open_on_stream_round_trips(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://on-stream.floe');
+        $path = path('memory://continuation.floe');
 
         $writer = new FloeWriter($filesystem);
-        $writer->createOnStream($filesystem->writeTo($path), Metadata::fromArray(['source' => 'stream']));
-        $writer->write(rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+        $writer->create($path);
+        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(row(int_entry('id', 2))));
         $writer->close();
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(3, $footer->totalRows);
-        static::assertSame(['source' => 'stream'], $footer->metadata->normalize());
+        static::assertSame(2, $footer->totalRows);
+        static::assertCount(1, $footer->sections);
         static::assertSame(
-            [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
-            FloeFileContext::frameTypes($filesystem, $path),
+            [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
-    }
-
-    public function test_open_on_stream_with_non_noop_codec_throws(): void
-    {
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('supports only the no-op codec, got codec 0x05');
-
-        (new FloeWriter(memory_filesystem(), new CodecStub(0x05)))->createOnStream(memory_filesystem()->writeTo(path(
-            'memory://on-stream-codec.floe',
-        )));
     }
 
     public function test_nothing_reaches_the_stream_before_buffer_fills_or_close(): void
@@ -376,27 +431,133 @@ final class FloeWriterTest extends TestCase
 
         static::assertSame(
             [Format::FRAME_PARTITIONS, Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_FOOTER],
-            FloeFileContext::frameTypes($filesystem, $path),
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
-        static::assertSame(['country' => 'PL'], FloeFileContext::footer($filesystem, $path)->partitions);
+        static::assertSame([['country' => 'PL']], FloeStreamReaderContext::footer($filesystem, $path)->partitions);
     }
 
-    public function test_partitions_fixed_empty_reject_partitioned_writes(): void
+    public function test_a_partition_change_starts_a_new_section_with_its_own_partitions_id(): void
     {
-        $writer = new FloeWriter(memory_filesystem());
-        $writer->create(path('memory://fixed-empty.floe'));
-        $writer->write(rows(row(int_entry('id', 1))));
+        $filesystem = memory_filesystem();
+        $path = path('memory://multi-combination.floe');
 
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('one partition combination');
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path);
+        $writer->write(Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
+            'country',
+            'PL',
+        )]));
+        $writer->write(Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
+            'country',
+            'US',
+        )]));
+        $writer->close();
 
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame([['country' => 'PL'], ['country' => 'US']], $footer->partitions);
+        static::assertCount(2, $footer->sections);
+        static::assertSame(0, $footer->sections[0]->partitionsId);
+        static::assertSame(1, $footer->sections[1]->partitionsId);
+        static::assertSame(
+            [
+                Format::FRAME_PARTITIONS,
+                Format::FRAME_SCHEMA,
+                Format::FRAME_ROW,
+                Format::FRAME_PARTITIONS,
+                Format::FRAME_ROW,
+                Format::FRAME_FOOTER,
+            ],
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
+        );
+    }
+
+    public function test_consecutive_writes_with_the_same_partition_reuse_the_id_and_emit_no_second_frame(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://same-combination.floe');
+
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path);
+        $writer->write(Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
+            'country',
+            'PL',
+        )]));
         $writer->write(Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'PL'))], [new Partition(
             'country',
             'PL',
         )]));
+        $writer->close();
+
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame([['country' => 'PL']], $footer->partitions);
+        static::assertCount(1, $footer->sections);
+        static::assertSame(
+            [
+                Format::FRAME_PARTITIONS,
+                Format::FRAME_SCHEMA,
+                Format::FRAME_ROW,
+                Format::FRAME_ROW,
+                Format::FRAME_FOOTER,
+            ],
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
+        );
     }
 
-    public function test_partitions_mismatch_on_append_throws(): void
+    public function test_a_change_back_to_unpartitioned_emits_an_empty_partitions_frame(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://back-to-unpartitioned.floe');
+
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path);
+        $writer->write(Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
+            'country',
+            'PL',
+        )]));
+        $writer->write(rows(row(int_entry('id', 2))));
+        $writer->close();
+
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame([['country' => 'PL'], []], $footer->partitions);
+        static::assertSame(0, $footer->sections[0]->partitionsId);
+        static::assertSame(1, $footer->sections[1]->partitionsId);
+        static::assertSame(
+            [
+                Format::FRAME_PARTITIONS,
+                Format::FRAME_SCHEMA,
+                Format::FRAME_ROW,
+                Format::FRAME_PARTITIONS,
+                Format::FRAME_ROW,
+                Format::FRAME_FOOTER,
+            ],
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
+        );
+    }
+
+    public function test_empty_write_records_the_empty_combination_without_a_section(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://empty-partitioned.floe');
+
+        // a zero-row partitioned Rows collapses to empty-unpartitioned at the core level
+        // (Rows::partitioned drops partitions when there are no rows), so the write records
+        // only the empty combination and creates no section
+        $writer = new FloeWriter($filesystem);
+        $writer->create($path);
+        $writer->write(Rows::partitioned([], [new Partition('country', 'PL')]));
+        $writer->close();
+
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame([[]], $footer->partitions);
+        static::assertSame([], $footer->sections);
+        static::assertSame([Format::FRAME_FOOTER], FloeStreamReaderContext::frameTypes($filesystem, $path));
+    }
+
+    public function test_append_with_a_different_partition_preserves_both_combinations(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://append-partitions.floe');
@@ -409,18 +570,23 @@ final class FloeWriterTest extends TestCase
         )]));
         $writer->close();
 
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('one partition combination');
-
         $writer = new FloeWriter($filesystem);
         $writer->append($path);
         $writer->write(Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
             'country',
             'US',
         )]));
+        $writer->close();
+
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
+
+        static::assertSame([['country' => 'PL'], ['country' => 'US']], $footer->partitions);
+        static::assertCount(2, $footer->sections);
+        static::assertSame(0, $footer->sections[0]->partitionsId);
+        static::assertSame(1, $footer->sections[1]->partitionsId);
     }
 
-    public function test_a_new_column_grows_a_section_and_narrower_rows_ride_it(): void
+    public function test_within_batch_heterogeneous_rows_encode_under_one_union_schema(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://sections.floe');
@@ -428,26 +594,25 @@ final class FloeWriterTest extends TestCase
         $writer = new FloeWriter($filesystem);
         $writer->create($path);
         $writer->write(rows(
-            // section {a,b}; then c is new -> grow to section {a,b,c}; then {a,b} fits it (c absent)
+            // one write session = one schema; the batch encodes under its union {a,b,c}
             row(int_entry('a', 1), str_entry('b', 'x')),
             row(int_entry('a', 2), str_entry('c', 'y')),
             row(int_entry('a', 3), str_entry('b', 'z')),
         ));
         $writer->close();
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertCount(2, $footer->schemas);
-        static::assertCount(2, $footer->sections);
-        static::assertSame([0, 1], [
-            $footer->sections[0]->schemaId,
-            $footer->sections[1]->schemaId,
-        ]);
-        static::assertSame([1, 2], [
-            $footer->sections[0]->rowCount,
-            $footer->sections[1]->rowCount,
-        ]);
+        static::assertNotSame([], $footer->schema);
+        static::assertCount(1, $footer->sections);
         static::assertSame(3, $footer->totalRows);
+        static::assertSame(3, $footer->sections[0]->rowCount);
+
+        $fileSchema = $footer->schema();
+        static::assertNotNull($fileSchema->findDefinition('a'));
+        static::assertTrue($fileSchema->findDefinition('b')?->isNullable());
+        static::assertTrue($fileSchema->findDefinition('c')?->isNullable());
+        static::assertCount(3, FloeStreamReaderContext::readAll($filesystem, $path)->all());
     }
 
     public function test_section_offsets_point_at_frames(): void
@@ -460,7 +625,7 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(row(int_entry('a', 1)), row(str_entry('b', 'x'))));
         $writer->close();
 
-        $footer = FloeFileContext::footer($filesystem, $path);
+        $footer = FloeStreamReaderContext::footer($filesystem, $path);
         $source = $filesystem->readFrom($path);
 
         static::assertSame(Format::HEADER_LENGTH, $footer->sections[0]->offset);
@@ -480,33 +645,5 @@ final class FloeWriterTest extends TestCase
         $this->expectExceptionMessage('Floe writer session is not open');
 
         $writer->write(rows(row(int_entry('id', 1))));
-    }
-
-    public function test_grow_section_plan_from_null_uses_the_row_schema(): void
-    {
-        $plan = FloeWriter::growSectionPlan(null, row(int_entry('a', 1), str_entry('b', 'x')));
-
-        static::assertSame(['a', 'b'], array_values(array_map(static fn($column) => $column->name, $plan->columns)));
-    }
-
-    public function test_grow_section_plan_grows_the_union_preserving_order(): void
-    {
-        $base = FloeWriter::growSectionPlan(null, row(int_entry('a', 1), str_entry('b', 'x')));
-
-        $grown = FloeWriter::growSectionPlan($base->schemaBody, row(int_entry('a', 2), float_entry('c', 1.5)));
-
-        static::assertSame(
-            ['a', 'b', 'c'],
-            array_values(array_map(static fn($column) => $column->name, $grown->columns)),
-        );
-    }
-
-    public function test_grow_section_plan_rides_a_narrower_row_without_growing(): void
-    {
-        $base = FloeWriter::growSectionPlan(null, row(int_entry('a', 1), str_entry('b', 'x')));
-
-        $grown = FloeWriter::growSectionPlan($base->schemaBody, row(int_entry('a', 2)));
-
-        static::assertSame($base->schemaBody, $grown->schemaBody);
     }
 }

@@ -32,6 +32,15 @@ final class TypeMappingException extends RuntimeException
         ));
     }
 
+    public static function unmappedColumn(string $column, string $flowTypeClass): self
+    {
+        return new self(sprintf(
+            'Column "%s" of Flow type "%s" cannot be automatically mapped to a PostgreSQL type. Provide a type override to map it explicitly.',
+            $column,
+            $flowTypeClass,
+        ));
+    }
+
     public static function unsupportedFlowType(string $flowTypeClass): self
     {
         return new self(sprintf(

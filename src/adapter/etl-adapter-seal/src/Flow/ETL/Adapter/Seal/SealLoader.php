@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Seal;
 
 use CmsIg\Seal\EngineInterface;
-use Flow\ETL\Adapter\Seal\RowsNormalizer\EntryNormalizer;
+use DateTimeInterface;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -14,12 +14,19 @@ use Flow\ETL\Rows;
 use Generator;
 use Throwable;
 
+use function array_key_exists;
 use function is_int;
 use function is_string;
 
 final class SealLoader implements Loader
 {
     private int $bulkSize = 100;
+
+    private string $dateFormat = 'Y-m-d';
+
+    private string $dateTimeFormat = DateTimeInterface::ATOM;
+
+    private ?SealEncoder $encoder = null;
 
     private string $identifierEntry = 'id';
 
@@ -41,9 +48,9 @@ final class SealLoader implements Loader
             $this->engine->bulk(
                 $this->index,
                 $this->operation === Operation::UPSERT
-                    ? (new RowsNormalizer(new EntryNormalizer()))->normalize($rows)
+                    ? $this->encoder()->encode($context->hydrator()->dehydrate($rows))
                     : [],
-                $this->operation === Operation::DELETE ? $this->deleteIdentifiers($rows) : [],
+                $this->operation === Operation::DELETE ? $this->deleteIdentifiers($rows, $context) : [],
                 $this->bulkSize,
             );
 
@@ -62,6 +69,20 @@ final class SealLoader implements Loader
         return $this;
     }
 
+    public function withDateFormat(string $dateFormat): self
+    {
+        $this->dateFormat = $dateFormat;
+
+        return $this;
+    }
+
+    public function withDateTimeFormat(string $dateTimeFormat): self
+    {
+        $this->dateTimeFormat = $dateTimeFormat;
+
+        return $this;
+    }
+
     public function withIdentifierEntry(string $entry): self
     {
         $this->identifierEntry = $entry;
@@ -69,15 +90,21 @@ final class SealLoader implements Loader
         return $this;
     }
 
+    private function encoder(): SealEncoder
+    {
+        return $this->encoder ??= new SealEncoder($this->dateTimeFormat, $this->dateFormat);
+    }
+
     /**
      * @return Generator<int, string>
      */
-    private function deleteIdentifiers(Rows $rows): Generator
+    private function deleteIdentifiers(Rows $rows, FlowContext $context): Generator
     {
-        $normalizer = new EntryNormalizer();
-
-        foreach ($rows as $row) {
-            $identifier = $normalizer->normalize($row->get($this->identifierEntry));
+        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $document) {
+            // @mago-ignore analysis:mixed-assignment
+            $identifier = array_key_exists($this->identifierEntry, $document)
+                ? $document[$this->identifierEntry]
+                : null;
 
             if (!is_string($identifier) && !is_int($identifier)) {
                 throw new RuntimeException(

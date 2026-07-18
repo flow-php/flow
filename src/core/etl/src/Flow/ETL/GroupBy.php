@@ -194,13 +194,13 @@ final class GroupBy
             $buffer[] = $row;
 
             if (count($buffer) >= self::RESULT_BATCH_SIZE) {
-                yield array_to_rows($buffer, $context->entryFactory());
+                yield array_to_rows($buffer, $context->hydrator());
                 $buffer = [];
             }
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $context->entryFactory());
+            yield array_to_rows($buffer, $context->hydrator());
         }
     }
 }

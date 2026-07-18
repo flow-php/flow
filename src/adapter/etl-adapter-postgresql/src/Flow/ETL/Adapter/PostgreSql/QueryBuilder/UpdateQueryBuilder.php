@@ -7,11 +7,12 @@ namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
+use function array_key_exists;
+use function Flow\ETL\DSL\ref;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
@@ -28,9 +29,11 @@ final readonly class UpdateQueryBuilder
     ) {}
 
     /**
+     * @param array<string, mixed> $value dehydrated value map for a single row
+     *
      * @return array{null|Sql, list<null|TypedValue>}
      */
-    public function build(Row $row, UpdateOptions $options): array
+    public function build(array $value, Schema $schema, UpdateOptions $options): array
     {
         $primaryKeys = $options->primaryKeys;
 
@@ -42,13 +45,14 @@ final readonly class UpdateQueryBuilder
         $params = [];
         $assignments = [];
 
-        foreach ($row->entries() as $entry) {
-            if (in_array($entry->name(), $primaryKeys, true)) {
+        /** @var mixed $columnValue */
+        foreach ($value as $column => $columnValue) {
+            if (in_array($column, $primaryKeys, true)) {
                 continue;
             }
 
-            $assignments[$entry->name()] = param($paramIndex++);
-            $params[] = $this->mapEntryToParameter($entry);
+            $assignments[$column] = param($paramIndex++);
+            $params[] = $this->typesMap->map($column, $schema->get(ref($column))->type(), $columnValue);
         }
 
         if ($assignments === []) {
@@ -58,26 +62,16 @@ final readonly class UpdateQueryBuilder
         $conditions = [];
 
         foreach ($primaryKeys as $key) {
-            if (!$row->has($key)) {
+            if (!array_key_exists($key, $value)) {
                 throw new RuntimeException(sprintf('Primary key "%s" not found in row', $key));
             }
 
-            $entry = $row->get($key);
-
             $conditions[] = eq(col($key), param($paramIndex++));
-            $params[] = $this->mapEntryToParameter($entry);
+            $params[] = $this->typesMap->map($key, $schema->get(ref($key))->type(), $value[$key]);
         }
 
         $query = update()->update($this->table)->setAll($assignments)->where(and_(...$conditions));
 
         return [$query, $params];
-    }
-
-    /**
-     * @param Entry<mixed> $entry
-     */
-    private function mapEntryToParameter(Entry $entry): ?TypedValue
-    {
-        return $this->typesMap->mapEntry($entry);
     }
 }

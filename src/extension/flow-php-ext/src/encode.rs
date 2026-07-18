@@ -1,19 +1,19 @@
-//! Floe ROW frame-body encoder mirroring `Flow\Floe\RowEncoder::encode`
-//! byte-for-byte; entry properties are read through cached slot offsets.
+//! Floe ROW frame-body encoder mirroring `Flow\Floe\PhpFloeEncoder::encode`
+//! byte-for-byte; values and per-value metadata are read from a `TypedRowValues`.
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::zend_ulong;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::ClassEntry;
 
-use crate::ctx::{call_handle, call_handle_on, property_offset, read_property, Ctx};
+use crate::ctx::{call_handle, call_handle_on, read_property, zval_str, Ctx};
 use crate::exception::ext_exception;
 use crate::format::{
     write_u32, DATETIME_IMMUTABLE, DATETIME_MUTABLE, KEY_INTEGER, KEY_STRING, TAG_ARRAY,
     TAG_BOOLEAN, TAG_DATETIME, TAG_FLOAT, TAG_INTEGER, TAG_JSON, TAG_NULL, TAG_STRING, TAG_UUID,
-    VALUE_ABSENT, VALUE_NULL, VALUE_NULL_FROM_NULL, VALUE_PRESENT,
+    VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
-use crate::plan::{entry_class_for_type, parse_schema_json, TypeJson};
+use crate::plan::{parse_schema_json, TypeJson};
 
 enum EncodeMapKey {
     Integer,
@@ -124,18 +124,18 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
     })
 }
 
-struct EncodeColumn {
-    name: Vec<u8>,
-    value_slot: u32,
-    definition_slot: u32,
+pub(crate) struct EncodeColumn {
+    pub(crate) name: Vec<u8>,
     encoder: Encoder,
-    /// (definition ce, `metadata` slot, `type` slot) - resolved lazily from the
-    /// first definition instance seen for this column.
-    definition_slots: Option<(*const ClassEntry, u32, u32)>,
+    /// Canonical PHP `json_encode` of this column's section-schema metadata - the
+    /// divergence reference. An entry whose metadata JSON differs rides its own
+    /// metadata beside the value.
+    plan_metadata_json: Vec<u8>,
+    plan_metadata_empty: bool,
 }
 
 pub struct EncodePlan {
-    columns: Vec<EncodeColumn>,
+    pub(crate) columns: Vec<EncodeColumn>,
 }
 
 /// `HASH_FLAG_PACKED` from zend_types.h.
@@ -196,104 +196,171 @@ fn write_len_prefixed(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 
 /// Builds the encode plan from a SCHEMA frame body (the JSON the PHP
-/// `SchemaEncoder` emits) - once built, no PHP call is needed to encode.
-pub fn build_encode_plan(schema_json: &[u8]) -> Result<EncodePlan, PhpException> {
+/// `SchemaEncoder` emits). Each column's section-schema metadata is captured as
+/// its canonical PHP `json_encode` so a diverging entry can be detected without
+/// re-parsing the schema per row.
+pub fn build_encode_plan(schema_json: &[u8], ctx: &mut Ctx) -> Result<EncodePlan, PhpException> {
     let definitions = parse_schema_json(schema_json)?;
+
+    let mut assoc_zv = Zval::new();
+    assoc_zv.set_bool(true);
+    let decoded = {
+        let json_decode = ctx.json_decode()?;
+        call_handle(
+            json_decode,
+            None,
+            &mut [zval_str(schema_json), assoc_zv],
+            "decode a schema frame for metadata",
+        )?
+    };
+    let decoded_ht = decoded
+        .array()
+        .ok_or_else(|| ext_exception("flow_php expected a schema frame to decode to a list"))?;
 
     let mut columns = Vec::with_capacity(definitions.len());
 
-    for definition in &definitions {
-        let entry_ce = entry_class_for_type(&definition.type_)?;
+    for (index, definition) in definitions.iter().enumerate() {
+        let plan_metadata_json = column_metadata_json(decoded_ht, index, ctx)?;
 
         columns.push(EncodeColumn {
             name: definition.name.clone().into_bytes(),
-            value_slot: property_offset(entry_ce, "value")?,
-            definition_slot: property_offset(entry_ce, "definition")?,
             encoder: build_encoder(&definition.type_)?,
-            definition_slots: None,
+            plan_metadata_empty: plan_metadata_json == b"[]",
+            plan_metadata_json,
         });
     }
 
     Ok(EncodePlan { columns })
 }
 
-/// Encodes one Row into a bare ROW frame body (no length prefix, no frame type).
-pub fn encode_row_body(
-    plan: &mut EncodePlan,
-    row: &Zval,
+/// Canonical PHP `json_encode` of the `metadata` map of the `index`th decoded
+/// schema definition (`[]` when absent).
+fn column_metadata_json(
+    decoded_ht: &ZendHashTable,
+    index: usize,
     ctx: &mut Ctx,
 ) -> Result<Vec<u8>, PhpException> {
-    let row_obj = expect_object(row, "a Row")?;
-    let entries_obj = expect_object(read_slot(row_obj, ctx.row_entries_slot), "Row entries")?;
-    let entries_ht = read_slot(entries_obj, ctx.entries_entries_slot)
-        .array()
-        .ok_or_else(|| ext_exception("flow_php expected Entries to hold an array"))?;
+    let definition_ht = decoded_ht
+        .get_index(index as i64)
+        .and_then(Zval::array)
+        .ok_or_else(|| ext_exception("flow_php expected a schema definition to be a map"))?;
 
-    let mut out = Vec::with_capacity(1024);
-    encode_row(plan, entries_ht, &mut out, ctx)?;
+    let metadata_zv = match definition_ht.get("metadata") {
+        Some(zv) => zv.shallow_clone(),
+        None => return Ok(b"[]".to_vec()),
+    };
 
-    Ok(out)
+    let json_encode = ctx.json_encode()?;
+    let encoded = call_handle(
+        json_encode,
+        None,
+        &mut [metadata_zv],
+        "encode section-schema metadata",
+    )?;
+
+    encoded
+        .zend_str()
+        .map(|s| s.as_bytes().to_vec())
+        .ok_or_else(|| ext_exception("flow_php expected json_encode to return a string"))
 }
 
-fn definition_slots(
-    column: &mut EncodeColumn,
-    definition: &ZendObject,
-) -> Result<(u32, u32), PhpException> {
-    let ce = definition.ce.cast_const();
-
-    if let Some((cached_ce, metadata_slot, type_slot)) = column.definition_slots {
-        if std::ptr::eq(cached_ce, ce) {
-            return Ok((metadata_slot, type_slot));
-        }
-    }
-
-    let ce_ref = unsafe { ce.as_ref() }
-        .ok_or_else(|| ext_exception("flow_php failed to resolve a definition class"))?;
-    let metadata_slot = property_offset(ce_ref, "metadata")?;
-    let type_slot = property_offset(ce_ref, "type")?;
-    column.definition_slots = Some((ce, metadata_slot, type_slot));
-
-    Ok((metadata_slot, type_slot))
-}
-
-fn encode_row(
-    plan: &mut EncodePlan,
-    entries_ht: &ZendHashTable,
-    out: &mut Vec<u8>,
+/// Encodes one `Flow\ETL\Row\TypedRowValues` (its `values` + `metadata` maps)
+/// into a bare ROW frame body (no length prefix, no frame type). Byte-identical
+/// to `Flow\Floe\PhpFloeEncoder::encode` for the same row.
+pub fn encode_typed_row(
+    plan: &EncodePlan,
+    values_ht: &ZendHashTable,
+    metadata_ht: &ZendHashTable,
     ctx: &mut Ctx,
-) -> Result<(), PhpException> {
-    for column in &mut plan.columns {
-        let Some(entry_zv) = ht_find(entries_ht, &column.name) else {
+) -> Result<Vec<u8>, PhpException> {
+    let mut out = Vec::with_capacity(1024);
+
+    for column in &plan.columns {
+        let Some(value) = ht_find(values_ht, &column.name) else {
             out.push(VALUE_ABSENT);
 
             continue;
         };
 
-        let entry = expect_object(entry_zv, "a row entry")?;
-        let value = read_slot(entry, column.value_slot);
+        let (diverges, entry_metadata_json) = typed_metadata(column, metadata_ht, ctx)?;
 
         if value.is_null() {
-            let definition =
-                expect_object(read_slot(entry, column.definition_slot), "a definition")?;
-            let (metadata_slot, _) = definition_slots(column, definition)?;
-            let metadata =
-                expect_object(read_slot(definition, metadata_slot), "definition metadata")?;
-            let map = read_slot(metadata, ctx.metadata_map_slot()?)
-                .array()
-                .ok_or_else(|| ext_exception("flow_php expected Metadata to hold an array"))?;
-
-            out.push(if crate::ctx::ht_contains(map, b"from_null") {
-                VALUE_NULL_FROM_NULL
+            if diverges {
+                out.push(VALUE_NULL_WITH_META);
+                write_len_prefixed(&mut out, &entry_metadata_json);
             } else {
-                VALUE_NULL
-            });
+                out.push(VALUE_NULL);
+            }
+
+            continue;
+        }
+
+        if diverges {
+            out.push(VALUE_PRESENT_WITH_META);
+            write_len_prefixed(&mut out, &entry_metadata_json);
         } else {
             out.push(VALUE_PRESENT);
-            encode_value(&column.encoder, value, out, ctx)?;
         }
+
+        encode_value(&column.encoder, value, &mut out, ctx)?;
     }
 
-    Ok(())
+    Ok(out)
+}
+
+/// Whether a column's per-value metadata diverges from the section-schema
+/// reference and, if so, its canonical JSON (the beside-value blob). `metadata_ht`
+/// is the `TypedRowValues::metadata` map, which carries only non-empty entries
+/// (mirroring `PhpRowHydrator::dehydrate`); an absent key is empty metadata. Fast
+/// path: an empty entry against an empty-metadata column never diverges - no PHP call.
+fn typed_metadata(
+    column: &EncodeColumn,
+    metadata_ht: &ZendHashTable,
+    ctx: &mut Ctx,
+) -> Result<(bool, Vec<u8>), PhpException> {
+    let metadata_zv = ht_find(metadata_ht, &column.name);
+
+    let entry_empty = match metadata_zv {
+        None => true,
+        Some(zv) => {
+            let metadata = expect_object(zv, "per-value metadata")?;
+            let map_slot = ctx.metadata_map_slot()?;
+            read_slot(metadata, map_slot)
+                .array()
+                .is_none_or(|map| map.is_empty())
+        }
+    };
+
+    if entry_empty && column.plan_metadata_empty {
+        return Ok((false, Vec::new()));
+    }
+
+    let entry_metadata_json = if entry_empty {
+        b"[]".to_vec()
+    } else {
+        let metadata = expect_object(
+            metadata_zv.expect("Some when the entry is not empty"),
+            "per-value metadata",
+        )?;
+        let map_slot = ctx.metadata_map_slot()?;
+        let map_owned = read_slot(metadata, map_slot).shallow_clone();
+        let json_encode = ctx.json_encode()?;
+        let encoded = call_handle(
+            json_encode,
+            None,
+            &mut [map_owned],
+            "encode per-value metadata",
+        )?;
+
+        encoded
+            .zend_str()
+            .map(|s| s.as_bytes().to_vec())
+            .ok_or_else(|| ext_exception("flow_php expected json_encode to return a string"))?
+    };
+
+    let diverges = entry_metadata_json != column.plan_metadata_json;
+
+    Ok((diverges, entry_metadata_json))
 }
 
 fn encode_value(

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\MismatchedDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_strict_validator;
 use function Flow\ETL\DSL\schema_validate;
@@ -157,12 +157,12 @@ final class StrictValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_rows_with_from_null_metadata(): void
+    public function test_given_schema_with_null_definition(): void
     {
         static::assertTrue(
             schema_validate(
                 expected: schema(integer_schema('id', nullable: true)),
-                given: schema(string_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true))),
+                given: schema(null_schema('id')),
                 validator: schema_strict_validator(),
             )->isValid(),
         );
@@ -176,7 +176,7 @@ final class StrictValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_rows_with_multiple_columns_with_from_null_metadata(): void
+    public function test_given_schema_with_multiple_columns_including_null_definition(): void
     {
         static::assertFalse(
             schema_validate(
@@ -189,21 +189,18 @@ final class StrictValidatorTest extends FlowTestCase
         static::assertTrue(
             schema_validate(
                 expected: schema(integer_schema('id', nullable: true), string_schema('name')),
-                given: schema(
-                    string_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true)),
-                    string_schema('name'),
-                ),
+                given: schema(null_schema('id'), string_schema('name')),
                 validator: schema_strict_validator(),
             )->isValid(),
         );
     }
 
-    public function test_with_from_null_metadata_but_non_string_type(): void
+    public function test_given_null_definition_against_non_nullable_expected(): void
     {
         static::assertFalse(
             schema_validate(
-                expected: schema(integer_schema('id', nullable: true)),
-                given: schema(bool_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true))),
+                expected: schema(integer_schema('id')),
+                given: schema(null_schema('id')),
                 validator: schema_strict_validator(),
             )->isValid(),
         );

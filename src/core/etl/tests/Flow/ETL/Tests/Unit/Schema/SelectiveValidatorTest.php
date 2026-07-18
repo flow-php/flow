@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\MismatchedDefinition;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\schema_validate;
@@ -79,14 +79,11 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_schema_with_from_null_metadata(): void
+    public function test_schema_with_null_definition(): void
     {
         static::assertTrue(
             (new SelectiveValidator())
-                ->validate(
-                    schema(integer_schema('id', nullable: true)),
-                    schema(string_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true))),
-                )
+                ->validate(schema(integer_schema('id', nullable: true)), schema(null_schema('id')))
                 ->isValid(),
         );
 
@@ -97,16 +94,13 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_schema_with_multiple_columns_with_from_null_metadata(): void
+    public function test_schema_with_multiple_columns_including_null_definition(): void
     {
         static::assertTrue(
             (new SelectiveValidator())
                 ->validate(
                     expected: schema(integer_schema('id', nullable: true), string_schema('name')),
-                    given: schema(
-                        string_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true)),
-                        string_schema('name'),
-                    ),
+                    given: schema(null_schema('id'), string_schema('name')),
                 )
                 ->isValid(),
         );
@@ -142,18 +136,11 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_with_from_null_metadata_but_non_string_type(): void
+    public function test_null_definition_against_non_nullable_expected(): void
     {
         static::assertFalse(
             (new SelectiveValidator())
-                ->validate(
-                    expected: schema(integer_schema('id', nullable: true)),
-                    given: schema(bool_schema(
-                        'id',
-                        nullable: true,
-                        metadata: Metadata::with(Metadata::FROM_NULL, true),
-                    )),
-                )
+                ->validate(expected: schema(integer_schema('id')), given: schema(null_schema('id')))
                 ->isValid(),
         );
     }

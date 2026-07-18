@@ -6,7 +6,6 @@ scalar columns round-trip identically to the pure-PHP decoder
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry};
 
@@ -30,7 +29,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 var_dump(count($actual) === 2);
 assert_rows_identical(php_decode_frames($frames), $actual);

@@ -72,7 +72,7 @@ final class FilesystemBucketsCache implements BucketsCache
             return;
         }
 
-        foreach ($this->reader->read($path)->recover($this->batchSize) as $batch) {
+        foreach ($this->reader->read($path)->rows($this->batchSize, conform: false) as $batch) {
             yield from $batch->all();
         }
     }

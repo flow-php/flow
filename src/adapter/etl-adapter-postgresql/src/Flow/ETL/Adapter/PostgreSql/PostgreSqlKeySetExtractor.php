@@ -21,7 +21,6 @@ use function array_key_exists;
 use function array_merge;
 use function end;
 use function explode;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\sql_to_keyset_query;
 use function get_debug_type;
 use function is_bool;
@@ -55,6 +54,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
+        $encoder = new PostgreSqlEncoder();
         $totalFetched = 0;
         $cursorValues = null;
 
@@ -65,29 +65,29 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
             $hasRows = false;
             $lastRow = null;
+            $rawBatch = [];
 
             foreach ($cursor->iterate() as $row) {
                 $hasRows = true;
                 $lastRow = $row;
+                $rawBatch[] = $row;
+            }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+            $cursor->free();
+
+            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                $signal = yield new Rows($hydratedRow);
 
                 $totalFetched++;
 
                 if ($signal === Signal::STOP) {
-                    $cursor->free();
-
                     return;
                 }
 
                 if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                    $cursor->free();
-
                     return;
                 }
             }
-
-            $cursor->free();
 
             if (!$hasRows || $lastRow === null) {
                 break;
