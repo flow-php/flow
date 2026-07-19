@@ -52,6 +52,7 @@ final class FloeStreamReader
         private readonly Codec $codec,
         private readonly int $chunkSize,
         ?Hydrator $hydrator = null,
+        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
         $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
@@ -63,7 +64,7 @@ final class FloeStreamReader
      */
     private function encoder(Schema $schema): Encoder
     {
-        return $this->encoder ??= new AdaptiveFloeEncoder($schema);
+        return $this->encoder ??= $this->engine->encoder($schema);
     }
 
     /**

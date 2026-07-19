@@ -1,0 +1,33 @@
+{
+  "$schema": "./tools/phpbench/vendor/phpbench/phpbench/phpbench.schema.json",
+  "runner.bootstrap": "benchmarks/bootstrap.php",
+  "runner.path": ["benchmarks/suites"],
+  "runner.time_unit": "seconds",
+  "runner.revs": 1,
+  "runner.iterations": 3,
+  "runner.warmup": 1,
+  "runner.php_config": {
+    "memory_limit": "-1",
+    "opcache.enable": "1",
+    "opcache.enable_cli": "1",
+    "pcov.enabled": "0"
+  },
+  "report.generators": {
+    "flow-report": {
+      "generator": "expression",
+      "cols": {
+        "benchmark": null,
+        "subject": null,
+        "set": null,
+        "mem_peak": null,
+        "mode": null,
+        "total_time": null,
+        "rstdev": null
+      },
+      "expressions": {
+        "total_time": "display_as_time(sum(result_time_net), \"seconds\", 2, \"time\")"
+      }
+    }
+  },
+  "storage.xml_storage_path": "var/phpbench"
+}

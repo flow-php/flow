@@ -119,6 +119,18 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_cache_dir_override_wins_over_env(): void
+    {
+        putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-from-env');
+
+        $config = config_builder()->cacheDir(__DIR__ . '/var/cache-explicit')->build();
+
+        static::assertSame(
+            str_replace('\\', '/', __DIR__ . '/var/cache-explicit'),
+            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+        );
+    }
+
     public function test_default_cache_dir(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=');

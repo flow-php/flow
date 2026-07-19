@@ -8,11 +8,14 @@ use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\FakeRandomOrdersExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\SizeUnits;
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Ramsey\Uuid\Uuid;
 
 use function array_diff;
+use function extension_loaded;
 use function file_exists;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
@@ -44,6 +47,39 @@ final class ParquetTest extends FlowTestCase
             ->run();
 
         static::assertEquals(10, data_frame($config)->read(from_parquet($path))->count());
+    }
+
+    public function test_writing_and_reading_with_explicit_arrow_engine(): void
+    {
+        if (!extension_loaded('arrow')) {
+            static::markTestSkipped('arrow extension is not loaded');
+        }
+
+        $path = path('memory://var/arrow_engine.parquet');
+        $config = config();
+
+        data_frame($config)
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_parquet($path, engine: new ArrowParquetEngine()))
+            ->run();
+
+        static::assertSame(
+            2,
+            data_frame($config)->read(from_parquet($path, engine: new ArrowParquetEngine()))->count(),
+        );
+    }
+
+    public function test_writing_and_reading_with_explicit_php_engine(): void
+    {
+        $path = path('memory://var/php_engine.parquet');
+        $config = config();
+
+        data_frame($config)
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_parquet($path, engine: new PhpParquetEngine()))
+            ->run();
+
+        static::assertSame(2, data_frame($config)->read(from_parquet($path, engine: new PhpParquetEngine()))->count());
     }
 
     public function test_writing_and_reading_parquet_orders(): void

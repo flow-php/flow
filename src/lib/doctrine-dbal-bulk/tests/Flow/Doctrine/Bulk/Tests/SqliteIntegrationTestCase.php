@@ -12,6 +12,7 @@ use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 
 use function Flow\Types\DSL\type_string;
 use function getenv;
+use function str_starts_with;
 
 abstract class SqliteIntegrationTestCase extends IntegrationTestCase
 {
@@ -27,7 +28,9 @@ abstract class SqliteIntegrationTestCase extends IntegrationTestCase
         }
 
         $this->databaseContext = new DatabaseContext(DriverManager::getConnection(
-            (new DsnParser(['sqlite' => 'sqlite3']))->parse('sqlite3://' . $path),
+            (new DsnParser(['sqlite' => 'sqlite3']))->parse(
+                'sqlite3://' . (str_starts_with($path, '/') ? '/' : '') . $path,
+            ),
             (new Configuration())->setMiddlewares([new Middleware($this->logger)]),
         ));
     }

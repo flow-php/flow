@@ -30,8 +30,9 @@ final class FloeWriter
         private readonly Codec $codec = new NoopCodec(),
         ?Hydrator $hydrator = null,
         int $bufferSize = 65_536,
+        FloeEngine $engine = FloeEngine::adaptive,
     ) {
-        $this->inner = new FloeStreamWriter($this->codec, $hydrator, $bufferSize);
+        $this->inner = new FloeStreamWriter($this->codec, $hydrator, $bufferSize, $engine);
     }
 
     /**

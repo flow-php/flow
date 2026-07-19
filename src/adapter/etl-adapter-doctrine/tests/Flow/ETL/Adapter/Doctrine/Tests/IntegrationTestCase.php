@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\Types\DSL\type_string;
 use function getenv;
+use function str_starts_with;
 
 /**
  * @phpstan-import-type Params from DriverManager
@@ -102,6 +103,8 @@ abstract class IntegrationTestCase extends FlowTestCase
             @mkdir($folder, 0777, true);
         }
 
-        return (new DsnParser(['sqlite' => 'sqlite3']))->parse('sqlite3://' . $path);
+        return (new DsnParser(['sqlite' => 'sqlite3']))->parse(
+            'sqlite3://' . (str_starts_with($path, '/') ? '/' : '') . $path,
+        );
     }
 }

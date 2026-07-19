@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
+use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\FloeLoader;
 use Flow\Floe\FloeMerger;
@@ -25,18 +26,26 @@ use function is_string;
  * @param Path|string $path
  */
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::EXTRACTOR)]
-function from_floe(string|Path $path, Codec $codec = new NoopCodec(), int $chunk_size = 65536): FloeExtractor
-{
-    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size);
+function from_floe(
+    string|Path $path,
+    Codec $codec = new NoopCodec(),
+    int $chunk_size = 65536,
+    FloeEngine $engine = FloeEngine::adaptive,
+): FloeExtractor {
+    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size, $engine);
 }
 
 /**
  * @param Path|string $path
  */
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::LOADER)]
-function to_floe(string|Path $path, ?Metadata $metadata = null, Codec $codec = new NoopCodec()): FloeLoader
-{
-    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $codec);
+function to_floe(
+    string|Path $path,
+    ?Metadata $metadata = null,
+    Codec $codec = new NoopCodec(),
+    FloeEngine $engine = FloeEngine::adaptive,
+): FloeLoader {
+    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $codec, $engine);
 }
 
 /**
