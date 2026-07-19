@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-07-18
+## [Unreleased] - 2026-07-19
 
 ### Added
+- [#2538](https://github.com/flow-php/flow/pull/2538) - **phpbench based benchmarks** - [@norberttech](https://github.com/norberttech)
+- [#2538](https://github.com/flow-php/flow/pull/2538) - **flow-php/etl - selectable Floe engine (native/pure-PHP) on from_floe()/to_floe()** - [@norberttech](https://github.com/norberttech)
+- [#2538](https://github.com/flow-php/flow/pull/2538) - **flow-php/etl-adapter-parquet - selectable engine (arrow/pure-PHP) on from_parquet()/to_parquet()** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - bucketed hash join with disk spilling and JoinConfig DSL** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - Row\Encoder and Row\Hydrator abstractions (PHP, native, adaptive)** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - NullEntry and NullDefinition** - [@norberttech](https://github.com/norberttech)
