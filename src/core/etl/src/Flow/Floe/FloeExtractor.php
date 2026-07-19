@@ -31,6 +31,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
         private readonly Path $path,
         private readonly Codec $codec = new NoopCodec(),
         private readonly int $chunkSize = 65536,
+        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         $this->resetLimit();
     }
@@ -120,6 +121,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $this->codec,
                     $this->chunkSize,
                     hydrator: $context->hydrator(),
+                    engine: $this->engine,
                 ))->read($filePath),
                 $filePath->uri(),
             ];

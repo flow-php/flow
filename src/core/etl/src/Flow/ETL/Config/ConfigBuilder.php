@@ -25,6 +25,7 @@ use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Path;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Telemetry\PackageVersion;
@@ -145,6 +146,13 @@ final class ConfigBuilder
     public function cache(Cache $cache): self
     {
         $this->cache->cache($cache);
+
+        return $this;
+    }
+
+    public function cacheDir(string|Path $dir): self
+    {
+        $this->cache->cacheDir($dir);
 
         return $this;
     }

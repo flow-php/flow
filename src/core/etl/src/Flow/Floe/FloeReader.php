@@ -20,6 +20,7 @@ final readonly class FloeReader
         private Codec $codec = new NoopCodec(),
         private int $chunkSize = 65536,
         private ?Hydrator $hydrator = null,
+        private FloeEngine $engine = FloeEngine::adaptive,
     ) {}
 
     /**
@@ -32,6 +33,7 @@ final readonly class FloeReader
             $this->codec,
             $this->chunkSize,
             $this->hydrator,
+            $this->engine,
         );
     }
 }

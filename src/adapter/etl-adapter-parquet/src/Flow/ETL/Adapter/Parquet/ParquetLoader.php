@@ -15,7 +15,9 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 use Throwable;
@@ -30,6 +32,8 @@ final class ParquetLoader implements Closure, FileLoader, Loader
     private readonly SchemaConverter $converter;
 
     private ?ParquetEncoder $encoder = null;
+
+    private ?ParquetEngine $engine = null;
 
     private ?Schema $inferredSchema = null;
 
@@ -90,6 +94,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
+                        engine: $this->engine ?? new AdaptiveParquetEngine(),
                     );
 
                     $this->writers[$stream->path()->uri()]->openForStream(
@@ -106,6 +111,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
+                        engine: $this->engine ?? new AdaptiveParquetEngine(),
                     );
 
                     $this->writers[$stream->path()->uri()]->openForStream(
@@ -128,6 +134,13 @@ final class ParquetLoader implements Closure, FileLoader, Loader
     public function withCompressions(Compressions $compressions): self
     {
         $this->compressions = $compressions;
+
+        return $this;
+    }
+
+    public function withEngine(?ParquetEngine $engine): self
+    {
+        $this->engine = $engine;
 
         return $this;
     }

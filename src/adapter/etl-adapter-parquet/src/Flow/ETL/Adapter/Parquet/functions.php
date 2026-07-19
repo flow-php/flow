@@ -12,6 +12,7 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Generator;
@@ -35,10 +36,12 @@ function from_parquet(
     Options $options = new Options(),
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
+    ?ParquetEngine $engine = null,
 ): ParquetExtractor {
     $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path))
         ->withOptions($options)
-        ->withByteOrder($byte_order);
+        ->withByteOrder($byte_order)
+        ->withEngine($engine);
 
     if ($offset !== null) {
         $loader->withOffset($offset);
@@ -64,8 +67,11 @@ function to_parquet(
     ?Options $options = null,
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
+    ?ParquetEngine $engine = null,
 ): ParquetLoader {
-    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path))->withCompressions($compressions);
+    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path))
+        ->withCompressions($compressions)
+        ->withEngine($engine);
 
     if ($options !== null) {
         $loader->withOptions($options);

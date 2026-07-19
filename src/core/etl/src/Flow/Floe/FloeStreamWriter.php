@@ -87,6 +87,7 @@ final class FloeStreamWriter
         private readonly Codec $codec = new NoopCodec(),
         ?Hydrator $hydrator = null,
         private readonly int $bufferSize = 65_536,
+        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
@@ -250,7 +251,7 @@ final class FloeStreamWriter
     {
         $this->sessionSchema ??= $batchSchema;
         $this->sessionSchemaBody ??= self::encodeSchemaBody($this->sessionSchema);
-        $this->sessionEncoder = new AdaptiveFloeEncoder($this->sessionSchema);
+        $this->sessionEncoder = $this->engine->encoder($this->sessionSchema);
     }
 
     /**

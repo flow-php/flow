@@ -14,6 +14,19 @@ just install
 docker compose up -d
 ```
 
+Service and test env config (database URLs, S3/Redis/Azurite/OTel endpoints, the filesystem cache dir) lives in the
+committed `.env.dist`, loaded for both PHPUnit and phpbench by the root `bootstrap.php`. The `.dist` defaults match the
+`compose.yml.dist` ports, so a standard setup needs no extra step. If you shift service ports in your own `compose.yml`,
+copy `.env.dist` to `.env` (gitignored) and set the shifted values there — `.env` overrides `.env.dist` per-variable:
+
+```shell
+cp .env.dist .env
+```
+
+> If you keep a personal gitignored `phpunit.xml`, regenerate it from `phpunit.xml.dist` after pulling this change: the
+> new `.dist` uses `bootstrap="bootstrap.php"` and no longer carries the `<php><env>` block (env now comes from `.env.dist`
+> / `.env`). A stale `phpunit.xml` keeps the old bootstrap and env, bypassing the shared config.
+
 For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
 
 Pcov extension is not mandatory, and tests are going to pass without it; however, you won't be able to run mutation tests.

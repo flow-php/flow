@@ -8,10 +8,11 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
-use function dirname;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
+use function getenv;
 use function iterator_to_array;
 
 /**
@@ -101,11 +102,14 @@ abstract class FlowTestCase extends TestCase
         static::assertEquals($expectedRows, $extractedRows, $message);
     }
 
-    /**
-     * Root of the project monorepo.
-     */
     public function repositoryRoot(): string
     {
-        return dirname(__DIR__, 7);
+        $root = getenv('FLOW_MONOREPO_PROJECT_ROOT');
+
+        if ($root === false || $root === '') {
+            throw new RuntimeException('FLOW_MONOREPO_PROJECT_ROOT is not set; bootstrap.php must be loaded.');
+        }
+
+        return $root;
     }
 }

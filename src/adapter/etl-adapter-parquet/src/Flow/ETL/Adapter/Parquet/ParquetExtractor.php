@@ -17,6 +17,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 use Generator;
@@ -36,6 +37,8 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
      * @var array<string>
      */
     private array $columns = [];
+
+    private ?ParquetEngine $engine = null;
 
     private ?int $offset = null;
 
@@ -151,6 +154,13 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         return $this;
     }
 
+    public function withEngine(?ParquetEngine $engine): self
+    {
+        $this->engine = $engine;
+
+        return $this;
+    }
+
     public function withOffset(int $offset): self
     {
         if ($offset < 0) {
@@ -176,7 +186,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     {
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             yield [
-                'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))->readStream($stream),
+                'file' => (new Reader(
+                    byteOrder: $this->byteOrder,
+                    options: $this->options,
+                    engine: $this->engine,
+                ))->readStream($stream),
                 'stream' => $stream,
             ];
         }

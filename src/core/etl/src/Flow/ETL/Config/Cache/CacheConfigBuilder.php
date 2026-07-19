@@ -10,15 +10,20 @@ use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Path;
 use Flow\Serializer\Serializer;
 
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function getenv;
+use function is_string;
 use function sys_get_temp_dir;
 
 final class CacheConfigBuilder
 {
     private ?Cache $cache = null;
+
+    private ?Path $cacheDir = null;
 
     /**
      * @var int<1, max>
@@ -43,8 +48,12 @@ final class CacheConfigBuilder
         ?TelemetryConfig $telemetryConfig = null,
         string $dataframeName = 'flow_dataframe',
     ): CacheConfig {
-        $cachePath = getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
-        $cachePath = path_real($cachePath !== '' ? $cachePath : sys_get_temp_dir() . '/flow_php/cache');
+        if ($this->cacheDir !== null) {
+            $cachePath = $this->cacheDir;
+        } else {
+            $envCacheDir = getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
+            $cachePath = path_real($envCacheDir !== '' ? $envCacheDir : sys_get_temp_dir() . '/flow_php/cache');
+        }
 
         $cache = $this->cache ?? new FilesystemCache(
             $fstab->for($this->filesystemMount),
@@ -69,6 +78,17 @@ final class CacheConfigBuilder
     public function cache(Cache $cache): self
     {
         $this->cache = $cache;
+
+        return $this;
+    }
+
+    /**
+     * Sets the local filesystem cache directory explicitly, overriding the FLOW_LOCAL_FILESYSTEM_CACHE_DIR
+     * env var and the system temp fallback.
+     */
+    public function cacheDir(string|Path $dir): self
+    {
+        $this->cacheDir = is_string($dir) ? path($dir) : $dir;
 
         return $this;
     }

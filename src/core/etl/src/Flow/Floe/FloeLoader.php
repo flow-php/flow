@@ -33,6 +33,7 @@ final class FloeLoader implements Closure, FileLoader, Loader
         private readonly Path $path,
         private readonly ?Metadata $metadata = null,
         private readonly Codec $codec = new NoopCodec(),
+        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {}
 
     public function withSchema(Schema $schema): self
@@ -79,6 +80,7 @@ final class FloeLoader implements Closure, FileLoader, Loader
                     $context->filesystem($this->path),
                     $this->codec,
                     hydrator: $context->hydrator(),
+                    engine: $this->engine,
                 );
                 $writer->createForStream($stream, $this->metadata, schema: $this->schema ?? $this->inferredSchema);
                 $this->writers[$uri] = $writer;

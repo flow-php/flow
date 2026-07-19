@@ -5,4 +5,6 @@ vendor
 compose.yml
 phpunit.xml
 phpbench.json
+benchmarks/datasets/
+benchmarks/var/
 .env
