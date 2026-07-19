@@ -15,6 +15,7 @@ use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\FloeLoader;
 use Flow\Floe\FloeMerger;
+use Flow\Floe\Options;
 
 use function array_map;
 use function Flow\Filesystem\DSL\native_local_filesystem;
@@ -42,10 +43,16 @@ function from_floe(
 function to_floe(
     string|Path $path,
     ?Metadata $metadata = null,
-    Codec $codec = new NoopCodec(),
+    Options $options = new Options(),
     FloeEngine $engine = FloeEngine::adaptive,
 ): FloeLoader {
-    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $codec, $engine);
+    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $engine);
+}
+
+#[DocumentationDSL(module: Module::FLOE, type: DSLType::HELPER)]
+function floe_options(bool $validate_data = true, int $buffer_size = 65536, Codec $codec = new NoopCodec()): Options
+{
+    return new Options($validate_data, $buffer_size, $codec);
 }
 
 /**

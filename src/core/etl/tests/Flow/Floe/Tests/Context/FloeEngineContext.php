@@ -7,23 +7,28 @@ namespace Flow\Floe\Tests\Context;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
+use Flow\Floe\Options;
 
 final class FloeEngineContext
 {
-    public static function phpWriter(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeWriter
+    public static function phpWriter(Filesystem $filesystem, Schema $schema, Codec $codec = new NoopCodec()): FloeWriter
     {
-        return new FloeWriter($filesystem, $codec, new PhpRowHydrator());
+        return new FloeWriter($filesystem, $schema, new Options(codec: $codec), new PhpRowHydrator());
     }
 
-    public static function nativeWriter(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeWriter
-    {
-        return new FloeWriter($filesystem, $codec, new NativeRowHydrator());
+    public static function nativeWriter(
+        Filesystem $filesystem,
+        Schema $schema,
+        Codec $codec = new NoopCodec(),
+    ): FloeWriter {
+        return new FloeWriter($filesystem, $schema, new Options(codec: $codec), new NativeRowHydrator());
     }
 
     public static function phpReader(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeReader

@@ -39,6 +39,26 @@ final class MetadataTest extends FlowTestCase
         ])));
     }
 
+    public function test_is_equal_empty(): void
+    {
+        static::assertTrue(Metadata::empty()->isEqual(Metadata::empty()));
+    }
+
+    public function test_is_equal_identical(): void
+    {
+        static::assertTrue(Metadata::empty()->add('id', 1)->isEqual(Metadata::empty()->add('id', 1)));
+    }
+
+    public function test_is_equal_differing_key(): void
+    {
+        static::assertFalse(Metadata::empty()->add('a', 1)->isEqual(Metadata::empty()->add('b', 1)));
+    }
+
+    public function test_is_equal_differing_value(): void
+    {
+        static::assertFalse(Metadata::empty()->add('a', 1)->isEqual(Metadata::empty()->add('a', 2)));
+    }
+
     /**
      * @param array<mixed>|bool|float|int|string $intput
      * @param Type<mixed> $type

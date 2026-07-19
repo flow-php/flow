@@ -57,6 +57,41 @@ final class ExternalSortTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
     }
 
+    public function test_sorting_preserves_a_nullable_column_present_and_null_across_spilled_buckets(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/test_sorting_nullable_column_across_buckets');
+
+        $this->fs()->rm($cacheDir);
+
+        $input = [];
+
+        for ($i = 1; $i <= 40; $i++) {
+            $input[] = ['id' => str_pad((string) $i, 3, '0', STR_PAD_LEFT), 'opt' => ($i % 2) === 0 ? 'v' . $i : null];
+        }
+
+        $randomizedInput = $input;
+        shuffle($randomizedInput);
+
+        $sort = new ExternalSort(
+            new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir),
+            bucketsCount: 2,
+            bucketSize: 5,
+        );
+
+        $context = flow_context();
+        $pipeline = new Pipeline(from_array($randomizedInput));
+
+        $sortedOutput = iterator_to_array($sort->sortGenerator(
+            $pipeline->process($context),
+            $context,
+            refs(ref('id')->asc()),
+        ));
+
+        static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));
+
+        $this->fs()->rm($cacheDir);
+    }
+
     public function test_sorting_with_multiple_merge_rounds(): void
     {
         $cacheDir = path(__DIR__ . '/var/test_sorting_with_multiple_merge_rounds');

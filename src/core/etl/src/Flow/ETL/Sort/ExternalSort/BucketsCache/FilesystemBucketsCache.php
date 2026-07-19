@@ -8,11 +8,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeReader;
+use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
+use Flow\Floe\Options;
 use Generator;
 
 use function count;
@@ -50,13 +53,19 @@ final class FilesystemBucketsCache implements BucketsCache
      */
     public function append(string $bucketId, iterable $rows): void
     {
-        if (!isset($this->writers[$bucketId])) {
-            $writer = new FloeWriter($this->filesystem);
-            $writer->append($this->keyPath($bucketId));
-            $this->writers[$bucketId] = $writer;
-        }
+        foreach ($this->batches($rows) as $batch) {
+            if (!isset($this->writers[$bucketId])) {
+                $writer = new FloeWriter(
+                    $this->filesystem,
+                    FloeStreamWriter::unionSchema($batch),
+                    new Options(validateData: false),
+                );
+                $writer->append($this->keyPath($bucketId));
+                $this->writers[$bucketId] = $writer;
+            }
 
-        $this->write($this->writers[$bucketId], $rows);
+            $this->writers[$bucketId]->write($batch);
+        }
     }
 
     /**
@@ -93,10 +102,25 @@ final class FilesystemBucketsCache implements BucketsCache
     {
         $this->closeWriter($bucketId);
 
-        $writer = new FloeWriter($this->filesystem);
-        $writer->create($this->keyPath($bucketId));
+        $writer = null;
 
-        $this->write($writer, $rows);
+        foreach ($this->batches($rows) as $batch) {
+            if ($writer === null) {
+                $writer = new FloeWriter(
+                    $this->filesystem,
+                    FloeStreamWriter::unionSchema($batch),
+                    new Options(validateData: false),
+                );
+                $writer->create($this->keyPath($bucketId));
+            }
+
+            $writer->write($batch);
+        }
+
+        if ($writer === null) {
+            $writer = new FloeWriter($this->filesystem, new Schema(), new Options(validateData: false));
+            $writer->create($this->keyPath($bucketId));
+        }
 
         $writer->close();
     }
@@ -120,8 +144,10 @@ final class FilesystemBucketsCache implements BucketsCache
 
     /**
      * @param iterable<Row>|Rows $rows
+     *
+     * @return Generator<Rows>
      */
-    private function write(FloeWriter $writer, iterable $rows): void
+    private function batches(iterable $rows): Generator
     {
         $batch = [];
 
@@ -129,13 +155,13 @@ final class FilesystemBucketsCache implements BucketsCache
             $batch[] = $row;
 
             if (count($batch) >= $this->batchSize) {
-                $writer->write(new Rows(...$batch));
+                yield new Rows(...$batch);
                 $batch = [];
             }
         }
 
         if ($batch !== []) {
-            $writer->write(new Rows(...$batch));
+            yield new Rows(...$batch);
         }
     }
 }

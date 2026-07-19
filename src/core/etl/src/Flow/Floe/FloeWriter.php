@@ -11,7 +11,6 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
-use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
 
 use function sprintf;
@@ -21,18 +20,19 @@ final class FloeWriter
     private readonly FloeStreamWriter $inner;
 
     /**
+     * @param Schema $schema fixes the session schema for the writer's life
      * @param null|Hydrator $hydrator null uses the adaptive hydrator
      *
      * @throws FloeException
      */
     public function __construct(
         private readonly Filesystem $filesystem,
-        private readonly Codec $codec = new NoopCodec(),
+        Schema $schema,
+        private readonly Options $options = new Options(),
         ?Hydrator $hydrator = null,
-        int $bufferSize = 65_536,
         FloeEngine $engine = FloeEngine::adaptive,
     ) {
-        $this->inner = new FloeStreamWriter($this->codec, $hydrator, $bufferSize, $engine);
+        $this->inner = new FloeStreamWriter($schema, $this->options, $hydrator, $engine);
     }
 
     /**
@@ -67,7 +67,7 @@ final class FloeWriter
             return;
         }
 
-        $location = (new FooterReader())->read($source, $this->codec);
+        $location = (new FooterReader())->read($source, $this->options->codec);
         $source->close();
 
         $this->inner->resume($this->filesystem->appendTo($path), $location->footer, $size, $metadata);
@@ -83,24 +83,22 @@ final class FloeWriter
 
     /**
      * @param ?Metadata $metadata stored in the footer
-     * @param ?Schema $schema fixes the session schema; null derives it from the first batch
      *
      * @throws FloeException
      */
-    public function create(Path $path, ?Metadata $metadata = null, ?Schema $schema = null): void
+    public function create(Path $path, ?Metadata $metadata = null): void
     {
-        $this->inner->create($this->filesystem->writeTo($path), $metadata, $schema);
+        $this->inner->create($this->filesystem->writeTo($path), $metadata);
     }
 
     /**
      * @param ?Metadata $metadata stored in the footer
-     * @param ?Schema $schema fixes the session schema; null derives it from the first batch
      *
      * @throws FloeException
      */
-    public function createForStream(DestinationStream $stream, ?Metadata $metadata = null, ?Schema $schema = null): void
+    public function createForStream(DestinationStream $stream, ?Metadata $metadata = null): void
     {
-        $this->inner->create($stream, $metadata, $schema);
+        $this->inner->create($stream, $metadata);
     }
 
     /**

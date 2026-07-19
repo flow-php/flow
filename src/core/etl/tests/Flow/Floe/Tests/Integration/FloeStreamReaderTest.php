@@ -7,6 +7,7 @@ namespace Flow\Floe\Tests\Integration;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeReader;
+use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Mother\RowsMother;
 
@@ -29,19 +30,22 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $fileTwo = $this->cacheDir->suffix('evolving-2.floe');
         $fileThree = $this->cacheDir->suffix('evolving-3.floe');
 
-        $writer = new FloeWriter($this->fs());
+        $rowsOne = rows(row(int_entry('id', 1)));
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rowsOne));
         $writer->create($fileOne);
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write($rowsOne);
         $writer->close();
 
-        $writer = new FloeWriter($this->fs());
+        $rowsTwo = rows(row(int_entry('id', 2), str_entry('email', null)));
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rowsTwo));
         $writer->create($fileTwo);
-        $writer->write(rows(row(int_entry('id', 2), str_entry('email', null))));
+        $writer->write($rowsTwo);
         $writer->close();
 
-        $writer = new FloeWriter($this->fs());
+        $rowsThree = rows(row(int_entry('id', 3), str_entry('email', 'third@flow.php')));
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rowsThree));
         $writer->create($fileThree);
-        $writer->write(rows(row(int_entry('id', 3), str_entry('email', 'third@flow.php'))));
+        $writer->write($rowsThree);
         $writer->close();
 
         (new FloeMerger($this->fs()))->merge([$fileOne, $fileTwo, $fileThree], $path);
@@ -66,7 +70,11 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('large.floe');
 
-        $writer = new FloeWriter($this->fs());
+        $schema = FloeStreamWriter::unionSchema(rows(row(
+            int_entry('id', 0),
+            str_entry('payload', str_pad('row_0', 300, 'x')),
+        )));
+        $writer = new FloeWriter($this->fs(), $schema);
         $writer->create($path);
         $written = 0;
 
@@ -99,9 +107,10 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('original.floe');
 
-        $writer = new FloeWriter($this->fs());
+        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($data));
         $writer->create($path);
-        $writer->write(rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+        $writer->write($data);
         $writer->close();
 
         $content = $this->fs()->readFrom($path)->content();
@@ -127,7 +136,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $rows = RowsMother::withAllEntryTypes();
         $path = $this->cacheDir->suffix('all-types.floe');
 
-        $writer = new FloeWriter($this->fs());
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows));
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -147,7 +156,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $rows = RowsMother::heterogeneous();
         $path = $this->cacheDir->suffix('heterogeneous.floe');
 
-        $writer = new FloeWriter($this->fs());
+        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows));
         $writer->create($path);
         $writer->write($rows);
         $writer->close();

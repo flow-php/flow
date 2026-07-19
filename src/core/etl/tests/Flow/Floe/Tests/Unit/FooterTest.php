@@ -7,6 +7,7 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
+use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
 use Flow\Floe\Section;
@@ -235,7 +236,7 @@ final class FooterTest extends TestCase
         $path = path('memory://footer-rows.floe');
         $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
 
-        $writer = new FloeWriter($filesystem);
+        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
         $writer->create($path);
         $writer->write($value);
         $writer->close();
@@ -249,7 +250,7 @@ final class FooterTest extends TestCase
         $path = path('memory://footer-empty.floe');
         $value = rows();
 
-        $writer = new FloeWriter($filesystem);
+        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
         $writer->create($path);
         $writer->write($value);
         $writer->close();
@@ -266,7 +267,7 @@ final class FooterTest extends TestCase
             'PL',
         )]);
 
-        $writer = new FloeWriter($filesystem);
+        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
         $writer->create($path);
         $writer->write($value);
         $writer->close();
@@ -285,7 +286,7 @@ final class FooterTest extends TestCase
             str_entry('month', '03'),
         )], [new Partition('year', '2020'), new Partition('day', '15'), new Partition('month', '03')]);
 
-        $writer = new FloeWriter($filesystem);
+        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
         $writer->create($path);
         $writer->write($value);
         $writer->close();

@@ -38,14 +38,14 @@ final class FloeSerializer implements Serializer
     public function serialize(Rows $rows, DestinationStream $destination): void
     {
         try {
-            $writer = new FloeStreamWriter(hydrator: $this->hydrator);
-            // multi-chunk payloads need the whole-value union upfront so later chunks with columns
-            // absent from the first still fit the session; a single chunk derives the identical
-            // union inside write() - skip the second O(rows) schema pass
-            $writer->create(
-                $destination,
-                schema: $rows->count() > $this->batchSize ? FloeStreamWriter::unionSchema($rows) : null,
+            // the whole-Rows union is the schema for every chunk, so no chunk can drift from it -
+            // per-write validation is a provable no-op here and is skipped
+            $writer = new FloeStreamWriter(
+                FloeStreamWriter::unionSchema($rows),
+                new Options(validateData: false),
+                hydrator: $this->hydrator,
             );
+            $writer->create($destination);
 
             foreach ($rows->count() === 0 ? [$rows] : $rows->chunks($this->batchSize) as $chunk) {
                 $writer->write($chunk);
