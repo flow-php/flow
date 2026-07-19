@@ -1,0 +1,150 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Bucketing;
+
+use Flow\ETL\Bucketing\Bucket;
+use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\BucketMother;
+
+use function array_map;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
+
+final class BucketsTest extends FlowTestCase
+{
+    public function test_add_get_and_has(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $buckets->add(BucketMother::withRowsCount('a', 3));
+
+        static::assertTrue($buckets->has('a'));
+        static::assertFalse($buckets->has('missing'));
+        static::assertSame(3, $buckets->get('a')->stats->rowsCount());
+    }
+
+    public function test_all_returns_every_registered_bucket(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $buckets->add(BucketMother::withRowsCount('a', 1));
+        $buckets->add(BucketMother::withRowsCount('b', 2));
+
+        static::assertCount(2, $buckets->all());
+    }
+
+    public function test_clear_empties_manifest_and_storage(): void
+    {
+        $storage = new MemoryBuckets();
+        $storage->append('a', rows(row(int_entry('id', 1))));
+        $storage->append('b', rows(row(int_entry('id', 2))));
+
+        $buckets = new Buckets($storage);
+        $buckets->add(BucketMother::withRowsCount('a', 1));
+        $buckets->add(BucketMother::withRowsCount('b', 1));
+
+        $buckets->clear();
+
+        static::assertSame([], $buckets->all());
+        static::assertSame([], iterator_to_array($storage->get('a'), false));
+        static::assertSame([], iterator_to_array($storage->get('b'), false));
+    }
+
+    public function test_get_missing_bucket_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Bucket "missing" does not exist.');
+
+        (new Buckets(new MemoryBuckets()))->get('missing');
+    }
+
+    public function test_remove_drops_manifest_entry_and_storage(): void
+    {
+        $storage = new MemoryBuckets();
+        $storage->append('a', rows(row(int_entry('id', 1))));
+
+        $buckets = new Buckets($storage);
+        $buckets->add(BucketMother::withRowsCount('a', 1));
+
+        $buckets->remove('a');
+
+        static::assertFalse($buckets->has('a'));
+        static::assertSame([], iterator_to_array($storage->get('a'), false));
+    }
+
+    public function test_rows_batches_storage_rows_with_remainder(): void
+    {
+        $storage = new MemoryBuckets();
+        $storage->append('a', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+
+        $batches = iterator_to_array((new Buckets($storage))->rows('a', 2), false);
+
+        static::assertCount(2, $batches);
+        static::assertSame([1, 2], $batches[0]->reduceToArray('id'));
+        static::assertSame([3], $batches[1]->reduceToArray('id'));
+    }
+
+    public function test_rows_batches_storage_rows_on_exact_boundary(): void
+    {
+        $storage = new MemoryBuckets();
+        $storage->append('a', rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+        ));
+
+        $batches = iterator_to_array((new Buckets($storage))->rows('a', 2), false);
+
+        static::assertCount(2, $batches);
+        static::assertSame([1, 2], $batches[0]->reduceToArray('id'));
+        static::assertSame([3, 4], $batches[1]->reduceToArray('id'));
+    }
+
+    public function test_rows_with_batch_size_below_one_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be at least 1.');
+
+        iterator_to_array((new Buckets(new MemoryBuckets()))->rows('a', 0), false);
+    }
+
+    public function test_sort_by_rows_count_ascending(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $buckets->add(BucketMother::withRowsCount('big', 30));
+        $buckets->add(BucketMother::withRowsCount('small', 5));
+        $buckets->add(BucketMother::withRowsCount('mid', 15));
+
+        static::assertSame(
+            ['small', 'mid', 'big'],
+            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByRowsCount()),
+        );
+    }
+
+    public function test_sort_by_rows_count_descending(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $buckets->add(BucketMother::withRowsCount('big', 30));
+        $buckets->add(BucketMother::withRowsCount('small', 5));
+        $buckets->add(BucketMother::withRowsCount('mid', 15));
+
+        static::assertSame(
+            ['big', 'mid', 'small'],
+            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByRowsCount(SortOrder::DESC)),
+        );
+    }
+
+    public function test_storage_returns_the_injected_instance(): void
+    {
+        $storage = new MemoryBuckets();
+
+        static::assertSame($storage, (new Buckets($storage))->storage());
+    }
+}
