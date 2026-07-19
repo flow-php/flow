@@ -13,7 +13,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\DestinationStream;
-use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Types\Type\Native\NullType;
@@ -34,7 +33,7 @@ final class FloeStreamWriter
     private bool $open = false;
 
     /**
-     * @var array<int, array<string, string>> deduped PARTITIONS combinations, index = partitionsId
+     * @var array<int, array<string, string>>
      */
     private array $partitions = [];
 
@@ -59,16 +58,12 @@ final class FloeStreamWriter
 
     private bool $schemaFrameWritten = false;
 
-    /**
-     * The one schema fixed for the whole session: explicit at create, the file
-     * schema on resume, else the first batch's union.
-     */
-    private ?Schema $sessionSchema = null;
+    private Schema $sessionSchema;
 
     private ?string $sessionSchemaBody = null;
 
     /**
-     * @var null|Encoder<string> built once from the session schema
+     * @var null|Encoder<string>
      */
     private ?Encoder $sessionEncoder = null;
 
@@ -79,47 +74,33 @@ final class FloeStreamWriter
     private readonly Hydrator $hydrator;
 
     /**
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
-     *
      * @throws FloeException
      */
     public function __construct(
-        private readonly Codec $codec = new NoopCodec(),
+        Schema $schema,
+        private readonly Options $options = new Options(),
         ?Hydrator $hydrator = null,
-        private readonly int $bufferSize = 65_536,
         private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
-        Format::validateCodecId($this->codec->id());
+        Format::validateCodecId($this->options->codec->id());
+        $this->sessionSchema = $schema;
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
     }
 
     /**
-     * Opens a create session over a fresh destination stream, writing the header.
-     *
-     * @param ?Metadata $metadata stored in the footer
-     * @param ?Schema $schema fixes the session schema; null derives it from the first batch
-     *
      * @throws FloeException
      */
-    public function create(DestinationStream $stream, ?Metadata $metadata = null, ?Schema $schema = null): void
+    public function create(DestinationStream $stream, ?Metadata $metadata = null): void
     {
         $this->guardNotOpen();
 
-        $this->frameWriter = new FrameWriter($stream, $this->codec->id(), $this->bufferSize);
+        $this->frameWriter = new FrameWriter($stream, $this->options->codec->id(), $this->options->bufferSize);
         $this->metadata = $metadata ?? Metadata::empty();
-        $this->sessionSchema = $schema;
         $this->frameWriter->header();
         $this->open = true;
     }
 
     /**
-     * Seeds writer state from an existing file's footer and opens an append
-     * session over its stream. The caller (facade) owns the filesystem-level
-     * validation (header/trailer/torn/codec checks) before handing over. The
-     * session schema is forced to the file union - appended batches must fit it.
-     *
-     * @param ?Metadata $metadata merged over the existing footer metadata, new keys win
-     *
      * @throws FloeException
      */
     public function resume(DestinationStream $stream, Footer $footer, int $fileLength, ?Metadata $metadata = null): void
@@ -130,17 +111,21 @@ final class FloeStreamWriter
 
         $this->frameWriter = new FrameWriter(
             $stream,
-            $this->codec->id(),
-            $this->bufferSize,
+            $this->options->codec->id(),
+            $this->options->bufferSize,
             startPosition: $fileLength,
         );
         $this->metadata = $footer->metadata->merge($metadata ?? Metadata::empty());
         $this->sections = $footer->sections;
 
-        // a zero-row file records no schema - its session is still schemaless and the
-        // first appended batch fixes the schema, exactly as on create
         if ($footer->schema !== []) {
-            $this->sessionSchema = $footer->schema();
+            if ($this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
+                throw new IncompatibleSchemaException(
+                    'Floe append schema does not match the existing file schema. '
+                    . 'Align the pipeline with DataFrame::match($schema) before appending.',
+                );
+            }
+
             $this->sessionSchemaBody = $footer->schemaBody();
         }
 
@@ -161,7 +146,7 @@ final class FloeStreamWriter
         $this->closeSection();
 
         /** @var array<int, array<string, mixed>> $schema */
-        $schema = $this->sessionSchema?->normalize() ?? [];
+        $schema = $this->sessionSchema->normalize();
 
         $footerJson = (new Footer(
             Format::VERSION,
@@ -191,13 +176,11 @@ final class FloeStreamWriter
             return;
         }
 
-        $batchSchema = self::unionSchema($rows);
+        $this->openSession();
 
-        if ($this->sessionEncoder === null) {
-            $this->openSession($batchSchema);
+        if ($this->options->validateData) {
+            $this->assertFitsSession(self::unionSchema($rows));
         }
-
-        $this->assertFitsSession($batchSchema);
 
         if (!$this->sectionOpen || $this->forcePartitionBreak) {
             $this->startSection();
@@ -213,10 +196,6 @@ final class FloeStreamWriter
             : 'unknown';
     }
 
-    /**
-     * The union schema of a batch, built without touching the rows' lazily-cached
-     * schema() - the writer must not mutate caller rows.
-     */
     public static function unionSchema(Rows $rows): Schema
     {
         $schema = null;
@@ -229,10 +208,6 @@ final class FloeStreamWriter
         return $schema ?? new Schema();
     }
 
-    /**
-     * The row's schema built from its entry definitions, without touching the
-     * row's lazily-cached schema().
-     */
     private static function rowSchema(Row $row): Schema
     {
         $definitions = [];
@@ -247,9 +222,12 @@ final class FloeStreamWriter
     /**
      * @throws FloeException
      */
-    private function openSession(Schema $batchSchema): void
+    private function openSession(): void
     {
-        $this->sessionSchema ??= $batchSchema;
+        if ($this->sessionEncoder !== null) {
+            return;
+        }
+
         $this->sessionSchemaBody ??= self::encodeSchemaBody($this->sessionSchema);
         $this->sessionEncoder = $this->engine->encoder($this->sessionSchema);
     }
@@ -267,17 +245,11 @@ final class FloeStreamWriter
     }
 
     /**
-     * A batch fits the session when every one of its columns exists in the
-     * session schema with a type the session column accepts (nullable-narrower
-     * is fine); a wholly-null column fits any column. A new column or an
-     * incompatible type throws, naming the offending column(s).
-     *
-     * @throws FloeException
      * @throws IncompatibleSchemaException
      */
     private function assertFitsSession(Schema $batchSchema): void
     {
-        $session = $this->sessionSchema ?? throw new FloeException('Floe writer has no active session schema');
+        $session = $this->sessionSchema;
 
         $violations = [];
 
@@ -295,10 +267,6 @@ final class FloeStreamWriter
                 continue;
             }
 
-            // nullable-narrower is fine (a batch value fits a wider session column); nulls into a
-            // non-null column or a changed concrete type are drift. Compared structurally via
-            // type_equals - Definition::isCompatible reconstructs container element definitions,
-            // which throws for element types without a Definition class (mixed, timezone, ...).
             if (
                 !$sessionDefinition->isNullable() && $batchDefinition->isNullable()
                 || !type_equals($sessionDefinition->type(), $batchDefinition->type())
@@ -319,9 +287,6 @@ final class FloeStreamWriter
     }
 
     /**
-     * Body-encodes the whole batch in one call, then applies the codec and frames
-     * each row body.
-     *
      * @param list<\Flow\ETL\Row\TypedRowValues> $typed
      *
      * @throws FloeException
@@ -329,7 +294,7 @@ final class FloeStreamWriter
     private function emitBatch(array $typed): void
     {
         foreach ($this->sessionEncoder()->encode($typed) as $encoded) {
-            $this->frameWriter()->row($this->codec->encode($encoded));
+            $this->frameWriter()->row($this->options->codec->encode($encoded));
             $this->sectionRowCount++;
             $this->totalRows++;
         }
@@ -351,12 +316,6 @@ final class FloeStreamWriter
         }
     }
 
-    /**
-     * Records the batch's partition combination (in the caller's original order,
-     * no ksort) into the deduped table and flags a forced section break when it
-     * differs from the currently open section - a partition change starts a new
-     * section under the same session schema.
-     */
     private function trackPartitions(Rows $rows): void
     {
         $combo = [];
@@ -405,10 +364,6 @@ final class FloeStreamWriter
     }
 
     /**
-     * Opens a new section over the fixed session schema. The single SCHEMA frame
-     * is written once, before the first section; a PARTITIONS frame only when the
-     * combination changes.
-     *
      * @throws FloeException
      */
     private function startSection(): void
@@ -438,13 +393,6 @@ final class FloeStreamWriter
         $this->forcePartitionBreak = false;
     }
 
-    /**
-     * A PARTITIONS frame is written only when the section's combination differs
-     * from what the reader currently holds - mirror of the SCHEMA-frame dedup.
-     * The reader starts at the empty combination, so the first section emits a
-     * frame only when it is partitioned; a later change back to unpartitioned
-     * emits an empty-body (count=0) frame.
-     */
     private function partitionsFrameChanged(int $partitionsId): bool
     {
         if ($this->lastSectionPartitionsId === null) {

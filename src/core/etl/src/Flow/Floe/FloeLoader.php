@@ -13,7 +13,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Path;
-use Flow\Floe\Codec\NoopCodec;
+use Flow\Floe\Exception\FloeException;
 use Throwable;
 
 use function array_key_exists;
@@ -32,7 +32,7 @@ final class FloeLoader implements Closure, FileLoader, Loader
     public function __construct(
         private readonly Path $path,
         private readonly ?Metadata $metadata = null,
-        private readonly Codec $codec = new NoopCodec(),
+        private readonly Options $options = new Options(),
         private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {}
 
@@ -78,11 +78,14 @@ final class FloeLoader implements Closure, FileLoader, Loader
             if (!array_key_exists($uri, $this->writers)) {
                 $writer = new FloeWriter(
                     $context->filesystem($this->path),
-                    $this->codec,
+                    $this->schema ?? $this->inferredSchema ?? throw new FloeException(
+                        'Floe loader has no schema to write with',
+                    ),
+                    $this->options,
                     hydrator: $context->hydrator(),
                     engine: $this->engine,
                 );
-                $writer->createForStream($stream, $this->metadata, schema: $this->schema ?? $this->inferredSchema);
+                $writer->createForStream($stream, $this->metadata);
                 $this->writers[$uri] = $writer;
             }
 

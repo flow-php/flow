@@ -6,9 +6,11 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\FloeLoader;
+use Flow\Floe\Tests\Double\CodecStub;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;
+use function Flow\Floe\DSL\floe_options;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 
@@ -44,5 +46,31 @@ final class FloeDSLTest extends TestCase
 
         static::assertInstanceOf(FloeLoader::class, $loader);
         static::assertStringEndsWith('out.floe', $loader->destination()->path());
+    }
+
+    public function test_to_floe_accepts_options(): void
+    {
+        $loader = to_floe(path('memory://opts.floe'), options: floe_options(validate_data: false));
+
+        static::assertInstanceOf(FloeLoader::class, $loader);
+        static::assertSame('memory://opts.floe', $loader->destination()->uri());
+    }
+
+    public function test_floe_options_defaults(): void
+    {
+        $options = floe_options();
+
+        static::assertTrue($options->validateData);
+        static::assertSame(65_536, $options->bufferSize);
+    }
+
+    public function test_floe_options_with_custom_values(): void
+    {
+        $codec = new CodecStub(0x00);
+        $options = floe_options(validate_data: false, buffer_size: 4_096, codec: $codec);
+
+        static::assertFalse($options->validateData);
+        static::assertSame(4_096, $options->bufferSize);
+        static::assertSame($codec, $options->codec);
     }
 }

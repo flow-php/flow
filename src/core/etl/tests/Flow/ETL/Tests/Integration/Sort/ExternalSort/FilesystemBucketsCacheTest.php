@@ -144,6 +144,23 @@ final class FilesystemBucketsCacheTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
     }
 
+    public function test_append_round_trips_a_nullable_column_present_then_null_across_batches(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_present_then_null');
+        $this->fs()->rm($cacheDir);
+
+        $cache = new FilesystemBucketsCache($this->fs(), cacheDir: $cacheDir, batchSize: 1);
+        $cache->append('bucket', [row(int_entry('id', 1), str_entry('opt', 'present'))]);
+        $cache->append('bucket', [row(int_entry('id', 2), str_entry('opt', null))]);
+
+        static::assertSame(
+            [['id' => 1, 'opt' => 'present'], ['id' => 2, 'opt' => null]],
+            array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($cache->get('bucket'), false)),
+        );
+
+        $this->fs()->rm($cacheDir);
+    }
+
     public function test_round_trips_schema_changing_rows(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_heterogeneous');

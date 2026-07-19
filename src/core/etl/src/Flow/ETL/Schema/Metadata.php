@@ -108,6 +108,10 @@ final readonly class Metadata
 
     public function isEqual(self $metadata): bool
     {
+        if ($this->map === $metadata->map) {
+            return true;
+        }
+
         return (new ArrayComparison())->equals($this->map, $metadata->map);
     }
 

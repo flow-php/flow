@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use PHPUnit\Framework\TestCase;
 
@@ -136,16 +137,18 @@ final class FloeExtractorTest extends TestCase
         $context = flow_context(config());
         $path = path('memory://extract-multi-combination.floe');
 
-        $writer = new FloeWriter($context->filesystem($path));
-        $writer->create($path);
-        $writer->write(Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
+        $batchPL = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
             'country',
             'PL',
-        )]));
-        $writer->write(Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
+        )]);
+        $batchUS = Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
             'country',
             'US',
-        )]));
+        )]);
+        $writer = new FloeWriter($context->filesystem($path), FloeStreamWriter::unionSchema($batchPL->merge($batchUS)));
+        $writer->create($path);
+        $writer->write($batchPL);
+        $writer->write($batchUS);
         $writer->close();
 
         $combos = [];

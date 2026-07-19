@@ -163,4 +163,39 @@ final class ArrayComparisonTest extends TestCase
     {
         static::assertFalse((new ArrayComparison())->equals($a, $b));
     }
+
+    public function test_equals_empty_arrays(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals([], []));
+    }
+
+    public function test_equals_identical_arrays_short_circuit(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(['a' => 1, 'b' => 2], ['a' => 1, 'b' => 2]));
+    }
+
+    public function test_equals_returns_false_on_size_mismatch(): void
+    {
+        static::assertFalse((new ArrayComparison())->equals([1, 2], [1, 2, 3]));
+    }
+
+    public function test_equals_order_independence_preserved_for_lists(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals([1, 2], [2, 1]));
+    }
+
+    public function test_equals_order_independence_preserved_for_nested_maps(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(['tags' => ['b', 'a'], 'id' => 1], [
+            'id' => 1,
+            'tags' => ['a', 'b'],
+        ]));
+    }
+
+    public function test_equals_null_handling_unchanged(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(null, null));
+        static::assertFalse((new ArrayComparison())->equals(null, []));
+        static::assertFalse((new ArrayComparison())->equals([], null));
+    }
 }

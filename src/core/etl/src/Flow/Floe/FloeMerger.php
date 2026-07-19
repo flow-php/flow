@@ -146,8 +146,13 @@ final readonly class FloeMerger
             $mergedMetadata = $mergedMetadata->merge($layout['footer']->metadata);
         }
 
-        $writer = new FloeWriter($this->filesystem, $this->codec, hydrator: $this->hydrator);
-        $writer->create($dest, $mergedMetadata->merge($metadata), schema: $merged);
+        $writer = new FloeWriter(
+            $this->filesystem,
+            $merged ?? new Schema(),
+            new Options(codec: $this->codec),
+            hydrator: $this->hydrator,
+        );
+        $writer->create($dest, $mergedMetadata->merge($metadata));
 
         $reader = new FloeReader($this->filesystem, $this->codec, hydrator: $this->hydrator);
 
