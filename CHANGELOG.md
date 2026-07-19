@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-07-19
 
 ### Added
+- [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - Floe Options value object with validateData toggle** - [@norberttech](https://github.com/norberttech)
+- [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - floe_options() DSL and options argument on to_floe()** - [@norberttech](https://github.com/norberttech)
 - [#2538](https://github.com/flow-php/flow/pull/2538) - **phpbench based benchmarks** - [@norberttech](https://github.com/norberttech)
 - [#2538](https://github.com/flow-php/flow/pull/2538) - **flow-php/etl - selectable Floe engine (native/pure-PHP) on from_floe()/to_floe()** - [@norberttech](https://github.com/norberttech)
 - [#2538](https://github.com/flow-php/flow/pull/2538) - **flow-php/etl-adapter-parquet - selectable engine (arrow/pure-PHP) on from_parquet()/to_parquet()** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +49,9 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - FloeWriter/FloeStreamWriter take schema in constructor and build encoder once** - [@norberttech](https://github.com/norberttech)
+- [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - external-sort and hash-join spill cache skip per-write schema validation** - [@norberttech](https://github.com/norberttech)
+- [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - fast-path identity and count checks in array and metadata equality** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - simplified Cache contract** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-csv - RowsNormalizer replaced with CSVEncoder, schema-driven hydration in extractor** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl-adapter-doctrine - RowsNormalizer replaced with DbalEncoder, schema-driven hydration in extractors** - [@norberttech](https://github.com/norberttech)
