@@ -85,11 +85,11 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame($custom, $config->cache->cache);
     }
 
-    public function test_external_sort_batch_size_flows_into_cache_config(): void
+    public function test_external_sort_batch_size_flows_into_sort_config(): void
     {
         $config = config_builder()->externalSortBatchSize(250)->build();
 
-        static::assertSame(250, $config->cache->externalSortBatchSize);
+        static::assertSame(250, $config->sort->batchSize);
     }
 
     public function test_config_builder_with_analyze(): void
@@ -177,7 +177,10 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
     public function test_external_sort_filesystem_protocol_override(): void
     {
-        $config = config_builder()->externalSortFilesystem('custom-sort')->build();
+        $config = config_builder()
+            ->mount(native_local_filesystem('custom-sort'))
+            ->externalSortFilesystem('custom-sort')
+            ->build();
 
         static::assertSame('custom-sort', $config->sort->filesystemProtocol);
     }

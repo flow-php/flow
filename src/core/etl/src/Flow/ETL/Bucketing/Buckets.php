@@ -95,13 +95,13 @@ final class Buckets
     /**
      * @return array<Bucket>
      */
-    public function sortByRowsCount(SortOrder $order = SortOrder::ASC): array
+    public function sortByTotalRows(SortOrder $order = SortOrder::ASC): array
     {
         $buckets = $this->all();
 
         usort($buckets, static fn(Bucket $a, Bucket $b): int => $order === SortOrder::ASC
-            ? $a->stats->rowsCount() <=> $b->stats->rowsCount()
-            : $b->stats->rowsCount() <=> $a->stats->rowsCount());
+            ? $a->totalRows <=> $b->totalRows
+            : $b->totalRows <=> $a->totalRows);
 
         return $buckets;
     }

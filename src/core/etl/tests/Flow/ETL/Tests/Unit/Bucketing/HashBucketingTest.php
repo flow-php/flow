@@ -6,7 +6,9 @@ namespace Flow\ETL\Tests\Unit\Bucketing;
 
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\ConstantHasher;
 use Flow\ETL\Tests\Double\CountingHasher;
@@ -16,69 +18,71 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
 
 final class HashBucketingTest extends FlowTestCase
 {
     public function test_bucket_ids_carry_namespace_and_run_id(): void
     {
-        $strategy = new HashBucketing(refs('id'), 4, namespace: 'group-by');
+        $strategy = new HashBucketing(
+            refs('id'),
+            4,
+            new NativeHasher(),
+            new NativePHPRandomValueGenerator(),
+            'group-by',
+        );
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)));
         })();
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            static::assertMatchesRegularExpression('/^group-by-[0-9a-f]{16}-\d$/', $chunk->bucketId);
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            static::assertMatchesRegularExpression('/^group-by-[0-9a-f]{16}-\d$/', $bucket->id);
         }
     }
 
-    public function test_by_returns_bucket_columns_and_sorted_by_is_null(): void
+    public function test_buckets_are_yielded_after_the_whole_input_is_spilled(): void
     {
-        $strategy = new HashBucketing(refs('id'), 4);
-
-        static::assertEquals(refs('id'), $strategy->by());
-        static::assertNull($strategy->sortedBy());
-    }
-
-    public function test_chunk_carries_values_and_hashes_aligned_with_rows(): void
-    {
-        $strategy = new HashBucketing(refs('id'), 4);
+        $strategy = new HashBucketing(refs('id'), 2, new NativeHasher(), new NativePHPRandomValueGenerator());
+        $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 4)),
-            );
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
         })();
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            static::assertCount($chunk->rows->count(), $chunk->hashes);
-            static::assertCount($chunk->rows->count(), $chunk->values);
+        $totalRows = 0;
+
+        foreach ($strategy->bucketize($generator, $storage) as $bucket) {
+            static::assertCount($bucket->totalRows, iterator_to_array($storage->get($bucket->id), false));
+            $totalRows += $bucket->totalRows;
         }
+
+        static::assertSame(4, $totalRows);
     }
 
     public function test_custom_hasher_overrides_assignment(): void
     {
-        $strategy = new HashBucketing(refs('id'), 8, new ConstantHasher('00000000ffffffff'));
+        $strategy = new HashBucketing(
+            refs('id'),
+            8,
+            new ConstantHasher('00000000ffffffff'),
+            new NativePHPRandomValueGenerator(),
+        );
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
         })();
 
-        $ids = [];
+        $buckets = iterator_to_array($strategy->bucketize($generator, new MemoryBuckets()));
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            $ids[$chunk->bucketId] = true;
-        }
-
-        static::assertCount(1, $ids);
+        static::assertCount(1, $buckets);
+        static::assertSame(3, $buckets[0]->totalRows);
     }
 
     public function test_distributes_rows_within_buckets_count(): void
     {
-        $strategy = new HashBucketing(refs('id'), 4);
+        $strategy = new HashBucketing(refs('id'), 4, new NativeHasher(), new NativePHPRandomValueGenerator());
 
         $rows = [];
 
@@ -92,9 +96,9 @@ final class HashBucketingTest extends FlowTestCase
 
         $total = 0;
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            static::assertMatchesRegularExpression('/-[0-3]$/', $chunk->bucketId);
-            $total += $chunk->rows->count();
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            static::assertMatchesRegularExpression('/-[0-3]$/', $bucket->id);
+            $total += $bucket->totalRows;
         }
 
         static::assertSame(100, $total);
@@ -103,17 +107,33 @@ final class HashBucketingTest extends FlowTestCase
     public function test_hashes_each_row_exactly_once(): void
     {
         $spy = new CountingHasher(new NativeHasher());
-        $strategy = new HashBucketing(refs('id'), 4, $spy);
+        $strategy = new HashBucketing(refs('id'), 4, $spy, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
             yield rows(row(int_entry('id', 3)));
         })();
 
-        foreach ($strategy->bucketize($generator) as $_) {
-        }
+        iterator_to_array($strategy->bucketize($generator, new MemoryBuckets()));
 
         static::assertSame(3, $spy->hashedRows());
+    }
+
+    public function test_same_key_lands_in_the_same_bucket(): void
+    {
+        $strategy = new HashBucketing(refs('id'), 4, new NativeHasher(), new NativePHPRandomValueGenerator());
+        $storage = new MemoryBuckets();
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 1)));
+            yield rows(row(int_entry('id', 1)));
+        })();
+
+        $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
+
+        static::assertCount(1, $buckets);
+        static::assertSame(3, $buckets[0]->totalRows);
+        static::assertCount(3, iterator_to_array($storage->get($buckets[0]->id), false));
     }
 
     public function test_throws_when_buckets_count_below_one(): void
@@ -121,6 +141,6 @@ final class HashBucketingTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Buckets count must be greater than 0, given: 0');
 
-        new HashBucketing(refs('id'), 0);
+        new HashBucketing(refs('id'), 0, new NativeHasher(), new NativePHPRandomValueGenerator());
     }
 }

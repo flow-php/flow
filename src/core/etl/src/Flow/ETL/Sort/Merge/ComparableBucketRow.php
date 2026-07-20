@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Sort\ExternalSort;
+namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Row;
 

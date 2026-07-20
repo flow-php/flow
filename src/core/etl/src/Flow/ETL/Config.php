@@ -49,6 +49,7 @@ final readonly class Config
         private int $extractorBatchSize = 1000,
         private EntryFactory $entryFactory = new EntryFactory(),
         private Calculator $calculator = new Calculator(),
+        private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
 
     public static function builder(): ConfigBuilder
@@ -120,6 +121,11 @@ final readonly class Config
     public function optimizer(): Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function randomValueGenerator(): RandomValueGenerator
+    {
+        return $this->randomValueGenerator;
     }
 
     public function serializer(): Serializer

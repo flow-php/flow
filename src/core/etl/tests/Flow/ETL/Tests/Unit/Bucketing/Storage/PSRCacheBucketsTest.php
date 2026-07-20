@@ -84,7 +84,7 @@ final class PSRCacheBucketsTest extends FlowTestCase
             row(int_entry('id', 2), str_entry('name', 'John')),
             row(str_entry('name', 'Jane')),
         );
-        $storage->set('bucket', $input);
+        $storage->append('bucket', $input);
 
         static::assertSame(
             array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($input, false)),

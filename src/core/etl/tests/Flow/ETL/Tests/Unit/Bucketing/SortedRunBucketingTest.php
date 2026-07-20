@@ -4,57 +4,38 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Bucketing;
 
-use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\SortedRunBucketing;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Tests\Double\CountingHasher;
+use Flow\ETL\NativePHPRandomValueGenerator;
+use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
 
 final class SortedRunBucketingTest extends FlowTestCase
 {
     public function test_bucket_ids_are_random_hex(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2);
+        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            static::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $chunk->bucketId);
-        }
-    }
-
-    public function test_by_and_sorted_by_return_refs(): void
-    {
-        $strategy = new SortedRunBucketing(refs('id'), 2);
-
-        static::assertEquals(refs('id'), $strategy->by());
-        static::assertEquals(refs('id'), $strategy->sortedBy());
-    }
-
-    public function test_chunk_carries_values_and_hashes_aligned_with_rows(): void
-    {
-        $strategy = new SortedRunBucketing(refs('id'), 3);
-
-        $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
-        })();
-
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            static::assertCount($chunk->rows->count(), $chunk->hashes);
-            static::assertCount($chunk->rows->count(), $chunk->values);
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            static::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $bucket->id);
         }
     }
 
     public function test_emits_final_partial_run(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2);
+        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -62,48 +43,54 @@ final class SortedRunBucketingTest extends FlowTestCase
 
         $sizes = [];
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            $sizes[] = $chunk->rows->count();
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            $sizes[] = $bucket->totalRows;
         }
 
         static::assertSame([2, 1], $sizes);
     }
 
-    public function test_hashes_each_row_once_for_stats(): void
+    public function test_runs_are_spilled_sorted_by_refs(): void
     {
-        $spy = new CountingHasher(new NativeHasher());
-        $strategy = new SortedRunBucketing(refs('id'), 2, $spy);
+        $strategy = new SortedRunBucketing(refs('id'), 3, new NativePHPRandomValueGenerator());
+        $storage = new MemoryBuckets();
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
 
-        foreach ($strategy->bucketize($generator) as $_) {
-        }
+        $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
 
-        static::assertSame(3, $spy->hashedRows());
+        static::assertCount(1, $buckets);
+        static::assertSame(
+            [1, 2, 3],
+            array_map(
+                static fn(Row $r): mixed => $r->valueOf('id'),
+                iterator_to_array($storage->get($buckets[0]->id), false),
+            ),
+        );
     }
 
-    public function test_runs_are_sorted_by_refs(): void
+    public function test_runs_are_yielded_as_soon_as_they_are_complete(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 3);
+        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
         })();
 
-        $runs = [];
+        $firstRun = $strategy->bucketize($generator, $storage)->current();
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            $runs[] = $chunk->rows->toArray();
-        }
-
-        static::assertSame([[['id' => 1], ['id' => 2], ['id' => 3]]], $runs);
+        static::assertNotNull($firstRun);
+        static::assertSame(2, $firstRun->totalRows);
+        static::assertCount(2, iterator_to_array($storage->get($firstRun->id), false));
     }
 
     public function test_splits_buffer_into_runs_of_run_size(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2);
+        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -112,8 +99,8 @@ final class SortedRunBucketingTest extends FlowTestCase
 
         $sizes = [];
 
-        foreach ($strategy->bucketize($generator) as $chunk) {
-            $sizes[] = $chunk->rows->count();
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            $sizes[] = $bucket->totalRows;
         }
 
         static::assertSame([2, 2], $sizes);
@@ -124,6 +111,6 @@ final class SortedRunBucketingTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Run size must be greater than 0, given: 0');
 
-        new SortedRunBucketing(refs('id'), 0);
+        new SortedRunBucketing(refs('id'), 0, new NativePHPRandomValueGenerator());
     }
 }

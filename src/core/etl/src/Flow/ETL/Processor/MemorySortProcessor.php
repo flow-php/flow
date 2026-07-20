@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Sort;
+namespace Flow\ETL\Processor;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -13,9 +14,19 @@ use Generator;
 
 use function max;
 
-final class MemorySort implements SortingAlgorithm
+/**
+ * Buffers all rows and sorts them in memory. Registered by DataFrame::sortBy when the sort algorithm is
+ * MEMORY_SORT.
+ *
+ * @internal
+ */
+final readonly class MemorySortProcessor implements Processor
 {
-    public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
+    public function __construct(
+        private References $refs,
+    ) {}
+
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<Row> $buffer */
         $buffer = [];
@@ -44,7 +55,7 @@ final class MemorySort implements SortingAlgorithm
         }
 
         yield from Rows::partitioned($buffer, $partitions ?? new Partitions())
-            ->sortBy(...$refs->all())
+            ->sortBy(...$this->refs->all())
             ->chunks($maxSize);
     }
 }

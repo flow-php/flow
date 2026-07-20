@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Bucketing\SortedRunBucketing;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -23,14 +25,16 @@ use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Processor\BatchingProcessor;
+use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Processor\GroupByProcessor;
 use Flow\ETL\Processor\HashJoinProcessor;
+use Flow\ETL\Processor\MemorySortProcessor;
+use Flow\ETL\Processor\MergeSortProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
-use Flow\ETL\Processor\SortingProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Row\EntryReference;
@@ -40,6 +44,7 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
+use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
@@ -856,7 +861,31 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries): self
     {
-        $this->pipeline->add(new SortingProcessor(refs(...$entries)));
+        $refs = refs(...$entries);
+
+        if ($this->context->config->sort->algorithm === SortAlgorithms::MEMORY_SORT) {
+            $this->pipeline->add(new MemorySortProcessor($refs));
+
+            return $this;
+        }
+
+        $random = $this->context->config->randomValueGenerator();
+
+        $this->pipeline->add(
+            new BucketingProcessor(
+                new SortedRunBucketing($refs, $this->context->config->sort->bucketSize, $random),
+                new Buckets($this->context->config->sort->cache),
+            ),
+        );
+        $this->pipeline->add(
+            new MergeSortProcessor(
+                $refs,
+                $this->context->config->sort->cache,
+                $random,
+                $this->context->config->sort->bucketsCount,
+                $this->context->config->sort->batchSize,
+            ),
+        );
 
         return $this;
     }

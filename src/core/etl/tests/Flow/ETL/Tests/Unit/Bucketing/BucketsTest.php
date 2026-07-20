@@ -23,18 +23,18 @@ final class BucketsTest extends FlowTestCase
     public function test_add_get_and_has(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withRowsCount('a', 3));
+        $buckets->add(BucketMother::withTotalRows('a', 3));
 
         static::assertTrue($buckets->has('a'));
         static::assertFalse($buckets->has('missing'));
-        static::assertSame(3, $buckets->get('a')->stats->rowsCount());
+        static::assertSame(3, $buckets->get('a')->totalRows);
     }
 
     public function test_all_returns_every_registered_bucket(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withRowsCount('a', 1));
-        $buckets->add(BucketMother::withRowsCount('b', 2));
+        $buckets->add(BucketMother::withTotalRows('a', 1));
+        $buckets->add(BucketMother::withTotalRows('b', 2));
 
         static::assertCount(2, $buckets->all());
     }
@@ -46,8 +46,8 @@ final class BucketsTest extends FlowTestCase
         $storage->append('b', rows(row(int_entry('id', 2))));
 
         $buckets = new Buckets($storage);
-        $buckets->add(BucketMother::withRowsCount('a', 1));
-        $buckets->add(BucketMother::withRowsCount('b', 1));
+        $buckets->add(BucketMother::withTotalRows('a', 1));
+        $buckets->add(BucketMother::withTotalRows('b', 1));
 
         $buckets->clear();
 
@@ -70,7 +70,7 @@ final class BucketsTest extends FlowTestCase
         $storage->append('a', rows(row(int_entry('id', 1))));
 
         $buckets = new Buckets($storage);
-        $buckets->add(BucketMother::withRowsCount('a', 1));
+        $buckets->add(BucketMother::withTotalRows('a', 1));
 
         $buckets->remove('a');
 
@@ -115,29 +115,29 @@ final class BucketsTest extends FlowTestCase
         iterator_to_array((new Buckets(new MemoryBuckets()))->rows('a', 0), false);
     }
 
-    public function test_sort_by_rows_count_ascending(): void
+    public function test_sort_by_total_rows_ascending(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withRowsCount('big', 30));
-        $buckets->add(BucketMother::withRowsCount('small', 5));
-        $buckets->add(BucketMother::withRowsCount('mid', 15));
+        $buckets->add(BucketMother::withTotalRows('big', 30));
+        $buckets->add(BucketMother::withTotalRows('small', 5));
+        $buckets->add(BucketMother::withTotalRows('mid', 15));
 
         static::assertSame(
             ['small', 'mid', 'big'],
-            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByRowsCount()),
+            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByTotalRows()),
         );
     }
 
-    public function test_sort_by_rows_count_descending(): void
+    public function test_sort_by_total_rows_descending(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withRowsCount('big', 30));
-        $buckets->add(BucketMother::withRowsCount('small', 5));
-        $buckets->add(BucketMother::withRowsCount('mid', 15));
+        $buckets->add(BucketMother::withTotalRows('big', 30));
+        $buckets->add(BucketMother::withTotalRows('small', 5));
+        $buckets->add(BucketMother::withTotalRows('mid', 15));
 
         static::assertSame(
             ['big', 'mid', 'small'],
-            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByRowsCount(SortOrder::DESC)),
+            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByTotalRows(SortOrder::DESC)),
         );
     }
 

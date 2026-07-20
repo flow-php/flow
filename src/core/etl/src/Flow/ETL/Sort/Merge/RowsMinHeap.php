@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Sort\ExternalSort;
+namespace Flow\ETL\Sort\Merge;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
@@ -48,23 +48,15 @@ final class RowsMinHeap extends SplMinHeap
         return $elements;
     }
 
-    public function insert(mixed $value): true
+    public function push(Row $row, string $bucketId): void
     {
-        if (!$value instanceof BucketRow) {
-            throw new InvalidArgumentException(
-                'Value inserted into RowsMinHeap must be an instance of Flow\\ETL\\Sort\\ExternalSort\\BucketRow',
-            );
-        }
-
         $values = [];
 
         foreach ($this->ref as $ref) {
-            $values[] = $value->row->valueOf($ref->name());
+            $values[] = $row->valueOf($ref->name());
         }
 
-        parent::insert(new ComparableBucketRow($values, $value->row, $value->bucketId));
-
-        return true;
+        parent::insert(new ComparableBucketRow($values, $row, $bucketId));
     }
 
     /**

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Sort\MemorySort;
 
 use Flow\ETL\Pipeline;
-use Flow\ETL\Sort\MemorySort;
+use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
@@ -35,16 +35,12 @@ final class MemorySortTest extends FlowTestCase
         $randomizedInput = $input;
         shuffle($randomizedInput);
 
-        $sort = new MemorySort();
+        $processor = new MemorySortProcessor(refs(ref('id')->desc()));
 
         $context = flow_context();
         $pipeline = new Pipeline(from_array($randomizedInput));
 
-        $sortedOutput = iterator_to_array($sort->sortGenerator(
-            $pipeline->process($context),
-            $context,
-            refs(ref('id')->desc()),
-        ));
+        $sortedOutput = iterator_to_array($processor->process($pipeline->process($context), $context));
 
         // @mago-ignore analysis:mixed-argument,mixed-method-access
         static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));

@@ -59,7 +59,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, batchSize: 2);
-        $storage->set('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
 
         static::assertCount(3, iterator_to_array($storage->get('bucket'), false));
 
@@ -97,7 +97,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->set('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(row(int_entry('id', 1))));
         $storage->remove('bucket');
 
         static::assertSame([], iterator_to_array($storage->get('bucket')));
@@ -118,33 +118,25 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
             $input[] = row(int_entry('id', $i));
         }
 
-        $storage->set('bucket', rows(...$input));
+        $storage->append('bucket', rows(...$input));
 
         static::assertEquals($input, iterator_to_array($storage->get('bucket'), false));
 
         $this->fs()->rm($cacheDir);
     }
 
-    public function test_round_trips_schema_changing_rows(): void
+    public function test_set_replaces_a_bucket_written_with_append(): void
     {
-        $cacheDir = path(__DIR__ . '/var/buckets_heterogeneous');
+        $cacheDir = path(__DIR__ . '/var/buckets_append_set');
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        $storage->set('bucket', rows(row(int_entry('id', 3))));
 
-        $input = [
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2), str_entry('name', 'John')),
-            row(str_entry('name', 'Jane')),
-        ];
-
-        $storage->set('bucket', rows(...$input));
-
-        // one write session = one schema: rows keep their own columns (unpadded) but entry
-        // types widen to the batch union, so compare values rather than exact definitions
         static::assertSame(
-            array_map(static fn(Row $r): array => $r->toArray(), $input),
-            array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($storage->get('bucket'), false)),
+            [3],
+            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
         );
 
         $this->fs()->rm($cacheDir);
@@ -163,18 +155,26 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
     }
 
-    public function test_set_replaces_a_bucket_written_with_append(): void
+    public function test_round_trips_schema_changing_rows(): void
     {
-        $cacheDir = path(__DIR__ . '/var/buckets_append_set');
+        $cacheDir = path(__DIR__ . '/var/buckets_heterogeneous');
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-        $storage->set('bucket', rows(row(int_entry('id', 3))));
 
+        $input = [
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2), str_entry('name', 'John')),
+            row(str_entry('name', 'Jane')),
+        ];
+
+        $storage->append('bucket', rows(...$input));
+
+        // one write session = one schema: rows keep their own columns (unpadded) but entry
+        // types widen to the batch union, so compare values rather than exact definitions
         static::assertSame(
-            [3],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): array => $r->toArray(), $input),
+            array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($storage->get('bucket'), false)),
         );
 
         $this->fs()->rm($cacheDir);

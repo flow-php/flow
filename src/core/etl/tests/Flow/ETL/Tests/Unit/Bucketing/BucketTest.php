@@ -5,20 +5,25 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Bucketing;
 
 use Flow\ETL\Bucketing\Bucket;
+use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Tests\Mother\BucketStatsMother;
-
-use function Flow\ETL\DSL\refs;
 
 final class BucketTest extends FlowTestCase
 {
-    public function test_exposes_identity_bucket_by_columns_and_stats(): void
+    public function test_exposes_identity_and_total_rows(): void
     {
-        $stats = BucketStatsMother::with(rowsCount: 7);
-        $bucket = new Bucket('bucket-1', refs('id', 'name'), $stats);
+        $bucket = new Bucket('bucket-1', 7);
 
         static::assertSame('bucket-1', $bucket->id);
-        static::assertEquals(refs('id', 'name'), $bucket->by);
-        static::assertSame($stats, $bucket->stats);
+        static::assertSame(7, $bucket->totalRows);
+    }
+
+    public function test_to_row_carries_id_and_total_rows(): void
+    {
+        $row = (new Bucket('bucket-1', 4))->toRow();
+
+        static::assertSame('bucket-1', $row->valueOf(BucketShape::id->value));
+        static::assertSame(4, $row->valueOf(BucketShape::totalRows->value));
+        static::assertCount(2, $row->entries());
     }
 }

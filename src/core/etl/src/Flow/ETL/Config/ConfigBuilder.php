@@ -134,12 +134,13 @@ final class ConfigBuilder
             $this->putInputIntoRows,
             $hydrator,
             $cacheConfig,
-            $this->sort->build(),
+            $this->sort->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
             $this->grouping->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
             $this->join->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
             $this->extractorBatchSize,
+            randomValueGenerator: $this->randomValueGenerator,
         );
     }
 
@@ -195,7 +196,7 @@ final class ConfigBuilder
      */
     public function externalSortBucketsCount(int $externalSortBucketsCount): self
     {
-        $this->cache->externalSortBucketsCount($externalSortBucketsCount);
+        $this->sort->bucketsCount($externalSortBucketsCount);
 
         return $this;
     }
@@ -205,7 +206,7 @@ final class ConfigBuilder
      */
     public function externalSortBatchSize(int $externalSortBatchSize): self
     {
-        $this->cache->externalSortBatchSize($externalSortBatchSize);
+        $this->sort->batchSize($externalSortBatchSize);
 
         return $this;
     }
@@ -215,7 +216,7 @@ final class ConfigBuilder
      */
     public function externalSortBucketSize(int $externalSortBucketSize): self
     {
-        $this->cache->externalSortBucketSize($externalSortBucketSize);
+        $this->sort->bucketSize($externalSortBucketSize);
 
         return $this;
     }

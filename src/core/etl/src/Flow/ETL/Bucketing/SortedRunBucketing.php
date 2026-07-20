@@ -5,75 +5,51 @@ declare(strict_types=1);
 namespace Flow\ETL\Bucketing;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Generator;
 
-use function array_splice;
-use function bin2hex;
-use function count;
-use function random_bytes;
-
 final class SortedRunBucketing implements BucketingStrategy
 {
-    private readonly Hasher $hasher;
-
-    private readonly KeyValues $keyValues;
-
     public function __construct(
         private readonly References $refs,
         private readonly int $runSize,
-        ?Hasher $hasher = null,
+        private readonly RandomValueGenerator $random,
     ) {
         if ($this->runSize < 1) {
             throw new InvalidArgumentException('Run size must be greater than 0, given: ' . $this->runSize);
         }
-
-        $this->hasher = $hasher ?? new NativeHasher();
-        $this->keyValues = new KeyValues($refs);
-    }
-
-    public function by(): References
-    {
-        return $this->refs;
     }
 
     /**
      * @param Generator<Rows> $rows
      *
-     * @return Generator<BucketChunk>
+     * @return Generator<Bucket>
      */
-    public function bucketize(Generator $rows): Generator
+    public function bucketize(Generator $rows, BucketsStorage $storage): Generator
     {
-        $toChunk = function (array $run): BucketChunk {
-            /** @var list<Row> $run */
-            $sorted = (new Rows(...$run))->sortBy(...$this->refs->all());
-            $values = $this->keyValues->of($sorted);
-
-            return new BucketChunk(bin2hex(random_bytes(16)), $sorted, $this->hasher->hash($values), $values);
-        };
-
-        /** @var list<Row> $buffer */
-        $buffer = [];
+        $buffer = new Rows();
 
         foreach ($rows as $batch) {
-            foreach ($batch as $row) {
-                $buffer[] = $row;
-            }
+            $buffer = $buffer->merge($batch);
 
-            while (count($buffer) >= $this->runSize) {
-                yield $toChunk(array_splice($buffer, 0, $this->runSize));
+            while ($buffer->count() >= $this->runSize) {
+                yield $this->spill($buffer->take($this->runSize), $storage);
+                $buffer = $buffer->drop($this->runSize);
             }
         }
 
-        if ($buffer !== []) {
-            yield $toChunk($buffer);
+        if (!$buffer->empty()) {
+            yield $this->spill($buffer, $storage);
         }
     }
 
-    public function sortedBy(): ?References
+    private function spill(Rows $run, BucketsStorage $storage): Bucket
     {
-        return $this->refs;
+        $bucketId = $this->random->string(32);
+        $storage->set($bucketId, $run->sortBy(...$this->refs->all()));
+
+        return new Bucket($bucketId, $run->count());
     }
 }
