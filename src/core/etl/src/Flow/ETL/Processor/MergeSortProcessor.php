@@ -11,7 +11,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\References;
-use Flow\ETL\Rows;
 use Flow\ETL\Sort\Merge\KWayMerge;
 use Generator;
 
@@ -50,7 +49,7 @@ final class MergeSortProcessor implements Processor
             }
         }
 
-        $merger = new KWayMerge($this->storage, $this->refs);
+        $merger = new KWayMerge($this->storage, $this->refs, $this->batchSize);
 
         try {
             while (count($bucketIds) > $this->mergeFanIn) {
@@ -58,7 +57,7 @@ final class MergeSortProcessor implements Processor
                 array_splice($bucketIds, 0, $this->mergeFanIn);
             }
 
-            yield from $this->stream($merger->merge($bucketIds));
+            yield from $merger->merge($bucketIds);
         } finally {
             foreach ($bucketIds as $bucketId) {
                 $this->storage->remove($bucketId);
@@ -75,7 +74,7 @@ final class MergeSortProcessor implements Processor
     {
         $bucketId = $this->random->string(32);
 
-        foreach ($this->stream($merger->merge($group)) as $batch) {
+        foreach ($merger->merge($group) as $batch) {
             $this->storage->append($bucketId, $batch);
         }
 
@@ -84,28 +83,5 @@ final class MergeSortProcessor implements Processor
         }
 
         return $bucketId;
-    }
-
-    /**
-     * @param Generator<\Flow\ETL\Row> $rows
-     *
-     * @return Generator<Rows>
-     */
-    private function stream(Generator $rows): Generator
-    {
-        $batch = [];
-
-        foreach ($rows as $row) {
-            $batch[] = $row;
-
-            if (count($batch) >= $this->batchSize) {
-                yield new Rows(...$batch);
-                $batch = [];
-            }
-        }
-
-        if ($batch !== []) {
-            yield new Rows(...$batch);
-        }
     }
 }

@@ -34,25 +34,30 @@ Flow PHP supports four join types with specific behaviors:
 | **Left Anti Join** (`Join::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
 
 Joins follow SQL semantics - every matching pair of rows produces one output row, so a left row
-that matches multiple right rows is emitted multiple times.
+that matches multiple right rows is emitted multiple times. A `null` join key never matches
+anything, including another `null` - rows with `null` keys are dropped by inner joins and
+null-padded (or kept, for `left_anti`) by outer joins.
 
 > Flow uses hash join implementation where hashes are stored in buckets to optimize memory usage and performance.
 > Rows are bucketed by the values of the join columns and every candidate pair is verified against
 > the join expression, so non-equality expressions (like `compare_any()`) are supported as well.
+> Mixed expressions still hash by their equality conditions - in `compare_all(Equal, Any)` rows are
+> bucketed by the `Equal` columns and the `Any` part is verified per candidate pair; only joins with
+> no equality condition at all fall back to comparing every pair.
 
 ## Buckets Storage
 
-Like group by, `join()` always partitions the right DataFrame into buckets through a `BucketsCache` -
-the same abstraction used by external sort and group by - and the configured implementation decides
+`join()` always partitions the right DataFrame into buckets through a `BucketsStorage` -
+the same abstraction used by external sort - and the configured implementation decides
 how the join executes:
 
-| Buckets cache                          | Behavior                                                                                                                                                                                        |
-|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `FilesystemBucketsCache` - **Default** | Both sides are partitioned by join key into buckets spilled to disk (Floe files), then joined bucket by bucket. Memory usage is bounded by the largest bucket, left row order is not preserved. |
-| `InMemoryBucketsCache`                 | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                 |
+| Buckets storage                   | Behavior                                                                                                                                                                                                                                 |
+|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `FilesystemBuckets` - **Default** | Both sides are partitioned by join key into buckets spilled to disk (Floe files), then joined pair by pair - the hash table is built from the smaller bucket of each pair. Memory usage is bounded by that bucket, left row order is not preserved. |
+| `MemoryBuckets`                   | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                                                            |
 
-The implementation is swapped with `config_builder()->joinCache(BucketsCache $cache)`; any cache
-implementing `ResidentBucketsCache` (like `InMemoryBucketsCache`) enables the streaming,
+The implementation is swapped with `config_builder()->joinCache(BucketsStorage $cache)`; any storage
+implementing `ResidentBucketsStorage` (like `MemoryBuckets`) enables the streaming,
 order-preserving execution:
 
 ```php
@@ -60,7 +65,7 @@ order-preserving execution:
 
 data_frame(
     config_builder()
-        ->joinCache(new InMemoryBucketsCache()) // right side fits in memory, keep left row order
+        ->joinCache(new MemoryBuckets())        // right side fits in memory, keep left row order
         ->joinBucketsCount(64)                  // number of disk buckets
         ->joinBatchSize(1000)                   // rows per batch when reading buckets back
 )

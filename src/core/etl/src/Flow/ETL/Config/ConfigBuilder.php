@@ -6,6 +6,7 @@ namespace Flow\ETL\Config;
 
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
+use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Cache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
@@ -292,7 +293,7 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function joinCache(BucketsCache $cache): self
+    public function joinCache(BucketsStorage $cache): self
     {
         $this->join->cache($cache);
 

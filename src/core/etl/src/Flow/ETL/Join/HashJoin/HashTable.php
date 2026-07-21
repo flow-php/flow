@@ -29,15 +29,14 @@ final class HashTable
     private array $unmatched = [];
 
     public function __construct(
-        private readonly JoinKeys $keys,
         private readonly bool $trackUnmatched = false,
     ) {}
 
-    public function add(Row $row): void
+    public function add(string $hash, Row $row): void
     {
         $index = count($this->rows);
         $this->rows[] = $row;
-        $this->buckets[$this->keys->rightHash($row)][] = $index;
+        $this->buckets[$hash][] = $index;
 
         if ($this->trackUnmatched) {
             $this->unmatched[$index] = true;
@@ -47,10 +46,8 @@ final class HashTable
     /**
      * @return array<int, Row>
      */
-    public function candidatesFor(Row $leftRow): array
+    public function candidatesFor(string $hash): array
     {
-        $hash = $this->keys->leftHash($leftRow);
-
         if (!array_key_exists($hash, $this->buckets)) {
             return [];
         }

@@ -7,8 +7,6 @@ namespace Flow\ETL;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use DateInterval;
-use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Hash\Algorithm;
@@ -25,6 +23,7 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Sort\ValuesSorter;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Types\Exception\InvalidTypeException;
@@ -44,8 +43,6 @@ use function count;
 use function Flow\Types\DSL\type_integer;
 use function is_array;
 use function is_int;
-use function is_numeric;
-use function is_string;
 use function iterator_to_array;
 use function usort;
 
@@ -683,33 +680,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $values[$index] = $row->valueOf($reference);
         }
 
-        uasort($values, static function (mixed $valueA, mixed $valueB): int {
-            if (is_numeric($valueA) && is_numeric($valueB)) {
-                return (float) $valueA <=> (float) $valueB;
-            }
-
-            if (is_string($valueA) && is_string($valueB)) {
-                return $valueA <=> $valueB;
-            }
-
-            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
-                return $valueA <=> $valueB;
-            }
-
-            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
-                return $valueA <=> $valueB;
-            }
-
-            if (is_array($valueA) && is_array($valueB)) {
-                return $valueA <=> $valueB;
-            }
-
-            return 0;
-        });
-
         $rows = [];
 
-        foreach (array_keys($values) as $index) {
+        foreach (array_keys(ValuesSorter::sort($values, SortOrder::ASC)) as $index) {
             $rows[] = $this->rows[$index];
         }
 
@@ -741,33 +714,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $values[$index] = $row->valueOf($reference);
         }
 
-        uasort($values, static function (mixed $valueA, mixed $valueB): int {
-            if (is_numeric($valueA) && is_numeric($valueB)) {
-                return -((float) $valueA <=> (float) $valueB);
-            }
-
-            if (is_string($valueA) && is_string($valueB)) {
-                return -($valueA <=> $valueB);
-            }
-
-            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
-                return -($valueA <=> $valueB);
-            }
-
-            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
-                return -($valueA <=> $valueB);
-            }
-
-            if (is_array($valueA) && is_array($valueB)) {
-                return -($valueA <=> $valueB);
-            }
-
-            return 0;
-        });
-
         $rows = [];
 
-        foreach (array_keys($values) as $index) {
+        foreach (array_keys(ValuesSorter::sort($values, SortOrder::DESC)) as $index) {
             $rows[] = $this->rows[$index];
         }
 

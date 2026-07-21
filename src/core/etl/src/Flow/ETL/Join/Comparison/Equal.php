@@ -28,8 +28,9 @@ final readonly class Equal implements Comparison
         $leftValue = $left->valueOf($this->entryLeft);
         $rightValue = $right->valueOf($this->entryRight);
 
+        // SQL semantics - null never equals anything, including null
         if ($leftValue === null || $rightValue === null) {
-            return $leftValue === $rightValue;
+            return false;
         }
 
         if (is_numeric($leftValue) && is_numeric($rightValue)) {

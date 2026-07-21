@@ -8,13 +8,13 @@ use Flow\ETL\Bucketing\Bucket;
 
 final class BucketMother
 {
-    public static function empty(string $id): Bucket
+    public static function empty(string $id, int $index = 0): Bucket
     {
-        return new Bucket($id, 0);
+        return new Bucket($id, 0, $index);
     }
 
-    public static function withTotalRows(string $id, int $totalRows): Bucket
+    public static function withTotalRows(string $id, int $totalRows, int $index = 0): Bucket
     {
-        return new Bucket($id, $totalRows);
+        return new Bucket($id, $totalRows, $index);
     }
 }

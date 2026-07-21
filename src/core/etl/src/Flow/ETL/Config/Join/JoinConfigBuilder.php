@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Join;
 
+use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Sort\ExternalSort\BucketsCache;
-use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
@@ -22,7 +22,7 @@ final class JoinConfigBuilder
      */
     private int $bucketsCount = 64;
 
-    private ?BucketsCache $cache = null;
+    private ?BucketsStorage $cache = null;
 
     private string $filesystemMount = 'file';
 
@@ -43,7 +43,7 @@ final class JoinConfigBuilder
 
     public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): JoinConfig
     {
-        $cache = $this->cache ?? new FilesystemBucketsCache(
+        $cache = $this->cache ?? new FilesystemBuckets(
             $filesystemTable->for($this->filesystemMount),
             $localFilesystemCacheDir->suffix('/flow-php-join/'),
             $this->batchSize,
@@ -67,7 +67,7 @@ final class JoinConfigBuilder
         return $this;
     }
 
-    public function cache(BucketsCache $cache): self
+    public function cache(BucketsStorage $cache): self
     {
         $this->cache = $cache;
 

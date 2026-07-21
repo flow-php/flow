@@ -14,6 +14,7 @@ final readonly class Bucket
     public function __construct(
         public string $id,
         public int $totalRows,
+        public int $index,
     ) {}
 
     public function toRow(): Row

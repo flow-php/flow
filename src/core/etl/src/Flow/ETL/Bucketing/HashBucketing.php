@@ -7,7 +7,7 @@ namespace Flow\ETL\Bucketing;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
 
@@ -21,8 +21,11 @@ final class HashBucketing implements BucketingStrategy
 {
     private readonly KeyValues $keyValues;
 
+    /**
+     * @param list<Reference> $by
+     */
     public function __construct(
-        private readonly References $by,
+        array $by,
         private readonly int $bucketsCount,
         private readonly Hasher $hasher,
         private readonly RandomValueGenerator $random,
@@ -47,6 +50,9 @@ final class HashBucketing implements BucketingStrategy
         /** @var array<string, int> $totals */
         $totals = [];
 
+        /** @var array<string, int> $indexes */
+        $indexes = [];
+
         foreach ($rows as $batch) {
             /** @var list<RowKey> $keys */
             $keys = [];
@@ -61,13 +67,10 @@ final class HashBucketing implements BucketingStrategy
             $groups = [];
 
             foreach ($keys as $i => $key) {
-                $id = sprintf(
-                    '%s-%s-%d',
-                    $this->namespace,
-                    $runId,
-                    (int) hexdec(substr($hashes[$i], 0, 8)) % $this->bucketsCount,
-                );
+                $index = (int) hexdec(substr($hashes[$i], 0, 8)) % $this->bucketsCount;
+                $id = sprintf('%s-%s-%d', $this->namespace, $runId, $index);
                 $groups[$id][] = $key->row;
+                $indexes[$id] = $index;
             }
 
             foreach ($groups as $id => $groupRows) {
@@ -77,7 +80,7 @@ final class HashBucketing implements BucketingStrategy
         }
 
         foreach ($totals as $id => $totalRows) {
-            yield new Bucket($id, $totalRows);
+            yield new Bucket($id, $totalRows, $indexes[$id]);
         }
     }
 }

@@ -6,7 +6,6 @@ namespace Flow\ETL\Bucketing\Storage;
 
 use DateInterval;
 use Flow\ETL\Bucketing\BucketsStorage;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
@@ -36,7 +35,7 @@ final readonly class PSRCacheBuckets implements BucketsStorage
     }
 
     /**
-     * @return Generator<Row>
+     * @return Generator<Rows>
      */
     public function get(string $bucketId): Generator
     {
@@ -50,7 +49,7 @@ final readonly class PSRCacheBuckets implements BucketsStorage
                 continue;
             }
 
-            yield from unserialize_from_string($this->serializer, $payload);
+            yield unserialize_from_string($this->serializer, $payload);
         }
     }
 

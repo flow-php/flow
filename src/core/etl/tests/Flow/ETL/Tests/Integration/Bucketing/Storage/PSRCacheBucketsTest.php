@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 use Exception;
 use Flow\ETL\Bucketing\Storage\PSRCacheBuckets;
 use Flow\ETL\Row;
+use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -17,7 +18,6 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function getenv;
-use function iterator_to_array;
 
 final class PSRCacheBucketsTest extends FlowIntegrationTestCase
 {
@@ -52,11 +52,13 @@ final class PSRCacheBucketsTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $storage->remove('bucket');
 
-        static::assertSame([], iterator_to_array($storage->get('bucket'), false));
+        static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
     }
 }

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Exception\JoinException;
+use Flow\ETL\Join\Comparison\Any;
+use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
-use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Rows;
-use Flow\ETL\Sort\ExternalSort\BucketsCache\InMemoryBucketsCache;
+use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
 
-use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
@@ -19,11 +22,58 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function iterator_to_array;
+use function str_starts_with;
 use function usort;
 
 final class HashJoinProcessorTest extends FlowTestCase
 {
-    public function test_on_disk_cache_produces_the_same_rows_as_the_in_memory_cache(): void
+    public function test_builds_hash_table_from_the_smaller_side_without_changing_results(): void
+    {
+        $bigger = rows(
+            row(int_entry('id', 1), int_entry('amount', 100)),
+            row(int_entry('id', 1), int_entry('amount', 150)),
+            row(int_entry('id', 2), int_entry('amount', 200)),
+            row(int_entry('id', 3), int_entry('amount', 300)),
+        );
+        $smaller = rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')));
+
+        $leftBiggerJoined = [];
+
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows($smaller)),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
+
+        $generator = (static function () use ($bigger) {
+            yield $bigger;
+        })();
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $leftBiggerJoined[] = $rowData;
+            }
+        }
+
+        usort(
+            $leftBiggerJoined,
+            static fn(array $left, array $right): int => (int) $left['amount'] <=> (int) $right['amount'],
+        );
+
+        static::assertSame(
+            [
+                ['id' => 1, 'amount' => 100, 'user_id' => 1, 'name' => 'Alice'],
+                ['id' => 1, 'amount' => 150, 'user_id' => 1, 'name' => 'Alice'],
+            ],
+            $leftBiggerJoined,
+        );
+    }
+
+    public function test_grace_and_resident_storages_produce_the_same_rows(): void
     {
         $leftRows = rows(
             row(int_entry('id', 1), int_entry('amount', 100)),
@@ -38,12 +88,18 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $results = [];
 
-        foreach ([config_builder()->joinCache(new InMemoryBucketsCache()), config_builder()] as $configBuilder) {
-            $processor = new HashJoinProcessor(
-                df()->read(from_rows($rightRows)),
-                Expression::on(['id' => 'user_id']),
-                Join::left,
-            );
+        foreach (['grace', 'resident'] as $mode) {
+            $processor = $mode === 'grace'
+                ? HashJoinProcessorMother::grace(
+                    df()->read(from_rows($rightRows)),
+                    Expression::on(['id' => 'user_id']),
+                    Join::left,
+                )
+                : HashJoinProcessorMother::resident(
+                    df()->read(from_rows($rightRows)),
+                    Expression::on(['id' => 'user_id']),
+                    Join::left,
+                );
 
             $generator = (static function () use ($leftRows) {
                 yield $leftRows;
@@ -51,10 +107,8 @@ final class HashJoinProcessorTest extends FlowTestCase
 
             $joined = [];
 
-            $context = flow_context($configBuilder->build());
-
             /** @var list<Rows> $batches */
-            $batches = iterator_to_array($processor->process($generator, $context));
+            $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
             foreach ($batches as $batch) {
                 foreach ($batch->toArray() as $rowData) {
@@ -79,31 +133,33 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_handles_empty_left_side(): void
     {
-        $rightDf = df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
 
         $generator = (static function () {
             yield from [];
         })();
 
-        $result = iterator_to_array($processor->process($generator, flow_context()));
-
-        static::assertCount(0, $result);
+        static::assertCount(0, iterator_to_array($processor->process($generator, flow_context()), false));
     }
 
     public function test_handles_empty_right_side(): void
     {
-        $rightDf = df()->read(from_rows(rows()));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows())),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
         })();
 
         /** @var list<Rows> $result */
-        $result = iterator_to_array($processor->process($generator, flow_context()));
+        $result = iterator_to_array($processor->process($generator, flow_context()), false);
         $allRows = [];
 
         foreach ($result as $batch) {
@@ -117,12 +173,14 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_inner_join(): void
     {
-        $rightDf = df()->read(from_rows(rows(
-            row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-            row(int_entry('user_id', 2), str_entry('name', 'Bob')),
-        )));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
 
         $generator = (static function () {
             yield rows(
@@ -133,7 +191,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         })();
 
         /** @var list<Rows> $result */
-        $result = iterator_to_array($processor->process($generator, flow_context()));
+        $result = iterator_to_array($processor->process($generator, flow_context()), false);
         /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
@@ -143,6 +201,8 @@ final class HashJoinProcessorTest extends FlowTestCase
             }
         }
 
+        usort($allRows, static fn(array $left, array $right): int => (int) $left['id'] <=> (int) $right['id']);
+
         static::assertCount(2, $allRows);
         static::assertEquals(1, $allRows[0]['id']);
         static::assertEquals('Alice', $allRows[0]['name']);
@@ -150,14 +210,35 @@ final class HashJoinProcessorTest extends FlowTestCase
         static::assertEquals('Bob', $allRows[1]['name']);
     }
 
+    public function test_inner_join_drops_null_key_rows_without_touching_storage(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+            $storage,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', null)), row(int_entry('id', null)));
+        })();
+
+        static::assertCount(0, iterator_to_array($processor->process($generator, flow_context()), false));
+        static::assertSame([], $storage->readBucketIds());
+    }
+
     public function test_inner_join_emits_every_matching_right_row(): void
     {
-        $rightDf = df()->read(from_rows(rows(
-            row(int_entry('user_id', 1), str_entry('role', 'admin')),
-            row(int_entry('user_id', 1), str_entry('role', 'writer')),
-        )));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('role', 'admin')),
+                row(int_entry('user_id', 1), str_entry('role', 'writer')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)));
@@ -166,7 +247,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $joined = [];
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($processor->process($generator, flow_context()));
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -185,9 +266,11 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_left_anti_join(): void
     {
-        $rightDf = df()->read(from_rows(rows(row(int_entry('user_id', 1)))));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::left_anti);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1))))),
+            Expression::on(['id' => 'user_id']),
+            Join::left_anti,
+        );
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -196,7 +279,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $joined = [];
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($processor->process($generator, flow_context()));
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -207,11 +290,39 @@ final class HashJoinProcessorTest extends FlowTestCase
         static::assertSame([['id' => 2]], $joined);
     }
 
+    public function test_left_anti_join_keeps_null_key_left_rows(): void
+    {
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1))))),
+            Expression::on(['id' => 'user_id']),
+            Join::left_anti,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', null)));
+        })();
+
+        $joined = [];
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame([['id' => null]], $joined);
+    }
+
     public function test_left_join(): void
     {
-        $rightDf = df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::left);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::left,
+        );
 
         $generator = (static function () {
             yield rows(
@@ -221,7 +332,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         })();
 
         /** @var list<Rows> $result */
-        $result = iterator_to_array($processor->process($generator, flow_context()));
+        $result = iterator_to_array($processor->process($generator, flow_context()), false);
         /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
@@ -231,28 +342,97 @@ final class HashJoinProcessorTest extends FlowTestCase
             }
         }
 
+        usort($allRows, static fn(array $left, array $right): int => (int) $left['id'] <=> (int) $right['id']);
+
         static::assertCount(2, $allRows);
         static::assertEquals('Alice', $allRows[0]['name']);
         static::assertNull($allRows[1]['name']);
     }
 
-    public function test_right_join(): void
+    public function test_left_join_pads_null_key_left_rows(): void
     {
-        $rightDf = df()->read(from_rows(rows(
-            row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-            row(int_entry('user_id', 2), str_entry('name', 'Bob')),
-        )));
-
-        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::right);
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::left,
+        );
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', null)));
         })();
 
         $joined = [];
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($processor->process($generator, flow_context()));
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        usort($joined, static fn(array $left, array $right): int => (int) $left['id'] <=> (int) $right['id']);
+
+        static::assertSame(
+            [
+                ['id' => null, 'user_id' => null, 'name' => null],
+                ['id' => 1, 'user_id' => 1, 'name' => 'Alice'],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_non_equality_join_falls_back_to_a_single_bucket(): void
+    {
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+            ))),
+            Expression::on(new Any(new Equal('id', 'user_id'))),
+            Join::inner,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 3)));
+        })();
+
+        $joined = [];
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame([['id' => 1, 'user_id' => 1, 'name' => 'Alice']], $joined);
+    }
+
+    public function test_resident_storage_preserves_left_row_order(): void
+    {
+        $processor = HashJoinProcessorMother::resident(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+                row(int_entry('user_id', 3), str_entry('name', 'Cid')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)));
+            yield rows(row(int_entry('id', 2)));
+        })();
+
+        $joined = [];
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -262,10 +442,145 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         static::assertSame(
             [
+                ['id' => 3, 'user_id' => 3, 'name' => 'Cid'],
+                ['id' => 1, 'user_id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'user_id' => 2, 'name' => 'Bob'],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_right_join(): void
+    {
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::right,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
+        })();
+
+        $joined = [];
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        usort($joined, static fn(array $left, array $right): int => (int) $left['user_id'] <=> (int) $right['user_id']);
+
+        static::assertSame(
+            [
                 ['id' => 1, 'amount' => 100, 'user_id' => 1, 'name' => 'Alice'],
                 ['id' => null, 'amount' => null, 'user_id' => 2, 'name' => 'Bob'],
             ],
             $joined,
         );
+    }
+
+    public function test_right_join_pads_null_key_right_rows(): void
+    {
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', null), str_entry('name', 'Bob')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::right,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', null)));
+        })();
+
+        $joined = [];
+
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        usort($joined, static fn(array $left, array $right): int => (int) $left['user_id'] <=> (int) $right['user_id']);
+
+        static::assertSame(
+            [
+                ['id' => null, 'user_id' => null, 'name' => 'Bob'],
+                ['id' => 1, 'user_id' => 1, 'name' => 'Alice'],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_storages_are_cleared_after_the_join(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::left,
+            $storage,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        })();
+
+        iterator_to_array($processor->process($generator, flow_context()), false);
+
+        static::assertSame([], $storage->liveBucketIds());
+    }
+
+    public function test_pairs_with_a_missing_right_side_read_only_left_buckets(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows())),
+            Expression::on(['id' => 'user_id']),
+            Join::left,
+            $storage,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        })();
+
+        iterator_to_array($processor->process($generator, flow_context()), false);
+
+        foreach ($storage->readBucketIds() as $bucketId) {
+            static::assertTrue(str_starts_with($bucketId, 'join-left-'), $bucketId);
+        }
+        static::assertNotSame([], $storage->readBucketIds());
+    }
+
+    public function test_duplicated_entries_outside_join_columns_throw_join_exception(): void
+    {
+        $processor = HashJoinProcessorMother::grace(
+            df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice'))))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1), str_entry('name', 'Norbert')));
+        })();
+
+        $this->expectException(JoinException::class);
+
+        iterator_to_array($processor->process($generator, flow_context()), false);
     }
 }

@@ -7,13 +7,13 @@ namespace Flow\ETL\Tests\Unit\Bucketing\Storage;
 use Flow\ETL\Bucketing\ResidentBucketsStorage;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Row;
+use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function iterator_to_array;
 
 final class MemoryBucketsTest extends FlowTestCase
 {
@@ -25,13 +25,15 @@ final class MemoryBucketsTest extends FlowTestCase
 
         static::assertSame(
             [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get('bucket'))),
         );
     }
 
     public function test_get_unknown_bucket_yields_nothing(): void
     {
-        static::assertSame([], iterator_to_array((new MemoryBuckets())->get('unknown'), false));
+        static::assertSame([], BucketsStorageContext::rows((new MemoryBuckets())->get('unknown')));
     }
 
     public function test_is_resident_storage(): void
@@ -45,7 +47,7 @@ final class MemoryBucketsTest extends FlowTestCase
         $storage->append('bucket', rows(row(int_entry('id', 1))));
         $storage->remove('bucket');
 
-        static::assertSame([], iterator_to_array($storage->get('bucket'), false));
+        static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
     }
 
     public function test_set_replaces_previous_rows(): void
@@ -56,7 +58,9 @@ final class MemoryBucketsTest extends FlowTestCase
 
         static::assertSame(
             [42],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get('bucket'))),
         );
     }
 }

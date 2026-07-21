@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Row;
+use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_map;
@@ -14,7 +15,6 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\Filesystem\DSL\path;
-use function iterator_to_array;
 
 final class FilesystemBucketsTest extends FlowIntegrationTestCase
 {
@@ -26,11 +26,11 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
         $storage->append('bucket', rows(row(int_entry('id', 1))));
 
-        static::assertCount(1, iterator_to_array($storage->get('bucket'), false));
+        static::assertCount(1, BucketsStorageContext::rows($storage->get('bucket')));
 
         $storage->append('bucket', rows(row(int_entry('id', 2))));
 
-        static::assertCount(2, iterator_to_array($storage->get('bucket'), false));
+        static::assertCount(2, BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -47,7 +47,9 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [1, 2, 3, 4, 5],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);
@@ -61,7 +63,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, batchSize: 2);
         $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
 
-        static::assertCount(3, iterator_to_array($storage->get('bucket'), false));
+        static::assertCount(3, BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -73,7 +75,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [],
-            iterator_to_array((new FilesystemBuckets($this->fs(), cacheDir: $cacheDir))->get('nope')),
+            BucketsStorageContext::rows((new FilesystemBuckets($this->fs(), cacheDir: $cacheDir))->get('nope')),
         );
     }
 
@@ -86,7 +88,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', rows(row(int_entry('id', 1))));
         $storage->remove('bucket');
 
-        static::assertSame([], iterator_to_array($storage->get('bucket')));
+        static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -100,7 +102,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', rows(row(int_entry('id', 1))));
         $storage->remove('bucket');
 
-        static::assertSame([], iterator_to_array($storage->get('bucket')));
+        static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -120,7 +122,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         $storage->append('bucket', rows(...$input));
 
-        static::assertEquals($input, iterator_to_array($storage->get('bucket'), false));
+        static::assertEquals($input, BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -136,7 +138,9 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [3],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);
@@ -150,7 +154,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
         $storage->set('bucket', rows());
 
-        static::assertSame([], iterator_to_array($storage->get('bucket'), false));
+        static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -174,7 +178,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         // types widen to the batch union, so compare values rather than exact definitions
         static::assertSame(
             array_map(static fn(Row $r): array => $r->toArray(), $input),
-            array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($storage->get('bucket'), false)),
+            array_map(static fn(Row $r): array => $r->toArray(), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);

@@ -9,6 +9,7 @@ use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Row;
+use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
@@ -64,10 +65,9 @@ final class SortedRunBucketingTest extends FlowTestCase
         static::assertCount(1, $buckets);
         static::assertSame(
             [1, 2, 3],
-            array_map(
-                static fn(Row $r): mixed => $r->valueOf('id'),
-                iterator_to_array($storage->get($buckets[0]->id), false),
-            ),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($storage->get($buckets[0]->id))),
         );
     }
 
@@ -85,7 +85,7 @@ final class SortedRunBucketingTest extends FlowTestCase
 
         static::assertNotNull($firstRun);
         static::assertSame(2, $firstRun->totalRows);
-        static::assertCount(2, iterator_to_array($storage->get($firstRun->id), false));
+        static::assertCount(2, BucketsStorageContext::rows($storage->get($firstRun->id)));
     }
 
     public function test_splits_buffer_into_runs_of_run_size(): void
@@ -104,6 +104,25 @@ final class SortedRunBucketingTest extends FlowTestCase
         }
 
         static::assertSame([2, 2], $sizes);
+    }
+
+    public function test_runs_are_numbered_sequentially(): void
+    {
+        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(row(int_entry('id', 5)));
+        })();
+
+        $indexes = [];
+
+        foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
+            $indexes[] = $bucket->index;
+        }
+
+        static::assertSame([0, 1, 2], $indexes);
     }
 
     public function test_throws_when_run_size_below_one(): void

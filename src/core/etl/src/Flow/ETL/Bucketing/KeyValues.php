@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace Flow\ETL\Bucketing;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
+/**
+ * Extracts bucket-key values positionally, in reference order - position, not column name, defines
+ * key identity, so two sides of a join extract hash-compatible values from differently named columns.
+ */
 final readonly class KeyValues
 {
+    /**
+     * @param list<Reference> $refs
+     */
     public function __construct(
-        private References $refs,
+        private array $refs,
     ) {}
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<list<mixed>>
      */
     public function of(Rows $rows): array
     {
@@ -29,14 +36,14 @@ final readonly class KeyValues
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<mixed>
      */
     public function ofRow(Row $row): array
     {
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[$ref->name()] = $row->valueOf($ref);
+            $values[] = $row->valueOf($ref);
         }
 
         return $values;

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Sort\Merge;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Sort\Merge\KWayMerge;
+use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
@@ -16,7 +18,6 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
-use function iterator_to_array;
 
 final class KWayMergeTest extends FlowTestCase
 {
@@ -31,7 +32,9 @@ final class KWayMergeTest extends FlowTestCase
 
         static::assertSame(
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($merge->merge(['a', 'b', 'c']))),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($merge->merge(['a', 'b', 'c']))),
         );
     }
 
@@ -45,7 +48,9 @@ final class KWayMergeTest extends FlowTestCase
 
         static::assertSame(
             [8, 7, 5, 4, 2, 1],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($merge->merge(['a', 'b']))),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($merge->merge(['a', 'b']))),
         );
     }
 
@@ -59,7 +64,9 @@ final class KWayMergeTest extends FlowTestCase
 
         static::assertSame(
             [1, 2, 3, 4],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($merge->merge(['a', 'b']))),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($merge->merge(['a', 'b']))),
         );
     }
 
@@ -73,7 +80,9 @@ final class KWayMergeTest extends FlowTestCase
 
         static::assertSame(
             ['a', 'b', 'c', 'd'],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($merge->merge(['a', 'b']))),
+            array_map(static fn(Row $r): mixed => $r->valueOf(
+                'id',
+            ), BucketsStorageContext::rows($merge->merge(['a', 'b']))),
         );
     }
 
@@ -86,7 +95,7 @@ final class KWayMergeTest extends FlowTestCase
 
         static::assertSame(
             [1, 2],
-            array_map(static fn(Row $r): mixed => $r->valueOf('id'), iterator_to_array($merge->merge(['a']))),
+            array_map(static fn(Row $r): mixed => $r->valueOf('id'), BucketsStorageContext::rows($merge->merge(['a']))),
         );
     }
 
@@ -94,6 +103,31 @@ final class KWayMergeTest extends FlowTestCase
     {
         $merge = new KWayMerge(new MemoryBuckets(), refs(ref('id')->asc()));
 
-        static::assertSame([], iterator_to_array($merge->merge([])));
+        static::assertSame([], BucketsStorageContext::rows($merge->merge([])));
+    }
+
+    public function test_merged_rows_are_yielded_in_batches_of_batch_size(): void
+    {
+        $storage = new MemoryBuckets();
+        $storage->append('a', rows(row(int_entry('id', 1)), row(int_entry('id', 3)), row(int_entry('id', 5))));
+        $storage->append('b', rows(row(int_entry('id', 2)), row(int_entry('id', 4))));
+
+        $merge = new KWayMerge($storage, refs(ref('id')->asc()), batchSize: 2);
+
+        $sizes = [];
+
+        foreach ($merge->merge(['a', 'b']) as $batch) {
+            $sizes[] = $batch->count();
+        }
+
+        static::assertSame([2, 2, 1], $sizes);
+    }
+
+    public function test_throws_when_batch_size_below_one(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
+
+        new KWayMerge(new MemoryBuckets(), refs(ref('id')->asc()), batchSize: 0);
     }
 }

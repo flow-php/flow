@@ -23,6 +23,17 @@ final class EqualTest extends FlowTestCase
         ));
     }
 
+    public function test_null_is_not_equal_to_null(): void
+    {
+        static::assertFalse((new Equal('id', 'id'))->compare(row(int_entry('id', null)), row(int_entry('id', null))));
+    }
+
+    public function test_null_is_not_equal_to_value(): void
+    {
+        static::assertFalse((new Equal('id', 'id'))->compare(row(int_entry('id', null)), row(int_entry('id', 1))));
+        static::assertFalse((new Equal('id', 'id'))->compare(row(int_entry('id', 1)), row(int_entry('id', null))));
+    }
+
     public function test_object_and_scalar_are_not_equal(): void
     {
         static::assertFalse((new Equal('id', 'id'))->compare(

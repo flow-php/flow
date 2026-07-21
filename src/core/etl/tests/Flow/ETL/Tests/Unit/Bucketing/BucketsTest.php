@@ -78,41 +78,22 @@ final class BucketsTest extends FlowTestCase
         static::assertSame([], iterator_to_array($storage->get('a'), false));
     }
 
-    public function test_rows_batches_storage_rows_with_remainder(): void
+    public function test_rows_yields_storage_batches(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('a', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+        $storage->append('a', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        $storage->append('a', rows(row(int_entry('id', 3))));
 
-        $batches = iterator_to_array((new Buckets($storage))->rows('a', 2), false);
+        $batches = iterator_to_array((new Buckets($storage))->rows('a'), false);
 
         static::assertCount(2, $batches);
         static::assertSame([1, 2], $batches[0]->reduceToArray('id'));
         static::assertSame([3], $batches[1]->reduceToArray('id'));
     }
 
-    public function test_rows_batches_storage_rows_on_exact_boundary(): void
+    public function test_rows_of_missing_bucket_yields_nothing(): void
     {
-        $storage = new MemoryBuckets();
-        $storage->append('a', rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        ));
-
-        $batches = iterator_to_array((new Buckets($storage))->rows('a', 2), false);
-
-        static::assertCount(2, $batches);
-        static::assertSame([1, 2], $batches[0]->reduceToArray('id'));
-        static::assertSame([3, 4], $batches[1]->reduceToArray('id'));
-    }
-
-    public function test_rows_with_batch_size_below_one_throws(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Batch size must be at least 1.');
-
-        iterator_to_array((new Buckets(new MemoryBuckets()))->rows('a', 0), false);
+        static::assertSame([], iterator_to_array((new Buckets(new MemoryBuckets()))->rows('missing'), false));
     }
 
     public function test_sort_by_total_rows_ascending(): void

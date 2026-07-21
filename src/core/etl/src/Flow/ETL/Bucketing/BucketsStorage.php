@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Bucketing;
 
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Generator;
 
@@ -13,7 +12,10 @@ interface BucketsStorage
     public function append(string $bucketId, Rows $rows): void;
 
     /**
-     * @return Generator<Row>
+     * Yields the bucket back in batches - batch shape is storage-defined, consumers must not
+     * assume any particular batch size.
+     *
+     * @return Generator<Rows>
      */
     public function get(string $bucketId): Generator;
 

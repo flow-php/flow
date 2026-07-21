@@ -20,7 +20,15 @@ final readonly class Identical implements Comparison
 
     public function compare(Row $left, Row $right): bool
     {
-        return $left->valueOf($this->entryLeft) === $right->valueOf($this->entryRight);
+        $leftValue = $left->valueOf($this->entryLeft);
+        $rightValue = $right->valueOf($this->entryRight);
+
+        // SQL semantics - null never equals anything, including null
+        if ($leftValue === null || $rightValue === null) {
+            return false;
+        }
+
+        return $leftValue === $rightValue;
     }
 
     /**

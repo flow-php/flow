@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Config\Join;
 
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Config\Join\JoinConfigBuilder;
-use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
-use Flow\ETL\Sort\ExternalSort\BucketsCache\InMemoryBucketsCache;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 
@@ -25,18 +25,18 @@ final class JoinConfigBuilderTest extends FlowTestCase
         static::assertSame(250, $config->batchSize);
     }
 
-    public function test_default_builds_a_filesystem_buckets_cache(): void
+    public function test_default_builds_a_filesystem_buckets_storage(): void
     {
         $config = (new JoinConfigBuilder())->build(fstab(), Path::realpath(__DIR__));
 
-        static::assertInstanceOf(FilesystemBucketsCache::class, $config->cache);
+        static::assertInstanceOf(FilesystemBuckets::class, $config->cache);
         static::assertSame(64, $config->bucketsCount);
         static::assertSame(1000, $config->batchSize);
     }
 
     public function test_injected_cache_wins_over_the_default(): void
     {
-        $cache = new InMemoryBucketsCache();
+        $cache = new MemoryBuckets();
 
         $config = (new JoinConfigBuilder())
             ->cache($cache)

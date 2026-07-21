@@ -549,7 +549,18 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline->add(new HashJoinProcessor($dataFrame, $on, $type));
+        $this->pipeline->add(
+            new HashJoinProcessor(
+                $dataFrame,
+                $on,
+                $type,
+                new Buckets($this->context->config->join->cache),
+                new Buckets($this->context->config->join->cache),
+                $this->context->config->randomValueGenerator(),
+                $this->context->config->join->bucketsCount,
+                $this->context->config->join->batchSize,
+            ),
+        );
 
         return $this;
     }

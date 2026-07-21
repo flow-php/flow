@@ -11,7 +11,6 @@ use Generator;
 
 use function array_key_exists;
 use function array_values;
-use function count;
 use function usort;
 
 final class Buckets
@@ -70,26 +69,9 @@ final class Buckets
     /**
      * @return Generator<Rows>
      */
-    public function rows(string $id, int $batchSize): Generator
+    public function rows(string $id): Generator
     {
-        if ($batchSize < 1) {
-            throw new InvalidArgumentException('Batch size must be at least 1.');
-        }
-
-        $batch = [];
-
-        foreach ($this->storage->get($id) as $row) {
-            $batch[] = $row;
-
-            if (count($batch) >= $batchSize) {
-                yield new Rows(...$batch);
-                $batch = [];
-            }
-        }
-
-        if ($batch !== []) {
-            yield new Rows(...$batch);
-        }
+        yield from $this->storage->get($id);
     }
 
     /**

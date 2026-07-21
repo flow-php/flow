@@ -17,6 +17,11 @@ final class SpyBucketsStorage implements BucketsStorage
      */
     private array $liveBucketIds = [];
 
+    /**
+     * @var array<string, true>
+     */
+    private array $readBucketIds = [];
+
     public function __construct(
         private readonly BucketsStorage $inner,
     ) {}
@@ -29,6 +34,8 @@ final class SpyBucketsStorage implements BucketsStorage
 
     public function get(string $bucketId): Generator
     {
+        $this->readBucketIds[$bucketId] = true;
+
         yield from $this->inner->get($bucketId);
     }
 
@@ -38,6 +45,14 @@ final class SpyBucketsStorage implements BucketsStorage
     public function liveBucketIds(): array
     {
         return array_keys($this->liveBucketIds);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function readBucketIds(): array
+    {
+        return array_keys($this->readBucketIds);
     }
 
     public function remove(string $bucketId): void

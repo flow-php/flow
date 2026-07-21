@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 final readonly class RowKey
 {
     /**
-     * @param array<string, mixed> $values extracted bucket-key values for this row
+     * @param list<mixed> $values extracted bucket-key values for this row, in reference order
      */
     public function __construct(
         public Row $row,

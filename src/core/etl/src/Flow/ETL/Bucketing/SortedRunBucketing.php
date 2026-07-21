@@ -30,26 +30,27 @@ final class SortedRunBucketing implements BucketingStrategy
     public function bucketize(Generator $rows, BucketsStorage $storage): Generator
     {
         $buffer = new Rows();
+        $index = 0;
 
         foreach ($rows as $batch) {
             $buffer = $buffer->merge($batch);
 
             while ($buffer->count() >= $this->runSize) {
-                yield $this->spill($buffer->take($this->runSize), $storage);
+                yield $this->spill($buffer->take($this->runSize), $storage, $index++);
                 $buffer = $buffer->drop($this->runSize);
             }
         }
 
         if (!$buffer->empty()) {
-            yield $this->spill($buffer, $storage);
+            yield $this->spill($buffer, $storage, $index);
         }
     }
 
-    private function spill(Rows $run, BucketsStorage $storage): Bucket
+    private function spill(Rows $run, BucketsStorage $storage, int $index): Bucket
     {
         $bucketId = $this->random->string(32);
         $storage->set($bucketId, $run->sortBy(...$this->refs->all()));
 
-        return new Bucket($bucketId, $run->count());
+        return new Bucket($bucketId, $run->count(), $index);
     }
 }

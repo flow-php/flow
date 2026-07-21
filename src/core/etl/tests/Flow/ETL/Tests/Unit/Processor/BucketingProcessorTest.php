@@ -19,6 +19,7 @@ use function count;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -30,7 +31,7 @@ final class BucketingProcessorTest extends FlowTestCase
     {
         $buckets = new Buckets(new MemoryBuckets());
         $processor = new BucketingProcessor(
-            new HashBucketing(refs('id'), 2, new NativeHasher(), new NativePHPRandomValueGenerator()),
+            new HashBucketing([ref('id')], 2, new NativeHasher(), new NativePHPRandomValueGenerator()),
             $buckets,
         );
 
@@ -46,7 +47,7 @@ final class BucketingProcessorTest extends FlowTestCase
     {
         $buckets = new Buckets(new MemoryBuckets());
         $processor = new BucketingProcessor(
-            new HashBucketing(refs('id'), 2, new NativeHasher(), new NativePHPRandomValueGenerator()),
+            new HashBucketing([ref('id')], 2, new NativeHasher(), new NativePHPRandomValueGenerator()),
             $buckets,
         );
 

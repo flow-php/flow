@@ -7,7 +7,7 @@ namespace Flow\ETL\Bucketing;
 interface Hasher
 {
     /**
-     * @param list<array<string, mixed>> $values extracted bucket-key values, one map per row
+     * @param list<list<mixed>> $values extracted bucket-key values in reference order, one list per row
      *
      * @return list<string> hashes aligned 1:1 with $values
      */

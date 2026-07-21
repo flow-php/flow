@@ -75,7 +75,7 @@ final class FilesystemBuckets implements BucketsStorage
         }
 
         foreach ($this->reader->read($path)->rows($this->batchSize, conform: false) as $batch) {
-            yield from $batch->all();
+            yield $batch;
         }
     }
 
