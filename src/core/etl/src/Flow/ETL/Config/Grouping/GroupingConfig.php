@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Grouping;
 
-use Flow\ETL\Sort\ExternalSort\BucketsCache;
+use Flow\ETL\Bucketing\BucketsStorage;
 
 final readonly class GroupingConfig
 {
@@ -13,7 +13,7 @@ final readonly class GroupingConfig
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        public BucketsCache $cache,
+        public BucketsStorage $storage,
         public int $bucketsCount = 64,
         public int $batchSize = 1000,
     ) {}

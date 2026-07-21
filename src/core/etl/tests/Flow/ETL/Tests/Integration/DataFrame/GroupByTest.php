@@ -95,6 +95,11 @@ final class GroupByTest extends FlowIntegrationTestCase
             schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg')),
             $rows->schema(),
         );
+        /** @var list<array{date: DateTimeImmutable, score_sum: int, score_avg: float}> $aggregated */
+        $aggregated = $rows->toArray();
+        // group output order follows hash-bucket order, not input order - assert order-insensitively
+        usort($aggregated, static fn(array $a, array $b): int => $a['date'] <=> $b['date']);
+
         static::assertEquals(
             [
                 ['date' => new DateTimeImmutable('2024-01-01 10:00:00'), 'score_sum' => 40, 'score_avg' => 20.0],
@@ -102,7 +107,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['date' => new DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.67],
                 ['date' => new DateTimeImmutable('2024-01-04 10:00:00'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
-            $rows->toArray(),
+            $aggregated,
         );
     }
 

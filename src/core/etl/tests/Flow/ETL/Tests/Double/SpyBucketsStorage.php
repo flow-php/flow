@@ -13,6 +13,11 @@ use function array_keys;
 final class SpyBucketsStorage implements BucketsStorage
 {
     /**
+     * @var array<string, list<Rows>>
+     */
+    private array $appendedRows = [];
+
+    /**
      * @var array<string, true>
      */
     private array $liveBucketIds = [];
@@ -28,8 +33,17 @@ final class SpyBucketsStorage implements BucketsStorage
 
     public function append(string $bucketId, Rows $rows): void
     {
+        $this->appendedRows[$bucketId][] = $rows;
         $this->liveBucketIds[$bucketId] = true;
         $this->inner->append($bucketId, $rows);
+    }
+
+    /**
+     * @return array<string, list<Rows>>
+     */
+    public function appendedRows(): array
+    {
+        return $this->appendedRows;
     }
 
     public function get(string $bucketId): Generator

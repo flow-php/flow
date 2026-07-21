@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Bucketing;
 
 use Flow\ETL\Bucketing\KeyValues;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_entry;
@@ -39,5 +40,20 @@ final class KeyValuesTest extends FlowTestCase
     public function test_duplicated_refs_are_extracted_per_position(): void
     {
         static::assertSame([1, 1], (new KeyValues([ref('id'), ref('id')]))->ofRow(row(int_entry('id', 1))));
+    }
+
+    public function test_missing_column_throws_by_default(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new KeyValues([ref('id')]))->ofRow(row(str_entry('name', 'flow')));
+    }
+
+    public function test_null_on_missing_extracts_missing_column_as_null(): void
+    {
+        static::assertSame(
+            [null, 'flow'],
+            (new KeyValues([ref('id'), ref('name')], nullOnMissing: true))->ofRow(row(str_entry('name', 'flow'))),
+        );
     }
 }

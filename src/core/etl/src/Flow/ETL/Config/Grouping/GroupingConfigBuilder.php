@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Grouping;
 
+use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Sort\ExternalSort\BucketsCache;
-use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
@@ -22,9 +22,9 @@ final class GroupingConfigBuilder
      */
     private int $bucketsCount = 64;
 
-    private ?BucketsCache $cache = null;
-
     private string $filesystemMount = 'file';
+
+    private ?BucketsStorage $storage = null;
 
     /**
      * @param int<1, max> $batchSize
@@ -43,13 +43,13 @@ final class GroupingConfigBuilder
 
     public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): GroupingConfig
     {
-        $cache = $this->cache ?? new FilesystemBucketsCache(
+        $storage = $this->storage ?? new FilesystemBuckets(
             $filesystemTable->for($this->filesystemMount),
             $localFilesystemCacheDir->suffix('/flow-php-group-by/'),
             $this->batchSize,
         );
 
-        return new GroupingConfig($cache, $this->bucketsCount, $this->batchSize);
+        return new GroupingConfig($storage, $this->bucketsCount, $this->batchSize);
     }
 
     /**
@@ -67,9 +67,9 @@ final class GroupingConfigBuilder
         return $this;
     }
 
-    public function cache(BucketsCache $cache): self
+    public function storage(BucketsStorage $storage): self
     {
-        $this->cache = $cache;
+        $this->storage = $storage;
 
         return $this;
     }

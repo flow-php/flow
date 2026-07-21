@@ -203,4 +203,12 @@ final class GroupBy
             yield array_to_rows($buffer, $context->hydrator());
         }
     }
+
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return $this->refs->all();
+    }
 }

@@ -163,6 +163,40 @@ final class HashBucketingTest extends FlowTestCase
         static::assertCount(3, BucketsStorageContext::rows($storage->get($buckets[0]->id)));
     }
 
+    public function test_null_on_missing_buckets_rows_missing_the_key_column_as_null(): void
+    {
+        $strategy = new HashBucketing(
+            [ref('id')],
+            4,
+            new NativeHasher(),
+            new NativePHPRandomValueGenerator(),
+            nullOnMissing: true,
+        );
+        $storage = new MemoryBuckets();
+
+        $generator = (static function () {
+            yield rows(row(int_entry('id', null)), row(int_entry('other', 1)));
+        })();
+
+        $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
+
+        static::assertCount(1, $buckets);
+        static::assertSame(2, $buckets[0]->totalRows);
+    }
+
+    public function test_rows_missing_the_key_column_throw_by_default(): void
+    {
+        $strategy = new HashBucketing([ref('id')], 4, new NativeHasher(), new NativePHPRandomValueGenerator());
+
+        $generator = (static function () {
+            yield rows(row(int_entry('other', 1)));
+        })();
+
+        $this->expectException(InvalidArgumentException::class);
+
+        iterator_to_array($strategy->bucketize($generator, new MemoryBuckets()));
+    }
+
     public function test_throws_when_buckets_count_below_one(): void
     {
         $this->expectException(InvalidArgumentException::class);

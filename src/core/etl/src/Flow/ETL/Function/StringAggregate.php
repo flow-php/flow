@@ -43,6 +43,14 @@ final class StringAggregate implements AggregatingFunction
     /**
      * @return Row\Entry<?string>
      */
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return [$this->ref];
+    }
+
     public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {

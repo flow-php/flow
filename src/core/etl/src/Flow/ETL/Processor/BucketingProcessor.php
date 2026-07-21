@@ -21,6 +21,11 @@ final class BucketingProcessor implements Processor
         private readonly Buckets $buckets,
     ) {}
 
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
         foreach ($this->strategy->bucketize($rows, $this->buckets->storage()) as $bucket) {

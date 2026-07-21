@@ -19,6 +19,11 @@ use function Flow\ETL\DSL\str_entry;
 
 final class MaxTest extends FlowTestCase
 {
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('int')], max(ref('int'))->references());
+    }
+
     public function test_aggregation_max_from_numeric_values(): void
     {
         $aggregator = max(ref('int'));

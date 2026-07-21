@@ -14,6 +14,7 @@ use IteratorAggregate;
 use Traversable;
 
 use function array_map;
+use function array_values;
 use function count;
 
 /**
@@ -63,5 +64,28 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->aggregators);
+    }
+
+    /**
+     * @return null|list<Row\Reference> union of references read by all aggregators, or null when any
+     *                                  aggregator cannot enumerate them (disables spill column pruning)
+     */
+    public function references(): ?array
+    {
+        $references = [];
+
+        foreach ($this->aggregators as $aggregator) {
+            $aggregatorReferences = $aggregator->references();
+
+            if ($aggregatorReferences === null) {
+                return null;
+            }
+
+            foreach ($aggregatorReferences as $reference) {
+                $references[$reference->base()] ??= $reference;
+            }
+        }
+
+        return array_values($references);
     }
 }

@@ -19,6 +19,7 @@ final readonly class KeyValues
      */
     public function __construct(
         private array $refs,
+        private bool $nullOnMissing = false,
     ) {}
 
     /**
@@ -43,7 +44,7 @@ final readonly class KeyValues
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[] = $row->valueOf($ref);
+            $values[] = $this->nullOnMissing && !$row->has($ref) ? null : $row->valueOf($ref);
         }
 
         return $values;

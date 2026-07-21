@@ -17,6 +17,11 @@ use function Flow\ETL\DSL\string_agg;
 
 final class StringAggregateTest extends FlowTestCase
 {
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('value')], string_agg(ref('value'), ',')->references());
+    }
+
     public function test_string_agg(): void
     {
         $aggregator = string_agg(ref('data'));

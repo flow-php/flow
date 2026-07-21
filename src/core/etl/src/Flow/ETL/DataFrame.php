@@ -19,6 +19,7 @@ use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -29,7 +30,6 @@ use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Processor\GroupByProcessor;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
@@ -96,7 +96,9 @@ final class DataFrame
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        $this->pipeline->add(new GroupByProcessor($groupBy));
+        foreach (GroupBySteps::of($groupBy, $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }
@@ -703,19 +705,6 @@ final class DataFrame
         array_unshift($entries, $entry);
 
         $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
-
-        return $this;
-    }
-
-    public function pivot(Reference $ref): self
-    {
-        $processor = $this->pipeline->segments()->current()->processor();
-
-        if (!$processor instanceof GroupByProcessor) {
-            throw new RuntimeException('Pivot can be used only after groupBy');
-        }
-
-        $processor->groupBy->pivot($ref);
 
         return $this;
     }

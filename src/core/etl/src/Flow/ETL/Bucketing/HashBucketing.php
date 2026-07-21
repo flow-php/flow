@@ -30,12 +30,13 @@ final class HashBucketing implements BucketingStrategy
         private readonly Hasher $hasher,
         private readonly RandomValueGenerator $random,
         private readonly string $namespace = 'bucket',
+        bool $nullOnMissing = false,
     ) {
         if ($this->bucketsCount < 1) {
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
 
-        $this->keyValues = new KeyValues($by);
+        $this->keyValues = new KeyValues($by, $nullOnMissing);
     }
 
     /**

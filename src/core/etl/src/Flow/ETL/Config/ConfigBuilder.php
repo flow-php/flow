@@ -23,7 +23,6 @@ use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
@@ -249,9 +248,9 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function groupingCache(BucketsCache $cache): self
+    public function groupingStorage(BucketsStorage $storage): self
     {
-        $this->grouping->cache($cache);
+        $this->grouping->storage($storage);
 
         return $this;
     }

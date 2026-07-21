@@ -99,6 +99,37 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         static::assertSame(1, $byGroup['xy|z']);
     }
 
+    public function test_mixed_presence_columns_survive_the_filesystem_round_trip(): void
+    {
+        $input = [
+            ['seller' => 'a', 'amount' => 10.5],
+            ['seller' => 'a'],
+            ['seller' => 'b', 'amount' => 2.5],
+            ['amount' => 7.0],
+        ];
+
+        $result = iterator_to_array(
+            data_frame(config_builder()->groupingBucketsCount(3))
+                ->read(from_array($input))
+                ->groupBy(ref('seller'))
+                ->aggregate(sum(ref('amount')))
+                ->getEachAsArray(),
+        );
+
+        static::assertCount(3, $result);
+
+        $bySeller = [];
+
+        foreach ($result as $row) {
+            $bySeller[$row['seller'] ?? '__null__'] = $row['amount_sum'];
+        }
+
+        static::assertSame(10.5, $bySeller['a']);
+        static::assertSame(2.5, $bySeller['b']);
+        // Sum narrows whole-number float sums to int
+        static::assertSame(7, $bySeller['__null__']);
+    }
+
     public function test_chained_filesystem_group_by_stages_do_not_corrupt_each_other(): void
     {
         $input = [
