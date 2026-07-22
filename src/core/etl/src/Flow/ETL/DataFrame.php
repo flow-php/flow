@@ -17,8 +17,10 @@ use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\JoinSteps;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Processor\BatchingByProcessor;
@@ -26,11 +28,8 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Processor\GroupByProcessor;
-use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
-use Flow\ETL\Processor\SortingProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Row\EntryReference;
@@ -40,6 +39,7 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
+use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
@@ -91,7 +91,9 @@ final class DataFrame
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        $this->pipeline->add(new GroupByProcessor($groupBy));
+        foreach (GroupBySteps::of($groupBy, $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }
@@ -544,7 +546,9 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline->add(new HashJoinProcessor($dataFrame, $on, $type));
+        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }
@@ -687,19 +691,6 @@ final class DataFrame
         array_unshift($entries, $entry);
 
         $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
-
-        return $this;
-    }
-
-    public function pivot(Reference $ref): self
-    {
-        $processor = $this->pipeline->segments()->current()->processor();
-
-        if (!$processor instanceof GroupByProcessor) {
-            throw new RuntimeException('Pivot can be used only after groupBy');
-        }
-
-        $processor->groupBy->pivot($ref);
 
         return $this;
     }
@@ -856,7 +847,9 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries): self
     {
-        $this->pipeline->add(new SortingProcessor(refs(...$entries)));
+        foreach (SortSteps::of(refs(...$entries), $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }

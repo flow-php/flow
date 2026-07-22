@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -49,7 +50,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3)->groupingBatchSize(2));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)->batchSize(2)));
 
         static::assertSame($default, $fewPartitions);
         static::assertCount(3, $default);
@@ -79,7 +80,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('a'), ref('b'))
                 ->aggregate(sum(ref('v')))
@@ -99,6 +100,37 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         static::assertSame(1, $byGroup['xy|z']);
     }
 
+    public function test_mixed_presence_columns_survive_the_filesystem_round_trip(): void
+    {
+        $input = [
+            ['seller' => 'a', 'amount' => 10.5],
+            ['seller' => 'a'],
+            ['seller' => 'b', 'amount' => 2.5],
+            ['amount' => 7.0],
+        ];
+
+        $result = iterator_to_array(
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
+                ->read(from_array($input))
+                ->groupBy(ref('seller'))
+                ->aggregate(sum(ref('amount')))
+                ->getEachAsArray(),
+        );
+
+        static::assertCount(3, $result);
+
+        $bySeller = [];
+
+        foreach ($result as $row) {
+            $bySeller[$row['seller'] ?? '__null__'] = $row['amount_sum'];
+        }
+
+        static::assertSame(10.5, $bySeller['a']);
+        static::assertSame(2.5, $bySeller['b']);
+        // Sum narrows whole-number float sums to int
+        static::assertSame(7, $bySeller['__null__']);
+    }
+
     public function test_chained_filesystem_group_by_stages_do_not_corrupt_each_other(): void
     {
         $input = [
@@ -111,7 +143,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('seller'), ref('region'))
                 ->aggregate(count(ref('seller')))
@@ -139,7 +171,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('k'))
                 ->aggregate(first(ref('v')), last(ref('v')))
@@ -172,7 +204,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
         static::assertSame($default, $fewPartitions);
 
@@ -216,7 +248,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
         static::assertSame($default, $fewPartitions);
 
@@ -252,6 +284,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        static::assertSame($pipeline(config_builder()), $pipeline(config_builder()->groupingBucketsCount(3)));
+        static::assertSame(
+            $pipeline(config_builder()),
+            $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3))),
+        );
     }
 }

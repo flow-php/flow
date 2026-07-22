@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Processor\GroupByProcessor;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -148,10 +148,7 @@ final class GroupByTest extends FlowTestCase
     {
         $result = new Rows();
 
-        $output = (new GroupByProcessor($groupBy))->process((static fn() => yield $input)(), flow_context(config()));
-
-        /** @var Rows $batch */
-        foreach ($output as $batch) {
+        foreach (GroupByContext::aggregate($groupBy, flow_context(config()), $input) as $batch) {
             $result = $result->merge($batch);
         }
 

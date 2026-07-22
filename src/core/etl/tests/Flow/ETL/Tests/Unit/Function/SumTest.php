@@ -23,6 +23,17 @@ use function Flow\ETL\DSL\window;
 
 final class SumTest extends FlowTestCase
 {
+    public function test_references_is_null_when_exact_is_a_scalar_function(): void
+    {
+        static::assertNull(sum(ref('value'), exact: ref('flag'))->references());
+    }
+
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('value')], sum(ref('value'))->references());
+        static::assertEquals([ref('value')], sum(ref('value'), exact: true)->references());
+    }
+
     public function test_aggregation_sum_from_numeric_values(): void
     {
         $aggregator = sum(ref('int'));

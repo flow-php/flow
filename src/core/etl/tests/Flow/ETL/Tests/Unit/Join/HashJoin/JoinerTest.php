@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
 use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Comparison\Identical;
@@ -61,6 +62,54 @@ final class JoinerTest extends FlowTestCase
                     'name' => 'Alice',
                 ],
                 ['id' => 2, 'email' => 'bob@flow.php', 'user_id' => 2, 'contact' => 'other@flow.php', 'name' => 'Bob'],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_all_with_any_hashes_by_the_equality_and_verifies_the_rest(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(
+            Expression::on(
+                new All(
+                    new Equal('id', 'user_id'),
+                    new Any(new Equal('email', 'contact'), new Equal('phone', 'phone')),
+                ),
+            ),
+            Join::inner,
+        );
+
+        foreach ($joiner->join(
+            $batches(rows(
+                row(int_entry('id', 1), str_entry('email', 'alice@flow.php'), str_entry('phone', '111')),
+                row(int_entry('id', 2), str_entry('email', 'bob@flow.php'), str_entry('phone', '222')),
+            )),
+            $batches(rows(
+                row(int_entry('user_id', 1), str_entry('contact', 'alice@flow.php'), str_entry('phone', '999')),
+                row(int_entry('user_id', 2), str_entry('contact', 'other@flow.php'), str_entry('phone', '999')),
+            )),
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        // id=1 matches via email, id=2 has an id match but fails the Any residual
+        static::assertSame(
+            [
+                [
+                    'id' => 1,
+                    'email' => 'alice@flow.php',
+                    'phone' => '111',
+                    'user_id' => 1,
+                    'contact' => 'alice@flow.php',
+                ],
             ],
             $joined,
         );
@@ -239,6 +288,153 @@ final class JoinerTest extends FlowTestCase
         ) as $batch) {
             $batch->count();
         }
+    }
+
+    public function test_swapped_inner_join_emits_the_same_rows(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
+
+        foreach ($joiner->join(
+            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(
+                row(int_entry('user_id', 1), str_entry('role', 'admin')),
+                row(int_entry('user_id', 1), str_entry('role', 'writer')),
+                row(int_entry('user_id', 2), str_entry('role', 'reader')),
+            )),
+            buildLeft: true,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'amount' => 100, 'user_id' => 1, 'role' => 'admin'],
+                ['id' => 1, 'amount' => 100, 'user_id' => 1, 'role' => 'writer'],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_swapped_left_anti_join_emits_unmatched_left_rows_at_the_end(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left_anti);
+
+        foreach ($joiner->join(
+            $batches(rows(row(int_entry('id', 1)), row(int_entry('id', 2)))),
+            $batches(rows(row(int_entry('user_id', 1)))),
+            buildLeft: true,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame([['id' => 2]], $joined);
+    }
+
+    public function test_swapped_left_join_pads_unmatched_left_rows_at_the_end(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        foreach ($joiner->join(
+            $batches(rows(
+                row(int_entry('id', 1), int_entry('amount', 100)),
+                row(int_entry('id', 404), int_entry('amount', 200)),
+            )),
+            $batches(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))),
+            buildLeft: true,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'amount' => 100, 'user_id' => 1, 'name' => 'Alice'],
+                ['id' => 404, 'amount' => 200, 'user_id' => null, 'name' => null],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_swapped_left_join_with_empty_right_side_pads_every_left_row(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $empty = static function (): Generator {
+            yield from [];
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        foreach ($joiner->join(
+            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $empty(),
+            buildLeft: true,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame([['id' => 1, 'amount' => 100]], $joined);
+    }
+
+    public function test_swapped_right_join_pads_unmatched_right_rows_inline(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
+
+        foreach ($joiner->join(
+            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(
+                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+            )),
+            buildLeft: true,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'amount' => 100, 'user_id' => 1, 'name' => 'Alice'],
+                ['id' => null, 'amount' => null, 'user_id' => 2, 'name' => 'Bob'],
+            ],
+            $joined,
+        );
     }
 
     public function test_right_join_emits_unmatched_right_rows_with_null_left_entries(): void

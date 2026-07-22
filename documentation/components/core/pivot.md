@@ -9,7 +9,8 @@ is commonly used for creating cross-tabular reports and summary tables.
 
 ## Basic Pivot Operation
 
-Pivot can only be used after a `groupBy()` operation and requires exactly one aggregation function.
+Pivot is part of the grouping specification: it is declared between `groupBy()` and `aggregate()` and requires
+exactly one aggregation function.
 
 ```php
 <?php
@@ -28,8 +29,8 @@ $salesData = data_frame()
         ['region' => 'South', 'product' => 'Phone', 'month' => 'Feb', 'sales' => 850],
     ]))
     ->groupBy('region', 'product')
-    ->aggregate(sum(col('sales'))->as('total_sales'))
     ->pivot(col('product')) // Pivot by product - creates 'Laptop' and 'Phone' columns
+    ->aggregate(sum(col('sales'))->as('total_sales'))
     ->write(to_output())
     ->run();
 ```
@@ -62,8 +63,8 @@ $monthlySales = data_frame()
         ['region' => 'South', 'month' => 'Mar', 'sales' => 5200],
     ]))
     ->groupBy('region')
-    ->aggregate(avg(col('sales'))->as('avg_sales'))
     ->pivot(col('month')) // Pivot by month
+    ->aggregate(avg(col('sales'))->as('avg_sales'))
     ->write(to_output())
     ->run();
 ```

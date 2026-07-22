@@ -9,9 +9,12 @@ use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
-use Flow\ETL\Config\Grouping\GroupingConfigBuilder;
-use Flow\ETL\Config\Join\JoinConfigBuilder;
-use Flow\ETL\Config\Sort\SortConfigBuilder;
+use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
+use Flow\ETL\Config\Grouping\HashGroupByBuilder;
+use Flow\ETL\Config\Join\HashJoinBuilder;
+use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
+use Flow\ETL\Config\Sort\ExternalSortBuilder;
+use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Filesystem\FilesystemStreams;
@@ -22,7 +25,6 @@ use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Sort\ExternalSort\BucketsCache;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
@@ -39,12 +41,6 @@ final class ConfigBuilder
 {
     public readonly CacheConfigBuilder $cache;
 
-    public readonly GroupingConfigBuilder $grouping;
-
-    public readonly JoinConfigBuilder $join;
-
-    public readonly SortConfigBuilder $sort;
-
     private ?Analyze $analyze;
 
     private ?ClockInterface $clock;
@@ -56,10 +52,14 @@ final class ConfigBuilder
 
     private ?FilesystemTable $fstab;
 
+    private ?GroupByAlgorithmBuilder $groupBy;
+
     /**
      * @var null|Hydrator
      */
     private ?Hydrator $hydrator;
+
+    private ?JoinAlgorithmBuilder $join;
 
     private ?string $id;
 
@@ -72,6 +72,8 @@ final class ConfigBuilder
     private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
+
+    private ?SortAlgorithmBuilder $sort;
 
     private ?TelemetryConfig $telemetryConfig;
 
@@ -89,9 +91,9 @@ final class ConfigBuilder
         $this->clock = null;
         $this->extractorBatchSize = 1000;
         $this->cache = new CacheConfigBuilder();
-        $this->grouping = new GroupingConfigBuilder();
-        $this->join = new JoinConfigBuilder();
-        $this->sort = new SortConfigBuilder();
+        $this->groupBy = null;
+        $this->join = null;
+        $this->sort = null;
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
         $this->telemetryConfig = null;
@@ -134,12 +136,13 @@ final class ConfigBuilder
             $this->putInputIntoRows,
             $hydrator,
             $cacheConfig,
-            $this->sort->build(),
+            ($this->sort ?? new ExternalSortBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
-            $this->grouping->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
-            $this->join->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            ($this->groupBy ?? new HashGroupByBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            ($this->join ?? new HashJoinBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
             $this->extractorBatchSize,
+            randomValueGenerator: $this->randomValueGenerator,
         );
     }
 
@@ -190,66 +193,9 @@ final class ConfigBuilder
         return $this;
     }
 
-    /**
-     * @param int<1, max> $externalSortBucketsCount
-     */
-    public function externalSortBucketsCount(int $externalSortBucketsCount): self
+    public function groupBy(GroupByAlgorithmBuilder $algorithm): self
     {
-        $this->cache->externalSortBucketsCount($externalSortBucketsCount);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $externalSortBatchSize
-     */
-    public function externalSortBatchSize(int $externalSortBatchSize): self
-    {
-        $this->cache->externalSortBatchSize($externalSortBatchSize);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $externalSortBucketSize
-     */
-    public function externalSortBucketSize(int $externalSortBucketSize): self
-    {
-        $this->cache->externalSortBucketSize($externalSortBucketSize);
-
-        return $this;
-    }
-
-    public function externalSortFilesystem(string $protocol): self
-    {
-        $this->sort->filesystemProtocol($protocol);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $batchSize
-     */
-    public function groupingBatchSize(int $batchSize): self
-    {
-        $this->grouping->batchSize($batchSize);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $bucketsCount
-     */
-    public function groupingBucketsCount(int $bucketsCount): self
-    {
-        $this->grouping->bucketsCount($bucketsCount);
-
-        return $this;
-    }
-
-    public function groupingCache(BucketsCache $cache): self
-    {
-        $this->grouping->cache($cache);
+        $this->groupBy = $algorithm;
 
         return $this;
     }
@@ -271,29 +217,9 @@ final class ConfigBuilder
         return $this;
     }
 
-    /**
-     * @param int<1, max> $batchSize
-     */
-    public function joinBatchSize(int $batchSize): self
+    public function join(JoinAlgorithmBuilder $algorithm): self
     {
-        $this->join->batchSize($batchSize);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $bucketsCount
-     */
-    public function joinBucketsCount(int $bucketsCount): self
-    {
-        $this->join->bucketsCount($bucketsCount);
-
-        return $this;
-    }
-
-    public function joinCache(BucketsCache $cache): self
-    {
-        $this->join->cache($cache);
+        $this->join = $algorithm;
 
         return $this;
     }
@@ -338,6 +264,13 @@ final class ConfigBuilder
     public function serializer(Serializer $serializer): self
     {
         $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    public function sort(SortAlgorithmBuilder $algorithm): self
+    {
+        $this->sort = $algorithm;
 
         return $this;
     }

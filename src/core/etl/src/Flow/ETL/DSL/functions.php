@@ -28,6 +28,10 @@ use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\Config\Grouping\HashGroupByBuilder;
+use Flow\ETL\Config\Join\HashJoinBuilder;
+use Flow\ETL\Config\Sort\ExternalSortBuilder;
+use Flow\ETL\Config\Sort\MemorySortBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Constraint\SortedByConstraint;
 use Flow\ETL\Constraint\UniqueConstraint;
@@ -2185,6 +2189,30 @@ function config(): Config
 function config_builder(): ConfigBuilder
 {
     return new ConfigBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function memory_sort(): MemorySortBuilder
+{
+    return new MemorySortBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function external_sort(): ExternalSortBuilder
+{
+    return new ExternalSortBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function hash_join(): HashJoinBuilder
+{
+    return new HashJoinBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function hash_group_by(): HashGroupByBuilder
+{
+    return new HashGroupByBuilder();
 }
 
 /**

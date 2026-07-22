@@ -20,6 +20,11 @@ use function Flow\ETL\DSL\window;
 
 final class AverageTest extends FlowTestCase
 {
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('int')], average(ref('int'))->references());
+    }
+
     public function test_aggregation_average_from_numeric_values(): void
     {
         $aggregator = average(ref('int'));

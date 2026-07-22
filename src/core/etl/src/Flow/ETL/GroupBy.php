@@ -26,8 +26,6 @@ use function Flow\Types\DSL\type_union;
 
 final class GroupBy
 {
-    private const int RESULT_BATCH_SIZE = 1000;
-
     private Aggregators $aggregations;
 
     private ?Reference $pivot = null;
@@ -86,11 +84,7 @@ final class GroupBy
         $values = [];
 
         foreach ($this->refs as $ref) {
-            try {
-                $values[$ref->name()] = $row->valueOf($ref);
-            } catch (InvalidArgumentException) {
-                $values[$ref->name()] = null;
-            }
+            $values[$ref->name()] = $row->has($ref) ? $row->valueOf($ref) : null;
         }
 
         return new GroupKey($values);
@@ -103,10 +97,11 @@ final class GroupBy
 
     /**
      * @param Generator<Rows> $rows
+     * @param int<1, max> $batchSize
      *
      * @return Generator<Rows>
      */
-    public function pivotResult(Generator $rows, FlowContext $context): Generator
+    public function pivotResult(Generator $rows, FlowContext $context, int $batchSize = 1000): Generator
     {
         $pivot = $this->pivot;
 
@@ -193,7 +188,7 @@ final class GroupBy
 
             $buffer[] = $row;
 
-            if (count($buffer) >= self::RESULT_BATCH_SIZE) {
+            if (count($buffer) >= $batchSize) {
                 yield array_to_rows($buffer, $context->hydrator());
                 $buffer = [];
             }
@@ -202,5 +197,13 @@ final class GroupBy
         if ($buffer !== []) {
             yield array_to_rows($buffer, $context->hydrator());
         }
+    }
+
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return $this->refs->all();
     }
 }

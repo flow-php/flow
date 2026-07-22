@@ -4,16 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\GroupBy;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
+use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
 use Generator;
 
-use function count;
-
 final readonly class BucketAggregation
 {
-    private const int RESULT_BATCH_SIZE = 1000;
+    /**
+     * @param int<1, max> $batchSize
+     */
+    public function __construct(
+        private int $batchSize = 1000,
+    ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($this->batchSize < 1) {
+            throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
+        }
+    }
 
     /**
      * @param Generator<Rows> $rows
@@ -22,32 +33,35 @@ final readonly class BucketAggregation
      */
     public function aggregate(Generator $rows, FlowContext $context, GroupBy $groupBy): Generator
     {
-        /** @var array<string, Bucket> $buckets */
-        $buckets = [];
+        /** @var array<string, Group> $groups */
+        $groups = [];
         $aggregations = $groupBy->aggregations();
 
         foreach ($rows as $batch) {
             foreach ($batch as $row) {
                 $key = $groupBy->keyValues($row);
-                $bucket = $buckets[(string) $key] ??= new Bucket($key, $aggregations->cloned());
-                $bucket->aggregators->aggregate($row, $context);
+                $group = $groups[(string) $key] ??= new Group($key, $aggregations->cloned());
+                $group->aggregators->aggregate($row, $context);
             }
         }
 
-        $buffer = [];
+        $buffer = new RowsBuffer($this->batchSize);
         $entryFactory = $context->entryFactory();
 
-        foreach ($buckets as $bucket) {
-            $buffer[] = $groupBy->aggregatedRow($bucket->key, $bucket->aggregators, $entryFactory);
-
-            if (count($buffer) >= self::RESULT_BATCH_SIZE) {
-                yield new Rows(...$buffer);
-                $buffer = [];
+        foreach ($groups as $group) {
+            if (
+                null !== ($batch = $buffer->add($groupBy->aggregatedRow(
+                    $group->key,
+                    $group->aggregators,
+                    $entryFactory,
+                )))
+            ) {
+                yield $batch;
             }
         }
 
-        if ($buffer !== []) {
-            yield new Rows(...$buffer);
+        if (null !== ($batch = $buffer->flush())) {
+            yield $batch;
         }
     }
 }

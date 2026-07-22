@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Processor\CollectingProcessor;
-use Flow\ETL\Processor\GroupByProcessor;
+use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 
@@ -21,7 +23,7 @@ final class PipelineTest extends FlowTestCase
     {
         $pipeline = new Pipeline(from_rows(rows()));
         $pipeline->add($transformer1 = $this->createMock(Transformer::class));
-        $pipeline->add($groupBy = new GroupByProcessor(new GroupBy()));
+        $pipeline->add($groupBy = new GroupByAggregationProcessor(new GroupBy(), new Buckets(new MemoryBuckets())));
         $pipeline->add($transformer2 = $this->createMock(Transformer::class));
         $pipeline->add($collecting = new CollectingProcessor());
         $pipeline->add($loader = $this->createMock(Loader::class));

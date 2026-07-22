@@ -7,9 +7,10 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Config\Grouping\GroupingConfig;
-use Flow\ETL\Config\Join\JoinConfig;
-use Flow\ETL\Config\Sort\SortConfig;
+use Flow\ETL\Config\Grouping\HashGroupByConfig;
+use Flow\ETL\Config\Join\HashJoinConfig;
+use Flow\ETL\Config\Sort\ExternalSortConfig;
+use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
@@ -41,14 +42,15 @@ final readonly class Config
         private bool $putInputIntoRows,
         private Hydrator $hydrator,
         public CacheConfig $cache,
-        public SortConfig $sort,
+        public MemorySortConfig|ExternalSortConfig $sort,
         private ?Analyze $analyze,
         public TelemetryConfig $telemetry,
-        public GroupingConfig $grouping,
-        public JoinConfig $join,
+        public HashGroupByConfig $grouping,
+        public HashJoinConfig $join,
         private int $extractorBatchSize = 1000,
         private EntryFactory $entryFactory = new EntryFactory(),
         private Calculator $calculator = new Calculator(),
+        private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
 
     public static function builder(): ConfigBuilder
@@ -120,6 +122,11 @@ final readonly class Config
     public function optimizer(): Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function randomValueGenerator(): RandomValueGenerator
+    {
+        return $this->randomValueGenerator;
     }
 
     public function serializer(): Serializer

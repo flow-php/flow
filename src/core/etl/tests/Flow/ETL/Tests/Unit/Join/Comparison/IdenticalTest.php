@@ -17,6 +17,20 @@ final class IdenticalTest extends FlowTestCase
         static::assertFalse((new Identical('id', 'id'))->compare(row(int_entry('id', 1)), row(int_entry('id', 2))));
     }
 
+    public function test_null_is_not_identical_to_null(): void
+    {
+        static::assertFalse((new Identical('id', 'id'))->compare(
+            row(int_entry('id', null)),
+            row(int_entry('id', null)),
+        ));
+    }
+
+    public function test_null_is_not_identical_to_value(): void
+    {
+        static::assertFalse((new Identical('id', 'id'))->compare(row(int_entry('id', null)), row(int_entry('id', 1))));
+        static::assertFalse((new Identical('id', 'id'))->compare(row(int_entry('id', 1)), row(int_entry('id', null))));
+    }
+
     public function test_success(): void
     {
         static::assertTrue((new Identical('id', 'id'))->compare(row(int_entry('id', 1)), row(int_entry('id', 1))));
