@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-07-19
+## [Unreleased] - 2026-07-22
 
 ### Added
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Standalone Flow\ETL\Bucketing storage backend with Memory, Filesystem and PSR-16 implementations.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - BucketingProcessor with pluggable strategies (HashBucketing, SortedRunBucketing).** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Algorithm builder DSL functions: memory_sort(), external_sort(), hash_join(), hash_group_by().** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Floe Options value object with floe_options() DSL and validateData option.** - [@norberttech](https://github.com/norberttech)
 - [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - Floe Options value object with validateData toggle** - [@norberttech](https://github.com/norberttech)
 - [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - floe_options() DSL and options argument on to_floe()** - [@norberttech](https://github.com/norberttech)
 - [#2538](https://github.com/flow-php/flow/pull/2538) - **phpbench based benchmarks** - [@norberttech](https://github.com/norberttech)
@@ -49,6 +53,13 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - External sort rebuilt on the bucketing engine.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Grace hash join rebuilt on the bucketing engine, building the hash table from the smaller bucket.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Mixed join expressions with equalities now run as hash join instead of nested loop.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Group-by runs on the bucketing engine with spill column pruning.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Sort, join and group-by configuration is now algorithm-scoped via ConfigBuilder::sort()/join()/groupBy().** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Equal/Identical join comparisons follow SQL null semantics.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - FloeWriter/FloeStreamWriter take schema in constructor and build the encoder once.** - [@norberttech](https://github.com/norberttech)
 - [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - FloeWriter/FloeStreamWriter take schema in constructor and build encoder once** - [@norberttech](https://github.com/norberttech)
 - [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - external-sort and hash-join spill cache skip per-write schema validation** - [@norberttech](https://github.com/norberttech)
 - [#2540](https://github.com/flow-php/flow/pull/2540) - **flow-php/etl - fast-path identity and count checks in array and metadata equality** - [@norberttech](https://github.com/norberttech)
@@ -109,6 +120,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DateInterval ordering in sort now works via type-specialized Rows::sortBy.** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - route_naming: path no longer calls Router::getRouteCollection() (full route collection rebuild) on every traced request** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/filesystem - MemoryStream appends at end of stream after ranged reads.** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/types - EnumType normalization accepts UnitEnum/BackedEnum interfaces.** - [@norberttech](https://github.com/norberttech)
@@ -125,6 +137,10 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DataFrame::pivot() - pivot is declared between groupBy() and aggregate().** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Root ConfigBuilder externalSort*/join*/grouping* delegators.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Legacy Sort\ExternalSort and BucketsCache family.** - [@norberttech](https://github.com/norberttech)
+- [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - SortAlgorithms enum replaced by SortSteps processor dispatch.** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - legacy Processor\HashJoin hash table and buckets** - [@norberttech](https://github.com/norberttech)
 - [#2536](https://github.com/flow-php/flow/pull/2536) - **flow-php/etl - FloeFile and legacy Floe encoders/serializers** - [@norberttech](https://github.com/norberttech)
 - [#2532](https://github.com/flow-php/flow/pull/2532) - **flow-php/etl - runtime value type detection from List/Map/Structure entry constructors** - [@norberttech](https://github.com/norberttech)
