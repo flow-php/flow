@@ -2,8 +2,8 @@
 
 [TOC]
 
-This document provides guidelines for upgrading between versions of Flow PHP.
-Please follow the instructions for your specific version to ensure a smooth upgrade process.
+This document provides guidelines for upgrading between versions of Flow PHP. Please follow the instructions for your
+specific version to ensure a smooth upgrade process.
 
 ---
 
@@ -20,9 +20,9 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 The worker-cycle span and the `trace: worker`/`both` modes are gone; a consumed message is a `process` span and a
 produced one a `send` span. The `messenger:consume` worker loop is suppressed via
 `instrumentation.console.exclude_commands` — which now **fully suppresses** matching commands (previously it only
-skipped the console span) and defaults to `['messenger:consume']` — so transport-poll/idle-tick work does not
-surface and the long-lived `messenger:consume` console span is dropped. Per-message handler traces are still
-recorded. Set `console.exclude_commands: []` to trace the worker loop.
+skipped the console span) and defaults to `['messenger:consume']` — so transport-poll/idle-tick work does not surface
+and the long-lived `messenger:consume` console span is dropped. Per-message handler traces are still recorded. Set
+`console.exclude_commands: []` to trace the worker loop.
 
 ### 2) `flow-php/symfony-telemetry-bundle` - cache span names unified to dotted lowercase
 
@@ -68,8 +68,8 @@ maintained by attach/detach alone. A custom `context_storage` service no longer 
 ### 5) `flow-php/symfony-telemetry-bundle` - messenger tracing middleware auto-injected into all buses
 
 The tracing middleware is now injected into every message bus automatically. If you previously added
-`flow.telemetry.messenger.middleware` to a bus's `framework.messenger.buses.*.middleware` list by hand,
-remove it to avoid duplicate spans.
+`flow.telemetry.messenger.middleware` to a bus's `framework.messenger.buses.*.middleware` list by hand, remove it to
+avoid duplicate spans.
 
 ### 6) `flow-php/symfony-telemetry-bundle` - `http_kernel.exclude_paths` now suppresses the whole request
 
@@ -79,9 +79,9 @@ remove it to avoid duplicate spans.
 | DBAL/cache/`kernel.terminate` work still recorded | DBAL/cache/`kernel.terminate` work produces no spans    |
 
 An excluded path now attaches the OpenTelemetry suppression key for the request's duration (through
-`kernel.terminate`), so lower-level auto-instrumentation and terminate-phase database writes no longer emit
-orphan root spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its response). If you relied on
-those child spans being recorded for an excluded path, remove the path from `exclude_paths`.
+`kernel.terminate`), so lower-level auto-instrumentation and terminate-phase database writes no longer emit orphan root
+spans (e.g. the `/_wdt` toolbar fetch writing an audit row after its response). If you relied on those child spans being
+recorded for an excluded path, remove the path from `exclude_paths`.
 
 ### 7) `flow-php/postgresql`, `flow-php/symfony-postgresql-bundle` - `traceTransactions` bool replaced by
 
@@ -97,8 +97,8 @@ those child spans being recorded for an excluded path, remove the path from `exc
 | config `telemetry.trace_transactions: true`                    | config `telemetry.transaction_spans: grouped`                                  |
 | config `telemetry.trace_transactions: false`                   | config `telemetry.transaction_spans: off`                                      |
 
-`TransactionSpanMode::PER_OPERATION` emits a short span per `BEGIN`/`COMMIT`/`ROLLBACK`; `GROUPED` (default) keeps
-the single long-lived transaction span.
+`TransactionSpanMode::PER_OPERATION` emits a short span per `BEGIN`/`COMMIT`/`ROLLBACK`; `GROUPED` (default) keeps the
+single long-lived transaction span.
 
 The `db.client.operation.duration` metric now uses only low-cardinality dimensions: queries are tagged with
 `db.system.name`, `db.namespace`, `db.operation.name`, `db.collection.name`; transactions with `db.system.name`,
@@ -119,8 +119,8 @@ The `db.client.operation.duration` metric now uses only low-cardinality dimensio
 
 Query spans now carry `db.system.name`, `db.namespace`, `server.address`, `server.port`, `db.operation.name`,
 `db.collection.name`, `db.response.returned_rows` and (on error) `db.response.status_code`, and the instrumentation
-emits `db.client.operation.duration` and `db.client.response.returned_rows` metrics. If you matched DBAL spans by
-their `doctrine.dbal.*` names, switch to the semantic names above.
+emits `db.client.operation.duration` and `db.client.response.returned_rows` metrics. If you matched DBAL spans by their
+`doctrine.dbal.*` names, switch to the semantic names above.
 
 ### 9) `flow-php/symfony-telemetry-bundle` - custom attribute keys moved out of reserved OTel namespaces
 
@@ -292,8 +292,8 @@ Custom `Cache` implementations must adopt the `Rows`-only signatures.
 Delete cache directories written by 0.41 — the old serialized payloads are unreadable. Convert
 `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
 
-A Floe file carries exactly one schema, and sort / join / group-by spill batches through it — a pipeline with a
-drifting or schemaless source must declare column types at the source so nullable columns carry a concrete type
+A Floe file carries exactly one schema, and sort / join / group-by spill batches through it — a pipeline with a drifting
+or schemaless source must declare column types at the source so nullable columns carry a concrete type
 (`DataFrame::match($schema)` validates but does not retype values):
 
 ```php
@@ -313,27 +313,31 @@ Applies only to direct construction; services wired by the bundle need no change
 
 ### 22) `flow-php/etl` - sort algorithm is an explicit choice; external sort is the default
 
-| Before                                                          | After                                                          |
-|-----------------------------------------------------------------|----------------------------------------------------------------|
-| `SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT` (default)       | removed; default is `SortAlgorithms::EXTERNAL_SORT`            |
-| `SortAlgorithms::SQLITE_SORT`                                   | removed                                                        |
-| `SortAlgorithms::useMemory()`                                   | removed                                                        |
-| `ConfigBuilder::sortMemoryLimit(Unit $unit)`                    | removed                                                        |
-| `SortConfigBuilder::sortMemoryLimit(Unit $unit)`                | removed                                                        |
-| `SortConfig::$memoryLimit`                                      | removed                                                        |
-| `SortConfig::SORT_MAX_MEMORY_ENV` / `FLOW_SORT_MAX_MEMORY` env  | removed                                                        |
-| `new MemorySort(Unit $maximumMemory)`                           | `new MemorySort()`                                             |
-| `MemorySort` throwing `Flow\ETL\Exception\OutOfMemoryException` | removed                                                        |
-| `new ExternalSort($cache, $bucketsCount)`                       | `new ExternalSort($cache, $bucketsCount, $bucketSize)`         |
-| —                                                               | `ConfigBuilder::externalSortBucketSize(int)` (default `10000`) |
+| Before                                                          | After                                                                     |
+|-----------------------------------------------------------------|---------------------------------------------------------------------------|
+| `SortAlgorithms` enum                                           | removed; `ConfigBuilder::sort(memory_sort()` / `external_sort())`         |
+| `SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT` (default)       | removed; default is `external_sort()`                                     |
+| `SortAlgorithms::SQLITE_SORT`                                   | removed                                                                   |
+| `SortAlgorithms::useMemory()`                                   | removed                                                                   |
+| `ConfigBuilder::sortMemoryLimit(Unit $unit)`                    | removed                                                                   |
+| `SortConfigBuilder`                                             | removed; `external_sort()` builder                                        |
+| `SortConfigBuilder::sortMemoryLimit(Unit $unit)`                | removed                                                                   |
+| `SortConfig`                                                    | `MemorySortConfig` \| `ExternalSortConfig` (`Config::$sort`)              |
+| `SortConfig::$memoryLimit`                                      | removed                                                                   |
+| `SortConfig::SORT_MAX_MEMORY_ENV` / `FLOW_SORT_MAX_MEMORY` env  | removed                                                                   |
+| `new MemorySort(Unit $maximumMemory)`                           | removed; `sort(memory_sort())`                                            |
+| `MemorySort` throwing `Flow\ETL\Exception\OutOfMemoryException` | removed                                                                   |
+| `new ExternalSort($cache, $bucketsCount)`                       | removed; `sortBy()` pipelines `BucketingProcessor` + `MergeSortProcessor` |
+| `ConfigBuilder::externalSortFilesystem(string)`                 | `external_sort()->filesystemProtocol(string)`                             |
+| —                                                               | `external_sort()->runSize(int)` (default `10000`)                         |
+| —                                                               | `external_sort()->bucketsCount(int)` (default `100`)                      |
+| —                                                               | `external_sort()->batchSize(int)` (default `1000`)                        |
+| —                                                               | `external_sort()->storage(BucketsStorage)` (default `FilesystemBuckets`)  |
 
 To sort in memory, opt in explicitly:
 
 ```php
-$config = config_builder();
-$config->sort->algorithm(SortAlgorithms::MEMORY_SORT);
-
-data_frame($config)->read(...)->sortBy(ref('id'))->run();
+data_frame(config_builder()->sort(memory_sort()))->read(...)->sortBy(ref('id'))->run();
 ```
 
 ### 23) `flow-php/etl` - joins emit every matching right row and follow SQL semantics
@@ -353,19 +357,20 @@ data_frame($config)->read(...)->sortBy(ref('id'))->run();
 
 ### 24) `flow-php/etl` - join buckets storage is configurable, spills to disk by default
 
-| Before                                             | After                                                                       |
-|----------------------------------------------------|-----------------------------------------------------------------------------|
+| Before                                                    | After                                                                   |
+|-----------------------------------------------------------|-------------------------------------------------------------------------|
 | `join()` holds right side in memory, keeps left row order | join buckets spilled to disk (Floe files), left row order not preserved |
-| —                                                  | `ConfigBuilder::joinCache(BucketsCache)` (default `FilesystemBucketsCache`) |
-| —                                                  | `ConfigBuilder::joinBucketsCount(int)` (default `64`)                       |
-| —                                                  | `ConfigBuilder::joinBatchSize(int)` (default `1000`)                        |
-| —                                                  | `Flow\ETL\Sort\ExternalSort\ResidentBucketsCache`                           |
-| —                                                  | `Flow\ETL\Sort\ExternalSort\BucketsCache\InMemoryBucketsCache`              |
+| —                                                         | `ConfigBuilder::join(hash_join())`                                      |
+| —                                                         | `hash_join()->storage(BucketsStorage)` (default `FilesystemBuckets`)    |
+| —                                                         | `hash_join()->bucketsCount(int)` (default `64`)                         |
+| —                                                         | `hash_join()->batchSize(int)` (default `1000`)                          |
+| —                                                         | `Flow\ETL\Bucketing\ResidentBucketsStorage`                             |
+| —                                                         | `Flow\ETL\Bucketing\Storage\MemoryBuckets`                              |
 
 To keep the right side in memory and preserve left row order:
 
 ```php
-data_frame(config_builder()->joinCache(new InMemoryBucketsCache()))
+data_frame(config_builder()->join(hash_join()->storage(new MemoryBuckets())))
     ->read(...)
     ->join(...)
     ->run();
@@ -403,8 +408,8 @@ data_frame(config_builder()->joinCache(new InMemoryBucketsCache()))
 | `array_to_rows($data, EntryFactory $entryFactory, ...)` | `array_to_rows($data, Hydrator $hydrator = new AdaptiveRowHydrator(), ...)`                                                                               |
 
 `cast()` coerces untrusted values through the schema (`null` schema infers types); `hydrate()` instantiates trusted,
-already-typed values and requires a schema. A custom extractor reading raw values (CSV, JSON, XML, Excel, Text,
-Google Sheet, PostgreSQL, Doctrine) calls `$context->hydrator()->cast(...)`; a self-describing source (Parquet, Floe)
+already-typed values and requires a schema. A custom extractor reading raw values (CSV, JSON, XML, Excel, Text, Google
+Sheet, PostgreSQL, Doctrine) calls `$context->hydrator()->cast(...)`; a self-describing source (Parquet, Floe)
 calls `$context->hydrator()->hydrate(...)`.
 
 Under a schema, entries emit in schema-definition order (was data-key order with missing columns appended); a schema
@@ -448,6 +453,30 @@ dropped when a schema was set); Excel now appends `_input_file_uri` under `putIn
 | `Flow\ETL\Row\Entry\StringEntry::fromNull($name, $metadata)`              | `null_entry($name, $metadata)`                                                       |
 | `new StringEntry($name, $value, $metadata, fromNull: true)`               | `$fromNull` constructor flag removed                                                 |
 | `Flow\ETL\Schema\Metadata::FROM_NULL`                                     | removed                                                                              |
+
+### 30) `flow-php/etl` - group by runs on bucketing storage; only referenced columns are spilled
+
+| Before                                                                     | After                                                                                |
+|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| grouping state held in memory                                              | rows partitioned into buckets through `BucketsStorage` (default `FilesystemBuckets`) |
+| rows carry all columns into grouping                                       | only `groupBy` refs + aggregator refs are spilled                                    |
+| STRICT schema mode throws for a missing aggregate column under `groupBy()` | row gets a `null` entry for it; aggregators skip `null`                              |
+| group output follows input order (incidental)                              | follows hash-bucket order                                                            |
+| —                                                                          | `AggregatingFunction::references(): ?array`                                          |
+| —                                                                          | `ConfigBuilder::groupBy(hash_group_by())`                                            |
+| —                                                                          | `hash_group_by()->storage(BucketsStorage)` (default `FilesystemBuckets`)             |
+| —                                                                          | `hash_group_by()->bucketsCount(int)` (default `64`)                                  |
+| —                                                                          | `hash_group_by()->batchSize(int)` (default `1000`)                                   |
+
+Custom aggregators must implement `references()` - return the references the aggregator reads, or
+`null` when they cannot be statically enumerated (disables spill column pruning).
+
+### 31) `flow-php/etl` - `DataFrame::pivot()` removed; pivot is declared between `groupBy()` and `aggregate()`
+
+| Before                                            | After                                             |
+|---------------------------------------------------|---------------------------------------------------|
+| `->groupBy(...)->aggregate(...)->pivot(ref('x'))` | `->groupBy(...)->pivot(ref('x'))->aggregate(...)` |
+| `DataFrame::pivot()`                              | removed; `GroupedDataFrame::pivot()` only         |
 
 ---
 
@@ -511,8 +540,8 @@ composer require flow-php/symfony-http-foundation-telemetry-bridge
 | `context(?TraceId, ?Baggage)` (DSL)     | `context(?Baggage)`                                            |
 | a root span reused the context trace id | each root span generates a new `TraceId`                       |
 
-`Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep
-subsequent spans in the same trace.
+`Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep subsequent spans in
+the same trace.
 
 ### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
 
@@ -612,12 +641,12 @@ Rename these series in dashboards and alerts.
 | (no span selection)                           | `instrumentation.messenger.trace`: `worker`/`handlers`/`both` (default)/`none` |
 | (no link selection)                           | `instrumentation.messenger.link`: `dispatcher`/`worker`/`both` (default)       |
 
-Remove `propagation_style` from config — `continue` mode is gone (it made the consumer span absorb the queue wait
-time). `trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
+Remove `propagation_style` from config — `continue` mode is gone (it made the consumer span absorb the queue wait time).
+`trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
 `link` selects the consumer span's links. `link: worker`/`both` requires `trace` to include the worker, otherwise the
-config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP client,
-…) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span, no
-orphans either way.
+config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP
+client, …) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span,
+no orphans either way.
 
 ---
 
@@ -632,9 +661,9 @@ orphans either way.
 | `$column->default` (string)                                   | `$column->default?->literal` / `$column->default?->applicableSql()`         |
 | `ColumnShape['default']` / `DomainShape['default']` `?string` | `?array{literal: string, type: ?ColumnTypeShape, kind: string}`             |
 
-`Column::create()` / `Domain::create()` still accept `bool|float|int|string|Expression|null`.
-Schema arrays serialized by `Column::normalize()` / `Domain::normalize()` before 0.40 must be
-regenerated — `fromArray()` reads the nested `default` shape only.
+`Column::create()` / `Domain::create()` still accept `bool|float|int|string|Expression|null`. Schema arrays serialized
+by `Column::normalize()` / `Domain::normalize()` before 0.40 must be regenerated — `fromArray()` reads the nested
+`default` shape only.
 
 ### 2) `flow-php/telemetry` - Log severity filtering moved to a pipeline middleware
 
@@ -700,8 +729,8 @@ flow_telemetry:
 
 ### 3) `flow-php/symfony-telemetry-bundle` - named scope `attributes` split into `scope` and `signal`
 
-Applies to `tracers`, `meters`, and `loggers`. The `attributes` map is no longer a flat list of scope
-attributes; scope attributes move under `attributes.scope`.
+Applies to `tracers`, `meters`, and `loggers`. The `attributes` map is no longer a flat list of scope attributes; scope
+attributes move under `attributes.scope`.
 
 Before:
 
@@ -782,8 +811,8 @@ percent-decoded.
 
 ### 1) `flow-php/types` - PHPStan extension extracted to `flow-php/phpstan-types-bridge`
 
-The `StructureTypeReturnTypeExtension` — which narrows the return type of `type_structure()` for PHPStan —
-has been moved out of `flow-php/types` into a dedicated package, `flow-php/phpstan-types-bridge`.
+The `StructureTypeReturnTypeExtension` — which narrows the return type of `type_structure()` for PHPStan — has been
+moved out of `flow-php/types` into a dedicated package, `flow-php/phpstan-types-bridge`.
 `flow-php/types` no longer ships any PHPStan code.
 
 | Before                                                | After                                                        |
@@ -797,8 +826,8 @@ If you used `type_structure()` together with PHPStan, install the new package:
 composer require --dev flow-php/phpstan-types-bridge
 ```
 
-With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) the extension is
-registered automatically. If you registered it manually, update your `phpstan.neon`:
+With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) the extension is registered
+automatically. If you registered it manually, update your `phpstan.neon`:
 
 Before:
 
@@ -1138,8 +1167,8 @@ The monolithic `functions.php` has been split into 5 focused files (same namespa
 The filesystem library has been redesigned around a single mount-protocol string. The `Protocol` and
 `Backend` value types are gone; `Mount` now wraps just a protocol name.
 
-**`Protocol` class removed.** `Path::protocol()` now returns `string` instead of a `Protocol` object.
-Callsites that unpacked `Protocol::$name` / `Protocol::scheme()` / `Protocol::is()` are mechanical updates:
+**`Protocol` class removed.** `Path::protocol()` now returns `string` instead of a `Protocol` object. Callsites that
+unpacked `Protocol::$name` / `Protocol::scheme()` / `Protocol::is()` are mechanical updates:
 
 | Before                                   | After                                                                                              |
 |------------------------------------------|----------------------------------------------------------------------------------------------------|
@@ -1149,10 +1178,9 @@ Callsites that unpacked `Protocol::$name` / `Protocol::scheme()` / `Protocol::is
 | `$fs->protocol()->validateScheme($path)` | `$fs->mount()->supports($path) \|\| throw new InvalidSchemeException(...)`                         |
 | `new Protocol('file')`                   | `new Mount('file')` (if you need a Mount) or plain `'file'` (FilesystemTable::for accepts strings) |
 
-**`Backend` enum removed.** There's no closed set of backends anymore — any filesystem can mount
-under any protocol. The Symfony bundle schema now uses a plain string `type:` field (see below). If
-you branched on `Backend` cases in application code, replace with string comparisons against the
-factory `type()` or the mount protocol, whichever fits.
+**`Backend` enum removed.** There's no closed set of backends anymore — any filesystem can mount under any protocol. The
+Symfony bundle schema now uses a plain string `type:` field (see below). If you branched on `Backend` cases in
+application code, replace with string comparisons against the factory `type()` or the mount protocol, whichever fits.
 
 **`Mount` rewritten.** The shape is now:
 
@@ -1170,30 +1198,27 @@ final readonly class Mount
 `Protocol` to `Mount`. Every `Filesystem` implementation must rename the method.
 
 **`Filesystem` ctors take `Mount` directly.** `NativeLocalFilesystem`, `MemoryFilesystem`,
-`StdOutFilesystem`, `AsyncAWSS3Filesystem`, `AzureBlobFilesystem` now accept `Mount` as the first
-constructor argument (local filesystems have a sensible default). DSL factory functions
-(`native_local_filesystem`, `memory_filesystem`, `stdout_filesystem`, `aws_s3_filesystem`,
-`azure_filesystem`) accept `string $protocol` as the **last** argument with a sensible default
-(`'file'`, `'memory'`, `'stdout'`, `'aws-s3'`, `'azure-blob'`) and build the `Mount` internally — no
-caller change needed unless you instantiate the filesystem class directly or mount two filesystems of
-the same backend under distinct protocols.
+`StdOutFilesystem`, `AsyncAWSS3Filesystem`, `AzureBlobFilesystem` now accept `Mount` as the first constructor argument
+(local filesystems have a sensible default). DSL factory functions (`native_local_filesystem`, `memory_filesystem`,
+`stdout_filesystem`, `aws_s3_filesystem`,
+`azure_filesystem`) accept `string $protocol` as the **last** argument with a sensible default (`'file'`, `'memory'`,
+`'stdout'`, `'aws-s3'`, `'azure-blob'`) and build the `Mount` internally — no caller change needed unless you
+instantiate the filesystem class directly or mount two filesystems of the same backend under distinct protocols.
 
-**Auto-alias dropped.** Previously, mounting a single filesystem of a given backend would auto-register
-its canonical scheme as an additional alias (e.g. mounting S3 as `warehouse` also made `aws-s3`
-available). That behavior is gone — every mount is registered under exactly the protocol you pick. If
-you need two protocols for the same filesystem, mount it twice explicitly.
+**Auto-alias dropped.** Previously, mounting a single filesystem of a given backend would auto-register its canonical
+scheme as an additional alias (e.g. mounting S3 as `warehouse` also made `aws-s3`
+available). That behavior is gone — every mount is registered under exactly the protocol you pick. If you need two
+protocols for the same filesystem, mount it twice explicitly.
 
 **`FilesystemTable::for(Path|Protocol)` → `for(Path|string)`.** Pass a `Path` or a plain protocol string.
 
 ### 7) `flow-php/filesystem` - `NativeLocalFilesystem::list()` no longer sorts results
 
-`Glob::glob()` was replaced with lazy `Webmozart\Glob\Iterator\GlobIterator` to avoid materializing
-the entire matching set up front (this gives a ~30× speedup on large trees when the caller only needs
-the first N entries).
+`Glob::glob()` was replaced with lazy `Webmozart\Glob\Iterator\GlobIterator` to avoid materializing the entire matching
+set up front (this gives a ~30× speedup on large trees when the caller only needs the first N entries).
 
-**Side effect:** `NativeLocalFilesystem::list()` no longer returns results in alphabetical order.
-Output now follows filesystem traversal order. If your code depends on sort order, sort client-side
-after consuming the generator:
+**Side effect:** `NativeLocalFilesystem::list()` no longer returns results in alphabetical order. Output now follows
+filesystem traversal order. If your code depends on sort order, sort client-side after consuming the generator:
 
 ```php
 $statuses = iterator_to_array($fs->list(path('/some/dir/**/*.txt')));
@@ -1202,8 +1227,8 @@ usort($statuses, static fn (FileStatus $a, FileStatus $b) => $a->path->uri() <=>
 
 ### 8) `flow-php/symfony-filesystem-bundle` - YAML schema now uses `type:` + protocol-as-key
 
-The configuration schema changed significantly. The YAML key under `filesystems:` is now the **mount
-protocol** (any valid URI scheme), and a separate `type:` field picks the factory.
+The configuration schema changed significantly. The YAML key under `filesystems:` is now the **mount protocol** (any
+valid URI scheme), and a separate `type:` field picks the factory.
 
 **Before:**
 
@@ -1277,9 +1302,9 @@ The DI tag attribute is renamed from `protocol` to `type`. `FilesystemFactoryReg
 | (no `--offset`)              | New `--offset=N` skips the first N entries                   |
 | `--format=json` → JSON array | `--format=json` now emits NDJSON (one JSON object per line)  |
 
-Default behavior: list all entries, paginated in tables of 10 rows; interactive terminals prompt
-between pages (Enter continues, "no" stops), piped output flows continuously. Size is formatted with
-binary units, Modified as ISO-8601 — both read from the backend listing response, no per-file HEAD.
+Default behavior: list all entries, paginated in tables of 10 rows; interactive terminals prompt between pages (Enter
+continues, "no" stops), piped output flows continuously. Size is formatted with binary units, Modified as ISO-8601 —
+both read from the backend listing response, no per-file HEAD.
 
 ### 11) `flow-php/symfony-filesystem-bundle` - `flow:filesystem:stat` rejects pattern paths
 
@@ -1291,8 +1316,8 @@ binary units, Modified as ISO-8601 — both read from the backend listing respon
 
 `flow-php/filesystem-azure-bridge` - DSL protocol is the last argument with a default
 
-The DSL factories expose the mount protocol as an optional last argument, defaulted to the
-conventional scheme. Common cases work without passing it:
+The DSL factories expose the mount protocol as an optional last argument, defaulted to the conventional scheme. Common
+cases work without passing it:
 
 ```php
 aws_s3_filesystem($bucket, $client);                              // mounts under 'aws-s3'
@@ -1334,8 +1359,8 @@ $config = config_builder()
 `Output::memoryLoader(string $id)` and `Output::stdoutLoader()` were replaced by
 `Output::loader(Path $path)`. `FlowBufferedResponse` gained a `string $filesystem = 'memory'`
 constructor argument (buffer protocol); `FlowStreamedResponse` gained
-`string $stdoutFilesystemProtocol = 'stdout'`. Each response builds the path with its configured
-protocol and passes it to the Output.
+`string $stdoutFilesystemProtocol = 'stdout'`. Each response builds the path with its configured protocol and passes it
+to the Output.
 
 ```php
 // Before
@@ -1347,12 +1372,12 @@ new FlowBufferedResponse($extractor, new CsvOutput(), $transformations, filesyst
 
 ### 16) `flow-php/filesystem` - `StdOutFilesystem` tracks open streams per php:// target
 
-Previously the "only one stdout stream" guard lived in `FilesystemStreams` (ETL core) and fired when
-two writing streams used the `stdout://` protocol. The check now lives in `StdOutFilesystem` itself
-and is precise per underlying php:// target (`stdout` / `stderr` / `output`): two streams with
-`['stream' => 'stdout']` conflict; one stdout stream + one stderr stream do not. Error message
-changed from *"Only one stdout filesystem stream can be open at the same time"* to
-*"Only one stream can be open at the same time for php://{target}"*.
+Previously the "only one stdout stream" guard lived in `FilesystemStreams` (ETL core) and fired when two writing streams
+used the `stdout://` protocol. The check now lives in `StdOutFilesystem` itself and is precise per underlying php://
+target (`stdout` / `stderr` / `output`): two streams with
+`['stream' => 'stdout']` conflict; one stdout stream + one stderr stream do not. Error message changed from *"Only one
+stdout filesystem stream can be open at the same time"* to *"Only one stream can be open at the same time for php:
+//{target}"*.
 
 ---
 
@@ -1424,8 +1449,7 @@ cast(ref('id'), ColumnType::bigint());
 ### 2) `flow-php/postgresql` - `PostgreSqlType` renamed to `ValueType`
 
 The `PostgreSqlType` enum used for value binding/casting has been renamed to `ValueType` to better communicate its
-purpose.
-All related DSL functions have been renamed from `pgsql_type_*` to `value_type_*`.
+purpose. All related DSL functions have been renamed from `pgsql_type_*` to `value_type_*`.
 
 | Removed                                       | Replacement                              |
 |-----------------------------------------------|------------------------------------------|
@@ -1594,8 +1618,8 @@ This applies to all Definition implementations: `BooleanDefinition`, `DateDefini
 
 ### 1) JsonType now uses Json value object instead of string
 
-The `JsonType` has been refactored to use a dedicated `Json` value object (similar to `Uuid`/`UuidType` pattern).
-This allows static analysis tools to distinguish between regular strings and JSON strings.
+The `JsonType` has been refactored to use a dedicated `Json` value object (similar to `Uuid`/`UuidType` pattern). This
+allows static analysis tools to distinguish between regular strings and JSON strings.
 
 **Breaking Changes:**
 
@@ -1738,9 +1762,8 @@ type_optional(string())->toString() // ?string
 
 ### 2) Removed precision from `float_type()`
 
-Before `float_type()` use to have default precision 6. This means that any operations on float had to round values
-to given precision. The problem with this approach is that all operations now need to receive a dedicated rounding
-option.
+Before `float_type()` use to have default precision 6. This means that any operations on float had to round values to
+given precision. The problem with this approach is that all operations now need to receive a dedicated rounding option.
 
 Instead, end users should handle precision of float columns through `round()` scalar function.
 
@@ -1785,8 +1808,8 @@ Selected transformers were deprecated in favor of using `DataFrame::renameEach()
 
 ### 1) Removed `Flow\ETL\Row\Schema\Matcher` and implementations
 
-Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over
-time got replaced with a different implementation of Schema Validator.
+Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over time got
+replaced with a different implementation of Schema Validator.
 
 ### 2) Renamed `Flow\ETL\Row\Schema` namespace into `Flow\ETL\Schema`.
 
@@ -1804,9 +1827,9 @@ The old method is now deprecated and will be removed in the next release.
 
 `Flow\ETL\Function\ScalarFunction\ScalarResult`.
 
-The old interface was used to allow defining the return type of the ScalarFunctions.
-It was replaced with a ScalarResult value object that is much more flexible than the interface,
-because it's allowing to return any type dynamically without making the scalar function stateful.
+The old interface was used to allow defining the return type of the ScalarFunctions. It was replaced with a ScalarResult
+value object that is much more flexible than the interface, because it's allowing to return any type dynamically without
+making the scalar function stateful.
 
 ## Upgrading from 0.10.x to 0.11.x
 
@@ -1837,8 +1860,8 @@ From now options for:
 - `to_dbal_table_insert()`
 - `to_db_table_update()`
 
-are passed as objects (instance of UpdateOptions|InsertOptions interfaces) and they are platform specific,
-so please use the proper class for the platform you are using.
+are passed as objects (instance of UpdateOptions|InsertOptions interfaces) and they are platform specific, so please use
+the proper class for the platform you are using.
 
 - PostgreSQL
     - PostgreSQLInsertOptions
@@ -1880,8 +1903,8 @@ from_all(
 
 ### 2) Passing optional arguments to extractors/loaders
 
-From now all extractors/loaders are accepting only mandatory arguments,
-all optional arguments should be passed through `with*` methods and fluent interface.
+From now all extractors/loaders are accepting only mandatory arguments, all optional arguments should be passed through
+`with*` methods and fluent interface.
 
 Before:
 
@@ -1925,14 +1948,14 @@ statement Builder. To get the results, you first need to define the aggregation 
 
 ## Upgrading from 0.6.x to 0.7.x
 
-### 1) DataFrame::appendSafe() method was removed
+### 1) DataFrame::appendSafe () method was removed
 
 `DataFrame::appendSafe()` aka `DataFrame::threadSafe()` method was removed as it was introducing additional complexity
 and was not used in any of the adapters.
 
 ## Upgrading from 0.5.x to 0.6.x
 
-### 1) Rows::merge() accepts single instance of Rows
+### 1) Rows::merge () accepts single instance of Rows
 
 Before:
 
@@ -1964,23 +1987,23 @@ a passed schema, `InvalidArgumentException` will be thrown.
 ### 3) BufferLoader was removed
 
 BufferLoader was removed in favor of `DataFrame::collect(int $batchSize = null)` method which now accepts additional
-argument `$batchSize` that will keep collecting Rows from Extractor until the given batch size is reached.
-Which does exactly the same thing as BufferLoader did, but in a more generic way.
+argument `$batchSize` that will keep collecting Rows from Extractor until the given batch size is reached. Which does
+exactly the same thing as BufferLoader did, but in a more generic way.
 
 ### 4) Pipeline Closure
 
-Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace.
-Additionally, \Closure::close method no longer requires Rows to be passed as an argument.
+Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace. Additionally,
+\Closure::close method no longer requires Rows to be passed as an argument.
 
 ### 5) Parallelize
 
-DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size)
+DataFrame::parallelize () method is deprecated, and it will be removed, instead use DataFrame::batchSize (int $size)
 method.
 
 ### 6) Rows in batch - Extractors
 
-From now, file-based Extractors will always throw one Row at time, in order to merge them into bigger groups
-use `DataFrame::batchSize(int $size)` just after extractor method.
+From now, file-based Extractors will always throw one Row at time, in order to merge them into bigger groups use
+`DataFrame::batchSize(int $size)` just after extractor method.
 
 Before:
 
@@ -2017,19 +2040,18 @@ Affected extractors:
 ### 7) `GoogleSheetExtractor`
 
 Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size
-of the page that will be fetched from Google API.
-Rows are yielded one by one.
+of the page that will be fetched from Google API. Rows are yielded one by one.
 
 ### 8) `DataFrame::threadSafe()` method was replaced by `DataFrame::appendSafe()`
 
-`DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more
-descriptive and self-explanatory.
-It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set automatically.
+`DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more descriptive and
+self-explanatory. It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set
+automatically.
 
 ### 9) Loaders - chunk size
 
-Loaders are no longer accepting chunk_size parameter, from now in order to control
-the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
+Loaders are no longer accepting chunk_size parameter, from now in order to control the number of rows saved at once use
+`DataFrame::batchSize(int $size)` method.
 
 ### 10) Removed DSL functions: `datetime_string()`, `json_string()`
 
@@ -2138,8 +2160,8 @@ use Flow\ETL\Flow;
 
 ### 2) `ref` function nullability
 
-`ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception.
-The same behavior can be achieved through using a newly introduced `optional` function:
+`ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception. The same
+behavior can be achieved through using a newly introduced `optional` function:
 
 Before:
 
@@ -2181,8 +2203,8 @@ Affected extractors:
 Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become
 redundant.
 
-Because of that all DSL functions are no longer expecting `$entry_row_name` parameter, if it was used anywhere,
-please remove it.
+Because of that all DSL functions are no longer expecting `$entry_row_name` parameter, if it was used anywhere, please
+remove it.
 
 Before:
 
@@ -2211,9 +2233,9 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows() output is now prefixed with _ (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _  (underscore)
 
-In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows()
+In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.
 
 Before:

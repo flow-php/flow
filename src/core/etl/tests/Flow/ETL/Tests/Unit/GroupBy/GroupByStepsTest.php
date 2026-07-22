@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count as count_agg;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -75,7 +76,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage(new MemoryBuckets())->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
             rows(row(str_entry('category', 'a'), int_entry('amount', 10))),
             rows(row(str_entry('category', 'a'), int_entry('amount', 20))),
             rows(row(str_entry('category', 'b'), int_entry('amount', 15))),
@@ -101,7 +102,9 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage(new MemoryBuckets())->groupingBucketsCount(1)->build()),
+            flow_context(
+                config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets())->bucketsCount(1))->build(),
+            ),
             rows(
                 row(str_entry('category', 'a'), int_entry('amount', 10)),
                 row(str_entry('category', 'b'), int_entry('amount', 15)),
@@ -139,7 +142,9 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage(new MemoryBuckets())->groupingBucketsCount(4)->build()),
+            flow_context(
+                config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets())->bucketsCount(4))->build(),
+            ),
             ...$batches,
         );
 
@@ -167,7 +172,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage($storage)->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
             rows(
                 row(str_entry('category', 'a'), int_entry('amount', 10)),
                 row(str_entry('category', 'b'), int_entry('amount', 15)),
@@ -185,7 +190,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage(new MemoryBuckets())->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
             rows(
                 row(str_entry('category', 'a'), int_entry('amount', 10)),
                 row(int_entry('amount', 15)),
@@ -215,7 +220,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage($storage)->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
             rows(
                 row(str_entry('category', 'a'), int_entry('amount', 10), str_entry('noise', 'x'), int_entry('id', 1)),
                 row(str_entry('category', 'b'), int_entry('amount', 15), str_entry('noise', 'y'), int_entry('id', 2)),
@@ -240,7 +245,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage($storage)->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
             rows(
                 row(str_entry('category', 'a'), float_entry('amount', 0.1), bool_entry('flag', true)),
                 row(str_entry('category', 'a'), float_entry('amount', 0.2), bool_entry('flag', true)),
@@ -263,7 +268,7 @@ final class GroupByStepsTest extends FlowTestCase
         $groupBy = new GroupBy(ref('category'));
         $groupBy->aggregate(sum(ref('amount')));
 
-        $context = flow_context(config_builder()->groupingStorage(new MemoryBuckets())->build());
+        $context = flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build());
         $context->functions()->setMode(ExecutionMode::STRICT);
 
         $result = GroupByContext::aggregate(
@@ -282,7 +287,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupingStorage(new MemoryBuckets())->build()),
+            flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
         );
 
         $total = 0;

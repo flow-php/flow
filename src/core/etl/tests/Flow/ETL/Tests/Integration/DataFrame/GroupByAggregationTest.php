@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -49,7 +50,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3)->groupingBatchSize(2));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)->batchSize(2)));
 
         static::assertSame($default, $fewPartitions);
         static::assertCount(3, $default);
@@ -79,7 +80,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('a'), ref('b'))
                 ->aggregate(sum(ref('v')))
@@ -109,7 +110,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('seller'))
                 ->aggregate(sum(ref('amount')))
@@ -142,7 +143,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('seller'), ref('region'))
                 ->aggregate(count(ref('seller')))
@@ -170,7 +171,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         ];
 
         $result = iterator_to_array(
-            data_frame(config_builder()->groupingBucketsCount(3))
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
                 ->groupBy(ref('k'))
                 ->aggregate(first(ref('v')), last(ref('v')))
@@ -203,7 +204,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
         static::assertSame($default, $fewPartitions);
 
@@ -247,7 +248,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupingBucketsCount(3));
+        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
         static::assertSame($default, $fewPartitions);
 
@@ -283,6 +284,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
                 ->getEachAsArray(),
         );
 
-        static::assertSame($pipeline(config_builder()), $pipeline(config_builder()->groupingBucketsCount(3)));
+        static::assertSame(
+            $pipeline(config_builder()),
+            $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3))),
+        );
     }
 }

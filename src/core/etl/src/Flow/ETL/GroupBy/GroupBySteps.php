@@ -45,11 +45,11 @@ final readonly class GroupBySteps
             $steps[] = new SelectEntriesTransformer(...array_values($pruned));
         }
 
-        $buckets = new Buckets($config->grouping->storage);
+        $buckets = new Buckets($config->grouping->bucketing->storage);
         $steps[] = new BucketingProcessor(
             new HashBucketing(
                 $groupBy->references(),
-                $config->grouping->bucketsCount,
+                $config->grouping->bucketing->bucketsCount,
                 new NativeHasher(),
                 $config->randomValueGenerator(),
                 'group-by',

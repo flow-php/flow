@@ -6,9 +6,10 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
+use Flow\ETL\Config\Sort\ExternalSortConfig;
+use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
-use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Filesystem;
@@ -20,7 +21,9 @@ use Override;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\telemetry_options;
@@ -87,9 +90,10 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
     public function test_external_sort_batch_size_flows_into_sort_config(): void
     {
-        $config = config_builder()->externalSortBatchSize(250)->build();
+        $config = config_builder()->sort(external_sort()->batchSize(250))->build();
 
-        static::assertSame(250, $config->sort->batchSize);
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
+        static::assertSame(250, $config->sort->bucketing->batchSize);
     }
 
     public function test_config_builder_with_analyze(): void
@@ -153,6 +157,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->build();
 
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
         static::assertSame('file', $config->sort->filesystemProtocol);
     }
 
@@ -161,11 +166,14 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertInstanceOf(AdaptiveRowHydrator::class, config_builder()->build()->hydrator());
     }
 
-    public function test_default_sorting_algorithm(): void
+    public function test_default_sorting_algorithm_is_external_sort(): void
     {
-        $config = config_builder()->build();
+        static::assertInstanceOf(ExternalSortConfig::class, config_builder()->build()->sort);
+    }
 
-        static::assertSame(SortAlgorithms::EXTERNAL_SORT, $config->sort->algorithm);
+    public function test_memory_sort_algorithm_override(): void
+    {
+        static::assertInstanceOf(MemorySortConfig::class, config_builder()->sort(memory_sort())->build()->sort);
     }
 
     public function test_hydrator_override_wins_over_the_default(): void
@@ -179,9 +187,10 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $config = config_builder()
             ->mount(native_local_filesystem('custom-sort'))
-            ->externalSortFilesystem('custom-sort')
+            ->sort(external_sort()->filesystemProtocol('custom-sort'))
             ->build();
 
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
         static::assertSame('custom-sort', $config->sort->filesystemProtocol);
     }
 

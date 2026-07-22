@@ -10,15 +10,15 @@ rows from the left DataFrame.
 
 ## Join Methods
 
-### join()
+### join ()
 
 Main join method that partitions the right DataFrame into buckets and probes them with left rows through a hash table.
 
-### crossJoin() - Cartesian Product
+### crossJoin () - Cartesian Product
 
 Joins each row from the left side with each row on the right side, creating `count(left) * count(right)` rows total.
 
-### joinEach() - Streaming Join
+### joinEach () - Streaming Join
 
 Right side is dynamically generated for each left row, useful for large right-side datasets that don't fit in memory.
 
@@ -33,10 +33,9 @@ Flow PHP supports four join types with specific behaviors:
 | **Right Join** (`Join::right`)         | Returns all rows from right DataFrame with matching rows from left (or NULL)               |
 | **Left Anti Join** (`Join::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
 
-Joins follow SQL semantics - every matching pair of rows produces one output row, so a left row
-that matches multiple right rows is emitted multiple times. A `null` join key never matches
-anything, including another `null` - rows with `null` keys are dropped by inner joins and
-null-padded (or kept, for `left_anti`) by outer joins.
+Joins follow SQL semantics - every matching pair of rows produces one output row, so a left row that matches multiple
+right rows is emitted multiple times. A `null` join key never matches anything, including another `null` - rows with
+`null` keys are dropped by inner joins and null-padded (or kept, for `left_anti`) by outer joins.
 
 > Flow uses hash join implementation where hashes are stored in buckets to optimize memory usage and performance.
 > Rows are bucketed by the values of the join columns and every candidate pair is verified against
@@ -47,27 +46,30 @@ null-padded (or kept, for `left_anti`) by outer joins.
 
 ## Buckets Storage
 
-`join()` always partitions the right DataFrame into buckets through a `BucketsStorage` -
-the same abstraction used by external sort - and the configured implementation decides
-how the join executes:
+`join()` always partitions the right DataFrame into buckets through a `BucketsStorage` - the same abstraction used by
+external sort - and the configured implementation decides how the join executes:
 
-| Buckets storage                   | Behavior                                                                                                                                                                                                                                 |
-|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Buckets storage                   | Behavior                                                                                                                                                                                                                                            |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `FilesystemBuckets` - **Default** | Both sides are partitioned by join key into buckets spilled to disk (Floe files), then joined pair by pair - the hash table is built from the smaller bucket of each pair. Memory usage is bounded by that bucket, left row order is not preserved. |
-| `MemoryBuckets`                   | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                                                            |
+| `MemoryBuckets`                   | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                                                                     |
+| `PSRCacheBuckets`                 | Buckets are spilled into any PSR-16 cache. Executes like `FilesystemBuckets` (left row order is not preserved).                                                                                                                                     |
 
-The implementation is swapped with `config_builder()->joinCache(BucketsStorage $cache)`; any storage
-implementing `ResidentBucketsStorage` (like `MemoryBuckets`) enables the streaming,
-order-preserving execution:
+The join algorithm is configured through `config_builder()->join(hash_join())` - all its options live on the
+`hash_join()` builder; any storage implementing `ResidentBucketsStorage` (like `MemoryBuckets`)
+enables the streaming, order-preserving execution:
 
 ```php
 <?php
 
 data_frame(
     config_builder()
-        ->joinCache(new MemoryBuckets())        // right side fits in memory, keep left row order
-        ->joinBucketsCount(64)                  // number of disk buckets
-        ->joinBatchSize(1000)                   // rows per batch when reading buckets back
+        ->join(
+            hash_join()
+                ->storage(new MemoryBuckets())  // right side fits in memory, keep left row order
+                ->bucketsCount(64)              // number of disk buckets
+                ->batchSize(1000)               // rows per batch when reading buckets back
+        )
 )
     ->read(from_parquet('orders.parquet'))
     ->join(
@@ -76,6 +78,10 @@ data_frame(
     )
     ->run();
 ```
+
+> While rows are partitioned, each spilled bucket is announced downstream as a single metadata row
+> (`BucketShape`: `_bucket_id`, `_bucket_total_rows`). Those rows are an internal pipeline detail consumed
+> by the join processor - they never appear in the joined output.
 
 ## Example
 

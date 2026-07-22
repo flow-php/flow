@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Config\Join;
+namespace Flow\ETL\Config\Bucketing;
 
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
@@ -10,7 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
-final class JoinConfigBuilder
+final class BucketingConfigBuilder
 {
     /**
      * @var int<1, max>
@@ -20,11 +20,21 @@ final class JoinConfigBuilder
     /**
      * @var int<1, max>
      */
-    private int $bucketsCount = 64;
+    private int $bucketsCount;
 
-    private ?BucketsStorage $cache = null;
+    private string $filesystemProtocol = 'file';
 
-    private string $filesystemMount = 'file';
+    private ?BucketsStorage $storage = null;
+
+    /**
+     * @param int<1, max> $bucketsCount
+     */
+    public function __construct(
+        private readonly string $spillDirectory,
+        int $bucketsCount,
+    ) {
+        $this->bucketsCount = $bucketsCount;
+    }
 
     /**
      * @param int<1, max> $batchSize
@@ -41,15 +51,17 @@ final class JoinConfigBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): JoinConfig
+    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): BucketingConfig
     {
-        $cache = $this->cache ?? new FilesystemBuckets(
-            $filesystemTable->for($this->filesystemMount),
-            $localFilesystemCacheDir->suffix('/flow-php-join/'),
+        return new BucketingConfig(
+            $this->storage ?? new FilesystemBuckets(
+                $filesystemTable->for($this->filesystemProtocol),
+                $localFilesystemCacheDir->suffix($this->spillDirectory),
+                $this->batchSize,
+            ),
+            $this->bucketsCount,
             $this->batchSize,
         );
-
-        return new JoinConfig($cache, $this->bucketsCount, $this->batchSize);
     }
 
     /**
@@ -67,9 +79,16 @@ final class JoinConfigBuilder
         return $this;
     }
 
-    public function cache(BucketsStorage $cache): self
+    public function filesystemProtocol(string $protocol): self
     {
-        $this->cache = $cache;
+        $this->filesystemProtocol = $protocol;
+
+        return $this;
+    }
+
+    public function storage(BucketsStorage $storage): self
+    {
+        $this->storage = $storage;
 
         return $this;
     }

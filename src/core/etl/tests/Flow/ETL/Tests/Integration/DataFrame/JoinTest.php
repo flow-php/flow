@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\row;
@@ -63,7 +64,7 @@ final class JoinTest extends FlowIntegrationTestCase
 
     public function test_join_inner_with_on_disk_buckets_cache(): void
     {
-        $rows = df(config_builder()->joinBucketsCount(4))
+        $rows = df(config_builder()->join(hash_join()->bucketsCount(4)))
             ->from(from_rows(rows(
                 row(int_entry('id', 1), str_entry('country', 'PL')),
                 row(int_entry('id', 2), str_entry('country', 'US')),
@@ -96,7 +97,7 @@ final class JoinTest extends FlowIntegrationTestCase
 
     public function test_join_inner_with_on_disk_buckets_preserves_a_nullable_column_present_and_null(): void
     {
-        $rows = df(config_builder()->joinBucketsCount(2))
+        $rows = df(config_builder()->join(hash_join()->bucketsCount(2)))
             ->from(from_rows(rows(
                 row(int_entry('id', 1), str_entry('country', 'PL'), str_entry('note', 'has-note')),
                 row(int_entry('id', 2), str_entry('country', 'US'), str_entry('note', null)),
