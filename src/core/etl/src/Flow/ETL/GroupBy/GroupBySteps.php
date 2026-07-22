@@ -29,7 +29,7 @@ final readonly class GroupBySteps
     public static function of(GroupBy $groupBy, Config $config): array
     {
         if ($groupBy->isPivot()) {
-            return [new PivotProcessor($groupBy)];
+            return [new PivotProcessor($groupBy, $config->grouping->bucketing->batchSize)];
         }
 
         $steps = [];
@@ -58,7 +58,7 @@ final readonly class GroupBySteps
             ),
             $buckets,
         );
-        $steps[] = new GroupByAggregationProcessor($groupBy, $buckets);
+        $steps[] = new GroupByAggregationProcessor($groupBy, $buckets, $config->grouping->bucketing->batchSize);
 
         return $steps;
     }

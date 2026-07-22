@@ -14,8 +14,6 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
 {
     private readonly BucketingConfigBuilder $bucketing;
 
-    private string $filesystemProtocol = 'file';
-
     /**
      * @var int<1, max>
      */
@@ -41,7 +39,6 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
         return new ExternalSortConfig(
             $this->bucketing->build($filesystemTable, $localFilesystemCacheDir),
             $this->runSize,
-            $this->filesystemProtocol,
         );
     }
 
@@ -57,7 +54,6 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
 
     public function filesystemProtocol(string $protocol): self
     {
-        $this->filesystemProtocol = $protocol;
         $this->bucketing->filesystemProtocol($protocol);
 
         return $this;

@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Bucketing;
 
-use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\BucketMother;
 
-use function array_map;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -20,16 +16,6 @@ use function iterator_to_array;
 
 final class BucketsTest extends FlowTestCase
 {
-    public function test_add_get_and_has(): void
-    {
-        $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withTotalRows('a', 3));
-
-        static::assertTrue($buckets->has('a'));
-        static::assertFalse($buckets->has('missing'));
-        static::assertSame(3, $buckets->get('a')->totalRows);
-    }
-
     public function test_all_returns_every_registered_bucket(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
@@ -56,14 +42,6 @@ final class BucketsTest extends FlowTestCase
         static::assertSame([], iterator_to_array($storage->get('b'), false));
     }
 
-    public function test_get_missing_bucket_throws(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Bucket "missing" does not exist.');
-
-        (new Buckets(new MemoryBuckets()))->get('missing');
-    }
-
     public function test_remove_drops_manifest_entry_and_storage(): void
     {
         $storage = new MemoryBuckets();
@@ -74,7 +52,7 @@ final class BucketsTest extends FlowTestCase
 
         $buckets->remove('a');
 
-        static::assertFalse($buckets->has('a'));
+        static::assertSame([], $buckets->all());
         static::assertSame([], iterator_to_array($storage->get('a'), false));
     }
 
@@ -94,32 +72,6 @@ final class BucketsTest extends FlowTestCase
     public function test_rows_of_missing_bucket_yields_nothing(): void
     {
         static::assertSame([], iterator_to_array((new Buckets(new MemoryBuckets()))->rows('missing'), false));
-    }
-
-    public function test_sort_by_total_rows_ascending(): void
-    {
-        $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withTotalRows('big', 30));
-        $buckets->add(BucketMother::withTotalRows('small', 5));
-        $buckets->add(BucketMother::withTotalRows('mid', 15));
-
-        static::assertSame(
-            ['small', 'mid', 'big'],
-            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByTotalRows()),
-        );
-    }
-
-    public function test_sort_by_total_rows_descending(): void
-    {
-        $buckets = new Buckets(new MemoryBuckets());
-        $buckets->add(BucketMother::withTotalRows('big', 30));
-        $buckets->add(BucketMother::withTotalRows('small', 5));
-        $buckets->add(BucketMother::withTotalRows('mid', 15));
-
-        static::assertSame(
-            ['big', 'mid', 'small'],
-            array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->sortByTotalRows(SortOrder::DESC)),
-        );
     }
 
     public function test_storage_returns_the_injected_instance(): void

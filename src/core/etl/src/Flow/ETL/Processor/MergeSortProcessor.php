@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\Bucketing\Bucket;
+use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
-use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
@@ -20,17 +21,25 @@ use function count;
 
 final class MergeSortProcessor implements Processor
 {
+    /**
+     * @param int<1, max> $mergeFanIn
+     * @param int<1, max> $batchSize
+     */
     public function __construct(
         private readonly References $refs,
-        private readonly BucketsStorage $storage,
+        private readonly Buckets $buckets,
         private readonly RandomValueGenerator $random,
         private readonly int $mergeFanIn = 10,
         private readonly int $batchSize = 1000,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->mergeFanIn < 1) {
             throw new InvalidArgumentException('Merge fan-in must be greater than 0, given: ' . $this->mergeFanIn);
         }
 
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
         }
@@ -49,19 +58,19 @@ final class MergeSortProcessor implements Processor
             }
         }
 
-        $merger = new KWayMerge($this->storage, $this->refs, $this->batchSize);
+        $merger = new KWayMerge($this->buckets->storage(), $this->refs, $this->batchSize);
 
         try {
+            $mergedIndex = 0;
+
             while (count($bucketIds) > $this->mergeFanIn) {
-                $bucketIds[] = $this->reduce(array_slice($bucketIds, 0, $this->mergeFanIn), $merger);
+                $bucketIds[] = $this->reduce(array_slice($bucketIds, 0, $this->mergeFanIn), $merger, $mergedIndex++);
                 array_splice($bucketIds, 0, $this->mergeFanIn);
             }
 
             yield from $merger->merge($bucketIds);
         } finally {
-            foreach ($bucketIds as $bucketId) {
-                $this->storage->remove($bucketId);
-            }
+            $this->buckets->clear();
         }
     }
 
@@ -70,17 +79,24 @@ final class MergeSortProcessor implements Processor
      *
      * @return string id of the bucket holding the merged runs
      */
-    private function reduce(array $group, KWayMerge $merger): string
+    private function reduce(array $group, KWayMerge $merger, int $index): string
     {
-        $bucketId = $this->random->string(32);
+        $bucketId = 'sort-merge-' . $this->random->string(16);
+
+        // registered before the spill so clear() covers a partially written merged run
+        $this->buckets->add(new Bucket($bucketId, 0, $index));
+        $totalRows = 0;
 
         foreach ($merger->merge($group) as $batch) {
-            $this->storage->append($bucketId, $batch);
+            $this->buckets->storage()->append($bucketId, $batch);
+            $totalRows += $batch->count();
         }
 
         foreach ($group as $id) {
-            $this->storage->remove($id);
+            $this->buckets->remove($id);
         }
+
+        $this->buckets->add(new Bucket($bucketId, $totalRows, $index));
 
         return $bucketId;
     }

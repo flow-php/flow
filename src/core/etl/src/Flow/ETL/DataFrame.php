@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -21,6 +20,7 @@ use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\JoinSteps;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Processor\BatchingByProcessor;
@@ -28,7 +28,6 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Processor\VoidProcessor;
@@ -547,18 +546,9 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline->add(
-            new HashJoinProcessor(
-                $dataFrame,
-                $on,
-                $type,
-                new Buckets($this->context->config->join->bucketing->storage),
-                new Buckets($this->context->config->join->bucketing->storage),
-                $this->context->config->randomValueGenerator(),
-                $this->context->config->join->bucketing->bucketsCount,
-                $this->context->config->join->bucketing->batchSize,
-            ),
-        );
+        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }

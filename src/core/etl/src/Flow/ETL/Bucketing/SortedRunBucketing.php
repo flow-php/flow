@@ -6,17 +6,25 @@ namespace Flow\ETL\Bucketing;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
 
+use function sprintf;
+
 final class SortedRunBucketing implements BucketingStrategy
 {
+    /**
+     * @param list<Reference> $by
+     * @param int<1, max> $runSize
+     */
     public function __construct(
-        private readonly References $refs,
+        private readonly array $by,
         private readonly int $runSize,
         private readonly RandomValueGenerator $random,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->runSize < 1) {
             throw new InvalidArgumentException('Run size must be greater than 0, given: ' . $this->runSize);
         }
@@ -29,6 +37,7 @@ final class SortedRunBucketing implements BucketingStrategy
      */
     public function bucketize(Generator $rows, BucketsStorage $storage): Generator
     {
+        $runId = $this->random->string(16);
         $buffer = new Rows();
         $index = 0;
 
@@ -36,20 +45,20 @@ final class SortedRunBucketing implements BucketingStrategy
             $buffer = $buffer->merge($batch);
 
             while ($buffer->count() >= $this->runSize) {
-                yield $this->spill($buffer->take($this->runSize), $storage, $index++);
+                yield $this->spill($buffer->take($this->runSize), $storage, $runId, $index++);
                 $buffer = $buffer->drop($this->runSize);
             }
         }
 
         if (!$buffer->empty()) {
-            yield $this->spill($buffer, $storage, $index);
+            yield $this->spill($buffer, $storage, $runId, $index);
         }
     }
 
-    private function spill(Rows $run, BucketsStorage $storage, int $index): Bucket
+    private function spill(Rows $run, BucketsStorage $storage, string $runId, int $index): Bucket
     {
-        $bucketId = $this->random->string(32);
-        $storage->set($bucketId, $run->sortBy(...$this->refs->all()));
+        $bucketId = sprintf('sort-%s-%d', $runId, $index);
+        $storage->set($bucketId, $run->sortBy(...$this->by));
 
         return new Bucket($bucketId, $run->count(), $index);
     }

@@ -33,15 +33,16 @@ final class MergeSortProcessorTest extends FlowTestCase
     public function test_descending_single_column(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $buckets = new Buckets($storage);
         $context = flow_context(config());
 
         $bucketing = new BucketingProcessor(
-            new SortedRunBucketing(refs(ref('id')->desc()), 2, new NativePHPRandomValueGenerator()),
-            new Buckets($storage),
+            new SortedRunBucketing([ref('id')->desc()], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
         );
         $merge = new MergeSortProcessor(
             refs(ref('id')->desc()),
-            $storage,
+            $buckets,
             new NativePHPRandomValueGenerator(),
             10,
             1000,
@@ -68,13 +69,14 @@ final class MergeSortProcessorTest extends FlowTestCase
     public function test_empty_input_yields_nothing_and_leaves_storage_empty(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $buckets = new Buckets($storage);
         $context = flow_context(config());
 
         $bucketing = new BucketingProcessor(
-            new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator()),
-            new Buckets($storage),
+            new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $storage, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
 
         $input = (static function () {
             yield from [];
@@ -90,13 +92,14 @@ final class MergeSortProcessorTest extends FlowTestCase
     public function test_heap_merges_overlapping_runs_without_reduction(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $buckets = new Buckets($storage);
         $context = flow_context(config());
 
         $bucketing = new BucketingProcessor(
-            new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator()),
-            new Buckets($storage),
+            new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $storage, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
 
         $input = (static function () {
             yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), [0, 10, 1, 11, 2, 12, 3, 13]));
@@ -114,13 +117,14 @@ final class MergeSortProcessorTest extends FlowTestCase
     public function test_sorts_by_multiple_columns(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $buckets = new Buckets($storage);
         $context = flow_context(config());
 
         $bucketing = new BucketingProcessor(
-            new SortedRunBucketing(refs('a', 'b'), 2, new NativePHPRandomValueGenerator()),
-            new Buckets($storage),
+            new SortedRunBucketing([ref('a'), ref('b')], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
         );
-        $merge = new MergeSortProcessor(refs('a', 'b'), $storage, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(refs('a', 'b'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
 
         $input = (static function () {
             yield rows(
@@ -148,13 +152,14 @@ final class MergeSortProcessorTest extends FlowTestCase
     public function test_multi_pass_reduction_produces_sorted_output(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $buckets = new Buckets($storage);
         $context = flow_context(config());
 
         $bucketing = new BucketingProcessor(
-            new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator()),
-            new Buckets($storage),
+            new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $storage, new NativePHPRandomValueGenerator(), 2, 1000);
+        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 2, 1000);
 
         $input = (static function () {
             yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), range(19, 0)));
@@ -174,7 +179,14 @@ final class MergeSortProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
 
-        new MergeSortProcessor(refs('id'), new MemoryBuckets(), new NativePHPRandomValueGenerator(), 10, 0);
+        // @mago-ignore analysis:invalid-argument
+        new MergeSortProcessor(
+            refs('id'),
+            new Buckets(new MemoryBuckets()),
+            new NativePHPRandomValueGenerator(),
+            10,
+            0,
+        );
     }
 
     public function test_throws_when_merge_fan_in_below_one(): void
@@ -182,6 +194,13 @@ final class MergeSortProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Merge fan-in must be greater than 0, given: 0');
 
-        new MergeSortProcessor(refs('id'), new MemoryBuckets(), new NativePHPRandomValueGenerator(), 0, 1000);
+        // @mago-ignore analysis:invalid-argument
+        new MergeSortProcessor(
+            refs('id'),
+            new Buckets(new MemoryBuckets()),
+            new NativePHPRandomValueGenerator(),
+            0,
+            1000,
+        );
     }
 }

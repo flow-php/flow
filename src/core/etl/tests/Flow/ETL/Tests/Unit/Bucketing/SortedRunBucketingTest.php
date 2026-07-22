@@ -13,30 +13,38 @@ use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function array_unique;
 use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function iterator_to_array;
 
 final class SortedRunBucketingTest extends FlowTestCase
 {
-    public function test_bucket_ids_are_random_hex(): void
+    public function test_bucket_ids_are_namespaced_per_run(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
         })();
 
+        $ids = [];
+
         foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
-            static::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $bucket->id);
+            static::assertMatchesRegularExpression('/^sort-[0-9a-f]{16}-\d+$/', $bucket->id);
+            $ids[] = $bucket->id;
         }
+
+        static::assertCount(2, $ids);
+        static::assertSame($ids, array_unique($ids));
     }
 
     public function test_emits_final_partial_run(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -53,7 +61,7 @@ final class SortedRunBucketingTest extends FlowTestCase
 
     public function test_runs_are_spilled_sorted_by_refs(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 3, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 3, new NativePHPRandomValueGenerator());
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
@@ -73,7 +81,7 @@ final class SortedRunBucketingTest extends FlowTestCase
 
     public function test_runs_are_yielded_as_soon_as_they_are_complete(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
@@ -90,7 +98,7 @@ final class SortedRunBucketingTest extends FlowTestCase
 
     public function test_splits_buffer_into_runs_of_run_size(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -108,7 +116,7 @@ final class SortedRunBucketingTest extends FlowTestCase
 
     public function test_runs_are_numbered_sequentially(): void
     {
-        $strategy = new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator());
+        $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -130,6 +138,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Run size must be greater than 0, given: 0');
 
-        new SortedRunBucketing(refs('id'), 0, new NativePHPRandomValueGenerator());
+        // @mago-ignore analysis:invalid-argument
+        new SortedRunBucketing([ref('id')], 0, new NativePHPRandomValueGenerator());
     }
 }

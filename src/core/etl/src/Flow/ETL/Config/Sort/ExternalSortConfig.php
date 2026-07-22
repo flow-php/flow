@@ -14,6 +14,5 @@ final readonly class ExternalSortConfig
     public function __construct(
         public BucketingConfig $bucketing,
         public int $runSize = 10_000,
-        public string $filesystemProtocol = 'file',
     ) {}
 }

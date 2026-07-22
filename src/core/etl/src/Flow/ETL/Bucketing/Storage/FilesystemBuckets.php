@@ -17,8 +17,6 @@ use Flow\Floe\FloeWriter;
 use Flow\Floe\Options;
 use Generator;
 
-use function count;
-
 final class FilesystemBuckets implements BucketsStorage
 {
     private readonly Path $cacheDir;
@@ -49,7 +47,7 @@ final class FilesystemBuckets implements BucketsStorage
 
     public function append(string $bucketId, Rows $rows): void
     {
-        foreach ($this->batches($rows) as $batch) {
+        foreach ($rows->chunks($this->batchSize) as $batch) {
             if (!isset($this->writers[$bucketId])) {
                 $writer = new FloeWriter(
                     $this->filesystem,
@@ -93,7 +91,7 @@ final class FilesystemBuckets implements BucketsStorage
 
         $writer = null;
 
-        foreach ($this->batches($rows) as $batch) {
+        foreach ($rows->chunks($this->batchSize) as $batch) {
             if ($writer === null) {
                 $writer = new FloeWriter(
                     $this->filesystem,
@@ -129,26 +127,5 @@ final class FilesystemBuckets implements BucketsStorage
     private function keyPath(string $key): Path
     {
         return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.floe');
-    }
-
-    /**
-     * @return Generator<Rows>
-     */
-    private function batches(Rows $rows): Generator
-    {
-        $batch = [];
-
-        foreach ($rows as $row) {
-            $batch[] = $row;
-
-            if (count($batch) >= $this->batchSize) {
-                yield new Rows(...$batch);
-                $batch = [];
-            }
-        }
-
-        if ($batch !== []) {
-            yield new Rows(...$batch);
-        }
     }
 }

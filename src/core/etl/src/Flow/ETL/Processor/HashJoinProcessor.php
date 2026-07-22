@@ -25,7 +25,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
-use Throwable;
 
 use function array_intersect_key;
 use function array_keys;
@@ -71,16 +70,6 @@ final readonly class HashJoinProcessor implements Processor
         try {
             $nullRightBuilder = $this->type === Join::left ? new NullRowBuilder($context->entryFactory()) : null;
 
-            $rightStrategy = $equalityKeys !== null && !$resident
-                ? new HashBucketing(
-                    $equalityKeys->rightRefs(),
-                    $this->bucketsCount,
-                    new NativeHasher(),
-                    $this->random,
-                    'join-right',
-                )
-                : new HashBucketing([], 1, new SingleBucketHasher(), $this->random, 'join-right');
-
             $rightRows = $this->tap(
                 $this->right->get(),
                 $nullRightBuilder,
@@ -88,9 +77,12 @@ final readonly class HashJoinProcessor implements Processor
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,
             );
 
-            foreach ($rightStrategy->bucketize($rightRows, $this->rightBuckets->storage()) as $bucket) {
-                $this->rightBuckets->add($bucket);
-            }
+            $this->bucketize(
+                $rightRows,
+                $this->rightBuckets,
+                $equalityKeys !== null && !$resident ? $equalityKeys->rightRefs() : null,
+                'join-right',
+            );
 
             $nullRightRow = $nullRightBuilder?->row();
 
@@ -121,19 +113,7 @@ final readonly class HashJoinProcessor implements Processor
                 return;
             }
 
-            $leftStrategy = $equalityKeys !== null
-                ? new HashBucketing(
-                    $equalityKeys->leftRefs(),
-                    $this->bucketsCount,
-                    new NativeHasher(),
-                    $this->random,
-                    'join-left',
-                )
-                : new HashBucketing([], 1, new SingleBucketHasher(), $this->random, 'join-left');
-
-            foreach ($leftStrategy->bucketize($leftRows, $this->leftBuckets->storage()) as $bucket) {
-                $this->leftBuckets->add($bucket);
-            }
+            $this->bucketize($leftRows, $this->leftBuckets, $equalityKeys?->leftRefs(), 'join-left');
 
             $nullLeftRow = $nullLeftBuilder?->row();
 
@@ -154,15 +134,23 @@ final readonly class HashJoinProcessor implements Processor
         } catch (DuplicatedEntriesException $e) {
             throw new JoinException($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
-            try {
-                $this->leftBuckets->clear();
-            } catch (Throwable) {
-            }
+            $this->leftBuckets->clear();
+            $this->rightBuckets->clear();
+        }
+    }
 
-            try {
-                $this->rightBuckets->clear();
-            } catch (Throwable) {
-            }
+    /**
+     * @param Generator<Rows> $rows
+     * @param null|list<Reference> $refs - null hashes every row into a single bucket (non-equality join / resident side)
+     */
+    private function bucketize(Generator $rows, Buckets $buckets, ?array $refs, string $namespace): void
+    {
+        $strategy = $refs !== null
+            ? new HashBucketing($refs, $this->bucketsCount, new NativeHasher(), $this->random, $namespace)
+            : new HashBucketing([], 1, new SingleBucketHasher(), $this->random, $namespace);
+
+        foreach ($strategy->bucketize($rows, $buckets->storage()) as $bucket) {
+            $buckets->add($bucket);
         }
     }
 

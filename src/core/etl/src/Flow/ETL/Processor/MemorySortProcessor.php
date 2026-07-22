@@ -15,8 +15,8 @@ use Generator;
 use function max;
 
 /**
- * Buffers all rows and sorts them in memory. Registered by DataFrame::sortBy when the sort algorithm is
- * MEMORY_SORT.
+ * Buffers all rows and sorts them in memory. Registered by SortSteps when the sort algorithm is
+ * memory_sort().
  *
  * @internal
  */

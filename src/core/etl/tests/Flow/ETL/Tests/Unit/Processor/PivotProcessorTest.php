@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Tests\FlowTestCase;
@@ -19,6 +20,15 @@ use function Flow\ETL\DSL\sum;
 
 final class PivotProcessorTest extends FlowTestCase
 {
+    public function test_throws_when_batch_size_below_one(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
+
+        // @mago-ignore analysis:invalid-argument
+        new PivotProcessor(new GroupBy(ref('date')), 0);
+    }
+
     public function test_pivots_grouped_rows(): void
     {
         $groupBy = new GroupBy(ref('date'));

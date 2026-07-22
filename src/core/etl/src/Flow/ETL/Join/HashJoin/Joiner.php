@@ -15,10 +15,9 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
 use Generator;
-
-use function count;
 
 final class Joiner
 {
@@ -162,19 +161,16 @@ final class Joiner
 
         if ($this->type === Join::right) {
             $nullLeftRow ??= $nullLeftBuilder?->row() ?? new Row(Entries::recreate([]));
-            $joined = [];
+            $buffer = new RowsBuffer($this->batchSize);
 
             foreach ($hashTable->unmatchedRows() as $rightRow) {
-                $joined[] = $this->merge($nullLeftRow, $rightRow);
-
-                if (count($joined) >= $this->batchSize) {
-                    yield new Rows(...$joined);
-                    $joined = [];
+                if (null !== ($batch = $buffer->add($this->merge($nullLeftRow, $rightRow)))) {
+                    yield $batch;
                 }
             }
 
-            if ($joined !== []) {
-                yield new Rows(...$joined);
+            if (null !== ($batch = $buffer->flush())) {
+                yield $batch;
             }
         }
     }
@@ -258,19 +254,18 @@ final class Joiner
 
         if ($this->type === Join::left || $this->type === Join::left_anti) {
             $nullRightRow ??= $nullRightBuilder?->row() ?? new Row(Entries::recreate([]));
-            $joined = [];
+            $buffer = new RowsBuffer($this->batchSize);
 
             foreach ($hashTable->unmatchedRows() as $leftRow) {
-                $joined[] = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow;
+                $joined = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow;
 
-                if (count($joined) >= $this->batchSize) {
-                    yield new Rows(...$joined);
-                    $joined = [];
+                if (null !== ($batch = $buffer->add($joined))) {
+                    yield $batch;
                 }
             }
 
-            if ($joined !== []) {
-                yield new Rows(...$joined);
+            if (null !== ($batch = $buffer->flush())) {
+                yield $batch;
             }
         }
     }

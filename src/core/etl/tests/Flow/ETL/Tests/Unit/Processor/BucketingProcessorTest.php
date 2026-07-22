@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Bucketing\HashBucketing;
@@ -15,12 +16,12 @@ use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function count;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function iterator_to_array;
@@ -65,10 +66,10 @@ final class BucketingProcessorTest extends FlowTestCase
 
         static::assertCount(count($buckets->all()), $result);
 
+        $registeredIds = array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->all());
+
         foreach ($result as $batch) {
-            /** @var string $bucketId */
-            $bucketId = $batch->first()->valueOf(BucketShape::id->value);
-            static::assertTrue($buckets->has($bucketId));
+            static::assertContains($batch->first()->valueOf(BucketShape::id->value), $registeredIds);
         }
     }
 
@@ -76,7 +77,7 @@ final class BucketingProcessorTest extends FlowTestCase
     {
         $buckets = new Buckets(new MemoryBuckets());
         $processor = new BucketingProcessor(
-            new SortedRunBucketing(refs('id'), 2, new NativePHPRandomValueGenerator()),
+            new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
             $buckets,
         );
 

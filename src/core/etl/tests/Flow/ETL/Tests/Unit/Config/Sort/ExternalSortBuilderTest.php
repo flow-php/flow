@@ -32,17 +32,16 @@ final class ExternalSortBuilderTest extends FlowTestCase
         static::assertSame(100, $config->bucketing->bucketsCount);
         static::assertSame(1000, $config->bucketing->batchSize);
         static::assertSame(10_000, $config->runSize);
-        static::assertSame('file', $config->filesystemProtocol);
     }
 
     public function test_filesystem_protocol_is_used_for_the_default_storage(): void
     {
+        // the fstab has no 'file' mount, a successful build proves the custom protocol was used
         $config = external_sort()
             ->filesystemProtocol('custom-sort')
             ->build(fstab(native_local_filesystem('custom-sort')), Path::realpath(__DIR__));
 
         static::assertInstanceOf(FilesystemBuckets::class, $config->bucketing->storage);
-        static::assertSame('custom-sort', $config->filesystemProtocol);
     }
 
     public function test_injected_storage_wins_over_the_default(): void

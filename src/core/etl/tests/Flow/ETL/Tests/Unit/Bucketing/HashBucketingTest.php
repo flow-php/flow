@@ -202,6 +202,7 @@ final class HashBucketingTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Buckets count must be greater than 0, given: 0');
 
+        // @mago-ignore analysis:invalid-argument
         new HashBucketing([ref('id')], 0, new NativeHasher(), new NativePHPRandomValueGenerator());
     }
 }

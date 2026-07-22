@@ -11,7 +11,6 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
 
-use function array_map;
 use function count;
 use function hexdec;
 use function sprintf;
@@ -23,6 +22,7 @@ final class HashBucketing implements BucketingStrategy
 
     /**
      * @param list<Reference> $by
+     * @param int<1, max> $bucketsCount
      */
     public function __construct(
         array $by,
@@ -32,6 +32,8 @@ final class HashBucketing implements BucketingStrategy
         private readonly string $namespace = 'bucket',
         bool $nullOnMissing = false,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->bucketsCount < 1) {
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
@@ -55,22 +57,15 @@ final class HashBucketing implements BucketingStrategy
         $indexes = [];
 
         foreach ($rows as $batch) {
-            /** @var list<RowKey> $keys */
-            $keys = [];
-
-            foreach ($batch as $row) {
-                $keys[] = new RowKey($row, $this->keyValues->ofRow($row));
-            }
-
-            $hashes = $this->hasher->hash(array_map(static fn(RowKey $key): array => $key->values, $keys));
+            $hashes = $this->hasher->hash($this->keyValues->of($batch));
 
             /** @var array<string, list<Row>> $groups */
             $groups = [];
 
-            foreach ($keys as $i => $key) {
+            foreach ($batch as $i => $row) {
                 $index = (int) hexdec(substr($hashes[$i], 0, 8)) % $this->bucketsCount;
                 $id = sprintf('%s-%s-%d', $this->namespace, $runId, $index);
-                $groups[$id][] = $key->row;
+                $groups[$id][] = $row;
                 $indexes[$id] = $index;
             }
 

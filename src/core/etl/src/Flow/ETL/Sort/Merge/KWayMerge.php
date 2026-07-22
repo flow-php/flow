@@ -7,18 +7,22 @@ namespace Flow\ETL\Sort\Merge;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
 use Generator;
 
-use function count;
-
 final readonly class KWayMerge
 {
+    /**
+     * @param int<1, max> $batchSize
+     */
     public function __construct(
         private BucketsStorage $storage,
         private References $refs,
         private int $batchSize = 1000,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
         }
@@ -46,15 +50,13 @@ final readonly class KWayMerge
             }
         }
 
-        $batch = [];
+        $buffer = new RowsBuffer($this->batchSize);
 
         while (!$heap->isEmpty()) {
             $top = $heap->extract();
-            $batch[] = $top->row;
 
-            if (count($batch) >= $this->batchSize) {
-                yield new Rows(...$batch);
-                $batch = [];
+            if (null !== ($batch = $buffer->add($top->row))) {
+                yield $batch;
             }
 
             $cursor = $cursors[$top->bucketId];
@@ -65,8 +67,8 @@ final readonly class KWayMerge
             }
         }
 
-        if ($batch !== []) {
-            yield new Rows(...$batch);
+        if (null !== ($batch = $buffer->flush())) {
+            yield $batch;
         }
     }
 }

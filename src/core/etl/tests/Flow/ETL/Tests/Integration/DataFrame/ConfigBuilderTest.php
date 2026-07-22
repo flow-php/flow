@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
@@ -153,12 +154,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame('file', $config->cache->filesystemMount);
     }
 
-    public function test_default_external_sort_filesystem_protocol_is_file(): void
+    public function test_default_external_sort_builds_filesystem_storage(): void
     {
         $config = config_builder()->build();
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
-        static::assertSame('file', $config->sort->filesystemProtocol);
+        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
     public function test_default_hydrator_is_the_adaptive_hydrator(): void
@@ -191,7 +192,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
             ->build();
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
-        static::assertSame('custom-sort', $config->sort->filesystemProtocol);
+        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
     public function test_filesystems_mounted_after_telemetry_are_wrapped(): void

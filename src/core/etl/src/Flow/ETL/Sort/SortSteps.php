@@ -29,15 +29,13 @@ final readonly class SortSteps
         }
 
         $random = $config->randomValueGenerator();
+        $buckets = new Buckets($config->sort->bucketing->storage);
 
         return [
-            new BucketingProcessor(
-                new SortedRunBucketing($refs, $config->sort->runSize, $random),
-                new Buckets($config->sort->bucketing->storage),
-            ),
+            new BucketingProcessor(new SortedRunBucketing($refs->all(), $config->sort->runSize, $random), $buckets),
             new MergeSortProcessor(
                 $refs,
-                $config->sort->bucketing->storage,
+                $buckets,
                 $random,
                 $config->sort->bucketing->bucketsCount,
                 $config->sort->bucketing->batchSize,

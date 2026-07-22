@@ -128,6 +128,7 @@ final class KWayMergeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
 
+        // @mago-ignore analysis:invalid-argument
         new KWayMerge(new MemoryBuckets(), refs(ref('id')->asc()), batchSize: 0);
     }
 }
