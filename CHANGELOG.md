@@ -53,6 +53,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [3cf520](https://github.com/flow-php/flow/commit/3cf520cff5b0eb374d743f6ead93958dcbada749) - **docs: refresh sponsor logos and add Blacksmit** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - External sort rebuilt on the bucketing engine.** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Grace hash join rebuilt on the bucketing engine, building the hash table from the smaller bucket.** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Mixed join expressions with equalities now run as hash join instead of nested loop.** - [@norberttech](https://github.com/norberttech)
