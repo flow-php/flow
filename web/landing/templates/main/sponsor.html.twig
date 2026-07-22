@@ -75,21 +75,24 @@
         </div>
 
         {% set sponsors = [
-            {url: 'https://www.datadoghq.com/',                                                                                                       name: 'Datadog',      img: asset('images/sponsors/datadog.png')},
-            {url: 'https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge',     name: 'DigitalOcean', img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/h_146,w_450/digital-ocean_slmm2i.svg'},
-            {url: 'https://blackfire.io/',                                                                                                            name: 'Blackfire',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/blackfire_xiugzv.png'},
-            {url: 'https://sentry.io',                                                                                                                name: 'Sentry',       img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/h_200/sentry_ai9hi6.svg'},
-            {url: 'https://cloudflare.com/',                                                                                                          name: 'Cloudflare',   img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/cloudflare_logjlf.png'},
-            {url: 'https://tailscale.com/',                                                                                                           name: 'Tailscale',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/tailscale_biexgf.png',  light: true},
-            {url: 'https://1password.com/',                                                                                                           name: '1Password',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/1Password_sjoj4n.png'},
+            {url: 'https://blacksmith.sh/',                                                                                                           name: 'Blacksmith',   slug: 'blacksmith',    size: 'h-8'},
+            {url: 'https://www.datadoghq.com/',                                                                                                       name: 'Datadog',      slug: 'datadog',       size: 'h-24'},
+            {url: 'https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge',     name: 'DigitalOcean', slug: 'digitalocean',  size: 'h-24'},
+            {url: 'https://blackfire.io/',                                                                                                            name: 'Blackfire',    slug: 'blackfire',     size: 'h-16'},
+            {url: 'https://sentry.io',                                                                                                                name: 'Sentry',       slug: 'sentry',        size: 'h-10'},
+            {url: 'https://cloudflare.com/',                                                                                                          name: 'Cloudflare',   slug: 'cloudflare',    size: 'h-9'},
+            {url: 'https://tailscale.com/',                                                                                                           name: 'Tailscale',    slug: 'tailscale',     size: 'h-9'},
+            {url: 'https://1password.com/',                                                                                                           name: '1Password',    slug: '1password',     size: 'h-10'},
         ] %}
 
         <div class="mt-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {% for sponsor in sponsors %}
                 <a href="{{ sponsor.url }}" target="_blank" rel="noopener"
-                   class="card card-hover flex h-44 items-center justify-center no-underline {{ sponsor.light|default(false) ? '!bg-white/95 hover:!bg-white' : '' }}">
-                    <img src="{{ sponsor.img }}" alt="{{ sponsor.name }}" loading="lazy"
-                         class="max-h-20 max-w-[80%] w-auto h-auto object-contain"/>
+                   class="card card-hover flex h-44 items-center justify-center no-underline">
+                    <img src="{{ asset('images/sponsors/' ~ sponsor.slug ~ '-light.svg') }}" alt="{{ sponsor.name }}" loading="lazy"
+                         class="{{ sponsor.size }} max-w-[75%] w-auto object-contain dark:hidden"/>
+                    <img src="{{ asset('images/sponsors/' ~ sponsor.slug ~ '-dark.svg') }}" alt="{{ sponsor.name }}" loading="lazy"
+                         class="{{ sponsor.size }} max-w-[75%] w-auto object-contain hidden dark:block"/>
                 </a>
             {% endfor %}
         </div>
