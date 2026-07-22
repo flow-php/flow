@@ -16,8 +16,6 @@ use function is_array;
 
 final readonly class Metadata
 {
-    public const string FROM_NULL = 'from_null';
-
     /**
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $map
      */
@@ -110,6 +108,10 @@ final readonly class Metadata
 
     public function isEqual(self $metadata): bool
     {
+        if ($this->map === $metadata->map) {
+            return true;
+        }
+
         return (new ArrayComparison())->equals($this->map, $metadata->map);
     }
 

@@ -337,19 +337,19 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +--------------+-----------+----------+--------------------+
-            |         name |      type | nullable |           metadata |
-            +--------------+-----------+----------+--------------------+
-            |     order_id |      uuid |    false |                 [] |
-            |   created_at |  datetime |    false |                 [] |
-            |   updated_at |  datetime |    false |                 [] |
-            | cancelled_at |    string |     true | {"from_null":true} |
-            |  total_price |     float |    false |                 [] |
-            |     discount |     float |    false |                 [] |
-            |     customer | structure |    false |                 [] |
-            |      address | structure |    false |                 [] |
-            |        notes |      list |    false |                 [] |
-            +--------------+-----------+----------+--------------------+
+            +--------------+-----------+----------+----------+
+            |         name |      type | nullable | metadata |
+            +--------------+-----------+----------+----------+
+            |     order_id |      uuid |    false |       [] |
+            |   created_at |  datetime |    false |       [] |
+            |   updated_at |  datetime |    false |       [] |
+            | cancelled_at |      null |     true |       [] |
+            |  total_price |     float |    false |       [] |
+            |     discount |     float |    false |       [] |
+            |     customer | structure |    false |       [] |
+            |      address | structure |    false |       [] |
+            |        notes |      list |    false |       [] |
+            +--------------+-----------+----------+----------+
             9 rows
 
             OUTPUT, $tester->getDisplay());

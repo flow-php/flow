@@ -78,6 +78,15 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?float>|Entry<?int>
      */
+    /**
+     * @return null|list<Reference> null when $exact is a ScalarFunction - its entries cannot be
+     *                              statically enumerated, so spill column pruning must be disabled
+     */
+    public function references(): ?array
+    {
+        return $this->exact instanceof ScalarFunction ? null : [$this->ref];
+    }
+
     public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {

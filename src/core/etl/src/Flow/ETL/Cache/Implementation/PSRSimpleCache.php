@@ -11,10 +11,11 @@ use Flow\ETL\Rows;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
-use Generator;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function is_string;
 
 final readonly class PSRSimpleCache implements Cache
@@ -45,7 +46,7 @@ final readonly class PSRSimpleCache implements Cache
         }
 
         try {
-            return $this->serializer->unserialize(is_string($serializedValue) ? $serializedValue : '', [Rows::class]);
+            return unserialize_from_string($this->serializer, is_string($serializedValue) ? $serializedValue : '');
         } catch (SerializationException $e) {
             throw new KeyNotInCacheException($key, $e);
         }
@@ -60,18 +61,8 @@ final readonly class PSRSimpleCache implements Cache
         }
     }
 
-    /**
-     * @throws KeyNotInCacheException
-     *
-     * @return Generator<int, Rows>
-     */
-    public function read(string $key): Generator
-    {
-        yield $this->get($key);
-    }
-
     public function set(string $key, Rows $value): void
     {
-        $this->cache->set($key, $this->serializer->serialize($value), $this->ttl);
+        $this->cache->set($key, serialize_to_string($this->serializer, $value), $this->ttl);
     }
 }

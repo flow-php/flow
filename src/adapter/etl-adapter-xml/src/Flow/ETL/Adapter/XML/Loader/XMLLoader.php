@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Loader;
 
-use Flow\ETL\Adapter\XML\RowsNormalizer;
-use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
-use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
+use Flow\ETL\Adapter\XML\XMLEncoder;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
@@ -28,7 +26,11 @@ final class XMLLoader implements Closure, FileLoader, Loader
 {
     private string $attributePrefix = '_';
 
+    private string $dateFormat = 'Y-m-d';
+
     private string $dateTimeFormat = 'Y-m-d\TH:i:s.uP';
+
+    private ?XMLEncoder $encoder = null;
 
     private string $listElementName = 'element';
 
@@ -86,21 +88,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
-            $normalizer = new RowsNormalizer(
-                new EntryNormalizer(
-                    new PHPValueNormalizer(
-                        $this->attributePrefix,
-                        $this->dateTimeFormat,
-                        $this->listElementName,
-                        $this->mapElementName,
-                        $this->mapElementKeyName,
-                        $this->mapElementValueName,
-                    ),
-                ),
-                $this->rowElementName,
-            );
-
-            $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
+            $this->write($rows, $rows->partitions()->toArray(), $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {
@@ -113,6 +101,13 @@ final class XMLLoader implements Closure, FileLoader, Loader
     public function withAttributePrefix(string $attributePrefix): self
     {
         $this->attributePrefix = $attributePrefix;
+
+        return $this;
+    }
+
+    public function withDateFormat(string $dateFormat): self
+    {
+        $this->dateFormat = $dateFormat;
 
         return $this;
     }
@@ -179,7 +174,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context, RowsNormalizer $normalizer): void
+    public function write(Rows $nextRows, array $partitions, FlowContext $context): void
     {
         $streams = $context->streams();
 
@@ -200,23 +195,34 @@ final class XMLLoader implements Closure, FileLoader, Loader
             $stream = $streams->writeTo($this->path, $partitions);
         }
 
-        $this->writeXML($nextRows, $stream, $normalizer);
+        $this->writeXML($nextRows, $stream, $context);
     }
 
-    /**
-     * @param Rows $rows
-     * @param DestinationStream $stream
-     */
-    public function writeXML(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
+    public function writeXML(Rows $rows, DestinationStream $stream, FlowContext $context): void
     {
         if (!count($rows)) {
             return;
         }
 
-        foreach ($normalizer->normalize($rows) as $node) {
-            $stream->append($this->xmlWriter->write($node) . "\n");
+        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $node) {
+            $stream->append($node . "\n");
         }
 
         $this->writes[$stream->path()->path()]++;
+    }
+
+    private function encoder(): XMLEncoder
+    {
+        return $this->encoder ??= new XMLEncoder(
+            $this->xmlWriter,
+            $this->attributePrefix,
+            $this->dateTimeFormat,
+            $this->dateFormat,
+            $this->listElementName,
+            $this->mapElementName,
+            $this->mapElementKeyName,
+            $this->mapElementValueName,
+            $this->rowElementName,
+        );
     }
 }

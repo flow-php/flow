@@ -7,12 +7,15 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Config\Grouping\GroupingConfig;
-use Flow\ETL\Config\Sort\SortConfig;
+use Flow\ETL\Config\Grouping\HashGroupByConfig;
+use Flow\ETL\Config\Join\HashJoinConfig;
+use Flow\ETL\Config\Sort\ExternalSortConfig;
+use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Hydrator;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
@@ -23,6 +26,10 @@ use Psr\Clock\ClockInterface;
  */
 final readonly class Config
 {
+    /**
+     * @param Hydrator $hydrator
+     * @param int<1, max> $extractorBatchSize
+     */
     public function __construct(
         private string $id,
         private string $name,
@@ -33,13 +40,17 @@ final readonly class Config
         private FilesystemStreams $filesystemStreams,
         private Optimizer $optimizer,
         private bool $putInputIntoRows,
-        private EntryFactory $entryFactory,
+        private Hydrator $hydrator,
         public CacheConfig $cache,
-        public SortConfig $sort,
+        public MemorySortConfig|ExternalSortConfig $sort,
         private ?Analyze $analyze,
         public TelemetryConfig $telemetry,
-        public GroupingConfig $grouping,
+        public HashGroupByConfig $grouping,
+        public HashJoinConfig $join,
+        private int $extractorBatchSize = 1000,
+        private EntryFactory $entryFactory = new EntryFactory(),
         private Calculator $calculator = new Calculator(),
+        private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
 
     public static function builder(): ConfigBuilder
@@ -67,11 +78,6 @@ final readonly class Config
         return $this->clock;
     }
 
-    public function entryFactory(): EntryFactory
-    {
-        return $this->entryFactory;
-    }
-
     public function filesystemStreams(): FilesystemStreams
     {
         return $this->filesystemStreams;
@@ -80,6 +86,27 @@ final readonly class Config
     public function fstab(): FilesystemTable
     {
         return $this->filesystemTable;
+    }
+
+    public function entryFactory(): EntryFactory
+    {
+        return $this->entryFactory;
+    }
+
+    /**
+     * @return int<1, max>
+     */
+    public function extractorBatchSize(): int
+    {
+        return $this->extractorBatchSize;
+    }
+
+    /**
+     * @return Hydrator
+     */
+    public function hydrator(): Hydrator
+    {
+        return $this->hydrator;
     }
 
     public function id(): string
@@ -95,6 +122,11 @@ final readonly class Config
     public function optimizer(): Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function randomValueGenerator(): RandomValueGenerator
+    {
+        return $this->randomValueGenerator;
     }
 
     public function serializer(): Serializer

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\GroupBy;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\BucketAggregation;
 use Flow\ETL\Tests\FlowTestCase;
@@ -20,6 +21,36 @@ use function Flow\ETL\DSL\sum;
 
 final class BucketAggregationTest extends FlowTestCase
 {
+    public function test_batch_size_bounds_result_batches(): void
+    {
+        $groupBy = new GroupBy(ref('k'));
+        $groupBy->aggregate(sum(ref('v')));
+
+        $batches = (static function () {
+            yield rows(row(str_entry('k', 'a'), int_entry('v', 1)), row(str_entry('k', 'b'), int_entry('v', 10)));
+        })();
+
+        $result = iterator_to_array(
+            (new BucketAggregation(batchSize: 1))->aggregate($batches, flow_context(), $groupBy),
+            preserve_keys: false,
+        );
+
+        static::assertCount(2, $result);
+
+        foreach ($result as $batch) {
+            static::assertCount(1, $batch);
+        }
+    }
+
+    public function test_throws_when_batch_size_below_one(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
+
+        // @mago-ignore analysis:invalid-argument
+        new BucketAggregation(0);
+    }
+
     public function test_folds_groups_across_multiple_batches(): void
     {
         $context = flow_context();

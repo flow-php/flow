@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
@@ -211,42 +212,17 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertInstanceOf($expectedClass, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null(): void
+    public function test_merge_with_null_definition_keeps_original_type(): void
     {
-        $def1 = map_schema('col', type_map(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-        $def2 = map_schema('col', type_map(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-
-        $merged = $def1->merge($def2);
+        $merged = map_schema('col', type_map(type_string(), type_integer()), false)->merge(null_schema('col'));
 
         static::assertInstanceOf(MapDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
-        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null(): void
+    public function test_merge_when_this_is_null_definition(): void
     {
-        $nullDef = map_schema('col', type_map(type_string(), type_integer()), true, Metadata::fromArray([
-            Metadata::FROM_NULL => true,
-        ]));
-        $def = map_schema('col', type_map(type_string(), type_integer()), false);
-
-        $merged = $nullDef->merge($def);
-
-        static::assertInstanceOf(MapDefinition::class, $merged);
-        static::assertTrue($merged->isNullable());
-        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
-    }
-
-    public function test_merge_with_assumed_null_keeps_original_type(): void
-    {
-        $def = map_schema('col', type_map(type_string(), type_integer()), false);
-        $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def->merge($nullDef);
+        $merged = null_schema('col')->merge(map_schema('col', type_map(type_string(), type_integer()), false));
 
         static::assertInstanceOf(MapDefinition::class, $merged);
         static::assertTrue($merged->isNullable());

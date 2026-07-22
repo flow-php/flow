@@ -26,7 +26,7 @@ use Doctrine\DBAL\Types\TimeImmutableType;
 use Doctrine\DBAL\Types\TimeType as DoctrineTimeType;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\Schema;
 use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -133,23 +133,23 @@ final class TypesMap
     }
 
     /**
-     * Build DBAL types array from a row's entries.
+     * Build DBAL types array from a schema's definitions.
      *
      * @return array<string, DbalType> Column name => DBAL Type instance
      */
-    public function flowRowTypes(Row $row): array
+    public function flowSchemaTypes(Schema $schema): array
     {
         $types = [];
         $typeClassToName = array_flip(DbalType::getTypesMap());
 
-        foreach ($row->entries() as $entry) {
-            $dbalTypeClass = $this->toDbalType($entry->type()::class);
+        foreach ($schema->definitions() as $definition) {
+            $dbalTypeClass = $this->toDbalType($definition->type()::class);
 
             if (!array_key_exists($dbalTypeClass, $typeClassToName)) {
                 throw new BaseInvalidArgumentException(sprintf('DBAL type "%s" is not registered.', $dbalTypeClass));
             }
 
-            $types[$entry->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
+            $types[$definition->entry()->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
         }
 
         return $types;

@@ -7,7 +7,7 @@ namespace Flow\ETL\DataFrame;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Processor\GroupByProcessor;
+use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Row\Reference;
 
 final readonly class GroupedDataFrame
@@ -21,7 +21,18 @@ final readonly class GroupedDataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        return $this->addProcessor(new GroupByProcessor($this->groupBy));
+        $register = function (GroupBy $groupBy): void {
+            // @mago-ignore analysis:non-existent-property,null-property-access,null-argument
+            foreach (GroupBySteps::of($groupBy, $this->context->config) as $step) {
+                // @mago-ignore analysis:non-existent-property,method-access-on-null
+                $this->pipeline->add($step);
+            }
+        };
+
+        // @mago-ignore analysis:invalid-method-access
+        $register->bindTo($this->df, $this->df)($this->groupBy);
+
+        return $this->df;
     }
 
     public function pivot(Reference $ref): self
@@ -29,18 +40,5 @@ final readonly class GroupedDataFrame
         $this->groupBy->pivot($ref);
 
         return $this;
-    }
-
-    private function addProcessor(GroupByProcessor $processor): DataFrame
-    {
-        $pipelineAdder = function (GroupByProcessor $processor): void {
-            // @mago-ignore analysis:non-existent-property,method-access-on-null
-            $this->pipeline->add($processor);
-        };
-
-        // @mago-ignore analysis:invalid-method-access
-        $pipelineAdder->bindTo($this->df, $this->df)($processor);
-
-        return $this->df;
     }
 }

@@ -16,16 +16,25 @@ use function Flow\ETL\DSL\str_schema;
 
 final class EvolvingValidatorTest extends FlowTestCase
 {
-    public function test_given_having_less_definitions_than_expected(): void
+    public function test_adding_a_new_non_nullable_column_is_invalid(): void
     {
         $expected = schema(int_schema('id'), str_schema('name'));
 
-        $given = schema(int_schema('id'));
+        $given = schema(int_schema('id'), str_schema('name'), bool_schema('active'));
 
         static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
-    public function test_context_collects_missing_and_mismatched_definitions_ignoring_added_fields(): void
+    public function test_adding_a_new_nullable_column_is_valid(): void
+    {
+        $expected = schema(int_schema('id'), str_schema('name'));
+
+        $given = schema(int_schema('id'), str_schema('name'), bool_schema('active', nullable: true));
+
+        static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
+    }
+
+    public function test_context_collects_missing_mismatched_and_unexpected_required_definitions(): void
     {
         $context = schema_validate(
             expected: schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
@@ -36,13 +45,28 @@ final class EvolvingValidatorTest extends FlowTestCase
         static::assertFalse($context->isValid());
         static::assertEquals([int_schema('id')], $context->missingDefinitions());
         static::assertEquals(
-            [
-                new MismatchedDefinition(str_schema('name', nullable: true), str_schema('name')),
-                new MismatchedDefinition(bool_schema('active'), str_schema('active')),
-            ],
+            [new MismatchedDefinition(bool_schema('active'), str_schema('active'))],
             $context->mismatchedDefinitions(),
         );
-        static::assertSame([], $context->unexpectedDefinitions());
+        static::assertEquals([bool_schema('extra')], $context->unexpectedDefinitions());
+    }
+
+    public function test_omitting_a_non_nullable_column_is_invalid(): void
+    {
+        $expected = schema(int_schema('id'), str_schema('name'));
+
+        $given = schema(int_schema('id'));
+
+        static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
+    }
+
+    public function test_omitting_a_nullable_column_is_valid(): void
+    {
+        $expected = schema(int_schema('id'), str_schema('name', nullable: true));
+
+        $given = schema(int_schema('id'));
+
+        static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
     public function test_given_having_same_number_of_definitions_but_different_names(): void
@@ -54,25 +78,25 @@ final class EvolvingValidatorTest extends FlowTestCase
         static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
-    public function test_given_schema_adding_new_field(): void
-    {
-        $expected = schema(int_schema('id'), str_schema('name'));
-
-        $given = schema(int_schema('id'), str_schema('name'), bool_schema('active'));
-
-        static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
-    }
-
-    public function test_given_schema_changing_nullable_field_to_non_nullable(): void
+    public function test_narrowing_a_nullable_expected_column_to_non_nullable_is_valid(): void
     {
         $expected = schema(int_schema('id'), str_schema('name', nullable: true));
 
         $given = schema(int_schema('id'), str_schema('name'));
 
+        static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
+    }
+
+    public function test_widening_a_non_nullable_expected_column_to_nullable_is_invalid(): void
+    {
+        $expected = schema(int_schema('id'), str_schema('name'));
+
+        $given = schema(int_schema('id'), str_schema('name', nullable: true));
+
         static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
-    public function test_given_schema_changing_type_of_field(): void
+    public function test_changing_the_type_of_a_column_is_invalid(): void
     {
         $expected = schema(int_schema('id'), str_schema('name'));
 
@@ -81,7 +105,7 @@ final class EvolvingValidatorTest extends FlowTestCase
         static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
-    public function test_given_schema_is_the_same_as_expected_schema(): void
+    public function test_identical_schema_is_valid(): void
     {
         $expected = schema(int_schema('id'), str_schema('name'));
 
@@ -90,16 +114,7 @@ final class EvolvingValidatorTest extends FlowTestCase
         static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
     }
 
-    public function test_given_schema_making_non_nullable_field_into_nullable(): void
-    {
-        $expected = schema(int_schema('id'), str_schema('name'));
-
-        $given = schema(int_schema('id'), str_schema('name', nullable: true));
-
-        static::assertTrue(schema_validate($expected, $given, schema_evolving_validator())->isValid());
-    }
-
-    public function test_given_totally_different(): void
+    public function test_totally_different_schema_is_invalid(): void
     {
         $expected = schema(int_schema('id'), str_schema('name'));
 

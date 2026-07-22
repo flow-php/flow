@@ -6,7 +6,7 @@ namespace Flow\Serializer\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
@@ -19,10 +19,13 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function range;
+use function serialize;
 
 final class NativePHPSerializerTest extends TestCase
 {
@@ -46,8 +49,16 @@ final class NativePHPSerializerTest extends TestCase
 
         $serializer = new NativePHPSerializer();
 
-        $serialized = $serializer->serialize($rows);
+        $serialized = serialize_to_string($serializer, $rows);
 
-        static::assertEquals($rows, $serializer->unserialize($serialized, [Rows::class]));
+        static::assertEquals($rows, unserialize_from_string($serializer, $serialized));
+    }
+
+    public function test_unserialize_of_non_rows_payload_throws(): void
+    {
+        $this->expectException(SerializationException::class);
+        $this->expectExceptionMessage('must return instance of');
+
+        unserialize_from_string(new NativePHPSerializer(), serialize('just a string'));
     }
 }

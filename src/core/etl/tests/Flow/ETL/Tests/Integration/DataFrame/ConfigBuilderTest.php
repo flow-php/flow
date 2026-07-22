@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
-use Flow\ETL\Sort\SortAlgorithms;
+use Flow\ETL\Config\Sort\ExternalSortConfig;
+use Flow\ETL\Config\Sort\MemorySortConfig;
+use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -17,7 +22,9 @@ use Override;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\telemetry_options;
@@ -33,7 +40,6 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
-use function iterator_to_array;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -56,37 +62,39 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame('custom-cache', $config->cache->filesystemMount);
     }
 
-    public function test_cache_serializer_mode_reaches_the_default_cache(): void
+    public function test_config_serializer_reaches_the_default_cache(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-serializer-mode');
 
-        $config = config_builder()->cacheSerializerBatchSize(2)->build();
+        $config = config_builder()->serializer($spy = new SpySerializer())->build();
 
-        $config->cache->cache->set('key', rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        ));
+        $config->cache->cache->set(
+            'key',
+            $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))),
+        );
 
-        static::assertCount(2, iterator_to_array($config->cache->cache->read('key')));
+        static::assertEquals($rows, $config->cache->cache->get('key'));
+        static::assertCount(1, $spy->serialized);
+        static::assertCount(1, $spy->unserialized);
 
         $config->cache->cache->clear();
     }
 
-    public function test_custom_cache_wins_over_serializer_mode(): void
+    public function test_custom_cache_is_untouched_by_config_serializer(): void
     {
         $custom = new InMemoryCache();
 
-        $config = config_builder()->cache($custom)->cacheSerializerBatchSize(500)->build();
+        $config = config_builder()->cache($custom)->serializer(new SpySerializer())->build();
 
         static::assertSame($custom, $config->cache->cache);
     }
 
-    public function test_external_sort_batch_size_flows_into_cache_config(): void
+    public function test_external_sort_batch_size_flows_into_sort_config(): void
     {
-        $config = config_builder()->externalSortBatchSize(250)->build();
+        $config = config_builder()->sort(external_sort()->batchSize(250))->build();
 
-        static::assertSame(250, $config->cache->externalSortBatchSize);
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
+        static::assertSame(250, $config->sort->bucketing->batchSize);
     }
 
     public function test_config_builder_with_analyze(): void
@@ -116,6 +124,18 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_cache_dir_override_wins_over_env(): void
+    {
+        putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-from-env');
+
+        $config = config_builder()->cacheDir(__DIR__ . '/var/cache-explicit')->build();
+
+        static::assertSame(
+            str_replace('\\', '/', __DIR__ . '/var/cache-explicit'),
+            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+        );
+    }
+
     public function test_default_cache_dir(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=');
@@ -134,25 +154,45 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame('file', $config->cache->filesystemMount);
     }
 
-    public function test_default_external_sort_filesystem_protocol_is_file(): void
+    public function test_default_external_sort_builds_filesystem_storage(): void
     {
         $config = config_builder()->build();
 
-        static::assertSame('file', $config->sort->filesystemProtocol);
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
+        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
-    public function test_default_sorting_algorithm(): void
+    public function test_default_hydrator_is_the_adaptive_hydrator(): void
     {
-        $config = config_builder()->build();
+        static::assertInstanceOf(AdaptiveRowHydrator::class, config_builder()->build()->hydrator());
+    }
 
-        static::assertSame(SortAlgorithms::EXTERNAL_SORT, $config->sort->algorithm);
+    public function test_default_sorting_algorithm_is_external_sort(): void
+    {
+        static::assertInstanceOf(ExternalSortConfig::class, config_builder()->build()->sort);
+    }
+
+    public function test_memory_sort_algorithm_override(): void
+    {
+        static::assertInstanceOf(MemorySortConfig::class, config_builder()->sort(memory_sort())->build()->sort);
+    }
+
+    public function test_hydrator_override_wins_over_the_default(): void
+    {
+        $hydrator = new PhpRowHydrator();
+
+        static::assertSame($hydrator, config_builder()->hydrator($hydrator)->build()->hydrator());
     }
 
     public function test_external_sort_filesystem_protocol_override(): void
     {
-        $config = config_builder()->externalSortFilesystem('custom-sort')->build();
+        $config = config_builder()
+            ->mount(native_local_filesystem('custom-sort'))
+            ->sort(external_sort()->filesystemProtocol('custom-sort'))
+            ->build();
 
-        static::assertSame('custom-sort', $config->sort->filesystemProtocol);
+        static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
+        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
     public function test_filesystems_mounted_after_telemetry_are_wrapped(): void

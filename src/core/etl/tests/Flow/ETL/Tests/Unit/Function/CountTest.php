@@ -21,6 +21,16 @@ use function Flow\ETL\DSL\window;
 
 final class CountTest extends FlowTestCase
 {
+    public function test_references_is_empty_without_a_reference(): void
+    {
+        static::assertSame([], count()->references());
+    }
+
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('id')], count(ref('id'))->references());
+    }
+
     public function test_aggregation_count_from_numeric_values(): void
     {
         $aggregator = count(ref('int'));

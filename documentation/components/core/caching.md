@@ -63,33 +63,40 @@ but it does not come with any out of the box.
 
 ## Serialization
 
-Cache entries are stored as [Floe](/documentation/components/core/floe.md) files, streamed in both
-directions: writes go straight to the cache file batch by batch (the payload string is never
-materialized), reads decode one batch at a time. The batch size (default 1000 rows) bounds how many
-rows cross the engine at once:
+Persisting caches (`FilesystemCache`, `PSRSimpleCache`) turn `Rows` into bytes through a
+[`Serializer`](/src/core/etl/src/Flow/Serializer/Serializer.php). The default is
+[`FloeSerializer`](/src/core/etl/src/Flow/Floe/FloeSerializer.php), which encodes to the
+[Floe](/documentation/components/core/floe.md) binary format.
+
+`Cache::get()` returns one fully materialized `Rows` per key. The caching processor writes exactly
+one batch per cache key, so each key holds a single batch bounded by `DataFrame::cache(cacheBatchSize:)`
+(falling back to `DataFrame::batchSize()`):
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{config_builder, filesystem_cache};
+use function Flow\ETL\DSL\{data_frame, from_array};
 
-// through the config builder (default FilesystemCache)
-config_builder()
-    ->cacheSerializerBatchSize(1000);
-
-// or constructing the cache directly
-filesystem_cache(serializer_batch_size: 1000);
+data_frame()
+    ->read(from_array($data))
+    ->cache('my-dataset', cacheBatchSize: 1000)
+    ->run();
 ```
 
-`Cache::get()` always returns a fully materialized `Rows` — the raw payload bytes are never held
-next to the decoded rows, but the decoded rows themselves are unbounded. To keep the decoded side
-bounded too, use `Cache::read()`:
+A `Serializer` writes to and reads from streams, so the default `FilesystemCache` streams the payload
+directly to and from the cache file. `PSRSimpleCache` materializes the payload string — its PSR-16
+backend stores string values — bounded by `cacheBatchSize`.
+
+You can swap the serializer per cache; the default `FilesystemCache` shares the same serializer as the
+rest of the pipeline (so it uses the context hydrator):
 
 ```php
 <?php
 
-foreach ($cache->read('my-dataset') as $rows) {
-    // FilesystemCache: one batch of Rows at a time
-    // InMemory/PSRSimpleCache: the whole value, yielded once
-}
+use function Flow\ETL\DSL\filesystem_cache;
+
+filesystem_cache(serializer: new MyCustomSerializer());
 ```
+
+`FilesystemCache` stores each entry in a file named after the cache key, with no extension — the
+on-disk bytes are whatever the configured serializer produced.

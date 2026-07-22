@@ -15,8 +15,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_rows;
-
 final class DbalQueryExtractor implements Extractor
 {
     private ParametersSet $parametersSet;
@@ -63,9 +61,18 @@ final class DbalQueryExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
+        $hydrator = $context->hydrator();
+        $encoder = new DbalEncoder();
+
         foreach ($this->parametersSet->all() as $parameters) {
+            $rawBatch = [];
+
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+                $rawBatch[] = $row;
+            }
+
+            foreach ($hydrator->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                $signal = yield new Rows($hydratedRow);
 
                 if ($signal === Signal::STOP) {
                     return;

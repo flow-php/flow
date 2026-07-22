@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
-use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
@@ -16,103 +15,90 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\structure_entry;
-use function Flow\ETL\DSL\uuid_entry;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 
 final class EntryTypesMapTest extends TestCase
 {
-    public function test_allows_override_for_integer_entry_to_int2(): void
+    public function test_allows_override_for_integer_type_to_int2(): void
     {
         $map = new EntryTypesMap([
-            IntegerEntry::class => ValueType::INT2,
+            IntegerType::class => ValueType::INT2,
         ]);
 
-        $result = $map->mapEntry(int_entry('small_count', 42));
+        $result = $map->map('small_count', type_integer(), 42);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::INT2, $result->targetType);
         static::assertSame(42, $result->value);
     }
 
-    public function test_maps_boolean_entry_to_bool_type(): void
+    public function test_maps_boolean_type_to_bool(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(bool_entry('active', true));
+        $result = (new EntryTypesMap())->map('active', type_boolean(), true);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::BOOL, $result->targetType);
         static::assertTrue($result->value);
     }
 
-    public function test_maps_datetime_entry_to_timestamp_type(): void
+    public function test_maps_datetime_type_to_timestamp(): void
     {
-        $map = new EntryTypesMap();
         $date = new DateTimeImmutable('2024-01-15 10:30:00');
-        $result = $map->mapEntry(datetime_entry('created_at', $date));
+        $result = (new EntryTypesMap())->map('created_at', type_datetime(), $date);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::TIMESTAMP, $result->targetType);
         static::assertEquals($date, $result->value);
     }
 
-    public function test_maps_float_entry_to_float8_type(): void
+    public function test_maps_float_type_to_float8(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(float_entry('price', 99.99));
+        $result = (new EntryTypesMap())->map('price', type_float(), 99.99);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::FLOAT8, $result->targetType);
         static::assertSame(99.99, $result->value);
     }
 
-    public function test_maps_integer_entry_to_int8_type(): void
+    public function test_maps_integer_type_to_int8(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(int_entry('count', 42));
+        $result = (new EntryTypesMap())->map('count', type_integer(), 42);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::INT8, $result->targetType);
         static::assertSame(42, $result->value);
     }
 
-    public function test_maps_json_entry_to_jsonb_type(): void
+    public function test_maps_json_type_to_jsonb(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(json_entry('data', ['key' => 'value']));
+        $result = (new EntryTypesMap())->map('data', type_json(), ['key' => 'value']);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
     }
 
-    public function test_maps_list_entry_to_jsonb_type(): void
+    public function test_maps_list_type_to_jsonb(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(list_entry('tags', [1, 2, 3], type_list(type_integer())));
+        $result = (new EntryTypesMap())->map('tags', type_list(type_integer()), [1, 2, 3]);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
         static::assertSame([1, 2, 3], $result->value);
     }
 
-    public function test_maps_map_entry_to_jsonb_type(): void
+    public function test_maps_map_type_to_jsonb(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(map_entry('metadata', ['key' => 'value'], type_map(type_string(), type_string())));
+        $result = (new EntryTypesMap())->map('metadata', type_map(type_string(), type_string()), ['key' => 'value']);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
@@ -121,38 +107,33 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_null_value_to_null(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(str_entry('name', null));
-
-        static::assertNull($result);
+        static::assertNull((new EntryTypesMap())->map('name', type_string(), null));
     }
 
-    public function test_maps_string_entry_to_text_type(): void
+    public function test_maps_string_type_to_text(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(str_entry('name', 'Alice'));
+        $result = (new EntryTypesMap())->map('name', type_string(), 'Alice');
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::TEXT, $result->targetType);
         static::assertSame('Alice', $result->value);
     }
 
-    public function test_maps_structure_entry_to_jsonb_type(): void
+    public function test_maps_structure_type_to_jsonb(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(structure_entry('user', ['name' => 'Alice', 'age' => 30], type_structure([
-            'name' => type_string(),
-            'age' => type_integer(),
-        ])));
+        $result = (new EntryTypesMap())->map(
+            'user',
+            type_structure(['name' => type_string(), 'age' => type_integer()]),
+            ['name' => 'Alice', 'age' => 30],
+        );
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
     }
 
-    public function test_maps_uuid_entry_to_uuid_type(): void
+    public function test_maps_uuid_type_to_uuid(): void
     {
-        $map = new EntryTypesMap();
-        $result = $map->mapEntry(uuid_entry('id', '550e8400-e29b-41d4-a716-446655440000'));
+        $result = (new EntryTypesMap())->map('id', type_uuid(), '550e8400-e29b-41d4-a716-446655440000');
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::UUID, $result->targetType);

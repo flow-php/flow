@@ -17,14 +17,14 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 use Generator;
 
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\Types\DSL\type_string;
+use function count;
+use function Flow\ETL\DSL\str_schema;
+use function max;
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -38,13 +38,13 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
      */
     private array $columns = [];
 
+    private ?ParquetEngine $engine = null;
+
     private ?int $offset = null;
 
     private Options $options;
 
     private SchemaConverter $schemaConverter;
-
-    private ValueHydrator $valueHydrator;
 
     /**
      * @param Path $path
@@ -54,7 +54,6 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     ) {
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
-        $this->valueHydrator = new ValueHydrator();
         $this->options = Options::default();
     }
 
@@ -64,6 +63,8 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
 
         $fileOffset = $this->offset ?? 0;
 
@@ -78,34 +79,46 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
             }
 
             $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
+            $streamUri = $shouldPutInputIntoRows ? $fileData['stream']->path()->uri() : null;
 
             if (count($this->columns)) {
                 $flowSchema = $flowSchema->keep(...$this->columns);
             }
 
-            $uri = $fileData['stream']->path()->uri();
+            if ($streamUri !== null && $flowSchema->findDefinition('_input_file_uri') === null) {
+                $flowSchema = $flowSchema->add(str_schema('_input_file_uri'));
+            }
+
+            $encoder = new ParquetEncoder($fileData['file']->schema());
+
+            $rawBatch = [];
 
             foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
-                $entries = [];
-
-                if ($shouldPutInputIntoRows) {
-                    $entries[] = $context->entryFactory()->createAs('_input_file_uri', $uri, type_string());
+                if ($streamUri !== null) {
+                    $row['_input_file_uri'] = $streamUri;
                 }
 
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($row as $entryName => $entryValue) {
-                    $definition = $flowSchema->get(ref($entryName));
+                $rawBatch[] = $row;
 
-                    $entries[] = $context->entryFactory()->instantiate(
-                        $entryName,
-                        $this->valueHydrator->hydrate($entryValue, $definition),
-                        $definition,
-                    );
+                if (count($rawBatch) >= $batchSize) {
+                    foreach ($hydrator->hydrate($encoder->decode($rawBatch), $flowSchema) as $hydratedRow) {
+                        $this->incrementReturnedRows();
+                        $signal = yield new Rows($hydratedRow);
+
+                        if ($signal === Signal::STOP || $this->reachedLimit()) {
+                            $context->streams()->closeStreams($this->path);
+
+                            return;
+                        }
+                    }
+
+                    $rawBatch = [];
                 }
+            }
 
-                $signal = yield rows(row(...$entries));
-
+            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $flowSchema) as $hydratedRow) {
                 $this->incrementReturnedRows();
+                $signal = yield new Rows($hydratedRow);
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     $context->streams()->closeStreams($this->path);
@@ -141,6 +154,13 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         return $this;
     }
 
+    public function withEngine(?ParquetEngine $engine): self
+    {
+        $this->engine = $engine;
+
+        return $this;
+    }
+
     public function withOffset(int $offset): self
     {
         if ($offset < 0) {
@@ -166,7 +186,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     {
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             yield [
-                'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))->readStream($stream),
+                'file' => (new Reader(
+                    byteOrder: $this->byteOrder,
+                    options: $this->options,
+                    engine: $this->engine,
+                ))->readStream($stream),
                 'stream' => $stream,
             ];
         }

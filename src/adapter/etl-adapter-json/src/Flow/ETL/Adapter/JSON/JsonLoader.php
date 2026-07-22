@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use DateTimeInterface;
-use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -22,11 +21,14 @@ use JsonException;
 use Throwable;
 
 use function array_key_exists;
-use function count;
 
 final class JsonLoader implements Closure, FileLoader, Loader
 {
+    private string $dateFormat = 'Y-m-d';
+
     private string $dateTimeFormat = DateTimeInterface::ATOM;
+
+    private ?JSONEncoder $encoder = null;
 
     private int $flags = JSON_THROW_ON_ERROR;
 
@@ -81,6 +83,13 @@ final class JsonLoader implements Closure, FileLoader, Loader
         }
     }
 
+    public function withDateFormat(string $dateFormat): self
+    {
+        $this->dateFormat = $dateFormat;
+
+        return $this;
+    }
+
     public function withDateTimeFormat(string $dateTimeFormat): self
     {
         $this->dateTimeFormat = $dateTimeFormat;
@@ -108,7 +117,6 @@ final class JsonLoader implements Closure, FileLoader, Loader
     public function write(Rows $nextRows, array $partitions, FlowContext $context): void
     {
         $streams = $context->streams();
-        $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
 
         if (!$streams->isOpen($this->path, $partitions)) {
             $stream = $streams->writeTo($this->path, $partitions);
@@ -122,25 +130,29 @@ final class JsonLoader implements Closure, FileLoader, Loader
             $stream = $streams->writeTo($this->path, $partitions);
         }
 
-        $this->writeJSON($nextRows, $stream, $normalizer);
+        $this->writeJSON($this->encoder()->encode($context->hydrator()->dehydrate($nextRows)), $stream);
+    }
+
+    private function encoder(): JSONEncoder
+    {
+        return $this->encoder ??= new JSONEncoder($this->dateTimeFormat, $this->dateFormat);
     }
 
     /**
-     * @param Rows $rows
-     * @param DestinationStream $stream
+     * @param list<array<string, mixed>> $encodedRows
      *
      * @throws RuntimeException
      * @throws \JsonException
      */
-    private function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
+    private function writeJSON(array $encodedRows, DestinationStream $stream): void
     {
-        if (!count($rows)) {
+        if ($encodedRows === []) {
             return;
         }
 
         $separator = $this->putRowsInNewLines ? ",\n" : ',';
 
-        foreach ($normalizer->normalize($rows) as $normalizedRow) {
+        foreach ($encodedRows as $normalizedRow) {
             try {
                 $json = json_encode($normalizedRow, $this->flags);
 

@@ -51,7 +51,11 @@ final class CallUserFunc extends ScalarFunctionChain
         }
 
         if ($this->returnType) {
-            return new ScalarResult(call_user_func($callable, ...$parameters), $this->returnType);
+            // The callable's output may not match the declared type - coerce it before trusting the ScalarResult.
+            // @mago-ignore analysis:mixed-assignment
+            $result = call_user_func($callable, ...$parameters);
+
+            return new ScalarResult($result === null ? null : $this->returnType->cast($result), $this->returnType);
         }
 
         return call_user_func($callable, ...$parameters);

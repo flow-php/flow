@@ -6,11 +6,12 @@ repeated frame-body encode and decode do not leak memory
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Rows;
 use Flow\Floe\Format;
-use Flow\Floe\RowsDecoder;
-use Flow\Floe\RowsEncoder;
+use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry};
+use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, schema_from_json};
 use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float, type_mixed};
 
 $build = static function (int $i): Flow\ETL\Row {
@@ -44,21 +45,19 @@ foreach ($frames as $frame) {
     }
 }
 
-$cycle = static function () use ($schemaBody, $rowBodies, $sourceRows): void {
-    $decoder = new RowsDecoder();
-    $decoder->schema($schemaBody);
-    $decoder->rows($rowBodies);
+$schema = schema_from_json($schemaBody);
+
+$cycle = static function () use ($schemaBody, $schema, $rowBodies, $sourceRows): void {
+    $decoder = new RustFloeEncoderNative();
+    $hydrator = new PhpRowHydrator();
+    $hydrator->hydrate($decoder->decode($rowBodies, $schemaBody), $schema);
 
     foreach ($rowBodies as $body) {
-        $decoder->row($body);
+        $hydrator->hydrate($decoder->decode([$body], $schemaBody), $schema);
     }
 
-    $encoder = new RowsEncoder();
-    $encoder->schema($schemaBody);
-
-    foreach ($sourceRows as $row) {
-        $encoder->row($row);
-    }
+    $encoder = new RustFloeEncoderNative();
+    $encoder->encode($hydrator->dehydrate(new Rows(...$sourceRows)), $schemaBody);
 };
 
 for ($i = 0; $i < 10; $i++) {

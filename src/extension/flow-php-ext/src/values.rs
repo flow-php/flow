@@ -4,6 +4,7 @@ use std::ffi::{c_char, c_int, c_void};
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
+use ext_php_rs::zend::ExecutorGlobals;
 
 use crate::ctx::{
     call_handle, ensure_no_pending_exception, ht_insert, ht_insert_index, write_property_raw,
@@ -32,6 +33,59 @@ extern "C" {
 }
 
 const PHP_DATE_OBJ_STD_OFFSET: usize = std::mem::size_of::<*const c_void>();
+
+/// `new DateTimeImmutable($str)` through the same C-level timelib parser, in its
+/// non-throwing `date_create()` flavor: `Ok(None)` on parse failure, no exception.
+pub(crate) fn date_from_free_form(
+    bytes: &[u8],
+    ctx: &mut Ctx,
+) -> Result<Option<Zval>, PhpException> {
+    let ce = ctx.datetime_fns(false)?.ce;
+
+    let mut datetime = Zval::new();
+    unsafe {
+        php_date_instantiate(
+            std::ptr::from_ref(ce).cast_mut(),
+            std::ptr::from_mut(&mut datetime),
+        );
+    }
+
+    let datetime_obj = datetime
+        .object_mut()
+        .ok_or_else(|| ext_exception("flow_php failed to instantiate a datetime object"))?;
+
+    // timelib reads the byte AFTER the consumed input, so the buffer must be
+    // NUL-terminated like the zend_strings PHP hands it (length excludes the NUL)
+    let mut time_str = Vec::with_capacity(bytes.len() + 1);
+    time_str.extend_from_slice(bytes);
+    time_str.push(0);
+
+    let initialized = unsafe {
+        php_date_initialize(
+            std::ptr::from_mut(datetime_obj)
+                .cast::<u8>()
+                .sub(PHP_DATE_OBJ_STD_OFFSET)
+                .cast::<c_void>(),
+            time_str.as_mut_ptr().cast::<c_char>(),
+            time_str.len() - 1,
+            std::ptr::null(),
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+
+    if !initialized {
+        // date_create() reports parse failures via `false`; discard any engine
+        // artifact so the caller can fall back to the PHP cast cleanly
+        drop(ExecutorGlobals::take_exception());
+
+        return Ok(None);
+    }
+
+    ensure_no_pending_exception("parse a datetime value")?;
+
+    Ok(Some(datetime))
+}
 
 pub fn decode_value(
     decoder: &Decoder,

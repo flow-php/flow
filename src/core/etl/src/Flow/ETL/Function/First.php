@@ -40,6 +40,14 @@ final class First implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return [$this->ref];
+    }
+
     public function result(EntryFactory $entryFactory): Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';

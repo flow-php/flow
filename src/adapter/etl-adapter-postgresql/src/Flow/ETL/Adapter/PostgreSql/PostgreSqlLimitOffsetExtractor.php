@@ -15,7 +15,6 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
 
 use function ceil;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_query_order_by;
 use function Flow\PostgreSql\DSL\sql_to_count_query;
@@ -57,6 +56,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
             return;
         }
 
+        $encoder = new PostgreSqlEncoder();
         $totalFetched = 0;
         $pages = (int) ceil($total / $this->pageSize);
 
@@ -67,25 +67,27 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
             $cursor = $this->client->cursor($paginatedSql, $this->parameters);
 
+            $rawBatch = [];
+
             foreach ($cursor->iterate() as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+                $rawBatch[] = $row;
+            }
+
+            $cursor->free();
+
+            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
+                $signal = yield new Rows($hydratedRow);
 
                 $totalFetched++;
 
                 if ($signal === Signal::STOP) {
-                    $cursor->free();
-
                     return;
                 }
 
                 if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                    $cursor->free();
-
                     return;
                 }
             }
-
-            $cursor->free();
         }
     }
 

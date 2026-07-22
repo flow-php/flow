@@ -17,6 +17,11 @@ use function Flow\ETL\DSL\string_entry;
 
 final class FirstTest extends FlowTestCase
 {
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('value')], first(ref('value'))->references());
+    }
+
     public function test_aggregation_firs_value(): void
     {
         $aggregator = first(ref('int'));

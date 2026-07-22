@@ -247,6 +247,7 @@
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/core/etl/src/Flow/Floe/DSL/functions.php",
+            "src/core/etl/src/Flow/Serializer/DSL/functions.php",
             "src/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
             "src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php",
@@ -321,6 +322,10 @@
                 "src/lib/types/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
+            "Flow\\Benchmarks\\": [
+                "benchmarks/src",
+                "benchmarks/suites"
+            ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
                 "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"
             ],
@@ -356,7 +361,8 @@
             "composer install --working-dir=./tools/mago",
             "composer install --working-dir=./tools/monorepo",
             "composer install --working-dir=./tools/phpunit",
-            "composer install --working-dir=./tools/phpdocumentor"
+            "composer install --working-dir=./tools/phpdocumentor",
+            "composer install --working-dir=./tools/phpbench"
         ],
         "tools:update": [
             "composer update --working-dir=./tools/blackfire",
@@ -365,7 +371,8 @@
             "composer update --working-dir=./tools/mago",
             "composer update --working-dir=./tools/monorepo",
             "composer update --working-dir=./tools/phpunit",
-            "composer update --working-dir=./tools/phpdocumentor"
+            "composer update --working-dir=./tools/phpdocumentor",
+            "composer update --working-dir=./tools/phpbench"
         ]
     }
 }

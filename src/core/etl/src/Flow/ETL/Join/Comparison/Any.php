@@ -35,6 +35,14 @@ final readonly class Any implements Comparison
     }
 
     /**
+     * @return array<Comparison>
+     */
+    public function comparisons(): array
+    {
+        return $this->comparisons;
+    }
+
+    /**
      * @return array<Reference>
      */
     public function left(): array

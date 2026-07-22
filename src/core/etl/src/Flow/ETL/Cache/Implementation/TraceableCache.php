@@ -17,7 +17,6 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
-use Generator;
 use Throwable;
 
 final readonly class TraceableCache implements Cache
@@ -92,29 +91,6 @@ final readonly class TraceableCache implements Cache
 
             throw $exception;
         }
-    }
-
-    /**
-     * @throws KeyNotInCacheException
-     *
-     * @return Generator<int, Rows>
-     */
-    public function read(string $key): Generator
-    {
-        $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
-        $batches = $this->cache->read($key);
-
-        try {
-            $batches->rewind();
-        } catch (KeyNotInCacheException $exception) {
-            $this->missCounter->add(1, $attributes);
-
-            throw $exception;
-        }
-
-        $this->hitCounter->add(1, $attributes);
-
-        yield from $batches;
     }
 
     public function has(string $key): bool

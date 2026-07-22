@@ -21,19 +21,27 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
-    directory: "/tools/cs-fixer"
-    schedule:
-      interval: "daily"
-    ignore:
-      - dependency-name: "friendsofphp/php-cs-fixer"
-
-  - package-ecosystem: "composer"
     directory: "/tools/infection"
     schedule:
       interval: "daily"
 
   - package-ecosystem: "composer"
+    directory: "/tools/mago"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
     directory: "/tools/monorepo"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/phpbench"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/phpdocumentor"
     schedule:
       interval: "daily"
 

@@ -68,6 +68,11 @@ final readonly class Expression
         return new self($comparison, $joinPrefix);
     }
 
+    public function comparison(): Comparison
+    {
+        return $this->comparison;
+    }
+
     public function dropDuplicateLeftEntries(Row $left): Row
     {
         if ($this->joinPrefix !== '') {

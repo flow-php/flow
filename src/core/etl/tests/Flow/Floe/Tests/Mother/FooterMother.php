@@ -10,29 +10,23 @@ use Flow\Floe\Footer;
 final class FooterMother
 {
     /**
-     * @param array<array-key, mixed> $schemas raw normalized schema lists, e.g. [$schema->normalize()]
-     * @param array<array-key, mixed> $fileSchema raw normalized schema, e.g. $schema->normalize()
+     * @param array<array-key, mixed> $schema raw normalized schema, e.g. $schema->normalize()
      * @param array<int, \Flow\Floe\Section> $sections
-     * @param array<string, string> $partitions
+     * @param array<int, array<string, string>> $partitions
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $metadata
      */
     public static function footer(
-        array $schemas = [],
-        array $fileSchema = [],
+        array $schema = [],
         array $sections = [],
         array $partitions = [],
         int $totalRows = 0,
         array $metadata = [],
     ): Footer {
-        /**
-         * @var array<int, array<int, array<string, mixed>>> $schemas
-         * @var array<int, array<string, mixed>> $fileSchema
-         */
+        /** @var array<int, array<string, mixed>> $schema */
         return new Footer(
             1,
             'test-writer',
-            $schemas,
-            $fileSchema,
+            $schema,
             $sections,
             $partitions,
             $totalRows,

@@ -29,6 +29,7 @@ use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 
 use function array_keys;
@@ -105,6 +106,7 @@ final class SchemaConverter
             XMLElementType::class,
             XMLType::class,
             StringType::class,
+            NullType::class,
                 => FlatColumn::string($name, $repetition),
             BooleanType::class => FlatColumn::boolean($name, $repetition),
             TimeType::class => FlatColumn::time($name, $repetition),
@@ -225,7 +227,7 @@ final class SchemaConverter
     /**
      * @return Type<mixed>
      */
-    private function parquetToFlowType(Column $column): Type
+    public function parquetToFlowType(Column $column): Type
     {
         if ($column instanceof FlatColumn) {
             $logicalType = $column->logicalType();

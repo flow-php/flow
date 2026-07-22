@@ -12,9 +12,9 @@ use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class DeleteQueryBuilderTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class DeleteQueryBuilderTest extends TestCase
     {
         $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
 
-        [$_query, $params] = $builder->build(row(int_entry('id', 1)), new DeleteOptions(['id']));
+        [$_query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new DeleteOptions(['id']));
 
         static::assertCount(1, $params);
         static::assertInstanceOf(TypedValue::class, $params[0]);
@@ -34,7 +34,7 @@ final class DeleteQueryBuilderTest extends TestCase
     {
         $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
 
-        [$query, $params] = $builder->build(row(int_entry('id', 1)), new DeleteOptions(['id']));
+        [$query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new DeleteOptions(['id']));
 
         $sql = $query->toSql();
         static::assertStringContainsString('DELETE FROM users', $sql);
@@ -49,7 +49,7 @@ final class DeleteQueryBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for DELETE operation');
 
-        $builder->build(row(int_entry('id', 1)), new DeleteOptions([]));
+        $builder->build(['id' => 1], schema(int_schema('id')), new DeleteOptions([]));
     }
 
     public function test_build_throws_when_primary_key_not_in_row(): void
@@ -59,7 +59,7 @@ final class DeleteQueryBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary key "id" not found in row');
 
-        $builder->build(row(str_entry('name', 'Alice')), new DeleteOptions(['id']));
+        $builder->build(['name' => 'Alice'], schema(str_schema('name')), new DeleteOptions(['id']));
     }
 
     public function test_build_with_multiple_primary_keys(): void
@@ -67,7 +67,8 @@ final class DeleteQueryBuilderTest extends TestCase
         $builder = new DeleteQueryBuilder('order_items', new EntryTypesMap());
 
         [$query, $params] = $builder->build(
-            row(int_entry('order_id', 1), int_entry('product_id', 2)),
+            ['order_id' => 1, 'product_id' => 2],
+            schema(int_schema('order_id'), int_schema('product_id')),
             new DeleteOptions(['order_id', 'product_id']),
         );
 

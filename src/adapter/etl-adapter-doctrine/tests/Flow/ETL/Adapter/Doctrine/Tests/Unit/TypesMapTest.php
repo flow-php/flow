@@ -47,6 +47,12 @@ use InvalidArgumentException as BaseInvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+use function array_keys;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\xml_schema;
+
 final class TypesMapTest extends TestCase
 {
     public function test_complete_dbal_to_flow_type_conversion_workflow(): void
@@ -345,5 +351,19 @@ final class TypesMapTest extends TestCase
 
         static::assertSame(TextType::class, $typesMap->toDbalType(StringType::class));
         static::assertSame(BigIntType::class, $typesMap->toDbalType(IntegerType::class));
+    }
+
+    public function test_flow_schema_types_maps_schema_definitions_to_dbal_types(): void
+    {
+        $types = (new TypesMap([]))->flowSchemaTypes(schema(
+            int_schema('id'),
+            string_schema('name'),
+            xml_schema('body'),
+        ));
+
+        static::assertSame(['id', 'name', 'body'], array_keys($types));
+        static::assertInstanceOf(DoctrineIntegerType::class, $types['id']);
+        static::assertInstanceOf(DoctrineStringType::class, $types['name']);
+        static::assertInstanceOf(DoctrineStringType::class, $types['body']);
     }
 }

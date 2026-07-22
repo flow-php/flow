@@ -12,7 +12,6 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 
 use function current;
-use function Flow\ETL\DSL\to_entry;
 use function in_array;
 
 final class CollectUnique implements AggregatingFunction
@@ -52,12 +51,20 @@ final class CollectUnique implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return [$this->ref];
+    }
+
     public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->name() . '_collection_unique');
         }
 
-        return to_entry($this->ref->name(), $this->collection, $entryFactory);
+        return $entryFactory->create($this->ref->name(), $this->collection);
     }
 }

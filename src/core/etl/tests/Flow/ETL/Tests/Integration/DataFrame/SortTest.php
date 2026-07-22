@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Config;
-use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\external_sort;
+use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\ref;
 use function range;
 
@@ -17,8 +18,7 @@ final class SortTest extends FlowIntegrationTestCase
 {
     public function test_etl_sort_by_external_sort(): void
     {
-        $config = Config::builder()->externalSortBucketSize(100);
-        $config->sort->algorithm(SortAlgorithms::EXTERNAL_SORT);
+        $config = config_builder()->sort(external_sort()->runSize(100));
 
         $rows = df($config->build())->read(new FakeExtractor(2500))->batchSize(50)->sortBy(ref('int'))->fetch();
 
@@ -27,8 +27,7 @@ final class SortTest extends FlowIntegrationTestCase
 
     public function test_etl_sort_by_in_memory(): void
     {
-        $config = Config::builder();
-        $config->sort->algorithm(SortAlgorithms::MEMORY_SORT);
+        $config = config_builder()->sort(memory_sort());
 
         $rows = df($config->build())->read(new FakeExtractor(40))->batchSize(2)->sortBy(ref('int'))->fetch();
 

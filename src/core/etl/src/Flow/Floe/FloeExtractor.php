@@ -31,6 +31,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
         private readonly Path $path,
         private readonly Codec $codec = new NoopCodec(),
         private readonly int $chunkSize = 65536,
+        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         $this->resetLimit();
     }
@@ -106,7 +107,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     }
 
     /**
-     * @return \Generator<int, array{FloeFile, string}>
+     * @return \Generator<int, array{FloeStreamReader, string}>
      */
     private function readers(FlowContext $context): Generator
     {
@@ -115,7 +116,13 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
             $listed->close();
 
             yield [
-                (new FloeReader($context->filesystem($this->path), $this->codec, $this->chunkSize))->read($filePath),
+                (new FloeReader(
+                    $context->filesystem($this->path),
+                    $this->codec,
+                    $this->chunkSize,
+                    hydrator: $context->hydrator(),
+                    engine: $this->engine,
+                ))->read($filePath),
                 $filePath->uri(),
             ];
         }

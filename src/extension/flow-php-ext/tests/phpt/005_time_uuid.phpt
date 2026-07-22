@@ -6,7 +6,6 @@ time (DateInterval) and uuid columns round-trip identically
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\RowsDecoder;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, time_entry, uuid_entry};
 
@@ -25,7 +24,7 @@ $rows = rows(
 );
 
 $frames = php_frames($rows);
-$actual = decoder_decode_frames(new RowsDecoder(), $frames);
+$actual = ext_decode_frames($frames);
 
 assert_rows_identical(php_decode_frames($frames), $actual);
 

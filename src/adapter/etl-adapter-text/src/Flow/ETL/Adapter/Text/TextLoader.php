@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -16,10 +15,12 @@ use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
-use function sprintf;
+use function implode;
 
 final class TextLoader implements Closure, FileLoader, Loader
 {
+    private ?TextEncoder $encoder = null;
+
     private string $newLineSeparator = PHP_EOL;
 
     private readonly Path $path;
@@ -50,34 +51,12 @@ final class TextLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
+            $lines = implode('', $this->encoder()->encode($context->hydrator()->dehydrate($rows)));
+
             if ($rows->partitions()->count()) {
-                foreach ($rows as $row) {
-                    if ($row->entries()->count() > 1) {
-                        throw new RuntimeException(sprintf(
-                            'Text data loader supports only a single entry rows, and you have %d rows.',
-                            $row->entries()->count(),
-                        ));
-                    }
-
-                    $context
-                        ->streams()
-                        ->writeTo($this->path, $rows->partitions()->toArray())
-                        ->append($row->entries()->all()[0]->toString() . $this->newLineSeparator);
-                }
+                $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->append($lines);
             } else {
-                foreach ($rows as $row) {
-                    if ($row->entries()->count() > 1) {
-                        throw new RuntimeException(sprintf(
-                            'Text data loader supports only a single entry rows, and you have %d rows.',
-                            $row->entries()->count(),
-                        ));
-                    }
-
-                    $context
-                        ->streams()
-                        ->writeTo($this->path)
-                        ->append($row->entries()->all()[0]->toString() . $this->newLineSeparator);
-                }
+                $context->streams()->writeTo($this->path)->append($lines);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -93,5 +72,10 @@ final class TextLoader implements Closure, FileLoader, Loader
         $this->newLineSeparator = $newLineSeparator;
 
         return $this;
+    }
+
+    private function encoder(): TextEncoder
+    {
+        return $this->encoder ??= new TextEncoder($this->newLineSeparator);
     }
 }

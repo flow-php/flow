@@ -1,27 +1,25 @@
+mod cast;
 mod ctx;
 mod encode;
 mod exception;
 mod format;
 mod hydrate;
 mod plan;
-mod section;
 mod values;
 
 use std::alloc::System;
 
 use ext_php_rs::binary_slice::BinarySlice;
-use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendObject, Zval};
+use ext_php_rs::types::{ZendHashTable, Zval};
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
-use crate::ctx::{call_handle_on, zval_long, zval_null, zval_str, Ctx};
-use crate::encode::{encode_row_body, expect_object, ht_for_each, read_slot, EncodePlan};
+use crate::ctx::{zval_str, Ctx};
+use crate::encode::{build_encode_plan, encode_typed_row, expect_object, ht_for_each, read_slot, EncodePlan};
 use crate::exception::ext_exception;
-use crate::format::{write_frame, Reader, FRAME_ROW};
+use crate::format::Reader;
 use crate::plan::Plan;
-use crate::section::SectionTracker;
 
 #[global_allocator]
 static GLOBAL: System = System;
@@ -44,67 +42,122 @@ pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 
     0
 }
 
-/// Stateful frame decoder for streaming Floe reads (`FloeReader` fast path):
-/// the PHP side keeps buffering/framing and hands over bare frame bodies.
+/// A built plan together with the schema JSON it was built from; the schema
+/// bytes decide when a new schema requires a plan rebuild. Generic over the plan
+/// kind so encode (`EncodePlan`) and decode (`Plan`) share one rebind path.
+struct BoundPlan<P> {
+    schema: Vec<u8>,
+    plan: P,
+}
+
+/// Rebuilds the bound plan when the schema JSON changed, `Ctx` caches survive rebinds.
+fn ensure_plan<P>(
+    bound: &mut Option<BoundPlan<P>>,
+    ctx: &mut Ctx,
+    schema: &[u8],
+    build: fn(&[u8], &mut Ctx) -> PhpResult<P>,
+) -> PhpResult<()> {
+    if bound.as_ref().is_some_and(|b| b.schema == schema) {
+        return Ok(());
+    }
+
+    *bound = Some(BoundPlan {
+        schema: schema.to_vec(),
+        plan: build(schema, ctx)?,
+    });
+
+    Ok(())
+}
+
+/// Floe's consolidated binary codec, both directions: ROW frame bodies to/from
+/// `Flow\ETL\Row\RawRowValues` (decode) and `Flow\ETL\Row\TypedRowValues` (encode).
+/// The PHP side keeps buffering/framing/sectioning and hands over bare frame
+/// bodies; the extension owns value encode/decode against a primed schema.
 #[php_class]
-#[php(name = "Flow\\Floe\\RowsDecoder")]
-pub struct RowsDecoder {
+#[php(name = "Flow\\Floe\\RustFloeEncoderNative")]
+pub struct RustFloeEncoderNative {
     ctx: Ctx,
-    plan: Option<Plan>,
+    encode_bound: Option<BoundPlan<EncodePlan>>,
+    decode_bound: Option<BoundPlan<Plan>>,
+    row_values_class: hydrate::RowValuesClass,
 }
 
 #[php_impl]
-impl RowsDecoder {
+impl RustFloeEncoderNative {
     pub fn __construct() -> PhpResult<Self> {
         Ok(Self {
             ctx: Ctx::new()?,
-            plan: None,
+            encode_bound: None,
+            decode_bound: None,
+            row_values_class: hydrate::RowValuesClass::resolve()?,
         })
     }
 
-    /// Replaces the current column plan with the given SCHEMA frame body.
-    pub fn schema(&mut self, frame_body: BinarySlice<u8>) -> PhpResult<()> {
-        self.plan = Some(plan::build_plan(&frame_body, &mut self.ctx)?);
+    /// Encodes a list of `Flow\ETL\Row\TypedRowValues` into a list of bare ROW
+    /// frame bodies against the plan bound to `schema_body`.
+    pub fn encode(&mut self, batch: &Zval, schema_body: BinarySlice<u8>) -> PhpResult<Zval> {
+        ensure_plan(
+            &mut self.encode_bound,
+            &mut self.ctx,
+            &schema_body,
+            build_encode_plan,
+        )?;
 
-        Ok(())
+        let batch_ht = batch
+            .array()
+            .ok_or_else(|| ext_exception("flow_php expected a list of typed row values"))?;
+
+        let (values_slot, metadata_slot) = self.ctx.typed_row_values_slots()?;
+
+        let plan = &self.encode_bound.as_ref().expect("plan bound above").plan;
+        let ctx = &mut self.ctx;
+
+        let mut encoded = ZendHashTable::with_capacity(batch_ht.len() as u32);
+
+        ht_for_each(batch_ht, |_, _, item_zv| {
+            let typed = expect_object(item_zv, "a TypedRowValues")?;
+
+            let values_ht = read_slot(typed, values_slot).array().ok_or_else(|| {
+                ext_exception("flow_php expected TypedRowValues::values to be an array")
+            })?;
+            let metadata_ht = read_slot(typed, metadata_slot).array().ok_or_else(|| {
+                ext_exception("flow_php expected TypedRowValues::metadata to be an array")
+            })?;
+
+            let body = encode_typed_row(plan, values_ht, metadata_ht, ctx)?;
+
+            encoded.push(zval_str(&body)).map_err(|e| {
+                ext_exception(format!("flow_php failed to collect a row body: {e:?}"))
+            })?;
+
+            Ok(())
+        })?;
+
+        let mut zv = Zval::new();
+        zv.set_hashtable(encoded);
+
+        Ok(zv)
     }
 
-    /// Decodes one ROW frame body against the current plan into a `Flow\ETL\Row`.
-    pub fn row(&mut self, frame_body: BinarySlice<u8>) -> PhpResult<Zval> {
-        let Some(plan) = self.plan.as_ref() else {
-            return Err(ext_exception(
-                "flow_php found a row frame before any schema frame",
-            ));
-        };
+    /// Decodes a list of ROW frame bodies written with the given SCHEMA frame
+    /// body into `Flow\ETL\Row\RawRowValues` objects.
+    pub fn decode(&mut self, frame_bodies: &Zval, schema_body: BinarySlice<u8>) -> PhpResult<Zval> {
+        ensure_plan(
+            &mut self.decode_bound,
+            &mut self.ctx,
+            &schema_body,
+            plan::build_plan,
+        )?;
 
-        let mut reader = Reader::new(&frame_body);
-        let row = hydrate::hydrate_row(plan, &mut reader, &mut self.ctx)?;
-
-        if !reader.is_eof() {
-            return Err(ext_exception(
-                "flow_php row frame length does not match its content",
-            ));
-        }
-
-        row.into_zval(false)
-            .map_err(|e| ext_exception(format!("flow_php failed to return a Row: {e:?}")))
-    }
-
-    /// Decodes a list of ROW frame bodies against the current plan into one
-    /// `Flow\ETL\Rows`, graph-identical to calling `row()` per body.
-    pub fn rows(&mut self, frame_bodies: &Zval) -> PhpResult<Zval> {
         let bodies_ht = frame_bodies
             .array()
             .ok_or_else(|| ext_exception("flow_php expected a list of row frame bodies"))?;
 
-        let Some(plan) = self.plan.as_ref() else {
-            return Err(ext_exception(
-                "flow_php found a row frame before any schema frame",
-            ));
-        };
+        let plan = &self.decode_bound.as_ref().expect("plan bound above").plan;
+        let class = &self.row_values_class;
         let ctx = &mut self.ctx;
 
-        let mut rows = Vec::with_capacity(bodies_ht.len());
+        let mut decoded = ZendHashTable::with_capacity(bodies_ht.len() as u32);
 
         ht_for_each(bodies_ht, |_, _, body_zv| {
             let bytes = body_zv
@@ -113,7 +166,7 @@ impl RowsDecoder {
                 .as_bytes();
 
             let mut reader = Reader::new(bytes);
-            let row = hydrate::hydrate_row(plan, &mut reader, ctx)?;
+            let row_values = hydrate::decode_row_values(plan, &mut reader, ctx, class)?;
 
             if !reader.is_eof() {
                 return Err(ext_exception(
@@ -121,148 +174,94 @@ impl RowsDecoder {
                 ));
             }
 
-            rows.push(row);
+            decoded.push(row_values).map_err(|e| {
+                ext_exception(format!("flow_php failed to collect row values: {e:?}"))
+            })?;
 
             Ok(())
         })?;
 
-        hydrate::build_rows(rows, ctx)
+        let mut zv = Zval::new();
+        zv.set_hashtable(decoded);
+
+        Ok(zv)
     }
 }
 
-/// Stateful frame encoder for streaming Floe writes (`FloeWriter` fast path).
-/// The `rows()` segment state is independent from the `schema()`/`row()`
-/// per-frame state; the two modes must not be mixed on one instance.
+/// Native counterpart of `PhpRowHydrator`: `hydrate` builds `Flow\ETL\Rows` from
+/// a trusted list of `RawRowValues` against a `Schema` object (values moved
+/// verbatim); `cast` does the same from RAW scalars, casting each value against
+/// the schema first; `dehydrate` turns `Rows` into a list of `TypedRowValues`.
 #[php_class]
-#[php(name = "Flow\\Floe\\RowsEncoder")]
-pub struct RowsEncoder {
+#[php(name = "Flow\\ETL\\Row\\RustRowHydratorNative")]
+pub struct RustRowHydratorNative {
     ctx: Ctx,
-    plan: Option<EncodePlan>,
-    stream: SectionTracker,
+    rows_classes: hydrate::RowsClasses,
+    typed_row_values_class: hydrate::TypedRowValuesClass,
+    raw_row_values_class: hydrate::RowValuesClass,
+    assembly: hydrate::AssemblyClasses,
+    entry_slots: hydrate::EntrySlotCache,
+    def_dehydrate_fns: hydrate::DefFnCache,
+    def_rare_fns: hydrate::DefRareFnCache,
+    hydrate_plan: Option<hydrate::HydratePlan>,
+    cast_plan: Option<cast::CastPlan>,
 }
 
 #[php_impl]
-impl RowsEncoder {
+impl RustRowHydratorNative {
     pub fn __construct() -> PhpResult<Self> {
         Ok(Self {
             ctx: Ctx::new()?,
-            plan: None,
-            stream: SectionTracker::new(),
+            rows_classes: hydrate::RowsClasses::resolve()?,
+            typed_row_values_class: hydrate::TypedRowValuesClass::resolve()?,
+            raw_row_values_class: hydrate::RowValuesClass::resolve()?,
+            assembly: hydrate::AssemblyClasses::resolve()?,
+            entry_slots: hydrate::EntrySlotCache::new(),
+            def_dehydrate_fns: hydrate::DefFnCache::new(),
+            def_rare_fns: hydrate::DefRareFnCache::new(),
+            hydrate_plan: None,
+            cast_plan: None,
         })
     }
 
-    /// Primes the encode plan from a SCHEMA frame body.
-    pub fn schema(&mut self, frame_body: BinarySlice<u8>) -> PhpResult<()> {
-        self.plan = Some(encode::build_encode_plan(&frame_body)?);
-
-        Ok(())
-    }
-
-    /// Encodes one `Flow\ETL\Row` into a bare ROW frame body against the plan.
-    pub fn row(&mut self, row: &Zval) -> PhpResult<Zval> {
-        let Some(plan) = self.plan.as_mut() else {
-            return Err(ext_exception(
-                "flow_php found a row before any schema frame",
-            ));
-        };
-
-        Ok(zval_str(&encode::encode_row_body(
-            plan,
-            row,
+    /// Casts a list of raw-scalar `RawRowValues` against a `Schema` and builds
+    /// a `Flow\ETL\Rows` in a single pass.
+    pub fn cast(&mut self, batch: &Zval, schema: &Zval) -> PhpResult<Zval> {
+        cast::cast_rows(
+            batch,
+            schema,
+            &mut self.cast_plan,
+            &self.raw_row_values_class,
+            &self.assembly,
+            &mut self.entry_slots,
+            &mut self.def_rare_fns,
             &mut self.ctx,
-        )?))
+        )
     }
 
-    /// Encodes a whole `Flow\ETL\Rows` into a list of `Flow\Floe\FrameSegment`
-    /// in one call, mirroring `Flow\Floe\PhpRowFrameEncoder`.
-    pub fn rows(&mut self, rows: &Zval) -> PhpResult<Zval> {
-        struct Segment {
-            schema_body: Option<Vec<u8>>,
-            frames: Vec<u8>,
-            row_count: i64,
-        }
+    /// Builds a `Flow\ETL\Rows` from a trusted list of `RawRowValues` against a `Schema`.
+    pub fn hydrate(&mut self, batch: &Zval, schema: &Zval) -> PhpResult<Zval> {
+        hydrate::hydrate_rows(
+            batch,
+            schema,
+            &mut self.hydrate_plan,
+            &self.raw_row_values_class,
+            &self.assembly,
+            &mut self.entry_slots,
+            &mut self.def_rare_fns,
+        )
+    }
 
-        let rows_obj = expect_object(rows, "Rows")?;
-        let rows_ht = read_slot(rows_obj, self.ctx.rows_rows_slot)
-            .array()
-            .ok_or_else(|| ext_exception("flow_php expected Rows to hold an array"))?;
-
-        let ctx = &mut self.ctx;
-        let stream = &mut self.stream;
-
-        let mut segments: Vec<Segment> = Vec::new();
-        let mut current: Option<Segment> = None;
-
-        ht_for_each(rows_ht, |_, _, row_zv| {
-            let entries_ht = SectionTracker::row_entries(row_zv, ctx)?;
-
-            if let Some(schema_body) = stream.ensure_section(row_zv, entries_ht, ctx)? {
-                if let Some(segment) = current.take() {
-                    segments.push(segment);
-                }
-
-                current = Some(Segment {
-                    schema_body: Some(schema_body),
-                    frames: Vec::new(),
-                    row_count: 0,
-                });
-            } else if current.is_none() {
-                current = Some(Segment {
-                    schema_body: None,
-                    frames: Vec::new(),
-                    row_count: 0,
-                });
-            }
-
-            let body = encode_row_body(stream.plan_mut()?, row_zv, ctx)?;
-
-            let segment = current
-                .as_mut()
-                .ok_or_else(|| ext_exception("flow_php has no active segment"))?;
-            write_frame(&mut segment.frames, FRAME_ROW, &body);
-            segment.row_count += 1;
-
-            Ok(())
-        })?;
-
-        if let Some(segment) = current.take() {
-            segments.push(segment);
-        }
-
-        let (segment_ce, segment_ctor) = ctx.frame_segment()?;
-        let mut out = ext_php_rs::types::ZendHashTable::with_capacity(segments.len() as u32);
-
-        for segment in segments {
-            let schema_body_zv = match &segment.schema_body {
-                Some(body) => zval_str(body),
-                None => zval_null(),
-            };
-
-            let obj = ZendObject::new(segment_ce);
-            call_handle_on(
-                segment_ctor,
-                &obj,
-                &mut [
-                    schema_body_zv,
-                    zval_str(&segment.frames),
-                    zval_long(segment.row_count),
-                ],
-                "construct a FrameSegment",
-            )?;
-
-            let obj_zv = obj.into_zval(false).map_err(|e| {
-                ext_exception(format!("flow_php failed to return a FrameSegment: {e:?}"))
-            })?;
-
-            out.push(obj_zv).map_err(|e| {
-                ext_exception(format!("flow_php failed to build a segment list: {e:?}"))
-            })?;
-        }
-
-        let mut zv = Zval::new();
-        zv.set_hashtable(out);
-
-        Ok(zv)
+    /// Turns a `Flow\ETL\Rows` into a list of `Flow\ETL\Row\TypedRowValues`.
+    pub fn dehydrate(&mut self, rows: &Zval) -> PhpResult<Zval> {
+        hydrate::dehydrate_rows(
+            rows,
+            &self.rows_classes,
+            &self.typed_row_values_class,
+            &mut self.entry_slots,
+            &mut self.def_dehydrate_fns,
+            &mut self.ctx,
+        )
     }
 }
 
@@ -271,6 +270,6 @@ impl RowsEncoder {
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .info_function(php_module_info)
-        .class::<RowsDecoder>()
-        .class::<RowsEncoder>()
+        .class::<RustFloeEncoderNative>()
+        .class::<RustRowHydratorNative>()
 }

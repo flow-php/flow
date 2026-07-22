@@ -34,6 +34,14 @@ final class ArrayComparison
             return false;
         }
 
+        if ($a === $b) {
+            return true;
+        }
+
+        if (count($a) !== count($b)) {
+            return false;
+        }
+
         return $this->valueEquals((new ArraySortByKey())($a), (new ArraySortByKey())($b));
     }
 

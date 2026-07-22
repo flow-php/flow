@@ -57,6 +57,7 @@ $application->addCommand(new class extends Command {
         $paths = [
             __DIR__ . '/../src/core/etl/src/Flow/ETL/DSL/functions.php',
             __DIR__ . '/../src/core/etl/src/Flow/Floe/DSL/functions.php',
+            __DIR__ . '/../src/core/etl/src/Flow/Serializer/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php',

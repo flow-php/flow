@@ -61,7 +61,7 @@ final class References implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
-     * @return array<Reference>
+     * @return list<Reference>
      */
     public function all(): array
     {

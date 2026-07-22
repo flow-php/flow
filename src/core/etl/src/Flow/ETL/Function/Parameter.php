@@ -9,7 +9,6 @@ use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Schema\Metadata;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
@@ -21,7 +20,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_object;
 use function Flow\Types\DSL\type_string;
 
@@ -222,10 +220,6 @@ final readonly class Parameter
     public function asType(Row $row, FlowContext $context): Type
     {
         if ($this->function instanceof Reference) {
-            if ($row->get($this->function)->definition()->metadata()->has(Metadata::FROM_NULL)) {
-                return type_null();
-            }
-
             return $row->get($this->function)->type();
         }
 

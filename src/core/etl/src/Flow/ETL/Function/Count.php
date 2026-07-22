@@ -90,6 +90,14 @@ final class Count implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?int>
      */
+    /**
+     * @return list<Reference>
+     */
+    public function references(): array
+    {
+        return $this->ref === null ? [] : [$this->ref];
+    }
+
     public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref) {

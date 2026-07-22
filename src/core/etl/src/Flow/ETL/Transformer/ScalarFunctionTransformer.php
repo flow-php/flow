@@ -55,11 +55,11 @@ final readonly class ScalarFunctionTransformer implements Transformer
     {
         if ($this->function instanceof ExpandResults) {
             return $rows->flatMap(fn(Row $r): array => array_map(
-                fn($val): Row => new Row($r->entries()->set($context->entryFactory()->create(
-                    $this->entryName(),
-                    $val,
-                    $this->entry instanceof Definition ? $this->entry : null,
-                ))),
+                fn($val): Row => new Row($r->entries()->set(
+                    $this->entry instanceof Definition
+                        ? $context->entryFactory()->cast($this->entryName(), $val, $this->entry->type())
+                        : $context->entryFactory()->create($this->entryName(), $val),
+                )),
                 // @mago-ignore analysis:mixed-argument
                 $this->function->eval($r, $context),
             ));
@@ -79,22 +79,16 @@ final readonly class ScalarFunctionTransformer implements Transformer
         return $rows->map(function (Row $r) use ($context): Row {
             // @mago-ignore analysis:mixed-assignment
             $value = $this->function->eval($r, $context);
-            $type = $this->entry instanceof Definition ? $this->entry->type() : null;
 
+            // ScalarResult already carries a native, typed value - trust it, no re-cast.
             if ($value instanceof ScalarResult) {
-                $type = $value->type;
-                // @mago-ignore analysis:mixed-assignment
-                $value = $value->value;
+                return $r->set($context->entryFactory()->create($this->entryName(), $value->value, $value->type));
             }
 
             return $r->set(
-                $type
-                    ? $context->entryFactory()->createAs($this->entryName(), $value, $type)
-                    : $context->entryFactory()->create(
-                        $this->entryName(),
-                        $value,
-                        $this->entry instanceof Definition ? $this->entry : null,
-                    ),
+                $this->entry instanceof Definition
+                    ? $context->entryFactory()->cast($this->entryName(), $value, $this->entry->type())
+                    : $context->entryFactory()->create($this->entryName(), $value),
             );
         });
     }

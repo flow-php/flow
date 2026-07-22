@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Row\Entry\Instantiators;
-use Flow\ETL\Schema\Metadata;
 use Flow\Floe\RowPadding;
 use Flow\Floe\SchemaDecoder;
 use Flow\Floe\ValueDecoder;
+use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\int_entry;
@@ -20,7 +20,7 @@ use function Flow\ETL\DSL\str_schema;
 
 final class RowPaddingTest extends TestCase
 {
-    public function test_absent_columns_are_padded_with_from_null_entries(): void
+    public function test_absent_columns_are_padded_with_typed_nullable_nulls(): void
     {
         $padding = RowPadding::forFileSchema(
             schema(int_schema('id'), str_schema('email', nullable: true)),
@@ -33,8 +33,9 @@ final class RowPaddingTest extends TestCase
         static::assertSame(['id', 'email'], $padded->entries()->names());
         static::assertSame(1, $padded->get('id')->value());
         static::assertNull($email->value());
+        static::assertInstanceOf(StringType::class, $email->definition()->type());
         static::assertTrue($email->definition()->isNullable());
-        static::assertTrue($email->definition()->metadata()->has(Metadata::FROM_NULL));
+        static::assertTrue($email->definition()->metadata()->isEmpty());
     }
 
     public function test_padding_entries_are_shared_between_rows(): void

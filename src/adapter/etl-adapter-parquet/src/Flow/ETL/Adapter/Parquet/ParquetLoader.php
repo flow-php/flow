@@ -15,7 +15,9 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 use Throwable;
@@ -29,9 +31,11 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     private readonly SchemaConverter $converter;
 
-    private ?Schema $inferredSchema = null;
+    private ?ParquetEncoder $encoder = null;
 
-    private readonly RowsNormalizer $normalizer;
+    private ?ParquetEngine $engine = null;
+
+    private ?Schema $inferredSchema = null;
 
     private Options $options;
 
@@ -47,7 +51,6 @@ final class ParquetLoader implements Closure, FileLoader, Loader
     public function __construct(Path $path)
     {
         $this->converter = new SchemaConverter();
-        $this->normalizer = new RowsNormalizer();
         $this->options = Options::default();
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
@@ -80,6 +83,8 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                 $this->inferSchema($rows);
             }
 
+            $encoded = $this->encoder()->encode($context->hydrator()->dehydrate($rows));
+
             $streams = $context->streams();
 
             if ($rows->partitions()->count()) {
@@ -89,6 +94,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
+                        engine: $this->engine ?? new AdaptiveParquetEngine(),
                     );
 
                     $this->writers[$stream->path()->uri()]->openForStream(
@@ -97,10 +103,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     );
                 }
 
-                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize(
-                    $rows,
-                    $this->schema(),
-                ));
+                $this->writers[$stream->path()->uri()]->writeBatch($encoded);
             } else {
                 $stream = $streams->writeTo($this->path);
 
@@ -108,6 +111,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
+                        engine: $this->engine ?? new AdaptiveParquetEngine(),
                     );
 
                     $this->writers[$stream->path()->uri()]->openForStream(
@@ -116,10 +120,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                     );
                 }
 
-                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize(
-                    $rows,
-                    $this->schema(),
-                ));
+                $this->writers[$stream->path()->uri()]->writeBatch($encoded);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -137,6 +138,13 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
+    public function withEngine(?ParquetEngine $engine): self
+    {
+        $this->engine = $engine;
+
+        return $this;
+    }
+
     public function withOptions(Options $options): self
     {
         $this->options = $options;
@@ -149,6 +157,11 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         $this->schema = $schema;
 
         return $this;
+    }
+
+    private function encoder(): ParquetEncoder
+    {
+        return $this->encoder ??= new ParquetEncoder($this->converter->toParquet($this->schema()));
     }
 
     private function inferSchema(Rows $rows): void

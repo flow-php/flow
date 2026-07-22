@@ -14,6 +14,8 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
@@ -25,11 +27,9 @@ use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use Throwable;
 use ZipArchive;
 
-use function array_combine;
 use function array_map;
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
-use function is_scalar;
+use function Flow\ETL\DSL\str_schema;
 use function str_starts_with;
 
 final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
@@ -68,16 +68,94 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
      */
     public function extract(FlowContext $context): Generator
     {
-        $headers = [];
-
         // Offset must be a positive number
         $offset = $this->offset ?? 1;
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $hydrator = $context->hydrator();
+        $batchSize = $context->config->extractorBatchSize();
+
+        $baseSchema = $this->schema;
+
+        if (
+            $baseSchema !== null
+            && $shouldPutInputIntoRows
+            && $baseSchema->findDefinition('_input_file_uri') === null
+        ) {
+            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
+        }
+
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $this->schema);
+            $schema = $baseSchema;
+
+            if ($schema !== null) {
+                foreach ($partitions as $partition) {
+                    if ($schema->findDefinition($partition->name) === null) {
+                        $schema = $schema->add(str_schema($partition->name));
+                    }
+                }
+            }
+
+            $encoder = new ExcelEncoder(withHeader: $this->withHeader, convertEmptyToNull: $this->convertEmptyToNull);
+            $rawCells = [];
+
+            foreach ($this->extractRows($stream, $offset) as $cells) {
+                $rawCells[] = $cells;
+
+                if (count($rawCells) >= $batchSize) {
+                    $batch = [];
+
+                    foreach ($encoder->decode($rawCells) as $rowValues) {
+                        $row = $rowValues->values;
+
+                        if ($streamUri !== null) {
+                            $row['_input_file_uri'] = $streamUri;
+                        }
+
+                        foreach ($partitions as $partition) {
+                            $row[$partition->name] = $partition->value;
+                        }
+
+                        $batch[] = new RawRowValues($row);
+                    }
+
+                    $rawCells = [];
+
+                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+
+                        $this->incrementReturnedRows();
+
+                        if ($signal === Signal::STOP || $this->reachedLimit()) {
+                            $stream->close();
+
+                            return;
+                        }
+                    }
+                }
+            }
+
+            $batch = [];
+
+            foreach ($encoder->decode($rawCells) as $rowValues) {
+                $row = $rowValues->values;
+
+                if ($streamUri !== null) {
+                    $row['_input_file_uri'] = $streamUri;
+                }
+
+                foreach ($partitions as $partition) {
+                    $row[$partition->name] = $partition->value;
+                }
+
+                $batch[] = new RawRowValues($row);
+            }
+
+            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
+                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
 
                 $this->incrementReturnedRows();
 
@@ -153,11 +231,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
      */
     private function createRowsFromCells(Row $row, int $previousRowDataCount = 0): array
     {
-        $rowData = array_map(
-            // Convert empty values to nullables if allowed
-            fn(Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
-            $row->cells,
-        );
+        $rowData = array_map(static fn(Cell $cell) => $cell->getValue(), $row->cells);
 
         // Expand columns to the size of the previous row
         for ($i = count($rowData); $i < $previousRowDataCount; $i++) {
@@ -168,11 +242,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     }
 
     /**
-     * @param array<int, string> $headers
-     *
-     * @return Generator<int, array<array-key, mixed>>
+     * @return Generator<int, array<int, mixed>>
      */
-    private function extractRows(SourceStream $stream, array $headers, int $offset): Generator
+    private function extractRows(SourceStream $stream, int $offset): Generator
     {
         $reader = $this->reader($stream);
 
@@ -191,9 +263,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 $rowIndex++;
 
                 if (1 === $rowIndex && $this->withHeader) {
-                    $headersRaw = $this->createRowsFromCells($sheetRow);
-                    // Convert headers to strings for array_combine compatibility
-                    $headers = array_map(static fn($header) => is_scalar($header) ? (string) $header : '', $headersRaw);
+                    yield $this->createRowsFromCells($sheetRow);
 
                     continue;
                 }
@@ -207,11 +277,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
                 $previousRowDataCount = count($row);
 
-                if ($this->withHeader) {
-                    yield array_combine($headers, $row);
-                } else {
-                    yield $row;
-                }
+                yield $row;
             }
 
             $reader->close();

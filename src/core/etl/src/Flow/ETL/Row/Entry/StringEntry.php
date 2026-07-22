@@ -35,26 +35,12 @@ final class StringEntry implements Entry
         private readonly string $name,
         private readonly ?string $value,
         ?Metadata $metadata = null,
-        bool $fromNull = false,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $metadata = $metadata ?: Metadata::empty();
-        $this->definition = new StringDefinition(
-            $this->name,
-            $this->value === null,
-            $fromNull ? $metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true])) : $metadata,
-        );
-    }
-
-    /**
-     * @return self<null>
-     */
-    public static function fromNull(string $name, ?Metadata $metadata = null): self
-    {
-        return new self($name, null, $metadata, fromNull: true);
+        $this->definition = new StringDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     /**

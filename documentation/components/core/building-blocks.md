@@ -41,7 +41,7 @@ $rows = array_to_rows([
     ['id' => 2, 'name' => 'user_02', 'active' => false],
     ['id' => 3, 'name' => 'user_03', 'active' => true],
     ['id' => 4, 'name' => 'user_04', 'active' => false],
-], flow_context(config())->entryFactory());
+]);
 ```
 
 ## Entry Types
@@ -56,6 +56,7 @@ $rows = array_to_rows([
 - [Json](/src/core/etl/src/Flow/ETL/Row/Entry/JsonEntry.php)
 - [List](/src/core/etl/src/Flow/ETL/Row/Entry/ListEntry.php)
 - [Map](/src/core/etl/src/Flow/ETL/Row/Entry/MapEntry.php)
+- [Null](/src/core/etl/src/Flow/ETL/Row/Entry/NullEntry.php)
 - [String](/src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
 - [Structure](/src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
 - [Uuid](/src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
@@ -64,7 +65,8 @@ $rows = array_to_rows([
 - [XML](/src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
 - [XMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
 
-Internally, Flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create entries.
-It will try to detect and create the most appropriate entry type based on the value.
+Internally, Flow is using a [Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) to turn raw values
+into rows and an [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create single entries.
+Both will try to detect and create the most appropriate entry type based on the value.
 
 Flow Entries are based on [Flow Types Library](/documentation/components/libs/types.md)

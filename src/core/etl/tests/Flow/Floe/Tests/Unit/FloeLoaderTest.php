@@ -7,9 +7,11 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
+use Flow\Floe\Tests\Double\SpyHydrator;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
@@ -40,6 +42,19 @@ final class FloeLoaderTest extends TestCase
         }
 
         static::assertSame([1, 2], $ids);
+    }
+
+    public function test_load_honors_the_context_hydrator(): void
+    {
+        $hydrator = new SpyHydrator();
+        $context = flow_context(config_builder()->hydrator($hydrator)->build());
+        $path = path('memory://hydrator.floe');
+
+        $loader = to_floe($path);
+        $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
+        $loader->closure($context);
+
+        static::assertGreaterThan(0, $hydrator->dehydrateCalls);
     }
 
     public function test_destination_returns_path(): void

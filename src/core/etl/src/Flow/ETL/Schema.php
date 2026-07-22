@@ -12,6 +12,7 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
@@ -99,7 +100,7 @@ final class Schema implements Countable
                 $allDetected = true;
 
                 foreach ($schema->definitions() as $definition) {
-                    if ($definition->metadata()->has(Metadata::FROM_NULL)) {
+                    if ($definition instanceof NullDefinition) {
                         $allDetected = false;
 
                         break;

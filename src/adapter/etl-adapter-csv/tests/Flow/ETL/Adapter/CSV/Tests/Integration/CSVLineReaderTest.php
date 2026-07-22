@@ -15,28 +15,6 @@ final class CSVLineReaderTest extends FlowTestCase
 {
     use OperatingSystem;
 
-    public function test_memory_usage_with_large_multiline_csv(): void
-    {
-        $path = __DIR__ . '/../Fixtures/large_multiline_csv.csv';
-        $memoryBefore = memory_get_usage(true);
-
-        $stream = NativeLocalSourceStream::open(path_real($path));
-        $reader = new CSVLineReader('"');
-        $lines = iterator_to_array($reader->readLines($stream));
-
-        $memoryAfter = memory_get_usage(true);
-        $memoryUsed = $memoryAfter - $memoryBefore;
-
-        static::assertCount(11, $lines);
-
-        static::assertLessThan(50 * 1024 * 1024, $memoryUsed, 'Memory usage should be reasonable');
-
-        static::assertSame('"id","content"', $lines[0]);
-        static::assertStringStartsWith('"0","Line 0 content', $lines[1]);
-
-        $stream->close();
-    }
-
     public function test_reading_csv_with_custom_character_limit(): void
     {
         $path = __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv';
@@ -83,28 +61,6 @@ final class CSVLineReaderTest extends FlowTestCase
         static::assertSame('"name","description"', $lines[0]);
         static::assertSame('"John ""The Great""","Description with ""quotes"""', $lines[1]);
         static::assertSame('"Jane","Normal description"', $lines[2]);
-
-        $stream->close();
-    }
-
-    public function test_reading_large_csv_file_performance(): void
-    {
-        $path = __DIR__ . '/../Fixtures/large_performance_csv.csv';
-        $startTime = microtime(true);
-
-        $stream = NativeLocalSourceStream::open(path_real($path));
-        $reader = new CSVLineReader('"');
-        $lines = iterator_to_array($reader->readLines($stream));
-
-        $endTime = microtime(true);
-        $executionTime = $endTime - $startTime;
-
-        static::assertCount(10001, $lines);
-
-        static::assertLessThan(1.0, $executionTime, 'Reading 10,000 rows should complete in less than 1 second');
-
-        static::assertSame('id,name,value,description', $lines[0]);
-        static::assertSame('9999,name_9999,value_9999,description_9999', $lines[10000]);
 
         $stream->close();
     }

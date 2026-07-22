@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\FloeEngine;
+use Flow\Floe\NativeFloeEncoder;
 
 use function Flow\ETL\DSL\append;
 use function Flow\ETL\DSL\config_builder;
@@ -33,6 +36,41 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
+    }
+
+    public function test_writing_and_reading_with_explicit_native_engine(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension is not loaded');
+        }
+
+        $path = $this->cacheDir->suffix('native-engine.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path, engine: FloeEngine::native))
+            ->run();
+
+        static::assertSame(2, data_frame()->read(from_floe($path, engine: FloeEngine::native))->count());
+    }
+
+    public function test_writing_and_reading_with_explicit_php_engine(): void
+    {
+        $path = $this->cacheDir->suffix('php-engine.floe');
+
+        data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->saveMode(overwrite())
+            ->write(to_floe($path, engine: FloeEngine::php))
+            ->run();
+
+        static::assertSame(
+            2,
+            data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+                ->read(from_floe($path, engine: FloeEngine::php))
+                ->count(),
+        );
     }
 
     public function test_input_file_uri_is_added_when_configured(): void

@@ -15,6 +15,11 @@ use function Flow\ETL\DSL\str_entry;
 
 final class CollectUniqueTest extends FlowTestCase
 {
+    public function test_references_returns_the_aggregated_reference(): void
+    {
+        static::assertEquals([ref('value')], collect_unique(ref('value'))->references());
+    }
+
     public function test_aggregation_collect_unique_values(): void
     {
         $aggregator = collect_unique(ref('data'));

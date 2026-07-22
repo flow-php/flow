@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Serializer\Exception\SerializationException;
 
-use function implode;
-use function is_a;
-use function is_object;
+use function get_debug_type;
 use function serialize;
 use function sprintf;
 use function unserialize;
@@ -17,26 +18,28 @@ final class NativePHPSerializer implements Serializer
 {
     public function __construct() {}
 
-    public function serialize(object $serializable): string
+    public function serialize(Rows $rows, DestinationStream $destination): void
     {
-        return serialize($serializable);
+        $destination->append(serialize($rows));
+        $destination->close();
     }
 
-    public function unserialize(string $serialized, array $classes): object
+    public function unserialize(SourceStream $source): Rows
     {
-        // @mago-ignore analysis:mixed-assignment
-        $value = unserialize($serialized, ['allowed_classes' => true]);
+        $payload = $source->content();
+        $source->close();
 
-        foreach ($classes as $class) {
-            if (is_object($value) && is_a($value, $class)) {
-                return $value;
-            }
+        // @mago-ignore analysis:mixed-assignment
+        $value = unserialize($payload, ['allowed_classes' => true]);
+
+        if (!$value instanceof Rows) {
+            throw new SerializationException(sprintf(
+                'NativePHPSerializer::unserialize must return instance of %s, got: %s',
+                Rows::class,
+                get_debug_type($value),
+            ));
         }
 
-        throw new RuntimeException(sprintf(
-            'NativePHPSerializer::unserialize must return instance of {%s}, got: %s',
-            implode(', ', $classes),
-            get_debug_type($value),
-        ));
+        return $value;
     }
 }

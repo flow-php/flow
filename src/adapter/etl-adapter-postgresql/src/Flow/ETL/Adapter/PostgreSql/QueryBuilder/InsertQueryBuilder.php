@@ -6,12 +6,14 @@ namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
+use function array_keys;
+use function count;
+use function Flow\ETL\DSL\ref;
 use function Flow\PostgreSql\DSL\bulk_insert;
 use function Flow\PostgreSql\DSL\conflict_columns;
 use function Flow\PostgreSql\DSL\conflict_constraint;
@@ -24,27 +26,24 @@ final readonly class InsertQueryBuilder
     ) {}
 
     /**
+     * @param list<array<string, mixed>> $values pre-sorted dehydrated value maps
+     *
      * @return array{Sql, list<null|TypedValue>}
      */
-    public function build(Rows $rows, ?InsertOptions $options = null): array
+    public function build(array $values, Schema $schema, ?InsertOptions $options = null): array
     {
-        $sortedRows = $rows->sortEntries();
-        $firstRow = $sortedRows->first();
-        $columns = [];
-
-        foreach ($firstRow->entries() as $entry) {
-            $columns[] = $entry->name();
-        }
+        $columns = $values === [] ? [] : array_keys($values[0]);
 
         $params = [];
 
-        foreach ($sortedRows as $row) {
-            foreach ($row->entries() as $entry) {
-                $params[] = $this->mapEntryToParameter($entry);
+        foreach ($values as $row) {
+            /** @var mixed $value */
+            foreach ($row as $column => $value) {
+                $params[] = $this->typesMap->map($column, $schema->get(ref($column))->type(), $value);
             }
         }
 
-        $query = bulk_insert($this->table, $columns, $sortedRows->count());
+        $query = bulk_insert($this->table, $columns, count($values));
 
         if ($options !== null && $options->hasConflictHandling()) {
             $query = $this->applyConflictHandling($query, $options);
@@ -74,13 +73,5 @@ final readonly class InsertQueryBuilder
         $updateColumns = $options->updateColumns !== [] ? $options->updateColumns : null;
 
         return $query->onConflictDoUpdate($conflictTarget, $updateColumns);
-    }
-
-    /**
-     * @param Entry<mixed> $entry
-     */
-    private function mapEntryToParameter(Entry $entry): ?TypedValue
-    {
-        return $this->typesMap->mapEntry($entry);
     }
 }

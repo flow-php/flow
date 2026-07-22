@@ -29,6 +29,22 @@ test-mutation *args:
 test-website:
     composer test --working-dir=./web/landing
 
+# Run phpbench benchmarks (local only; MUST be inside nix-shell). Args are forwarded to `phpbench run`.
+# Defaults to `--report=flow-report`; pass your own `--report=...` to override it.
+# Examples:
+#   just benchmark
+#   just benchmark --group=format-parquet
+#   just benchmark --store --tag=before   # store a baseline
+#   just benchmark --ref=before           # run current code, compare to baseline
+benchmark *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "{{args}}" == *"--report"* ]]; then
+        tools/phpbench/vendor/bin/phpbench run {{args}}
+    else
+        tools/phpbench/vendor/bin/phpbench run --report=flow-report {{args}}
+    fi
+
 # Run all linters: Mago format-check + Mago lint + monorepo validation + GitHub Actions audit.
 lint: lint-mago lint-monorepo lint-actions
 

@@ -15,6 +15,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
@@ -168,36 +169,17 @@ final class XMLDefinitionTest extends FlowTestCase
         static::assertEquals($expected, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null(): void
+    public function test_merge_with_null_definition_keeps_original_type(): void
     {
-        $def1 = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-        $def2 = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def1->merge($def2);
+        $merged = xml_schema('col', false)->merge(null_schema('col'));
 
         static::assertInstanceOf(XMLDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
-        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null(): void
+    public function test_merge_when_this_is_null_definition(): void
     {
-        $nullDef = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-        $def = xml_schema('col', false);
-
-        $merged = $nullDef->merge($def);
-
-        static::assertInstanceOf(XMLDefinition::class, $merged);
-        static::assertTrue($merged->isNullable());
-        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
-    }
-
-    public function test_merge_with_assumed_null_keeps_original_type(): void
-    {
-        $def = xml_schema('col', false);
-        $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
-
-        $merged = $def->merge($nullDef);
+        $merged = null_schema('col')->merge(xml_schema('col', false));
 
         static::assertInstanceOf(XMLDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
