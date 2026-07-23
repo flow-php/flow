@@ -1,0 +1,514 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Performance Optimizations</h1>
+        <hr/>
+        <p>
+            From July 10 to 12, we organized the first Flow PHP hackathon together with
+            <a href="https://github.com/stloyd" target="_blank">Józef (@stloyd)</a>
+            and <a href="https://github.com/mrhdolek" target="_blank">Aleksander (@MrHDOLEK)</a>.
+        </p>
+        <p>
+            We had one goal: improve general Flow performance. We created a dedicated GitHub label for the event that
+            groups together all the work we pushed through those 3 days. Those changes also pushed me to redesign Flow's
+            serialization/hydration architecture and invent a new binary data format, called Floe.
+        </p>
+        <p>
+            GitHub Label: <a href="https://github.com/flow-php/flow/pulls?q=is%3Apr+label%3Ahackaton-07-2026+" target="_blank">hackaton-07-2026</a>
+        </p>
+        <h2>Benchmarks</h2>
+        <p>
+            Before I explain what and how we changed, take a look at the numbers.
+        </p>
+        <p>
+            <strong>Benchmarking Method</strong><br/>
+            100k rows, same dataset files, same machine, PHP 8.3 + opcache, phpbench (mode of 3 iterations, 1 warmup).
+            Delta = (1.0 - 0.41.1) / 0.41.1; negative is better.<br/>
+            1.0 pipelines read input from <a href="/documentation/components/core/floe/" target="_blank">Floe format</a>,
+            0.41.1 from Parquet (Floe did not exist yet); timings include input reading.
+        </p>
+        <aside class="callout-info">
+            <strong>Note:</strong> All benchmarks run through a full DataFrame. This means we are not only reading the
+            dataset from a source format &mdash; the DataFrame also casts and converts each row into Flow's
+            <a href="https://github.com/flow-php/flow/blob/32bbeab728f8e5c925e04111f9c54057c04b9000/src/core/etl/src/Flow/ETL/Rows.php" target="_blank">Rows</a>
+            representation, just like in the snippet below.
+        </aside>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/benchmark.php' %}{% endapply %}</code></pre>
+        <h3>DataFrame Operations</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Benchmark</th>
+                <th>Rows</th>
+                <th>Time 0.41.1</th>
+                <th>Time 1.0</th>
+                <th>Mem 0.41.1</th>
+                <th>Mem 1.0</th>
+                <th>&Delta; time</th>
+                <th>&Delta; mem</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Join inner</td>
+                <td>100k</td>
+                <td>8.03s</td>
+                <td>3.35s</td>
+                <td>44.9mb</td>
+                <td>30.8mb</td>
+                <td>-58.3%</td>
+                <td>-31.4%</td>
+            </tr>
+            <tr>
+                <td>Join left</td>
+                <td>100k</td>
+                <td>8.23s</td>
+                <td>3.41s</td>
+                <td>44.9mb</td>
+                <td>30.8mb</td>
+                <td>-58.6%</td>
+                <td>-31.4%</td>
+            </tr>
+            <tr>
+                <td>Join left anti</td>
+                <td>100k</td>
+                <td>7.74s</td>
+                <td>2.53s</td>
+                <td>44.9mb</td>
+                <td>29.5mb</td>
+                <td>-67.3%</td>
+                <td>-34.4%</td>
+            </tr>
+            <tr>
+                <td>Join right</td>
+                <td>100k</td>
+                <td>8.27s</td>
+                <td>3.33s</td>
+                <td>44.9mb</td>
+                <td>30.9mb</td>
+                <td>-59.7%</td>
+                <td>-31.3%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Cross join</td>
+                <td>100k</td>
+                <td>5.26s</td>
+                <td>1.36s</td>
+                <td>45.7mb</td>
+                <td>31.1mb</td>
+                <td>-74.2%</td>
+                <td>-32.0%</td>
+            </tr>
+            <tr>
+                <td>Join each</td>
+                <td>100k</td>
+                <td>6.32s</td>
+                <td>1.77s</td>
+                <td>45.8mb</td>
+                <td>30.0mb</td>
+                <td>-71.9%</td>
+                <td>-34.6%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Sort (external)</td>
+                <td>100k</td>
+                <td>25.08s</td>
+                <td>2.64s</td>
+                <td>115.0mb</td>
+                <td>93.3mb</td>
+                <td>-89.5%</td>
+                <td>-18.9%</td>
+            </tr>
+            <tr>
+                <td>Group by</td>
+                <td>100k</td>
+                <td>4.59s</td>
+                <td>1.32s</td>
+                <td>44.1mb</td>
+                <td>23.9mb</td>
+                <td>-71.2%</td>
+                <td>-45.9%</td>
+            </tr>
+            <tr>
+                <td>Group by + aggregates</td>
+                <td>100k</td>
+                <td>5.85s</td>
+                <td>1.85s</td>
+                <td>44.1mb</td>
+                <td>24.1mb</td>
+                <td>-68.4%</td>
+                <td>-45.5%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Filter</td>
+                <td>100k</td>
+                <td>4.96s</td>
+                <td>0.87s</td>
+                <td>36.9mb</td>
+                <td>23.7mb</td>
+                <td>-82.4%</td>
+                <td>-35.7%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Schema inference</td>
+                <td>100k</td>
+                <td>6.85s</td>
+                <td>1.61s</td>
+                <td>44.8mb</td>
+                <td>29.0mb</td>
+                <td>-76.5%</td>
+                <td>-35.2%</td>
+            </tr>
+            <tr>
+                <td>Cache write</td>
+                <td>100k</td>
+                <td>5.91s</td>
+                <td>2.10s</td>
+                <td>63.6mb</td>
+                <td>34.9mb</td>
+                <td>-64.5%</td>
+                <td>-45.2%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Cache read</td>
+                <td>100k</td>
+                <td>4.37s</td>
+                <td>0.62s</td>
+                <td>133.7mb</td>
+                <td>34.9mb</td>
+                <td>-85.8%</td>
+                <td>-73.9%</td>
+            </tr>
+            </tbody>
+        </table>
+        <h3>Data Formats &amp; Storage</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Benchmark</th>
+                <th>Rows</th>
+                <th>Time 0.41.1</th>
+                <th>Time 1.0</th>
+                <th>Mem 0.41.1</th>
+                <th>Mem 1.0</th>
+                <th>&Delta; time</th>
+                <th>&Delta; mem</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>CSV read</td>
+                <td>100k</td>
+                <td>2.52s</td>
+                <td>2.57s</td>
+                <td>9.1mb</td>
+                <td>9.6mb</td>
+                <td>+1.9%</td>
+                <td>+5.2%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>CSV write</td>
+                <td>100k</td>
+                <td>5.40s</td>
+                <td>1.32s</td>
+                <td>22.8mb</td>
+                <td>23.4mb</td>
+                <td>-75.6%</td>
+                <td>+2.5%</td>
+            </tr>
+            <tr>
+                <td>JSON read</td>
+                <td>100k</td>
+                <td>4.29s</td>
+                <td>3.91s</td>
+                <td>9.1mb</td>
+                <td>10.1mb</td>
+                <td>-8.9%</td>
+                <td>+10.9%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>JSON write</td>
+                <td>100k</td>
+                <td>5.35s</td>
+                <td>1.58s</td>
+                <td>22.8mb</td>
+                <td>24.3mb</td>
+                <td>-70.5%</td>
+                <td>+6.5%</td>
+            </tr>
+            <tr>
+                <td>Parquet read (php)</td>
+                <td>100k</td>
+                <td>6.60s</td>
+                <td>3.97s</td>
+                <td>210.1mb</td>
+                <td>216.4mb</td>
+                <td>-39.9%</td>
+                <td>+3.0%</td>
+            </tr>
+            <tr>
+                <td>Parquet read (arrow)</td>
+                <td>100k</td>
+                <td>3.82s</td>
+                <td>1.42s</td>
+                <td>22.7mb</td>
+                <td>23.1mb</td>
+                <td>-62.8%</td>
+                <td>+1.7%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Parquet write (php)</td>
+                <td>100k</td>
+                <td>17.82s</td>
+                <td>4.22s</td>
+                <td>212.3mb</td>
+                <td>45.8mb</td>
+                <td>-76.3%</td>
+                <td>-78.4%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Parquet write (arrow)</td>
+                <td>100k</td>
+                <td>5.79s</td>
+                <td>1.79s</td>
+                <td>22.9mb</td>
+                <td>23.6mb</td>
+                <td>-69.0%</td>
+                <td>+3.3%</td>
+            </tr>
+            <tr>
+                <td>XML read</td>
+                <td>100k</td>
+                <td>4.56s</td>
+                <td>4.59s</td>
+                <td>105.8mb</td>
+                <td>105.7mb</td>
+                <td>+0.5%</td>
+                <td>-0.1%</td>
+            </tr>
+            <tr>
+                <td>XML write</td>
+                <td>100k</td>
+                <td>14.76s</td>
+                <td>6.24s</td>
+                <td>22.8mb</td>
+                <td>23.7mb</td>
+                <td>-57.7%</td>
+                <td>+4.1%</td>
+            </tr>
+            <tr>
+                <td>Excel read</td>
+                <td>100k</td>
+                <td>14.21s</td>
+                <td>13.01s</td>
+                <td>9.1mb</td>
+                <td>9.7mb</td>
+                <td>-8.5%</td>
+                <td>+7.1%</td>
+            </tr>
+            <tr>
+                <td>Excel write</td>
+                <td>100k</td>
+                <td>11.66s</td>
+                <td>7.40s</td>
+                <td>22.9mb</td>
+                <td>22.8mb</td>
+                <td>-36.5%</td>
+                <td>-0.6%</td>
+            </tr>
+            <tr>
+                <td>Text read</td>
+                <td>100k</td>
+                <td>0.50s</td>
+                <td>0.21s</td>
+                <td>9.1mb</td>
+                <td>8.9mb</td>
+                <td>-57.5%</td>
+                <td>-1.9%</td>
+            </tr>
+            <tr class="highlight green">
+                <td>Text write</td>
+                <td>100k</td>
+                <td>4.88s</td>
+                <td>0.84s</td>
+                <td>22.8mb</td>
+                <td>17.5mb</td>
+                <td>-82.7%</td>
+                <td>-23.2%</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL write</td>
+                <td>100k</td>
+                <td>8.57s</td>
+                <td>5.37s</td>
+                <td>45.0mb</td>
+                <td>33.3mb</td>
+                <td>-37.4%</td>
+                <td>-26.0%</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL read</td>
+                <td>100k</td>
+                <td>8.05s</td>
+                <td>7.06s</td>
+                <td>9.1mb</td>
+                <td>10.9mb</td>
+                <td>-12.3%</td>
+                <td>+19.9%</td>
+            </tr>
+            <tr>
+                <td>Doctrine write</td>
+                <td>100k</td>
+                <td>9.61s</td>
+                <td>6.10s</td>
+                <td>44.6mb</td>
+                <td>33.3mb</td>
+                <td>-36.5%</td>
+                <td>-25.3%</td>
+            </tr>
+            <tr>
+                <td>Doctrine read</td>
+                <td>100k</td>
+                <td>6.61s</td>
+                <td>6.32s</td>
+                <td>9.1mb</td>
+                <td>10.3mb</td>
+                <td>-4.4%</td>
+                <td>+13.1%</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>
+            <small>
+                Parquet engines: both versions ship php and arrow engines. 1.0 pins the engine explicitly per benchmark;
+                0.41.1 auto-selects (arrow whenever ext-arrow is loaded), so its php rows were measured with ext-arrow
+                disabled and its arrow rows with ext-arrow loaded. On 0.41.1 the selected engine applies to both the
+                input
+                read and the write inside the write benchmark; on 1.0 the write benchmark reads its input from Floe.
+            </small>
+        </p>
+        <h2>Floe</h2>
+        <blockquote>
+            A floe (or ice floe) is a large, flat sheet of ice floating on the ocean, a river, or a lake.
+        </blockquote>
+        <p>
+            Floe is a dedicated, immutable binary data format created to speed up serialization/hydration of Flow Rows.
+            It combines ideas from Parquet & Avro, optimized for PHP and Flow Rows.
+        </p>
+        <p>
+            Floe is a row-based binary format, with metadata stored as JSON in the footer. It is self-descriptive, which
+            means the format provides a schema (also in the footer) that supports deeply nested data structures like
+            lists/rows/maps.
+        </p>
+        <p>
+            Floe also supports schema evolution without breaking backward compatibility. This means we can add new
+            columns between write batches, as long as those columns are nullable.
+        </p>
+
+        <h2>Encoders and Hydrator</h2>
+
+        <p>
+            Introducing Floe was just the first step to optimize performance. It allowed us to replace the old Serializer
+            based on PHP's <code>serialize</code> & <code>unserialize</code> functions.
+        </p>
+        <p>
+            The diagram below shows how Flow used to read and convert data from datasets into Rows, and then back to the
+            format expected by the destination storage.
+        </p>
+        <figure>
+            <img class="mx-auto w-full" src="{{ asset('images/blog/performance-optimizations/before.png') }}" alt="Flow workflow before Encoders / Hydrators contracts">
+            <figcaption>Flow workflow before Encoders / Hydrators contracts</figcaption>
+        </figure>
+        <p>
+            As you can see, EntryFactory was responsible for encoding the values coming from a data source and casting them
+            to a specific schema, and then each loader converted them back to whatever format the destination storage expected.
+        </p>
+        <p>
+            That was one of our biggest bottlenecks. Because of how generic it was, EntryFactory always cast data into a
+            specific format, regardless of which data format it was reading from. You might ask: what is wrong with this approach?
+            Most data formats like CSV, JSON or PostgreSQL return data as strings or simple scalar values anyway.
+        </p>
+        <p>
+            That is correct, but there are also data formats that are self-descriptive (they come with a schema), like Parquet or Floe.
+            For those, casting &mdash; especially of nested data structures like lists / structures / maps &mdash; was redundant. That redundancy
+            is not so painful when working with a few thousand rows, but once we move beyond 100k, the pain becomes real.
+        </p>
+        <p>
+            So with our new architecture, each data format provides its own dedicated Encoder/Decoder, which internally decides
+            how to handle data just after reading it from the source and just before we write it to the destination.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/encoder.php' %}{% endapply %}</code></pre>
+
+        <p>
+            Once our data is encoded into its plain PHP representation, we pass it to the Hydrator, whose only goal is to create the Rows instances
+            based on the passed <a href="https://github.com/flow-php/flow/blob/b0ea50111cb8ff4663e1100e9b33a104d68b203f/src/core/etl/src/Flow/ETL/Row/RawRowValues.php" target="_blank">RawRowValues</a>.
+        </p>
+
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/hydrator.php' %}{% endapply %}</code></pre>
+
+        <p>
+            This separation also allowed us to create two instances of the Hydrator: one based on PHP that internally uses EntryFactory, and a
+            Rust-based hydrator available when <code>flow-php/flow-ext</code> is installed.
+        </p>
+        <ul>
+            <li><a href="https://github.com/flow-php/flow/blob/b0ea50111cb8ff4663e1100e9b33a104d68b203f/src/core/etl/src/Flow/ETL/Row/PhpRowHydrator.php" target="_blank">PhpRowHydrator</a></li>
+            <li><a href="https://github.com/flow-php/flow/blob/b0ea50111cb8ff4663e1100e9b33a104d68b203f/src/core/etl/src/Flow/ETL/Row/NativeRowHydrator.php" target="_blank">NativeRowHydrator</a></li>
+        </ul>
+        <p>
+            The Hydrator is not the only place where we managed to leverage the PHP extension. We used a similar pattern (php / native) for Floe's dedicated Encoder,
+            <a href="https://github.com/flow-php/flow/blob/b0ea50111cb8ff4663e1100e9b33a104d68b203f/src/core/etl/src/Flow/Floe/AdaptiveFloeEncoder.php">AdaptiveFloeEncoder</a>,
+            which let us squeeze out even more performance.
+        </p>
+        <figure>
+            <img class="mx-auto w-full" src="{{ asset('images/blog/performance-optimizations/after.png') }}" alt="Flow workflow after Encoders / Hydrators contracts">
+            <figcaption>Flow workflow after Encoders / Hydrators contracts</figcaption>
+        </figure>
+        <h2>Caching / Sorting / Grouping / Joining </h2>
+        <p>
+            Since all the mechanisms mentioned above need to dump Rows from memory to disk (or other storage) at some point, Floe became
+            the default serialization format, which allowed us to significantly improve the performance of those operations.
+        </p>
+        <p>
+            But we had to slightly change the Serializer contract, which previously attempted to serialize/unserialize any object.
+            Now it focuses only on Rows, which can really represent any data structure.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/serializer.php' %}{% endapply %}</code></pre>
+        <p>
+            The new serialization contract also expects source/destination streams to read from and write to.
+        </p>
+        <hr/>
+        <h2>Bucketing</h2>
+        <p>
+            The final step of this refactoring was improving bucketing (breaking the dataset into smaller buckets to reduce memory consumption).
+        </p>
+        <p>
+            <code>Sort / Join / Group By</code> - all 3 are directly affected by those changes, and can now operate on datasets of any size.
+            I believe there is still room for optimization, especially around Sort, which currently still takes around 100mb of RAM to sort 100k rows.
+        </p>
+        <p>
+            This is also not the final performance we are aiming for. All of the benchmarks above are executed in a single process.
+            True scalability will come with parallel processing, and that's another area where Floe will shine, since we'll be able to
+            move (shuffle) data between workers faster.
+        </p>
+        <p>
+            Using PHP's native serializer, 100k rows produced a 1.5GB string; with Floe we managed to drop that to 36MB &mdash; and this is still before compression!
+        </p>
+        <p>
+            The goal is to implement different compression algorithms and let the Floe reader/writer use them, like Snappy, which is pretty much the
+            industry standard today.
+        </p>
+        <h2>The end goal</h2>
+        <p>
+            These numbers might not feel very impressive yet, but joining 100k rows in under 3 seconds with only 30MB of RAM might
+            already be a good reason to move some processes outside the database and work on plain files.
+        </p>
+        <p>
+            Flow's true performance boost will come with parallel processing, which will make speed depend on another variable &mdash;
+            the number of processes, and maybe even nodes, that can process ETL pipelines in parallel.
+        </p>
+        <p>
+            That's our final goal, and I hope it will make Flow a real alternative to other data processing frameworks.
+        </p>
+
+    </article>
+{% endblock %}

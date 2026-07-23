@@ -29,4 +29,15 @@ final class BlogController extends AbstractController
             'posts' => (new Posts())->all(),
         ]);
     }
+
+    #[Route('/rss.xml', name: 'blog_rss')]
+    public function rss(): Response
+    {
+        $response = $this->render('blog/rss.xml.twig', [
+            'posts' => (new Posts())->all(),
+        ]);
+        $response->headers->set('Content-Type', 'application/rss+xml; charset=UTF-8');
+
+        return $response;
+    }
 }

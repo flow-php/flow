@@ -139,6 +139,10 @@ code {
     @apply font-semibold text-xl text-slate-900 mt-7 mb-2 dark:text-white;
 }
 
+#blog-post h4 {
+    @apply font-semibold text-lg text-slate-900 mt-6 mb-2 dark:text-white;
+}
+
 #blog-post p,
 #blog-post ul,
 #blog-post ol {
@@ -176,6 +180,21 @@ code {
            dark:border-blue-100 dark:text-white/75;
 }
 
+#blog-post .callout-info {
+    @apply border-l-2 border-blue-300 bg-blue-300/[0.04] rounded-r-lg px-4 py-3 my-5 text-slate-700
+           dark:border-blue-100 dark:bg-blue-100/[0.08] dark:text-white/85;
+}
+
+#blog-post .callout-warning {
+    @apply border-l-2 border-brown-200 bg-brown-100/[0.06] rounded-r-lg px-4 py-3 my-5 text-slate-700
+           dark:border-brown-100 dark:bg-brown-100/[0.08] dark:text-white/85;
+}
+
+#blog-post .callout-danger {
+    @apply border-l-2 border-orange-200 bg-orange-100/[0.05] rounded-r-lg px-4 py-3 my-5 text-slate-700
+           dark:border-orange-100 dark:bg-orange-100/[0.08] dark:text-white/85;
+}
+
 #blog-post table {
     @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-slate-200
            dark:border-white/10;
@@ -188,6 +207,14 @@ code {
 
 #blog-post table td {
     @apply border-b border-slate-200 px-3 py-2 dark:border-white/10;
+}
+
+#blog-post .highlight.green {
+    @apply bg-green-500/[0.08] dark:bg-green-400/[0.1];
+}
+
+#blog-post .highlight.red {
+    @apply bg-red-500/[0.08] dark:bg-red-400/[0.1];
 }
 
 #blog-post img {

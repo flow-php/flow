@@ -26,9 +26,7 @@ final class JsonDecoder implements ValueDecoder
         $create = Closure::bind(
             static function (string $value, bool $isObject) use ($reflection): Json {
                 $json = $reflection->newInstanceWithoutConstructor();
-                // @mago-ignore analysis:invalid-property-write
                 $json->value = $value;
-                // @mago-ignore analysis:invalid-property-write
                 $json->isObject = $isObject;
 
                 return $json;

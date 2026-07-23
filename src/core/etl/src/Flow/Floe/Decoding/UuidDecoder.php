@@ -25,7 +25,6 @@ final class UuidDecoder implements ValueDecoder
         $create = Closure::bind(
             static function (string $value) use ($reflection): Uuid {
                 $uuid = $reflection->newInstanceWithoutConstructor();
-                // @mago-ignore analysis:invalid-property-write
                 $uuid->value = $value;
 
                 return $uuid;

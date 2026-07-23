@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{%- autoescape 'html' -%}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Flow PHP Blog</title>
+        <link>{{ url('blog') }}</link>
+        <atom:link href="{{ url('blog_rss') }}" rel="self" type="application/rss+xml"/>
+        <description>Articles, releases and guides from the Flow PHP data processing framework.</description>
+        <language>en</language>
+        {%- if posts|length %}
+        <lastBuildDate>{{ (posts|first).date|date('r') }}</lastBuildDate>
+        {%- endif %}
+        {%- for post in posts %}
+        <item>
+            <title>{{ post.title }}</title>
+            <link>{{ url('blog_post', {date: post.date|date('Y-m-d'), slug: post.slug}) }}</link>
+            <guid isPermaLink="true">{{ url('blog_post', {date: post.date|date('Y-m-d'), slug: post.slug}) }}</guid>
+            <description>{{ post.description }}</description>
+            <pubDate>{{ post.date|date('r') }}</pubDate>
+        </item>
+        {%- endfor %}
+    </channel>
+</rss>
+{%- endautoescape -%}
