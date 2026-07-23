@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-07-22
+## [Unreleased] - 2026-07-23
 
 ### Added
+- [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - "Performance Optimizations" blog post with benchmarks and diagrams** - [@norberttech](https://github.com/norberttech)
+- [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - blog RSS feed at /rss.xml with autodiscovery and subscribe links** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Standalone Flow\ETL\Bucketing storage backend with Memory, Filesystem and PSR-16 implementations.** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - BucketingProcessor with pluggable strategies (HashBucketing, SortedRunBucketing).** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Algorithm builder DSL functions: memory_sort(), external_sort(), hash_join(), hash_group_by().** - [@norberttech](https://github.com/norberttech)
@@ -121,6 +123,8 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - silence false-positive analyzer warnings on batch size guards** - [@norberttech](https://github.com/norberttech)
+- [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/postgresql - silence false-positive analyzer warning on version comparison** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DateInterval ordering in sort now works via type-specialized Rows::sortBy.** - [@norberttech](https://github.com/norberttech)
 - [#2525](https://github.com/flow-php/flow/pull/2525) - **flow-php/symfony-telemetry-bundle - route_naming: path no longer calls Router::getRouteCollection() (full route collection rebuild) on every traced request** - [@norberttech](https://github.com/norberttech)
 - [#2523](https://github.com/flow-php/flow/pull/2523) - **flow-php/filesystem - MemoryStream appends at end of stream after ranged reads.** - [@norberttech](https://github.com/norberttech)
@@ -138,6 +142,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - unused analyzer ignore pragmas in Floe JSON/UUID decoders** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DataFrame::pivot() - pivot is declared between groupBy() and aggregate().** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Root ConfigBuilder externalSort*/join*/grouping* delegators.** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Legacy Sort\ExternalSort and BucketsCache family.** - [@norberttech](https://github.com/norberttech)
