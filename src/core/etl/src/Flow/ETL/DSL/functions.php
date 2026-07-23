@@ -434,7 +434,7 @@ function filesystem_cache(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function batched_by(Extractor $extractor, string|Reference $column, ?int $min_size = null): BatchByExtractor
 {
-    // @mago-ignore analysis:invalid-operand
+    // @mago-ignore analysis:invalid-operand,impossible-condition,redundant-comparison,redundant-logical-operation
     if ($min_size !== null && $min_size <= 0) {
         throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
     }

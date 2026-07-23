@@ -45,6 +45,12 @@ final class Posts
             'date' => '2026-06-29',
             'slug' => 'flow-php-release-0410',
         ],
+        [
+            'title' => 'Performance Optimizations',
+            'description' => 'Floe is a dedicated binary format, created to speedup serialization and reduce serialized content size of Rows.',
+            'date' => '2026-07-23',
+            'slug' => 'performance-optimizations',
+        ],
     ];
 
     /**

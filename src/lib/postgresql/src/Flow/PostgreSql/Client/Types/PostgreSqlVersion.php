@@ -35,6 +35,7 @@ enum PostgreSqlVersion: int
 
     public function supportsJsonPath(): bool
     {
+        // @mago-ignore analysis:redundant-comparison
         return $this->value >= self::V12->value; // Added in PostgreSQL 12
     }
 
