@@ -7,16 +7,12 @@ namespace Flow\ETL\Adapter\Http;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
-use function array_merge;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\str_entry;
 
 final class PsrHttpClientStaticExtractor implements Extractor
 {
@@ -29,6 +25,8 @@ final class PsrHttpClientStaticExtractor implements Extractor
      * @var null|callable(RequestInterface) : void
      */
     private $preRequest;
+
+    private ?Schema $schema = null;
 
     /**
      * @param iterable<RequestInterface> $requests
@@ -43,10 +41,8 @@ final class PsrHttpClientStaticExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
-        $responseFactory = new ResponseEntriesFactory();
-        $requestFactory = new RequestEntriesFactory();
-
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+        $encoder = new HttpEncoder();
+        $hydrator = $context->hydrator();
 
         foreach ($this->requests as $request) {
             if ($this->preRequest) {
@@ -59,25 +55,15 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            if ($shouldPutInputIntoRows) {
-                $signal = yield new Rows(Row::create(...array_merge(
-                    $responseFactory->create($response)->all(),
-                    $requestFactory->create($request)->all(),
-                    [
-                        str_entry('request_uri', (string) $request->getUri()),
-                        str_entry('request_method', $request->getMethod()),
-                        json_entry('request_headers', $request->getHeaders()),
-                    ],
-                )));
-            } else {
-                $signal = yield new Rows(Row::create(...array_merge(
-                    $responseFactory->create($response)->all(),
-                    $requestFactory->create($request)->all(),
-                )));
-            }
+            foreach ($hydrator->cast($encoder->decode([new HttpExchange(
+                $request,
+                $response,
+            )]), $this->schema) as $row) {
+                $signal = yield new Rows($row);
 
-            if ($signal === Signal::STOP) {
-                return;
+                if ($signal === Signal::STOP) {
+                    return;
+                }
             }
         }
     }
@@ -98,6 +84,13 @@ final class PsrHttpClientStaticExtractor implements Extractor
     public function withPreRequest(callable $preRequest): self
     {
         $this->preRequest = $preRequest;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema): self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

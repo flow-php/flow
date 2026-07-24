@@ -21,8 +21,28 @@ final class ContentTypeDetectorTest extends TestCase
             ResponseType::JSON,
         ];
 
+        yield 'application/json with charset param' => [
+            new Response(headers: ['Content-Type' => 'application/json; charset=utf-8']),
+            ResponseType::JSON,
+        ];
+
+        yield 'application/vnd.api+json suffix' => [
+            new Response(headers: ['Content-Type' => 'application/vnd.api+json']),
+            ResponseType::JSON,
+        ];
+
         yield 'application/xml' => [
             new Response(headers: ['Content-Type' => 'application/xml']),
+            ResponseType::XML,
+        ];
+
+        yield 'text/xml' => [
+            new Response(headers: ['Content-Type' => 'text/xml; charset=UTF-8']),
+            ResponseType::XML,
+        ];
+
+        yield 'application/atom+xml suffix' => [
+            new Response(headers: ['Content-Type' => 'application/atom+xml']),
             ResponseType::XML,
         ];
 

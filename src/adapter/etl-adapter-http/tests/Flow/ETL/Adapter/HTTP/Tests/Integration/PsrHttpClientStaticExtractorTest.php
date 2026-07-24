@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
@@ -16,9 +17,15 @@ use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_static_http_requests;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function is_scalar;
 use function json_decode;
+use function json_encode;
 
 final class PsrHttpClientStaticExtractorTest extends FlowTestCase
 {
@@ -84,5 +91,32 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
 
         static::assertSame('norberttech', $norbertResponseBody['login']);
         static::assertSame('tomaszhanc', $tomekResponseBody['login']);
+    }
+
+    public function test_schema_typed_response_body(): void
+    {
+        $factory = new Psr17Factory();
+        $client = new Client($factory);
+        $client->addResponse(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'login' => 'norberttech',
+            'id' => 1,
+        ], JSON_THROW_ON_ERROR)));
+
+        $rows = from_static_http_requests(
+            $client,
+            [$factory->createRequest('GET', 'https://api.github.com/users/norberttech')],
+            schema(structure_schema('response_body', type_structure([
+                'login' => type_string(),
+                'id' => type_integer(),
+            ]))),
+        )
+            ->extract(flow_context(config()))
+            ->current();
+
+        if (!$rows instanceof Rows) {
+            static::fail('Expected Rows instance');
+        }
+
+        static::assertInstanceOf(StructureEntry::class, $rows->first()->get('response_body'));
     }
 }
