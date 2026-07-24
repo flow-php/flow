@@ -1,0 +1,5 @@
+self-hosted-runner:
+  # Blacksmith runner labels are custom labels actionlint does not know about.
+  labels:
+    - blacksmith-2vcpu-ubuntu-2404
+    - blacksmith-4vcpu-ubuntu-2404

@@ -78,7 +78,11 @@ runs:
         tools: ${{ inputs.tools }}
         php-version: ${{ inputs.php-version }}
         ini-values: ${{ inputs.ini-values }}
-        extensions: ${{ inputs.extensions }}
+        # The runner image ships ext-redis 5.3.7 pre-installed, which conflicts with
+        # symfony/cache (requires ext-redis >= 6.1) and breaks `composer install`.
+        # Pin a compatible phpredis (>= 6.1, and new enough to build on PHP 8.5) so the
+        # extension stays available for the redis cache tests instead of being dropped.
+        extensions: "${{ inputs.extensions }}, redis-6.3.0"
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 
