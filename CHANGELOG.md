@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-23
+## [Unreleased] - 2026-07-24
 
 ### Added
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - "Performance Optimizations" blog post with benchmarks and diagrams** - [@norberttech](https://github.com/norberttech)
@@ -55,6 +55,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2535](https://github.com/flow-php/flow/pull/2535) - **Migrate GitHub Actions workflows to Blacksmith runners** - [@blacksmith-sh[bot]](https://github.com/apps/blacksmith-sh)
 - [3cf520](https://github.com/flow-php/flow/commit/3cf520cff5b0eb374d743f6ead93958dcbada749) - **docs: refresh sponsor logos and add Blacksmit** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - External sort rebuilt on the bucketing engine.** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Grace hash join rebuilt on the bucketing engine, building the hash table from the smaller bucket.** - [@norberttech](https://github.com/norberttech)
@@ -3732,6 +3733,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - @alexislefebvre
 - @Bellangelo
 - @bendavies
+- @blacksmith-sh[bot]
 - @broncha
 - @christianc1
 - @codedmonkey
