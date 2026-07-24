@@ -12,8 +12,10 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "ext-json": "*",
+        "flow-php/array-dot": "self.version",
         "flow-php/etl": "self.version",
-        "psr/http-client": "^1.0"
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0"
     },
     "require-dev": {
         "nyholm/psr7": "^1.8",

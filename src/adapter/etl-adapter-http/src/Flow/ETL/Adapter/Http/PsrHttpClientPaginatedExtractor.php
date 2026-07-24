@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\Pagination\DecodedResponse;
+use Flow\ETL\Adapter\Http\Pagination\Paginator;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -15,7 +16,9 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-final class PsrHttpClientDynamicExtractor implements Extractor
+use function is_array;
+
+final class PsrHttpClientPaginatedExtractor implements Extractor
 {
     /**
      * @var null|callable(RequestInterface, ResponseInterface) : void
@@ -31,7 +34,8 @@ final class PsrHttpClientDynamicExtractor implements Extractor
 
     public function __construct(
         private readonly ClientInterface $client,
-        private readonly NextRequestFactory $requestFactory,
+        private readonly RequestInterface $request,
+        private readonly Paginator $paginator,
     ) {}
 
     /**
@@ -42,23 +46,22 @@ final class PsrHttpClientDynamicExtractor implements Extractor
         $encoder = new HttpEncoder();
         $hydrator = $context->hydrator();
 
-        $nextRequest = $this->requestFactory->create();
+        $request = $this->paginator->initialRequest($this->request);
 
-        while ($nextRequest) {
+        while ($request !== null) {
             if ($this->preRequest) {
-                ($this->preRequest)($nextRequest);
+                ($this->preRequest)($request);
             }
 
-            $response = $this->client->sendRequest($nextRequest);
+            $response = $this->client->sendRequest($request);
 
             if ($this->postRequest) {
-                ($this->postRequest)($nextRequest, $response);
+                ($this->postRequest)($request, $response);
             }
 
-            foreach ($hydrator->cast($encoder->decode([new HttpExchange(
-                $nextRequest,
-                $response,
-            )]), $this->schema) as $row) {
+            $raw = $encoder->decode([new HttpExchange($request, $response)]);
+
+            foreach ($hydrator->cast($raw, $this->schema) as $row) {
                 $signal = yield new Rows($row);
 
                 if ($signal === Signal::STOP) {
@@ -66,7 +69,13 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                 }
             }
 
-            $nextRequest = $this->requestFactory->create($response);
+            /** @var array<mixed>|string|null $body */
+            $body = $raw[0]->values['response_body'];
+
+            $request = $this->paginator->nextRequest(
+                $this->request,
+                new DecodedResponse(is_array($body) ? $body : [], $response),
+            );
         }
     }
 
