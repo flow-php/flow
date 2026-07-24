@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-07-24
 
 ### Added
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - declarative from_http_paginated extractor with page-number, offset/limit, cursor, next-url, link-header and last-record strategies** - [@norberttech](https://github.com/norberttech)
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - composable stop conditions and pluggable request injection (query/header/body/uri) for pagination** - [@norberttech](https://github.com/norberttech)
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - optional Schema argument on all HTTP extractor DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - "Performance Optimizations" blog post with benchmarks and diagrams** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - blog RSS feed at /rss.xml with autodiscovery and subscribe links** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Standalone Flow\ETL\Bucketing storage backend with Memory, Filesystem and PSR-16 implementations.** - [@norberttech](https://github.com/norberttech)
@@ -55,6 +58,9 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - response body is decoded once (content-type aware, JSON + XML) into typed rows** - [@norberttech](https://github.com/norberttech)
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - ContentTypeDetector broadened to text/xml and +xml/+json suffixes** - [@norberttech](https://github.com/norberttech)
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - require flow-php/array-dot and psr/http-factory** - [@norberttech](https://github.com/norberttech)
 - [#2535](https://github.com/flow-php/flow/pull/2535) - **Migrate GitHub Actions workflows to Blacksmith runners** - [@blacksmith-sh[bot]](https://github.com/apps/blacksmith-sh)
 - [3cf520](https://github.com/flow-php/flow/commit/3cf520cff5b0eb374d743f6ead93958dcbada749) - **docs: refresh sponsor logos and add Blacksmit** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - External sort rebuilt on the bucketing engine.** - [@norberttech](https://github.com/norberttech)
@@ -143,6 +149,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - RequestEntriesFactory and ResponseEntriesFactory** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - unused analyzer ignore pragmas in Floe JSON/UUID decoders** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DataFrame::pivot() - pivot is declared between groupBy() and aggregate().** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - Root ConfigBuilder externalSort*/join*/grouping* delegators.** - [@norberttech](https://github.com/norberttech)
