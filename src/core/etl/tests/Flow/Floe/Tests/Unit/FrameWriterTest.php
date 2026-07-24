@@ -40,17 +40,6 @@ final class FrameWriterTest extends TestCase
         static::assertSame(Format::FRAME_HEADER_LENGTH + 3, $writer->position());
     }
 
-    public function test_schema_frame_matches_format_frame(): void
-    {
-        $sink = new StringDestinationStream(path('memory://frame.floe'));
-        $writer = new FrameWriter($sink, 0x00);
-
-        $writer->schema('{"x":1}');
-        $writer->flush();
-
-        static::assertSame(Format::frame(Format::FRAME_SCHEMA, '{"x":1}'), $sink->content());
-    }
-
     public function test_empty_combination_emits_count_zero_partitions_frame(): void
     {
         $sink = new StringDestinationStream(path('memory://frame.floe'));

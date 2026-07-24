@@ -308,7 +308,7 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(row(int_entry('id', 2), str_entry('email', null))));
     }
 
-    public function test_append_with_same_schema_starts_section_without_schema_frame(): void
+    public function test_append_with_same_schema_adds_a_section_reusing_the_footer_schema(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://same-schema.floe');
@@ -324,7 +324,7 @@ final class FloeWriterTest extends TestCase
         $writer->close();
 
         static::assertSame(
-            [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_FOOTER, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_ROW, Format::FRAME_FOOTER, Format::FRAME_ROW, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
 
@@ -387,7 +387,7 @@ final class FloeWriterTest extends TestCase
         ));
     }
 
-    public function test_two_writes_with_the_same_schema_in_one_session_emit_a_single_schema_frame(): void
+    public function test_two_writes_with_the_same_schema_in_one_session_share_one_section(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://continuation.floe');
@@ -403,7 +403,7 @@ final class FloeWriterTest extends TestCase
         static::assertSame(2, $footer->totalRows);
         static::assertCount(1, $footer->sections);
         static::assertSame(
-            [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
     }
@@ -438,7 +438,7 @@ final class FloeWriterTest extends TestCase
         $writer->close();
 
         static::assertSame(
-            [Format::FRAME_PARTITIONS, Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_PARTITIONS, Format::FRAME_ROW, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
         static::assertSame([['country' => 'PL']], FloeStreamReaderContext::footer($filesystem, $path)->partitions);
@@ -470,7 +470,6 @@ final class FloeWriterTest extends TestCase
         static::assertSame(
             [
                 Format::FRAME_PARTITIONS,
-                Format::FRAME_SCHEMA,
                 Format::FRAME_ROW,
                 Format::FRAME_PARTITIONS,
                 Format::FRAME_ROW,
@@ -504,7 +503,6 @@ final class FloeWriterTest extends TestCase
         static::assertSame(
             [
                 Format::FRAME_PARTITIONS,
-                Format::FRAME_SCHEMA,
                 Format::FRAME_ROW,
                 Format::FRAME_ROW,
                 Format::FRAME_FOOTER,
@@ -535,7 +533,6 @@ final class FloeWriterTest extends TestCase
         static::assertSame(
             [
                 Format::FRAME_PARTITIONS,
-                Format::FRAME_SCHEMA,
                 Format::FRAME_ROW,
                 Format::FRAME_PARTITIONS,
                 Format::FRAME_ROW,
@@ -643,7 +640,7 @@ final class FloeWriterTest extends TestCase
         static::assertSame(Format::HEADER_LENGTH, $footer->sections[0]->offset);
 
         foreach ($footer->sections as $section) {
-            static::assertSame(Format::FRAME_SCHEMA, ord($source->read(1, $section->offset)));
+            static::assertSame(Format::FRAME_ROW, ord($source->read(1, $section->offset)));
         }
     }
 

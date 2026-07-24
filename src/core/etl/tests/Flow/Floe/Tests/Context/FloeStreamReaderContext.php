@@ -129,8 +129,8 @@ final class FloeStreamReaderContext
 
     /**
      * Writes a complete file then rewrites it with the FOOTER frame stripped -
-     * a crashed writer that flushed complete frames but never closed. recover()
-     * salvages such a file; strict rows() throws on the missing trailer.
+     * a crashed writer that flushed complete frames but never closed. Strict
+     * rows() throws on the missing trailer.
      */
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void
     {

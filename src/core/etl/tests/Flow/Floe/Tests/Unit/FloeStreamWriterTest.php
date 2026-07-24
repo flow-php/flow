@@ -91,7 +91,7 @@ final class FloeStreamWriterTest extends TestCase
         static::assertSame(3, $footer->totalRows);
         static::assertSame(['source' => 'stream'], $footer->metadata->normalize());
         static::assertSame(
-            [Format::FRAME_SCHEMA, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
     }

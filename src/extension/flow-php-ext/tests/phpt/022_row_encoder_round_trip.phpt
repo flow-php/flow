@@ -36,7 +36,7 @@ $reBodies = $reEncoder->encode($hydrator->dehydrate($decoded), $schemaBody);
 var_dump($bodies === $reBodies);
 
 $frames = array_merge(
-    [['type' => Format::FRAME_SCHEMA, 'body' => $schemaBody]],
+    [['type' => SCHEMA_ENTRY, 'body' => $schemaBody]],
     array_map(fn($body) => ['type' => Format::FRAME_ROW, 'body' => $body], $bodies),
 );
 assert_rows_identical(php_decode_frames($frames), $decoded->all());

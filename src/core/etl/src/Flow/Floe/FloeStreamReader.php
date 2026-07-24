@@ -18,10 +18,8 @@ use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Generator;
-use Throwable;
 
 use function count;
-use function Flow\ETL\DSL\schema_from_json;
 use function max;
 use function ord;
 use function sprintf;
@@ -84,162 +82,9 @@ final class FloeStreamReader
     }
 
     /**
-     * Salvages complete frames from the beginning of the file sequentially - no
-     * footer, no ranged reads. Rows are yielded as they were written (no
-     * padding); reading ends silently at the first truncated or invalid frame.
-     *
-     * @param int<1, max> $batchSize
-     *
-     * @throws FloeException
-     *
-     * @return \Generator<int, Rows>
-     */
-    public function recover(int $batchSize = 1000): Generator
-    {
-        $frames = (new FrameReader($this->source, $this->codec->id(), $this->chunkSize))->frames(lenient: true);
-
-        $schema = null;
-        $partitions = [];
-        $batch = [];
-        /** @var list<string> $pending */
-        $pending = [];
-
-        foreach ($frames as [$frameType, $frameBody]) {
-            if ($frameType === Format::FRAME_ROW) {
-                if ($schema === null) {
-                    break;
-                }
-
-                try {
-                    $pending[] = $this->codec->decode($frameBody);
-                } catch (Throwable) {
-                    break;
-                }
-
-                if (count($pending) === $batchSize) {
-                    [$ready, $stop] = $this->flushRecoverPending($schema, $pending, $batch, $batchSize, $partitions);
-                    $pending = [];
-
-                    foreach ($ready as $rows) {
-                        yield $rows;
-                    }
-
-                    if ($stop) {
-                        break;
-                    }
-                }
-            } elseif ($frameType === Format::FRAME_SCHEMA) {
-                if ($schema !== null && $pending !== []) {
-                    [$ready, $stop] = $this->flushRecoverPending($schema, $pending, $batch, $batchSize, $partitions);
-                    $pending = [];
-
-                    foreach ($ready as $rows) {
-                        yield $rows;
-                    }
-
-                    if ($stop) {
-                        break;
-                    }
-                }
-
-                try {
-                    $schema = $this->decodeSchema($frameBody);
-                } catch (Throwable) {
-                    break;
-                }
-            } elseif ($frameType === Format::FRAME_PARTITIONS) {
-                if ($schema !== null && $pending !== []) {
-                    [$ready, $stop] = $this->flushRecoverPending($schema, $pending, $batch, $batchSize, $partitions);
-                    $pending = [];
-
-                    foreach ($ready as $rows) {
-                        yield $rows;
-                    }
-
-                    if ($stop) {
-                        break;
-                    }
-                }
-
-                if ($batch !== []) {
-                    yield $this->batch($batch, $partitions);
-                    $batch = [];
-                }
-
-                $partitions = self::decodePartitions($frameBody);
-            } elseif ($frameType !== Format::FRAME_FOOTER) {
-                break;
-            }
-        }
-
-        if ($schema !== null && $pending !== []) {
-            [$ready] = $this->flushRecoverPending($schema, $pending, $batch, $batchSize, $partitions);
-
-            foreach ($ready as $rows) {
-                yield $rows;
-            }
-        }
-
-        if ($batch !== []) {
-            yield $this->batch($batch, $partitions);
-        }
-    }
-
-    /**
-     * A failed batch is replayed row by row so the prefix before the first
-     * corrupt body still surfaces; the true stop flag ends the recover read.
-     *
-     * @param list<string> $pending
-     * @param array<int, Row> $batch
-     * @param int<1, max> $batchSize
-     * @param array<int, Partition> $partitions
-     *
-     * @return array{0: array<int, Rows>, 1: bool} ready batches + stop flag
-     */
-    private function flushRecoverPending(
-        Schema $schema,
-        array $pending,
-        array &$batch,
-        int $batchSize,
-        array $partitions,
-    ): array {
-        $stop = false;
-
-        try {
-            $rows = $this->hydrator->hydrate($this->encoder($schema)->decode($pending), $schema)->all();
-        } catch (Throwable) {
-            $rows = [];
-
-            foreach ($pending as $body) {
-                try {
-                    $rows[] = $this->hydrator->hydrate($this->encoder($schema)->decode([$body]), $schema)->first();
-                } catch (Throwable) {
-                    break;
-                }
-            }
-
-            $stop = true;
-        }
-
-        $ready = [];
-
-        foreach ($rows as $row) {
-            $batch[] = $row;
-
-            if (count($batch) === $batchSize) {
-                $ready[] = $this->batch($batch, $partitions);
-                $batch = [];
-            }
-        }
-
-        return [$ready, $stop];
-    }
-
-    /**
-     * Hot path: frames are walked in-buffer, unlike recover() which keeps the
-     * reusable FrameReader. offset skips whole leading sections using the footer,
-     * then the remaining rows inside the start section; limit stops the read
-     * after that many rows.
+     * Hot path: frames are walked in-buffer. offset skips whole leading sections
+     * using the footer, then the remaining rows inside the start section; limit
+     * stops the read after that many rows.
      *
      * @param int<1, max> $batchSize
      * @param bool $conform pad/reorder every batch to the merged file schema (default); false yields rows verbatim per section (the raw read used by spill buckets)
@@ -294,7 +139,6 @@ final class FloeStreamReader
             $buffer,
             Format::HEADER_LENGTH,
             $fileSchema,
-            $footer->schemaBody(),
             0,
             [],
             $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
@@ -344,9 +188,7 @@ final class FloeStreamReader
     /**
      * The single strict frame-walk shared by rows() and rowsFromOffset(); they
      * differ only in how it is seeded - start position, skip and partitions. The
-     * file carries exactly one schema, so decode state comes from the footer and
-     * inline SCHEMA frames are only validated against it. recover() keeps its
-     * own lenient FrameReader walk.
+     * file carries exactly one schema, so decode state comes from the footer.
      *
      * @param \Generator<int, string> $chunks
      * @param array<int, Partition> $partitions
@@ -361,7 +203,6 @@ final class FloeStreamReader
         string $buffer,
         int $position,
         Schema $schema,
-        string $schemaBody,
         int $skip,
         array $partitions,
         ?RowPadding $padding,
@@ -424,12 +265,6 @@ final class FloeStreamReader
                             return;
                         }
                     }
-                } elseif ($frameType === Format::FRAME_SCHEMA) {
-                    if (substr($buffer, $position, $frameLength) !== $schemaBody) {
-                        throw new FloeException('Floe found a schema frame that does not match the file schema');
-                    }
-
-                    $position = $frameEnd;
                 } elseif ($frameType === Format::FRAME_PARTITIONS) {
                     $frameBody = substr($buffer, $position, $frameLength);
 
@@ -642,8 +477,8 @@ final class FloeStreamReader
 
     /**
      * Offset pushdown: seeks to the start section's byte offset, takes the
-     * schema from the footer (the file's single SCHEMA frame sits before the
-     * seek point) and skips the remaining rows inside the start section.
+     * schema from the footer and skips the remaining rows inside the start
+     * section.
      *
      * @param int<1, max> $batchSize
      * @param int<1, max> $offset
@@ -695,7 +530,6 @@ final class FloeStreamReader
             '',
             0,
             $fileSchema,
-            $footer->schemaBody(),
             $offset - $cumulative,
             $partitions,
             $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
@@ -724,17 +558,5 @@ final class FloeStreamReader
         }
 
         return $partitions;
-    }
-
-    /**
-     * @throws FloeException
-     */
-    private function decodeSchema(string $schemaBody): Schema
-    {
-        try {
-            return schema_from_json($schemaBody);
-        } catch (Throwable $e) {
-            throw new FloeException('Floe failed to decode schema JSON: ' . $e->getMessage(), 0, $e);
-        }
     }
 }

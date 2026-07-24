@@ -4,22 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
-use Flow\Floe\Format;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\Options;
-use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\Tests\Context\FloeEngineContext;
-use Flow\Floe\Tests\Context\FloeSchemaContext;
-use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\PrefixingCodecStub;
 use Flow\Floe\Tests\Mother\RowsMother;
 use Override;
@@ -28,10 +22,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\str_entry;
 use function iterator_to_array;
-use function pack;
 
 /**
  * With the flow_php extension loaded, FloeReader hydrates ROW frame bodies
@@ -97,111 +89,6 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
             iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->rows(1000, 2, 3)),
             iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->rows(1000, 2, 3)),
         );
-    }
-
-    #[DataProvider('rows_datasets')]
-    public function test_extension_and_pure_php_recover_identical_rows(Rows $rows): void
-    {
-        $path = $this->cacheDir->suffix('parity-recover.floe');
-
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows));
-        $writer->create($path);
-        $writer->write($rows);
-        $writer->close();
-
-        static::assertEquals(
-            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover()),
-            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
-        );
-    }
-
-    public function test_extension_and_pure_php_recover_a_torn_file_identically(): void
-    {
-        $path = $this->cacheDir->suffix('parity-recover-torn.floe');
-
-        FloeStreamReaderContext::writeWithoutFooter(
-            $this->fs(),
-            $path,
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2), str_entry('email', 'x')), row(int_entry('id', 3))),
-        );
-
-        static::assertEquals(
-            iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover()),
-            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
-        );
-    }
-
-    public function test_extension_and_pure_php_salvage_rows_before_a_corrupt_row_identically(): void
-    {
-        $path = $this->cacheDir->suffix('parity-recover-corrupt.floe');
-
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
-        $encoder = new PhpFloeEncoder(schema_from_json($schemaBody));
-        $hydrator = new PhpRowHydrator();
-
-        $stream = $this->fs()->writeTo($path);
-        $stream->append(
-            Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(
-                    Format::FRAME_ROW,
-                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 1)))))[0],
-                )
-                . Format::frame(
-                    Format::FRAME_ROW,
-                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 2)))))[0],
-                )
-                . Format::frame(Format::FRAME_ROW, "\xEE"),
-        );
-        $stream->close();
-
-        $pure = iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover());
-
-        static::assertEquals(
-            $pure,
-            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
-        );
-        static::assertCount(1, $pure);
-        static::assertCount(2, $pure[0]->all());
-    }
-
-    public function test_extension_and_pure_php_recover_rows_around_a_late_partitions_frame_identically(): void
-    {
-        $path = $this->cacheDir->suffix('parity-recover-late-partitions.floe');
-
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
-        $encoder = new PhpFloeEncoder(schema_from_json($schemaBody));
-        $hydrator = new PhpRowHydrator();
-        $partitionsBody = pack('V', 1) . pack('V', 1) . 'g' . pack('V', 1) . 'a';
-
-        $stream = $this->fs()->writeTo($path);
-        $stream->append(
-            Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(
-                    Format::FRAME_ROW,
-                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 1)))))[0],
-                )
-                . Format::frame(Format::FRAME_PARTITIONS, $partitionsBody)
-                . Format::frame(
-                    Format::FRAME_ROW,
-                    $encoder->encode($hydrator->dehydrate(rows(row(int_entry('id', 2)))))[0],
-                ),
-        );
-        $stream->close();
-
-        $pure = iterator_to_array(FloeEngineContext::phpReader($this->fs())->read($path)->recover());
-
-        static::assertEquals(
-            $pure,
-            iterator_to_array(FloeEngineContext::nativeReader($this->fs())->read($path)->recover()),
-        );
-        // the partition change splits the rows into two batches so no batch mixes combinations
-        static::assertCount(2, $pure);
-        static::assertCount(1, $pure[0]->all());
-        static::assertSame([], $pure[0]->partitions()->toArray());
-        static::assertCount(1, $pure[1]->all());
-        static::assertEquals([new Partition('g', 'a')], $pure[1]->partitions()->toArray());
     }
 
     /**

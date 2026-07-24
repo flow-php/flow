@@ -13,9 +13,16 @@ use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\PhpFloeEncoder;
 
 /**
+ * In-memory marker for the schema-carrying entry in the reference frame lists
+ * below. The Floe format stores the schema in the footer, not in a frame; this
+ * scaffold threads the schema through the frame list to drive the encoders.
+ */
+const SCHEMA_ENTRY = 0x01;
+
+/**
  * Pure-PHP reference framing built from the Floe encoder primitives: a write
- * session carries one schema, so the whole Rows is framed as a single SCHEMA
- * frame (its union) followed by one ROW frame per row.
+ * session carries one schema, so the whole Rows is framed as a single schema
+ * entry (its union) followed by one ROW frame per row.
  *
  * @return array<int, array{type: int, body: string}>
  */
@@ -29,7 +36,7 @@ function php_frames(Rows $rows): array
     $schemaBody = json_encode($rows->schema()->normalize(), JSON_THROW_ON_ERROR);
     $encoder = new PhpFloeEncoder(Flow\ETL\DSL\schema_from_json($schemaBody));
 
-    $frames = [['type' => Format::FRAME_SCHEMA, 'body' => $schemaBody]];
+    $frames = [['type' => SCHEMA_ENTRY, 'body' => $schemaBody]];
 
     foreach ($rows->all() as $row) {
         $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
@@ -55,7 +62,7 @@ function ext_frames(Rows $rows): array
     $schemaBody = json_encode($rows->schema()->normalize(), JSON_THROW_ON_ERROR);
     $encoder = new NativeFloeEncoder(Flow\ETL\DSL\schema_from_json($schemaBody));
 
-    $frames = [['type' => Format::FRAME_SCHEMA, 'body' => $schemaBody]];
+    $frames = [['type' => SCHEMA_ENTRY, 'body' => $schemaBody]];
 
     foreach ($rows->all() as $row) {
         $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
@@ -80,11 +87,11 @@ function php_decode_frames(array $frames): array
     $rows = [];
 
     foreach ($frames as $frame) {
-        if ($frame['type'] === Format::FRAME_SCHEMA) {
+        if ($frame['type'] === SCHEMA_ENTRY) {
             $schema = Flow\ETL\DSL\schema_from_json($frame['body']);
             $encoder = new PhpFloeEncoder($schema);
         } elseif ($schema === null || $encoder === null) {
-            throw new RuntimeException('row frame before any schema frame');
+            throw new RuntimeException('row frame before any schema entry');
         } else {
             foreach ($hydrator->hydrate($encoder->decode([$frame['body']]), $schema)->all() as $row) {
                 $rows[] = $row;
@@ -97,7 +104,7 @@ function php_decode_frames(array $frames): array
 
 /**
  * Drives the native two-layer pipeline over frame bodies, rebinding the schema
- * per SCHEMA frame (mirrors what FloeStreamReader does on the hot path).
+ * per schema entry (mirrors how FloeStreamReader sources the schema).
  *
  * @param array<int, array{type: int, body: string}> $frames
  *
@@ -111,11 +118,11 @@ function ext_decode_frames(array $frames): array
     $rows = [];
 
     foreach ($frames as $frame) {
-        if ($frame['type'] === Format::FRAME_SCHEMA) {
+        if ($frame['type'] === SCHEMA_ENTRY) {
             $schema = Flow\ETL\DSL\schema_from_json($frame['body']);
             $encoder = new NativeFloeEncoder($schema);
         } elseif ($schema === null || $encoder === null) {
-            throw new RuntimeException('row frame before any schema frame');
+            throw new RuntimeException('row frame before any schema entry');
         } else {
             foreach ($hydrator->hydrate($encoder->decode([$frame['body']]), $schema)->all() as $row) {
                 $rows[] = $row;

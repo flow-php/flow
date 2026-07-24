@@ -8,7 +8,6 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
-use Flow\Floe\Format;
 use Flow\Floe\RustFloeEncoderNative;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, schema_from_json};
@@ -38,7 +37,7 @@ $schemaBody = null;
 $rowBodies = [];
 
 foreach ($frames as $frame) {
-    if ($frame['type'] === Format::FRAME_SCHEMA) {
+    if ($frame['type'] === SCHEMA_ENTRY) {
         $schemaBody = $frame['body'];
     } else {
         $rowBodies[] = $frame['body'];

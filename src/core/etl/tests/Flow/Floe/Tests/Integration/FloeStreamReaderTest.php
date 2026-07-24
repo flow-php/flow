@@ -17,8 +17,6 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function iterator_to_array;
 use function str_pad;
-use function strlen;
-use function substr;
 
 final class FloeStreamReaderTest extends FlowIntegrationTestCase
 {
@@ -101,34 +99,6 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         }
 
         static::assertSame($written, $read);
-    }
-
-    public function test_recover_salvages_truncated_copy_of_real_file(): void
-    {
-        $path = $this->cacheDir->suffix('original.floe');
-
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($data));
-        $writer->create($path);
-        $writer->write($data);
-        $writer->close();
-
-        $content = $this->fs()->readFrom($path)->content();
-        $truncatedPath = $this->cacheDir->suffix('truncated.floe');
-        $stream = $this->fs()->writeTo($truncatedPath);
-        $stream->append(substr($content, 0, strlen($content) - 250));
-        $stream->close();
-
-        $salvaged = 0;
-
-        foreach ((new FloeReader($this->fs()))
-            ->read($truncatedPath)
-            ->recover() as $batch) {
-            $salvaged += $batch->count();
-        }
-
-        static::assertGreaterThan(0, $salvaged);
-        static::assertLessThanOrEqual(3, $salvaged);
     }
 
     public function test_round_trip_of_all_entry_types_through_local_filesystem(): void

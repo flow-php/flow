@@ -33,8 +33,6 @@ final class Format
 
     public const int FRAME_HEADER_LENGTH = 5;
 
-    public const int FRAME_SCHEMA = 0x01;
-
     public const int FRAME_ROW = 0x02;
 
     public const int FRAME_PARTITIONS = 0x03;
