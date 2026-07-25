@@ -75,7 +75,7 @@ final readonly class FlowConfigFactory
     {
         return new PSRSimpleCache(new Psr16Cache(
             new FilesystemAdapter(
-                'flow-website',
+                'flow-contributors',
                 $ttl,
                 directory: type_string()->assert($this->parameters->get('kernel.cache_dir')) . '/'
                     . ltrim($directoryName, '/'),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Dom\HTMLDocument;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -37,6 +38,10 @@ final class HTMLEntry implements Entry
         private readonly ?HTMLDocument $value,
         ?Metadata $metadata = null,
     ) {
+        if ('' === $name) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
         $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
     }
 

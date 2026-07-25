@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\EnumDefinition;
@@ -35,6 +36,10 @@ final class EnumEntry implements Entry
         private readonly ?UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
+        if ('' === $name) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
         $this->definition = self::buildDefinition($this->name, $this->value, $metadata);
     }
 

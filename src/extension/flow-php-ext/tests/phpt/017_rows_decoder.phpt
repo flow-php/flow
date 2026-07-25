@@ -6,7 +6,6 @@ RowValues pipeline decodes streamed frame bodies identically to the pure-PHP pip
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Floe\Format;
 use Flow\Floe\RustFloeEncoderNative;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, datetime_entry};
@@ -29,7 +28,7 @@ $schemaBody = null;
 $rowBody = null;
 
 foreach ($frames as $frame) {
-    if ($frame['type'] === Format::FRAME_SCHEMA) {
+    if ($frame['type'] === SCHEMA_ENTRY) {
         if ($schemaBody === null) {
             $schemaBody = $frame['body'];
         }

@@ -44,6 +44,10 @@ final class XMLElementEntry implements Entry
         private readonly DOMElement|Element|null $value,
         ?Metadata $metadata = null,
     ) {
+        if ('' === $name) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
         $this->definition = new XMLElementDefinition(
             $this->name,
             $this->value === null,

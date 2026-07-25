@@ -205,4 +205,11 @@ final class XMLEntryTest extends FlowTestCase
 
         static::assertTrue($entry->isEqual($unserialized));
     }
+
+    public function test_prevents_from_creating_entry_with_empty_entry_name(): void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        xml_entry('', null);
+    }
 }

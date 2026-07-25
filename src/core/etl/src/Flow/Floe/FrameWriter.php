@@ -39,13 +39,6 @@ final class FrameWriter
         $this->flushIfFull();
     }
 
-    public function schema(string $schemaBody): void
-    {
-        $this->buffer .= Format::frame(Format::FRAME_SCHEMA, $schemaBody);
-        $this->position += Format::FRAME_HEADER_LENGTH + strlen($schemaBody);
-        $this->flushIfFull();
-    }
-
     /**
      * @param array<string, string> $combo
      */

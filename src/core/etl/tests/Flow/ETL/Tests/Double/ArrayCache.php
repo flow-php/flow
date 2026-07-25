@@ -9,6 +9,12 @@ use Psr\SimpleCache\CacheInterface;
 
 use function array_key_exists;
 
+/**
+ * Parameters are intentionally untyped: psr/simple-cache 1.0 declares CacheInterface without
+ * parameter types, so narrowing them here is an LSP violation that PHP reports as a fatal error
+ * whenever the lowest supported version is installed. Untyped parameters stay compatible with
+ * 1.0, 2.0 and 3.0 alike.
+ */
 final class ArrayCache implements CacheInterface
 {
     /**
@@ -23,14 +29,20 @@ final class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function delete(string $key): bool
+    /**
+     * @param string $key
+     */
+    public function delete($key): bool
     {
         unset($this->values[$key]);
 
         return true;
     }
 
-    public function deleteMultiple(iterable $keys): bool
+    /**
+     * @param iterable<string> $keys
+     */
+    public function deleteMultiple($keys): bool
     {
         foreach ($keys as $key) {
             $this->delete($key);
@@ -39,12 +51,20 @@ final class ArrayCache implements CacheInterface
         return true;
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    /**
+     * @param string $key
+     */
+    public function get($key, mixed $default = null): mixed
     {
         return array_key_exists($key, $this->values) ? $this->values[$key] : $default;
     }
 
-    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    /**
+     * @param iterable<string> $keys
+     *
+     * @return iterable<string, mixed>
+     */
+    public function getMultiple($keys, mixed $default = null): iterable
     {
         $result = [];
 
@@ -55,19 +75,30 @@ final class ArrayCache implements CacheInterface
         return $result;
     }
 
-    public function has(string $key): bool
+    /**
+     * @param string $key
+     */
+    public function has($key): bool
     {
         return array_key_exists($key, $this->values);
     }
 
-    public function set(string $key, mixed $value, int|DateInterval|null $ttl = null): bool
+    /**
+     * @param string $key
+     * @param null|DateInterval|int $ttl
+     */
+    public function set($key, mixed $value, $ttl = null): bool
     {
         $this->values[$key] = $value;
 
         return true;
     }
 
-    public function setMultiple(iterable $values, int|DateInterval|null $ttl = null): bool
+    /**
+     * @param iterable $values
+     * @param null|DateInterval|int $ttl
+     */
+    public function setMultiple($values, $ttl = null): bool
     {
         // @mago-ignore analysis:mixed-assignment
         // @mago-ignore analysis:mixed-assignment

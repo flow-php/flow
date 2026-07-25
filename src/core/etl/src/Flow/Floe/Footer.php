@@ -228,6 +228,10 @@ final readonly class Footer
         // metadata is a map: an empty one must encode as a JSON object ({}), not a list ([])
         $data['metadata'] = (object) $data['metadata'];
 
-        return json_encode($data, JSON_THROW_ON_ERROR);
+        try {
+            return json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new FloeException('Floe failed to encode schema as JSON: ' . $e->getMessage(), 0, $e);
+        }
     }
 }

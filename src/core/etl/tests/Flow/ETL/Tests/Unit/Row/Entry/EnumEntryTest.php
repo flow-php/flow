@@ -67,6 +67,13 @@ final class EnumEntryTest extends FlowTestCase
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
+    public function test_prevents_from_creating_entry_with_empty_entry_name(): void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        enum_entry('', BasicEnum::one);
+    }
+
     public function test_to_string(): void
     {
         static::assertSame('one', enum_entry('enum', BasicEnum::one)->toString());

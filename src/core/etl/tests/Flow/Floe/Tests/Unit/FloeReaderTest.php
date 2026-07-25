@@ -38,7 +38,6 @@ use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function pack;
 use function strlen;
-use function substr;
 
 final class FloeReaderTest extends TestCase
 {
@@ -438,13 +437,10 @@ final class FloeReaderTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://corrupt-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
         $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_ROW, "\xEE")
+            Format::header(0x00) . Format::frame(Format::FRAME_ROW, "\xEE")
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();
@@ -520,7 +516,6 @@ final class FloeReaderTest extends TestCase
         $reader = (new FloeReader($filesystem))->read($path);
 
         static::assertSame([], iterator_to_array($reader->rows()));
-        static::assertSame([], iterator_to_array($reader->recover()));
         static::assertSame(0, $reader->totalRows());
         static::assertCount(0, $reader->schema()->definitions());
     }
@@ -744,36 +739,6 @@ final class FloeReaderTest extends TestCase
         static::assertEquals([new Partition('country', 'US')], iterator_to_array($batches[0]->partitions()));
     }
 
-    public function test_recover_tracks_per_section_partitions(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-multi-combination.floe');
-
-        $batchPL = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
-        $batchUS = Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
-            'country',
-            'US',
-        )]);
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($batchPL->merge($batchUS)));
-        $writer->create($path);
-        $writer->write($batchPL);
-        $writer->write($batchUS);
-        $writer->close();
-
-        $combos = [];
-
-        foreach ((new FloeReader($filesystem))
-            ->read($path)
-            ->recover() as $batch) {
-            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-        }
-
-        static::assertSame([['PL'], ['US']], $combos);
-    }
-
     public function test_reader_with_mismatched_codec_flags_throws(): void
     {
         $filesystem = memory_filesystem();
@@ -788,231 +753,6 @@ final class FloeReaderTest extends TestCase
         (new FloeReader($filesystem))
             ->read($path)
             ->footer();
-    }
-
-    public function test_recover_chunks_batches(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-batches.floe');
-
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
-        $writer->create($path);
-        $writer->write($data);
-        $writer->close();
-
-        static::assertCount(
-            2,
-            iterator_to_array(
-                (new FloeReader($filesystem))
-                    ->read($path)
-                    ->recover(2),
-            ),
-        );
-    }
-
-    public function test_recover_stops_at_corrupt_row_body(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-corrupt-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_ROW, "\xEE"),
-        );
-        $stream->close();
-
-        static::assertSame(
-            [],
-            iterator_to_array(
-                (new FloeReader($filesystem))
-                    ->read($path)
-                    ->recover(),
-            ),
-        );
-    }
-
-    public function test_recover_stops_at_corrupt_schema_body(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-corrupt-schema.floe');
-        $stream = $filesystem->writeTo($path);
-        $stream->append(Format::header(0x00) . Format::frame(Format::FRAME_SCHEMA, '{broken'));
-        $stream->close();
-
-        static::assertSame(
-            [],
-            iterator_to_array(
-                (new FloeReader($filesystem))
-                    ->read($path)
-                    ->recover(),
-            ),
-        );
-    }
-
-    public function test_recover_stops_at_unknown_frame_type(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-unknown.floe');
-
-        FloeStreamReaderContext::writeWithoutFooter($filesystem, $path, rows(row(int_entry('id', 1))));
-
-        $filesystem->appendTo($path)->append(Format::frame(0x55, 'mystery'))->close();
-
-        $batches = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->recover(),
-        );
-
-        static::assertCount(1, $batches);
-        static::assertCount(1, $batches[0]->all());
-    }
-
-    public function test_recover_reads_partitions_from_frame(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-partitions.floe');
-
-        FloeStreamReaderContext::writeWithoutFooter(
-            $filesystem,
-            $path,
-            Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition('country', 'PL')]),
-        );
-
-        $batches = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->recover(),
-        );
-
-        static::assertCount(1, $batches);
-        static::assertEquals([new Partition('country', 'PL')], iterator_to_array($batches[0]->partitions()));
-    }
-
-    public function test_recover_salvages_rows_from_file_missing_close(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://torn.floe');
-
-        FloeStreamReaderContext::writeWithoutFooter(
-            $filesystem,
-            $path,
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
-        );
-
-        $reader = (new FloeReader($filesystem))->read($path);
-        $batches = iterator_to_array($reader->recover());
-
-        static::assertCount(1, $batches);
-        static::assertCount(2, $batches[0]->all());
-    }
-
-    public function test_recover_salvages_complete_frames_from_truncated_tail(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://complete.floe');
-
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
-        $writer->create($path);
-        $writer->write($data);
-        $writer->close();
-
-        $content = $filesystem->readFrom($path)->content();
-        $truncated = path('memory://truncated.floe');
-        $stream = $filesystem->writeTo($truncated);
-        $stream->append(substr($content, 0, strlen($content) - 192));
-        $stream->close();
-
-        $salvaged = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($truncated)
-                ->recover(),
-        );
-
-        static::assertNotSame([], $salvaged);
-        static::assertLessThanOrEqual(3, count($salvaged[0]->all()));
-    }
-
-    public function test_recover_yields_rows_as_written_without_padding(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-evolved.floe');
-
-        // a multi-schema file is what FloeMerger produces (schema evolution lives in merge, not the writer)
-        $baseFile = path('memory://recover-base.floe');
-        $evolvedFile = path('memory://recover-new.floe');
-
-        $baseRows = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($baseRows));
-        $writer->create($baseFile);
-        $writer->write($baseRows);
-        $writer->close();
-
-        $evolvedRows = rows(row(int_entry('id', 2), str_entry('email', null)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($evolvedRows));
-        $writer->create($evolvedFile);
-        $writer->write($evolvedRows);
-        $writer->close();
-
-        (new FloeMerger($filesystem))->merge([$baseFile, $evolvedFile], $path);
-
-        $rows = [];
-
-        foreach ((new FloeReader($filesystem))
-            ->read($path)
-            ->recover() as $batch) {
-            foreach ($batch->all() as $row) {
-                $rows[] = $row->entries()->names();
-            }
-        }
-
-        static::assertSame([['id'], ['id', 'email']], $rows);
-    }
-
-    public function test_recover_stops_at_row_frame_before_schema_frame(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-row-first.floe');
-        $stream = $filesystem->writeTo($path);
-        $stream->append(Format::header(0x00) . Format::frame(Format::FRAME_ROW, 'row-bytes'));
-        $stream->close();
-
-        static::assertSame(
-            [],
-            iterator_to_array(
-                (new FloeReader($filesystem))
-                    ->read($path)
-                    ->recover(),
-            ),
-        );
-    }
-
-    public function test_recover_stops_at_row_body_longer_than_hydrated_content(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://recover-long-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
-        $rowBody = (new PhpFloeEncoder(schema_from_json(
-            $schemaBody,
-        )))->encode((new AdaptiveRowHydrator())->dehydrate(rows(row(int_entry('id', 1)))))[0];
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes'),
-        );
-        $stream->close();
-
-        static::assertSame(
-            [],
-            iterator_to_array(
-                (new FloeReader($filesystem))
-                    ->read($path)
-                    ->recover(),
-            ),
-        );
     }
 
     public function test_rows_through_a_custom_identity_codec(): void
@@ -1051,9 +791,7 @@ final class FloeReaderTest extends TestCase
         $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
+            Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();
@@ -1090,29 +828,6 @@ final class FloeReaderTest extends TestCase
         );
     }
 
-    public function test_schema_frame_not_matching_the_footer_schema_throws(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://drifted-schema-frame.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
-        $footerJson = FooterMother::footer(schema: row(str_entry('name', 'a'))->schema()->normalize())->toJson();
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
-        );
-        $stream->close();
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe found a schema frame that does not match the file schema');
-
-        iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(),
-        );
-    }
-
     public function test_row_body_longer_than_hydrated_content_throws(): void
     {
         $filesystem = memory_filesystem();
@@ -1124,9 +839,7 @@ final class FloeReaderTest extends TestCase
         $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00)
-                . Format::frame(Format::FRAME_SCHEMA, $schemaBody)
-                . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
+            Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();

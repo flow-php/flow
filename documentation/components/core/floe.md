@@ -41,7 +41,7 @@ data_frame()
 When the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md) is loaded, the
 strict read and the write fuse frame-split + value decode/encode + hydrate/dehydrate into one native
 call per batch. It is transparent — the on-disk format is unchanged and the rows are byte-for-byte
-identical to the pure-PHP engine; the salvage path (`FloeStreamReader::recover()`) always stays pure PHP.
+identical to the pure-PHP engine.
 
 ## Save Modes
 
@@ -200,8 +200,8 @@ guidance live in the [caching documentation](/documentation/components/core/cach
 ## On-Disk Layout
 
 A `.floe` file is a fixed 6-byte header, a stream of length-prefixed frames, and a JSON footer that a
-reader can locate from the last 8 bytes without scanning the body. All multi-byte integers are
-**little-endian**.
+reader can locate from the last 8 bytes without scanning the body. The schema lives **only in the
+footer** — there is no inline schema frame. All multi-byte integers are **little-endian**.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -209,7 +209,6 @@ reader can locate from the last 8 bytes without scanning the body. All multi-byt
 ├──────────────────────────────────────────────────────────┤
 │ FRAMES  (repeated, in write order)                       │
 │    PARTITIONS  (0x03)   emitted when combination changes │
-│    SCHEMA      (0x01)   written once, before first ROW   │
 │    ROW         (0x02)   one frame per row                │
 │    ROW         (0x02)                                    │
 │    …                                                     │
@@ -232,7 +231,7 @@ reader can locate from the last 8 bytes without scanning the body. All multi-byt
 
 ### Frame envelope
 
-Every frame — `SCHEMA`, `ROW`, `PARTITIONS`, `FOOTER` — shares the same envelope: a 1-byte type, a
+Every frame — `ROW`, `PARTITIONS`, `FOOTER` — shares the same envelope: a 1-byte type, a
 4-byte little-endian body length, then the body.
 
 ```
@@ -240,26 +239,35 @@ Every frame — `SCHEMA`, `ROW`, `PARTITIONS`, `FOOTER` — shares the same enve
       │ type   │ body length   │ body                  │
       │ 1 byte │ 4 bytes (LE)  │ <length> bytes        │
       └────────┴───────────────┴───────────────────────┘
-        0x01 SCHEMA   0x02 ROW   0x03 PARTITIONS   0x06 FOOTER
+        0x02 ROW   0x03 PARTITIONS   0x06 FOOTER
 ```
 
-- **SCHEMA (`0x01`)** — body is the JSON schema for the file. A file carries **exactly one schema**,
-  fixed at session start (explicit, or the first batch's union), written once before the first section.
-  Rows narrower than the schema ride it (see the ROW absent flag). A later batch that introduces a new
-  column or an incompatible type throws `IncompatibleSchemaException` — schema evolution lives only in
-  `merge_floe()`.
+The file's schema is not a frame — it carries **exactly one schema**, fixed at session start (explicit,
+or the first batch's union) and stored only in the footer (see `schema` below). A row narrower than the
+schema rides it (see the ROW absent flag). A later batch that introduces a new column or an incompatible
+type throws `IncompatibleSchemaException` — schema evolution lives only in `merge_floe()`.
+
 - **ROW (`0x02`)** — one row encoded **by column** against the file schema: for each schema
-  column, in order, a one-byte presence flag — `0x01` present (followed by the value encoded per the
-  column's schema type, no per-value tag), `0x00` null, `0x02` null-from-null, or `0x03` **absent** (the
-  row has no such column). Only dynamically typed values (mixed/union columns, dynamic map keys) carry a
-  one-byte type tag (`NULL`, `INTEGER`, `FLOAT`, `BOOLEAN`, `STRING`, `ARRAY`, `DATETIME`, `UUID`,
-  `JSON`). A row whose columns exactly match the section produces the same bytes as a plain positional
-  encode. One frame per row.
+  column, in order, a one-byte presence flag —
+  - `0x01` **present** — followed by the value encoded per the column's schema type, no per-value tag.
+  - `0x00` **null** — the value is null.
+  - `0x02` **null with metadata** — a null value carrying per-value metadata that diverges from the
+    column's schema metadata: a metadata block (4-byte little-endian JSON length + JSON), no value.
+  - `0x03` **absent** — the row has no such column.
+  - `0x04` **present with metadata** — a divergent-metadata block (4-byte length + JSON) followed by
+    the encoded value.
+
+  The two metadata flags (`0x02`, `0x04`) appear only when a row's per-value metadata differs from the
+  column's schema metadata; otherwise every value uses `0x00`/`0x01`. Only dynamically typed values
+  (mixed/union columns, dynamic map keys) carry a one-byte type tag (`NULL`, `INTEGER`, `FLOAT`,
+  `BOOLEAN`, `STRING`, `ARRAY`, `DATETIME`, `UUID`, `JSON`). A row whose columns exactly match the
+  section, with no divergent metadata, produces the same bytes as a plain positional encode. One frame
+  per row.
 - **PARTITIONS (`0x03`)** — the partition key/value pairs for the section that follows: a 4-byte count
   followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
-  whose combination differs from the previous one (mirror of the `SCHEMA`-frame dedup); the reader
-  starts at the empty combination, so an unpartitioned first section emits none and a later change back
-  to unpartitioned emits a `count=0` frame.
+  whose combination differs from the previous one; the reader starts at the empty combination, so an
+  unpartitioned first section emits none and a later change back to unpartitioned emits a `count=0`
+  frame.
 - **FOOTER (`0x06`)** — the footer JSON followed by the trailer (below).
 
 ### Footer
@@ -285,10 +293,10 @@ scanning rows**:
 - **`partitions`** is the deduplicated, order-preserving table of partition combinations, indexed by
   `partitionsId`; the unpartitioned combination is an empty object at its own id. A file can hold many
   combinations (one per section).
-- **`schema`** is the file's single schema, available from the footer alone. On a seamless read, a row
-  narrower than it (an absent column) is padded with null entries so every yielded row conforms;
-  `recover()` reads rows exactly as written, absent columns omitted. `merge_floe()` re-encodes drifted
-  sources to their union, so a merged file is still one schema.
+- **`schema`** is the file's single schema and the sole place it is stored, so every read decodes
+  against it without scanning the body. On a read, a row narrower than it (an absent column) is padded
+  with null entries so every yielded row conforms. `merge_floe()` re-encodes drifted sources to their
+  union, so a merged file is still one schema.
 
 ### Trailer (last 8 bytes)
 

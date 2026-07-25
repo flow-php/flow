@@ -16,15 +16,11 @@ use Flow\Filesystem\DestinationStream;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Types\Type\Native\NullType;
-use JsonException;
 
 use function count;
 use function Flow\Types\DSL\type_equals;
 use function implode;
-use function json_encode;
 use function sprintf;
-
-use const JSON_THROW_ON_ERROR;
 
 final class FloeStreamWriter
 {
@@ -56,11 +52,7 @@ final class FloeStreamWriter
 
     private bool $sectionOpen = false;
 
-    private bool $schemaFrameWritten = false;
-
     private Schema $sessionSchema;
-
-    private ?string $sessionSchemaBody = null;
 
     /**
      * @var null|Encoder<string>
@@ -118,18 +110,13 @@ final class FloeStreamWriter
         $this->metadata = $footer->metadata->merge($metadata ?? Metadata::empty());
         $this->sections = $footer->sections;
 
-        if ($footer->schema !== []) {
-            if ($this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
-                throw new IncompatibleSchemaException(
-                    'Floe append schema does not match the existing file schema. '
-                    . 'Align the pipeline with DataFrame::match($schema) before appending.',
-                );
-            }
-
-            $this->sessionSchemaBody = $footer->schemaBody();
+        if ($footer->schema !== [] && $this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
+            throw new IncompatibleSchemaException(
+                'Floe append schema does not match the existing file schema. '
+                . 'Align the pipeline with DataFrame::match($schema) before appending.',
+            );
         }
 
-        $this->schemaFrameWritten = $footer->sections !== [];
         $this->lastSectionPartitionsId = $lastSection?->partitionsId;
         $this->partitions = $footer->partitions;
         $this->totalRows = $footer->totalRows;
@@ -228,20 +215,7 @@ final class FloeStreamWriter
             return;
         }
 
-        $this->sessionSchemaBody ??= self::encodeSchemaBody($this->sessionSchema);
         $this->sessionEncoder = $this->engine->encoder($this->sessionSchema);
-    }
-
-    /**
-     * @throws FloeException
-     */
-    private static function encodeSchemaBody(Schema $schema): string
-    {
-        try {
-            return json_encode($schema->normalize(), JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
-            throw new FloeException('Floe failed to encode schema as JSON: ' . $e->getMessage(), 0, $e);
-        }
     }
 
     /**
@@ -378,13 +352,6 @@ final class FloeStreamWriter
 
         if ($this->partitionsFrameChanged($partitionsId)) {
             $this->frameWriter()->partitions($this->partitions[$partitionsId]);
-        }
-
-        if (!$this->schemaFrameWritten) {
-            $this->frameWriter()->schema(
-                $this->sessionSchemaBody ?? throw new FloeException('Floe writer has no session schema body'),
-            );
-            $this->schemaFrameWritten = true;
         }
 
         $this->sectionOpen = true;

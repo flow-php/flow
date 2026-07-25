@@ -91,4 +91,11 @@ final class XMLElementEntryTest extends FlowTestCase
         static::assertInstanceOf(DOMElement::class, $entry->value());
         static::assertEquals($element->attributes, $entry->value()->attributes);
     }
+
+    public function test_prevents_from_creating_entry_with_empty_entry_name(): void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        xml_element_entry('', null);
+    }
 }
