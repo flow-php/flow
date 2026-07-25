@@ -32,7 +32,7 @@ runs:
         echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
     - name: "Cache Composer dependencies"
-      uses: "actions/cache@v4"
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: "${{ steps.composer-cache.outputs.dir }}"
         key: "php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-${{ hashFiles(inputs.composer-file) }}"

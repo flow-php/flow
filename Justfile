@@ -68,6 +68,8 @@ lint-links:
 #   - every per-package subtree-split readonly.yaml (added by hand per package, so all
 #     are audited to catch drift; dangerous-triggers is exempted for them in
 #     .github/zizmor.yml — they only run `gh pr close`, never check out PR code).
+# .github/actions holds the composite actions every workflow depends on; auditing them is
+# what catches unpinned or deprecated `uses:` that never appear in a workflow file.
 lint-actions:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -78,7 +80,7 @@ lint-actions:
     done < <(find src -path '*/.github/workflows/readonly.yaml' | sort)
     actionlint "${extra_workflows[@]}" || rc=$?
     actionlint || rc=$?
-    zizmor --offline .github/workflows "${extra_workflows[@]}" || rc=$?
+    zizmor --offline .github/workflows .github/actions "${extra_workflows[@]}" || rc=$?
     exit $rc
 
 # Run static analysis (Mago). The monorepo and web/landing are analyzed in separate runs because

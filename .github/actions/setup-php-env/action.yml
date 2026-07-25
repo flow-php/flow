@@ -70,10 +70,13 @@ runs:
     - name: "Install apt packages"
       if: ${{ inputs.apt-packages != '' }}
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y ${{ inputs.apt-packages }}
+      env:
+        APT_PACKAGES: ${{ inputs.apt-packages }}
+      # Deliberately unquoted: apt-packages is a space-separated list that must word-split.
+      run: sudo apt-get update && sudo apt-get install -y $APT_PACKAGES
 
     - name: "Install PHP"
-      uses: "shivammathur/setup-php@v2"
+      uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
       with:
         tools: ${{ inputs.tools }}
         php-version: ${{ inputs.php-version }}
@@ -87,7 +90,7 @@ runs:
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 
     - name: "Install just"
-      uses: extractions/setup-just@v3
+      uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
 
     - name: "Install PIE"
       if: ${{ inputs.pie-extensions != '' }}
@@ -100,8 +103,11 @@ runs:
     - name: "Install PIE extensions"
       if: ${{ inputs.pie-extensions != '' }}
       shell: bash
+      env:
+        PIE_EXTENSIONS: ${{ inputs.pie-extensions }}
       run: |
-        for ext in ${{ inputs.pie-extensions }}; do
+        # Deliberately unquoted: pie-extensions is a space-separated list that must word-split.
+        for ext in $PIE_EXTENSIONS; do
           echo "Installing extension: $ext"
           sudo pie install "$ext"
         done
