@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-24
+## [Unreleased] - 2026-07-25
 
 ### Added
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - declarative from_http_paginated extractor with page-number, offset/limit, cursor, next-url, link-header and last-record strategies** - [@norberttech](https://github.com/norberttech)
@@ -58,6 +58,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2548](https://github.com/flow-php/flow/pull/2548) - **flow-php/etl - Floe stores its schema only in the footer, dropping the inline SCHEMA frame** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - response body is decoded once (content-type aware, JSON + XML) into typed rows** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - ContentTypeDetector broadened to text/xml and +xml/+json suffixes** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - require flow-php/array-dot and psr/http-factory** - [@norberttech](https://github.com/norberttech)
@@ -149,6 +150,7 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Suppress messenger worker poll/idle noise and tame orphan cache/DBAL spans.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2548](https://github.com/flow-php/flow/pull/2548) - **flow-php/etl - FloeStreamReader::recover() salvage path** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - RequestEntriesFactory and ResponseEntriesFactory** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - unused analyzer ignore pragmas in Floe JSON/UUID decoders** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DataFrame::pivot() - pivot is declared between groupBy() and aggregate().** - [@norberttech](https://github.com/norberttech)
