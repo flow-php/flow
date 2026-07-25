@@ -58,6 +58,11 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - bump composite action uses: to node24 releases** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - pin composite action uses: to commit SHAs** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - replace deprecated codecov/test-results-action with codecov-action** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - audit .github/actions with zizmor** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - bump PHPUnit to 12.5.32** - [@norberttech](https://github.com/norberttech)
 - [#2548](https://github.com/flow-php/flow/pull/2548) - **flow-php/etl - Floe stores its schema only in the footer, dropping the inline SCHEMA frame** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - response body is decoded once (content-type aware, JSON + XML) into typed rows** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - ContentTypeDetector broadened to text/xml and +xml/+json suffixes** - [@norberttech](https://github.com/norberttech)
@@ -167,6 +172,11 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/telemetry - Remove ResettableContextStorage and MemoryContextStorage::reset().** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/symfony-telemetry-bundle - Remove messenger link config, worker-cycle span, metrics_duration_unit and dbal.log_sql config.** - [@norberttech](https://github.com/norberttech)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/postgresql - Remove duplicated official-key telemetry attribute constants.** - [@norberttech](https://github.com/norberttech)
+
+### Security
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - pass composite action inputs via env instead of shell interpolation** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - read Codecov base commit SHA from step outputs instead of GITHUB_ENV** - [@norberttech](https://github.com/norberttech)
+- [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - validate the base commit SHA artifact before use** - [@norberttech](https://github.com/norberttech)
 
 ## [0.41.1] - 2026-07-01
 
