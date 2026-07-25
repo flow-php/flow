@@ -250,7 +250,10 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('failed to encode schema as JSON');
 
+        // the schema is stored only in the footer, so the pure PHP engine rejects it when the footer
+        // is written, while the native engine rejects it earlier, when it encodes the batch
         $writer->write($badRows);
+        $writer->close();
     }
 
     public function test_validation_off_is_byte_identical_to_validation_on_for_a_fitting_batch(): void

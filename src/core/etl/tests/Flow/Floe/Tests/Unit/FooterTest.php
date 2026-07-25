@@ -299,4 +299,19 @@ final class FooterTest extends TestCase
         );
         static::assertEquals($value, $result);
     }
+
+    public function test_encoding_a_schema_that_is_not_valid_utf8_throws_a_floe_exception(): void
+    {
+        $footer = FooterMother::footer([[
+            'ref' => "bad\xFFname",
+            'type' => ['type' => 'string'],
+            'nullable' => false,
+            'metadata' => [],
+        ]]);
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe failed to encode schema as JSON');
+
+        $footer->toJson();
+    }
 }

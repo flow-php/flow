@@ -42,6 +42,10 @@ final class XMLEntry implements Entry
         private readonly DOMDocument|XMLDocument|null $value,
         ?Metadata $metadata = null,
     ) {
+        if ('' === $name) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
         $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
