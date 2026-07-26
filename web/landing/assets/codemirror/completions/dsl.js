@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 799
+ * Total functions: 821
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -3993,6 +3993,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\explain(" + "$" + "{" + "1:query" + "}" + ")"),
         boost: 10
     },                {
+        label: "external_sort",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">external_sort</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExternalSortBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\external_sort()"),
+        boost: 10
+    },                {
         label: "fetch",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -4543,12 +4558,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_dynamic_http_requests</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NextRequestFactory</span> <span class=\"fn-param\">$requestFactory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PsrHttpClientDynamicExtractor</span>
+                    <span class=\"fn-name\">from_dynamic_http_requests</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NextRequestFactory</span> <span class=\"fn-param\">$requestFactory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PsrHttpClientDynamicExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_dynamic_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_dynamic_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "from_excel",
@@ -4618,6 +4633,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\GoogleSheet\\from_google_sheet_columns(" + "$" + "{" + "1:auth_config" + "}" + ", " + "$" + "{" + "2:spreadsheet_id" + "}" + ", " + "$" + "{" + "3:sheet_name" + "}" + ", " + "$" + "{" + "4:start_range_column" + "}" + ", " + "$" + "{" + "5:end_range_column" + "}" + ", " + "$" + "{" + "6:with_header" + "}" + ", " + "$" + "{" + "7:rows_per_page" + "}" + ", " + "$" + "{" + "8:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_http_paginated",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_http_paginated</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestInterface</span> <span class=\"fn-param\">$request</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Paginator</span> <span class=\"fn-param\">$paginator</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PsrHttpClientPaginatedExtractor</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_http_paginated(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:request" + "}" + ", " + "$" + "{" + "3:paginator" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "from_json",
@@ -4786,7 +4816,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_static_http_requests</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">iterable</span> <span class=\"fn-param\">$requests</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PsrHttpClientStaticExtractor</span>
+                    <span class=\"fn-name\">from_static_http_requests</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">iterable</span> <span class=\"fn-param\">$requests</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PsrHttpClientStaticExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param iterable<RequestInterface> $requests
@@ -4794,7 +4824,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_static_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requests" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_static_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requests" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "from_text",
@@ -5073,6 +5103,36 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\hash(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },                {
+        label: "hash_group_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">hash_group_by</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HashGroupByBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\hash_group_by()"),
+        boost: 10
+    },                {
+        label: "hash_join",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">hash_join</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HashJoinBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\hash_join()"),
+        boost: 10
+    },                {
         label: "host_detector",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -5155,6 +5215,261 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\html_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_cursor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_cursor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$cursor_path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$inject</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_cursor(" + "$" + "{" + "1:cursor_path" + "}" + ", " + "$" + "{" + "2:inject" + "}" + ", " + "$" + "{" + "3:stop_on_client_error" + "}" + ", " + "$" + "{" + "4:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_last_record_cursor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_last_record_cursor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$record_path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$inject</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_last_record_cursor(" + "$" + "{" + "1:record_path" + "}" + ", " + "$" + "{" + "2:inject" + "}" + ", " + "$" + "{" + "3:stop_on_client_error" + "}" + ", " + "$" + "{" + "4:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_link_header",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_link_header</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$rel</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;next&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_link_header(" + "$" + "{" + "1:rel" + "}" + ", " + "$" + "{" + "2:stop_on_client_error" + "}" + ", " + "$" + "{" + "3:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_next_url",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_next_url</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_next_url(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:stop_on_client_error" + "}" + ", " + "$" + "{" + "3:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_offset",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_offset</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$offset_option</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$limit_option</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$start_offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$total_path</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$inject_on_first_request</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_offset(" + "$" + "{" + "1:offset_option" + "}" + ", " + "$" + "{" + "2:limit_option" + "}" + ", " + "$" + "{" + "3:limit" + "}" + ", " + "$" + "{" + "4:start_offset" + "}" + ", " + "$" + "{" + "5:total_path" + "}" + ", " + "$" + "{" + "6:inject_on_first_request" + "}" + ", " + "$" + "{" + "7:stop_on_client_error" + "}" + ", " + "$" + "{" + "8:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_pagination_page_number",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_pagination_page_number</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$inject</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$start_page</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$page_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestOption</span> <span class=\"fn-param\">$size_option</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$inject_on_first_request</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$records_path</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$stop_on_client_error</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$stop_when</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Paginator</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_pagination_page_number(" + "$" + "{" + "1:inject" + "}" + ", " + "$" + "{" + "2:start_page" + "}" + ", " + "$" + "{" + "3:page_size" + "}" + ", " + "$" + "{" + "4:size_option" + "}" + ", " + "$" + "{" + "5:inject_on_first_request" + "}" + ", " + "$" + "{" + "6:records_path" + "}" + ", " + "$" + "{" + "7:stop_on_client_error" + "}" + ", " + "$" + "{" + "8:stop_when" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_request_option_body",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_request_option_body</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StreamFactoryInterface</span> <span class=\"fn-param\">$stream_factory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestOption</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_request_option_body(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:stream_factory" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_request_option_header",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_request_option_header</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestOption</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_request_option_header(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_request_option_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_request_option_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestOption</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_request_option_query(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_request_option_uri",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_request_option_uri</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestOption</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_request_option_uri()"),
+        boost: 10
+    },                {
+        label: "http_stop_when_empty_path",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_empty_path</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_empty_path(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_flag_false",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_flag_false</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_flag_false(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_flag_true",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_flag_true</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_flag_true(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_max_pages",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_max_pages</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$pages</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_max_pages(" + "$" + "{" + "1:pages" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_max_results",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_max_results</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$count</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_max_results(" + "$" + "{" + "1:count" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_path_missing",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_path_missing</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_path_missing(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_total_reached",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_total_reached</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$total_path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_total_reached(" + "$" + "{" + "1:total_path" + "}" + ")"),
         boost: 10
     },                {
         label: "identical",
@@ -6367,6 +6682,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\memory_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "memory_sort",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">memory_sort</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemorySortBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\memory_sort()"),
         boost: 10
     },                {
         label: "memory_span_processor",

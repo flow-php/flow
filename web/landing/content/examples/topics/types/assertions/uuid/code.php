@@ -8,4 +8,4 @@ use Flow\Types\Value\Uuid;
 require __DIR__ . '/vendor/autoload.php';
 
 echo 'UUID: ' . type_uuid()->assert(new Uuid('550e8400-e29b-41d4-a716-446655440000'))->toString() . "\n";
-echo 'Uppercase: ' . type_uuid()->assert(new Uuid('550E8400-E29B-41D4-A716-446655440000'))->toString() . "\n";
+echo 'From string: ' . type_uuid()->assert(Uuid::fromString('6ba7b810-9dad-11d1-80b4-00c04fd430c8'))->toString() . "\n";

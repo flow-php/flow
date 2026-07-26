@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgmp-dev \
     libpq-dev \
     libsqlite3-dev \
+    libzip-dev \
     default-libmysqlclient-dev \
     libprotobuf-dev \
     libprotobuf-c-dev \
@@ -37,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     libclang-dev \
  && rm -rf /var/lib/apt/lists/* \
- && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite pgsql \
+ && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite pgsql zip \
  && pecl install protobuf \
  && docker-php-ext-enable protobuf \
  && curl -L https://github.com/php/pie/releases/latest/download/pie.phar -o /usr/local/bin/pie \
@@ -61,6 +62,7 @@ FROM base AS flow
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     libgmp10 \
+    libzip5 \
  && rm -rf /var/lib/apt/lists/*
 
 # Copy the built extensions from the builder stage

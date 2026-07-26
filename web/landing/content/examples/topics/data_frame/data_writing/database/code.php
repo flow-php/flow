@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use function Flow\ETL\DSL\{data_frame, from_csv, overwrite};
+use function Flow\ETL\DSL\{data_frame, overwrite};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};

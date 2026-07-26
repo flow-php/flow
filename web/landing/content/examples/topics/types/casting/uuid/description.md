@@ -1,1 +1,1 @@
-Cast UUID strings to the Uuid value object. Normalizes case and provides safe UUID handling and comparison.
+Cast UUID strings to the Uuid value object. Accepts lowercase RFC 4122 strings and existing Uuid instances, and provides safe UUID handling and comparison.

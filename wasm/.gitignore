@@ -4,7 +4,7 @@
 *.phar.br
 manifest.json
 /libxml2-*
-/libpg_query
+/libpg_query-*
 /php-ext-snappy
 /libzip-*
 # Build logs

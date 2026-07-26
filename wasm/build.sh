@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Build script for Flow PHP Interactive Playground
-# Builds PHP 8.4.13
+# Builds PHP 8.5.8
 
 set -xeu
 
@@ -12,7 +12,7 @@ rm -f build.log
 exec > >(tee -a build.log) 2>&1
 echo "=== Build started at $(date) ==="
 
-PHP_VERSION=8.4.13
+PHP_VERSION=8.5.8
 PHP_PATH=php-$PHP_VERSION
 
 echo "Build libxml2 for WebAssembly"
@@ -48,20 +48,39 @@ if [ ! -d "$LIBXML2_DIR" ]; then
 fi
 
 echo "Build libpg_query for WebAssembly"
-LIBPG_QUERY_VERSION=17-latest
-LIBPG_QUERY_DIR=libpg_query
+# Single source of truth is the pg_query extension's own pin, so the playground and the CLI can
+# never disagree about which PostgreSQL grammar parses. build.sh already consumes that directory's
+# ext/ sources below, so this adds no coupling that did not already exist.
+LIBPG_QUERY_VERSION=$(sed -n 's/^LIBPG_QUERY_VERSION := //p' \
+    "$PROJECT_ROOT/../src/extension/pg-query-ext/Makefile")
+
+if [ -z "$LIBPG_QUERY_VERSION" ]; then
+    echo "ERROR: could not read LIBPG_QUERY_VERSION from src/extension/pg-query-ext/Makefile"
+    exit 1
+fi
+
+# Version in the directory name, like libxml2/libzip/php above: a bumped pin then misses the
+# guard below and re-clones, instead of silently reusing the previous version's checkout.
+# Note this tracks a moving branch, so an upstream branch move still needs a manual rm -rf.
+LIBPG_QUERY_DIR=libpg_query-$LIBPG_QUERY_VERSION
 LIBPG_QUERY_INSTALL_DIR="$PROJECT_ROOT/$LIBPG_QUERY_DIR"
 
-if [ ! -d "$LIBPG_QUERY_DIR" ]; then
+# Guard on the built archive rather than the directory, like libzip below: a build that fails
+# part way then leaves a tree that a directory check would skip, and the missing archive would
+# only surface much later at link time.
+if [ ! -f "$LIBPG_QUERY_INSTALL_DIR/libpg_query.a" ]; then
+    rm -rf "$LIBPG_QUERY_DIR"
     git clone --depth=1 --branch=$LIBPG_QUERY_VERSION \
         https://github.com/pganalyze/libpg_query.git "$LIBPG_QUERY_DIR"
     cd $LIBPG_QUERY_DIR
 
-    # Build with Emscripten - override CC and AR
-    # The Makefile does AR := $(AR) rs, but command-line AR overrides this
-    # So we must include the 'rs' flags ourselves. However, LLVM ar doesn't support 'g',
-    # and the Makefile @ suppresses the echo, so we pass 'rcs' which is compatible.
-    emmake make build -j$(nproc) CC=emcc AR="emar rcs"
+    # Build with Emscripten - override CC, AR and ARFLAGS.
+    # libpg_query 18 keeps AR and ARFLAGS separate (Makefile:71-72), unlike 17's combined
+    # AR := $(AR) rs, so folding the flags into AR gives `emar rcs rs` -- two operations, which
+    # llvm-ar rejects. Both have to come from the command line: the Makefile's `?=` never fires,
+    # because GNU make predefines ARFLAGS=-rv and `?=` only assigns when the origin is `undefined`.
+    # `rcs` rather than the default `-rv` so the archive still gets its symbol index.
+    emmake make build -j$(nproc) CC=emcc AR=emar ARFLAGS=rcs
 
     cd $PROJECT_ROOT
 fi
@@ -76,7 +95,10 @@ if [ ! -f "$LIBZIP_INSTALL_DIR/lib/libzip.a" ]; then
     # First, ensure Emscripten's zlib port is built by triggering a compile
     # This downloads and builds zlib to the Emscripten cache
     echo "int main(){return 0;}" > /tmp/zlib_test.c
-    emcc -sUSE_ZLIB=1 /tmp/zlib_test.c -o /tmp/zlib_test.js 2>/dev/null || true
+    # -flto must match CFLAGS below: emcc caches a separate port build per variant, and this
+    # script links the lto/ one. Without it only the non-LTO libz.a is produced and the check
+    # after this block fails.
+    emcc -flto -sUSE_ZLIB=1 /tmp/zlib_test.c -o /tmp/zlib_test.js 2>/dev/null || true
     rm -f /tmp/zlib_test.c /tmp/zlib_test.js /tmp/zlib_test.wasm
 
     # Get Emscripten cache path and locate zlib
@@ -136,6 +158,20 @@ if [ ! -d "$PHP_PATH" ]; then
     tar xf $PHP_PATH.tar.xz
 fi
 
+echo "Patch php-src"
+# Re-runs reuse an already extracted $PHP_PATH, so this has to be idempotent: a cleanly applying
+# reverse patch means it is already in place. Anything else is a real failure and set -e ends here.
+PHP_PATCH="$PROJECT_ROOT/patches/php-8.5-opcache-unistd.patch"
+cd "$PHP_PATH"
+
+if patch -p1 --reverse --dry-run --force --silent <"$PHP_PATCH" >/dev/null 2>&1; then
+    echo "  already applied: $(basename "$PHP_PATCH")"
+else
+    patch -p1 --forward <"$PHP_PATCH"
+fi
+
+cd "$PROJECT_ROOT"
+
 echo "Add pg_query extension"
 PG_QUERY_EXT_SRC="$PROJECT_ROOT/../src/extension/pg-query-ext/ext"
 PG_QUERY_EXT_DST="$PHP_PATH/ext/pg_query"
@@ -156,7 +192,10 @@ cp -r "$SNAPPY_EXT_DIR" "$SNAPPY_EXT_DST"
 echo "Configure PHP"
 
 # Use -Oz for size optimization instead of -O3 for speed
-export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -I$LIBPG_QUERY_INSTALL_DIR/src -I$LIBZIP_INSTALL_DIR/include -sUSE_ZLIB=1"
+# -DHAVE_REALLOCARRAY=1: emcc's link probe for reallocarray() fails while its sysroot header still
+# declares the symbol, so main/php_glob.c (always built since 8.5) compiles its own static copy and
+# clashes. See https://github.com/php/php-src/issues/19152.
+export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -DHAVE_REALLOCARRAY=1 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -I$LIBPG_QUERY_INSTALL_DIR/src -I$LIBZIP_INSTALL_DIR/include -sUSE_ZLIB=1"
 export CXXFLAGS="-Oz -flto -fPIC -g0 -std=c++11 -sUSE_ZLIB=1"
 export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -L$LIBPG_QUERY_INSTALL_DIR -L$LIBZIP_INSTALL_DIR/lib -sUSE_ZLIB=1"
 
@@ -184,8 +223,17 @@ bash ./buildconf --force
 
 set +e
 
+# --disable-opcache-jit is NOT redundant next to --disable-all. Since php-src 7b4c14dc1016 opcache
+# is non-optional and --disable-all cannot reach it, but its JIT is still gated on $host_cpu -- and
+# emconfigure passes no --host, so config.guess reports the BUILD machine. On any host autoconf
+# calls JIT-capable (x86_64, aarch64, ...) emcc would be handed jit/ir/*.c and dynasm for the host
+# ISA to compile into a wasm32 binary. Same class of workaround as --disable-fiber-asm below.
+# --disable-huge-code-pages is pointless under wasm and matches the other PHP-to-wasm builds.
+# Both pass [no] as their 5th PHP_ARG_ENABLE arg, so neither is affected by --disable-all.
 emconfigure ./configure \
   --disable-all \
+  --disable-opcache-jit \
+  --disable-huge-code-pages \
   --disable-cgi \
   --disable-cli \
   --disable-rpath \

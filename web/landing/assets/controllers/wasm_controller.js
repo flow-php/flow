@@ -420,6 +420,11 @@ require '/workspace/bin/cs-fixer.php';
             this.#log('Creating /workspace/uploads directory')
             this.#phpModule.FS.mkdir('/workspace/uploads')
 
+            // Examples write results under output/. Flow's filesystem creates missing directories
+            // on write, but PDO/sqlite does not, so the directory has to exist up front.
+            this.#log('Creating /workspace/output directory')
+            this.#phpModule.FS.mkdir('/workspace/output')
+
             if (!this.resourcesValue || Object.keys(this.resourcesValue).length === 0) {
                 this.#log('No resources configured to load')
                 this.#resourcesLoaded = true
