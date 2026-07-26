@@ -13,7 +13,7 @@ The Arrow ecosystem provides high-performance implementations for common data op
 Parquet, CSV, JSON, and Arrow IPC — in C++, Rust, Java, Python, and other languages.
 
 This extension brings the [Arrow Rust ecosystem](https://github.com/apache/arrow-rs) into PHP via
-[ext-php-rs](https://github.com/davidcole1340/ext-php-rs). It exposes Arrow's native readers and writers through
+[ext-php-rs](https://github.com/extphprs/ext-php-rs). It exposes Arrow's native readers and writers through
 PHP streaming interfaces, letting PHP applications benefit from Rust-level performance without leaving the PHP runtime.
 
 > [!TIP]
@@ -316,7 +316,7 @@ make test
 
 ## Architecture
 
-- Built with [ext-php-rs](https://github.com/davidcole1340/ext-php-rs), which generates PHP bindings from Rust code
+- Built with [ext-php-rs](https://github.com/extphprs/ext-php-rs), which generates PHP bindings from Rust code
 - Uses Apache Arrow and Parquet Rust crates from the [Arrow ecosystem](https://github.com/apache/arrow-rs)
 - All compression codecs compiled into the extension — no external PHP compression extensions needed
 - PHP streaming interfaces (`RandomAccessFile`, `OutputStream`) called from Rust via ext-php-rs callbacks
@@ -326,6 +326,6 @@ make test
 ## See Also
 
 - [parquet library](/documentation/components/libs/parquet.md)
-- [ext-php-rs](https://github.com/davidcole1340/ext-php-rs)
+- [ext-php-rs](https://github.com/extphprs/ext-php-rs)
 - [Apache Arrow Rust](https://github.com/apache/arrow-rs)
 - [Nix Development Environment](/documentation/contributing/nix.md)

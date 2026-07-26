@@ -1,6 +1,6 @@
 # Extension: Arrow
 
-A Rust-powered PHP extension for reading and writing Apache Parquet files using [ext-php-rs](https://github.com/davidcole1340/ext-php-rs)
+A Rust-powered PHP extension for reading and writing Apache Parquet files using [ext-php-rs](https://github.com/extphprs/ext-php-rs)
 and the official Apache Arrow/Parquet Rust crates. This extension provides streaming read/write interfaces for Parquet files
 with support for all flat Arrow types, nested types (LIST, STRUCT, MAP), and multiple compression algorithms
 (SNAPPY, GZIP, BROTLI, ZSTD, LZ4_RAW).
