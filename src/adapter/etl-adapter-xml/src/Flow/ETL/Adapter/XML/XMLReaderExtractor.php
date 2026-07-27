@@ -81,7 +81,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $schema = clone $baseSchema;
+            $schema = $baseSchema;
 
             foreach ($partitions as $partition) {
                 if ($schema->findDefinition($partition->name) === null) {

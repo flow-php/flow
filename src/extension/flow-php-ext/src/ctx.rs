@@ -287,24 +287,6 @@ pub fn construct_with_zvals(
     Ok(obj)
 }
 
-/// Runs an object's engine `clone` handler, mirroring PHP `clone $object`: a
-/// shallow copy that shares the readonly sub-objects (ref/type) by refcount, the
-/// exact semantics `(clone $definition)->setMetadata(...)` relies on.
-pub fn clone_object(object: &ZendObject) -> Result<ZBox<ZendObject>, PhpException> {
-    let handler = unsafe { object.handlers.as_ref() }
-        .and_then(|handlers| handlers.clone_obj)
-        .ok_or_else(|| ext_exception("flow_php failed to resolve a clone handler"))?;
-
-    let cloned = unsafe { handler(std::ptr::from_ref(object).cast_mut()) };
-    ensure_no_pending_exception("clone a definition")?;
-
-    if cloned.is_null() {
-        return Err(ext_exception("flow_php failed to clone a definition"));
-    }
-
-    Ok(unsafe { ZBox::from_raw(cloned) })
-}
-
 fn method_handle(class: &str, method: &str) -> Result<Function, PhpException> {
     Function::try_from_method(class, method).ok_or_else(|| {
         ext_exception(format!(

@@ -24,19 +24,19 @@ use function sprintf;
  *
  * @implements Definition<array<string, TElement>>
  */
-final class StructureDefinition implements Definition
+final readonly class StructureDefinition implements Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @param StructureType<TElement> $type
      */
     public function __construct(
         string|Reference $ref,
-        private readonly StructureType $type,
-        private readonly bool $nullable = false,
+        private StructureType $type,
+        private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
@@ -48,9 +48,7 @@ final class StructureDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        $this->metadata = $this->metadata->add($key, $value);
-
-        return $this;
+        return new self($this->ref, $this->type, $this->nullable, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -221,9 +219,7 @@ final class StructureDefinition implements Definition
 
     public function setMetadata(Metadata $metadata): static
     {
-        $this->metadata = $metadata;
-
-        return $this;
+        return new self($this->ref, $this->type, $this->nullable, $metadata);
     }
 
     /**

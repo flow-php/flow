@@ -110,7 +110,7 @@ final class DatabaseTableSchemaCommand extends Command
                 }
             }
 
-            $schema->keep(...$columns);
+            $schema = $schema->keep(...$columns);
         }
 
         if (option_bool('output-ascii', $input)) {

@@ -49,7 +49,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new JSONEncoder();
-        $baseSchema = $this->schema !== null ? clone $this->schema : null;
+        $baseSchema = $this->schema;
 
         if (
             $baseSchema !== null
@@ -76,7 +76,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $schema = $baseSchema !== null ? clone $baseSchema : null;
+            $schema = $baseSchema;
 
             if ($schema !== null) {
                 foreach ($partitions as $partition) {
@@ -166,7 +166,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = clone $schema;
+        $this->schema = $schema;
 
         return $this;
     }

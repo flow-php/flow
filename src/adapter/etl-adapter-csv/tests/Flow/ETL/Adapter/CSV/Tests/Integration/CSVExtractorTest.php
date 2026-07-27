@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
@@ -146,6 +147,20 @@ final class CSVExtractorTest extends FlowTestCase
                 iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
+    }
+
+    public function test_extract_does_not_mutate_metadata_of_user_provided_schema(): void
+    {
+        $schema = schema(int_schema('id', metadata: schema_metadata(['primary_key' => true])), str_schema('value'));
+
+        $before = $schema->normalize();
+
+        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema);
+
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+
+        static::assertSame($before, $schema->normalize());
     }
 
     public function test_extract_does_not_mutate_user_provided_schema(): void

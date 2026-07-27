@@ -21,10 +21,13 @@ final class NullDefinitionTest extends FlowTestCase
 {
     public function test_add_metadata(): void
     {
-        $withMeta = null_schema('id')->addMetadata('key', 'value');
+        $def = null_schema('id');
+
+        $withMeta = $def->addMetadata('key', 'value');
 
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertFalse($def->metadata()->has('key'));
     }
 
     public function test_entry(): void
@@ -171,9 +174,13 @@ final class NullDefinitionTest extends FlowTestCase
 
     public function test_set_metadata(): void
     {
+        $def = null_schema('id');
         $metadata = Metadata::with('key', 'value');
 
-        static::assertTrue(null_schema('id')->setMetadata($metadata)->metadata()->isEqual($metadata));
+        $withMeta = $def->setMetadata($metadata);
+
+        static::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($def->metadata()->isEmpty());
     }
 
     public function test_type_is_null_type(): void

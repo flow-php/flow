@@ -75,7 +75,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
 
-        $baseSchema = $this->schema !== null ? clone $this->schema : null;
+        $baseSchema = $this->schema;
 
         if (
             $baseSchema !== null
@@ -89,7 +89,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $schema = $baseSchema !== null ? clone $baseSchema : null;
+            $schema = $baseSchema;
 
             if ($schema !== null) {
                 foreach ($partitions as $partition) {
@@ -212,7 +212,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = clone $schema;
+        $this->schema = $schema;
 
         return $this;
     }

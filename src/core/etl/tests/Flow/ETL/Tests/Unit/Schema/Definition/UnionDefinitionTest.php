@@ -96,6 +96,7 @@ final class UnionDefinitionTest extends FlowTestCase
 
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertFalse($def->metadata()->has('key'));
     }
 
     public function test_definition_from_type_creates_union_definition(): void
@@ -303,6 +304,7 @@ final class UnionDefinitionTest extends FlowTestCase
         $withMeta = $def->setMetadata($metadata);
 
         static::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($def->metadata()->isEmpty());
     }
 
     public function test_type_returns_union_type(): void

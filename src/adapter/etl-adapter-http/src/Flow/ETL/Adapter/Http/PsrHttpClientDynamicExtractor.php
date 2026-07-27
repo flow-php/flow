@@ -92,7 +92,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = clone $schema;
+        $this->schema = $schema;
 
         return $this;
     }
