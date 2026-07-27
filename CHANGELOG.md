@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-07-27
+
+### Fixed
+- [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
+
 ## [0.42.0] - 2026-07-27
 
 ### Added
