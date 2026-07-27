@@ -4,6 +4,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [6060a1](https://github.com/flow-php/flow/commit/6060a1ff02e1e8c50b8c861fe2e04546a24560f0) - **docs(flow-php/etl-adapter-http): replace HTTP data reading examples with a single paginated on** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - Docker image is built on native amd64 and arm64 runners instead of QEMU emulation.** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - extension revisions are pinned per build so the layer cache tracks extension content.** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
