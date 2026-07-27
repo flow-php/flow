@@ -1,0 +1,87 @@
+Stop Zend's chunk allocator from orphaning ~2 MB of wasm memory per chunk.
+
+zend_mm_chunk_alloc_int() aligns a chunk by over-allocating and then munmap()ing
+the unwanted head and tail. Emscripten's munmap() returns EINVAL unless the length
+matches a whole mapping, so both trims fail -- and because wasm memory can never
+shrink, one ZEND_MM_CHUNK_SIZE is lost per chunk, permanently. That is what gave
+the playground a finite Run budget: 2.362 MB leaked per Run, and the tab stopped
+executing PHP after 813 Runs. It was silent because build.sh used to compile with
+-DZEND_MM_ERROR=0, which suppresses the "munmap() failed" message.
+
+posix_memalign() aligns directly, so there is nothing to trim. chunk_truncate()
+and chunk_extend() then report failure, which is the branch _WIN32 already takes
+and which callers handle by falling back to allocate-copy-free.
+
+Not reported upstream: php-src does not target Emscripten. Re-check on the next
+PHP bump.
+
+--- a/Zend/zend_alloc.c
++++ b/Zend/zend_alloc.c
+@@ -477,7 +477,9 @@
+ #endif
+ }
+ 
+-#ifndef HAVE_MREMAP
++/* zend_mm_chunk_extend() is the only non-_WIN32 caller and cannot succeed under Emscripten, so
++ * without this guard the definition is left unreferenced. */
++#if !defined(HAVE_MREMAP) && !defined(__EMSCRIPTEN__)
+ static void *zend_mm_mmap_fixed(void *addr, size_t size)
+ {
+ #ifdef _WIN32
+@@ -740,6 +742,18 @@
+ 
+ static void *zend_mm_chunk_alloc_int(size_t size, size_t alignment)
+ {
++#ifdef __EMSCRIPTEN__
++	/* Emscripten's munmap() cannot release part of a mapping, so the over-allocate-then-trim path
++	 * below orphans one ZEND_MM_CHUNK_SIZE per chunk and wasm memory never shrinks. Early return
++	 * rather than #else, so the generic path stays referenced and -Wunused-function stays quiet. */
++	void *aligned;
++
++	if (posix_memalign(&aligned, alignment, size) != 0) {
++		return NULL;
++	}
++
++	return aligned;
++#endif
+ 	void *ptr = zend_mm_mmap(size);
+ 
+ 	if (ptr == NULL) {
+@@ -818,7 +832,12 @@
+ 		return;
+ 	}
+ #endif
++#ifdef __EMSCRIPTEN__
++	/* Paired with the posix_memalign() in zend_mm_chunk_alloc_int(). */
++	free(addr);
++#else
+ 	zend_mm_munmap(addr, size);
++#endif
+ }
+ 
+ static int zend_mm_chunk_truncate(zend_mm_heap *heap, void *addr, size_t old_size, size_t new_size)
+@@ -832,10 +851,11 @@
+ 		}
+ 	}
+ #endif
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+ 	zend_mm_munmap((char*)addr + new_size, old_size - new_size);
+ 	return 1;
+ #else
++	/* A posix_memalign() block cannot be partially released; callers fall back to copy-and-free. */
+ 	return 0;
+ #endif
+ }
+@@ -860,9 +880,10 @@
+ 	/* Sanity check: The mapping shouldn't have moved. */
+ 	ZEND_ASSERT(ptr == addr);
+ 	return 1;
+-#elif !defined(_WIN32)
++#elif !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+ 	return (zend_mm_mmap_fixed((char*)addr + old_size, new_size - old_size) != NULL);
+ #else
++	/* Emscripten's mmap() rejects a non-NULL addr hint, so a fixed extension can never succeed. */
+ 	return 0;
+ #endif
+ }
