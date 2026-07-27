@@ -79,6 +79,7 @@ final class HTMLElementDefinitionTest extends FlowTestCase
 
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertFalse($def->metadata()->has('key'));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -244,6 +245,7 @@ final class HTMLElementDefinitionTest extends FlowTestCase
         $withMeta = $def->setMetadata($metadata);
 
         static::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($def->metadata()->isEmpty());
     }
 
     public function test_type_returns_html_element_type(): void

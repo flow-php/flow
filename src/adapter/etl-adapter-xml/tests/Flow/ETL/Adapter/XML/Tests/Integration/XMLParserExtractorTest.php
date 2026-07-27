@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_keys;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
@@ -19,6 +21,19 @@ use function Flow\Types\DSL\type_string;
 
 final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
+    public function test_extract_does_not_mutate_user_provided_schema(): void
+    {
+        $schema = schema(xml_schema('node'));
+
+        $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')->withSchema($schema);
+
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+
+        static::assertNull($schema->findDefinition('date'));
+        static::assertNull($schema->findDefinition('_input_file_uri'));
+    }
+
     public function test_limit(): void
     {
         $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row');
@@ -27,6 +42,18 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $rows = df()->extract($extractor)->fetch()->toArray();
 
         static::assertCount(2, $rows);
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        $rows = df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item'))
+            ->fetch()
+            ->toArray();
+
+        static::assertSame(['node', 'date'], array_keys($rows[0]));
+        static::assertSame('2026-01-01', $rows[0]['date']);
+        static::assertSame(['node'], array_keys($rows[1]));
     }
 
     public function test_reading_deep_xml(): void

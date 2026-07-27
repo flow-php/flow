@@ -20,7 +20,6 @@ use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
-use function array_merge;
 use function array_search;
 use function array_splice;
 use function array_values;
@@ -32,7 +31,7 @@ use function is_array;
 use function sprintf;
 use function usort;
 
-final class Schema implements Countable
+final readonly class Schema implements Countable
 {
     /**
      * @var array<string, Definition<mixed>>
@@ -123,9 +122,7 @@ final class Schema implements Countable
      */
     public function add(Definition ...$definitions): self
     {
-        $this->setDefinitions(...array_merge(array_values($this->definitions), $definitions));
-
-        return $this;
+        return new self(...array_values($this->definitions), ...$definitions);
     }
 
     /**
@@ -167,9 +164,7 @@ final class Schema implements Countable
      */
     public function addMetadata(string $definition, string $name, int|string|bool|float|array $value): self
     {
-        $this->get($definition)->addMetadata($name, $value);
-
-        return $this;
+        return $this->replace($definition, $this->get($definition)->addMetadata($name, $value));
     }
 
     public function count(): int
@@ -230,9 +225,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -259,9 +252,7 @@ final class Schema implements Countable
 
         array_splice($definitionsList, $index, 0, $definitions);
 
-        $this->setDefinitions(...$definitionsList);
-
-        return $this;
+        return new self(...$definitionsList);
     }
 
     public function isSame(self $schema): bool
@@ -304,9 +295,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -324,9 +313,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     public function merge(self $schema): self
@@ -359,9 +346,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...array_values($newDefinitions));
-
-        return $this;
+        return new self(...array_values($newDefinitions));
     }
 
     /**
@@ -416,9 +401,7 @@ final class Schema implements Countable
         $moved = array_splice($definitionsList, $from, 1);
         array_splice($definitionsList, $index, 0, $moved);
 
-        $this->setDefinitions(...$definitionsList);
-
-        return $this;
+        return new self(...$definitionsList);
     }
 
     /**
@@ -444,9 +427,7 @@ final class Schema implements Countable
      */
     public function prepend(Definition ...$definitions): self
     {
-        $this->setDefinitions(...$definitions, ...array_values($this->definitions));
-
-        return $this;
+        return new self(...$definitions, ...array_values($this->definitions));
     }
 
     public function references(): References
@@ -481,9 +462,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -505,9 +484,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -541,9 +518,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -567,9 +542,7 @@ final class Schema implements Countable
             }
         }
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     /**
@@ -581,9 +554,7 @@ final class Schema implements Countable
      */
     public function setMetadata(string $definition, Metadata $metadata): self
     {
-        $this->get($definition)->setMetadata($metadata);
-
-        return $this;
+        return $this->replace($definition, $this->get($definition)->setMetadata($metadata));
     }
 
     /**
@@ -595,9 +566,7 @@ final class Schema implements Countable
 
         usort($definitions, static fn(Definition $left, Definition $right): int => $strategy->compare($left, $right));
 
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return new self(...$definitions);
     }
 
     private function indexOf(string|Reference $reference): int
@@ -640,9 +609,7 @@ final class Schema implements Countable
 
         array_splice($definitionsList, $referenceIndex + $offset, 0, $moved);
 
-        $this->setDefinitions(...$definitionsList);
-
-        return $this;
+        return new self(...$definitionsList);
     }
 
     /**

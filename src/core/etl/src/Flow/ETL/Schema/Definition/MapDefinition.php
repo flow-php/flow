@@ -23,19 +23,19 @@ use function sprintf;
  *
  * @implements Definition<array<TKey, TValue>>
  */
-final class MapDefinition implements Definition
+final readonly class MapDefinition implements Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @param MapType<TKey, TValue> $type
      */
     public function __construct(
         string|Reference $ref,
-        private readonly MapType $type,
-        private readonly bool $nullable = false,
+        private MapType $type,
+        private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
@@ -47,9 +47,7 @@ final class MapDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        $this->metadata = $this->metadata->add($key, $value);
-
-        return $this;
+        return new self($this->ref, $this->type, $this->nullable, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -205,9 +203,7 @@ final class MapDefinition implements Definition
 
     public function setMetadata(Metadata $metadata): static
     {
-        $this->metadata = $metadata;
-
-        return $this;
+        return new self($this->ref, $this->type, $this->nullable, $metadata);
     }
 
     /**

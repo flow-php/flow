@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use Flow\ETL\Adapter\Excel\ExcelReader;
+use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
@@ -250,6 +251,19 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertTrue($result[4]['is_valid']);
     }
 
+    public function test_extract_does_not_mutate_user_provided_schema(): void
+    {
+        $schema = schema(string_schema('group'), int_schema('id'), string_schema('value'));
+
+        $extractor = from_excel(__DIR__ . '/../Fixtures/cross_stream/*/*.xlsx')->withSchema($schema);
+
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+
+        static::assertNull($schema->findDefinition('date'));
+        static::assertNull($schema->findDefinition('_input_file_uri'));
+    }
+
     public function test_loading_data_from_all_partitions(): void
     {
         df()->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))->run(function (Rows $rows): void {
@@ -258,6 +272,26 @@ final class ExcelExtractorTest extends FlowTestCase
                 array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
             );
         });
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        static::assertSame(
+            [
+                ['group' => '1', 'id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
+                ['group' => '1', 'id' => 2, 'value' => 'b', 'date' => '2026-01-01'],
+                ['group' => '2', 'id' => 5, 'value' => 'e'],
+                ['group' => '2', 'id' => 6, 'value' => 'f'],
+            ],
+            df()
+                ->read(from_excel(__DIR__ . '/../Fixtures/cross_stream/*/*.xlsx')->withSchema(schema(
+                    string_schema('group'),
+                    int_schema('id'),
+                    string_schema('value'),
+                )))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     public function test_signal_stop(): void

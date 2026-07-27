@@ -478,6 +478,28 @@ Custom aggregators must implement `references()` - return the references the agg
 | `->groupBy(...)->aggregate(...)->pivot(ref('x'))` | `->groupBy(...)->pivot(ref('x'))->aggregate(...)` |
 | `DataFrame::pivot()`                              | removed; `GroupedDataFrame::pivot()` only         |
 
+### 32) `flow-php/etl-adapter-csv`, `-excel`, `-json`,
+`-xml` - explicit schema no longer projects partition columns away
+
+| Before                                                           | After                                                |
+|------------------------------------------------------------------|------------------------------------------------------|
+| partition columns undeclared in the schema are dropped from rows | force-added to rows as non-nullable `string` columns |
+
+Declare the partition column in the schema to control its type.
+
+### 33) `flow-php/etl` - `Schema` and `Schema\Definition` mutators return a new instance
+
+| Before                                  | After                                                |
+|-----------------------------------------|------------------------------------------------------|
+| `$schema->add(str_schema('x'));`        | `$schema = $schema->add(str_schema('x'));`           |
+| `$schema->addMetadata('id', 'k', 'v');` | `$schema = $schema->addMetadata('id', 'k', 'v');`    |
+| `$definition->setMetadata($metadata);`  | `$definition = $definition->setMetadata($metadata);` |
+
+Assign the result of every `Schema` mutator - `add`, `addAfter`, `addBefore`, `addMetadata`, `gracefulRemove`,
+`insertAt`, `keep`, `makeNullable`, `merge`, `moveAfter`, `moveBefore`, `moveTo`, `prepend`, `remove`, `rename`,
+`reorder`, `replace`, `setMetadata`, `sort` - and of `Definition::addMetadata()` / `Definition::setMetadata()`.
+Discarding it is a silent no-op.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x
@@ -2233,7 +2255,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _  (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _   (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

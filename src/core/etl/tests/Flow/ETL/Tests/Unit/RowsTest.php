@@ -850,6 +850,16 @@ final class RowsTest extends FlowTestCase
         );
     }
 
+    public function test_rows_schema_does_not_mutate_row_schemas(): void
+    {
+        $first = row(int_entry('id', 1));
+
+        $rows = rows($first, row(int_entry('id', 2), str_entry('name', 'foo')));
+
+        static::assertEquals(schema(integer_schema('id'), string_schema('name', true)), $rows->schema());
+        static::assertEquals(schema(integer_schema('id')), $first->schema());
+    }
+
     public function test_rows_schema_when_rows_have_different_list_types(): void
     {
         $rows = rows(

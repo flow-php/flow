@@ -24,24 +24,24 @@ use function sprintf;
  *
  * @implements Definition<TEnum>
  */
-final class EnumDefinition implements Definition
+final readonly class EnumDefinition implements Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @var EnumType<TEnum>
      */
-    private readonly EnumType $type;
+    private EnumType $type;
 
     /**
      * @param class-string<TEnum> $enumClass
      */
     public function __construct(
         string|Reference $ref,
-        private readonly string $enumClass,
-        private readonly bool $nullable = false,
+        private string $enumClass,
+        private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         if ($enumClass !== UnitEnum::class && !enum_exists($enumClass)) {
@@ -60,9 +60,7 @@ final class EnumDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        $this->metadata = $this->metadata->add($key, $value);
-
-        return $this;
+        return new self($this->ref, $this->enumClass, $this->nullable, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -186,9 +184,7 @@ final class EnumDefinition implements Definition
 
     public function setMetadata(Metadata $metadata): static
     {
-        $this->metadata = $metadata;
-
-        return $this;
+        return new self($this->ref, $this->enumClass, $this->nullable, $metadata);
     }
 
     /**

@@ -15,7 +15,10 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_to_ascii;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
@@ -23,6 +26,19 @@ use function iterator_to_array;
 
 final class JsonExtractorTest extends FlowTestCase
 {
+    public function test_extract_does_not_mutate_user_provided_schema(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('value'));
+
+        $extractor = from_json(__DIR__ . '/../../Fixtures/cross_stream/*/data.json', schema: $schema);
+
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+
+        static::assertNull($schema->findDefinition('date'));
+        static::assertNull($schema->findDefinition('_input_file_uri'));
+    }
+
     public function test_extracting_json_from_local_file_stream(): void
     {
         $rows = data_frame(Config::builder()->putInputIntoRows())
@@ -129,6 +145,23 @@ final class JsonExtractorTest extends FlowTestCase
         }
 
         static::assertSame(247, $total);
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
+                ['id' => 2, 'value' => 'b'],
+            ],
+            df()
+                ->read(from_json(__DIR__ . '/../../Fixtures/cross_stream/*/data.json', schema: schema(
+                    int_schema('id'),
+                    str_schema('value'),
+                )))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     public function test_limit(): void

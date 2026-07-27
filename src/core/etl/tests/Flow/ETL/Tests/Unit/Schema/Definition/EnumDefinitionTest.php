@@ -81,6 +81,7 @@ final class EnumDefinitionTest extends FlowTestCase
 
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertFalse($def->metadata()->has('key'));
     }
 
     public function test_does_not_match_entry_with_different_name(): void
@@ -260,6 +261,7 @@ final class EnumDefinitionTest extends FlowTestCase
         $withMeta = $def->setMetadata($metadata);
 
         static::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($def->metadata()->isEmpty());
     }
 
     public function test_throws_exception_for_non_existing_enum_class(): void

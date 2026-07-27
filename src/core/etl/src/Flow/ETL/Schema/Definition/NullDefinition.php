@@ -19,16 +19,16 @@ use function sprintf;
 /**
  * @implements Definition<null>
  */
-final class NullDefinition implements Definition
+final readonly class NullDefinition implements Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @var Type<null>
      */
-    private readonly Type $type;
+    private Type $type;
 
     public function __construct(string|Reference $ref, ?Metadata $metadata = null)
     {
@@ -42,9 +42,7 @@ final class NullDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        $this->metadata = $this->metadata->add($key, $value);
-
-        return $this;
+        return new self($this->ref, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -131,9 +129,7 @@ final class NullDefinition implements Definition
 
     public function setMetadata(Metadata $metadata): static
     {
-        $this->metadata = $metadata;
-
-        return $this;
+        return new self($this->ref, $metadata);
     }
 
     public function type(): Type

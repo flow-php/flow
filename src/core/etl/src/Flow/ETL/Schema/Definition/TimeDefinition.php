@@ -20,20 +20,20 @@ use function sprintf;
 /**
  * @implements Definition<\DateInterval>
  */
-final class TimeDefinition implements Definition
+final readonly class TimeDefinition implements Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @var Type<\DateInterval>
      */
-    private readonly Type $type;
+    private Type $type;
 
     public function __construct(
         string|Reference $ref,
-        private readonly bool $nullable = false,
+        private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
@@ -46,9 +46,7 @@ final class TimeDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        $this->metadata = $this->metadata->add($key, $value);
-
-        return $this;
+        return new self($this->ref, $this->nullable, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -171,9 +169,7 @@ final class TimeDefinition implements Definition
 
     public function setMetadata(Metadata $metadata): static
     {
-        $this->metadata = $metadata;
-
-        return $this;
+        return new self($this->ref, $this->nullable, $metadata);
     }
 
     public function type(): Type

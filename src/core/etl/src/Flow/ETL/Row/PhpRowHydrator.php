@@ -103,7 +103,7 @@ final class PhpRowHydrator implements Hydrator
                 }
 
                 if (array_key_exists($name, $rowValues->metadata)) {
-                    $definition = (clone $definition)->setMetadata($rowValues->metadata[$name]);
+                    $definition = $definition->setMetadata($rowValues->metadata[$name]);
                 }
 
                 // @mago-ignore analysis:mixed-assignment

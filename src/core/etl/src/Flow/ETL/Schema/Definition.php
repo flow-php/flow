@@ -16,7 +16,7 @@ interface Definition
     /**
      * @param array<array-key, mixed>|bool|float|int|string $value
      *
-     * @return static
+     * @return static a new definition, the original is left untouched
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static;
 
@@ -68,7 +68,7 @@ interface Definition
     public function rename(string $newName): static;
 
     /**
-     * @return static
+     * @return static a new definition, the original is left untouched
      */
     public function setMetadata(Metadata $metadata): static;
 

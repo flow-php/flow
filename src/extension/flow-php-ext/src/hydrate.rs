@@ -11,9 +11,9 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, Function};
 
 use crate::ctx::{
-    array_key_index, call_handle, call_handle_on, ce_method_ref, clone_object,
-    construct_with_zvals, find_class, ht_add, ht_find_key, ht_insert, ht_insert_key,
-    property_offset, write_slot, zval_str, Ctx, HtKey,
+    array_key_index, call_handle, call_handle_on, ce_method_ref, construct_with_zvals,
+    find_class, ht_add, ht_find_key, ht_insert, ht_insert_key, property_offset,
+    write_slot, zval_str, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
@@ -400,13 +400,13 @@ impl HydrateColumn {
     }
 }
 
-/// `Schema` is mutated in place (`add()`/`keep()`/`makeNullable()` return
-/// `$this`), so object identity cannot key the plan cache. Every structural
-/// mutation swaps the `definitions` array (`setDefinitions` builds a fresh one)
-/// and copy-on-write separates external writes, so the array's address
-/// identifies the definition set; retaining it (refcount++) prevents address
-/// reuse. Definition-level `setMetadata` mutates the retained (shared) objects
-/// directly and needs no rebuild.
+/// `Schema` is immutable - `add()`/`keep()`/`makeNullable()` return a new
+/// instance carrying a freshly built `definitions` array - so the array's
+/// address identifies the definition set; retaining it (refcount++) prevents
+/// address reuse. Keying on the array rather than on `Schema` identity also
+/// survives a caller that hands the same definitions to a new `Schema`.
+/// Per-value `setMetadata` returns a new `Definition` and leaves the retained
+/// ones untouched, so it needs no rebuild.
 pub struct HydratePlan {
     pub(crate) definitions_slot: u32,
     pub(crate) definitions_retained: Zval,
@@ -507,9 +507,9 @@ pub(crate) fn build_hydrate_plan(
 
 /// Resolves the `(definition, entry class, entry slots)` triple for one column
 /// occurrence, mirroring `PhpRowHydrator::instantiate` + `EntryFactory::fromDefinition`:
-/// the common path shares the retained base `Definition`; per-value metadata clones
-/// it (`(clone $def)->setMetadata(...)`), and a null value on a non-nullable
-/// definition produces a fresh `makeNullable()` variant.
+/// the common path shares the retained base `Definition`; per-value metadata takes
+/// the new instance `$def->setMetadata(...)` returns, and a null value on a
+/// non-nullable definition produces a fresh `makeNullable()` variant.
 pub(crate) fn resolve_entry_definition(
     column: &HydrateColumn,
     metadata: Option<&Zval>,
@@ -527,20 +527,15 @@ pub(crate) fn resolve_entry_definition(
         .ok_or_else(|| ext_exception("flow_php expected a Definition object"))?;
 
     let variant = if let Some(metadata) = metadata {
-        let metadata = metadata.shallow_clone();
-        let mut cloned = clone_object(base_obj)?;
-        let cloned_ce = unsafe { cloned.ce.as_ref() }
+        let base_ce = unsafe { base_obj.ce.as_ref() }
             .ok_or_else(|| ext_exception("flow_php failed to resolve a Definition class"))?;
-        let fns = def_rare_fns(def_rare_cache, cloned_ce)?;
-        call_handle(
+        let fns = def_rare_fns(def_rare_cache, base_ce)?;
+        call_handle_on(
             fns.set_metadata,
-            Some(&mut cloned),
-            &mut [metadata],
+            base_obj,
+            &mut [metadata.shallow_clone()],
             "set per-value metadata",
-        )?;
-        let mut zv = Zval::new();
-        zv.set_object(&mut cloned);
-        zv
+        )?
     } else {
         column.base_def.shallow_clone()
     };

@@ -235,6 +235,31 @@ final class SchemaTest extends FlowTestCase
         yield 'Reference name' => [ref('active')];
     }
 
+    public static function provide_mutators(): Generator
+    {
+        yield 'add' => [static fn(Schema $schema) => $schema->add(bool_schema('active'))];
+        yield 'addAfter' => [static fn(Schema $schema) => $schema->addAfter('id', bool_schema('active'))];
+        yield 'addBefore' => [static fn(Schema $schema) => $schema->addBefore('id', bool_schema('active'))];
+        yield 'addMetadata' => [static fn(Schema $schema) => $schema->addMetadata('id', 'primary_key', true)];
+        yield 'gracefulRemove' => [static fn(Schema $schema) => $schema->gracefulRemove('name')];
+        yield 'insertAt' => [static fn(Schema $schema) => $schema->insertAt(1, bool_schema('active'))];
+        yield 'keep' => [static fn(Schema $schema) => $schema->keep('id')];
+        yield 'makeNullable' => [static fn(Schema $schema) => $schema->makeNullable()];
+        yield 'merge' => [static fn(Schema $schema) => $schema->merge(schema(bool_schema('active')))];
+        yield 'moveAfter' => [static fn(Schema $schema) => $schema->moveAfter('id', 'name')];
+        yield 'moveBefore' => [static fn(Schema $schema) => $schema->moveBefore('name', 'id')];
+        yield 'moveTo' => [static fn(Schema $schema) => $schema->moveTo('name', 0)];
+        yield 'prepend' => [static fn(Schema $schema) => $schema->prepend(bool_schema('active'))];
+        yield 'remove' => [static fn(Schema $schema) => $schema->remove('name')];
+        yield 'rename' => [static fn(Schema $schema) => $schema->rename('name', 'title')];
+        yield 'reorder' => [static fn(Schema $schema) => $schema->reorder('name', 'id')];
+        yield 'replace' => [static fn(Schema $schema) => $schema->replace('name', str_schema('title'))];
+        yield 'setMetadata' => [
+            static fn(Schema $schema) => $schema->setMetadata('id', schema_metadata(['primary_key' => true])),
+        ];
+        yield 'sort' => [static fn(Schema $schema) => $schema->sort()];
+    }
+
     public static function provide_reorder_reference_inputs(): Generator
     {
         yield 'string names' => [['id', 'name', 'email']];
@@ -564,6 +589,19 @@ final class SchemaTest extends FlowTestCase
         schema(int_schema('id'), str_schema('name'))->moveTo('id', 2);
     }
 
+    /**
+     * @param callable(Schema) : Schema $mutator
+     */
+    #[DataProvider('provide_mutators')]
+    public function test_mutators_return_new_instance(callable $mutator): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'));
+        $before = $schema->normalize();
+
+        static::assertNotSame($schema, $mutator($schema));
+        static::assertSame($before, $schema->normalize());
+    }
+
     public function test_normalizing_and_recreating_schema(): void
     {
         $schema = schema(
@@ -580,13 +618,6 @@ final class SchemaTest extends FlowTestCase
         );
 
         static::assertEquals($schema, Schema::fromArray($schema->normalize()));
-    }
-
-    public function test_positional_mutation_returns_same_instance(): void
-    {
-        $schema = schema(int_schema('id'), str_schema('name'));
-
-        static::assertSame($schema, $schema->prepend(bool_schema('active')));
     }
 
     public function test_prepend(): void
@@ -845,12 +876,5 @@ final class SchemaTest extends FlowTestCase
     public function test_sort_empty_schema(): void
     {
         static::assertSame([], array_keys(schema()->sort()->definitions()));
-    }
-
-    public function test_sort_returns_same_instance(): void
-    {
-        $schema = schema(str_schema('name'), int_schema('id'));
-
-        static::assertSame($schema, $schema->sort());
     }
 }

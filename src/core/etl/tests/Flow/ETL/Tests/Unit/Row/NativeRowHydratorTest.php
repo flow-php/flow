@@ -477,7 +477,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         );
     }
 
-    public function test_native_cast_follows_in_place_schema_mutations(): void
+    public function test_native_cast_follows_schema_changes(): void
     {
         if (!NativeRowHydrator::isSupported()) {
             static::markTestSkipped('flow_php extension with the native hydrator is not loaded.');
@@ -490,12 +490,12 @@ final class NativeRowHydratorTest extends FlowTestCase
         $batch = [new RawRowValues(['id' => '1', 'name' => 7])];
         static::assertSame(serialize($php->cast($batch, $schema)), serialize($native->cast($batch, $schema)));
 
-        $schema->add(bool_schema('active', nullable: true));
+        $schema = $schema->add(bool_schema('active', nullable: true));
 
         $batch = [new RawRowValues(['id' => '2', 'name' => 'b', 'active' => 'yes'])];
         static::assertSame(serialize($php->cast($batch, $schema)), serialize($native->cast($batch, $schema)));
 
-        $schema->makeNullable();
+        $schema = $schema->makeNullable();
 
         $batch = [new RawRowValues(['id' => null, 'name' => null, 'active' => null])];
         static::assertSame(serialize($php->cast($batch, $schema)), serialize($native->cast($batch, $schema)));
@@ -522,7 +522,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         static::assertEquals($phpDehydrated[0]->types['doc'], $nativeDehydrated[0]->types['doc']);
     }
 
-    public function test_native_hydrate_follows_in_place_schema_mutations(): void
+    public function test_native_hydrate_follows_schema_changes(): void
     {
         if (!NativeRowHydrator::isSupported()) {
             static::markTestSkipped('flow_php extension with the native hydrator is not loaded.');
@@ -535,12 +535,12 @@ final class NativeRowHydratorTest extends FlowTestCase
         $batch = [new RawRowValues(['id' => 1, 'name' => 'a'])];
         static::assertSame(serialize($php->hydrate($batch, $schema)), serialize($native->hydrate($batch, $schema)));
 
-        $schema->add(bool_schema('active', nullable: true));
+        $schema = $schema->add(bool_schema('active', nullable: true));
 
         $batch = [new RawRowValues(['id' => 2, 'name' => 'b', 'active' => true])];
         static::assertSame(serialize($php->hydrate($batch, $schema)), serialize($native->hydrate($batch, $schema)));
 
-        $schema->makeNullable();
+        $schema = $schema->makeNullable();
 
         $batch = [new RawRowValues(['id' => null, 'name' => null, 'active' => null])];
         static::assertSame(serialize($php->hydrate($batch, $schema)), serialize($native->hydrate($batch, $schema)));
