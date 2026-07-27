@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-07-27
 
 ### Added
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - Schema Immutability ADR** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **docker - PHP 8.5 image with libpq 18 and native arrow, flow_php and pg_query extensions enabled** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - Opcache with a working shared-memory backend in the playground** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground recycles the PHP module automatically when memory runs high** - [@norberttech](https://github.com/norberttech)
@@ -61,6 +62,8 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - Schema and Schema\Definition are immutable, mutators return a new instance** - [@norberttech](https://github.com/norberttech)
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl-adapter-csv, -excel, -json, -xml - explicit schema no longer projects partition columns away** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground runs PHP 8.5.8 built as 64-bit wasm with libpg_query 18** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground is ~23% faster per run** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **flow-php/arrow-ext - documentation updated for the prebuilt Docker image** - [@norberttech](https://github.com/norberttech)
@@ -142,6 +145,11 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - extractors no longer pollute a user-provided schema** - [@norberttech](https://github.com/norberttech)
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - partition columns no longer leak between streams** - [@norberttech](https://github.com/norberttech)
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - Rows::schema() no longer corrupts the first row's schema** - [@norberttech](https://github.com/norberttech)
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/flow-php-ext - native hydrator no longer drops per-value metadata** - [@norberttech](https://github.com/norberttech)
+- [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/cli - --db-column filtering in flow:db:schema** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground no longer leaks memory and stops executing PHP after ~50 runs** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - sortBy() and Floe now work in the playground** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - parquet reads no longer emit integer overflow warnings in the playground** - [@norberttech](https://github.com/norberttech)
