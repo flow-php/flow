@@ -1,8 +1,20 @@
 ## [Unreleased] - 2026-07-27
 
+### Added
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - Docker image is built on native amd64 and arm64 runners instead of QEMU emulation.** - [@norberttech](https://github.com/norberttech)
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - extension revisions are pinned per build so the layer cache tracks extension content.** - [@norberttech](https://github.com/norberttech)
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
+
 ### Fixed
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - restored Docker layer cache, setup-docker-builder v2.0.0 silently fell back to a local builder.** - [@norberttech](https://github.com/norberttech)
 - [8f8157](https://github.com/flow-php/flow/commit/8f8157854232f98c46d812b909275bab7304a7a0) - **http adapter documentation examples** - [@norberttech](https://github.com/norberttech)
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - QEMU setup from Docker image builds.** - [@norberttech](https://github.com/norberttech)
 
 ## [0.42.0] - 2026-07-27
 
