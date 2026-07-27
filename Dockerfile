@@ -51,9 +51,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-RUN php /usr/local/bin/pie install flow-php/arrow-ext:1.x-dev \
- && php /usr/local/bin/pie install flow-php/pg-query-ext:1.x-dev \
- && php /usr/local/bin/pie install flow-php/flow-php-ext:1.x-dev
+# Pinned by CI to 1.x-dev#<commit> so this layer's cache key tracks extension content instead of wall-clock time.
+ARG FLOW_ARROW_EXT=1.x-dev
+ARG FLOW_PG_QUERY_EXT=1.x-dev
+ARG FLOW_PHP_EXT=1.x-dev
+
+RUN php /usr/local/bin/pie install flow-php/arrow-ext:${FLOW_ARROW_EXT} \
+ && php /usr/local/bin/pie install flow-php/pg-query-ext:${FLOW_PG_QUERY_EXT} \
+ && php /usr/local/bin/pie install flow-php/flow-php-ext:${FLOW_PHP_EXT}
 
 # Stage 3: Final Image
 FROM base AS flow

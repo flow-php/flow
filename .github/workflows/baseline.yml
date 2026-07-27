@@ -19,11 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  build-archives:
+  build-phar:
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    permissions:
-      contents: read
-      packages: write
 
     strategy:
       fail-fast: false
@@ -58,29 +55,13 @@ jobs:
         run: |
           ./build/flow.phar --version
 
-      - name: Setup Blacksmith Builder
-        uses: useblacksmith/setup-docker-builder@33803e640bd9d674f2843a8c323aa2a7da478d23 # v2.0.0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+      - name: "Upload Flow PHAR for Docker build"
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Docker Image
-        uses: useblacksmith/build-push-action@fb9e3e6a9299c78462bfadd0d93352c316adc9b8 # v2.2.0
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/flow-php/flow:latest
-          target: flow
+          name: "docker-phar"
+          path: "build/flow.phar"
+          if-no-files-found: error
+          retention-days: 1
 
       - name: "Prepare artifact name"
         if: ${{ github.event_name == 'push' }}
@@ -94,6 +75,17 @@ jobs:
           name: flow-${{ env.BUILD_TAG }}.phar
           path: build/flow.phar
           overwrite: true
+
+  docker-image:
+    needs: build-phar
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/job-docker-image.yml
+    with:
+      tags: "ghcr.io/flow-php/flow:latest"
+      phar-artifact: "docker-phar"
+      no-cache: ${{ github.event_name == 'schedule' }}
 
   publish-website:
     runs-on: blacksmith-2vcpu-ubuntu-2404
