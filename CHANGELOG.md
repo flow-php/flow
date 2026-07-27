@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-07-26
+## [Unreleased] - 2026-07-27
 
 ### Added
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - declarative from_http_paginated extractor with page-number, offset/limit, cursor, next-url, link-header and last-record strategies** - [@norberttech](https://github.com/norberttech)
