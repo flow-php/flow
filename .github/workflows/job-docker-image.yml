@@ -1,0 +1,162 @@
+name: Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      tags:
+        description: "Newline separated list of fully qualified image tags to publish"
+        required: true
+        type: string
+      phar-artifact:
+        description: "Name of the artifact containing flow.phar"
+        required: true
+        type: string
+      no-cache:
+        description: "Bypass the layer cache to refresh the unpinned base image and apt packages"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY_IMAGE: ghcr.io/flow-php/flow
+
+jobs:
+  build:
+    name: "Build ${{ matrix.platform }}"
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "linux/amd64"
+            runner: "blacksmith-4vcpu-ubuntu-2404"
+          - platform: "linux/arm64"
+            runner: "blacksmith-4vcpu-ubuntu-2404-arm"
+
+    steps:
+      - name: "Prepare platform pair"
+        env:
+          PLATFORM: "${{ matrix.platform }}"
+        run: |
+          echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Download Flow PHAR"
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: "${{ inputs.phar-artifact }}"
+          path: "build"
+
+      - name: "Resolve extension revisions"
+        id: extensions
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: |
+          for extension in arrow-ext pg-query-ext flow-php-ext; do
+            sha="$(gh api "repos/flow-php/${extension}/commits/1.x" --jq '.sha')"
+            echo "${extension//-/_}=1.x-dev#${sha}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: "Setup Blacksmith Builder"
+        uses: useblacksmith/setup-docker-builder@6ff44f8e5255f9d8aa31ef22f7e57a2d926b7da0 # v1.11.0
+        with:
+          nofallback: true
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build and push by digest"
+        id: build
+        uses: useblacksmith/build-push-action@fb9e3e6a9299c78462bfadd0d93352c316adc9b8 # v2.2.0
+        with:
+          context: .
+          file: ./Dockerfile
+          target: flow
+          platforms: "${{ matrix.platform }}"
+          tags: "${{ env.REGISTRY_IMAGE }}"
+          no-cache: ${{ inputs.no-cache }}
+          build-args: |
+            FLOW_ARROW_EXT=${{ steps.extensions.outputs.arrow_ext }}
+            FLOW_PG_QUERY_EXT=${{ steps.extensions.outputs.pg_query_ext }}
+            FLOW_PHP_EXT=${{ steps.extensions.outputs.flow_php_ext }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: "Export digest"
+        env:
+          DIGEST: "${{ steps.build.outputs.digest }}"
+          DIGESTS_DIR: "${{ runner.temp }}/digests"
+        run: |
+          mkdir -p "$DIGESTS_DIR"
+          touch "${DIGESTS_DIR}/${DIGEST#sha256:}"
+
+      - name: "Upload digest"
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: "digests-${{ env.PLATFORM_PAIR }}"
+          path: "${{ runner.temp }}/digests/*"
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: "Publish manifest list"
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    needs:
+      - build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: "Download digests"
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          path: "${{ runner.temp }}/digests"
+          pattern: "digests-*"
+          merge-multiple: true
+
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Create manifest list and push"
+        working-directory: "${{ runner.temp }}/digests"
+        env:
+          TAGS: "${{ inputs.tags }}"
+        run: |
+          tag_args=()
+          for tag in $TAGS; do
+            tag_args+=(--tag "$tag")
+          done
+
+          digest_args=()
+          for digest in *; do
+            digest_args+=("${REGISTRY_IMAGE}@sha256:${digest}")
+          done
+
+          docker buildx imagetools create "${tag_args[@]}" "${digest_args[@]}"
+
+      - name: "Inspect image"
+        env:
+          TAGS: "${{ inputs.tags }}"
+        run: |
+          for tag in $TAGS; do
+            docker buildx imagetools inspect "$tag"
+          done
