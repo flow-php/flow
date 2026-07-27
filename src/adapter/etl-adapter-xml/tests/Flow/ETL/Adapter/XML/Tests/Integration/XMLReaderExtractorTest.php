@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_keys;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
@@ -26,6 +27,21 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         $extractor->changeLimit(2);
 
         static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        $rows = data_frame()
+            ->read(
+                // @mago-ignore analysis:deprecated-class
+                new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'), 'root/item'),
+            )
+            ->fetch()
+            ->toArray();
+
+        static::assertSame(['node', 'date'], array_keys($rows[0]));
+        static::assertSame('2026-01-01', $rows[0]['date']);
+        static::assertSame(['node'], array_keys($rows[1]));
     }
 
     public function test_reading_deep_xml(): void

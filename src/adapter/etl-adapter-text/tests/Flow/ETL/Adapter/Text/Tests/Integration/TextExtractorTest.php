@@ -38,6 +38,20 @@ final class TextExtractorTest extends FlowTestCase
         static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        static::assertSame(
+            [
+                ['text' => 'line a', 'date' => '2026-01-01'],
+                ['text' => 'line b'],
+            ],
+            data_frame()
+                ->read(from_text(__DIR__ . '/../Fixtures/cross_stream/*/data.txt'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_signal_stop(): void
     {
         $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));

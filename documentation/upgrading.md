@@ -478,6 +478,14 @@ Custom aggregators must implement `references()` - return the references the agg
 | `->groupBy(...)->aggregate(...)->pivot(ref('x'))` | `->groupBy(...)->pivot(ref('x'))->aggregate(...)` |
 | `DataFrame::pivot()`                              | removed; `GroupedDataFrame::pivot()` only         |
 
+### 32) `flow-php/etl-adapter-csv`, `-excel`, `-json`, `-xml` - explicit schema no longer projects partition columns away
+
+| Before                                                           | After                                                |
+|------------------------------------------------------------------|------------------------------------------------------|
+| partition columns undeclared in the schema are dropped from rows | force-added to rows as non-nullable `string` columns |
+
+Declare the partition column in the schema to control its type.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

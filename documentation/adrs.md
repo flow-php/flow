@@ -38,6 +38,7 @@ consistency in decision-making across the project.
 - [2025-01-07: Static Analysis Baseline](/documentation/adrs/static-analysis-baseline.md)
 - [2025-01-09: Extension Points](/documentation/adrs/extension-points.md)
 - [2026-03-02: Variadic Arguments Pattern for Required Parameters](/documentation/adrs/variadic-arguments-pattern.md)
+- [2026-07-27: Extractors Never Mutate a User-Provided Schema](/documentation/adrs/extractors-never-mutate-user-schema.md)
 
 ### [Proposed AD](https://github.com/flow-php/flow/pulls?q=is%3Apr+is%3Aopen+label%3AAD+)
 

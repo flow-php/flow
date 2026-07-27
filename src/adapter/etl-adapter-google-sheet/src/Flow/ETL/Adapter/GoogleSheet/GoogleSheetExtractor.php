@@ -83,7 +83,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
 
-        $schema = $this->schema;
+        $schema = $this->schema !== null ? clone $this->schema : null;
 
         if ($schema !== null && $shouldPutInputIntoRows) {
             if ($schema->findDefinition('_spread_sheet_id') === null) {
@@ -200,7 +200,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = $schema;
+        $this->schema = clone $schema;
 
         return $this;
     }

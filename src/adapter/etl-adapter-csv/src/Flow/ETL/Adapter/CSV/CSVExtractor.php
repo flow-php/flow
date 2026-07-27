@@ -59,7 +59,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
-        $baseSchema = $this->schema;
+        $baseSchema = $this->schema !== null ? clone $this->schema : null;
 
         if (
             $baseSchema !== null
@@ -78,7 +78,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $schema = $baseSchema;
+            $schema = $baseSchema !== null ? clone $baseSchema : null;
 
             if ($schema !== null) {
                 foreach ($partitions as $partition) {
@@ -229,7 +229,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = $schema;
+        $this->schema = clone $schema;
 
         return $this;
     }

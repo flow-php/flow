@@ -143,7 +143,7 @@ final class PostgreSqlCursorExtractor implements Extractor
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = $schema;
+        $this->schema = clone $schema;
 
         return $this;
     }

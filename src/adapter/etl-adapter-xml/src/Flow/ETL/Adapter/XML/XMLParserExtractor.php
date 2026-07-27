@@ -116,7 +116,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new XMLEncoder();
 
-        $baseSchema = $this->schema ?? schema(xml_schema('node'));
+        $baseSchema = $this->schema !== null ? clone $this->schema : schema(xml_schema('node'));
 
         if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
@@ -126,7 +126,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $schema = $baseSchema;
+            $schema = clone $baseSchema;
 
             foreach ($partitions as $partition) {
                 if ($schema->findDefinition($partition->name) === null) {
@@ -281,7 +281,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     public function withSchema(Schema $schema): self
     {
-        $this->schema = $schema;
+        $this->schema = clone $schema;
 
         return $this;
     }

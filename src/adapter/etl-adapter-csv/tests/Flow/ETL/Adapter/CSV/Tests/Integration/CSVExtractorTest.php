@@ -18,8 +18,11 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_to_ascii;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function iterator_to_array;
 
@@ -143,6 +146,19 @@ final class CSVExtractorTest extends FlowTestCase
                 iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
+    }
+
+    public function test_extract_does_not_mutate_user_provided_schema(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('value'));
+
+        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema);
+
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+
+        static::assertNull($schema->findDefinition('date'));
+        static::assertNull($schema->findDefinition('_input_file_uri'));
     }
 
     public function test_extracting_csv_empty_columns_as_empty_strings(): void
@@ -433,6 +449,23 @@ final class CSVExtractorTest extends FlowTestCase
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
+                ['id' => 2, 'value' => 'b'],
+            ],
+            df()
+                ->read(from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: schema(
+                    int_schema('id'),
+                    str_schema('value'),
+                )))
                 ->fetch()
                 ->toArray(),
         );
