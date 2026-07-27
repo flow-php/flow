@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-07-27
 
 ### Added
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **docker - PHP 8.5 image with libpq 18 and native arrow, flow_php and pg_query extensions enabled** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - Opcache with a working shared-memory backend in the playground** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground recycles the PHP module automatically when memory runs high** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - declarative from_http_paginated extractor with page-number, offset/limit, cursor, next-url, link-header and last-record strategies** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - composable stop conditions and pluggable request injection (query/header/body/uri) for pagination** - [@norberttech](https://github.com/norberttech)
 - [#2547](https://github.com/flow-php/flow/pull/2547) - **flow-php/etl-adapter-http - optional Schema argument on all HTTP extractor DSL functions** - [@norberttech](https://github.com/norberttech)
@@ -58,6 +61,9 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground runs PHP 8.5.8 built as 64-bit wasm with libpg_query 18** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground is ~23% faster per run** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **flow-php/arrow-ext - documentation updated for the prebuilt Docker image** - [@norberttech](https://github.com/norberttech)
 - [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - bump composite action uses: to node24 releases** - [@norberttech](https://github.com/norberttech)
 - [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - pin composite action uses: to commit SHAs** - [@norberttech](https://github.com/norberttech)
 - [#2549](https://github.com/flow-php/flow/pull/2549) - **CI - replace deprecated codecov/test-results-action with codecov-action** - [@norberttech](https://github.com/norberttech)
@@ -136,6 +142,10 @@ instead of inside the per-row loop** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/psr18-telemetry-bridge - Client span name is the HTTP method only and server.port is always set.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground no longer leaks memory and stops executing PHP after ~50 runs** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - sortBy() and Floe now work in the playground** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - parquet reads no longer emit integer overflow warnings in the playground** - [@norberttech](https://github.com/norberttech)
+- [#2555](https://github.com/flow-php/flow/pull/2555) - **flow-php/pg-query-ext - no longer frees libpg_query memory on module shutdown** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/etl - silence false-positive analyzer warnings on batch size guards** - [@norberttech](https://github.com/norberttech)
 - [#2544](https://github.com/flow-php/flow/pull/2544) - **flow-php/postgresql - silence false-positive analyzer warning on version comparison** - [@norberttech](https://github.com/norberttech)
 - [#2543](https://github.com/flow-php/flow/pull/2543) - **flow-php/etl - DateInterval ordering in sort now works via type-specialized Rows::sortBy.** - [@norberttech](https://github.com/norberttech)
