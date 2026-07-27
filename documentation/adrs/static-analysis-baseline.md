@@ -8,20 +8,18 @@ Date: 2025-01-07
 ## Context
 ---
 
-After removal of Psalm and making PHPStan the main static analysis tool, 
-we looked again into hardening the static analysis configuration.
+Mago is the main static analysis tool for this project, providing both the analyzer 
+and the linter. It replaced PHPStan, which itself replaced Psalm.
 
-We had three globally ignored errors in phpstan configuration
-
-- identifier: argument.type
-- identifier: missingType.iterableValue
-- identifier: missingType.generics
-
-All of the above were significantly reducing the value of static analysis and 
-code quality.
+While hardening the static analysis configuration, we looked at the errors that were 
+globally ignored to keep the analysis green, for example whole categories of missing 
+or imprecise types. Ignoring them globally was significantly reducing the value of 
+static analysis and code quality.
 
 One of the proposed approaches was to use a baseline file to suppress those errors
-in the existing codebase and gradually remove them.
+in the existing codebase and gradually remove them. Mago supports baselines for both
+`mago analyze` and `mago lint` through `--baseline`, `--generate-baseline` and
+`--verify-baseline`.
 
 There are few problems with this approach, but the most significant one is that once the baseline is introduced, 
 it needs to be maintained.  
@@ -33,8 +31,9 @@ but also through the baseline file, which is not the best use of their very limi
 ---
 
 We **must not** use baseline for static analysis. 
-Instead, errors can be suppressed by annotations in the codebase or globally
-in the static analysis tool configuration.
+Instead, errors can be suppressed by annotations in the codebase, 
+`// @mago-expect <category>:<code>` and `// @mago-ignore <category>:<code>`, 
+or globally in `mago.toml`.
 
 Error suppression should be considered an edge case and should be used sparingly.
 Core contributors should review and approve all suppression annotations.
