@@ -62,6 +62,7 @@
 - [#2501](https://github.com/flow-php/flow/pull/2501) - **flow-php/phpunit-telemetry-bridge - test.suite.run.status attribute and telemetry.sdk.version resource attribute.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [fec9cf](https://github.com/flow-php/flow/commit/fec9cf91b4de2919349fea80d62ff8d9ca94a650) - **chore: upgrade Infection to 0.34** - [@norberttech](https://github.com/norberttech)
 - [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl - Schema and Schema\Definition are immutable, mutators return a new instance** - [@norberttech](https://github.com/norberttech)
 - [#2556](https://github.com/flow-php/flow/pull/2556) - **flow-php/etl-adapter-csv, -excel, -json, -xml - explicit schema no longer projects partition columns away** - [@norberttech](https://github.com/norberttech)
 - [#2555](https://github.com/flow-php/flow/pull/2555) - **wasm - playground runs PHP 8.5.8 built as 64-bit wasm with libpg_query 18** - [@norberttech](https://github.com/norberttech)
