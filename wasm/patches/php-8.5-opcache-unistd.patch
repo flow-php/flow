@@ -1,0 +1,23 @@
+Add the <unistd.h> include that ext/opcache needs for getpid().
+
+zend_accelerator_debug.c calls getpid() in its non-ZTS branch but only includes
+<process.h>, and only under ZEND_WIN32. On PHP 8.4 this never surfaced because
+--disable-all excluded opcache entirely; php-src 7b4c14dc1016 ("Make OPcache
+non-optional") removed that possibility, so the file is now always compiled.
+clang has treated implicit function declarations as an error since 16, and the
+Emscripten toolchain is well past that, so the build fails without this.
+
+Same fix as WordPress Playground's packages/php-wasm/compile/php/php8.5.patch.
+Reported upstream against 8.5; re-check on the next PHP bump and drop this file
+if it has landed.
+
+--- a/ext/opcache/zend_accelerator_debug.c
++++ b/ext/opcache/zend_accelerator_debug.c
+@@ -25,6 +25,8 @@
+ #include <time.h>
+ #ifdef ZEND_WIN32
+ # include <process.h>
++#else
++# include <unistd.h> /* getpid(), called below outside the ZEND_WIN32 branch */
+ #endif
+ #include "ZendAccelerator.h"

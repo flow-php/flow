@@ -1,5 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
+const RECYCLE_THRESHOLD_BYTES = 1536 * 1024 * 1024
+
 export default class extends Controller {
     static values = {
         phpJs: String,
@@ -12,6 +14,7 @@ export default class extends Controller {
     #resourcesLoaded = false
     #combinedOutput = ''
     #debug = false
+    #recycleCount = 0
 
     connect() {
         this.#debug = this.application.debug
@@ -23,48 +26,6 @@ export default class extends Controller {
         this.#phpModule = null
         this.#phpModuleLoaded = false
         this.#resourcesLoaded = false
-    }
-
-    #evaluate(code) {
-        if (!this.#phpModuleLoaded) {
-            this.#dispatchError('PHP module not loaded yet', null)
-            return false
-        }
-
-        this.#combinedOutput = ''
-
-        try {
-            try {
-                this.#phpModule.FS.chdir('/workspace')
-                this.#log('Changed working directory to /workspace')
-            } catch (chdirError) {
-                this.#logError('Failed to change directory to /workspace:', chdirError)
-            }
-
-            const result = this.#phpModule.ccall(
-                'pib_eval',
-                'number',
-                ['string'],
-                [code]
-            )
-
-            const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
-            if (errorInfo) {
-                this.#log('Parsed error info:', errorInfo)
-                this.#dispatchError(this.#combinedOutput, errorInfo)
-                return false
-            }
-
-            const output = this.#combinedOutput || 'Code executed successfully (no output)'
-            this.#dispatchOutput(output)
-            return true
-        } catch (e) {
-            this.#logError('Execution error:', e)
-            const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
-            this.#log('Parsed error info:', errorInfo)
-            this.#dispatchError('Execution error: ' + e.message + '\n' + this.#combinedOutput, errorInfo)
-            return false
-        }
     }
 
     #formatCode(code, callback) {
@@ -162,6 +123,8 @@ require '/workspace/bin/cs-fixer.php';
             throw new Error('PHP module not loaded')
         }
 
+        await this.#recycleIfNeeded()
+
         this.#combinedOutput = ''
 
         try {
@@ -212,6 +175,8 @@ require '/workspace/bin/cs-fixer.php';
     }
 
     async format(code) {
+        await this.#recycleIfNeeded()
+
         return new Promise((resolve) => {
             this.#formatCode(code, (formattedCode, error, appliedFixers) => {
                 if (error) {
@@ -400,7 +365,9 @@ require '/workspace/bin/cs-fixer.php';
         }
     }
 
-    async #loadResources() {
+    // announceReady=false while recycling: wasm:initialized makes playground-storage reload code.php
+    // from the example's initial code, which would throw away the user's edits.
+    async #loadResources(announceReady = true) {
         if (!this.#phpModuleLoaded) {
             this.#logError('Cannot load resources: PHP module not loaded yet')
             return false
@@ -420,11 +387,18 @@ require '/workspace/bin/cs-fixer.php';
             this.#log('Creating /workspace/uploads directory')
             this.#phpModule.FS.mkdir('/workspace/uploads')
 
+            // Examples write results under output/. Flow's filesystem creates missing directories
+            // on write, but PDO/sqlite does not, so the directory has to exist up front.
+            this.#log('Creating /workspace/output directory')
+            this.#phpModule.FS.mkdir('/workspace/output')
+
             if (!this.resourcesValue || Object.keys(this.resourcesValue).length === 0) {
                 this.#log('No resources configured to load')
                 this.#resourcesLoaded = true
-                this.#dispatchResourcesLoaded()
-                this.#dispatchInitialized()
+                if (announceReady) {
+                    this.#dispatchResourcesLoaded()
+                    this.#dispatchInitialized()
+                }
                 return true
             }
 
@@ -457,8 +431,10 @@ require '/workspace/bin/cs-fixer.php';
 
             this.#resourcesLoaded = true
             this.#log('All resources loaded successfully')
-            this.#dispatchResourcesLoaded()
-            this.#dispatchInitialized()
+            if (announceReady) {
+                this.#dispatchResourcesLoaded()
+                this.#dispatchInitialized()
+            }
             return true
         } catch (error) {
             this.#logError('Failed to load resources:', error)
@@ -511,25 +487,7 @@ require '/workspace/bin/cs-fixer.php';
             this.#dispatchProgress('Initializing PHP runtime...', 30)
 
             if (typeof PHP !== 'undefined') {
-                PHP({
-                    print: (text) => {
-                        this.#log('PHP stdout:', text)
-                        this.#combinedOutput += text + '\n'
-                    },
-                    printErr: (text) => {
-                        this.#log('PHP stderr:', text)
-                        this.#combinedOutput += text + '\n'
-                    },
-                    locateFile: (path, scriptDirectory) => {
-                        if (path === 'php.wasm') {
-                            this.#log('Locating php.wasm at:', this.phpWasmValue)
-                            return this.phpWasmValue
-                        }
-                        return scriptDirectory + path
-                    }
-                }).then(async (module) => {
-                    this.#phpModule = module
-                    this.#phpModuleLoaded = true
+                this.#instantiate().then(async () => {
                     this.#log('PHP module initialized successfully')
 
                     await this.#loadResources()
@@ -551,6 +509,117 @@ require '/workspace/bin/cs-fixer.php';
         document.head.appendChild(script)
     }
 
+    // Reused by the recycling path, which must not re-inject the <script>: PHP is already global.
+    async #instantiate() {
+        this.#phpModuleLoaded = false
+        this.#phpModule = null
+
+        const module = await PHP({
+            print: (text) => {
+                this.#log('PHP stdout:', text)
+                this.#combinedOutput += text + '\n'
+            },
+            printErr: (text) => {
+                this.#log('PHP stderr:', text)
+                this.#combinedOutput += text + '\n'
+            },
+            locateFile: (path, scriptDirectory) => {
+                if (path === 'php.wasm') {
+                    this.#log('Locating php.wasm at:', this.phpWasmValue)
+                    return this.phpWasmValue
+                }
+                return scriptDirectory + path
+            }
+        })
+
+        this.#phpModule = module
+        this.#phpModuleLoaded = true
+    }
+
+    #heapBytes() {
+        try {
+            return this.#phpModule.ccall('pib_heap_bytes', 'number', [], [])
+        } catch (error) {
+            this.#logError('pib_heap_bytes unavailable:', error)
+            return 0
+        }
+    }
+
+    // Runs before the next Run, not after a failed one: past the wall the module is unrecoverable.
+    async #recycleIfNeeded() {
+        if (!this.#phpModuleLoaded) {
+            return
+        }
+
+        const bytes = this.#heapBytes()
+        if (bytes < RECYCLE_THRESHOLD_BYTES) {
+            return
+        }
+
+        this.#log(`Heap at ${Math.round(bytes / 1048576)} MB, recycling PHP module`)
+        this.#dispatchProgress('Reclaiming memory...', 0)
+
+        try {
+            const workspace = this.#snapshotWorkspace()
+            this.#resourcesLoaded = false
+
+            await this.#instantiate()
+            await this.#loadResources(false)
+
+            // After #loadResources, so user edits win over the pristine copies it re-fetches.
+            this.#restoreWorkspace(workspace)
+
+            this.#recycleCount++
+            this.#log(`PHP module recycled (${this.#recycleCount}), heap now ${Math.round(this.#heapBytes() / 1048576)} MB`)
+        } catch (error) {
+            this.#logError('Failed to recycle PHP module:', error)
+            this.#phpModuleLoaded = false
+            this.#dispatchError('Failed to reclaim memory: ' + error.message)
+        }
+    }
+
+    // Everything under /workspace, so uploads, generated output and the user's code survive a recycle.
+    #snapshotWorkspace() {
+        const files = []
+        const walk = (dir) => {
+            for (const entry of this.#phpModule.FS.readdir(dir)) {
+                if (entry === '.' || entry === '..') {
+                    continue
+                }
+
+                const path = dir + '/' + entry
+                try {
+                    const stat = this.#phpModule.FS.stat(path)
+                    if (this.#phpModule.FS.isDir(stat.mode)) {
+                        walk(path)
+                    } else {
+                        files.push({ path, bytes: this.#phpModule.FS.readFile(path) })
+                    }
+                } catch (error) {
+                    this.#logError(`Skipping ${path} while snapshotting workspace:`, error)
+                }
+            }
+        }
+
+        walk('/workspace')
+        this.#log(`Snapshotted ${files.length} workspace files`)
+
+        return files
+    }
+
+    #restoreWorkspace(files) {
+        for (const { path, bytes } of files) {
+            try {
+                this.#ensureDirectoryExists(path)
+                this.#phpModule.FS.writeFile(path, bytes)
+            } catch (error) {
+                this.#logError(`Failed to restore ${path}:`, error)
+            }
+        }
+
+        this.#log(`Restored ${files.length} workspace files`)
+    }
+
     #dispatchReady() {
         this.dispatch('ready')
     }
@@ -569,10 +638,6 @@ require '/workspace/bin/cs-fixer.php';
 
     #dispatchProgress(message, percent) {
         this.dispatch('progress', { detail: { message, percent } })
-    }
-
-    #dispatchOutput(output) {
-        this.dispatch('output', { detail: { output } })
     }
 
     #dispatchError(error, errorInfo) {

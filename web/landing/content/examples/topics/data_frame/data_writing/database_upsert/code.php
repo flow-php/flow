@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_query,
     sqlite_insert_options,
     to_dbal_table_insert};
-use function Flow\ETL\DSL\{data_frame, from_csv, to_output};
+use function Flow\ETL\DSL\{data_frame, to_output};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table, UniqueConstraint};
 use Doctrine\DBAL\Types\{Type, Types};

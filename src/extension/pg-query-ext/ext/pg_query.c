@@ -65,7 +65,11 @@ PHP_MINIT_FUNCTION(pg_query)
 
 PHP_MSHUTDOWN_FUNCTION(pg_query)
 {
-    pg_query_exit();
+    /* Deliberately no pg_query_exit(). It frees libpg_query's TopMemoryContext, but pg_query_init()
+     * guards on a flag it never resets, so the contexts are gone and cannot be validly rebuilt.
+     * SAPIs that start the engine more than once per process -- embed, which the WASM playground
+     * uses -- then crash on the second startup. MSHUTDOWN runs at process teardown, so freeing
+     * here bought nothing anyway. */
     return SUCCESS;
 }
 

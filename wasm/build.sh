@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Build script for Flow PHP Interactive Playground
-# Builds PHP 8.4.13
+# Builds PHP 8.5.8 as 64-bit wasm (see WASM64_MODE below) with a forced mmap Opcache shared-memory
+# backend (see php_cv_shm_mmap_anon below).
 
 set -xeu
 
@@ -12,8 +13,15 @@ rm -f build.log
 exec > >(tee -a build.log) 2>&1
 echo "=== Build started at $(date) ==="
 
-PHP_VERSION=8.4.13
+PHP_VERSION=8.5.8
 PHP_PATH=php-$PHP_VERSION
+
+# MEMORY64=2 is wasm64 for clang/lld lowered to wasm32 by Binaryen, so PHP gets an 8-byte zend_long
+# (pack()'s q/Q/J/P, which Floe and sortBy() need) without requiring Memory64 in visitors' browsers.
+# Set via EMCC_CFLAGS, not CFLAGS, which is exported below -- after the dependencies are built.
+WASM64_MODE="-sMEMORY64=2"
+EM_TARGET=wasm64-emscripten
+export EMCC_CFLAGS="$WASM64_MODE"
 
 echo "Build libxml2 for WebAssembly"
 LIBXML2_VERSION=2.11.4
@@ -48,20 +56,33 @@ if [ ! -d "$LIBXML2_DIR" ]; then
 fi
 
 echo "Build libpg_query for WebAssembly"
-LIBPG_QUERY_VERSION=17-latest
-LIBPG_QUERY_DIR=libpg_query
+# Read from the pg_query extension's own pin, so the playground and the CLI cannot disagree about
+# which PostgreSQL grammar parses.
+LIBPG_QUERY_VERSION=$(sed -n 's/^LIBPG_QUERY_VERSION := //p' \
+    "$PROJECT_ROOT/../src/extension/pg-query-ext/Makefile")
+
+if [ -z "$LIBPG_QUERY_VERSION" ]; then
+    echo "ERROR: could not read LIBPG_QUERY_VERSION from src/extension/pg-query-ext/Makefile"
+    exit 1
+fi
+
+# Version in the directory name so a bumped pin re-clones instead of reusing the old checkout.
+# This tracks a moving branch, so an upstream branch move still needs a manual rm -rf.
+LIBPG_QUERY_DIR=libpg_query-$LIBPG_QUERY_VERSION
 LIBPG_QUERY_INSTALL_DIR="$PROJECT_ROOT/$LIBPG_QUERY_DIR"
 
-if [ ! -d "$LIBPG_QUERY_DIR" ]; then
+# Guard on the built archive, not the directory: a part-way failure leaves a tree that a directory
+# check would skip, and the missing archive would only surface at link time.
+if [ ! -f "$LIBPG_QUERY_INSTALL_DIR/libpg_query.a" ]; then
+    rm -rf "$LIBPG_QUERY_DIR"
     git clone --depth=1 --branch=$LIBPG_QUERY_VERSION \
         https://github.com/pganalyze/libpg_query.git "$LIBPG_QUERY_DIR"
     cd $LIBPG_QUERY_DIR
 
-    # Build with Emscripten - override CC and AR
-    # The Makefile does AR := $(AR) rs, but command-line AR overrides this
-    # So we must include the 'rs' flags ourselves. However, LLVM ar doesn't support 'g',
-    # and the Makefile @ suppresses the echo, so we pass 'rcs' which is compatible.
-    emmake make build -j$(nproc) CC=emcc AR="emar rcs"
+    # libpg_query 18 keeps AR and ARFLAGS separate, so folding the flags into AR gives `emar rcs rs`,
+    # which llvm-ar rejects. Both must come from the command line -- make predefines ARFLAGS, so the
+    # Makefile's `?=` never fires.
+    emmake make build -j$(nproc) CC=emcc AR=emar ARFLAGS=rcs
 
     cd $PROJECT_ROOT
 fi
@@ -76,12 +97,16 @@ if [ ! -f "$LIBZIP_INSTALL_DIR/lib/libzip.a" ]; then
     # First, ensure Emscripten's zlib port is built by triggering a compile
     # This downloads and builds zlib to the Emscripten cache
     echo "int main(){return 0;}" > /tmp/zlib_test.c
-    emcc -sUSE_ZLIB=1 /tmp/zlib_test.c -o /tmp/zlib_test.js 2>/dev/null || true
+    # -flto must match CFLAGS below: emcc caches a separate port build per variant and this links
+    # the lto/ one.
+    emcc -flto -sUSE_ZLIB=1 /tmp/zlib_test.c -o /tmp/zlib_test.js 2>/dev/null || true
     rm -f /tmp/zlib_test.c /tmp/zlib_test.js /tmp/zlib_test.wasm
 
     # Get Emscripten cache path and locate zlib
     EM_CACHE=$(em-config CACHE)
-    ZLIB_LIBRARY="$EM_CACHE/sysroot/lib/wasm32-emscripten/lto/libz.a"
+    # Per-target path: hardcoding wasm32 would find a real file of the wrong architecture, which the
+    # guard below cannot detect.
+    ZLIB_LIBRARY="$EM_CACHE/sysroot/lib/$EM_TARGET/lto/libz.a"
     ZLIB_INCLUDE_DIR="$EM_CACHE/sysroot/include"
 
     echo "Using zlib from Emscripten cache:"
@@ -99,11 +124,11 @@ if [ ! -f "$LIBZIP_INSTALL_DIR/lib/libzip.a" ]; then
     tar xf $LIBZIP_DIR.tar.xz
     cd $LIBZIP_DIR
 
+    # CMakeCache.txt pins the resolved zlib path and target, so a tree left from another target has
+    # to be cleared rather than reconfigured.
+    rm -rf build
     mkdir -p build && cd build
 
-    # Configure libzip for WebAssembly using CMake
-    # Provide explicit paths to Emscripten's zlib (from its ports system)
-    # Disable encryption and optional compression to minimize dependencies
     emcmake cmake .. \
         -DCMAKE_INSTALL_PREFIX=$LIBZIP_INSTALL_DIR \
         -DZLIB_LIBRARY=$ZLIB_LIBRARY \
@@ -136,6 +161,21 @@ if [ ! -d "$PHP_PATH" ]; then
     tar xf $PHP_PATH.tar.xz
 fi
 
+echo "Patch php-src"
+# Re-runs reuse an already extracted $PHP_PATH, so this has to be idempotent: a cleanly applying
+# reverse patch means it is already in place. Anything else is a real failure and set -e ends here.
+cd "$PHP_PATH"
+
+for PHP_PATCH in "$PROJECT_ROOT"/patches/*.patch; do
+    if patch -p1 --reverse --dry-run --force --silent <"$PHP_PATCH" >/dev/null 2>&1; then
+        echo "  already applied: $(basename "$PHP_PATCH")"
+    else
+        patch -p1 --forward <"$PHP_PATCH"
+    fi
+done
+
+cd "$PROJECT_ROOT"
+
 echo "Add pg_query extension"
 PG_QUERY_EXT_SRC="$PROJECT_ROOT/../src/extension/pg-query-ext/ext"
 PG_QUERY_EXT_DST="$PHP_PATH/ext/pg_query"
@@ -155,8 +195,10 @@ cp -r "$SNAPPY_EXT_DIR" "$SNAPPY_EXT_DST"
 
 echo "Configure PHP"
 
-# Use -Oz for size optimization instead of -O3 for speed
-export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -I$LIBPG_QUERY_INSTALL_DIR/src -I$LIBZIP_INSTALL_DIR/include -sUSE_ZLIB=1"
+# -DHAVE_REALLOCARRAY=1: emcc's link probe for reallocarray() fails while its sysroot header still
+# declares it, so main/php_glob.c compiles a clashing static copy (php-src#19152).
+# ZEND_MM_ERROR is deliberately NOT 0 -- it gates the messages that named the chunk-alignment leak.
+export CFLAGS="-Oz -flto -fPIC -g0 -DHAVE_REALLOCARRAY=1 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -I$LIBPG_QUERY_INSTALL_DIR/src -I$LIBZIP_INSTALL_DIR/include -sUSE_ZLIB=1"
 export CXXFLAGS="-Oz -flto -fPIC -g0 -std=c++11 -sUSE_ZLIB=1"
 export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -L$LIBPG_QUERY_INSTALL_DIR -L$LIBZIP_INSTALL_DIR/lib -sUSE_ZLIB=1"
 
@@ -168,13 +210,7 @@ export LIBZIP_LIBS="-L$LIBZIP_INSTALL_DIR/lib -lzip"
 
 cd $PHP_PATH
 
-# Configure with extensions required by Flow PHP
-# - bcmath: required by flow-php/parquet
-# - libxml: required as base for XML extensions
-# - xml, dom, xmlreader, xmlwriter: required by flow-php/etl-adapter-xml
-# - phar, mbstring: essential PHP extensions
-# - iconv: required by symfony/polyfill-mbstring
-# - zip: required by flow-php/etl-adapter-excel (XLSX files are ZIP archives)
+# The extension set and the reason for each is in documentation/contributing/wasm.md.
 
 # Fix permissions for build scripts
 chmod +x buildconf build/config-stubs build/shtool 2>/dev/null || true
@@ -184,8 +220,18 @@ bash ./buildconf --force
 
 set +e
 
+# Opcache's shared-memory probes all call fork(), which Emscripten lacks, so configure would leave
+# Opcache permanently inert. Only the fork() half really fails -- Emscripten's mmap() serves
+# anonymous MAP_SHARED from linear memory and its fcntl() reports the locks taken, which is enough.
+export php_cv_shm_mmap_anon=yes
+
+# --disable-opcache-jit and --disable-huge-code-pages are NOT redundant next to --disable-all: both
+# pass [no] as their 5th PHP_ARG_ENABLE arg, so --disable-all cannot reach either. Without the JIT
+# flag emcc is handed dynasm for the build machine's ISA, since emconfigure passes no --host.
 emconfigure ./configure \
   --disable-all \
+  --disable-opcache-jit \
+  --disable-huge-code-pages \
   --disable-cgi \
   --disable-cli \
   --disable-rpath \
@@ -242,9 +288,9 @@ echo "Compile pib_eval wrapper"
 emcc $CFLAGS -I . -I Zend -I main -I TSRM/ ../pib_eval.c -c -o pib_eval.o
 
 echo "Link everything together"
-emcc $CFLAGS $LDFLAGS \
+emcc $CFLAGS $LDFLAGS $WASM64_MODE \
   -s ENVIRONMENT=web \
-  -s EXPORTED_FUNCTIONS='["_pib_eval", "_pib_force_exit", "_php_embed_init", "_zend_eval_string", "_php_embed_shutdown"]' \
+  -s EXPORTED_FUNCTIONS='["_pib_eval", "_pib_force_exit", "_pib_heap_bytes"]' \
   -s EXPORTED_RUNTIME_METHODS='["ccall","FS","UTF8ToString","lengthBytesUTF8","stringToUTF8","getValue","setValue","ENV"]' \
   -s MODULARIZE=1 \
   -s EXPORT_NAME="'PHP'" \
