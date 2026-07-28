@@ -28,6 +28,12 @@ final class TracingArgumentResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $inner = $this->createStub(ArgumentResolverInterface::class);
         $inner->method('getArguments')->willReturn(['a', 'b']);
@@ -74,6 +80,12 @@ final class TracingArgumentResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $inner = $this->createStub(ArgumentResolverInterface::class);
         $inner->method('getArguments')->willThrowException(new RuntimeException('arguments failed'));

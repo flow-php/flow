@@ -13,6 +13,8 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Filesystem\Filesystem;
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Instrument\Throughput;
@@ -41,6 +43,8 @@ final class TelemetryContext
     private ?Counter $counterProcessedRows = null;
 
     private ?HighResolutionTime $dataFrameExecutionTime = null;
+
+    private ?Scope $dataFrameScope = null;
 
     private ?Span $dataFrameSpan = null;
 
@@ -91,6 +95,8 @@ final class TelemetryContext
         }
 
         $this->drain();
+        $this->dataFrameScope?->detach();
+        $this->dataFrameScope = null;
 
         $this->logger()->debug(
             'Data frame processing completed',
@@ -149,6 +155,8 @@ final class TelemetryContext
         }
 
         $this->drain();
+        $this->dataFrameScope?->detach();
+        $this->dataFrameScope = null;
 
         $this->logger->error('Data frame processing failed', [
             'exception' => $exception->getMessage(),
@@ -206,6 +214,9 @@ final class TelemetryContext
             ]),
         );
         $this->dataFrameSpan = $dataFrameSpan;
+        // activated so that everything started while the data frame runs - including filesystem streams, which
+        // never activate themselves - is parented to it
+        $this->dataFrameScope = $this->tracer->activate($dataFrameSpan);
 
         $this->logger()->debug(
             'Data frame processing started',
@@ -261,13 +272,14 @@ final class TelemetryContext
      */
     public function loadingCompleted(Loader $loader, array $attributes = []): void
     {
-        $span = $this->loadingSpans->pop();
+        $entry = $this->loadingSpans->pop();
 
-        if ($span === null) {
+        if ($entry === null) {
             return;
         }
 
-        $this->tracer->complete($span->setAttributes($attributes));
+        $entry->scope->detach();
+        $this->tracer->complete($entry->span->setAttributes($attributes));
     }
 
     /**
@@ -275,15 +287,17 @@ final class TelemetryContext
      */
     public function loadingFailed(Loader $loader, Throwable $exception, array $attributes = []): void
     {
-        $span = $this->loadingSpans->pop();
+        $entry = $this->loadingSpans->pop();
 
-        if ($span === null) {
+        if ($entry === null) {
             return;
         }
 
+        $entry->scope->detach();
         $this->logger->error('Loading failed', ['exception' => $exception->getMessage(), 'loader' => $loader::class]);
         $this->tracer->complete(
-            $span
+            $entry
+                ->span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
@@ -299,15 +313,17 @@ final class TelemetryContext
             return;
         }
 
-        $this->loadingSpans->push($this->tracer->span(
+        $span = $this->tracer->span(
             ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
                 TelemetryAttributes::ATTR_LOADER_CLASS => $loader::class,
                 TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
-            parentContext: $this->dataFrameSpan?->context(),
-        ));
+            parent: $this->dataFrameParent(),
+        );
+
+        $this->loadingSpans->push($span, $this->tracer->activate($span));
     }
 
     public function logger(): Logger
@@ -320,13 +336,14 @@ final class TelemetryContext
      */
     public function transformationCompleted(Transformer $transformer, array $attributes = []): void
     {
-        $span = $this->transformationSpans->pop();
+        $entry = $this->transformationSpans->pop();
 
-        if ($span === null) {
+        if ($entry === null) {
             return;
         }
 
-        $this->tracer->complete($span->setAttributes($attributes));
+        $entry->scope->detach();
+        $this->tracer->complete($entry->span->setAttributes($attributes));
     }
 
     /**
@@ -334,18 +351,20 @@ final class TelemetryContext
      */
     public function transformationFailed(Transformer $transformer, Throwable $exception, array $attributes = []): void
     {
-        $span = $this->transformationSpans->pop();
+        $entry = $this->transformationSpans->pop();
 
-        if ($span === null) {
+        if ($entry === null) {
             return;
         }
 
+        $entry->scope->detach();
         $this->logger->error('Transformation failed', [
             'exception' => $exception->getMessage(),
             'transformer' => $transformer::class,
         ]);
         $this->tracer->complete(
-            $span
+            $entry
+                ->span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
@@ -361,15 +380,32 @@ final class TelemetryContext
             return;
         }
 
-        $this->transformationSpans->push($this->tracer->span(
+        $span = $this->tracer->span(
             ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
                 TelemetryAttributes::ATTR_TRANSFORMER_CLASS => $transformer::class,
                 TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
-            parentContext: $this->dataFrameSpan?->context(),
-        ));
+            parent: $this->dataFrameParent(),
+        );
+
+        $this->transformationSpans->push($span, $this->tracer->activate($span));
+    }
+
+    /**
+     * Pins loading/transformation spans to the data frame span regardless of what else has been activated in
+     * between. Derived from the current context so baggage and suppression are preserved.
+     */
+    private function dataFrameParent(): ?Context
+    {
+        $dataFrameSpan = $this->dataFrameSpan;
+
+        if ($dataFrameSpan === null) {
+            return null;
+        }
+
+        return $this->tracer->context()->withActiveSpan($dataFrameSpan->context());
     }
 
     /**

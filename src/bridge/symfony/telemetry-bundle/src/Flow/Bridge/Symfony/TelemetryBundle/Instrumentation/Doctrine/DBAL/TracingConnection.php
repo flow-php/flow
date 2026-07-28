@@ -9,6 +9,7 @@ use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -27,6 +28,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
      * The open span for the current transaction in GROUPED mode, held between
      * beginTransaction() and commit()/rollBack() so query spans nest under it.
      */
+    private ?Scope $transactionScope = null;
+
     private ?Span $transactionSpan = null;
 
     /**
@@ -78,12 +81,17 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
             $tracer = $this->queryTracer->tracer();
             $span = $tracer->span('BEGIN TRANSACTION', SpanKind::CLIENT, $this->transactionSpanAttributes());
+            // activated: a grouped transaction span is a logical scope - every statement until
+            // commit/rollback belongs under it
+            $scope = $tracer->activate($span);
 
             try {
                 parent::beginTransaction();
                 $this->transactionSpan = $span;
+                $this->transactionScope = $scope;
             } catch (Throwable $exception) {
                 $this->queryTracer->recordError($span, $exception);
+                $scope->detach();
                 $tracer->complete($span);
 
                 throw $exception;
@@ -133,6 +141,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
             SpanKind::CLIENT,
             $this->queryTracer->queryAttributes($sql, $sqlAttributes),
         );
+        $scope = $tracer->activate($span);
 
         try {
             return new TracingStatement(parent::prepare($sql), $this->queryTracer, $sql, $sqlAttributes);
@@ -141,6 +150,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
             throw $exception;
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }
@@ -177,6 +187,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
             SpanKind::CLIENT,
             $this->queryTracer->queryAttributes($sql, $sqlAttributes),
         );
+        $scope = $tracer->activate($span);
 
         try {
             $result = $execute();
@@ -191,6 +202,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
             throw $exception;
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }
@@ -216,7 +228,9 @@ final class TracingConnection extends AbstractConnectionMiddleware
             }
 
             $span = $this->transactionSpan;
+            $scope = $this->transactionScope;
             $this->transactionSpan = null;
+            $this->transactionScope = null;
 
             if ($span === null) {
                 $execute();
@@ -233,6 +247,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
                 throw $exception;
             } finally {
+                $scope?->detach();
                 $tracer->complete($span);
             }
         } finally {
@@ -248,6 +263,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         $tracer = $this->queryTracer->tracer();
         $span = $tracer->span($spanName, SpanKind::CLIENT, [SemConvAttributes::DB_OPERATION_NAME => $operation]
         + $this->transactionSpanAttributes());
+        $scope = $tracer->activate($span);
 
         try {
             $execute();
@@ -256,6 +272,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
             throw $exception;
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }

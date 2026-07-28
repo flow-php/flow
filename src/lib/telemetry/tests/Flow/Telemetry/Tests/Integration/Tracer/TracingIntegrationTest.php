@@ -36,16 +36,20 @@ final class TracingIntegrationTest extends TestCase
         $tracer = $provider->tracer($this->resource, 'my-service', '1.0.0');
 
         $rootSpan = $tracer->span('handle-request', SpanKind::SERVER);
+        $rootScope = $tracer->activate($rootSpan);
         $rootSpan->setAttribute('http.method', 'POST');
         $rootSpan->setAttribute('http.url', '/api/orders');
 
         $dbSpan = $tracer->span('database-query', SpanKind::CLIENT);
+        $dbScope = $tracer->activate($dbSpan);
         $dbSpan->setAttribute('db.system', 'postgresql');
         $dbSpan->setAttribute('db.statement', 'SELECT * FROM orders');
         $dbSpan->setStatus(SpanStatus::ok());
+        $dbScope->detach();
         $tracer->complete($dbSpan);
 
         $rootSpan->setStatus(SpanStatus::ok());
+        $rootScope->detach();
         $tracer->complete($rootSpan);
 
         static::assertCount(2, $processor->endedSpans());
@@ -70,13 +74,21 @@ final class TracingIntegrationTest extends TestCase
         $tracer = $provider->tracer($this->resource, 'test');
 
         $level1 = $tracer->span('level-1');
+        $scope1 = $tracer->activate($level1);
         $level2 = $tracer->span('level-2');
+        $scope2 = $tracer->activate($level2);
         $level3 = $tracer->span('level-3');
+        $scope3 = $tracer->activate($level3);
         $level4 = $tracer->span('level-4');
+        $scope4 = $tracer->activate($level4);
 
+        $scope4->detach();
         $tracer->complete($level4);
+        $scope3->detach();
         $tracer->complete($level3);
+        $scope2->detach();
         $tracer->complete($level2);
+        $scope1->detach();
         $tracer->complete($level1);
 
         static::assertCount(4, $processor->endedSpans());
@@ -134,22 +146,26 @@ final class TracingIntegrationTest extends TestCase
         $tracerB = $provider->tracer($this->resource, 'tracer-b', '1.0.0');
 
         $spanA = $tracerA->span('span-a');
+        $scopeA = $tracerA->activate($spanA);
 
         $activeSpanId = $storage->current()->activeSpanId();
         static::assertNotNull($activeSpanId);
         static::assertTrue($spanA->context()->spanId->equals($activeSpanId));
 
         $spanB = $tracerB->span('span-b');
+        $scopeB = $tracerB->activate($spanB);
         $activeSpanIdAfterB = $storage->current()->activeSpanId();
         static::assertNotNull($activeSpanIdAfterB);
         static::assertTrue($spanB->context()->spanId->equals($activeSpanIdAfterB));
 
+        $scopeB->detach();
         $tracerB->complete($spanB);
 
         $activeSpanIdAfterBComplete = $storage->current()->activeSpanId();
         static::assertNotNull($activeSpanIdAfterBComplete);
         static::assertTrue($spanA->context()->spanId->equals($activeSpanIdAfterBComplete));
 
+        $scopeA->detach();
         $tracerA->complete($spanA);
 
         static::assertNull($storage->current()->activeSpanId());
@@ -166,13 +182,17 @@ final class TracingIntegrationTest extends TestCase
         $dbTracer = $provider->tracer($this->resource, 'database', '2.0.0');
 
         $httpSpan = $httpTracer->span('http-request');
+        $httpScope = $httpTracer->activate($httpSpan);
         $dbSpan = $dbTracer->span('db-query');
+        $dbScope = $dbTracer->activate($dbSpan);
 
         static::assertTrue($dbSpan->context()->traceId->equals($httpSpan->context()->traceId));
         static::assertSame($httpSpan->context()->spanId->toHex(), $dbSpan->context()->parentSpanId?->toHex());
 
-        $httpTracer->complete($httpSpan);
+        $dbScope->detach();
         $dbTracer->complete($dbSpan);
+        $httpScope->detach();
+        $httpTracer->complete($httpSpan);
     }
 
     public function test_provider_creates_new_tracer_each_time(): void

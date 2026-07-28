@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Context;
 
 use Flow\Clock\FakeClock;
 use Flow\ETL\Config;
+use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\FlowContext;
@@ -41,6 +42,7 @@ final class MemoryTelemetryContext
 
     public function __construct(
         public readonly TelemetryOptions $options = new TelemetryOptions(),
+        ?SortAlgorithmBuilder $sortAlgorithm = null,
     ) {
         $this->spans = new MemorySpanProcessor(new VoidExporter());
         $this->metrics = new MemoryMetricProcessor(new VoidExporter());
@@ -56,7 +58,13 @@ final class MemoryTelemetryContext
             new LoggerProvider($this->logs, $clock, $contextStorage),
         );
 
-        $this->config = config_builder()->withTelemetry($this->telemetry, $this->options)->build();
+        $configBuilder = config_builder()->withTelemetry($this->telemetry, $this->options);
+
+        if ($sortAlgorithm !== null) {
+            $configBuilder->sort($sortAlgorithm);
+        }
+
+        $this->config = $configBuilder->build();
         $this->flowContext = flow_context($this->config);
         $this->telemetryContext = new TelemetryContext(
             $this->telemetry->logger('flow-php'),

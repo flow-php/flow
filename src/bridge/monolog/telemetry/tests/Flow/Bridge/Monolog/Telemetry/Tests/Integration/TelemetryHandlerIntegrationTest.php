@@ -233,7 +233,9 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->pushHandler(telemetry_handler($context->logger));
 
         $span = $tracer->span('short-operation');
+        $scope = $tracer->activate($span);
         $monolog->info('Inside span');
+        $scope->detach();
         $tracer->complete($span);
 
         $monolog->info('After span completed');
@@ -255,10 +257,12 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->pushHandler(telemetry_handler($context->logger));
 
         $span = $tracer->span('process-order');
+        $scope = $tracer->activate($span);
 
         $monolog->info('Processing order', ['order_id' => 123]);
         $monolog->warning('Low inventory', ['product_id' => 456]);
 
+        $scope->detach();
         $tracer->complete($span);
 
         $entries = $context->processor->entries();
@@ -436,14 +440,18 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->pushHandler(telemetry_handler($context->logger));
 
         $parentSpan = $tracer->span('parent-operation');
+        $parentScope = $tracer->activate($parentSpan);
         $monolog->info('In parent span');
 
         $childSpan = $tracer->span('child-operation');
+        $childScope = $tracer->activate($childSpan);
         $monolog->info('In child span');
 
+        $childScope->detach();
         $tracer->complete($childSpan);
         $monolog->info('Back in parent span');
 
+        $parentScope->detach();
         $tracer->complete($parentSpan);
 
         $entries = $context->processor->entries();

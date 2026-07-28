@@ -62,6 +62,7 @@ final class TracingDriver extends AbstractDriverMiddleware
             SemConvAttributes::DB_NAMESPACE => $namespace,
             DbAttributes::DB_CONNECTION_NAME => $this->connectionName,
         ]);
+        $scope = $tracer->activate($span);
 
         try {
             $connection = parent::connect($params);
@@ -108,6 +109,7 @@ final class TracingDriver extends AbstractDriverMiddleware
 
             throw $exception;
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }

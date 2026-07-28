@@ -19,8 +19,10 @@ final class SpanStackTest extends FlowTestCase
         $tracer = $context->telemetry->tracer('flow-php');
 
         $stack = new SpanStack();
-        $stack->push($tracer->span('outer'));
-        $stack->push($tracer->span('inner'));
+        $outer = $tracer->span('outer');
+        $stack->push($outer, $tracer->activate($outer));
+        $inner = $tracer->span('inner');
+        $stack->push($inner, $tracer->activate($inner));
 
         $stack->drain($tracer, 'Span was never completed.');
 
@@ -42,8 +44,10 @@ final class SpanStackTest extends FlowTestCase
         $tracer = $context->telemetry->tracer('flow-php');
 
         $stack = new SpanStack();
-        $stack->push($tracer->span('outer'));
-        $stack->push($tracer->span('inner'));
+        $outer = $tracer->span('outer');
+        $stack->push($outer, $tracer->activate($outer));
+        $inner = $tracer->span('inner');
+        $stack->push($inner, $tracer->activate($inner));
 
         $stack->drain($tracer, 'Span was never completed.');
 
@@ -59,7 +63,8 @@ final class SpanStackTest extends FlowTestCase
         $tracer = $context->telemetry->tracer('flow-php');
 
         $stack = new SpanStack();
-        $stack->push($tracer->span('outer'));
+        $outer = $tracer->span('outer');
+        $stack->push($outer, $tracer->activate($outer));
 
         $stack->drain($tracer, 'Span was never completed.');
 
@@ -88,11 +93,40 @@ final class SpanStackTest extends FlowTestCase
         $inner = $tracer->span('inner');
 
         $stack = new SpanStack();
-        $stack->push($outer);
-        $stack->push($inner);
+        $stack->push($outer, $tracer->activate($outer));
+        $stack->push($inner, $tracer->activate($inner));
 
-        static::assertSame($inner, $stack->pop());
-        static::assertSame($outer, $stack->pop());
+        static::assertSame($inner, $stack->pop()?->span);
+        static::assertSame($outer, $stack->pop()?->span);
         static::assertNull($stack->pop());
+    }
+
+    public function test_pop_returns_the_scope_alongside_the_span(): void
+    {
+        $tracer = (new MemoryTelemetryContext())->telemetry->tracer('flow-php');
+
+        $span = $tracer->span('outer');
+        $scope = $tracer->activate($span);
+
+        $stack = new SpanStack();
+        $stack->push($span, $scope);
+
+        static::assertSame($scope, $stack->pop()?->scope);
+    }
+
+    public function test_drain_detaches_every_scope(): void
+    {
+        $context = new MemoryTelemetryContext();
+        $tracer = $context->telemetry->tracer('flow-php');
+
+        $stack = new SpanStack();
+        $outer = $tracer->span('outer');
+        $stack->push($outer, $tracer->activate($outer));
+        $inner = $tracer->span('inner');
+        $stack->push($inner, $tracer->activate($inner));
+
+        $stack->drain($tracer, 'Span was never completed.');
+
+        static::assertNull($tracer->activeSpan());
     }
 }

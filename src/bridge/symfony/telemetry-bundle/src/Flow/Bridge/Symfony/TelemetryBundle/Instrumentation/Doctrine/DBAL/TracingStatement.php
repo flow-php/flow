@@ -50,6 +50,7 @@ final class TracingStatement extends AbstractStatementMiddleware
             $this->queryTracer->queryAttributes($this->sql, $this->sqlAttributes)
             + $this->queryTracer->parameterAttributes($this->boundParameters),
         );
+        $scope = $tracer->activate($span);
 
         try {
             $result = parent::execute();
@@ -64,6 +65,7 @@ final class TracingStatement extends AbstractStatementMiddleware
 
             throw $exception;
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }

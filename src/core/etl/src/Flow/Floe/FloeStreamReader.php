@@ -57,6 +57,11 @@ final class FloeStreamReader
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
     }
 
+    public function close(): void
+    {
+        $this->source->close();
+    }
+
     /**
      * @return Encoder<string>
      */

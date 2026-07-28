@@ -28,6 +28,12 @@ final class TracingControllerResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $controller = static fn(): string => 'ok';
         $inner = $this->createStub(ControllerResolverInterface::class);
@@ -69,6 +75,12 @@ final class TracingControllerResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $inner = $this->createStub(ControllerResolverInterface::class);
         $inner->method('getController')->willThrowException(new RuntimeException('controller failed'));

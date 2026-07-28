@@ -53,8 +53,9 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
                 PHPUnitTelemetryAttributes::ATTR_SUITE_IS_ROOT => $isRoot,
             ]);
 
+            // activated: suites nest, and test spans must nest under their suite
             $this->spanStack->setSuiteSpan($suite->name(), $span);
-            $this->spanStack->push($span);
+            $this->spanStack->push($span, $tracer->activate($span));
             $this->suiteOutcomes->push();
         } catch (Throwable) {
             // Silent failure - telemetry must never break tests

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Context;
 
 use Flow\Telemetry\Context\Context;
-use Flow\Telemetry\Context\ContextScope;
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Tracer\SpanContext;
@@ -38,7 +38,19 @@ final class ContextScopeTest extends TestCase
         static::assertSame($context1->activeSpan(), $storage->current()->activeSpan());
     }
 
-    public function test_detach_is_idempotent(): void
+    public function test_detach_returns_detached_when_in_order(): void
+    {
+        $storage = new MemoryContextStorage();
+
+        $scope = $storage->attach(Context::root()->withActiveSpan(SpanContext::create(
+            TraceId::generate(),
+            SpanId::generate(),
+        )));
+
+        static::assertSame(Scope::DETACHED, $scope->detach());
+    }
+
+    public function test_detach_returns_inactive_when_already_detached(): void
     {
         $storage = new MemoryContextStorage();
         $originalContext = $storage->current();
@@ -48,9 +60,38 @@ final class ContextScopeTest extends TestCase
             SpanId::generate(),
         )));
 
-        static::assertSame(ContextScope::DETACHED, $scope->detach());
-        static::assertSame(ContextScope::DETACHED, $scope->detach());
-        static::assertSame(ContextScope::DETACHED, $scope->detach());
+        static::assertSame(Scope::DETACHED, $scope->detach());
+        static::assertSame(Scope::INACTIVE, $scope->detach());
+        static::assertSame(Scope::INACTIVE, $scope->detach());
+
+        static::assertSame($originalContext->activeSpan(), $storage->current()->activeSpan());
+    }
+
+    public function test_detach_returns_mismatch_when_out_of_order(): void
+    {
+        $storage = new MemoryContextStorage();
+
+        $scopeA = $storage->attach(Context::root()->withActiveSpan(SpanContext::create(
+            TraceId::generate(),
+            SpanId::generate(),
+        )));
+        $storage->attach(Context::root()->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate())));
+
+        static::assertSame(Scope::MISMATCH, $scopeA->detach());
+    }
+
+    public function test_detach_out_of_order_still_restores_the_previous_context(): void
+    {
+        $storage = new MemoryContextStorage();
+        $originalContext = $storage->current();
+
+        $scopeA = $storage->attach(Context::root()->withActiveSpan(SpanContext::create(
+            TraceId::generate(),
+            SpanId::generate(),
+        )));
+        $storage->attach(Context::root()->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate())));
+
+        $scopeA->detach();
 
         static::assertSame($originalContext->activeSpan(), $storage->current()->activeSpan());
     }

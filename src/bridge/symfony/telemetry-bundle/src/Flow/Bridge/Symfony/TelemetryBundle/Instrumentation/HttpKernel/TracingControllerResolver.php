@@ -30,6 +30,7 @@ final readonly class TracingControllerResolver implements ControllerResolverInte
 
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $span = $tracer->span('controller.get_callable', SpanKind::INTERNAL);
+        $scope = $tracer->activate($span);
 
         try {
             return $this->resolver->getController($request);
@@ -41,6 +42,7 @@ final readonly class TracingControllerResolver implements ControllerResolverInte
             throw $exception;
         } finally {
             // OTEL spec: instrumentation leaves the status Unset on success.
+            $scope->detach();
             $tracer->complete($span);
         }
     }

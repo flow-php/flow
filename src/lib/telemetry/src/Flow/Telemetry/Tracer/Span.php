@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\Telemetry\AttributeLimitsEnforcer;
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Throwable;
@@ -45,7 +44,7 @@ final class Span
 {
     private Attributes $attributes;
 
-    private ?Scope $contextScope = null;
+    private bool $completed = false;
 
     private int $droppedAttributeCount = 0;
 
@@ -202,14 +201,6 @@ final class Span
     }
 
     /**
-     * Get the context scope for this span.
-     */
-    public function contextScope(): ?Scope
-    {
-        return $this->contextScope;
-    }
-
-    /**
      * Get the count of attributes that were dropped due to limits.
      */
     public function droppedAttributeCount(): int
@@ -290,6 +281,25 @@ final class Span
     public function isEnded(): bool
     {
         return $this->endTime !== null;
+    }
+
+    /**
+     * Whether the span was already handed to the processor. Distinct from isEnded(): callers may end a span to
+     * read its duration and complete it later.
+     */
+    public function isCompleted(): bool
+    {
+        return $this->completed;
+    }
+
+    /**
+     * @internal used by Tracer::complete() to keep completion idempotent
+     */
+    public function markCompleted(): self
+    {
+        $this->completed = true;
+
+        return $this;
     }
 
     /**
@@ -527,18 +537,6 @@ final class Span
 
         $this->attributes = $result->attributes;
         $this->droppedAttributeCount += $result->droppedAttributeCount;
-
-        return $this;
-    }
-
-    /**
-     * Set the context scope for this span.
-     *
-     * @return $this
-     */
-    public function setContextScope(Scope $scope): self
-    {
-        $this->contextScope = $scope;
 
         return $this;
     }

@@ -72,8 +72,16 @@ final class FilesystemBuckets implements BucketsStorage
             return;
         }
 
-        foreach ($this->reader->read($path)->rows($this->batchSize, conform: false) as $batch) {
-            yield $batch;
+        $reader = $this->reader->read($path);
+
+        // finally, not a trailing close(): PHP runs it on generator destruction too, and a KWayMerge cursor is
+        // destroyed rather than exhausted when a merge throws
+        try {
+            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+                yield $batch;
+            }
+        } finally {
+            $reader->close();
         }
     }
 

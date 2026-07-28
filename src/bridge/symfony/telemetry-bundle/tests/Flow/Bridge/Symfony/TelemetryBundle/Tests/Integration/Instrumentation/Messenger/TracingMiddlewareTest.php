@@ -330,6 +330,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $tracer = $telemetry->tracer('test');
         $span = $tracer->span('parent-span');
+        $tracer->activate($span);
 
         $capturingMiddleware = new CapturingMiddleware();
 
@@ -388,6 +389,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $tracer = $telemetry->tracer('test');
         $span = $tracer->span('parent-span');
+        $tracer->activate($span);
 
         $handler = new TestMessageHandler();
         $capturingMiddleware = new CapturingMiddleware();

@@ -58,7 +58,8 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
                 PHPUnitTelemetryAttributes::ATTR_TEST_METHOD => $methodName,
             ]);
 
-            $this->spanStack->push($span);
+            // activated: spans the test itself emits must nest under the test span
+            $this->spanStack->push($span, $tracer->activate($span));
         } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }

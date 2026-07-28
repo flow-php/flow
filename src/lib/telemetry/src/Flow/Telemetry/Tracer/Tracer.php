@@ -7,6 +7,7 @@ namespace Flow\Telemetry\Tracer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
@@ -25,7 +26,7 @@ use Throwable;
  * manages parent-child relationships through the shared Context (the active span lives in the Context and
  * the parent is derived from it), and delegates span lifecycle events to a SpanProcessor.
  *
- * Example usage:
+ * Example usage - a leaf span, which never needs to become the active span:
  * ```php
  * $span = $tracer->span('process-order');
  * try {
@@ -35,6 +36,18 @@ use Throwable;
  *     $span->recordException($e)->setStatus(SpanStatus::error($e->getMessage()));
  *     throw $e;
  * } finally {
+ *     $tracer->complete($span);
+ * }
+ * ```
+ *
+ * When spans created inside must nest under this one, activate it and detach the scope before completing:
+ * ```php
+ * $span = $tracer->span('process-order');
+ * $scope = $tracer->activate($span);
+ * try {
+ *     // spans started here become children of $span
+ * } finally {
+ *     $scope->detach();
  *     $tracer->complete($span);
  * }
  * ```
@@ -64,6 +77,16 @@ final class Tracer
     ) {}
 
     /**
+     * Make a span the active span in the current Context.
+     *
+     * The returned Scope must be detached by the caller, in LIFO order, before the span is completed.
+     */
+    public function activate(Span $span): Scope
+    {
+        return $this->contextStorage->attach($this->contextStorage->current()->withActiveSpan($span->context()));
+    }
+
+    /**
      * Get the currently active span context from the shared Context, or null if none.
      */
     public function activeSpan(): ?SpanContext
@@ -74,16 +97,22 @@ final class Tracer
     /**
      * Complete a span and pass it to the processor.
      *
-     * This ends the span (if not already ended), detaches its Context scope
-     * (restoring the parent context), and notifies the processor.
+     * This ends the span (if not already ended) and notifies the processor. Detaching the Context scope is the
+     * responsibility of whoever called activate().
      */
     public function complete(Span $span): void
     {
+        // OTEL spec: End "MUST be called only once per span"; subsequent calls are ignored rather than
+        // re-exporting. isEnded() alone is not the guard - callers may end a span to read its duration first.
+        if ($span->isCompleted()) {
+            return;
+        }
+
         if (!$span->isEnded()) {
             $span->end($this->clock->now());
         }
 
-        $span->contextScope()?->detach();
+        $span->markCompleted();
 
         if ($span->isRecording()) {
             try {
@@ -141,34 +170,39 @@ final class Tracer
     }
 
     /**
-     * Start a new span.
+     * Start a new span, without making it the active span.
      *
-     * If there's an active span, it becomes the parent of the new span.
-     * The new span is attached to the Context and becomes the active span.
+     * OTEL trace API: "Span creation MUST NOT set the newly created Span as the active Span in the current
+     * Context by default, but this functionality MAY be offered additionally as a separate operation."
+     * That separate operation is activate().
      *
      * @param string $name The span name
      * @param SpanKind $kind The span kind
      * @param TAttributeValueMap|Attributes $attributes Initial attributes
      * @param array<SpanLink> $links Links to other spans
-     * @param null|false|SpanContext $parentContext Explicit parent control:
-     *                                              - null (default): automatic detection from the Context's active span
-     *                                              - SpanContext: use as explicit parent
-     *                                              - false: create root span (no parent)
+     * @param null|false|Context $parent Explicit parent control:
+     *                                   - null (default): automatic detection from the current Context's active span
+     *                                   - Context: use that Context's active span as parent
+     *                                   - false: create root span (no parent)
      */
     public function span(
         string $name,
         SpanKind $kind = SpanKind::INTERNAL,
         Attributes|array $attributes = [],
         array $links = [],
-        SpanContext|false|null $parentContext = null,
+        Context|false|null $parent = null,
     ): Span {
         $context = $this->contextStorage->current();
 
-        $parentSpanContext = match (true) {
-            $parentContext === false => null,
-            $parentContext !== null => $parentContext,
-            default => $context->activeSpan(),
+        // OTEL spec: the sampler receives the parent Context, not the ambient one. Dropping only the active
+        // span for a root span keeps suppression and baggage, which are not parent-child properties.
+        $parentContext = match (true) {
+            $parent === false => $context->withoutActiveSpan(),
+            $parent !== null => $parent,
+            default => $context,
         };
+
+        $parentSpanContext = $parentContext->activeSpan();
 
         // OpenTelemetry: a span inherits its parent's trace id; a root span (no parent) starts a new trace.
         $traceId = $parentSpanContext !== null ? $parentSpanContext->traceId : TraceId::generate();
@@ -209,7 +243,7 @@ final class Tracer
         }
 
         if ($this->sampler !== null) {
-            $samplingResult = $this->sampler->shouldSample($context, $span);
+            $samplingResult = $this->sampler->shouldSample($parentContext, $span);
 
             $isRecording = $samplingResult->decision->isRecording();
             $traceFlags = $samplingResult->decision->isSampled() ? TraceFlags::sampled() : TraceFlags::default();
@@ -243,8 +277,6 @@ final class Tracer
             }
         }
 
-        $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context())));
-
         if ($span->isRecording()) {
             try {
                 $this->processor->onStart($span);
@@ -268,7 +300,7 @@ final class Tracer
      * @param string $name The span name
      * @param callable(): T $callback The callable to execute
      * @param SpanKind $kind The span kind
-     * @param null|false|SpanContext $parentContext Explicit parent control (see span() for details)
+     * @param null|false|Context $parent Explicit parent control (see span() for details)
      *
      * @throws \Throwable Rethrows any exception from the callback
      *
@@ -278,9 +310,10 @@ final class Tracer
         string $name,
         callable $callback,
         SpanKind $kind = SpanKind::INTERNAL,
-        SpanContext|false|null $parentContext = null,
+        Context|false|null $parent = null,
     ): mixed {
-        $span = $this->span($name, $kind, [], [], $parentContext);
+        $span = $this->span($name, $kind, [], [], $parent);
+        $scope = $this->activate($span);
 
         try {
             // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
@@ -292,6 +325,7 @@ final class Tracer
 
             throw $e;
         } finally {
+            $scope->detach();
             $this->complete($span);
         }
     }
