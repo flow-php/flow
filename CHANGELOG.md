@@ -1,20 +1,37 @@
-## [Unreleased] - 2026-07-27
+## [Unreleased] - 2026-07-28
 
 ### Added
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::activate() returning a detachable Scope** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Scope::DETACHED, Scope::INACTIVE and Scope::MISMATCH detach results** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - FloeStreamReader::close()** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::span() no longer makes the span current** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::span() and trace() take a Context parent instead of a SpanContext** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::complete() no longer detaches the scope** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - to_transformation() expands a Transformation once per loader, not per batch** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - nested loading and transformation spans are tracked on a stack** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/phpunit-telemetry-bridge - SpanStack::push() takes the span scope** - [@norberttech](https://github.com/norberttech)
 - [6060a1](https://github.com/flow-php/flow/commit/6060a1ff02e1e8c50b8c861fe2e04546a24560f0) - **docs(flow-php/etl-adapter-http): replace HTTP data reading examples with a single paginated on** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - Docker image is built on native amd64 and arm64 runners instead of QEMU emulation.** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - extension revisions are pinned per build so the layer cache tracks extension content.** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/filesystem - concurrently open stream spans no longer nest into each other** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - bucket source streams are closed, so their spans complete** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - the sampler receives the parent Context instead of the ambient one** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::complete() no longer re-exports a span when called twice** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - LimitReachedException no longer escapes to_transformation()** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - limit reached is logged without the exception stacktrace** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - restored Docker layer cache, setup-docker-builder v2.0.0 silently fell back to a local builder.** - [@norberttech](https://github.com/norberttech)
 - [8f8157](https://github.com/flow-php/flow/commit/8f8157854232f98c46d812b909275bab7304a7a0) - **http adapter documentation examples** - [@norberttech](https://github.com/norberttech)
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Span::contextScope() and Span::setContextScope()** - [@norberttech](https://github.com/norberttech)
+- [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - MemoryContextStorage::store()** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - QEMU setup from Docker image builds.** - [@norberttech](https://github.com/norberttech)
 
 ## [0.42.0] - 2026-07-27
