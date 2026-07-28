@@ -204,16 +204,16 @@
         },
         {
             "name": "cmsig/seal",
-            "version": "0.12.15",
+            "version": "0.12.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHP-CMSIG/seal.git",
-                "reference": "05be2905a50b0f093e2c1b639c9a6b4580817853"
+                "reference": "2112eea3399d6ef0d3ed81f6502080d5ecfd8f96"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHP-CMSIG/seal/zipball/05be2905a50b0f093e2c1b639c9a6b4580817853",
-                "reference": "05be2905a50b0f093e2c1b639c9a6b4580817853",
+                "url": "https://api.github.com/repos/PHP-CMSIG/seal/zipball/2112eea3399d6ef0d3ed81f6502080d5ecfd8f96",
+                "reference": "2112eea3399d6ef0d3ed81f6502080d5ecfd8f96",
                 "shasum": ""
             },
             "require": {
@@ -263,7 +263,7 @@
                 "typesense"
             ],
             "support": {
-                "source": "https://github.com/PHP-CMSIG/seal/tree/0.12.15"
+                "source": "https://github.com/PHP-CMSIG/seal/tree/0.12.16"
             },
             "funding": [
                 {
@@ -275,7 +275,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-22T09:01:21+00:00"
+            "time": "2026-07-27T12:24:08+00:00"
         },
         {
             "name": "coduo/php-humanizer",
@@ -4494,16 +4494,16 @@
         },
         {
             "name": "cmsig/seal-elasticsearch-adapter",
-            "version": "0.12.14",
+            "version": "0.12.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHP-CMSIG/seal-elasticsearch-adapter.git",
-                "reference": "4119b46b0cf31e091767f4934505c06238e164ea"
+                "reference": "3e0588500fe9c25e81a0e4164332448e1b3fd7fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHP-CMSIG/seal-elasticsearch-adapter/zipball/4119b46b0cf31e091767f4934505c06238e164ea",
-                "reference": "4119b46b0cf31e091767f4934505c06238e164ea",
+                "url": "https://api.github.com/repos/PHP-CMSIG/seal-elasticsearch-adapter/zipball/3e0588500fe9c25e81a0e4164332448e1b3fd7fb",
+                "reference": "3e0588500fe9c25e81a0e4164332448e1b3fd7fb",
                 "shasum": ""
             },
             "require": {
@@ -4555,7 +4555,7 @@
                 "search-client"
             ],
             "support": {
-                "source": "https://github.com/PHP-CMSIG/seal-elasticsearch-adapter/tree/0.12.14"
+                "source": "https://github.com/PHP-CMSIG/seal-elasticsearch-adapter/tree/0.12.16"
             },
             "funding": [
                 {
@@ -4567,7 +4567,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-08T06:10:03+00:00"
+            "time": "2026-07-27T12:24:08+00:00"
         },
         {
             "name": "cmsig/seal-memory-adapter",
