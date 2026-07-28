@@ -31,6 +31,12 @@ final class TracingValueResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $inner = $this->createStub(ValueResolverInterface::class);
         $inner->method('resolve')->willReturn(['resolved']);
@@ -77,6 +83,12 @@ final class TracingValueResolverTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $inner = $this->createStub(ValueResolverInterface::class);
         $inner->method('resolve')->willThrowException(new RuntimeException('resolver failed'));

@@ -67,8 +67,9 @@ Three small immutable value objects in `Flow\Telemetry\Batch` carry the payload 
 
 **Interface:** `Flow\Telemetry\Context\ContextStorage`
 
-Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. Enables automatic context
-propagation to child spans.
+Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. `attach()` returns a
+`Scope` that must be detached in reverse order; a span becomes the parent of later spans only while its scope is
+attached — see `Tracer::activate()`.
 
 | Implementation         | Package              | Description                                |
 |------------------------|----------------------|--------------------------------------------|
@@ -102,12 +103,12 @@ sits between the Tracer and the unified `Exporter`. The `exporter()` accessor re
 Makes sampling decisions for traces. Determines whether a span should be recorded and exported based on configurable
 rules.
 
-| Implementation             | Package              | Description                                         |
-|----------------------------|----------------------|-----------------------------------------------------|
-| `AlwaysOnSampler`          | `flow-php/telemetry` | Records all traces                                  |
-| `AlwaysOffSampler`         | `flow-php/telemetry` | Records no traces                                   |
-| `TraceIdRatioBasedSampler` | `flow-php/telemetry` | Records a configurable percentage of traces         |
-| `ParentBasedSampler`       | `flow-php/telemetry` | Inherits sampling decision from parent span context |
+| Implementation             | Package              | Description                                                                                              |
+|----------------------------|----------------------|----------------------------------------------------------------------------------------------------------|
+| `AlwaysOnSampler`          | `flow-php/telemetry` | Records all traces                                                                                       |
+| `AlwaysOffSampler`         | `flow-php/telemetry` | Records no traces                                                                                        |
+| `TraceIdRatioBasedSampler` | `flow-php/telemetry` | Records a configurable percentage of traces                                                              |
+| `ParentBasedSampler`       | `flow-php/telemetry` | Inherits sampling decision from parent span context                                                      |
 | `AttributeMatchingSampler` | `flow-php/telemetry` | Drops spans matching an `AttributeFilter` (start-time attributes), defers the rest to a delegate sampler |
 
 ---
@@ -168,13 +169,13 @@ Processes log records from loggers. Determines how logs are buffered and when th
 (marker interface extending `LogProcessor`) identifies the terminal/leaf processors; `PipelineLogProcessor` runs an
 ordered chain of `LogMiddleware` and forwards survivors to one `LogSink`.
 
-| Implementation            | Package              | Sink? | Description                                          |
-|---------------------------|----------------------|-------|------------------------------------------------------|
-| `PassThroughLogProcessor` | `flow-php/telemetry` | yes   | Exports each log immediately when recorded           |
-| `BatchingLogProcessor`    | `flow-php/telemetry` | yes   | Buffers logs and exports in configurable batches     |
-| `CompositeLogProcessor`   | `flow-php/telemetry` | yes   | Delegates to multiple processors                     |
-| `MemoryLogProcessor`      | `flow-php/telemetry` | yes   | Stores logs in memory for testing                    |
-| `VoidLogProcessor`        | `flow-php/telemetry` | yes   | No-op processor that discards all logs               |
+| Implementation            | Package              | Sink? | Description                                            |
+|---------------------------|----------------------|-------|--------------------------------------------------------|
+| `PassThroughLogProcessor` | `flow-php/telemetry` | yes   | Exports each log immediately when recorded             |
+| `BatchingLogProcessor`    | `flow-php/telemetry` | yes   | Buffers logs and exports in configurable batches       |
+| `CompositeLogProcessor`   | `flow-php/telemetry` | yes   | Delegates to multiple processors                       |
+| `MemoryLogProcessor`      | `flow-php/telemetry` | yes   | Stores logs in memory for testing                      |
+| `VoidLogProcessor`        | `flow-php/telemetry` | yes   | No-op processor that discards all logs                 |
 | `PipelineLogProcessor`    | `flow-php/telemetry` | no    | Runs middleware in order, then forwards to a `LogSink` |
 
 ### LogMiddleware
@@ -184,11 +185,11 @@ ordered chain of `LogMiddleware` and forwards survivors to one `LogSink`.
 A chainable step inside a `PipelineLogProcessor`. `process(LogEntry): ?LogEntry` returns the entry to pass on (possibly
 enriched) or `null` to drop it. Stateless - flush/shutdown belong to the pipeline's `LogSink`.
 
-| Implementation                     | Package              | Description                                          |
-|------------------------------------|----------------------|------------------------------------------------------|
-| `EnrichingLogMiddleware`           | `flow-php/telemetry` | Merges default attributes (call-site values win)     |
-| `SeverityFilteringLogMiddleware`   | `flow-php/telemetry` | Drops log entries below a minimum severity threshold |
-| `AttributeFilteringLogMiddleware`  | `flow-php/telemetry` | Drops/keeps log entries by an `AttributeFilter`      |
+| Implementation                    | Package              | Description                                          |
+|-----------------------------------|----------------------|------------------------------------------------------|
+| `EnrichingLogMiddleware`          | `flow-php/telemetry` | Merges default attributes (call-site values win)     |
+| `SeverityFilteringLogMiddleware`  | `flow-php/telemetry` | Drops log entries below a minimum severity threshold |
+| `AttributeFilteringLogMiddleware` | `flow-php/telemetry` | Drops/keeps log entries by an `AttributeFilter`      |
 
 ---
 

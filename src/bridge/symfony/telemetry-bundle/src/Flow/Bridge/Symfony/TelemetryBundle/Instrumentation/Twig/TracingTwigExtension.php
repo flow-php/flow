@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig;
 
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
@@ -69,7 +70,8 @@ final class TracingTwigExtension extends AbstractExtension
 
         $span = $tracer->span($spanName, SpanKind::INTERNAL, $attributes);
 
-        $this->activeSpans[$profile] = ['span' => $span, 'tracer' => $tracer];
+        // activated: templates nest, so an included template's span belongs under the including one
+        $this->activeSpans[$profile] = ['span' => $span, 'tracer' => $tracer, 'scope' => $tracer->activate($span)];
     }
 
     #[Override]
@@ -96,6 +98,7 @@ final class TracingTwigExtension extends AbstractExtension
         // @mago-expect analysis:no-value,redundant-type-comparison,redundant-logical-operation(2)
         if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
             // OTEL spec: instrumentation leaves the status Unset on success.
+            $spanData['scope']->detach();
             $spanData['tracer']->complete($spanData['span']);
         }
 
@@ -111,6 +114,11 @@ final class TracingTwigExtension extends AbstractExtension
             if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
                 $spanData['span']->setAttribute('error.type', 'incomplete_render');
                 $spanData['span']->setStatus(SpanStatus::error('Twig rendering did not complete'));
+
+                if ($spanData['scope'] instanceof Scope) {
+                    $spanData['scope']->detach();
+                }
+
                 $spanData['tracer']->complete($spanData['span']);
             }
         }

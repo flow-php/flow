@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit;
 
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Telemetry\Tests\Mother\ScopeMother;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\TestCase;
 
@@ -17,8 +18,8 @@ final class SpanStackTest extends TestCase
         $span2 = SpanMother::create('span-2');
         $suiteSpan = SpanMother::create('suite-span');
 
-        $stack->push($span1);
-        $stack->push($span2);
+        $stack->push($span1, ScopeMother::attached());
+        $stack->push($span2, ScopeMother::attached());
         $stack->setSuiteSpan('TestSuite', $suiteSpan);
 
         $stack->clear();
@@ -32,7 +33,7 @@ final class SpanStackTest extends TestCase
         $stack = new SpanStack();
         $span = SpanMother::create('test-span');
 
-        $stack->push($span);
+        $stack->push($span, ScopeMother::attached());
 
         static::assertSame($span, $stack->current());
         static::assertSame($span, $stack->current());
@@ -46,9 +47,9 @@ final class SpanStackTest extends TestCase
         $span2 = SpanMother::create('span-2');
         $span3 = SpanMother::create('span-3');
 
-        $stack->push($span1);
-        $stack->push($span2);
-        $stack->push($span3);
+        $stack->push($span1, ScopeMother::attached());
+        $stack->push($span2, ScopeMother::attached());
+        $stack->push($span3, ScopeMother::attached());
 
         static::assertSame($span3, $stack->pop());
         static::assertSame($span2, $stack->pop());
@@ -61,7 +62,7 @@ final class SpanStackTest extends TestCase
         $stack = new SpanStack();
         $span = SpanMother::create('test-span');
 
-        $stack->push($span);
+        $stack->push($span, ScopeMother::attached());
 
         static::assertFalse($stack->isEmpty());
         static::assertSame($span, $stack->current());

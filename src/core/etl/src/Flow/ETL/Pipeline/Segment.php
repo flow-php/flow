@@ -81,10 +81,7 @@ final readonly class Segment
                         try {
                             $rows = $step->transform($rows, $context);
                         } catch (LimitReachedException $e) {
-                            $context
-                                ->telemetry()
-                                ->logger()
-                                ->debug('Limit reached, stopping the pipeline execution.', ['limit_exception' => $e]);
+                            $context->telemetry()->limitReached(['limit' => $e->limit]);
                             $rows = new Rows();
                             $input->send(Signal::STOP);
                         }

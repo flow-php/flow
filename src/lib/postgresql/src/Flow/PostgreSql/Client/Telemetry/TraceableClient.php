@@ -15,6 +15,7 @@ use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\PackageVersion;
@@ -57,7 +58,9 @@ final class TraceableClient implements Client
     private ?Tracer $tracer = null;
 
     /**
-     * @var array<int, Span>
+     * Keyed by nesting level; span and scope are always set and unset together.
+     *
+     * @var array<int, array{span: Span, scope: Scope}>
      */
     private array $transactionSpans = [];
 
@@ -116,15 +119,23 @@ final class TraceableClient implements Client
             } else {
                 $this->client->beginTransaction();
 
+                $tracer = $this->tracer;
+
                 if (
                     $this->telemetryConfig->options->transactionSpans === TransactionSpanMode::GROUPED
-                    && $this->tracer !== null
+                    && $tracer !== null
                 ) {
-                    $this->transactionSpans[$nestingLevel] = $this->tracer->span(
+                    // activated: a grouped transaction span is a logical scope - every query and nested
+                    // savepoint until commit/rollback belongs under it
+                    $transactionSpan = $tracer->span(
                         $this->buildTransactionSpanName('BEGIN', $nestingLevel),
                         SpanKind::CLIENT,
                         $this->buildTransactionAttributes($nestingLevel),
                     );
+                    $this->transactionSpans[$nestingLevel] = [
+                        'span' => $transactionSpan,
+                        'scope' => $tracer->activate($transactionSpan),
+                    ];
                 }
             }
 
@@ -142,10 +153,11 @@ final class TraceableClient implements Client
         rsort($levels);
 
         foreach ($levels as $level) {
-            $span = $this->transactionSpans[$level];
+            $span = $this->transactionSpans[$level]['span'];
             $span->setStatus(SpanStatus::error(
                 'Transaction was neither committed nor rolled back before the connection was closed',
             ));
+            $this->transactionSpans[$level]['scope']->detach();
             $this->tracer?->complete($span);
             unset($this->transactionSpans[$level]);
         }
@@ -707,13 +719,14 @@ final class TraceableClient implements Client
             return;
         }
 
-        $span = $this->transactionSpans[$nestingLevel];
+        $span = $this->transactionSpans[$nestingLevel]['span'];
 
         // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
         if ($exception !== null) {
             $this->recordFailure($span, $exception);
         }
 
+        $this->transactionSpans[$nestingLevel]['scope']->detach();
         $tracer->complete($span);
         unset($this->transactionSpans[$nestingLevel]);
     }

@@ -45,6 +45,12 @@ final class ControllerSpanSubscriberTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $request = new Request();
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);
@@ -93,6 +99,12 @@ final class ControllerSpanSubscriberTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $request = new Request();
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);
@@ -122,6 +134,12 @@ final class ControllerSpanSubscriberTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $request = new Request();
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);
@@ -154,6 +172,12 @@ final class ControllerSpanSubscriberTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $request = new Request();
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);
@@ -191,6 +215,12 @@ final class ControllerSpanSubscriberTest extends TestCase
             'GET /test',
             SpanKind::SERVER,
         );
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
+        $telemetry
+            ->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'))
+            ->activate($requestSpan);
 
         $request = new Request();
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, $requestSpan);

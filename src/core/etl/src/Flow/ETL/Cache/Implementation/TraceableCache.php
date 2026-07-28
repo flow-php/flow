@@ -114,6 +114,7 @@ final readonly class TraceableCache implements Cache
             CacheAttributes::CACHE_KEY => $key,
             CacheAttributes::CACHE_VALUE_TYPE => 'Rows',
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             $this->cache->set($key, $value);
@@ -124,6 +125,7 @@ final readonly class TraceableCache implements Cache
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }

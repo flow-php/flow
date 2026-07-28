@@ -157,8 +157,14 @@ final readonly class FloeMerger
         $reader = new FloeReader($this->filesystem, $this->codec, hydrator: $this->hydrator);
 
         foreach ($sources as $source) {
-            foreach ($reader->read($source)->rows() as $batch) {
-                $writer->write($batch);
+            $streamReader = $reader->read($source);
+
+            try {
+                foreach ($streamReader->rows() as $batch) {
+                    $writer->write($batch);
+                }
+            } finally {
+                $streamReader->close();
             }
         }
 
@@ -201,18 +207,21 @@ final readonly class FloeMerger
 
             if ($regionLength > 0) {
                 $sourceStream = $this->filesystem->readFrom($source);
-                $at = $copyStart;
-                $remaining = $regionLength;
 
-                while ($remaining > 0) {
-                    /** @var int<1, max> $length */
-                    $length = $remaining < self::COPY_CHUNK_SIZE ? $remaining : self::COPY_CHUNK_SIZE;
-                    $frameWriter->raw($sourceStream->read($length, $at));
-                    $at += $length;
-                    $remaining -= $length;
+                try {
+                    $at = $copyStart;
+                    $remaining = $regionLength;
+
+                    while ($remaining > 0) {
+                        /** @var int<1, max> $length */
+                        $length = $remaining < self::COPY_CHUNK_SIZE ? $remaining : self::COPY_CHUNK_SIZE;
+                        $frameWriter->raw($sourceStream->read($length, $at));
+                        $at += $length;
+                        $remaining -= $length;
+                    }
+                } finally {
+                    $sourceStream->close();
                 }
-
-                $sourceStream->close();
             }
 
             foreach ($footer->sections as $section) {
@@ -295,8 +304,12 @@ final readonly class FloeMerger
         }
 
         $stream = $this->filesystem->readFrom($source);
-        $location = (new FooterReader())->read($stream, $this->codec);
-        $stream->close();
+
+        try {
+            $location = (new FooterReader())->read($stream, $this->codec);
+        } finally {
+            $stream->close();
+        }
 
         return [
             'footer' => $location->footer,

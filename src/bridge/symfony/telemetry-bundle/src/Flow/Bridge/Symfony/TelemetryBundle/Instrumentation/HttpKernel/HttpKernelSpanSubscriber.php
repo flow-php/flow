@@ -43,6 +43,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private const string PROPAGATION_SCOPE_ATTRIBUTE = '_flow_telemetry_propagation_scope';
 
+    private const string REQUEST_SCOPE_ATTRIBUTE = '_flow_telemetry_request_scope';
+
     private const string SUPPRESSION_SCOPE_ATTRIBUTE = '_flow_telemetry_suppression_scope';
 
     /** @var array<PathExclusionRule> */
@@ -170,6 +172,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $request->attributes->set(self::SPAN_ATTRIBUTE, $span);
         $request->attributes->set(self::TRACER_ATTRIBUTE, $tracer);
+        // activated: the request span is the root logical scope - controller, DBAL and cache spans nest under
+        // it. Attached after the propagation scope, so it must be detached before it.
+        $request->attributes->set(self::REQUEST_SCOPE_ATTRIBUTE, $tracer->activate($span));
     }
 
     public function onResponse(ResponseEvent $event): void
@@ -241,6 +246,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         // @mago-expect analysis:mixed-assignment
         if (!($tracer = $request->attributes->get(self::TRACER_ATTRIBUTE)) instanceof Tracer) {
             return;
+        }
+
+        // @mago-expect analysis:mixed-assignment
+        if (($requestScope = $request->attributes->get(self::REQUEST_SCOPE_ATTRIBUTE)) instanceof Scope) {
+            $requestScope->detach();
+            $request->attributes->remove(self::REQUEST_SCOPE_ATTRIBUTE);
         }
 
         try {

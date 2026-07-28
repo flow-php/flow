@@ -84,9 +84,10 @@ final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
                     ]);
                 }
 
+                // pop first: it detaches the context scope, which must happen before the span completes
+                $this->spanStack->pop();
                 $tracer->complete($span);
 
-                $this->spanStack->pop();
                 $this->spanStack->removeSuiteSpan($suiteName);
             }
 

@@ -12,6 +12,7 @@ use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\ConfigurationMother;
 use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\TelemetryMother;
 use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\TestEventMother;
 use Flow\Bridge\PHPUnit\Telemetry\TestStatusRegistry;
+use Flow\Telemetry\Tests\Mother\ScopeMother;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\TestCase;
 
@@ -56,7 +57,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $memoryRegistry = new TestMemoryRegistry();
 
         $testSpan = SpanMother::create('test-span');
-        $spanStack->push($testSpan);
+        $spanStack->push($testSpan, ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
@@ -85,7 +86,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $memoryRegistry = new TestMemoryRegistry();
 
         $suiteSpan = SpanMother::create('suite-span');
-        $spanStack->push($suiteSpan);
+        $spanStack->push($suiteSpan, ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
@@ -114,7 +115,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $memoryRegistry = new TestMemoryRegistry();
 
         $testSpan = SpanMother::create('test-span');
-        $spanStack->push($testSpan);
+        $spanStack->push($testSpan, ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
@@ -142,7 +143,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry = new TestStatusRegistry();
         $memoryRegistry = new TestMemoryRegistry();
 
-        $spanStack->push(SpanMother::create('test-span'));
+        $spanStack->push(SpanMother::create('test-span'), ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
@@ -201,7 +202,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry = new TestStatusRegistry();
         $memoryRegistry = new TestMemoryRegistry();
 
-        $spanStack->push($telemetry->tracer('phpunit')->span('test-span'));
+        $spanStack->push($telemetry->tracer('phpunit')->span('test-span'), ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');
@@ -244,7 +245,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry = new TestStatusRegistry();
         $memoryRegistry = new TestMemoryRegistry();
 
-        $spanStack->push(SpanMother::create('test-span'));
+        $spanStack->push(SpanMother::create('test-span'), ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'failed', 'some error');
@@ -278,7 +279,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $statusRegistry = new TestStatusRegistry();
         $memoryRegistry = new TestMemoryRegistry();
 
-        $spanStack->push(SpanMother::create('test-span'));
+        $spanStack->push(SpanMother::create('test-span'), ScopeMother::attached());
 
         $event = TestEventMother::finished();
         $statusRegistry->setStatus($event->test()->id(), 'passed');

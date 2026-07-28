@@ -36,6 +36,7 @@ final readonly class TracingValueResolver implements ValueResolverInterface
             SemConvAttributes::CODE_FUNCTION_NAME => $this->inner::class . '::resolve',
             HttpKernelAttributes::ATTR_CONTROLLER_ARGUMENT => $argument->getName(),
         ]);
+        $scope = $tracer->activate($span);
 
         try {
             yield from $this->inner->resolve($request, $argument);
@@ -47,6 +48,7 @@ final readonly class TracingValueResolver implements ValueResolverInterface
             throw $exception;
         } finally {
             // OTEL spec: instrumentation leaves the status Unset on success.
+            $scope->detach();
             $tracer->complete($span);
         }
     }

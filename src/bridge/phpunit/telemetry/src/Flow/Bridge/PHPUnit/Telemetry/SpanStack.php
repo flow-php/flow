@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Tracer\Span;
 use SplStack;
 
 final class SpanStack
 {
     /**
-     * @var \SplStack<Span>
+     * @var \SplStack<array{span: Span, scope: Scope}>
      */
     private SplStack $stack;
 
@@ -21,14 +22,14 @@ final class SpanStack
 
     public function __construct()
     {
-        /** @var \SplStack<Span> $stack */
+        /** @var \SplStack<array{span: Span, scope: Scope}> $stack */
         $stack = new SplStack();
         $this->stack = $stack;
     }
 
     public function clear(): void
     {
-        /** @var \SplStack<Span> $stack */
+        /** @var \SplStack<array{span: Span, scope: Scope}> $stack */
         $stack = new SplStack();
         $this->stack = $stack;
         $this->suiteSpans = [];
@@ -40,7 +41,7 @@ final class SpanStack
             return null;
         }
 
-        return $this->stack->top();
+        return $this->stack->top()['span'];
     }
 
     public function getSuiteSpan(string $suiteName): ?Span
@@ -53,18 +54,25 @@ final class SpanStack
         return $this->stack->isEmpty();
     }
 
+    /**
+     * Detaches the entry's context scope before returning it, so the stack owns the LIFO ordering that
+     * Scope::detach() requires.
+     */
     public function pop(): ?Span
     {
         if ($this->stack->isEmpty()) {
             return null;
         }
 
-        return $this->stack->pop();
+        $entry = $this->stack->pop();
+        $entry['scope']->detach();
+
+        return $entry['span'];
     }
 
-    public function push(Span $span): void
+    public function push(Span $span, Scope $scope): void
     {
-        $this->stack->push($span);
+        $this->stack->push(['span' => $span, 'scope' => $scope]);
     }
 
     public function removeSuiteSpan(string $suiteName): void

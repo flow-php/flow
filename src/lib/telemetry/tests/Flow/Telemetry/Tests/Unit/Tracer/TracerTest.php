@@ -25,10 +25,19 @@ final class TracerTest extends TestCase
     {
         $tracer = TracerMother::create();
         $span = $tracer->span('test-span');
+        $tracer->activate($span);
 
         $active = $tracer->activeSpan();
         static::assertNotNull($active);
         static::assertTrue($active->spanId->equals($span->context()->spanId));
+    }
+
+    public function test_active_span_is_unchanged_by_an_unactivated_span(): void
+    {
+        $tracer = TracerMother::create();
+        $tracer->span('test-span');
+
+        static::assertNull($tracer->activeSpan());
     }
 
     public function test_active_span_returns_null_when_no_active_span(): void
@@ -62,7 +71,9 @@ final class TracerTest extends TestCase
         $tracerB = $provider->tracer($resource, 'tracerB');
 
         $a1 = $tracerA->span('A1');
+        $tracerA->activate($a1);
         $b1 = $tracerB->span('B1');
+        $tracerB->activate($b1);
         $a2 = $tracerA->span('A2');
 
         $parentSpanId = $a2->context()->parentSpanId;
@@ -81,6 +92,32 @@ final class TracerTest extends TestCase
         $tracer->complete($tracer->span('test-span'));
     }
 
+    public function test_complete_is_idempotent_and_exports_once(): void
+    {
+        $processor = $this->createMock(SpanProcessor::class);
+        $processor->expects(self::once())->method('onEnd');
+
+        $tracer = TracerMother::withProcessor($processor);
+        $span = $tracer->span('test-span');
+
+        $tracer->complete($span);
+        $tracer->complete($span);
+        $tracer->complete($span);
+    }
+
+    public function test_complete_exports_a_span_that_was_ended_by_the_caller(): void
+    {
+        $processor = $this->createMock(SpanProcessor::class);
+        $processor->expects(self::once())->method('onEnd');
+
+        $tracer = TracerMother::withProcessor($processor);
+        $span = $tracer->span('test-span');
+        // callers end a span early to read its duration, then complete it
+        $span->end();
+
+        $tracer->complete($span);
+    }
+
     public function test_complete_ends_span(): void
     {
         $tracer = TracerMother::create();
@@ -93,17 +130,68 @@ final class TracerTest extends TestCase
         static::assertTrue($span->isEnded());
     }
 
-    public function test_complete_restores_parent_context_after_child(): void
+    public function test_detaching_a_child_scope_restores_the_parent_context(): void
     {
         $tracer = TracerMother::create();
-        $tracer->span('test-span');
+        $parent = $tracer->span('parent');
+        $tracer->activate($parent);
 
         static::assertNotNull($tracer->activeSpan());
 
-        $tracer->complete($tracer->span('test-span'));
-        $tracer->complete($tracer->span('test-span'));
+        foreach (['first-child', 'second-child'] as $name) {
+            $child = $tracer->span($name);
+            $scope = $tracer->activate($child);
+            $scope->detach();
+            $tracer->complete($child);
+        }
 
-        static::assertNotNull($tracer->activeSpan());
+        $active = $tracer->activeSpan();
+        static::assertNotNull($active);
+        static::assertTrue($active->spanId->equals($parent->context()->spanId));
+    }
+
+    public function test_complete_does_not_detach_the_scope(): void
+    {
+        $tracer = TracerMother::create();
+        $span = $tracer->span('test-span');
+        $tracer->activate($span);
+
+        $tracer->complete($span);
+
+        $active = $tracer->activeSpan();
+        static::assertNotNull($active);
+        static::assertTrue($active->spanId->equals($span->context()->spanId));
+    }
+
+    public function test_explicit_parent_context_is_passed_to_the_sampler(): void
+    {
+        $storage = new MemoryContextStorage();
+        $tracer = TracerMother::withContextStorage($storage);
+
+        // ambient is suppressed, the explicitly declared parent is not
+        $storage->attach(Context::root()->withSuppressedTracing());
+
+        static::assertTrue($tracer->span('child', parent: Context::root())->isRecording());
+    }
+
+    public function test_ambient_context_is_passed_to_the_sampler_when_no_parent_is_given(): void
+    {
+        $storage = new MemoryContextStorage();
+        $tracer = TracerMother::withContextStorage($storage);
+
+        $storage->attach(Context::root()->withSuppressedTracing());
+
+        static::assertFalse($tracer->span('child')->isRecording());
+    }
+
+    public function test_root_span_keeps_suppression_from_the_ambient_context(): void
+    {
+        $storage = new MemoryContextStorage();
+        $tracer = TracerMother::withContextStorage($storage);
+
+        $storage->attach(Context::root()->withSuppressedTracing());
+
+        static::assertFalse($tracer->span('root', parent: false)->isRecording());
     }
 
     public function test_context_returns_tracer_context(): void
@@ -124,6 +212,7 @@ final class TracerTest extends TestCase
     {
         $tracer = TracerMother::create();
         $parent = $tracer->span('parent');
+        $tracer->activate($parent);
         $child = $tracer->span('child');
 
         $parentSpanId = $child->context()->parentSpanId;
@@ -131,10 +220,22 @@ final class TracerTest extends TestCase
         static::assertTrue($parentSpanId->equals($parent->context()->spanId));
     }
 
+    public function test_unactivated_spans_are_siblings_not_parent_and_child(): void
+    {
+        $tracer = TracerMother::create();
+        $first = $tracer->span('first');
+        $second = $tracer->span('second');
+
+        static::assertNull($second->context()->parentSpanId);
+        static::assertNull($first->context()->parentSpanId);
+        static::assertFalse($second->context()->traceId->equals($first->context()->traceId));
+    }
+
     public function test_nested_spans_share_trace_id(): void
     {
         $tracer = TracerMother::create();
         $parent = $tracer->span('parent');
+        $tracer->activate($parent);
         $child = $tracer->span('child');
 
         static::assertTrue($child->context()->traceId->equals($parent->context()->traceId));

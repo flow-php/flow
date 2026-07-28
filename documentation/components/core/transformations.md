@@ -232,6 +232,14 @@ This pattern is particularly useful when you need to:
 - Create transformation pipelines that can be reused
 - Separate transformation logic from extraction and loading
 
+The `Transformation` is expanded **once per loader instance**, on the first batch, and every subsequent batch is
+streamed through that same pipeline. Stateful transformations - `limit()`, `add_row_index()` - therefore apply across
+the whole stream, not per batch.
+
+Batching transformations (`batch_size()`, `batch_by()`) expand to a `Processor`, which re-batches only within the
+batches the outer pipeline hands the loader - a `Loader` never sees the stream. To re-batch the pipeline itself, use
+`$df->batchSize(...)` instead of `to_transformation(batch_size(...), ...)`.
+
 ## Creating Custom Transformations
 
 You can create custom transformations by implementing the `Transformation` interface:

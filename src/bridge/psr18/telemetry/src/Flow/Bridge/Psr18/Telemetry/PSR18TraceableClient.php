@@ -51,6 +51,7 @@ final readonly class PSR18TraceableClient implements ClientInterface
 
         // OTEL HTTP semconv: client span name is "{method}" - host would be per-host cardinality.
         $span = $this->tracer->span($method, SpanKind::CLIENT, $attributes);
+        $scope = $this->tracer->activate($span);
 
         try {
             $response = $this->client->sendRequest($request);
@@ -72,6 +73,7 @@ final readonly class PSR18TraceableClient implements ClientInterface
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }

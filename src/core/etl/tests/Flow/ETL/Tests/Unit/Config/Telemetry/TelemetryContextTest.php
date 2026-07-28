@@ -8,8 +8,10 @@ use DateTimeImmutable;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Loader\StreamLoader;
+use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
+use Flow\ETL\Transformer\UntilTransformer;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Logger\Severity;
@@ -20,20 +22,55 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 use RuntimeException;
 
+use function array_map;
 use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\telemetry_options;
+use function Flow\ETL\DSL\to_array;
+use function Flow\ETL\DSL\to_stream;
 
 final class TelemetryContextTest extends FlowTestCase
 {
+    public function test_dataframe_batch_processed_drains_abandoned_spans(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $outer = new LimitTransformer(10);
+        $inner = new UntilTransformer(ref('id')->lessThan(lit(5)));
+
+        $context->telemetryContext->transformationStarted($outer);
+        $context->telemetryContext->transformationStarted($inner);
+        $context->telemetryContext->transformationCompleted($inner);
+
+        $context->telemetryContext->dataFrameBatchProcessed(rows(row(int_entry('id', 1))), $context->flowContext);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertSame(
+            ['UntilTransformer', 'LimitTransformer'],
+            array_map(static fn(Span $span): string => $span->name(), $endedSpans),
+        );
+        static::assertNull($endedSpans[0]->status());
+
+        $status = $endedSpans[1]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Span was never completed.', $status->description);
+    }
+
     public function test_dataframe_batch_processed_tracks_rows_and_memory(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
@@ -75,6 +112,35 @@ final class TelemetryContextTest extends FlowTestCase
         $counterMetrics = $metricProcessor->metricsWithName('flow.etl.rows.processed');
         static::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         static::assertSame(3, $counterMetrics[0]->value);
+    }
+
+    public function test_dataframe_completed_drains_abandoned_spans(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $outer = new LimitTransformer(10);
+        $inner = new UntilTransformer(ref('id')->lessThan(lit(5)));
+
+        $context->telemetryContext->transformationStarted($outer);
+        $context->telemetryContext->transformationStarted($inner);
+        $context->telemetryContext->transformationCompleted($inner);
+
+        $context->telemetryContext->dataFrameCompleted($context->flowContext);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertSame(
+            ['UntilTransformer', 'LimitTransformer', 'DataFrame flow_dataframe'],
+            array_map(static fn(Span $span): string => $span->name(), $endedSpans),
+        );
+
+        $status = $endedSpans[1]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Span was never completed.', $status->description);
+        static::assertNull($endedSpans[2]->status());
     }
 
     public function test_dataframe_completed_finalizes_span_with_statistics(): void
@@ -126,6 +192,31 @@ final class TelemetryContextTest extends FlowTestCase
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
         static::assertGreaterThanOrEqual(2, count($debugLogs));
+    }
+
+    public function test_dataframe_failed_drains_abandoned_spans(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $outer = new LimitTransformer(10);
+        $inner = new UntilTransformer(ref('id')->lessThan(lit(5)));
+
+        $context->telemetryContext->transformationStarted($outer);
+        $context->telemetryContext->transformationStarted($inner);
+        $context->telemetryContext->transformationCompleted($inner);
+
+        $context->telemetryContext->dataFrameFailed($context->flowContext, new RuntimeException('boom'));
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertSame(
+            ['UntilTransformer', 'LimitTransformer', 'DataFrame flow_dataframe'],
+            array_map(static fn(Span $span): string => $span->name(), $endedSpans),
+        );
+        static::assertSame('Span was never completed.', $endedSpans[1]->status()?->description);
+        static::assertSame('boom', $endedSpans[2]->status()?->description);
     }
 
     public function test_dataframe_failed_logs_error_and_sets_span_status(): void
@@ -216,6 +307,28 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertStringContainsString('Data frame processing started', $debugLogs[0]->record->body);
     }
 
+    public function test_limit_reached_logs_debug_message_without_attributes(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $context->telemetryContext->limitReached();
+
+        $debugLogs = $context->logs->entriesWithSeverity(Severity::DEBUG);
+
+        static::assertCount(1, $debugLogs);
+        static::assertSame('Limit reached, stopping the pipeline execution.', $debugLogs[0]->record->body);
+        static::assertTrue($debugLogs[0]->record->attributes->isEmpty());
+    }
+
+    public function test_limit_reached_passes_through_attributes(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $context->telemetryContext->limitReached(['limit' => 10]);
+
+        static::assertSame(10, $context->logs->entriesContaining('Limit reached')[0]->record->attributes->get('limit'));
+    }
+
     public function test_loading_completed_finalizes_span_with_ok_status(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
@@ -256,6 +369,30 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['flow.etl.loader.class']);
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($endedSpans[0]->status());
+    }
+
+    public function test_loading_completed_is_noop_when_tracing_disabled(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: false));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $loader = to_stream('php://memory');
+
+        $context->telemetryContext->loadingStarted($loader);
+        $context->telemetryContext->loadingCompleted($loader);
+
+        static::assertEmpty($context->spans->endedSpans());
+    }
+
+    public function test_loading_completed_without_started_is_noop(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+        $context->telemetryContext->loadingCompleted(to_stream('php://memory'));
+
+        static::assertEmpty($context->spans->endedSpans());
     }
 
     public function test_loading_failed_logs_error_and_sets_span_status(): void
@@ -303,6 +440,31 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertTrue($status->isError());
         static::assertSame('Loading failed due to disk error', $status->description);
         static::assertSame(RuntimeException::class, $endedSpans[0]->attributes()['error.type']);
+    }
+
+    public function test_loading_failed_pops_the_innermost_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $output = [];
+        $outer = to_stream('php://memory');
+        $inner = to_array($output);
+
+        $context->telemetryContext->loadingStarted($outer);
+        $context->telemetryContext->loadingStarted($inner);
+        $context->telemetryContext->loadingFailed($inner, new RuntimeException('Loading failed'));
+        $context->telemetryContext->loadingCompleted($outer);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertSame(
+            ['ArrayLoader', 'StreamLoader'],
+            array_map(static fn(Span $span): string => $span->name(), $endedSpans),
+        );
+        static::assertTrue($endedSpans[0]->status()?->isError());
+        static::assertNull($endedSpans[1]->status());
     }
 
     public function test_loading_started_creates_span_when_trace_loading_enabled(): void
@@ -503,6 +665,53 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertEmpty($metricProcessor->metrics(), 'No metrics should be collected when disabled');
     }
 
+    public function test_nested_loadings_complete_both_spans_once(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $output = [];
+        $outer = to_stream('php://memory');
+        $inner = to_array($output);
+
+        $context->telemetryContext->loadingStarted($outer);
+        $context->telemetryContext->loadingStarted($inner);
+        $context->telemetryContext->loadingCompleted($inner, ['nesting' => 'inner']);
+        $context->telemetryContext->loadingCompleted($outer, ['nesting' => 'outer']);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertCount(2, $endedSpans);
+        static::assertSame('ArrayLoader', $endedSpans[0]->name());
+        static::assertSame('inner', $endedSpans[0]->attributes()['nesting']);
+        static::assertSame('StreamLoader', $endedSpans[1]->name());
+        static::assertSame('outer', $endedSpans[1]->attributes()['nesting']);
+    }
+
+    public function test_nested_transformations_complete_both_spans_once(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $outer = new LimitTransformer(10);
+        $inner = new UntilTransformer(ref('id')->lessThan(lit(5)));
+
+        $context->telemetryContext->transformationStarted($outer);
+        $context->telemetryContext->transformationStarted($inner);
+        $context->telemetryContext->transformationCompleted($inner, ['nesting' => 'inner']);
+        $context->telemetryContext->transformationCompleted($outer, ['nesting' => 'outer']);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertCount(2, $endedSpans);
+        static::assertSame('UntilTransformer', $endedSpans[0]->name());
+        static::assertSame('inner', $endedSpans[0]->attributes()['nesting']);
+        static::assertSame('LimitTransformer', $endedSpans[1]->name());
+        static::assertSame('outer', $endedSpans[1]->attributes()['nesting']);
+    }
+
     public function test_transformation_completed_finalizes_span(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
@@ -543,6 +752,30 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['flow.etl.transformer.class']);
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($endedSpans[0]->status());
+    }
+
+    public function test_transformation_completed_is_noop_when_tracing_disabled(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: false));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $transformer = new LimitTransformer(10);
+
+        $context->telemetryContext->transformationStarted($transformer);
+        $context->telemetryContext->transformationCompleted($transformer);
+
+        static::assertEmpty($context->spans->endedSpans());
+    }
+
+    public function test_transformation_completed_without_started_is_noop(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+        $context->telemetryContext->transformationCompleted(new LimitTransformer(10));
+
+        static::assertEmpty($context->spans->endedSpans());
     }
 
     public function test_transformation_failed_logs_error_and_sets_span_status(): void
@@ -590,6 +823,30 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertTrue($status->isError());
         static::assertSame('Transformation failed', $status->description);
         static::assertSame(RuntimeException::class, $endedSpans[0]->attributes()['error.type']);
+    }
+
+    public function test_transformation_failed_pops_the_innermost_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $context->telemetryContext->dataFrameStarted($context->flowContext);
+
+        $outer = new LimitTransformer(10);
+        $inner = new UntilTransformer(ref('id')->lessThan(lit(5)));
+
+        $context->telemetryContext->transformationStarted($outer);
+        $context->telemetryContext->transformationStarted($inner);
+        $context->telemetryContext->transformationFailed($inner, new RuntimeException('Transformation failed'));
+        $context->telemetryContext->transformationCompleted($outer);
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertSame(
+            ['UntilTransformer', 'LimitTransformer'],
+            array_map(static fn(Span $span): string => $span->name(), $endedSpans),
+        );
+        static::assertTrue($endedSpans[0]->status()?->isError());
+        static::assertNull($endedSpans[1]->status());
     }
 
     public function test_transformation_started_creates_span_when_trace_transformations_enabled(): void

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\DataFrame;
+use Flow\ETL\Exception\LimitReachedException;
+use Flow\ETL\Extractor\SwappableRowsExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
@@ -13,20 +16,31 @@ use Flow\ETL\Transformer;
 use Throwable;
 
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
 
-final readonly class TransformerLoader implements Closure, Loader, OverridingLoader
+final class TransformerLoader implements Closure, Loader, OverridingLoader
 {
+    private bool $limitReached = false;
+
+    private ?DataFrame $transformationDataFrame = null;
+
+    private SwappableRowsExtractor $transformationRows;
+
     public function __construct(
-        private Transformer|Transformation $transformer,
-        private Loader $loader,
-    ) {}
+        private readonly Transformer|Transformation $transformer,
+        private readonly Loader $loader,
+    ) {
+        $this->transformationRows = new SwappableRowsExtractor();
+    }
 
     public function closure(FlowContext $context): void
     {
         if ($this->loader instanceof Closure) {
             $this->loader->closure($context);
         }
+
+        $this->transformationDataFrame = null;
+        $this->transformationRows = new SwappableRowsExtractor();
+        $this->limitReached = false;
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -40,10 +54,24 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
                 // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
                 $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
-                df($context->config)->from(from_rows($rows))->with($transformer)->load($this->loader)->run();
+                $this->transformationDataFrame ??= $transformer
+                    ->transform(df($context->config)->from($this->transformationRows))
+                    ->load($this->loader);
+
+                if (!$this->transformationRows->stopped()) {
+                    $this->transformationRows->swap($rows);
+                    $this->transformationDataFrame->run();
+                }
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (LimitReachedException $e) {
+            if (!$this->limitReached) {
+                $this->limitReached = true;
+                $context->telemetry()->limitReached(['limit' => $e->limit]);
+            }
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => 0]);
         } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 

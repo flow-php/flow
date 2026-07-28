@@ -34,6 +34,7 @@ final readonly class TracingArgumentResolver implements ArgumentResolverInterfac
 
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $span = $tracer->span('controller.get_arguments', SpanKind::INTERNAL);
+        $scope = $tracer->activate($span);
 
         try {
             return $this->resolver->getArguments($request, $controller, $reflector);
@@ -45,6 +46,7 @@ final readonly class TracingArgumentResolver implements ArgumentResolverInterfac
             throw $exception;
         } finally {
             // OTEL spec: instrumentation leaves the status Unset on success.
+            $scope->detach();
             $tracer->complete($span);
         }
     }

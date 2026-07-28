@@ -182,6 +182,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $span = $this->traceHandler
             ? $tracer->span($spanName, $kind, $attributes, $links, $isWorkerConsumed ? false : null)
             : null;
+        // activated: the handler span is a logical scope - everything the handler does nests under it.
+        // Attached after $propagationScope, so it must be detached before it.
+        $spanScope = $span === null ? null : $tracer->activate($span);
 
         if (!$isReceived) {
             $envelope = $this->injectContext($envelope);
@@ -227,6 +230,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                     $this->finalizeProducerSpan($span, $resultEnvelope, $destination);
                 }
 
+                $spanScope?->detach();
                 $tracer->complete($span);
             }
 

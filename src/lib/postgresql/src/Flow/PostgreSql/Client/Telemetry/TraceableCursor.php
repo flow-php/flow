@@ -68,6 +68,7 @@ final class TraceableCursor implements Cursor
                 PackageVersion::get('flow-php/postgresql'),
             );
 
+            // deliberately not activated: a cursor is a resource handle that outlives its lexical scope
             $this->span = $this->tracer->span($this->buildSpanName(), SpanKind::CLIENT, $this->buildQueryAttributes());
         }
 

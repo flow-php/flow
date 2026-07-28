@@ -319,6 +319,7 @@ final class TracingMiddlewareTest extends TestCase
         ]);
 
         $outer = $tracer->span('outer');
+        $tracer->activate($outer);
 
         // SyncTransport adds ReceivedStamp but not ConsumedByWorkerStamp: handling happens inside the
         // current request, so the process span must stay in the current trace instead of orphaning
@@ -347,6 +348,7 @@ final class TracingMiddlewareTest extends TestCase
         ]);
 
         $outer = $tracer->span('outer');
+        $tracer->activate($outer);
 
         $bus->dispatch(new Envelope(new TestMessage('hello'), [
             new ReceivedStamp('async'),

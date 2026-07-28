@@ -43,6 +43,8 @@ final class TraceableDestinationStream implements DestinationStream
                 PackageVersion::get('flow-php/filesystem'),
             );
 
+            // deliberately not activated: streams outlive their lexical scope, so making them current would
+            // parent every later span to whichever stream happens to still be open
             $this->span = $this->tracer->span('filesystem.write', SpanKind::INTERNAL, [
                 FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
                 FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),

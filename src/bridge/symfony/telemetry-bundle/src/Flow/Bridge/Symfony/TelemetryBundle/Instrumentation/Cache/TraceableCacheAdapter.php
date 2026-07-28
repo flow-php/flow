@@ -63,6 +63,7 @@ final readonly class TraceableCacheAdapter implements
         }
 
         $span = $this->tracer->span('cache.clear', SpanKind::CLIENT, $attributes);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->clear($prefix);
@@ -73,6 +74,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -83,6 +85,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_OPERATION => 'commit',
             CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->commit();
@@ -93,6 +96,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -112,6 +116,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_POOL => $this->poolName,
             CacheAttributes::CACHE_KEY => $key,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->delete($key);
@@ -122,6 +127,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -135,6 +141,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_POOL => $this->poolName,
             CacheAttributes::CACHE_KEY => $keyString,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->deleteItem($keyString);
@@ -145,6 +152,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -159,6 +167,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_POOL => $this->poolName,
             CacheAttributes::CACHE_KEY_COUNT => count($keys),
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->deleteItems($keys);
@@ -169,6 +178,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -270,6 +280,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_OPERATION => 'prune',
             CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->prune();
@@ -280,6 +291,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -294,6 +306,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_OPERATION => 'reset',
             CacheAttributes::CACHE_POOL => $this->poolName,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             $this->adapter->reset();
@@ -304,6 +317,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -316,6 +330,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_POOL => $this->poolName,
             CacheAttributes::CACHE_KEY => $key,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->save($item);
@@ -326,6 +341,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }
@@ -338,6 +354,7 @@ final readonly class TraceableCacheAdapter implements
             CacheAttributes::CACHE_POOL => $this->poolName,
             CacheAttributes::CACHE_KEY => $key,
         ]);
+        $scope = $this->tracer->activate($span);
 
         try {
             return $this->adapter->saveDeferred($item);
@@ -348,6 +365,7 @@ final readonly class TraceableCacheAdapter implements
 
             throw $exception;
         } finally {
+            $scope->detach();
             $this->tracer->complete($span);
         }
     }

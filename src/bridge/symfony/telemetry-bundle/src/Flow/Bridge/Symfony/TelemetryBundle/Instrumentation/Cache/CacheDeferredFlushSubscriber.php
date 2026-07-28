@@ -63,12 +63,14 @@ final readonly class CacheDeferredFlushSubscriber implements EventSubscriberInte
     {
         $tracer = $this->telemetry->tracer('flow.symfony.cache', PackageVersion::get('symfony/cache'));
         $span = $tracer->span('cache.flush', SpanKind::INTERNAL, [CacheAttributes::CACHE_OPERATION => 'flush']);
+        $scope = $tracer->activate($span);
 
         try {
             foreach ($this->pools as $pool) {
                 $pool->commit();
             }
         } finally {
+            $scope->detach();
             $tracer->complete($span);
         }
     }

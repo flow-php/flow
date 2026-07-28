@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
 use DateTimeImmutable;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
@@ -34,7 +35,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
      * stacked — a nested command's TERMINATE completes its own span, not the enclosing command's.
      * Excluded commands push null to keep the pairs balanced.
      *
-     * @var array<null|array{span: Span, tracer: Tracer, error: null|Throwable}>
+     * @var array<null|array{span: Span, tracer: Tracer, scope: Scope, error: null|Throwable}>
      */
     private array $stack = [];
 
@@ -82,9 +83,13 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             $attributes[ConsoleAttributes::ATTR_COMMAND_CLASS] = $command::class;
         }
 
+        $span = $tracer->span($commandName, SpanKind::INTERNAL, $attributes);
+
+        // activated: a command span is a logical scope - everything the command does belongs under it
         $this->stack[] = [
-            'span' => $tracer->span($commandName, SpanKind::INTERNAL, $attributes),
+            'span' => $span,
             'tracer' => $tracer,
+            'scope' => $tracer->activate($span),
             'error' => null,
         ];
     }
@@ -137,6 +142,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             $span->setStatus(SpanStatus::error($error !== null ? $error->getMessage() : "Exit code: {$exitCode}"));
         }
 
+        $entry['scope']->detach();
         $entry['tracer']->complete($span);
     }
 

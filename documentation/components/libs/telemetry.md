@@ -286,6 +286,36 @@ $span->setAttribute('order.total', 99.99);
 $tracer->complete($span);
 ```
 
+**Nesting spans:**
+
+Creating a span does not make it the current one — per the OpenTelemetry specification, span creation must not
+change the active context. A span created inside another becomes its child only if the outer span was activated:
+
+```php
+<?php
+
+$order = $tracer->span('process-order');
+$scope = $tracer->activate($order);
+
+try {
+    // child of 'process-order'
+    $tracer->complete($tracer->span('charge-card'));
+} finally {
+    $scope->detach();
+    $tracer->complete($order);
+}
+```
+
+Without `activate()`, `charge-card` is a sibling of `process-order`, not a child.
+
+Detach scopes in reverse order of activation, and before completing the span. `Scope::detach()` returns
+`Scope::DETACHED` on success, `Scope::INACTIVE` if the scope was already detached, and `Scope::MISMATCH` if it was
+not the innermost active scope.
+
+Do **not** activate a span whose lifetime is an object rather than a block — a file stream, a database cursor, a
+long-running transaction handle. Several of those are open at once, so activating them makes each the parent of
+whichever is opened next, producing a staircase instead of siblings. Start such spans and leave them inactive.
+
 For automatic exception handling and span completion, use the `trace()` method:
 
 ```php

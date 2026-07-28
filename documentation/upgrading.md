@@ -7,6 +7,59 @@ specific version to ensure a smooth upgrade process.
 
 ---
 
+## Upgrading from 0.42.x to 0.43.x
+
+### 1) `flow-php/etl` - `to_transformation()` expands a `Transformation` once per loader, not once per batch
+
+| Before                                                                            | After                   |
+|-----------------------------------------------------------------------------------|-------------------------|
+| `to_transformation(limit(3), $loader)`, 6 batches → 6 rows loaded                 | 3 rows loaded           |
+| `to_transformation(add_row_index('n'), $loader)`, 6 batches → `n = [1,1,1,1,1,1]` | `n = [1,2,3,4,5,6]`     |
+| nested `DataFrame` span per batch                                                 | one nested span per run |
+
+Unchanged: any pipeline using `->collect()`, `drop()`, `select()`, `mask_columns()`, `batch_size()`, `batch_by()`.
+
+### 2) `flow-php/telemetry` - `Tracer::span()` no longer activates the span
+
+| Before                                             | After                                                             |
+|----------------------------------------------------|-------------------------------------------------------------------|
+| `$tracer->span('x')` makes the span current        | does not; `$tracer->activate($span): Scope` does                  |
+| `$tracer->complete($span)` also detaches the scope | ends the span only                                                |
+| `span(…, SpanContext $parentContext)`              | `span(…, Context $parent)`                                        |
+| `trace(…, SpanContext $parentContext)`             | `trace(…, Context $parent)`                                       |
+| `Scope::detach()` always returns `0`               | returns `Scope::DETACHED`, `Scope::INACTIVE` or `Scope::MISMATCH` |
+
+Call sites relying on implicit nesting still compile and silently produce siblings. Rewrite each one that needs
+children:
+
+Before:
+
+```php
+$span = $tracer->span('parent');
+
+try {
+    // ...
+} finally {
+    $tracer->complete($span);
+}
+```
+
+After:
+
+```php
+$span = $tracer->span('parent');
+$scope = $tracer->activate($span);
+
+try {
+    // ...
+} finally {
+    $scope->detach();
+    $tracer->complete($span);
+}
+```
+
+---
+
 ## Upgrading from 0.41.x to 0.42.x
 
 ### 1) `flow-php/symfony-telemetry-bundle` - messenger tracing simplified
@@ -479,6 +532,7 @@ Custom aggregators must implement `references()` - return the references the agg
 | `DataFrame::pivot()`                              | removed; `GroupedDataFrame::pivot()` only         |
 
 ### 32) `flow-php/etl-adapter-csv`, `-excel`, `-json`,
+
 `-xml` - explicit schema no longer projects partition columns away
 
 | Before                                                           | After                                                |
@@ -2255,7 +2309,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _   (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _    (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

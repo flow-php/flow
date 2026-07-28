@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Loader\RetryLoader;
+use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformer\LimitTransformer;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Logger\Severity;
@@ -16,18 +19,25 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
 use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\limit;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
+use function Flow\ETL\DSL\to_transformation;
+use function Flow\ETL\DSL\with_entry;
 use function str_contains;
 use function str_ends_with;
+use function str_starts_with;
 
 final class TelemetryTest extends FlowTestCase
 {
@@ -272,6 +282,116 @@ final class TelemetryTest extends FlowTestCase
         }
     }
 
+    public function test_duplicate_row_transformer_exports_nested_spans_once(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        $output = [];
+        df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->duplicateRow(condition: lit(true), entries: with_entry('id', ref('id')->multiply(lit(-1))))
+            ->write(to_array($output))
+            ->run();
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertCount(2, array_filter(
+            $endedSpans,
+            static fn(Span $span): bool => $span->name() === 'DuplicateRowTransformer',
+        ));
+        static::assertCount(2, array_filter(
+            $endedSpans,
+            static fn(Span $span): bool => $span->name() === 'ScalarFunctionTransformer',
+        ));
+    }
+
+    public function test_limit_reached_inside_transformer_loader_is_not_reported_as_failure(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $rows = [];
+
+        for ($id = 1; $id <= 20; $id++) {
+            $rows[] = ['id' => $id];
+        }
+
+        $output = [];
+        df($context->config)
+            ->read(from_array($rows))
+            ->load(to_transformation(new LimitTransformer(10), to_array($output)))
+            ->run();
+
+        static::assertEmpty($context->logs->entriesContaining('Loading failed'));
+        static::assertEmpty($context->logs->entriesContaining('Error during ETL segment execution.'));
+        static::assertEmpty($context->logs->entriesContaining('Data frame processing failed'));
+        static::assertCount(1, $context->logs->entriesContaining('Limit reached'));
+        static::assertEmpty(array_filter(
+            $context->spans->endedSpans(),
+            static fn(Span $span): bool => $span->status()?->isError() === true,
+        ));
+    }
+
+    public function test_limit_reached_inside_transformation_is_logged_once_across_batches(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $source = [];
+
+        for ($id = 1; $id <= 20; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        $output = [];
+        df($context->config)
+            ->read(from_array($source))
+            ->write(to_transformation(limit(3), to_array($output)))
+            ->run();
+
+        static::assertCount(3, $output);
+        static::assertCount(1, $context->logs->entriesContaining('Limit reached'));
+    }
+
+    public function test_limit_reached_is_logged_without_exception_attribute(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $rows = [];
+
+        for ($id = 1; $id <= 20; $id++) {
+            $rows[] = ['id' => $id];
+        }
+
+        df($context->config)->read(from_array($rows))->limit(5)->run();
+
+        $entries = $context->logs->entriesContaining('Limit reached');
+
+        static::assertCount(1, $entries);
+        static::assertFalse($entries[0]->record->attributes->has('limit_exception'));
+        static::assertSame(5, $entries[0]->record->attributes->get('limit'));
+    }
+
+    public function test_retry_loader_exports_nested_spans_once(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $output = [];
+        df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->load(new RetryLoader(to_array($output)))
+            ->run();
+
+        $endedSpans = $context->spans->endedSpans();
+
+        static::assertCount(2, array_filter(
+            $endedSpans,
+            static fn(Span $span): bool => $span->name() === 'RetryLoader',
+        ));
+        static::assertCount(2, array_filter(
+            $endedSpans,
+            static fn(Span $span): bool => $span->name() === 'ArrayLoader',
+        ));
+    }
+
     public function test_telemetry_disabled_by_default_uses_void_providers(): void
     {
         $config = config_builder()->build();
@@ -286,6 +406,51 @@ final class TelemetryTest extends FlowTestCase
 
         static::assertCount(1, $output);
         static::assertSame(1, $output[0]['id']);
+    }
+
+    public function test_transformation_loader_builds_one_nested_dataframe_span_per_run(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $source = [];
+
+        for ($id = 1; $id <= 6; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        $output = [];
+        df($context->config)
+            ->read(from_array($source))
+            ->write(to_transformation(limit(3), to_array($output)))
+            ->run();
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_until_condition_is_logged_without_exception_attribute(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $rows = [];
+
+        for ($id = 1; $id <= 20; $id++) {
+            $rows[] = ['id' => $id];
+        }
+
+        df($context->config)
+            ->read(from_array($rows))
+            ->until(ref('id')->lessThan(lit(5)))
+            ->run();
+
+        $entries = $context->logs->entriesContaining('Limit reached');
+
+        static::assertCount(1, $entries);
+        static::assertFalse($entries[0]->record->attributes->has('limit_exception'));
+        // UntilTransformer has no limit to report and throws LimitReachedException(0).
+        static::assertSame(0, $entries[0]->record->attributes->get('limit'));
     }
 
     private function createFrozenClock(DateTimeImmutable $now = new DateTimeImmutable()): ClockInterface

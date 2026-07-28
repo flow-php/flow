@@ -50,12 +50,14 @@ final readonly class TracableHttpClient implements HttpClientInterface
 
         // OTEL HTTP semconv: client span name is "{method}" - host would be per-host cardinality.
         $span = $tracer->span($method, SpanKind::CLIENT, $attributes);
+        $scope = $tracer->activate($span);
 
         try {
             $response = $this->client->request($method, $url, $options);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $scope->detach();
             $tracer->complete($span);
 
             throw $exception;
