@@ -34,6 +34,8 @@ use function round;
  */
 final class TelemetryContext
 {
+    private const string SPAN_NEVER_COMPLETED = 'Span was never completed.';
+
     private ?FlowContext $context = null;
 
     private ?Counter $counterProcessedRows = null;
@@ -42,7 +44,7 @@ final class TelemetryContext
 
     private ?Span $dataFrameSpan = null;
 
-    private ?Span $loadingSpan = null;
+    private readonly SpanStack $loadingSpans;
 
     private Consumption $memory;
 
@@ -50,7 +52,7 @@ final class TelemetryContext
 
     private int $totalRowsProcessed = 0;
 
-    private ?Span $transformationSpan = null;
+    private readonly SpanStack $transformationSpans;
 
     public function __construct(
         private readonly Logger $logger,
@@ -59,12 +61,16 @@ final class TelemetryContext
         public readonly TelemetryOptions $options,
     ) {
         $this->memory = new Consumption();
+        $this->loadingSpans = new SpanStack();
+        $this->transformationSpans = new SpanStack();
     }
 
     public function dataFrameBatchProcessed(Rows $rows, FlowContext $context): void
     {
         $this->totalRowsProcessed += $rows->count();
         $this->memory->capture();
+
+        $this->drain();
 
         if ($this->options->collectMetrics) {
             $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $context->config->name()];
@@ -83,6 +89,8 @@ final class TelemetryContext
         if ($dataFrameSpan === null) {
             return;
         }
+
+        $this->drain();
 
         $this->logger()->debug(
             'Data frame processing completed',
@@ -139,6 +147,8 @@ final class TelemetryContext
         if ($dataFrameSpan === null) {
             return;
         }
+
+        $this->drain();
 
         $this->logger->error('Data frame processing failed', [
             'exception' => $exception->getMessage(),
@@ -241,14 +251,23 @@ final class TelemetryContext
     /**
      * @param TAttributeValueMap $attributes
      */
+    public function limitReached(array $attributes = []): void
+    {
+        $this->logger->debug('Limit reached, stopping the pipeline execution.', $attributes);
+    }
+
+    /**
+     * @param TAttributeValueMap $attributes
+     */
     public function loadingCompleted(Loader $loader, array $attributes = []): void
     {
-        if ($this->loadingSpan === null) {
+        $span = $this->loadingSpans->pop();
+
+        if ($span === null) {
             return;
         }
-        $this->tracer->complete($this->loadingSpan->setAttributes($attributes));
 
-        $this->loadingSpan = null;
+        $this->tracer->complete($span->setAttributes($attributes));
     }
 
     /**
@@ -256,19 +275,19 @@ final class TelemetryContext
      */
     public function loadingFailed(Loader $loader, Throwable $exception, array $attributes = []): void
     {
-        if ($this->loadingSpan === null) {
+        $span = $this->loadingSpans->pop();
+
+        if ($span === null) {
             return;
         }
 
         $this->logger->error('Loading failed', ['exception' => $exception->getMessage(), 'loader' => $loader::class]);
         $this->tracer->complete(
-            $this->loadingSpan
+            $span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
-
-        $this->loadingSpan = null;
     }
 
     /**
@@ -280,7 +299,7 @@ final class TelemetryContext
             return;
         }
 
-        $this->loadingSpan = $this->tracer->span(
+        $this->loadingSpans->push($this->tracer->span(
             ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
@@ -288,7 +307,7 @@ final class TelemetryContext
                 TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
             parentContext: $this->dataFrameSpan?->context(),
-        );
+        ));
     }
 
     public function logger(): Logger
@@ -301,11 +320,13 @@ final class TelemetryContext
      */
     public function transformationCompleted(Transformer $transformer, array $attributes = []): void
     {
-        if ($this->transformationSpan === null) {
+        $span = $this->transformationSpans->pop();
+
+        if ($span === null) {
             return;
         }
 
-        $this->tracer->complete($this->transformationSpan->setAttributes($attributes));
+        $this->tracer->complete($span->setAttributes($attributes));
     }
 
     /**
@@ -313,7 +334,9 @@ final class TelemetryContext
      */
     public function transformationFailed(Transformer $transformer, Throwable $exception, array $attributes = []): void
     {
-        if ($this->transformationSpan === null) {
+        $span = $this->transformationSpans->pop();
+
+        if ($span === null) {
             return;
         }
 
@@ -322,13 +345,11 @@ final class TelemetryContext
             'transformer' => $transformer::class,
         ]);
         $this->tracer->complete(
-            $this->transformationSpan
+            $span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
                 ->setStatus(SpanStatus::error($exception->getMessage())),
         );
-
-        $this->transformationSpan = null;
     }
 
     /**
@@ -340,7 +361,7 @@ final class TelemetryContext
             return;
         }
 
-        $this->transformationSpan = $this->tracer->span(
+        $this->transformationSpans->push($this->tracer->span(
             ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
             Attributes::create(array_merge([
@@ -348,6 +369,16 @@ final class TelemetryContext
                 TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->context?->config->name(),
             ], $attributes)),
             parentContext: $this->dataFrameSpan?->context(),
-        );
+        ));
+    }
+
+    /**
+     * Transformations drain first: TransformerLoader nests transform() inside load(), so a transformation
+     * scope is always the inner one and must be detached before the loading scope that wraps it.
+     */
+    private function drain(): void
+    {
+        $this->transformationSpans->drain($this->tracer, self::SPAN_NEVER_COMPLETED);
+        $this->loadingSpans->drain($this->tracer, self::SPAN_NEVER_COMPLETED);
     }
 }

@@ -500,6 +500,16 @@ Assign the result of every `Schema` mutator - `add`, `addAfter`, `addBefore`, `a
 `reorder`, `replace`, `setMetadata`, `sort` - and of `Definition::addMetadata()` / `Definition::setMetadata()`.
 Discarding it is a silent no-op.
 
+### 34) `flow-php/etl` - `to_transformation()` expands a `Transformation` once per loader, not once per batch
+
+| Before                                                                           | After                   |
+|----------------------------------------------------------------------------------|-------------------------|
+| `to_transformation(limit(3), $loader)`, 6 batches → 6 rows loaded                | 3 rows loaded           |
+| `to_transformation(add_row_index('n'), $loader)`, 6 batches → `n = [1,1,1,1,1,1]` | `n = [1,2,3,4,5,6]`     |
+| nested `DataFrame` span per batch                                                | one nested span per run |
+
+Unchanged: any pipeline using `->collect()`, `drop()`, `select()`, `mask_columns()`, `batch_size()`, `batch_by()`.
+
 ---
 
 ## Upgrading from 0.40.x to 0.41.x

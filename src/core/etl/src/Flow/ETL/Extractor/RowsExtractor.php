@@ -9,9 +9,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Generator;
 
-/**
- * @internal
- */
 final readonly class RowsExtractor implements Extractor
 {
     /**

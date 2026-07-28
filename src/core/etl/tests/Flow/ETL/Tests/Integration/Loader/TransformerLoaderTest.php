@@ -7,9 +7,12 @@ namespace Flow\ETL\Tests\Integration\Loader;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
+use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\Transformer\LimitTransformer;
 
+use function array_column;
 use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\batch_size;
 use function Flow\ETL\DSL\df;
@@ -59,6 +62,42 @@ final class TransformerLoaderTest extends FlowTestCase
             ->run();
     }
 
+    public function test_transformer_loader_with_add_row_index_transformation_across_batches(): void
+    {
+        $source = [];
+
+        for ($id = 1; $id <= 6; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_array($source))
+            ->write(to_transformation(add_row_index('n', StartFrom::ONE), to_memory($memory)))
+            ->run();
+
+        static::assertSame([1, 2, 3, 4, 5, 6], array_column($memory->dump(), 'n'));
+    }
+
+    public function test_transformer_loader_with_batch_size_transformation_across_batches(): void
+    {
+        $source = [];
+
+        for ($id = 1; $id <= 6; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        $loader = new SpyLoader();
+
+        df()
+            ->read(from_array($source))
+            ->write(to_transformation(batch_size(4), $loader))
+            ->run();
+
+        static::assertSame(6, $loader->loadsCount);
+    }
+
     public function test_transformer_loader_with_drop_transformation(): void
     {
         $memory = new ArrayMemory();
@@ -78,6 +117,27 @@ final class TransformerLoaderTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_transformer_loader_with_limit_transformer_does_not_stop_sibling_loaders(): void
+    {
+        $limited = new ArrayMemory();
+        $sibling = new ArrayMemory();
+
+        $source = [];
+
+        for ($id = 1; $id <= 20; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        df()
+            ->read(from_array($source))
+            ->load(to_transformation(new LimitTransformer(10), to_memory($limited)))
+            ->load(to_memory($sibling))
+            ->run();
+
+        static::assertCount(10, $limited->dump());
+        static::assertCount(20, $sibling->dump());
     }
 
     public function test_transformer_loader_with_limit_transformation(): void
@@ -104,6 +164,24 @@ final class TransformerLoaderTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_transformer_loader_with_limit_transformation_across_batches(): void
+    {
+        $source = [];
+
+        for ($id = 1; $id <= 6; $id++) {
+            $source[] = ['id' => $id];
+        }
+
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_array($source))
+            ->write(to_transformation(limit(3), to_memory($memory)))
+            ->run();
+
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $memory->dump());
     }
 
     public function test_transformer_loader_with_mask_columns_transformation(): void
