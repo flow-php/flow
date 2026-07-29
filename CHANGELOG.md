@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-07-29
 
 ### Added
+- [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - precompiled musl binaries for Alpine, for every PHP/arch/thread-safety combination** - [@norberttech](https://github.com/norberttech)
+- [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - release artifacts are verified in a clean runtime container before upload** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window frames via rowsBetween() with unbounded_preceding(), preceding(), current_row(), following() and unbounded_following()** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - count() over a window without a reference counts every row in the frame** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() accept multiple orderBy() columns** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +13,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - releases are published only after musl binaries are built** - [@norberttech](https://github.com/norberttech)
+- [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - installation docs list libc flavours and the Alpine libgcc requirement** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - lowest dependencies are tested only against the lowest supported PHP version** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - lowest dependencies are tested on every pull request** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - code coverage is collected only for locked dependencies** - [@norberttech](https://github.com/norberttech)
@@ -32,6 +36,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - PIE no longer falls back to a source build on Alpine** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/filesystem - NativeLocalFilesystem::list() now yields matches sorted by path** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() ignored the orderBy() direction** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - row_number() gave duplicated rows the same number** - [@norberttech](https://github.com/norberttech)
