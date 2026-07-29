@@ -152,6 +152,117 @@ jobs:
             --repo "$REPO" \
             --clobber
 
+  build-linux-musl:
+    name: "Linux musl ${{ matrix.arch }} - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
+    needs: create-release
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        arch: ['x86_64', 'arm64']
+        ts: ['nts', 'zts']
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Set build variables
+        id: build-vars
+        env:
+          TS: ${{ matrix.ts }}
+          PHP: ${{ matrix.php }}
+        run: |
+          if [ "$TS" = "zts" ]; then
+            echo "php-image=${PHP}-zts-alpine" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          else
+            echo "php-image=${PHP}-cli-alpine" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create output directory
+        run: mkdir -p dist
+
+      - name: Build in Docker container
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          FLOW_PHP_EXT_VERSION: ${{ needs.create-release.outputs.tag }}
+          PHP_IMAGE: ${{ steps.build-vars.outputs.php-image }}
+        run: |
+          docker run --rm \
+            -v "$WORKSPACE:/workspace" \
+            -w /workspace \
+            -e FLOW_PHP_EXT_VERSION="$FLOW_PHP_EXT_VERSION" \
+            "php:$PHP_IMAGE" \
+            sh -c '
+              set -eu
+
+              echo "::group::Install system dependencies"
+              apk add --no-cache build-base clang-dev rust cargo
+              echo "::endgroup::"
+
+              echo "::group::Build extension"
+              cargo build --release
+              echo "::endgroup::"
+
+              echo "::group::Package artifact"
+              cp /workspace/target/release/libflow_php.so /workspace/dist/flow_php.so
+              echo "::endgroup::"
+            '
+
+      - name: Create ZIP archive
+        env:
+          TAG: ${{ needs.create-release.outputs.tag }}
+          PHP: ${{ matrix.php }}
+          ARCH: ${{ matrix.arch }}
+          TS_SUFFIX: ${{ steps.build-vars.outputs.ts-suffix }}
+        run: |
+          cd dist
+          ARTIFACT_NAME="php_${EXTENSION_NAME}-${TAG}_php${PHP}-${ARCH}-linux-musl${TS_SUFFIX}.zip"
+          zip "$ARTIFACT_NAME" flow_php.so
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+      - name: Verify in clean runtime container
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          PHP_IMAGE: ${{ steps.build-vars.outputs.php-image }}
+        run: |
+          docker run --rm \
+            -v "$WORKSPACE/dist:/dist:ro" \
+            -e ARTIFACT_NAME="$ARTIFACT_NAME" \
+            "php:$PHP_IMAGE" \
+            sh -c '
+              set -eu
+              apk add --no-cache libgcc
+              if command -v cargo >/dev/null 2>&1; then
+                echo "ERROR: build toolchain present in clean room, verification is meaningless"
+                exit 1
+              fi
+              unzip -o "/dist/$ARTIFACT_NAME" -d /tmp
+              php -n -d extension=/tmp/flow_php.so -m | grep -q flow_php || {
+                echo "ERROR: flow_php extension failed to load in a clean runtime"
+                exit 1
+              }
+              echo "flow_php extension loaded successfully in clean runtime"
+            '
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release upload "$TAG" \
+            "$ARTIFACT_PATH" \
+            --repo "$REPO" \
+            --clobber
+
   build-macos:
     name: "macOS arm64 - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
     needs: create-release
@@ -234,7 +345,7 @@ jobs:
 
   publish-release:
     name: Publish Release
-    needs: [create-release, build-linux, build-macos]
+    needs: [create-release, build-linux, build-linux-musl, build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
