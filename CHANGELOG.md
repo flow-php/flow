@@ -1,12 +1,22 @@
-## [Unreleased] - 2026-07-28
+## [Unreleased] - 2026-07-29
 
 ### Added
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window frames via rowsBetween() with unbounded_preceding(), preceding(), current_row(), following() and unbounded_following()** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - count() over a window without a reference counts every row in the frame** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() accept multiple orderBy() columns** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - FrameAccumulating and PartitionRanking contracts for incremental window evaluation** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::activate() returning a detachable Scope** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Scope::DETACHED, Scope::INACTIVE and Scope::MISMATCH detach results** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - FloeStreamReader::close()** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window aggregates over an ordered window use the SQL default frame instead of the whole partition** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - count() over a window counts non-null values in the frame** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - partitionBy() no longer sets orderBy()** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - WindowFunction::apply() receives a WindowContext** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - WindowFunction::over() returns static** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window functions evaluate once per partition instead of once per row, up to 29x faster** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::span() no longer makes the span current** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::span() and trace() take a Context parent instead of a SpanContext** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Tracer::complete() no longer detaches the scope** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +29,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() ignored the orderBy() direction** - [@norberttech](https://github.com/norberttech)
+- [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - row_number() gave duplicated rows the same number** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/filesystem - concurrently open stream spans no longer nest into each other** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/etl - bucket source streams are closed, so their spans complete** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - the sampler receives the parent Context instead of the ambient one** - [@norberttech](https://github.com/norberttech)
