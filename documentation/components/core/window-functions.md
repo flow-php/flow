@@ -138,6 +138,9 @@ A frame on a window without `orderBy()` is permitted, matching PostgreSQL and Sp
 accepted and ignored, exactly as in PostgreSQL. They do require an explicit
 `orderBy()`.
 
+`rank()` and `dense_rank()` accept multiple `orderBy()` columns - rows are peers when they match on all of them - and
+follow the ordering direction, so ascending and descending windows rank in opposite directions as in PostgreSQL.
+
 ### Example
 
 ```php

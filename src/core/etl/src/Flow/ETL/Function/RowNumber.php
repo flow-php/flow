@@ -22,7 +22,7 @@ final class RowNumber implements WindowFunction
         return $window->index() + 1;
     }
 
-    public function over(Window $window): WindowFunction
+    public function over(Window $window): static
     {
         $this->window = $window;
 

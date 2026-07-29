@@ -12,11 +12,13 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Window;
+use Flow\ETL\Window\Accumulator\CountAccumulator;
+use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\int_entry;
 
-final class Count implements AggregatingFunction, WindowFunction
+final class Count implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     private int $count;
 
@@ -41,33 +43,27 @@ final class Count implements AggregatingFunction, WindowFunction
         }
     }
 
+    public function accumulator(FlowContext $context): FrameAccumulator
+    {
+        return new CountAccumulator($this->ref, $context);
+    }
+
     public function apply(WindowContext $window): mixed
     {
         if ($this->ref === null) {
             return $window->frame()->count();
         }
 
-        $context = $window->flowContext();
-        $count = 0;
+        $accumulator = $this->accumulator($window->flowContext());
 
         foreach ($window->frame() as $frameRow) {
-            try {
-                if ($frameRow->valueOf($this->ref) !== null) {
-                    $count++;
-                }
-            } catch (InvalidArgumentException $e) {
-                $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                    );
-            }
+            $accumulator->accumulate($frameRow);
         }
 
-        return $count;
+        return $accumulator->value();
     }
 
-    public function over(Window $window): WindowFunction
+    public function over(Window $window): static
     {
         $this->window = $window;
 

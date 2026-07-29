@@ -11,7 +11,7 @@ interface WindowFunction
 {
     public function apply(WindowContext $window): mixed;
 
-    public function over(Window $window): self;
+    public function over(Window $window): static;
 
     public function toString(): string;
 

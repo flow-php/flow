@@ -12,13 +12,15 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Window;
+use Flow\ETL\Window\Accumulator\SumAccumulator;
+use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
 use function is_numeric;
 
-final class Sum implements AggregatingFunction, WindowFunction
+final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     private float|int $sum;
 
@@ -45,33 +47,23 @@ final class Sum implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(WindowContext $window): mixed
+    public function accumulator(FlowContext $context): FrameAccumulator
     {
-        $context = $window->flowContext();
-        // constant for a bool $exact, per-row only when it is a ScalarFunction
-        $exact = is_bool($this->exact) ? $this->exact : null;
-        $sum = null;
-
-        foreach ($window->frame() as $frameRow) {
-            try {
-                $value = $frameRow->valueOf($this->ref);
-
-                if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                    $sum = $this->add($sum ?? 0, $value, $exact ?? $this->isExact($frameRow, $context), $context);
-                }
-            } catch (InvalidArgumentException $e) {
-                $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e),
-                    );
-            }
-        }
-
-        return $sum;
+        return new SumAccumulator($this->ref, $this->exact, $context);
     }
 
-    public function over(Window $window): WindowFunction
+    public function apply(WindowContext $window): mixed
+    {
+        $accumulator = $this->accumulator($window->flowContext());
+
+        foreach ($window->frame() as $frameRow) {
+            $accumulator->accumulate($frameRow);
+        }
+
+        return $accumulator->value();
+    }
+
+    public function over(Window $window): static
     {
         $this->window = $window;
 
