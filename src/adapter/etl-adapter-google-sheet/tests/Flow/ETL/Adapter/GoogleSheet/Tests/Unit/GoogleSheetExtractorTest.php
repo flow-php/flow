@@ -87,7 +87,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ->with('spread-id', ['ranges' => [], 'includeGridData' => false])
             ->willReturn($spreadsheet);
 
-        $service = $this->createMock(Sheets::class);
+        $service = $this->createStub(Sheets::class);
         $service->spreadsheets = $resource;
 
         $extractor = from_google_sheet_columns($service, 'spread-id', 'sheet', 'A', 'B')
@@ -148,7 +148,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Rows per page must be greater than 0');
 
-        from_google_sheet_columns($this->createMock(Sheets::class), 'spread-id', 'sheet', 'A', 'B')->withRowsPerPage(0);
+        from_google_sheet_columns($this->createStub(Sheets::class), 'spread-id', 'sheet', 'A', 'B')->withRowsPerPage(0);
     }
 
     public function test_works_for_no_data(): void

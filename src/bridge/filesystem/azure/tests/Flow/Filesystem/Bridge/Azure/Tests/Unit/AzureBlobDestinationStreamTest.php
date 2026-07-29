@@ -25,7 +25,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
     {
         $blockSize = 100;
 
-        $blockFactory = $this->createMock(BlockFactory::class);
+        $blockFactory = $this->createStub(BlockFactory::class);
         $blockFactory
             ->method('create')
             ->willReturnCallback(
@@ -76,7 +76,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
     public function test_using_put_blob_with_content_when_data_is_smaller_than_block_size(): void
     {
         $blockSize = 100;
-        $blockFactory = $this->createMock(BlockFactory::class);
+        $blockFactory = $this->createStub(BlockFactory::class);
         $blockFactory
             ->method('create')
             ->willReturnCallback(

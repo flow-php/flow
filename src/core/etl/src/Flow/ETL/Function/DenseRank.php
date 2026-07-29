@@ -8,10 +8,8 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\WindowContext;
 use RuntimeException as BaseRuntimeException;
 
 use function count;
@@ -29,7 +27,7 @@ final class DenseRank implements WindowFunction
         $this->window = null;
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function apply(WindowContext $window): mixed
     {
         $rank = 1;
 
@@ -43,11 +41,11 @@ final class DenseRank implements WindowFunction
             throw new BaseRuntimeException('Dens Rank window function requires to be ordered by one column');
         }
 
-        $value = $row->valueOf($orderBy[0]->name());
+        $value = $window->row()->valueOf($orderBy[0]->name());
 
         $countedValues = [];
 
-        foreach ($partition->sortBy(...$orderBy) as $partitionRow) {
+        foreach ($window->partition() as $partitionRow) {
             $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
 
             $isLess = false;

@@ -18,7 +18,7 @@ final class TracerErrorHandlingTest extends TestCase
 {
     public function test_complete_routes_on_end_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(SpanProcessor::class);
+        $processor = $this->createStub(SpanProcessor::class);
         $processor->method('onEnd')->willThrowException(new RuntimeException('end exploded'));
         $spy = new ErrorHandlerSpy();
 
@@ -40,7 +40,7 @@ final class TracerErrorHandlingTest extends TestCase
 
     public function test_flush_routes_processor_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(SpanProcessor::class);
+        $processor = $this->createStub(SpanProcessor::class);
         $processor->method('flush')->willThrowException(new RuntimeException('flush exploded'));
         $spy = new ErrorHandlerSpy();
 
@@ -60,7 +60,7 @@ final class TracerErrorHandlingTest extends TestCase
 
     public function test_span_routes_on_start_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(SpanProcessor::class);
+        $processor = $this->createStub(SpanProcessor::class);
         $processor->method('onStart')->willThrowException(new RuntimeException('start exploded'));
         $spy = new ErrorHandlerSpy();
 

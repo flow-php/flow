@@ -15,7 +15,7 @@ use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\SemConvAttributes;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -48,7 +48,7 @@ final class TraceableClientTest extends TestCase
             collectMetrics: false,
         ));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockClient = $this->createMockClient();
         $mockClient->method('cursor')->willReturn($mockCursor);
 
@@ -64,7 +64,8 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockClient = $this->createMockClient();
+        $mockClient = $this->createMock(Client::class);
+        $mockClient->method('parameters')->willReturn(pgsql_connection_params('testdb', 'localhost', 5432, 'user'));
         $mockClient->expects(self::once())->method('close');
 
         $client = traceable_postgresql_client($mockClient, $config);
@@ -90,7 +91,7 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(traceQueries: true));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockClient = $this->createMockClient();
         $mockClient->method('cursor')->willReturn($mockCursor);
 
@@ -298,8 +299,9 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockClient = $this->createMockClient();
-        $mockClient->method('lastInsertId')->with('users_id_seq')->willReturn(42);
+        $mockClient = $this->createMock(Client::class);
+        $mockClient->method('parameters')->willReturn(pgsql_connection_params('testdb', 'localhost', 5432, 'user'));
+        $mockClient->expects(self::once())->method('lastInsertId')->with('users_id_seq')->willReturn(42);
 
         $client = traceable_postgresql_client($mockClient, $config);
 
@@ -511,7 +513,8 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockClient = $this->createMockClient();
+        $mockClient = $this->createMock(Client::class);
+        $mockClient->method('parameters')->willReturn(pgsql_connection_params('testdb', 'localhost', 5432, 'user'));
         $mockClient->expects(self::once())->method('setAutoCommit')->with(false);
 
         $client = traceable_postgresql_client($mockClient, $config);
@@ -536,11 +539,11 @@ final class TraceableClientTest extends TestCase
     }
 
     /**
-     * @return Client&MockObject
+     * @return Client&Stub
      */
     private function createMockClient(?ConnectionParameters $connectionParams = null): Client
     {
-        $mockClient = $this->createMock(Client::class);
+        $mockClient = $this->createStub(Client::class);
         $mockClient
             ->method('parameters')
             ->willReturn($connectionParams ?? pgsql_connection_params('testdb', 'localhost', 5432, 'user'));

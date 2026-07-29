@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\config;
@@ -90,7 +91,7 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('value'))->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame(0.1 + 0.2, $sum->apply($row1, $rows, flow_context()));
+        static::assertSame(0.1 + 0.2, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_aggregation_sum_of_floats_returns_int_when_sum_is_whole(): void
@@ -125,7 +126,7 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame(15, $sum->apply($row1, $rows, flow_context()));
+        static::assertSame(15, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_sum_of_decimal_fractions_in_exact_mode(): void
@@ -137,7 +138,7 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('value'), exact: true)->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+        static::assertSame(0.3, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_sum_with_exact_mode_from_column(): void
@@ -149,7 +150,7 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('value'), exact: ref('is_exact'))->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+        static::assertSame(0.3, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_sum_with_exact_mode_from_literal(): void
@@ -161,7 +162,7 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('value'), exact: lit(true))->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame(0.3, $sum->apply($row1, $rows, flow_context()));
+        static::assertSame(0.3, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_sum_with_missing_reference_in_strict_mode(): void
@@ -176,6 +177,6 @@ final class SumTest extends FlowTestCase
         $context = flow_context(config());
         $context->functions()->setMode(ExecutionMode::STRICT);
 
-        $sum->apply($row1, $rows, $context);
+        $sum->apply(WindowContextMother::forRow($row1, $rows, context: $context));
     }
 }

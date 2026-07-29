@@ -135,7 +135,7 @@ final class FilesystemTableTest extends TestCase
 
     private function filesystem(string $protocol): Filesystem
     {
-        $mock = $this->createMock(Filesystem::class);
+        $mock = $this->createStub(Filesystem::class);
         $mock->method('mount')->willReturn(new Mount($protocol));
 
         return $mock;

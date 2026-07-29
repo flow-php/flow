@@ -20,7 +20,7 @@ final class CompositeMetricProcessorTest extends TestCase
 {
     public function test_flush_continues_after_child_throws_and_routes_to_error_handler(): void
     {
-        $throwing = $this->createMock(MetricProcessor::class);
+        $throwing = $this->createStub(MetricProcessor::class);
         $throwing->method('flush')->willThrowException(new RuntimeException('flush blew up'));
 
         $sibling = $this->createMock(MetricProcessor::class);
@@ -73,7 +73,7 @@ final class CompositeMetricProcessorTest extends TestCase
 
     public function test_process_continues_after_child_throws_and_routes_to_error_handler(): void
     {
-        $throwing = $this->createMock(MetricProcessor::class);
+        $throwing = $this->createStub(MetricProcessor::class);
         $throwing->method('process')->willThrowException(new RuntimeException('child blew up'));
 
         $sibling = $this->createMock(MetricProcessor::class);

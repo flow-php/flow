@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\dense_rank;
 use function Flow\ETL\DSL\flow_context;
@@ -29,11 +30,11 @@ final class DenseRankTest extends FlowTestCase
         $denseRank = dense_rank()->over(window()->orderBy(ref('salary')->desc()));
         $context = flow_context();
 
-        static::assertSame(1, $denseRank->apply($row1, $rows, $context));
-        static::assertSame(1, $denseRank->apply($row2, $rows, $context));
-        static::assertSame(1, $denseRank->apply($row3, $rows, $context));
-        static::assertSame(3, $denseRank->apply($row4, $rows, $context));
-        static::assertSame(2, $denseRank->apply($row5, $rows, $context));
+        static::assertSame(1, $denseRank->apply(WindowContextMother::forRow($row1, $rows, context: $context)));
+        static::assertSame(1, $denseRank->apply(WindowContextMother::forRow($row2, $rows, context: $context)));
+        static::assertSame(1, $denseRank->apply(WindowContextMother::forRow($row3, $rows, context: $context)));
+        static::assertSame(3, $denseRank->apply(WindowContextMother::forRow($row4, $rows, context: $context)));
+        static::assertSame(2, $denseRank->apply(WindowContextMother::forRow($row5, $rows, context: $context)));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries(): void
@@ -50,7 +51,7 @@ final class DenseRankTest extends FlowTestCase
 
         $densRank = dense_rank()->over(window()->orderBy(ref('salary'), ref('id')));
 
-        static::assertSame(1, $densRank->apply($row1, $rows, flow_context()));
+        static::assertSame(1, $densRank->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_rank_function_without_order_by(): void
@@ -64,6 +65,6 @@ final class DenseRankTest extends FlowTestCase
             row(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
         );
 
-        dense_rank()->apply($row1, $rows, flow_context());
+        dense_rank()->apply(WindowContextMother::forRow($row1, $rows));
     }
 }

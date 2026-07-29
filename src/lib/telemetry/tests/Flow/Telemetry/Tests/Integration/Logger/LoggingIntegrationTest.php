@@ -30,7 +30,7 @@ final class LoggingIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->clock = $this->createMock(ClockInterface::class);
+        $this->clock = $this->createStub(ClockInterface::class);
         $this->clock->method('now')->willReturn(new DateTimeImmutable('2024-01-01 12:00:00.123456'));
         $this->resource = ResourceMother::default();
     }

@@ -24,7 +24,7 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
 use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -759,11 +759,11 @@ final class TraceableClientTelemetryTest extends TestCase
     }
 
     /**
-     * @return Client&MockObject
+     * @return Client&Stub
      */
     private function createMockClient(): Client
     {
-        $mockClient = $this->createMock(Client::class);
+        $mockClient = $this->createStub(Client::class);
         $mockClient->method('parameters')->willReturn(pgsql_connection_params('testdb', 'localhost', 5432, 'user'));
 
         return $mockClient;

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
@@ -82,21 +83,30 @@ final class CountTest extends FlowTestCase
         static::assertSame(4, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
-    public function test_window_function_count_on_partitioned_rows(): void
+    public function test_window_function_count_of_a_reference_skips_nulls(): void
     {
         $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 1)),
-            $row2 = row(int_entry('id', 2), int_entry('value', 1)),
-            row(int_entry('id', 3), int_entry('value', 1)),
-            row(int_entry('id', 4), int_entry('value', 1)),
-            row(int_entry('id', 1), int_entry('value', 1)),
+            $row1 = row(int_entry('id', 1), int_entry('value', 10)),
+            row(int_entry('id', 2), int_entry('value', null)),
+            row(int_entry('id', 3), int_entry('value', 30)),
         );
 
-        $count = count(ref('id'))->over(window()->orderBy(ref('id')->desc()));
-        $context = flow_context();
+        $count = count(ref('value'))->over(window()->orderBy(ref('id')));
 
-        static::assertSame(2, $count->apply($row1, $rows, $context));
-        static::assertSame(1, $count->apply($row2, $rows, $context));
+        static::assertSame(2, $count->apply(WindowContextMother::forRow($row1, $rows)));
+    }
+
+    public function test_window_function_count_without_a_reference_counts_every_row_in_the_frame(): void
+    {
+        $rows = rows(
+            $row1 = row(int_entry('id', 1), int_entry('value', 10)),
+            row(int_entry('id', 2), int_entry('value', null)),
+            row(int_entry('id', 3), int_entry('value', 30)),
+        );
+
+        $count = count()->over(window()->orderBy(ref('id')));
+
+        static::assertSame(3, $count->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_count_with_missing_reference_in_strict_mode(): void
@@ -111,6 +121,6 @@ final class CountTest extends FlowTestCase
         $context = flow_context(config());
         $context->functions()->setMode(ExecutionMode::STRICT);
 
-        $count->apply($row1, $rows, $context);
+        $count->apply(WindowContextMother::forRow($row1, $rows, context: $context));
     }
 }

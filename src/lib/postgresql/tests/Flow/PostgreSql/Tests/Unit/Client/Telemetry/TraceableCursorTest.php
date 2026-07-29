@@ -42,7 +42,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor->method('count')->willReturn(10);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
@@ -55,7 +55,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor->method('next')->willReturnOnConsecutiveCalls(['id' => 1], ['id' => 2], null);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
@@ -77,7 +77,7 @@ final class TraceableCursorTest extends TestCase
         $config = $this->createConfig($spanProcessor);
 
         $exception = new RuntimeException('Free failed');
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor->method('free')->willThrowException($exception);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
@@ -101,7 +101,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor
             ->method('iterate')
             ->willReturnCallback(static function (): Generator {
@@ -130,7 +130,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor
             ->method('iterate')
             ->willReturnCallback(static function (): Generator {
@@ -161,7 +161,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor
             ->method('map')
             ->willReturnCallback(static function (): Generator {
@@ -189,7 +189,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor
             ->method('map')
             ->willReturnCallback(static function (): Generator {
@@ -219,7 +219,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
         $mockCursor->method('next')->willReturnOnConsecutiveCalls(['id' => 1], ['id' => 2], null);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
@@ -240,7 +240,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(includeParameters: true));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $parameters = array_fill(0, 20, 'value');
         $cursor = new TraceableCursor(
@@ -272,7 +272,7 @@ final class TraceableCursorTest extends TestCase
             maxParameters: null,
         ));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $parameters = array_fill(0, 20, 'value');
         $cursor = new TraceableCursor(
@@ -297,7 +297,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(includeParameters: true));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $longValue = str_repeat('a', 200);
         $cursor = new TraceableCursor(
@@ -326,7 +326,7 @@ final class TraceableCursorTest extends TestCase
             maxParameterLength: null,
         ));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $longValue = str_repeat('a', 200);
         $cursor = new TraceableCursor(
@@ -352,7 +352,7 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $cursor = new TraceableCursor(
             $mockCursor,
@@ -383,7 +383,7 @@ final class TraceableCursorTest extends TestCase
             collectMetrics: false,
         ));
 
-        $mockCursor = $this->createMock(Cursor::class);
+        $mockCursor = $this->createStub(Cursor::class);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
         $cursor->free();

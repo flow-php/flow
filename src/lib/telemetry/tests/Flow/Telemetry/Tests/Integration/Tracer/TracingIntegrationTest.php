@@ -241,7 +241,7 @@ final class TracingIntegrationTest extends TestCase
 
     private function clock(): ClockInterface
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new DateTimeImmutable());
 
         return $clock;

@@ -198,7 +198,7 @@ final class TraceableCacheTest extends FlowTestCase
 
     public function test_clear_records_exception_on_error(): void
     {
-        $innerCache = $this->createMock(Cache::class);
+        $innerCache = $this->createStub(Cache::class);
         $innerCache->method('clear')->willThrowException(new RuntimeException('Test error'));
 
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -220,7 +220,7 @@ final class TraceableCacheTest extends FlowTestCase
 
     public function test_delete_records_exception_on_error(): void
     {
-        $innerCache = $this->createMock(Cache::class);
+        $innerCache = $this->createStub(Cache::class);
         $innerCache->method('delete')->willThrowException(new RuntimeException('Test error'));
 
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -242,7 +242,7 @@ final class TraceableCacheTest extends FlowTestCase
 
     public function test_set_records_exception_on_error(): void
     {
-        $innerCache = $this->createMock(Cache::class);
+        $innerCache = $this->createStub(Cache::class);
         $innerCache->method('set')->willThrowException(new RuntimeException('Test error'));
 
         $cache = new TraceableCache($innerCache, $this->telemetry);

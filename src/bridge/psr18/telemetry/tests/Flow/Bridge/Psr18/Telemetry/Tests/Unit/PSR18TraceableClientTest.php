@@ -41,7 +41,7 @@ final class PSR18TraceableClientTest extends TestCase
             new LoggerProvider(new MemoryLogProcessor(new VoidExporter()), $clock, $contextStorage),
         );
 
-        $client = $this->createMock(ClientInterface::class);
+        $client = $this->createStub(ClientInterface::class);
         $client->method('sendRequest')->willReturn(new Response(200));
 
         psr18_traceable_client($client, $telemetry)->sendRequest(new Request('GET', 'https://api.example.com/users'));
@@ -59,7 +59,7 @@ final class PSR18TraceableClientTest extends TestCase
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $exception = new RuntimeException('Connection failed');
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willThrowException($exception);
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);
@@ -101,7 +101,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willReturn(new Response(404));
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);
@@ -130,7 +130,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willReturn(new Response(500));
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);
@@ -159,7 +159,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willReturn(new Response(200));
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);
@@ -185,7 +185,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willReturn(new Response(200));
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);
@@ -203,7 +203,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $mockClient = $this->createMock(ClientInterface::class);
+        $mockClient = $this->createStub(ClientInterface::class);
         $mockClient->method('sendRequest')->willReturn(new Response(200));
 
         $traceableClient = psr18_traceable_client($mockClient, $telemetry);

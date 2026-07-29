@@ -135,7 +135,7 @@ final class FunctionsTest extends TestCase
 
     public function test_logger_provider_creates_provider(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $processor = $this->createLogProcessor();
         $contextStorage = new MemoryContextStorage();
 
@@ -146,7 +146,7 @@ final class FunctionsTest extends TestCase
 
     public function test_logger_provider_works_correctly(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new DateTimeImmutable());
         $processor = $this->createLogProcessor();
         $contextStorage = new MemoryContextStorage();
@@ -166,7 +166,7 @@ final class FunctionsTest extends TestCase
 
     public function test_meter_provider_creates_provider(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $processor = $this->createMetricProcessor();
 
         $provider = meter_provider($processor, $clock);
@@ -176,7 +176,7 @@ final class FunctionsTest extends TestCase
 
     public function test_meter_provider_with_limits(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new DateTimeImmutable());
         $processor = $this->createMetricProcessor();
         $limits = metric_limits(cardinalityLimit: 5);
@@ -351,7 +351,7 @@ final class FunctionsTest extends TestCase
 
     public function test_tracer_provider_creates_provider(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $processor = $this->createSpanProcessor();
         $contextStorage = new MemoryContextStorage();
 
@@ -362,7 +362,7 @@ final class FunctionsTest extends TestCase
 
     public function test_tracer_provider_with_context_storage(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new DateTimeImmutable());
         $span = span_context(trace_id(), span_id());
         $storage = new MemoryContextStorage(context()->withActiveSpan($span));
@@ -376,7 +376,7 @@ final class FunctionsTest extends TestCase
 
     public function test_tracer_provider_with_void_processor(): void
     {
-        $clock = $this->createMock(ClockInterface::class);
+        $clock = $this->createStub(ClockInterface::class);
         $contextStorage = new MemoryContextStorage();
 
         $provider = tracer_provider(new VoidSpanProcessor(), $clock, $contextStorage);

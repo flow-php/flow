@@ -37,7 +37,7 @@ final class TransactionalDbalLoaderTest extends TestCase
     public function test_from_connection_static_method(): void
     {
         $params = ['driver' => 'pdo_sqlite', 'memory' => true];
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('getParams')->willReturn($params);
 
         $loader = new DbalLoader('test_table', $params);

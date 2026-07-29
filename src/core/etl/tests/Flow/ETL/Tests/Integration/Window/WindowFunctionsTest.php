@@ -5,16 +5,24 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Window;
 
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\WindowFrameContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function array_merge;
+use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\current_row;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\dense_rank;
+use function Flow\ETL\DSL\following;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\preceding;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\unbounded_following;
+use function Flow\ETL\DSL\unbounded_preceding;
 use function Flow\ETL\DSL\window;
 use function iterator_to_array;
 
@@ -85,6 +93,72 @@ final class WindowFunctionsTest extends FlowTestCase
                 ],
             ],
             array_map(static fn(Rows $r) => $r->toArray(), iterator_to_array($rows, false)),
+        );
+    }
+
+    public function test_centered_frame(): void
+    {
+        static::assertSame(
+            [150, 200, 300, 400, 450],
+            WindowFrameContext::salaries(
+                average(ref('salary'))
+                    ->over(
+                        window()
+                            ->partitionBy(ref('department'))
+                            ->orderBy(ref('date'))
+                            ->rowsBetween(preceding(1), following(1)),
+                    ),
+            ),
+        );
+    }
+
+    public function test_default_frame_is_peer_aware(): void
+    {
+        static::assertSame(
+            [300, 300, 600, 1000],
+            WindowFrameContext::tiedDates(sum(ref('salary'))->over(window()->orderBy(ref('date')))),
+        );
+    }
+
+    public function test_default_frame_produces_a_running_total(): void
+    {
+        static::assertSame(
+            [100, 300, 600, 1000, 1500],
+            WindowFrameContext::salaries(
+                sum(ref('salary'))->over(window()->partitionBy(ref('department'))->orderBy(ref('date'))),
+            ),
+        );
+    }
+
+    public function test_moving_average_over_a_trailing_frame(): void
+    {
+        static::assertSame(
+            [100, 150, 200, 300, 400],
+            WindowFrameContext::salaries(
+                average(ref('salary'))
+                    ->over(
+                        window()
+                            ->partitionBy(ref('department'))
+                            ->orderBy(ref('date'))
+                            ->rowsBetween(preceding(2), current_row()),
+                    ),
+            ),
+        );
+    }
+
+    public function test_unbounded_frame_covers_the_whole_partition(): void
+    {
+        static::assertSame(
+            [1500, 1500, 1500, 1500, 1500],
+            WindowFrameContext::salaries(
+                sum(ref('salary'))
+                    ->over(
+                        window()
+                            ->partitionBy(ref('department'))
+                            ->orderBy(ref('date'))
+                            ->rowsBetween(unbounded_preceding(), unbounded_following()),
+                    ),
+            ),
         );
     }
 }

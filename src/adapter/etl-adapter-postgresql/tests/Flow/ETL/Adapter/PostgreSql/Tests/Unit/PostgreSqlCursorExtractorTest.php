@@ -138,7 +138,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_fetch_size_returns_self(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $result = $extractor->withFetchSize(500);
@@ -148,7 +148,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_fetch_size_validates_positive_value(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $this->expectException(InvalidArgumentException::class);
@@ -159,7 +159,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_fetch_size_validates_positive_value_negative(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $this->expectException(InvalidArgumentException::class);
@@ -170,7 +170,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_maximum_returns_self(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $result = $extractor->withMaximum(100);
@@ -180,7 +180,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_maximum_validates_positive_value(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $this->expectException(InvalidArgumentException::class);
@@ -191,7 +191,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_maximum_validates_positive_value_negative(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $this->expectException(InvalidArgumentException::class);
@@ -202,7 +202,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
     public function test_with_schema_returns_self(): void
     {
-        $client = $this->createClientMock();
+        $client = $this->createClientStub();
         $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
 
         $schema = new Schema();
@@ -217,6 +217,11 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
     private function createClientMock(): Client
     {
         return $this->createMock(Client::class);
+    }
+
+    private function createClientStub(): Client
+    {
+        return $this->createStub(Client::class);
     }
 
     /**

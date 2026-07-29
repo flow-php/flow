@@ -82,7 +82,7 @@ final class BatchingSpanProcessorTest extends TestCase
 
     public function test_flush_routes_exporter_throwable_to_error_handler(): void
     {
-        $exporter = $this->createMock(Exporter::class);
+        $exporter = $this->createStub(Exporter::class);
         $exporter->method('export')->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 

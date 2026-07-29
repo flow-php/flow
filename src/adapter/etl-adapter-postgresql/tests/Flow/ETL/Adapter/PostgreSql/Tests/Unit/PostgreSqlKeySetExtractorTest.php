@@ -12,7 +12,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 
 final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 {
@@ -77,10 +77,10 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
     }
 
     /**
-     * @return Client&MockObject
+     * @return Client&Stub
      */
     private function createClientMock(): Client
     {
-        return $this->createMock(Client::class);
+        return $this->createStub(Client::class);
     }
 }

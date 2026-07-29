@@ -253,6 +253,8 @@ use Flow\ETL\Transformer\Rename\RenameCaseEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameReplaceEntryStrategy;
 use Flow\ETL\Window;
+use Flow\ETL\Window\FrameBound;
+use Flow\ETL\Window\FrameBoundType;
 use Flow\ETL\WithEntry;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -1782,6 +1784,36 @@ function collect_unique(EntryReference|string $ref): CollectUnique
 function window(): Window
 {
     return new Window();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function unbounded_preceding(): FrameBound
+{
+    return new FrameBound(FrameBoundType::UNBOUNDED_PRECEDING);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function preceding(int $offset): FrameBound
+{
+    return new FrameBound(FrameBoundType::PRECEDING, $offset);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function current_row(): FrameBound
+{
+    return new FrameBound(FrameBoundType::CURRENT_ROW);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function following(int $offset): FrameBound
+{
+    return new FrameBound(FrameBoundType::FOLLOWING, $offset);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function unbounded_following(): FrameBound
+{
+    return new FrameBound(FrameBoundType::UNBOUNDED_FOLLOWING);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]

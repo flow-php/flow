@@ -11,8 +11,10 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Window\WindowContext;
 use Generator;
 
+use function Flow\ETL\DSL\rows;
 use function serialize;
 
 /**
@@ -92,22 +94,19 @@ final readonly class WindowProcessor implements Processor
     private function processPartition(array $rows, FlowContext $context): Rows
     {
         if ([] === $rows) {
-            return new Rows();
+            return rows();
         }
 
-        $partitionRows = new Rows(...$rows);
+        $window = $this->function->window();
+        $orderBy = $window->order();
+        $partitionRows = rows(...$rows)->sortBy(...$orderBy ?: $window->partitions());
 
-        $orderBy = $this->function->window()->order();
-
-        if ([] !== $orderBy) {
-            $partitionRows = $partitionRows->sortBy(...$orderBy);
-        }
-
+        $frame = $window->frame();
         $processedRows = [];
 
-        foreach ($partitionRows as $row) {
+        foreach ($partitionRows as $index => $row) {
             // @mago-ignore analysis:mixed-assignment
-            $value = $this->function->apply($row, $partitionRows, $context);
+            $value = $this->function->apply(new WindowContext($row, $index, $partitionRows, $frame, $context));
 
             $entryName = $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
 
@@ -125,6 +124,6 @@ final readonly class WindowProcessor implements Processor
             $processedRows[] = $newRow;
         }
 
-        return new Rows(...$processedRows);
+        return rows(...$processedRows);
     }
 }

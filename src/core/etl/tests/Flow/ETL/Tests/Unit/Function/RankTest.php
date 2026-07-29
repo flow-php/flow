@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
@@ -29,11 +30,11 @@ final class RankTest extends FlowTestCase
         $rank = rank()->over(window()->orderBy(ref('salary')->desc()));
         $context = flow_context();
 
-        static::assertSame(1, $rank->apply($row1, $rows, $context));
-        static::assertSame(1, $rank->apply($row2, $rows, $context));
-        static::assertSame(1, $rank->apply($row3, $rows, $context));
-        static::assertSame(5, $rank->apply($row4, $rows, $context));
-        static::assertSame(4, $rank->apply($row5, $rows, $context));
+        static::assertSame(1, $rank->apply(WindowContextMother::forRow($row1, $rows, context: $context)));
+        static::assertSame(1, $rank->apply(WindowContextMother::forRow($row2, $rows, context: $context)));
+        static::assertSame(1, $rank->apply(WindowContextMother::forRow($row3, $rows, context: $context)));
+        static::assertSame(5, $rank->apply(WindowContextMother::forRow($row4, $rows, context: $context)));
+        static::assertSame(4, $rank->apply(WindowContextMother::forRow($row5, $rows, context: $context)));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries(): void
@@ -50,7 +51,7 @@ final class RankTest extends FlowTestCase
 
         $rank = rank()->over(window()->partitionBy(ref('value'))->orderBy(ref('salary'), ref('id')));
 
-        static::assertSame(1, $rank->apply($row1, $rows, flow_context()));
+        static::assertSame(1, $rank->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_rank_function_without_order_by(): void
@@ -66,6 +67,6 @@ final class RankTest extends FlowTestCase
 
         $rank = rank();
 
-        static::assertSame(1, $rank->apply($row1, $rows, flow_context()));
+        static::assertSame(1, $rank->apply(WindowContextMother::forRow($row1, $rows)));
     }
 }

@@ -11,8 +11,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\int_entry;
 
@@ -41,40 +41,27 @@ final class Count implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function apply(WindowContext $window): mixed
     {
-        $ref = $this->ref;
-
-        if ($ref === null) {
-            throw new RuntimeException('Count WindowFunction function requires a reference.');
+        if ($this->ref === null) {
+            return $window->frame()->count();
         }
 
+        $context = $window->flowContext();
         $count = 0;
 
-        try {
-            $value = $row->valueOf($ref);
-
-            foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-                try {
-                    $partitionValue = $partitionRow->valueOf($ref);
-
-                    if ($partitionValue === $value) {
-                        $count++;
-                    }
-                } catch (InvalidArgumentException $e) {
-                    $context
-                        ->functions()
-                        ->invalidResult(
-                            new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                        );
+        foreach ($window->frame() as $frameRow) {
+            try {
+                if ($frameRow->valueOf($this->ref) !== null) {
+                    $count++;
                 }
+            } catch (InvalidArgumentException $e) {
+                $context
+                    ->functions()
+                    ->invalidResult(
+                        new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
+                    );
             }
-        } catch (InvalidArgumentException $e) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                );
         }
 
         return $count;

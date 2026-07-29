@@ -13,8 +13,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\integer_entry;
@@ -55,19 +55,21 @@ final class Average implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function apply(WindowContext $window): mixed
     {
+        $context = $window->flowContext();
+        $calculator = $context->calculator();
         $sum = 0;
         $count = 0;
 
-        foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
+        foreach ($window->frame() as $frameRow) {
             try {
                 /** @var mixed $value */
-                $value = $partitionRow->valueOf($this->ref);
+                $value = $frameRow->valueOf($this->ref);
 
                 if (is_numeric($value)) {
                     // @mago-ignore analysis:possibly-invalid-argument
-                    $sum = $context->calculator()->add($sum, $value);
+                    $sum = $calculator->add($sum, $value);
                     $count++;
                 }
             } catch (InvalidArgumentException $e) {
@@ -79,7 +81,11 @@ final class Average implements AggregatingFunction, WindowFunction
             }
         }
 
-        return $context->calculator()->divide($sum, $count, $this->scale, $this->rounding);
+        if (0 === $count) {
+            return null;
+        }
+
+        return $calculator->divide($sum, $count, $this->scale, $this->rounding);
     }
 
     public function over(Window $window): WindowFunction

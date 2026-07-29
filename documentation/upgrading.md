@@ -58,6 +58,60 @@ try {
 }
 ```
 
+### 3) `flow-php/etl` - window aggregates use the SQL default frame
+
+On `d = 2024-01-01, 2024-01-02, 2024-01-03, 2024-01-04` and `s = 100, 200, 300, 400`:
+
+| Before                                                      | After                    |
+|-------------------------------------------------------------|--------------------------|
+| `sum(ref('s'))->over(window()->orderBy(ref('d')))` → `1000, 1000, 1000, 1000` | `100, 300, 600, 1000`    |
+| `average()`, `count()` over an ordered window - whole partition | rows up to the current row's peers |
+| `window()->partitionBy(ref('dept'))` - whole partition       | unchanged                |
+| empty frame                                                  | `sum()`/`average()` → `null`, `count()` → `0` |
+
+Restore the previous result:
+
+```php
+sum(ref('s'))->over(window()->orderBy(ref('d'))->rowsBetween(unbounded_preceding(), unbounded_following()));
+```
+
+### 4) `flow-php/etl` - `count()` over a window is SQL `COUNT`
+
+On `s = 100, 100, 300` ordered by a distinct column:
+
+| Before                                                                  | After                                  |
+|-------------------------------------------------------------------------|----------------------------------------|
+| `count(ref('s'))` counts rows sharing the current row's value → `2, 2, 1` | counts non-null values in the frame → `1, 2, 3` |
+| `count()` threw `Count WindowFunction function requires a reference.`     | counts every row in the frame (`COUNT(*)`) |
+
+### 5) `flow-php/etl` - `partitionBy()` no longer sets `orderBy()`
+
+| Before                                                                       | After   |
+|------------------------------------------------------------------------------|---------|
+| `window()->orderBy(ref('date'))->partitionBy(ref('dept'))->order()` → `['dept']` | `['date']` |
+| `window()->partitionBy(ref('dept'))->order()` → `['dept']`                     | `[]`    |
+| `rank()`/`dense_rank()`/`row_number()` over a `partitionBy()`-only window ranked by the partition column | throws `... requires to be ordered by one column` |
+
+Add the ordering explicitly:
+
+```php
+rank()->over(window()->partitionBy(ref('dept'))->orderBy(ref('salary')->desc()));
+```
+
+### 6) `flow-php/etl` - `WindowFunction::apply()` receives a `WindowContext`
+
+| Before                                                    | After                                            |
+|------------------------------------------------------------|--------------------------------------------------|
+| `apply(Row $row, Rows $partition, FlowContext $context)`    | `apply(WindowContext $window)`                    |
+| `$row`                                                      | `$window->row()`                                  |
+| `$partition`                                                | `$window->partition()`                            |
+| `$context`                                                  | `$window->flowContext()`                          |
+| —                                                           | `$window->frame()` - rows within the current row's frame |
+| —                                                           | `$window->index()` - position in the ordered partition |
+| `row_number()` on duplicate rows → `1, 1, 3`                | `1, 2, 3`                                         |
+
+Implementations must no longer sort; `$window->partition()` and `$window->frame()` are already ordered.
+
 ---
 
 ## Upgrading from 0.41.x to 0.42.x

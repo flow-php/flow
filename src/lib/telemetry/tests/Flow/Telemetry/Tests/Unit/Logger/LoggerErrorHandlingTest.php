@@ -18,7 +18,7 @@ final class LoggerErrorHandlingTest extends TestCase
 {
     public function test_emit_routes_processor_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(LogProcessor::class);
+        $processor = $this->createStub(LogProcessor::class);
         $processor->method('process')->willThrowException(new RuntimeException('processor exploded'));
         $spy = new ErrorHandlerSpy();
 
@@ -39,7 +39,7 @@ final class LoggerErrorHandlingTest extends TestCase
 
     public function test_flush_routes_processor_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(LogProcessor::class);
+        $processor = $this->createStub(LogProcessor::class);
         $processor->method('flush')->willThrowException(new RuntimeException('flush exploded'));
         $spy = new ErrorHandlerSpy();
 
