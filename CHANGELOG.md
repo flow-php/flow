@@ -11,6 +11,9 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - lowest dependencies are tested only against the lowest supported PHP version** - [@norberttech](https://github.com/norberttech)
+- [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - lowest dependencies are tested on every pull request** - [@norberttech](https://github.com/norberttech)
+- [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - code coverage is collected only for locked dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window aggregates over an ordered window use the SQL default frame instead of the whole partition** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - count() over a window counts non-null values in the frame** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - partitionBy() no longer sets orderBy()** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +32,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/filesystem - NativeLocalFilesystem::list() now yields matches sorted by path** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() ignored the orderBy() direction** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - row_number() gave duplicated rows the same number** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/filesystem - concurrently open stream spans no longer nest into each other** - [@norberttech](https://github.com/norberttech)
