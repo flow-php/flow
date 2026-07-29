@@ -38,7 +38,7 @@ jobs:
   tests:
     uses: ./.github/workflows/job-tests.yml
     with:
-      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
+      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked","lowest"]' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

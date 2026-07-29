@@ -27,7 +27,6 @@ use function fopen;
 use function iterator_to_array;
 use function mb_substr;
 use function mkdir;
-use function sort;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
@@ -180,10 +179,40 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         $files = iterator_to_array($fs->list(path(__DIR__ . '/var/placeholders/order-year=2024/{order-name}.csv')));
 
-        $basenames = array_map(static fn(FileStatus $status) => $status->path->basename(), $files);
-        sort($basenames);
+        static::assertSame(
+            ['123456-PL.csv', '789-DE.csv'],
+            array_map(static fn(FileStatus $status) => $status->path->basename(), $files),
+        );
+    }
 
-        static::assertSame(['123456-PL.csv', '789-DE.csv'], $basenames);
+    public function test_list_matches_are_sorted_by_path(): void
+    {
+        $fs = native_local_filesystem();
+        $fs->rm(path(__DIR__ . '/var/list_order'));
+
+        foreach (['c', 'a', 'b'] as $directory) {
+            foreach (['file_02.txt', 'file_01.txt'] as $file) {
+                $fs->writeTo(path(__DIR__ . '/var/list_order/' . $directory . '/' . $file))->append('data');
+            }
+        }
+
+        $expected = [
+            path(__DIR__ . '/var/list_order/a/file_01.txt')->uri(),
+            path(__DIR__ . '/var/list_order/a/file_02.txt')->uri(),
+            path(__DIR__ . '/var/list_order/b/file_01.txt')->uri(),
+            path(__DIR__ . '/var/list_order/b/file_02.txt')->uri(),
+            path(__DIR__ . '/var/list_order/c/file_01.txt')->uri(),
+            path(__DIR__ . '/var/list_order/c/file_02.txt')->uri(),
+        ];
+
+        static::assertSame($expected, array_map(
+            static fn(FileStatus $status): string => $status->path->uri(),
+            iterator_to_array($fs->list(path(__DIR__ . '/var/list_order/*/*.txt'), new KeepAll())),
+        ));
+        static::assertSame($expected, array_map(
+            static fn(FileStatus $status): string => $status->path->uri(),
+            iterator_to_array($fs->list(path(__DIR__ . '/var/list_order/**/*.txt'), new KeepAll())),
+        ));
     }
 
     public function test_list_rejects_mismatched_scheme(): void
@@ -288,7 +317,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
                 flow_context(),
             ),
         ));
-        sort($paths);
 
         $path1 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt');
         $path1->partitions();
@@ -305,7 +333,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
             path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
             new KeepAll(),
         ));
-        sort($statuses);
 
         $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
         static::assertSame(
@@ -342,7 +369,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
             path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'),
             new KeepAll(),
         ));
-        sort($statuses);
 
         $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
         static::assertSame(
@@ -532,7 +558,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         . '/Fixtures/multi_partitions/**/*.txt')));
 
         $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
-        sort($uris);
 
         static::assertSame(
             [
