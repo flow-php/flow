@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\config;
@@ -93,7 +94,7 @@ final class AverageTest extends FlowTestCase
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));
 
-        static::assertSame(42.6, $avg->apply($row1, $rows, flow_context()));
+        static::assertSame(42.6, $avg->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
     public function test_window_function_average_with_missing_reference_in_strict_mode(): void
@@ -108,6 +109,6 @@ final class AverageTest extends FlowTestCase
         $context = flow_context(config());
         $context->functions()->setMode(ExecutionMode::STRICT);
 
-        $avg->apply($row1, $rows, $context);
+        $avg->apply(WindowContextMother::forRow($row1, $rows, context: $context));
     }
 }

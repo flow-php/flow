@@ -429,12 +429,7 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
      */
     private function find(string|Reference $reference): ?Entry
     {
-        if ($this->has($reference)) {
-            /** @var null|Entry<mixed> */
-            return $reference instanceof Reference ? $this->entries[$reference->base()] : $this->entries[$reference];
-        }
-
-        return null;
+        return $this->entries[$reference instanceof Reference ? $reference->base() : $reference] ?? null;
     }
 
     /**

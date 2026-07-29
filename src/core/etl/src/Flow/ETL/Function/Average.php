@@ -13,15 +13,17 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\Accumulator\AverageAccumulator;
+use Flow\ETL\Window\FrameAccumulator;
+use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\integer_entry;
 use function is_int;
 use function is_numeric;
 
-final class Average implements AggregatingFunction, WindowFunction
+final class Average implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     private int $count;
 
@@ -55,34 +57,23 @@ final class Average implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function accumulator(FlowContext $context): FrameAccumulator
     {
-        $sum = 0;
-        $count = 0;
-
-        foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            try {
-                /** @var mixed $value */
-                $value = $partitionRow->valueOf($this->ref);
-
-                if (is_numeric($value)) {
-                    // @mago-ignore analysis:possibly-invalid-argument
-                    $sum = $context->calculator()->add($sum, $value);
-                    $count++;
-                }
-            } catch (InvalidArgumentException $e) {
-                $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e),
-                    );
-            }
-        }
-
-        return $context->calculator()->divide($sum, $count, $this->scale, $this->rounding);
+        return new AverageAccumulator($this->ref, $this->scale, $this->rounding, $context);
     }
 
-    public function over(Window $window): WindowFunction
+    public function apply(WindowContext $window): mixed
+    {
+        $accumulator = $this->accumulator($window->flowContext());
+
+        foreach ($window->frame() as $frameRow) {
+            $accumulator->accumulate($frameRow);
+        }
+
+        return $accumulator->value();
+    }
+
+    public function over(Window $window): static
     {
         $this->window = $window;
 

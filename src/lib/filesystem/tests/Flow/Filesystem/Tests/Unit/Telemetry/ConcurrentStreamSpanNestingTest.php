@@ -31,7 +31,7 @@ final class ConcurrentStreamSpanNestingTest extends TestCase
         $streams = [];
 
         for ($i = 0; $i < 5; $i++) {
-            $inner = $this->createMock(DestinationStream::class);
+            $inner = $this->createStub(DestinationStream::class);
             $inner->method('path')->willReturn(Path::realpath("/tmp/bucket-{$i}.floe"));
 
             $streams[] = new TraceableDestinationStream($inner, $config);
@@ -68,7 +68,7 @@ final class ConcurrentStreamSpanNestingTest extends TestCase
         $streams = [];
 
         for ($i = 0; $i < 5; $i++) {
-            $inner = $this->createMock(SourceStream::class);
+            $inner = $this->createStub(SourceStream::class);
             $inner->method('path')->willReturn(Path::realpath("/tmp/run-{$i}.floe"));
 
             $streams[] = new TraceableSourceStream($inner, $config);
@@ -106,7 +106,7 @@ final class ConcurrentStreamSpanNestingTest extends TestCase
         $outer = $tracer->span('outer');
         $tracer->activate($outer);
 
-        $inner = $this->createMock(DestinationStream::class);
+        $inner = $this->createStub(DestinationStream::class);
         $inner->method('path')->willReturn(Path::realpath('/tmp/bucket.floe'));
 
         $stream = new TraceableDestinationStream($inner, $config);

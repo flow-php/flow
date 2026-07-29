@@ -14,7 +14,7 @@ final class ResponseConfigTest extends FlowTestCase
 {
     public function test_constructor_accepts_sanitizer_instance(): void
     {
-        $sanitizer = $this->createMock(Sanitizer::class);
+        $sanitizer = $this->createStub(Sanitizer::class);
 
         $config = new ResponseConfig(sanitizers: [
             'valid' => $sanitizer,

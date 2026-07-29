@@ -14,7 +14,7 @@ final class RequestConfigTest extends FlowTestCase
 {
     public function test_constructor_accepts_sanitizer_instance(): void
     {
-        $sanitizer = $this->createMock(Sanitizer::class);
+        $sanitizer = $this->createStub(Sanitizer::class);
 
         $config = new RequestConfig(sanitizers: [
             'valid' => $sanitizer,

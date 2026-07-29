@@ -17,7 +17,7 @@ final class MeterErrorHandlingTest extends TestCase
 {
     public function test_complete_routes_processor_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(MetricProcessor::class);
+        $processor = $this->createStub(MetricProcessor::class);
         $processor->method('process')->willThrowException(new RuntimeException('process exploded'));
         $spy = new ErrorHandlerSpy();
 
@@ -40,7 +40,7 @@ final class MeterErrorHandlingTest extends TestCase
 
     public function test_flush_routes_processor_throwable_to_error_handler(): void
     {
-        $processor = $this->createMock(MetricProcessor::class);
+        $processor = $this->createStub(MetricProcessor::class);
         $processor->method('flush')->willThrowException(new RuntimeException('flush exploded'));
         $spy = new ErrorHandlerSpy();
 

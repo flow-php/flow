@@ -541,7 +541,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
 
-        $mockFullChildBuilder = $this->createMock(ColumnChunkBuilder::class);
+        $mockFullChildBuilder = $this->createStub(ColumnChunkBuilder::class);
         $mockFullChildBuilder->method('isFull')->willReturn(true);
         $mockFullChildBuilder->method('column')->willReturn($childColumn1);
 
@@ -628,11 +628,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $nestedColumn = NestedColumn::create('nested', [$childColumn1, $childColumn2]);
 
-        $mockChild1 = $this->createMock(ColumnChunkBuilder::class);
+        $mockChild1 = $this->createStub(ColumnChunkBuilder::class);
         $mockChild1->method('uncompressedSize')->willReturn(100);
         $mockChild1->method('column')->willReturn($childColumn1);
 
-        $mockChild2 = $this->createMock(ColumnChunkBuilder::class);
+        $mockChild2 = $this->createStub(ColumnChunkBuilder::class);
         $mockChild2->method('uncompressedSize')->willReturn(200);
         $mockChild2->method('column')->willReturn($childColumn2);
 

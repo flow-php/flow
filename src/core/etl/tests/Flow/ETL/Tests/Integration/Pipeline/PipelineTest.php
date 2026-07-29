@@ -22,11 +22,11 @@ final class PipelineTest extends FlowTestCase
     public function test_getting_steps_from_pipeline(): void
     {
         $pipeline = new Pipeline(from_rows(rows()));
-        $pipeline->add($transformer1 = $this->createMock(Transformer::class));
+        $pipeline->add($transformer1 = $this->createStub(Transformer::class));
         $pipeline->add($groupBy = new GroupByAggregationProcessor(new GroupBy(), new Buckets(new MemoryBuckets())));
-        $pipeline->add($transformer2 = $this->createMock(Transformer::class));
+        $pipeline->add($transformer2 = $this->createStub(Transformer::class));
         $pipeline->add($collecting = new CollectingProcessor());
-        $pipeline->add($loader = $this->createMock(Loader::class));
+        $pipeline->add($loader = $this->createStub(Loader::class));
 
         static::assertSame(
             [

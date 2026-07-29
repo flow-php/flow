@@ -35,7 +35,7 @@ final class TracingDriverTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
-        $platform = $this->createMock(AbstractPlatform::class);
+        $platform = $this->createStub(AbstractPlatform::class);
         $driver = $this->createMockDriverWithPlatform($platform);
 
         $tracingDriver = new TracingDriver($telemetry, $driver, 'default', maxSqlLength: 100);

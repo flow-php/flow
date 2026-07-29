@@ -22,7 +22,7 @@ final class CompositeSpanProcessorTest extends TestCase
 {
     public function test_flush_continues_after_child_throws_and_routes_to_error_handler(): void
     {
-        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing = $this->createStub(SpanProcessor::class);
         $throwing->method('flush')->willThrowException(new RuntimeException('flush blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);
@@ -87,7 +87,7 @@ final class CompositeSpanProcessorTest extends TestCase
 
     public function test_on_end_continues_after_child_throws_and_routes_to_error_handler(): void
     {
-        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing = $this->createStub(SpanProcessor::class);
         $throwing->method('onEnd')->willThrowException(new RuntimeException('end blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);
@@ -102,7 +102,7 @@ final class CompositeSpanProcessorTest extends TestCase
 
     public function test_on_start_continues_after_child_throws_and_routes_to_error_handler(): void
     {
-        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing = $this->createStub(SpanProcessor::class);
         $throwing->method('onStart')->willThrowException(new RuntimeException('start blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);

@@ -206,7 +206,7 @@ final class ColumnChunkBuildersTest extends TestCase
 
     public function test_constructor_with_builders_array(): void
     {
-        $mockBuilder = $this->createMock(ColumnChunkBuilder::class);
+        $mockBuilder = $this->createStub(ColumnChunkBuilder::class);
         $builders = new ColumnChunkBuilders(['test' => $mockBuilder]);
 
         static::assertInstanceOf(ColumnChunkBuilders::class, $builders);

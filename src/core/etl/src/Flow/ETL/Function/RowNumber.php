@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\WindowContext;
 
 final class RowNumber implements WindowFunction
 {
@@ -19,22 +17,12 @@ final class RowNumber implements WindowFunction
         $this->window = null;
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function apply(WindowContext $window): mixed
     {
-        $number = 1;
-
-        foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            if ($partitionRow->isEqual($row)) {
-                return $number;
-            }
-
-            $number++;
-        }
-
-        return null;
+        return $window->index() + 1;
     }
 
-    public function over(Window $window): WindowFunction
+    public function over(Window $window): static
     {
         $this->window = $window;
 

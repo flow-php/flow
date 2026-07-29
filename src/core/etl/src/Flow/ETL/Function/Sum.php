@@ -11,14 +11,16 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\Accumulator\SumAccumulator;
+use Flow\ETL\Window\FrameAccumulator;
+use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
 use function is_numeric;
 
-final class Sum implements AggregatingFunction, WindowFunction
+final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     private float|int $sum;
 
@@ -38,37 +40,30 @@ final class Sum implements AggregatingFunction, WindowFunction
             $value = $row->valueOf($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = $this->add($this->sum, $value, $row, $context);
+                $this->sum = $this->add($this->sum, $value, $this->isExact($row, $context), $context);
             }
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function accumulator(FlowContext $context): FrameAccumulator
     {
-        $sum = 0;
-
-        foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            try {
-                $value = $partitionRow->valueOf($this->ref);
-
-                if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                    $sum = $this->add($sum, $value, $partitionRow, $context);
-                }
-            } catch (InvalidArgumentException $e) {
-                $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e),
-                    );
-            }
-        }
-
-        return $sum;
+        return new SumAccumulator($this->ref, $this->exact, $context);
     }
 
-    public function over(Window $window): WindowFunction
+    public function apply(WindowContext $window): mixed
+    {
+        $accumulator = $this->accumulator($window->flowContext());
+
+        foreach ($window->frame() as $frameRow) {
+            $accumulator->accumulate($frameRow);
+        }
+
+        return $accumulator->value();
+    }
+
+    public function over(Window $window): static
     {
         $this->window = $window;
 
@@ -117,9 +112,9 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @param float|int|numeric-string $value
      */
-    private function add(float|int $sum, float|int|string $value, Row $row, FlowContext $context): float|int
+    private function add(float|int $sum, float|int|string $value, bool $exact, FlowContext $context): float|int
     {
-        if ($this->isExact($row, $context)) {
+        if ($exact) {
             return $context->calculator()->add($sum, $value);
         }
 

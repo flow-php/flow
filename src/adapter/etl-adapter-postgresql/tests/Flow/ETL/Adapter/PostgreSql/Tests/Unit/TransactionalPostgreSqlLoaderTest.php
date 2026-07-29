@@ -45,7 +45,7 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $client->expects(self::never())->method('commit');
         $client->expects(self::once())->method('rollBack');
 
-        $failing = $this->createMock(Loader::class);
+        $failing = $this->createStub(Loader::class);
         $failing->method('load')->willThrowException(new RuntimeException('loader failed'));
 
         $this->expectException(RuntimeException::class);
@@ -59,7 +59,7 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('At least one loader must be provided');
 
-        new TransactionalPostgreSqlLoader($this->createMock(Client::class));
+        new TransactionalPostgreSqlLoader($this->createStub(Client::class));
     }
 
     public function test_sets_isolation_level_before_running_loaders(): void

@@ -53,8 +53,8 @@ final class RecordingClientTest extends TestCase
     public function test_every_statement_bearing_method_is_recorded(): void
     {
         $log = new QueryLog();
-        $client = new RecordingClient(new FakeClient($this->createMock(Cursor::class)), $log);
-        $mapper = $this->createMock(RowMapper::class);
+        $client = new RecordingClient(new FakeClient($this->createStub(Cursor::class)), $log);
+        $mapper = $this->createStub(RowMapper::class);
 
         $client->execute('UPDATE t SET a = 1');
         $client->explain('SELECT 1');
@@ -79,7 +79,7 @@ final class RecordingClientTest extends TestCase
     public function test_failed_cursor_records_failure_and_rethrows(): void
     {
         $log = new QueryLog();
-        $inner = new FakeClient($this->createMock(Cursor::class));
+        $inner = new FakeClient($this->createStub(Cursor::class));
         $inner->failNextQuery(QueryException::executionFailed('SELECT bad', PostgreSqlError::unknown('boom')));
         $client = new RecordingClient($inner, $log);
 
@@ -208,7 +208,7 @@ final class RecordingClientTest extends TestCase
     public function test_cursor_records_statement_with_unknown_row_count_and_returns_inner_cursor(): void
     {
         $log = new QueryLog();
-        $cursor = $this->createMock(Cursor::class);
+        $cursor = $this->createStub(Cursor::class);
         $inner = new FakeClient($cursor);
 
         $returned = (new RecordingClient($inner, $log))->cursor('SELECT * FROM big_table');

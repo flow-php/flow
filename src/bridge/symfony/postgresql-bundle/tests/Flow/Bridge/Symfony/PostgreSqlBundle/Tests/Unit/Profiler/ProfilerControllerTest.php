@@ -37,7 +37,7 @@ final class ProfilerControllerTest extends TestCase
 
     public function test_returns_message_when_profile_missing(): void
     {
-        $profiler = $this->createMock(Profiler::class);
+        $profiler = $this->createStub(Profiler::class);
         $profiler->method('loadProfile')->willReturn(null);
 
         $response = $this->controller($profiler, new ServiceLocator([]))->explainAction('tok', 'default', 0);
@@ -47,7 +47,7 @@ final class ProfilerControllerTest extends TestCase
 
     public function test_returns_message_when_collector_absent(): void
     {
-        $profiler = $this->createMock(Profiler::class);
+        $profiler = $this->createStub(Profiler::class);
         $profiler->method('loadProfile')->willReturn(new Profile('tok'));
 
         $response = $this->controller($profiler, new ServiceLocator([]))->explainAction('tok', 'default', 0);
@@ -126,7 +126,7 @@ final class ProfilerControllerTest extends TestCase
         $profile = new Profile('tok');
         $profile->addCollector($collector);
 
-        $profiler = $this->createMock(Profiler::class);
+        $profiler = $this->createStub(Profiler::class);
         $profiler->method('loadProfile')->willReturn($profile);
 
         return $profiler;
@@ -134,7 +134,7 @@ final class ProfilerControllerTest extends TestCase
 
     private function controller(Profiler $profiler, ServiceLocator $clients, string $renders = ''): ProfilerController
     {
-        $twig = $this->createMock(Environment::class);
+        $twig = $this->createStub(Environment::class);
         $twig->method('render')->willReturn($renders);
 
         return new ProfilerController($twig, $clients, $profiler);

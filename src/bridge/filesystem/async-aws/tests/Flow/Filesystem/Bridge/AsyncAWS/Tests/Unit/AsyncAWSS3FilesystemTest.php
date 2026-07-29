@@ -21,14 +21,14 @@ final class AsyncAWSS3FilesystemTest extends TestCase
             'Scheme "file://" is not supported by this protocol. Expected scheme is "aws-s3://"',
         );
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->appendTo(path('file:///var/foo.txt'));
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->appendTo(path('file:///var/foo.txt'));
     }
 
     public function test_list_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        iterator_to_array(aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->list(path(
+        iterator_to_array(aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->list(path(
             'file:///var/foo.txt',
         )));
     }
@@ -37,7 +37,7 @@ final class AsyncAWSS3FilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->mv(
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->mv(
             path('aws-s3://var/a.txt'),
             path('file:///var/b.txt'),
         );
@@ -47,7 +47,7 @@ final class AsyncAWSS3FilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->mv(
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->mv(
             path('file:///var/a.txt'),
             path('aws-s3://var/b.txt'),
         );
@@ -57,27 +57,27 @@ final class AsyncAWSS3FilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->readFrom(path('file:///var/foo.txt'));
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->readFrom(path('file:///var/foo.txt'));
     }
 
     public function test_rm_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->rm(path('file:///var/foo.txt'));
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->rm(path('file:///var/foo.txt'));
     }
 
     public function test_status_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->status(path('file:///var/foo.txt'));
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->status(path('file:///var/foo.txt'));
     }
 
     public function test_write_to_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->writeTo(path('file:///var/foo.txt'));
+        aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->writeTo(path('file:///var/foo.txt'));
     }
 }

@@ -46,7 +46,7 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     {
         $pipeline = new Pipeline(from_rows(rows()));
 
-        static::assertFalse((new BatchSizeOptimization())->isFor($this->createMock(Transformer::class), $pipeline));
+        static::assertFalse((new BatchSizeOptimization())->isFor($this->createStub(Transformer::class), $pipeline));
     }
 
     public function test_is_for_pipeline_with_collecting_processor(): void

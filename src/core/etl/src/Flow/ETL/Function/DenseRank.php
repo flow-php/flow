@@ -4,23 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use DateInterval;
-use DateTimeImmutable;
-use DateTimeInterface;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\PeerComparator;
+use Flow\ETL\Window\WindowContext;
 use RuntimeException as BaseRuntimeException;
 
 use function count;
-use function in_array;
-use function is_array;
-use function is_numeric;
-use function is_string;
 
-final class DenseRank implements WindowFunction
+final class DenseRank implements PartitionRanking, WindowFunction
 {
     private ?Window $window;
 
@@ -29,52 +22,37 @@ final class DenseRank implements WindowFunction
         $this->window = null;
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function apply(WindowContext $window): mixed
     {
-        $rank = 1;
+        return $this->rankPartition($window->partition())[$window->index()];
+    }
 
+    public function rankPartition(Rows $partition): array
+    {
         $orderBy = $this->window()->order();
-
-        if (count($orderBy) > 1) {
-            throw new BaseRuntimeException('Dens Rank window function supports only one order by column');
-        }
 
         if (count($orderBy) === 0) {
             throw new BaseRuntimeException('Dens Rank window function requires to be ordered by one column');
         }
 
-        $value = $row->valueOf($orderBy[0]->name());
+        $comparator = new PeerComparator($orderBy);
+        $ranks = [];
+        $rank = 1;
+        $previous = null;
 
-        $countedValues = [];
-
-        foreach ($partition->sortBy(...$orderBy) as $partitionRow) {
-            $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
-
-            $isLess = false;
-
-            if (is_numeric($value) && is_numeric($partitionValue)) {
-                $isLess = (float) $value < (float) $partitionValue;
-            } elseif (is_string($value) && is_string($partitionValue)) {
-                $isLess = $value < $partitionValue;
-            } elseif ($value instanceof DateTimeInterface && $partitionValue instanceof DateTimeInterface) {
-                $isLess = $value < $partitionValue;
-            } elseif ($value instanceof DateInterval && $partitionValue instanceof DateInterval) {
-                $reference = new DateTimeImmutable('@0');
-                $isLess = $reference->add($value) < $reference->add($partitionValue);
-            } elseif (is_array($value) && is_array($partitionValue)) {
-                $isLess = $value < $partitionValue;
-            }
-
-            if ($isLess && !in_array($partitionValue, $countedValues, true)) {
+        foreach ($partition as $row) {
+            if ($previous !== null && !$comparator->arePeers($previous, $row)) {
                 $rank++;
-                $countedValues[] = $partitionValue;
             }
+
+            $ranks[] = $rank;
+            $previous = $row;
         }
 
-        return $rank;
+        return $ranks;
     }
 
-    public function over(Window $window): WindowFunction
+    public function over(Window $window): static
     {
         $this->window = $window;
 

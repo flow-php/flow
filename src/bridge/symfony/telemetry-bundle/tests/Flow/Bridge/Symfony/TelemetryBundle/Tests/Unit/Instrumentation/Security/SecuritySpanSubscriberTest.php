@@ -38,7 +38,7 @@ final class SecuritySpanSubscriberTest extends TestCase
 
         $subscriber->onController(
             new ControllerEvent(
-                $this->createMock(HttpKernelInterface::class),
+                $this->createStub(HttpKernelInterface::class),
                 static fn(): null => null,
                 $request,
                 HttpKernelInterface::MAIN_REQUEST,
@@ -63,7 +63,7 @@ final class SecuritySpanSubscriberTest extends TestCase
 
         $subscriber->onController(
             new ControllerEvent(
-                $this->createMock(HttpKernelInterface::class),
+                $this->createStub(HttpKernelInterface::class),
                 static fn(): null => null,
                 $request,
                 HttpKernelInterface::MAIN_REQUEST,

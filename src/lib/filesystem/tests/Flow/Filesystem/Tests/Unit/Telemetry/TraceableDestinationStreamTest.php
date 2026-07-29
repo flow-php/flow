@@ -29,7 +29,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $path = Path::realpath('/tmp/test.txt');
         $data = 'Hello, World!';
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('append')->willReturnSelf();
 
@@ -60,7 +60,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $path = Path::realpath('/tmp/test.txt');
         $data = 'Hello, World!';
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('append')->willReturnSelf();
 
@@ -88,7 +88,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $path = Path::realpath('/tmp/test.txt');
         $exception = new RuntimeException('Close failed');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('append')->willReturnSelf();
         $mockStream->method('close')->willThrowException($exception);
@@ -118,7 +118,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
 
         $stream = new TraceableDestinationStream($mockStream, $config);
@@ -138,7 +138,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $resource = fopen('php://memory', 'rb');
         static::assertIsResource($resource);
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('fromResource')->willReturnSelf();
 
@@ -166,7 +166,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('isOpen')->willReturn(true);
 
@@ -182,7 +182,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('append')->willReturnSelf();
 
@@ -204,7 +204,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
 
         $stream = new TraceableDestinationStream($mockStream, $config);
@@ -219,7 +219,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
 
         $stream = new TraceableDestinationStream($mockStream, $config);
@@ -245,7 +245,7 @@ final class TraceableDestinationStreamTest extends TestCase
         ));
         $path = Path::realpath('/tmp/test.txt');
 
-        $mockStream = $this->createMock(DestinationStream::class);
+        $mockStream = $this->createStub(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
         $mockStream->method('append')->willReturnSelf();
 

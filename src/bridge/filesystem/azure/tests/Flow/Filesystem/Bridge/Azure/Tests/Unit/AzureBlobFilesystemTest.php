@@ -21,7 +21,7 @@ final class AzureBlobFilesystemTest extends TestCase
             'Scheme "file://" is not supported by this protocol. Expected scheme is "azure-blob://"',
         );
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->appendTo(path('file:///var/foo.txt'));
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->appendTo(path('file:///var/foo.txt'));
     }
 
     public function test_list_rejects_mismatched_scheme(): void
@@ -29,7 +29,7 @@ final class AzureBlobFilesystemTest extends TestCase
         $this->expectException(InvalidSchemeException::class);
 
         iterator_to_array(
-            azure_filesystem($this->createMock(BlobServiceInterface::class))->list(path('file:///var/foo.txt')),
+            azure_filesystem($this->createStub(BlobServiceInterface::class))->list(path('file:///var/foo.txt')),
         );
     }
 
@@ -37,7 +37,7 @@ final class AzureBlobFilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->mv(
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->mv(
             path('azure-blob://var/a.txt'),
             path('file:///var/b.txt'),
         );
@@ -47,7 +47,7 @@ final class AzureBlobFilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->mv(
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->mv(
             path('file:///var/a.txt'),
             path('azure-blob://var/b.txt'),
         );
@@ -57,27 +57,27 @@ final class AzureBlobFilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->readFrom(path('file:///var/foo.txt'));
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->readFrom(path('file:///var/foo.txt'));
     }
 
     public function test_rm_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->rm(path('file:///var/foo.txt'));
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->rm(path('file:///var/foo.txt'));
     }
 
     public function test_status_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->status(path('file:///var/foo.txt'));
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->status(path('file:///var/foo.txt'));
     }
 
     public function test_write_to_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
-        azure_filesystem($this->createMock(BlobServiceInterface::class))->writeTo(path('file:///var/foo.txt'));
+        azure_filesystem($this->createStub(BlobServiceInterface::class))->writeTo(path('file:///var/foo.txt'));
     }
 }

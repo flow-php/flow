@@ -11,12 +11,14 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use Flow\ETL\Window\Accumulator\CountAccumulator;
+use Flow\ETL\Window\FrameAccumulator;
+use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\int_entry;
 
-final class Count implements AggregatingFunction, WindowFunction
+final class Count implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     private int $count;
 
@@ -41,46 +43,27 @@ final class Count implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
+    public function accumulator(FlowContext $context): FrameAccumulator
     {
-        $ref = $this->ref;
-
-        if ($ref === null) {
-            throw new RuntimeException('Count WindowFunction function requires a reference.');
-        }
-
-        $count = 0;
-
-        try {
-            $value = $row->valueOf($ref);
-
-            foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-                try {
-                    $partitionValue = $partitionRow->valueOf($ref);
-
-                    if ($partitionValue === $value) {
-                        $count++;
-                    }
-                } catch (InvalidArgumentException $e) {
-                    $context
-                        ->functions()
-                        ->invalidResult(
-                            new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                        );
-                }
-            }
-        } catch (InvalidArgumentException $e) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                );
-        }
-
-        return $count;
+        return new CountAccumulator($this->ref, $context);
     }
 
-    public function over(Window $window): WindowFunction
+    public function apply(WindowContext $window): mixed
+    {
+        if ($this->ref === null) {
+            return $window->frame()->count();
+        }
+
+        $accumulator = $this->accumulator($window->flowContext());
+
+        foreach ($window->frame() as $frameRow) {
+            $accumulator->accumulate($frameRow);
+        }
+
+        return $accumulator->value();
+    }
+
+    public function over(Window $window): static
     {
         $this->window = $window;
 

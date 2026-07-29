@@ -35,7 +35,7 @@ final class TelemetryTest extends TestCase
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
 
-        $failingSpanProcessor = $this->createMock(SpanProcessor::class);
+        $failingSpanProcessor = $this->createStub(SpanProcessor::class);
         $failingSpanProcessor->method('flush')->willReturn(false);
 
         $telemetry = new Telemetry(

@@ -199,7 +199,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $telemetry = $this->createTelemetry();
 
-        $mockFilesystem = $this->createMock(Filesystem::class);
+        $mockFilesystem = $this->createStub(Filesystem::class);
         $mockFilesystem->method('mount')->willReturn(new Mount('gcs'));
 
         $config = config_builder()

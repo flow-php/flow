@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Tests\Context\RankingContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\WindowContextMother;
 
-use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
@@ -16,56 +17,66 @@ use function Flow\ETL\DSL\window;
 
 final class RankTest extends FlowTestCase
 {
-    public function test_rank_function_on_collection_of_rows_sorted_by_id_descending(): void
+    public function test_apply_returns_the_rank_at_the_row_index(): void
     {
-        $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 1), int_entry('salary', 6000)),
-            $row2 = row(int_entry('id', 2), int_entry('value', 1), int_entry('salary', 6000)),
-            $row3 = row(int_entry('id', 3), int_entry('value', 1), int_entry('salary', 6000)),
-            $row4 = row(int_entry('id', 4), int_entry('value', 1), int_entry('salary', 2000)),
-            $row5 = row(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
-        );
+        $partition = RankingContext::salariesDescending();
+        $function = rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $rank = rank()->over(window()->orderBy(ref('salary')->desc()));
-        $context = flow_context();
+        $applied = [];
 
-        static::assertSame(1, $rank->apply($row1, $rows, $context));
-        static::assertSame(1, $rank->apply($row2, $rows, $context));
-        static::assertSame(1, $rank->apply($row3, $rows, $context));
-        static::assertSame(5, $rank->apply($row4, $rows, $context));
-        static::assertSame(4, $rank->apply($row5, $rows, $context));
+        for ($index = 0; $index < $partition->count(); $index++) {
+            $applied[] = $function->apply(WindowContextMother::atIndex($partition, $index));
+        }
+
+        static::assertSame($function->rankPartition($partition), $applied);
     }
 
-    public function test_rank_function_without_more_than_one_order_by_entries(): void
+    /**
+     * PostgreSQL parity. Before this was a single pass over the sorted partition, rank() ignored the
+     * ORDER BY direction and always ranked descending, so the lowest salary got rank 5 here.
+     */
+    public function test_rank_over_ascending_order(): void
     {
-        $this->expectExceptionMessage('Rank window function supports only one order by column');
-
-        $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 2), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 3), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 4), int_entry('value', 1), int_entry('salary', 2000)),
-            row(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
+        static::assertSame(
+            [1, 2, 3, 3, 3],
+            rank()->over(window()->orderBy(ref('salary')))->rankPartition(RankingContext::salariesAscending()),
         );
-
-        $rank = rank()->over(window()->partitionBy(ref('value'))->orderBy(ref('salary'), ref('id')));
-
-        static::assertSame(1, $rank->apply($row1, $rows, flow_context()));
     }
 
-    public function test_rank_function_without_order_by(): void
+    public function test_rank_over_descending_order(): void
+    {
+        static::assertSame(
+            [1, 1, 1, 4, 5],
+            rank()->over(window()->orderBy(ref('salary')->desc()))->rankPartition(RankingContext::salariesDescending()),
+        );
+    }
+
+    /**
+     * Peers must match on every ORDER BY column, so adding a distinct second column breaks every tie.
+     */
+    public function test_rank_over_multiple_order_columns(): void
+    {
+        static::assertSame(
+            [1, 2, 3, 4, 5],
+            rank()
+                ->over(window()->orderBy(ref('salary')->desc(), ref('id')))
+                ->rankPartition(RankingContext::salariesDescending()),
+        );
+    }
+
+    public function test_rank_requires_an_order_by(): void
+    {
+        $this->expectExceptionMessage('Rank window function requires to be ordered by one column');
+
+        rank()->over(window())->rankPartition(rows(row(int_entry('salary', 6000))));
+    }
+
+    public function test_rank_without_over_clause(): void
     {
         $this->expectExceptionMessage('Window function "rank()" requires an OVER clause.');
-        $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 2), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 3), int_entry('value', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 4), int_entry('value', 1), int_entry('salary', 2000)),
-            row(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
-        );
 
-        $rank = rank();
+        $partition = RankingContext::salariesDescending();
 
-        static::assertSame(1, $rank->apply($row1, $rows, flow_context()));
+        rank()->apply(WindowContextMother::atIndex($partition, 0));
     }
 }

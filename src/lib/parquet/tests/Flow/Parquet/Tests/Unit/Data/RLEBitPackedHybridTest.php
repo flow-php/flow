@@ -76,7 +76,7 @@ final class RLEBitPackedHybridTest extends TestCase
     public function test_decode_bit_packed_with_zero_group_count_and_count(): void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
-        $binaryReader = $this->getMockBuilder(BinaryReader::class)->disableOriginalConstructor()->getMock();
+        $binaryReader = $this->createStub(BinaryReader::class);
 
         $bitWidth = 8;
         $varInt = 0;
@@ -108,7 +108,7 @@ final class RLEBitPackedHybridTest extends TestCase
     public function test_decode_rl_e_with_run_length_zero(): void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
-        $binaryReader = $this->getMockBuilder(BinaryReader::class)->disableOriginalConstructor()->getMock();
+        $binaryReader = $this->createStub(BinaryReader::class);
 
         $bitWidth = 8;
         $intVar = 0;
