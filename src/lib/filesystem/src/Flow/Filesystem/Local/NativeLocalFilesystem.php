@@ -42,6 +42,7 @@ use function preg_replace;
 use function rename;
 use function rmdir;
 use function scandir;
+use function sort;
 use function sprintf;
 use function str_ends_with;
 use function str_replace;
@@ -103,8 +104,15 @@ final readonly class NativeLocalFilesystem implements Filesystem
             return;
         }
 
+        $filePaths = [];
+
         foreach (new GlobIterator($path->glob()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
+            $filePaths[] = type_string()->assert($filePath);
+        }
+
+        sort($filePaths, SORT_STRING);
+
+        foreach ($filePaths as $filePath) {
             $status = self::statFor(path_real($filePath, $path->options()), $filePath);
 
             if ($pathFilter->accept($status)) {

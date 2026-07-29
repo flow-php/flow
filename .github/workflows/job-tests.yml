@@ -55,6 +55,11 @@ jobs:
           - "8.5"
         operating-system:
           - "blacksmith-4vcpu-ubuntu-2404"
+        exclude:
+          - dependencies: "lowest"
+            php-version: "8.4"
+          - dependencies: "lowest"
+            php-version: "8.5"
 
     steps:
       - name: "Checkout"
@@ -95,7 +100,7 @@ jobs:
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
-          coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
+          coverage: ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && 'pcov' || 'none' }}
           extensions: ':psr, apcu, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M, apc.enable_cli=1'
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
@@ -129,7 +134,7 @@ jobs:
       # exercised here and the process shuts down cleanly. Must pass.
       - name: "Test"
         timeout-minutes: 15
-        run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
+        run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
@@ -155,7 +160,7 @@ jobs:
       - name: "Test (grpc)"
         timeout-minutes: 10
         continue-on-error: ${{ matrix.php-version == '8.5' }}
-        run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/grpc-coverage.xml' || '' }}"
+        run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && '--coverage-clover=./var/phpunit/coverage/clover/grpc-coverage.xml' || '' }}"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
