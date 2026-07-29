@@ -21,8 +21,8 @@ Binary names follow the [PIE naming convention](https://github.com/php/pie/blob/
 
 Available platforms:
 - macOS ARM64 (Apple Silicon)
-- Linux ARM64
-- Linux x86_64
+- Linux ARM64 — glibc (Debian, Ubuntu, …) and musl (Alpine)
+- Linux x86_64 — glibc (Debian, Ubuntu, …) and musl (Alpine)
 
 PHP versions: 8.3, 8.4, 8.5 (each with NTS and ZTS variants).
 
@@ -51,6 +51,26 @@ php -m | grep flow_php
 ```bash
 pie install flow-php/flow-php-ext
 ```
+
+### Alpine Linux (musl)
+
+Alpine images need `libgcc` before the extension will load:
+
+```bash
+apk add --no-cache libgcc
+pie install flow-php/flow-php-ext
+```
+
+`libgcc` (129 KiB) provides `libgcc_s.so.1`, which the Rust runtime links for stack unwinding. Debian and Ubuntu
+ship it in the base system; Alpine does not. Without it PHP reports:
+
+```
+Unable to load dynamic library '.../flow_php.so'
+  (Error loading shared library libgcc_s.so.1: No such file or directory)
+```
+
+Installing `libgcc` is still dramatically cheaper than the alternative — without a musl binary PIE falls back to a
+source build, which pulls the full Rust toolchain (`rust cargo clang-dev`, ~824 MB) into the image.
 
 ## Build Prerequisites
 
