@@ -775,4 +775,112 @@ final class ConfigurationTest extends TestCase
         static::assertSame(10, $telemetry['max_parameters']);
         static::assertSame(100, $telemetry['max_parameter_length']);
     }
+
+    public function test_profiler_max_queries_defaults_to_1000(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => [],
+        ]);
+
+        static::assertSame(1000, $config['profiler']['max_queries']);
+    }
+
+    public function test_profiler_max_retained_parameters_defaults_to_100(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => [],
+        ]);
+
+        static::assertSame(100, $config['profiler']['max_retained_parameters']);
+    }
+
+    public function test_profiler_max_query_length_defaults_to_1000(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => [],
+        ]);
+
+        static::assertSame(1000, $config['profiler']['max_query_length']);
+    }
+
+    public function test_profiler_max_query_length_can_be_configured(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_query_length' => 250],
+        ]);
+
+        static::assertSame(250, $config['profiler']['max_query_length']);
+    }
+
+    public function test_profiler_max_query_length_below_one_is_rejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_query_length' => 0],
+        ]);
+    }
+
+    public function test_profiler_max_queries_can_be_configured(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_queries' => 250],
+        ]);
+
+        static::assertSame(250, $config['profiler']['max_queries']);
+    }
+
+    public function test_profiler_max_retained_parameters_can_be_configured(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_retained_parameters' => 5],
+        ]);
+
+        static::assertSame(5, $config['profiler']['max_retained_parameters']);
+    }
+
+    public function test_profiler_max_queries_below_one_is_rejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_queries' => 0],
+        ]);
+    }
+
+    public function test_profiler_negative_max_retained_parameters_is_rejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'profiler' => ['max_retained_parameters' => -1],
+        ]);
+    }
 }

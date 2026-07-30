@@ -6,11 +6,11 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\Profiler;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\FlowPostgreSqlDataCollector;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerController;
-use Flow\PostgreSql\Client\Debug\QueryLog;
-use Flow\PostgreSql\Client\Debug\RecordedQuery;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\QueryRecorder;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\RecordedQuery;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\FakeClient;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
 use Flow\PostgreSql\Client\Exception\QueryException;
-use Flow\PostgreSql\Tests\Mother\FakeClient;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ServiceLocator;
@@ -113,9 +113,9 @@ final class ProfilerControllerTest extends TestCase
      */
     private function collectorWith(string $statement, array $parameters): FlowPostgreSqlDataCollector
     {
-        $log = new QueryLog();
+        $log = new QueryRecorder();
         $log->add(new RecordedQuery($statement, $parameters, 1.0, 1, false, null));
-        $collector = new FlowPostgreSqlDataCollector($log, includeParameters: true);
+        $collector = new FlowPostgreSqlDataCollector($log);
         $collector->lateCollect();
 
         return $collector;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\PostgreSql\Client\Debug;
+namespace Flow\Bridge\Symfony\PostgreSqlBundle\Profiler;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
@@ -25,11 +25,13 @@ use function str_starts_with;
 
 use const DEBUG_BACKTRACE_IGNORE_ARGS;
 
-final class RecordingClient implements Client
+final class ProfilerClient implements Client
 {
+    private const array INSTRUMENTATION_NAMESPACES = ['Flow\\PostgreSql\\', __NAMESPACE__ . '\\'];
+
     public function __construct(
         private readonly Client $client,
-        private readonly QueryLog $log,
+        private readonly QueryRecorder $recorder,
         private readonly string $connection = 'default',
     ) {}
 
@@ -61,13 +63,13 @@ final class RecordingClient implements Client
         try {
             $cursor = $this->client->cursor($sql, $parameters);
         } catch (Throwable $e) {
-            $this->log->add($this->failure($statement, $parameters, $start, $e));
+            $this->recorder->add($this->failure($statement, $parameters, $start, $e));
 
             throw $e;
         }
 
         // Cursors are lazy; record the statement without consuming rows.
-        $this->log->add(
+        $this->recorder->add(
             new RecordedQuery(
                 $statement,
                 $parameters,
@@ -304,12 +306,12 @@ final class RecordingClient implements Client
         try {
             $result = $operation();
         } catch (Throwable $e) {
-            $this->log->add($this->failure($statement, $parameters, $start, $e));
+            $this->recorder->add($this->failure($statement, $parameters, $start, $e));
 
             throw $e;
         }
 
-        $this->log->add(
+        $this->recorder->add(
             new RecordedQuery(
                 $statement,
                 $parameters,
@@ -352,8 +354,8 @@ final class RecordingClient implements Client
      *
      * A backtrace frame's file/line is the *call site* (where the frame's function was called from),
      * while class/function is the callee. So the application caller is the file/line of the
-     * shallowest library frame — i.e. the last `Flow\PostgreSql\` frame before control crosses into
-     * application code.
+     * shallowest instrumentation frame — the last frame belonging to this decorator or to the
+     * PostgreSQL client itself before control crosses into application code.
      */
     private function callerLocation(): ?string
     {
@@ -368,7 +370,21 @@ final class RecordingClient implements Client
             // @mago-expect analysis:mixed-assignment
             $class = $frame['class'] ?? null;
 
-            if (!is_string($class) || !str_starts_with($class, 'Flow\\PostgreSql\\')) {
+            if (!is_string($class)) {
+                return $candidate;
+            }
+
+            $instrumentation = false;
+
+            foreach (self::INSTRUMENTATION_NAMESPACES as $namespace) {
+                if (str_starts_with($class, $namespace)) {
+                    $instrumentation = true;
+
+                    break;
+                }
+            }
+
+            if (!$instrumentation) {
                 return $candidate;
             }
 

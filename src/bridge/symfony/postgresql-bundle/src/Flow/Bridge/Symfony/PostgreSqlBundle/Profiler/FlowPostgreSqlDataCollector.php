@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Profiler;
 
-use Flow\PostgreSql\Client\Debug\QueryLog;
-use Flow\PostgreSql\Client\Debug\RecordedQuery;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
@@ -21,22 +19,21 @@ use function preg_split;
 use function strtoupper;
 
 /**
- * @phpstan-type QueryRow array{statement: string, parameters: array<int, mixed>, returnedRows: null|int, durationMs: float, failed: bool, error: null|string, connection: string, caller: null|string, explainable: bool, runCount: int, isDuplicate: bool}
+ * @phpstan-type QueryRow array{statement: string, parameters: array<int, mixed>, returnedRows: null|int, durationMs: float, failed: bool, error: null|string, connection: string, caller: null|string, explainable: bool, runCount: int, isDuplicate: bool, parametersTruncated: bool, statementTruncated: bool}
  */
 final class FlowPostgreSqlDataCollector extends DataCollector implements LateDataCollectorInterface
 {
     private const array EXPLAINABLE_KEYWORDS = ['SELECT', 'WITH', 'INSERT', 'UPDATE', 'DELETE', 'VALUES', 'TABLE'];
 
     public function __construct(
-        private readonly QueryLog $queryLog,
-        private readonly bool $includeParameters,
+        private readonly QueryRecorder $recorder,
     ) {}
 
     public function collect(Request $request, Response $response, ?Throwable $exception = null): void {}
 
     public function lateCollect(): void
     {
-        $queries = $this->queryLog->queries();
+        $queries = $this->recorder->queries();
 
         $runCounts = [];
 
@@ -45,44 +42,40 @@ final class FlowPostgreSqlDataCollector extends DataCollector implements LateDat
         }
 
         $byConnection = [];
-        $failedCount = 0;
-        $totalDurationMs = 0.0;
 
         foreach ($queries as $query) {
-            $totalDurationMs += $query->durationMs;
-
-            if ($query->failed) {
-                $failedCount++;
-            }
-
             $byConnection[$query->connection][] = [
                 'statement' => $query->sql,
-                'parameters' => $this->includeParameters ? $query->parameters : [],
+                'parameters' => $query->parameters,
                 'returnedRows' => $query->rowCount,
                 'durationMs' => $query->durationMs,
                 'failed' => $query->failed,
                 'error' => $query->error,
                 'connection' => $query->connection,
                 'caller' => $query->caller,
-                'explainable' => $this->isExplainable($query),
+                'explainable' =>
+                    $this->isExplainable($query) && !$query->parametersTruncated && !$query->statementTruncated,
                 'runCount' => $runCounts[$query->sql],
                 'isDuplicate' => $runCounts[$query->sql] > 1,
+                'parametersTruncated' => $query->parametersTruncated,
+                'statementTruncated' => $query->statementTruncated,
             ];
         }
 
         $this->data = [
             'queries' => $byConnection,
-            'queryCount' => count($queries),
-            'failedCount' => $failedCount,
-            'totalDurationMs' => $totalDurationMs,
-            'duplicateCount' => count($queries) - count($runCounts),
+            'queryCount' => $this->recorder->recordedCount(),
+            'retainedCount' => $this->recorder->retainedCount(),
+            'failedCount' => $this->recorder->failedCount(),
+            'totalDurationMs' => $this->recorder->totalDurationMs(),
+            'duplicateCount' => $this->recorder->retainedCount() - count($runCounts),
         ];
     }
 
     public function reset(): void
     {
         $this->data = [];
-        $this->queryLog->reset();
+        $this->recorder->reset();
     }
 
     public function getName(): string
@@ -110,6 +103,11 @@ final class FlowPostgreSqlDataCollector extends DataCollector implements LateDat
     public function getQueryCount(): int
     {
         return (int) ($this->data['queryCount'] ?? 0);
+    }
+
+    public function getRetainedCount(): int
+    {
+        return (int) ($this->data['retainedCount'] ?? 0);
     }
 
     public function getFailedCount(): int
