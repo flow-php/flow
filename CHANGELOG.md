@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-07-29
+## [Unreleased] - 2026-07-30
 
 ### Added
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler.max_query_length option bounding retained statements** - [@norberttech](https://github.com/norberttech)
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - panel marks truncated statements and excludes them from EXPLAIN** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - precompiled musl binaries for Alpine, for every PHP/arch/thread-safety combination** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - release artifacts are verified in a clean runtime container before upload** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - window frames via rowsBetween() with unbounded_preceding(), preceding(), current_row(), following() and unbounded_following()** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +15,10 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - query recording moved from flow-php/postgresql as ProfilerClient, QueryRecorder and QueryRecorderOptions** - [@norberttech](https://github.com/norberttech)
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler registers only when the kernel runs in debug mode, so --no-debug records nothing** - [@norberttech](https://github.com/norberttech)
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler.max_parameters renamed to profiler.max_retained_parameters** - [@norberttech](https://github.com/norberttech)
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - service flow.postgresql.profiler.query_log renamed to flow.postgresql.profiler.query_recorder** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - releases are published only after musl binaries are built** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - installation docs list libc flavours and the Alpine libgcc requirement** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/flow - lowest dependencies are tested only against the lowest supported PHP version** - [@norberttech](https://github.com/norberttech)
@@ -36,6 +42,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - long running console commands no longer retain queries for a panel that never renders** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - PIE no longer falls back to a source build on Alpine** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/filesystem - NativeLocalFilesystem::list() now yields matches sorted by path** - [@norberttech](https://github.com/norberttech)
 - [#2566](https://github.com/flow-php/flow/pull/2566) - **flow-php/etl - rank() and dense_rank() ignored the orderBy() direction** - [@norberttech](https://github.com/norberttech)
@@ -51,6 +58,7 @@
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/postgresql - Client\Debug namespace with RecordingClient, QueryLog, QueryLogOptions and RecordedQuery** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Span::contextScope() and Span::setContextScope()** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - MemoryContextStorage::store()** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - QEMU setup from Docker image builds.** - [@norberttech](https://github.com/norberttech)
