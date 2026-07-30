@@ -6,11 +6,10 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Profiler;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\FlowPostgreSqlDataCollector;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\Controller\QueryController;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\KernelTestCase;
-use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Client\Debug\RecordingClient;
 use LogicException;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -23,9 +22,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\Router;
-use Throwable;
 
 use function array_merge;
 use function getenv;
@@ -50,20 +50,19 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
             FlowPostgreSqlDataCollector::class,
             $container->get('flow.postgresql.profiler.collector'),
         );
-        static::assertInstanceOf(RecordingClient::class, $container->get('flow.postgresql.default.client'));
+        static::assertInstanceOf(ProfilerClient::class, $container->get('flow.postgresql.default.client'));
     }
 
-    public function test_executed_queries_are_collected(): void
+    public function test_queries_are_recorded_during_http_request(): void
     {
-        $container = $this->bootWithWebProfiler(['enabled' => true])->getContainer();
+        [$kernel, $token] = $this->runQueryRequest();
 
-        /** @var Client $client */
-        $client = $container->get('flow.postgresql.default.client');
-        $client->fetchAll('SELECT n FROM (VALUES (1), (2), (3)) AS t(n) WHERE n >= $1', [2]);
-
-        /** @var FlowPostgreSqlDataCollector $collector */
-        $collector = $container->get('flow.postgresql.profiler.collector');
-        $collector->lateCollect();
+        /** @var Profiler $profiler */
+        $profiler = $kernel->getContainer()->get('profiler');
+        $profile = $profiler->loadProfile($token);
+        static::assertNotNull($profile);
+        $collector = $profile->getCollector('flow_postgresql');
+        static::assertInstanceOf(FlowPostgreSqlDataCollector::class, $collector);
 
         static::assertSame(1, $collector->getQueryCount());
         $query = $collector->getQueries()['default'][0];
@@ -75,23 +74,18 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
         static::assertNotNull($query['caller']);
     }
 
-    public function test_failed_query_is_recorded_as_failed(): void
+    public function test_failed_query_is_recorded_during_http_request(): void
     {
-        $container = $this->bootWithWebProfiler(['enabled' => true])->getContainer();
+        [$kernel, $token, $response] = $this->runQueryRequest('/failing-query', 'runFailing');
 
-        /** @var Client $client */
-        $client = $container->get('flow.postgresql.default.client');
+        /** @var Profiler $profiler */
+        $profiler = $kernel->getContainer()->get('profiler');
+        $profile = $profiler->loadProfile($token);
+        static::assertNotNull($profile);
+        $collector = $profile->getCollector('flow_postgresql');
+        static::assertInstanceOf(FlowPostgreSqlDataCollector::class, $collector);
 
-        try {
-            $client->execute('SELECT * FROM table_that_does_not_exist');
-        } catch (Throwable) {
-            // expected
-        }
-
-        /** @var FlowPostgreSqlDataCollector $collector */
-        $collector = $container->get('flow.postgresql.profiler.collector');
-        $collector->lateCollect();
-
+        static::assertSame(500, $response->getStatusCode());
         static::assertSame(1, $collector->getFailedCount());
         static::assertTrue($collector->getQueries()['default'][0]['failed']);
     }
@@ -101,7 +95,7 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
         $container = $this->bootWithWebProfiler(['enabled' => false])->getContainer();
 
         static::assertFalse($container->has('flow.postgresql.profiler.collector'));
-        static::assertNotInstanceOf(RecordingClient::class, $container->get('flow.postgresql.default.client'));
+        static::assertNotInstanceOf(ProfilerClient::class, $container->get('flow.postgresql.default.client'));
     }
 
     public function test_connection_can_opt_out_while_profiler_enabled(): void
@@ -132,7 +126,7 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
 
         // Panel still registered (profiler enabled) but the opted-out connection is not decorated.
         static::assertTrue($container->has('flow.postgresql.profiler.collector'));
-        static::assertNotInstanceOf(RecordingClient::class, $container->get('flow.postgresql.default.client'));
+        static::assertNotInstanceOf(ProfilerClient::class, $container->get('flow.postgresql.default.client'));
     }
 
     public function test_auto_disabled_when_web_profiler_bundle_absent(): void
@@ -152,21 +146,7 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
 
     public function test_panel_renders_executed_queries_in_the_profiler(): void
     {
-        $kernel = $this->bootForPanelRendering();
-        $container = $kernel->getContainer();
-
-        /** @var Router $router */
-        $router = $container->get('router');
-        $router->getRouteCollection()->add('query', new Route('/query', [
-            '_controller' => QueryController::class . '::run',
-        ]));
-
-        $request = Request::create('/query', 'GET');
-        $response = $kernel->handle($request);
-        $token = $response->headers->get('X-Debug-Token');
-        $kernel->terminate($request, $response);
-
-        static::assertNotNull($token);
+        [$kernel, $token] = $this->runQueryRequest();
 
         $panel = $kernel->handle(Request::create('/_profiler/' . $token . '?panel=flow_postgresql'));
         $html = (string) $panel->getContent();
@@ -201,25 +181,25 @@ final class FlowPostgreSqlProfilerTest extends KernelTestCase
     }
 
     /**
-     * @return array{0: TestKernel, 1: string}
+     * @return array{0: TestKernel, 1: string, 2: Response}
      */
-    private function runQueryRequest(): array
+    private function runQueryRequest(string $path = '/query', string $action = 'run'): array
     {
         $kernel = $this->bootForPanelRendering();
         $container = $kernel->getContainer();
 
         /** @var Router $router */
         $router = $container->get('router');
-        $router->getRouteCollection()->add('query', new Route('/query', [
-            '_controller' => QueryController::class . '::run',
+        $router->getRouteCollection()->add('query', new Route($path, [
+            '_controller' => QueryController::class . '::' . $action,
         ]));
 
-        $request = Request::create('/query', 'GET');
+        $request = Request::create($path, 'GET');
         $response = $kernel->handle($request);
         $token = (string) $response->headers->get('X-Debug-Token');
         $kernel->terminate($request, $response);
 
-        return [$kernel, $token];
+        return [$kernel, $token, $response];
     }
 
     /**

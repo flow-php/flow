@@ -135,8 +135,21 @@ flow_postgresql:
   profiler:
     enabled: ~
     include_parameters: true # show bound query parameters in the panel
+    max_queries: 1000            # retained queries; oldest dropped first
+    max_retained_parameters: 100 # queries binding more than this keep no parameters
+    max_query_length: 1000       # retained statements longer than this are truncated
     migrations: true         # show the Flow Migrations panel (requires migrations enabled)
 ```
+
+The log is bounded: at most `max_queries` entries are retained and the panel notes when older ones were
+dropped. Because bound parameters dominate memory, a query binding more than `max_retained_parameters`
+values keeps none of them — such queries show "parameters omitted" and cannot be explained from the panel.
+The all-or-nothing rule is deliberate, and the reason this option is not named like the per-connection
+`telemetry.max_parameters` (which keeps the first N): the panel re-binds the retained parameters to run
+EXPLAIN, and a partial list is not a valid query. Statements themselves are bounded by
+`max_query_length` — a batch `INSERT` with a thousand `VALUES` tuples is over 100 KB of SQL, so retaining
+`max_queries` of them uncut would cost hundreds of megabytes. Truncated statements are marked in the panel
+and cannot be explained from it.
 
 Recording is dev-only and adds nothing in production: when the profiler is disabled — or
 WebProfilerBundle is absent in `enabled: ~` mode — no connection is decorated. A single connection
@@ -149,6 +162,11 @@ flow_postgresql:
       dsn: '%env(DATABASE_URL)%'
       profiler: false # do not record queries in selected connection (default: true)
 ```
+
+Recording follows `kernel.debug`, like DoctrineBundle's `dbal.profiling`. With `enabled: ~` the panel is
+wired only when WebProfilerBundle is registered **and** the kernel runs in debug mode, so
+`bin/console --no-debug` — which compiles a separate container — decorates no connection and records
+nothing. `enabled: true` forces recording on regardless of debug mode.
 
 When `migrations` are enabled, a separate **Flow Migrations** panel reports the migrations connection's
 executed, pending and unavailable migrations (with execution time) — like the Doctrine Migrations

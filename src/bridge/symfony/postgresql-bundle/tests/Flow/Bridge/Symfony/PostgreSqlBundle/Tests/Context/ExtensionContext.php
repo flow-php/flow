@@ -13,8 +13,9 @@ final readonly class ExtensionContext
 {
     /**
      * @param array<string, mixed> $config
+     * @param list<class-string> $bundles registered kernel bundles, e.g. WebProfilerBundle
      */
-    public function load(array $config): ContainerBuilder
+    public function load(array $config, bool $debug = false, array $bundles = []): ContainerBuilder
     {
         $extension = (new FlowPostgreSqlBundle())->getContainerExtension();
 
@@ -24,9 +25,10 @@ final readonly class ExtensionContext
 
         $container = new ContainerBuilder();
         $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.debug', false);
+        $container->setParameter('kernel.debug', $debug);
         $container->setParameter('kernel.build_dir', '/tmp');
         $container->setParameter('kernel.project_dir', '/tmp');
+        $container->setParameter('kernel.bundles', $bundles);
         $extension->load([$config], $container);
 
         return $container;

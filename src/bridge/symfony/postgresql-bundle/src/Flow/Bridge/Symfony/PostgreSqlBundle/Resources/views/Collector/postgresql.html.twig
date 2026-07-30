@@ -92,6 +92,14 @@
         </div>
     </div>
 
+    {% if collector.retainedCount < collector.queryCount %}
+        <div class="help">
+            Showing the last {{ collector.retainedCount }} of {{ collector.queryCount }} recorded queries —
+            older entries were dropped (<code>flow_postgresql.profiler.max_queries</code>).
+            Duplicate detection covers retained queries only.
+        </div>
+    {% endif %}
+
     {% if collector.queryCount == 0 %}
         <div class="empty"><p>No PostgreSQL queries were executed for this request.</p></div>
     {% else %}
@@ -122,6 +130,11 @@
                                     {% if query.caller %}<span title="{{ query.caller }}">{{ query.caller|split('/')|last }}</span>{% endif %}
                                     {% if query.parameters is not empty %}
                                         · <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#query-params-{{ connection }}-{{ row }}" data-toggle-alt-content="Hide parameters">View parameters</a>
+                                    {% elseif query.parametersTruncated %}
+                                        · <span class="text-muted" title="Parameters were not recorded to bound profiler memory (profiler.max_retained_parameters / profiler.include_parameters)">parameters omitted</span>
+                                    {% endif %}
+                                    {% if query.statementTruncated %}
+                                        · <span class="text-muted" title="The statement was cut to bound profiler memory (profiler.max_query_length)">statement truncated</span>
                                     {% endif %}
                                     {% if query.explainable %}
                                         · <a class="link-inverse" href="{{ path('_profiler', { panel: 'flow_postgresql', token: token, page: 'explain', connection: connection, query: row }) }}" onclick="return flowPgExplain(this);" data-target-id="flow-pg-explain-{{ connection }}-{{ row }}">Explain query</a>

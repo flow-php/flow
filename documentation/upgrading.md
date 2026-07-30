@@ -112,6 +112,21 @@ rank()->over(window()->partitionBy(ref('dept'))->orderBy(ref('salary')->desc()))
 
 Implementations must no longer sort; `$window->partition()` and `$window->frame()` are already ordered.
 
+### 7) `flow-php/postgresql` - query recording moved to `flow-php/symfony-postgresql-bundle`
+
+| Before                                           | After                                                                |
+|--------------------------------------------------|----------------------------------------------------------------------|
+| `Flow\PostgreSql\Client\Debug\RecordingClient`   | `Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerClient`       |
+| `Flow\PostgreSql\Client\Debug\QueryLog`          | `Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\QueryRecorder`        |
+| `Flow\PostgreSql\Client\Debug\QueryLogOptions`   | `Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\QueryRecorderOptions` |
+| `Flow\PostgreSql\Client\Debug\RecordedQuery`     | `Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\RecordedQuery`        |
+| `QueryLogOptions::$maxParameters`                | `QueryRecorderOptions::$maxRetainedParameters`                       |
+| `QueryLogOptions::maxParameters()`               | `QueryRecorderOptions::maxRetainedParameters()`                      |
+| service `flow.postgresql.profiler.query_log`     | `flow.postgresql.profiler.query_recorder`                            |
+| config `flow_postgresql.profiler.max_parameters` | `flow_postgresql.profiler.max_retained_parameters`                   |
+
+Applies to `flow-php/postgresql` users only through the bundle; `Client\Telemetry` is unchanged.
+
 ---
 
 ## Upgrading from 0.41.x to 0.42.x
