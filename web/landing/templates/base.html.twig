@@ -62,33 +62,9 @@
                 posthog.init('{{ posthog_key }}', {
                     api_host: '{{ posthog_api_host }}',
                     ui_host: '{{ posthog_ui_host }}',
-                    defaults: '2026-01-30'
+                    defaults: '2026-01-30',
+                    cookieless_mode: 'always'
                 })
-            </script>
-        {% endif %}
-        {% if datadog_application_id|length %}
-            <script>
-                (function(h,o,u,n,d) {
-                    h = h[d] = h[d] || { q: [], onReady: function (c) { h.q.push(c) } }
-                    d = o.createElement(u); d.async = 1; d.src = n; d.crossOrigin=''
-                    n = o.getElementsByTagName(u)[0]; n.parentNode.insertBefore(d, n)
-                })(window, document, 'script', 'https://www.datadoghq-browser-agent.com/eu1/v6/datadog-rum.js', 'DD_RUM')
-
-                window.DD_RUM.onReady(function () {
-                    window.DD_RUM.init({
-                        applicationId: '{{ datadog_application_id }}',
-                        clientToken: '{{ datadog_client_token }}',
-                        site: '{{ datadog_site }}',
-                        service: 'flow-php-website',
-                        env: 'prod',
-                        version: '{{ flow_version }}',
-                        sessionSampleRate: 100,
-                        sessionReplaySampleRate: 20,
-                        trackResources: true,
-                        trackUserInteractions: true,
-                        trackLongTasks: true,
-                    });
-                });
             </script>
         {% endif %}
     {% endblock %}

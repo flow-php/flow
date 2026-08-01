@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    How it works - Blueprints - Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+    What happens when you buy a Blueprint: how access is granted, why your email matters, and how seats work for teams.
+{%- endblock -%}
+
+{%- block hero -%}{%- endblock -%}
+
+{% block main %}
+    {% set surprises = [
+        {
+            title: 'Checkout never asks for your GitHub account',
+            body: 'You do not enter a username anywhere during payment. GitHub is connected afterwards, by you, from your order.'
+        },
+        {
+            title: 'Access is not sent automatically',
+            body: 'Nothing lands in your inbox with the repository attached. You grant access to yourself, and it takes about a minute.'
+        },
+        {
+            title: 'Your email address is the only key',
+            body: 'It is how you get into the customer portal, and the portal is the only place access can be granted. A typo locks you out of it.'
+        }
+    ] %}
+
+    {% set steps = [
+        {
+            title: 'Pay',
+            body: 'Checkout is handled by Polar, who are the seller of record. Card details never touch our systems. Choose how many seats you need before paying, and enter an email address you can actually read.'
+        },
+        {
+            title: 'Open the customer portal',
+            body: 'Go to the Polar customer portal and sign in with the email you bought with. There is no password: Polar emails a one-time code to that address. Then open your order.'
+        },
+        {
+            title: 'Connect GitHub and grant access',
+            body: 'From the order, connect your GitHub account and grant it repository access. If you bought several seats, you assign the rest to your colleagues from the same screen.'
+        },
+        {
+            title: 'Accept the invitation',
+            body: 'GitHub emails an invitation to each person, and it also shows up in their GitHub notifications. It has to be accepted before the repository can be cloned.'
+        }
+    ] %}
+
+    <section class="relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
+        <div aria-hidden="true"
+             class="pointer-events-none absolute -top-28 left-1/2 -z-10 h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-100/20 via-orange-100/15 to-blue-100/20 blur-3xl"></div>
+
+        <a href="{{ path('shop_blueprint_symfony') }}"
+           class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white no-underline">
+            <span aria-hidden="true">←</span> Back to the Blueprint
+        </a>
+
+        <div class="mx-auto mt-6 max-w-3xl text-center">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Before you buy
+            </span>
+            <h1 class="mt-3 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">How it works</h1>
+            <p class="mt-5 muted text-lg leading-relaxed">
+                Buying a Blueprint gets you access to a private GitHub repository, but the way that access
+                reaches you surprises people. Here is the whole process, written down before you pay rather
+                than after.
+            </p>
+        </div>
+
+        <div class="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3">
+            {% for surprise in surprises %}
+                <div class="card-accent flex flex-col">
+                    <h2 class="font-semibold tracking-tight text-slate-900 dark:text-white">{{ surprise.title }}</h2>
+                    <p class="mt-2 muted text-sm leading-relaxed">{{ surprise.body }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-20">
+        <div class="mx-auto max-w-3xl text-center">
+            <h2 class="section-title">The four steps</h2>
+            <p class="mt-3 muted leading-relaxed">
+                From paying to cloning. Steps two and three are the ones people do not expect.
+            </p>
+        </div>
+
+        <ol class="mx-auto mt-10 grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {% for step in steps %}
+                <li class="card flex flex-col">
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-orange-100/15 text-sm font-semibold text-orange-300 dark:text-orange-100">
+                        {{ loop.index }}
+                    </span>
+                    <h3 class="mt-4 font-semibold tracking-tight text-slate-900 dark:text-white">{{ step.title }}</h3>
+                    <p class="mt-2 muted text-sm leading-relaxed">{{ step.body }}</p>
+                </li>
+            {% endfor %}
+        </ol>
+
+        <p class="mx-auto mt-8 max-w-3xl text-center text-sm muted leading-relaxed">
+            The portal lives at
+            <a href="https://polar.sh/flow-php/portal" target="_blank" rel="noopener" class="underline underline-offset-2">polar.sh/flow-php/portal</a>.
+            You will not need it until after you have paid.
+        </p>
+    </section>
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-20">
+        <div class="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
+            <div class="card">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Buying for a team</h2>
+                <div class="mt-4 space-y-4 text-slate-700 dark:text-white/85 leading-relaxed">
+                    <p>
+                        One seat covers one developer. If four people will read the code, that is four seats,
+                        and you choose the quantity at checkout before paying rather than buying four times.
+                    </p>
+                    <p>
+                        <strong class="font-semibold text-slate-900 dark:text-white">Whoever pays does not have to be one of the developers.</strong>
+                        A team lead, an office manager or finance can buy the seats and hand them out afterwards.
+                        The person who paid owns the order, signs in to the portal, and assigns each seat to a
+                        colleague's GitHub account.
+                    </p>
+                    <p>
+                        Every person still accepts their own GitHub invitation. Sharing one account between
+                        several developers is not a way around buying seats, and it is not allowed by the licence.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Payment, tax and invoices</h2>
+                <div class="mt-4 space-y-4 text-slate-700 dark:text-white/85 leading-relaxed">
+                    <p>
+                        Polar acts as Merchant of Record, which means they are the seller for the transaction.
+                        They handle the payment, the tax and the invoice, and the invoice comes from them.
+                    </p>
+                    <p>
+                        Prices on the site exclude tax and are shown in US dollars. Your currency and the final
+                        amount are worked out at checkout based on where you are, so what you pay may be shown
+                        in a different currency than what you browsed.
+                    </p>
+                    <p>
+                        <strong class="font-semibold text-slate-900 dark:text-white">Buying from an EU business? Enter your VAT ID at checkout</strong>
+                        and the reverse charge applies, so no VAT is added.
+                    </p>
+                    <p>
+                        It is a one-time payment. There is no subscription and nothing renews.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-20">
+        <div class="mx-auto max-w-3xl text-center">
+            <h2 class="section-title">Worth knowing before you pay</h2>
+        </div>
+
+        <div class="mx-auto mt-10 grid max-w-6xl gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div class="card">
+                <h3 class="font-semibold tracking-tight text-slate-900 dark:text-white">What you can do with the code</h3>
+                <p class="mt-2 muted text-sm leading-relaxed">
+                    Read it, run it, change it, and use it inside your own projects, including at work. What you
+                    cannot do is republish it, resell it, or pass it to someone who has not bought a licence.
+                    The patterns themselves are just ideas, and you are free to rebuild them however you like.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 class="font-semibold tracking-tight text-slate-900 dark:text-white">It is a Blueprint, not a product</h3>
+                <p class="mt-2 muted text-sm leading-relaxed">
+                    It is deliberately incomplete. There is no authentication or authorization layer, and the
+                    front end is plain on purpose. It is built to be read and pulled apart, not deployed as-is.
+                    That is the offer, not a defect.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 class="font-semibold tracking-tight text-slate-900 dark:text-white">Updates</h3>
+                <p class="mt-2 muted text-sm leading-relaxed">
+                    You keep access to the repository as it evolves, so improvements and fixes show up with a
+                    <span class="font-mono text-xs">git pull</span>. There is nothing extra to pay for them.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 class="font-semibold tracking-tight text-slate-900 dark:text-white">What you need</h3>
+                <p class="mt-2 muted text-sm leading-relaxed">
+                    A GitHub account, an email address you can read, and either Docker or nix to run the thing
+                    locally. The README walks through the setup once you are in.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 class="font-semibold tracking-tight text-slate-900 dark:text-white">If something goes wrong</h3>
+                <p class="mt-2 muted text-sm leading-relaxed">
+                    Mistyped your email, invitation never arrived, or the portal is not showing your order?
+                    Email <a href="mailto:support@flow-php.com" class="underline underline-offset-2">support@flow-php.com</a>
+                    and we will sort it out with Polar.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-20 mb-24">
+        <div class="card-accent mx-auto max-w-4xl py-10 text-center sm:px-10">
+            <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                That is the whole process
+            </h2>
+            <p class="mx-auto mt-3 max-w-2xl text-slate-700 dark:text-white/85 leading-relaxed">
+                No surprises left. If anything above is still unclear, ask before you pay rather than after.
+            </p>
+            <div class="mt-7 flex flex-wrap justify-center gap-3">
+                <a href="{{ path('shop_blueprint_symfony') }}" class="btn btn-primary px-5 py-2.5 no-underline">
+                    Back to the Blueprint
+                </a>
+                <a href="mailto:support@flow-php.com" class="btn btn-secondary px-5 py-2.5 no-underline">
+                    Ask a question
+                </a>
+            </div>
+            <p class="mt-6 text-xs muted leading-relaxed">
+                The full terms are in our
+                <a href="{{ path('shop_terms_of_sales') }}" class="underline underline-offset-2">Terms of Sale</a>
+                and
+                <a href="{{ path('shop_privacy_policy') }}" class="underline underline-offset-2">Privacy Policy</a>.
+            </p>
+        </div>
+    </section>
+{% endblock %}

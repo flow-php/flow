@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 821
+ * Total functions: 826
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -2964,6 +2964,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\current_date()"),
         boost: 10
     },                {
+        label: "current_row",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">current_row</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\current_row()"),
+        boost: 10
+    },                {
         label: "current_time",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -4204,6 +4219,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\flow_context(" + "$" + "{" + "1:config" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "following",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">following</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\following(" + "$" + "{" + "1:offset" + "}" + ")"),
         boost: 10
     },                {
         label: "foreign_key",
@@ -7912,6 +7942,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\postgresql_update_options(" + "$" + "{" + "1:primary_key_columns" + "}" + ", " + "$" + "{" + "2:update_columns" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "preceding",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">preceding</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\preceding(" + "$" + "{" + "1:offset" + "}" + ")"),
         boost: 10
     },                {
         label: "prepare_transaction",
@@ -12625,6 +12670,36 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\ulid(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "unbounded_following",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">unbounded_following</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\unbounded_following()"),
+        boost: 10
+    },                {
+        label: "unbounded_preceding",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">unbounded_preceding</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\unbounded_preceding()"),
         boost: 10
     },                {
         label: "union_schema",

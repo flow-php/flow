@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Terms of Sale - Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+    Terms of Sale and Use for the Flow PHP Work-Shop, sold through Polar as Merchant of Record.
+{%- endblock -%}
+
+{%- block hero -%}{%- endblock -%}
+
+{% block main %}
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
+        <a href="{{ path('shop') }}"
+           class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white no-underline">
+            <span aria-hidden="true">←</span> Back to the Work-Shop
+        </a>
+        <span class="eyebrow mt-6">
+            <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+            Legal
+        </span>
+    </section>
+    <section id="shop-terms" class="shop-legal mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-4 mb-16">
+        {{ terms_markdown|markdown_to_html }}
+    </section>
+{% endblock %}

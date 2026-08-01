@@ -54,7 +54,7 @@
                     Hire me for consulting, workshops, or implementation support.
                     Engagements of 20+ hours include a sponsor logo on this page.
                 </p>
-                <a href="https://norbert.tech/consulting" target="_blank" rel="noopener"
+                <a href="{{ path('shop_consulting') }}"
                    class="btn btn-secondary mt-5 self-start px-4 py-2 no-underline">
                     Learn more <span aria-hidden="true">→</span>
                 </a>
@@ -75,7 +75,8 @@
         </div>
 
         {% set sponsors = [
-            {url: 'https://blacksmith.sh/',                                                                                                           name: 'Blacksmith',   slug: 'blacksmith',    size: 'h-8'},
+            {url: 'https://www.anthropic.com/',                                                                                                       name: 'Anthropic',    slug: 'anthropic',     size: 'h-8'},
+            {url: 'https://blacksmith.sh/',                                                                                                          name: 'Blacksmith',   slug: 'blacksmith',    size: 'h-8'},
             {url: 'https://www.datadoghq.com/',                                                                                                       name: 'Datadog',      slug: 'datadog',       size: 'h-24'},
             {url: 'https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge',     name: 'DigitalOcean', slug: 'digitalocean',  size: 'h-24'},
             {url: 'https://blackfire.io/',                                                                                                            name: 'Blackfire',    slug: 'blackfire',     size: 'h-16'},

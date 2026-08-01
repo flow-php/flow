@@ -1,0 +1,53 @@
+section.shop-legal {
+    @apply text-slate-700 leading-relaxed dark:text-white/85;
+}
+
+section.shop-legal h1 {
+    @apply font-bold text-3xl sm:text-4xl tracking-tight text-slate-900 mt-2 mb-6 dark:text-white;
+}
+
+section.shop-legal h2 {
+    @apply font-bold text-2xl tracking-tight text-slate-900 mt-10 mb-3 dark:text-white;
+}
+
+section.shop-legal h3 {
+    @apply font-semibold text-xl text-slate-900 mt-7 mb-2 dark:text-white;
+}
+
+section.shop-legal p {
+    @apply mb-4;
+}
+
+section.shop-legal a {
+    @apply text-blue-300 underline-offset-2 hover:text-orange-300 transition-colors
+           dark:text-blue-100 dark:hover:text-orange-100;
+}
+
+section.shop-legal ul {
+    @apply list-disc pl-6 mb-4 space-y-1.5;
+}
+
+section.shop-legal ol {
+    @apply list-decimal pl-6 mb-4 space-y-1.5;
+}
+
+section.shop-legal strong {
+    @apply font-semibold text-slate-900 dark:text-white;
+}
+
+section.shop-legal blockquote {
+    @apply my-6 rounded-r-lg border-l-4 border-orange-100/70 bg-orange-100/10 px-4 py-3 text-sm muted;
+}
+
+section.shop-legal blockquote p {
+    @apply mb-0;
+}
+
+section.shop-legal hr {
+    @apply my-8 border-0 h-px bg-slate-200 dark:bg-white/10;
+}
+
+section.shop-legal :not(pre) > code {
+    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700
+           dark:bg-white/[0.06] dark:text-[#d2a8ff];
+}

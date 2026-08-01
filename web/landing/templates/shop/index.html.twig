@@ -1,0 +1,156 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Work-Shop - Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+    The Flow PHP Work-Shop. Blueprints and consulting to help you build with Flow.
+{%- endblock -%}
+
+{%- block hero -%}{%- endblock -%}
+
+{% block main %}
+    {% set categories = [
+        {
+            id: 'blueprints',
+            heading: 'Blueprints',
+            subtitle: 'Working applications you can clone, run and pull apart. Read how the pieces fit together, then build your own on top.',
+            listings: [
+                {
+                    name: 'Symfony Backoffice Blueprint',
+                    price: '$59',
+                    href: path('shop_blueprint_symfony'),
+                    image: asset('images/shop/symfony-backoffice-app.png'),
+                    blurb: 'A working Symfony back office built on Flow PHP. One schema per model drives the database, the API and the imports, and every request is traced from the browser down to the SQL query.',
+                    features: ['Schema drives the database, API and imports', 'Streaming CSV, JSON and XML exports', 'OpenTelemetry across browser and backend'],
+                    available: true
+                },
+                {
+                    name: 'More Blueprints',
+                    blurb: 'The Symfony back office is the first one. More are being built, same standards, different frameworks and different problems.',
+                    features: ['Fully tested and statically analysed', 'Something you want to see? Let us know'],
+                    available: false
+                }
+            ]
+        },
+        {
+            id: 'consulting',
+            heading: 'Consulting',
+            subtitle: 'Data engineering, architecture and observability work, from a two day workshop to a fractional architect on your team.',
+            listings: [
+                {
+                    name: 'Consulting',
+                    href: path('shop_consulting'),
+                    image: asset('images/shop/consulting.jpg'),
+                    blurb: 'Sixteen years of data engineering, software architecture and observability work, from pipelines that hold up to APM bills that come down.',
+                    features: ['Data engineering, architecture, observability', 'Workshops, fractional architect, or hands-on build', 'Quoted per engagement, first call free'],
+                    available: true
+                }
+            ]
+        }
+    ] %}
+
+    <section class="relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
+        <div aria-hidden="true"
+             class="pointer-events-none absolute -top-28 left-1/2 -z-10 h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-100/20 via-orange-100/15 to-blue-100/20 blur-3xl"></div>
+
+        <div class="mx-auto max-w-3xl text-center">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Work-Shop
+            </span>
+            <h1 class="mt-3 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Welcome to the Work-Shop.</h1>
+            <p class="mt-5 muted text-lg leading-relaxed">
+                Go further than the docs. <strong class="font-semibold text-slate-900 dark:text-white">Blueprints</strong>
+                are starter templates that show how the pieces fit together, and
+                <strong class="font-semibold text-slate-900 dark:text-white">Consulting</strong>
+                puts the maintainer on your problem.
+            </p>
+        </div>
+
+        <nav aria-label="Categories" data-controller="shop-nav"
+             class="sticky top-16 z-30 -mx-4 sm:-mx-6 lg:-mx-8 mt-8 border-y border-slate-200/70 bg-[#e8eef7]/85 px-4 sm:px-6 lg:px-8 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#e8eef7]/70 dark:border-white/10 dark:bg-black/70 dark:supports-[backdrop-filter]:bg-black/60">
+            <div class="flex justify-center gap-2 overflow-x-auto">
+                {% for category in categories %}
+                    <a href="#{{ category.id }}"
+                       data-shop-nav-target="link" data-section="{{ category.id }}"
+                       class="shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium no-underline hover:no-underline transition-colors
+                              text-slate-600 hover:bg-slate-100 hover:text-slate-900
+                              dark:text-white/70 dark:hover:bg-white/[0.06] dark:hover:text-white
+                              aria-[current=true]:bg-slate-900 aria-[current=true]:text-white
+                              dark:aria-[current=true]:bg-white dark:aria-[current=true]:text-black">
+                        {{ category.heading }}
+                    </a>
+                {% endfor %}
+            </div>
+        </nav>
+
+        {% for category in categories %}
+            <div id="{{ category.id }}" class="scroll-mt-32 mt-14 lg:mt-20">
+                <h2 class="section-title">{{ category.heading }}</h2>
+                <p class="mt-2 muted max-w-2xl">{{ category.subtitle }}</p>
+
+                <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                    {% for listing in category.listings %}
+                        {# Listings without a href are placeholders, so they render as plain cards. #}
+                        {% set tag = listing.href is defined ? 'a' : 'div' %}
+                        <{{ tag }} {% if listing.href is defined %}href="{{ listing.href }}"{% endif %}
+                           class="card group flex flex-col no-underline hover:no-underline
+                                  {{ listing.href is defined
+                                     ? 'card-hover transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/40'
+                                     : 'border-dashed bg-transparent opacity-60 saturate-0 dark:bg-transparent' }}">
+                            <div class="-mx-6 -mt-6 mb-5 overflow-hidden rounded-t-xl">
+                                {% if listing.image is defined %}
+                                    <img src="{{ listing.image }}" alt="{{ listing.name }}" loading="lazy"
+                                         class="aspect-[16/9] w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                {% else %}
+                                    <div class="flex aspect-[16/9] w-full items-center justify-center border-b border-dashed border-slate-300 bg-slate-100/60 dark:border-white/15 dark:bg-white/[0.02]">
+                                        <span class="text-xs font-semibold uppercase tracking-[0.18em] muted">In the works</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ listing.name }}</h3>
+                                {% if listing.available %}
+                                    <span class="inline-flex shrink-0 items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-600/30 dark:text-emerald-300 dark:ring-emerald-400/30">
+                                        Available
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex shrink-0 items-center rounded-full bg-slate-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 ring-1 ring-slate-400/30 dark:text-white/55 dark:ring-white/15">
+                                        Coming soon
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <p class="mt-3 muted text-sm leading-relaxed">{{ listing.blurb }}</p>
+
+                            <ul class="mt-4 space-y-2 flex-1">
+                                {% for feature in listing.features %}
+                                    <li class="flex items-start gap-2 text-sm text-slate-700 dark:text-white/80">
+                                        <span class="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-[11px] text-orange-300 dark:text-orange-100">✓</span>
+                                        <span>{{ feature }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            <div class="mt-6 flex items-center justify-between">
+                                {% if listing.price is defined %}
+                                    <span class="flex items-baseline gap-1.5">
+                                        <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ listing.price }}</span>
+                                        <span class="muted text-xs">excl. tax</span>
+                                    </span>
+                                {% endif %}
+                                {% if listing.href is defined %}
+                                    <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-600 group-hover:text-slate-900 dark:text-white/70 dark:group-hover:text-white transition-colors">
+                                        View details <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </{{ tag }}>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+{% endblock %}

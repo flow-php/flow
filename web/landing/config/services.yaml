@@ -11,6 +11,8 @@ parameters:
     router.request_context.scheme: '%env(SCHEME)%'
     flow_version: '%env(FLOW_VERSION)%'
     turnstile_appearance_default: 'interaction-only'
+    shop_checkout_links:
+        symfony_backoffice: 'https://buy.polar.sh/polar_cl_KAb6EWLVtewQhsDZV2bGeqsxSxTWKOOvl1KAq4GbDlx'
 
 services:
     _defaults:
@@ -24,6 +26,10 @@ services:
 
     Flow\Website\Service\:
         resource: '../src/Flow/Website/Service/'
+
+    Flow\Website\Controller\ShopController:
+        arguments:
+            $checkoutLinks: '%shop_checkout_links%'
 
     Flow\Website\Factory\Github\ContributorsRequestFactory:
         arguments:
