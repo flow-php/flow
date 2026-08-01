@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-07-30
+## [Unreleased] - 2026-08-01
 
 ### Added
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Work-Shop section under /work-shop with Blueprint, consulting, how-it-works and success pages** - [@norberttech](https://github.com/norberttech)
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Polar embedded checkout on the Blueprint listing** - [@norberttech](https://github.com/norberttech)
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Terms of Sale and Privacy Policy for the Work-Shop** - [@norberttech](https://github.com/norberttech)
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Anthropic to the sponsors list** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler.max_query_length option bounding retained statements** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - panel marks truncated statements and excludes them from EXPLAIN** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - precompiled musl binaries for Alpine, for every PHP/arch/thread-safety combination** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +19,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - PostHog now runs in cookieless mode** - [@norberttech](https://github.com/norberttech)
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - sponsor page consulting link points to the Work-Shop** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - query recording moved from flow-php/postgresql as ProfilerClient, QueryRecorder and QueryRecorderOptions** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler registers only when the kernel runs in debug mode, so --no-debug records nothing** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - profiler.max_parameters renamed to profiler.max_retained_parameters** - [@norberttech](https://github.com/norberttech)
@@ -58,6 +64,7 @@
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Datadog RUM and its session replay** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/postgresql - Client\Debug namespace with RecordingClient, QueryLog, QueryLogOptions and RecordedQuery** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Span::contextScope() and Span::setContextScope()** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - MemoryContextStorage::store()** - [@norberttech](https://github.com/norberttech)
