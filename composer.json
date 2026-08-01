@@ -345,7 +345,7 @@
         ]
     },
     "scripts": {
-        "pre-autoload-dump": [
+    "pre-autoload-dump": [
             "Google\\Task\\Composer::cleanup"
         ],
         "post-install-cmd": [

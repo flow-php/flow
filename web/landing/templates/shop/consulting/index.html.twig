@@ -1,0 +1,86 @@
+{% extends 'shop/_listing.html.twig' %}
+
+{% set listing_name = 'Consulting' %}
+{% set listing_eyebrow = 'Consulting' %}
+{% set listing_available = true %}
+{% set listing_images = [
+    asset('images/shop/consulting.jpg'),
+    asset('images/shop/consulting-2.jpg'),
+] %}
+{% set listing_cta_label = 'Book a free call' %}
+{% set listing_cta_url = 'https://calendar.proton.me/bookings#EyjcEe07NRPoD6ECOGt-Qd--PRYh7XmulLqtf5l2zKE=' %}
+{% set listing_tagline = 'Sixteen years of building data systems, architecture and observability. Bring the problem, we work out what it actually needs.' %}
+
+{% block listing_body %}
+    <p class="mb-4">
+        I have been building software for over sixteen years, from scrappy startups to large enterprises,
+        mostly the kind of work where getting the architecture wrong costs you months rather than days.
+    </p>
+    <p class="mb-4">
+        One project shaped a lot of how I think about this. I designed and built a logistics platform for one of
+        the largest Amazon FBM sellers in the US, running orders worth over $250M a year. At that scale
+        collecting, processing and exposing data is not a feature you add later, it is the backbone the business
+        stands on.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What I help with</h2>
+    <ul class="space-y-2">
+        {% for feature in [
+            'Data engineering. Pipelines that survive your actual volume, warehousing your analysts can trust, and reporting that answers business questions instead of just looking busy.',
+            'Software architecture. Systems that grow with the business rather than holding it back, and modular monoliths when microservices would be an expensive mistake.',
+            'Observability. OpenTelemetry done properly, so traces, metrics and logs connect. Including cutting an APM bill you are probably overpaying.',
+        ] %}
+            <li class="flex items-start gap-3">
+                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100">✓</span>
+                <span>{{ feature }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">How that works in practice</h2>
+    <ul class="space-y-2">
+        {% for feature in [
+            'Fractional architect. Part-time on your team, reviewing pull requests and weighing in on design decisions, catching the problems that only surface six months later.',
+            'Coding services. Sometimes you just need the pipeline, warehouse or reporting system built. I have built all of them before.',
+            'Hands-on workshops. Code-first, in person or remote, built around the problems your team actually has rather than a generic curriculum.',
+            'Mentoring. One-on-one or small groups, based on what worked and what did not across sixteen years.',
+            'Data concierge. Sitting between analysts who have questions and engineers who have the data, so nobody files a ticket to get a number.',
+        ] %}
+            <li class="flex items-start gap-3">
+                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100">✓</span>
+                <span>{{ feature }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Why there is no price here</h2>
+    <p class="mb-4">
+        Because there is no standard engagement. A two day workshop and a six month fractional architecture
+        arrangement are not the same thing, and pricing them as though they were would be dishonest to one of
+        us. Every engagement is quoted individually, based on the complexity and size of the problem and how
+        much of it you want me carrying.
+    </p>
+    <p class="mb-4">
+        The first call is free and costs you half an hour. That is usually enough to work out whether I am the
+        right person for this at all, and if I am not, I will say so.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Words are cheap, here is the code</h2>
+    <p class="mb-4">
+        I maintain <a href="https://github.com/flow-php/flow" rel="noopener">Flow PHP</a>, close to fifty
+        packages covering DataFrames, Parquet, a PostgreSQL toolkit with a real query builder and SQL parser,
+        and an OpenTelemetry implementation. It is all open source, and it is a better description of how I
+        think about software than anything I could write on a sales page.
+    </p>
+{% endblock %}
+
+{% block listing_aside %}
+    <p class="mt-4 text-xs muted leading-relaxed">
+        Priced per engagement, based on the complexity and size of the problem. The first thirty minutes are
+        free and there is nothing to sign.
+    </p>
+    <p class="mt-3 text-xs muted leading-relaxed">
+        Available in English and Polish, remote or on-site. Prefer email? Write to
+        <a href="mailto:norbert@flow-php.com" class="underline underline-offset-2">norbert@flow-php.com</a>.
+    </p>
+{% endblock %}

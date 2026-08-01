@@ -1,4 +1,5 @@
 @import './changelog.css';
+@import './shop-legal.css';
 
 @tailwind base;
 @tailwind components;

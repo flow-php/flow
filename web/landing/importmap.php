@@ -167,4 +167,7 @@ return [
     '@lezer/xml' => [
         'version' => '1.0.6',
     ],
+    '@polar-sh/checkout/embed' => [
+        'version' => '0.3.0',
+    ],
 ];
