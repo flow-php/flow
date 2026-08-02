@@ -398,6 +398,11 @@ code {
     @apply inline-block w-[16px] h-[16px];
 }
 
+.mermaid-wrapper[data-mermaid-state="pending"] .mermaid,
+.mermaid-wrapper[data-mermaid-state="pending"] .navigation {
+    @apply invisible;
+}
+
 
 .mermaid-wrapper .mermaid {
     @apply z-0 !p-0;

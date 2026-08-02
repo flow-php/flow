@@ -30,7 +30,12 @@ final readonly class MermaidCodeRenderer implements NodeRendererInterface
         if ($info === 'mermaid') {
             return new HtmlElement(
                 'div',
-                ['class' => 'mermaid-wrapper', 'data-controller' => 'mermaid'],
+                [
+                    'class' => 'mermaid-wrapper',
+                    'data-controller' => 'mermaid',
+                    'data-mermaid-state' => 'pending',
+                    'data-mermaid-src-value' => $this->packages->getUrl('mermaid/mermaid.min.js'),
+                ],
                 $this->renderElements([
                     new HtmlElement('div', ['class' => 'navigation'], $this->renderElements([
                         new HTMLElement(
