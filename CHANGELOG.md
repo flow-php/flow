@@ -56,6 +56,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [f41412](https://github.com/flow-php/flow/commit/f41412b8c13e0db4e20d517449620131cba4d939) - **add required cache-key to Blacksmith docker builder setup** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - diagrams drawn on top of each other because mermaid derived ids from the clock** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - panzoom instances and zoom listeners leaking on every theme toggle** - [@norberttech](https://github.com/norberttech)
 - [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - example input files are now written into the static build** - [@norberttech](https://github.com/norberttech)
