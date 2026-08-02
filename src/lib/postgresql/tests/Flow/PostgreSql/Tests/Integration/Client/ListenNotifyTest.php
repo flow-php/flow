@@ -20,15 +20,15 @@ final class ListenNotifyTest extends PostgreSqlTestCase
         $listener = $this->pgsqlContext()->client;
         $listener->listen('flow_test_blocking');
 
-        $this->pgsqlContext()->spawnBackgroundNotifier('flow_test_blocking', 'delivered', 200);
+        $this->pgsqlContext()->scheduleNotify('flow_test_blocking', 'delivered', 200);
 
         $startNs = hrtime(true);
         $notification = $listener->wait(3000);
         $elapsedMs = (hrtime(true) - $startNs) / 1_000_000;
 
         if ($notification === null) {
-            $stderr = implode("\n---\n", $this->pgsqlContext()->backgroundStderrContents());
-            static::fail('No notification received. Background sender stderr:' . "\n" . $stderr);
+            $errors = implode("\n---\n", $this->pgsqlContext()->backgroundNotifierErrors());
+            static::fail('No notification received. Scheduled notification errors:' . "\n" . $errors);
         }
 
         static::assertSame('flow_test_blocking', $notification->channel);

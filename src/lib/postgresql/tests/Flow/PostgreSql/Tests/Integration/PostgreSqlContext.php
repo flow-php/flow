@@ -5,41 +5,37 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration;
 
 use Flow\PostgreSql\Client\Client;
+use PgSql\Connection;
 use RuntimeException;
 
-use function fclose;
-use function file_get_contents;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\drop;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\notify;
 use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
-use function getcwd;
 use function getenv;
-use function is_file;
-use function is_resource;
-use function proc_close;
-use function proc_open;
+use function pg_close;
+use function pg_connect;
+use function pg_get_result;
+use function pg_last_error;
+use function pg_result_error;
+use function pg_send_query;
 use function sprintf;
-use function sys_get_temp_dir;
-use function uniqid;
-use function unlink;
-use function var_export;
+
+use const PGSQL_CONNECT_FORCE_NEW;
 
 final class PostgreSqlContext
 {
     public readonly Client $client;
 
-    /** @var list<resource> */
-    private array $backgroundProcesses = [];
-
-    /** @var list<string> */
-    private array $backgroundStderrLogs = [];
+    /** @var list<Connection> */
+    private array $backgroundConnections = [];
 
     private readonly string $dsn;
 
@@ -59,19 +55,26 @@ final class PostgreSqlContext
     }
 
     /**
+     * Drains the results of every scheduled notification and returns the errors
+     * PostgreSQL reported for them. Empty when all of them succeeded.
+     *
      * @return list<string>
      */
-    public function backgroundStderrContents(): array
+    public function backgroundNotifierErrors(): array
     {
-        $out = [];
+        $errors = [];
 
-        foreach ($this->backgroundStderrLogs as $path) {
-            if (is_file($path)) {
-                $out[] = file_get_contents($path) ?: '';
+        foreach ($this->backgroundConnections as $connection) {
+            while (($result = pg_get_result($connection)) !== false) {
+                $error = pg_result_error($result);
+
+                if ($error !== false && $error !== '') {
+                    $errors[] = $error;
+                }
             }
         }
 
-        return $out;
+        return $errors;
     }
 
     public function client(): Client
@@ -81,17 +84,10 @@ final class PostgreSqlContext
 
     public function close(): void
     {
-        foreach ($this->backgroundProcesses as $process) {
-            proc_close($process);
+        foreach ($this->backgroundConnections as $connection) {
+            pg_close($connection);
         }
-        $this->backgroundProcesses = [];
-
-        foreach ($this->backgroundStderrLogs as $path) {
-            if (is_file($path)) {
-                @unlink($path);
-            }
-        }
-        $this->backgroundStderrLogs = [];
+        $this->backgroundConnections = [];
 
         foreach ($this->secondaryClients as $client) {
             $client->close();
@@ -190,56 +186,33 @@ final class PostgreSqlContext
     }
 
     /**
-     * Spawns a detached child PHP process that sleeps for $delayMs and then
-     * fires a NOTIFY on $channel with $payload using its own Client
-     * connection. Returns the child process handle; the context closes it
-     * during close(). Used for integration tests that need to exercise the
-     * blocking wait path of waitForNotification().
+     * Fires a NOTIFY on $channel with $payload after $delayMs on a dedicated
+     * connection, without blocking the caller. The delay runs server side, so
+     * the notification arrives while the caller sits in a blocking wait on its
+     * own connection. Used by tests that exercise the blocking wait path of
+     * waitForNotification().
      */
-    public function spawnBackgroundNotifier(string $channel, string $payload, int $delayMs): void
+    public function scheduleNotify(string $channel, string $payload, int $delayMs): void
     {
-        $cwd = getcwd();
+        $connection = pg_connect(pgsql_connection_dsn($this->dsn)->toString(), PGSQL_CONNECT_FORCE_NEW);
 
-        if ($cwd === false) {
-            throw new RuntimeException('Failed to determine current working directory');
+        if ($connection === false) {
+            throw new RuntimeException('Failed to open a connection for the scheduled notification');
         }
 
-        $autoload = $cwd . '/vendor/autoload.php';
+        $this->backgroundConnections[] = $connection;
 
-        if (!is_file($autoload)) {
-            throw new RuntimeException(sprintf('Project vendor/autoload.php not found at %s', $autoload));
+        $sent = pg_send_query($connection, sprintf(
+            '%s; %s',
+            select(func('pg_sleep', [literal($delayMs / 1000)]))->toSql(),
+            notify($channel)->withPayload($payload)->toSql(),
+        ));
+
+        if ($sent === false) {
+            throw new RuntimeException(sprintf(
+                'Failed to send the scheduled notification: %s',
+                pg_last_error($connection),
+            ));
         }
-
-        $phpCode = sprintf(
-            'usleep(%d); require %s; try { $c = \Flow\PostgreSql\DSL\pgsql_client(\Flow\PostgreSql\DSL\pgsql_connection_dsn(%s)); $c->execute(\Flow\PostgreSql\DSL\notify(%s)->withPayload(%s)); $c->close(); } catch (\Throwable $e) { fwrite(STDERR, "child error: " . get_class($e) . ": " . $e->getMessage() . "\n"); exit(1); }',
-            $delayMs * 1000,
-            var_export($autoload, true),
-            var_export($this->dsn, true),
-            var_export($channel, true),
-            var_export($payload, true),
-        );
-
-        $stderrLog = sys_get_temp_dir() . '/flow-bg-notifier-' . uniqid('', true) . '.log';
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['file', '/dev/null', 'w'],
-            2 => ['file', $stderrLog, 'w'],
-        ];
-
-        $pipes = [];
-        $process = proc_open(['php', '-r', $phpCode], $descriptors, $pipes);
-
-        if (!is_resource($process)) {
-            throw new RuntimeException('Failed to spawn background notifier process');
-        }
-
-        if (!is_resource($pipes[0] ?? null)) {
-            throw new RuntimeException('Failed to open stdin pipe to background notifier process');
-        }
-
-        fclose($pipes[0]);
-
-        $this->backgroundProcesses[] = $process;
-        $this->backgroundStderrLogs[] = $stderrLog;
     }
 }
