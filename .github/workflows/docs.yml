@@ -4,6 +4,7 @@ on:
       - 'src/**'
       - 'docs/**'
       - 'examples/**'
+      - 'web/landing/**'
       - 'README.md'
   push:
     branches:

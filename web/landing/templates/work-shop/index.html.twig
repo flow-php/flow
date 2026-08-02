@@ -20,8 +20,8 @@
                 {
                     name: 'Symfony Backoffice Blueprint',
                     price: '$59',
-                    href: path('shop_blueprint_symfony'),
-                    image: asset('images/shop/symfony-backoffice-app.png'),
+                    href: path('work_shop_blueprint_symfony'),
+                    image: asset('images/work-shop/symfony-backoffice-app.png'),
                     blurb: 'A working Symfony back office built on Flow PHP. One schema per model drives the database, the API and the imports, and every request is traced from the browser down to the SQL query.',
                     features: ['Schema drives the database, API and imports', 'Streaming CSV, JSON and XML exports', 'OpenTelemetry across browser and backend'],
                     available: true
@@ -41,8 +41,8 @@
             listings: [
                 {
                     name: 'Consulting',
-                    href: path('shop_consulting'),
-                    image: asset('images/shop/consulting.jpg'),
+                    href: path('work_shop_consulting'),
+                    image: asset('images/work-shop/consulting.jpg'),
                     blurb: 'Sixteen years of data engineering, software architecture and observability work, from pipelines that hold up to APM bills that come down.',
                     features: ['Data engineering, architecture, observability', 'Workshops, fractional architect, or hands-on build', 'Quoted per engagement, first call free'],
                     available: true
@@ -69,12 +69,12 @@
             </p>
         </div>
 
-        <nav aria-label="Categories" data-controller="shop-nav"
+        <nav aria-label="Categories" data-controller="work-shop-nav"
              class="sticky top-16 z-30 -mx-4 sm:-mx-6 lg:-mx-8 mt-8 border-y border-slate-200/70 bg-[#e8eef7]/85 px-4 sm:px-6 lg:px-8 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#e8eef7]/70 dark:border-white/10 dark:bg-black/70 dark:supports-[backdrop-filter]:bg-black/60">
             <div class="flex justify-center gap-2 overflow-x-auto">
                 {% for category in categories %}
                     <a href="#{{ category.id }}"
-                       data-shop-nav-target="link" data-section="{{ category.id }}"
+                       data-work-shop-nav-target="link" data-section="{{ category.id }}"
                        class="shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium no-underline hover:no-underline transition-colors
                               text-slate-600 hover:bg-slate-100 hover:text-slate-900
                               dark:text-white/70 dark:hover:bg-white/[0.06] dark:hover:text-white

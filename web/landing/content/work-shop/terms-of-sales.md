@@ -161,7 +161,7 @@ arrangements and invoicing apply.
 We process personal data needed to deliver access and provide support (such as
 your email and GitHub account). Polar processes data needed for payment as
 Merchant of Record. For details on how we handle personal data, see our
-[Privacy Policy](/work-shop/privacy-policy). Where we list purchasers as project
+Privacy Policy. Where we list purchasers as project
 sponsors, we do so only for those who explicitly opt in, and only the GitHub
 profile they choose to display.
 

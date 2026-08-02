@@ -33,7 +33,7 @@
     {% set listing_images = listing_images ?? [] %}
     {% set listing_image_aspect = listing_image_aspect ?? '16 / 9' %}
     <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
-        <a href="{{ path('shop') }}"
+        <a href="{{ path('work_shop') }}"
            class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white no-underline">
             <span aria-hidden="true">←</span> Back to the Work-Shop
         </a>
@@ -41,14 +41,14 @@
         <div class="mt-6 grid gap-8 lg:grid-cols-3 lg:gap-12">
             <div class="lg:col-span-2">
                 {% if listing_images|length %}
-                    <div {{ stimulus_controller('shop_carousel') }}
+                    <div {{ stimulus_controller('work_shop_carousel') }}
                          tabindex="0" role="group" aria-roledescription="carousel"
                          aria-label="{{ listing_name }} screenshots"
-                         data-action="keydown->shop-carousel#keydown"
+                         data-action="keydown->work-shop-carousel#keydown"
                          class="relative mb-8 overflow-hidden rounded-xl border border-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-300 dark:border-white/10 dark:focus-visible:ring-blue-100">
-                        <div data-shop-carousel-target="track" class="flex transition-transform duration-300 ease-out">
+                        <div data-work-shop-carousel-target="track" class="flex transition-transform duration-300 ease-out">
                             {% for image in listing_images %}
-                                <div data-shop-carousel-target="slide" class="w-full shrink-0" {{ loop.first ? '' : 'aria-hidden="true"' }}>
+                                <div data-work-shop-carousel-target="slide" class="w-full shrink-0" {{ loop.first ? '' : 'aria-hidden="true"' }}>
                                     <img src="{{ image }}" alt="{{ listing_name }} screenshot {{ loop.index }}" loading="lazy"
                                          style="aspect-ratio: {{ listing_image_aspect }}"
                                          class="w-full object-cover">
@@ -57,18 +57,18 @@
                         </div>
 
                         {% if listing_images|length > 1 %}
-                            <button type="button" data-action="shop-carousel#prev" aria-label="Previous image"
+                            <button type="button" data-action="work-shop-carousel#prev" aria-label="Previous image"
                                     class="absolute left-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-colors hover:bg-black/65">
                                 <img src="{{ asset('images/icons/arrow-left.svg') }}" alt="" width="18" height="18">
                             </button>
-                            <button type="button" data-action="shop-carousel#next" aria-label="Next image"
+                            <button type="button" data-action="work-shop-carousel#next" aria-label="Next image"
                                     class="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-colors hover:bg-black/65">
                                 <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="" width="18" height="18">
                             </button>
                             <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2">
                                 {% for image in listing_images %}
-                                    <button type="button" data-shop-carousel-target="dot"
-                                            data-action="shop-carousel#goTo" data-shop-carousel-index-param="{{ loop.index0 }}"
+                                    <button type="button" data-work-shop-carousel-target="dot"
+                                            data-action="work-shop-carousel#goTo" data-work-shop-carousel-index-param="{{ loop.index0 }}"
                                             aria-label="Go to image {{ loop.index }}"
                                             class="h-2 w-2 rounded-full transition-colors {{ loop.first ? 'bg-white' : 'bg-white/40' }}"></button>
                                 {% endfor %}
@@ -117,7 +117,7 @@
 
                     {% if listing_available %}
                         <a href="{{ listing_checkout_url ?? listing_cta_url }}"
-                           {% if listing_checkout_url %}{{ stimulus_controller('shop_checkout', { url: listing_checkout_url }) }} data-action="shop-checkout#open"{% endif %}
+                           {% if listing_checkout_url %}{{ stimulus_controller('work_shop_checkout', { url: listing_checkout_url }) }} data-action="work-shop-checkout#open"{% endif %}
                            class="btn btn-primary mt-6 w-full px-4 py-2.5">
                             {% if listing_price|default(false) %}
                                 <img src="{{ asset('images/icons/cart.svg') }}" alt="" width="16" height="16">
@@ -137,9 +137,9 @@
                     {% if listing_checkout_url %}
                         <p class="mt-5 border-t border-slate-200 pt-4 text-xs muted leading-relaxed dark:border-white/10">
                             By buying you accept our
-                            <a href="{{ path('shop_terms_of_sales') }}" class="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Terms of Sale</a>
+                            <a href="{{ path('work_shop_terms_of_sales') }}" class="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Terms of Sale</a>
                             and
-                            <a href="{{ path('shop_privacy_policy') }}" class="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Privacy Policy</a>.
+                            <a href="{{ path('work_shop_privacy_policy') }}" class="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Privacy Policy</a>.
                         </p>
                     {% endif %}
                 </div>

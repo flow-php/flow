@@ -1,4 +1,4 @@
-{% extends 'shop/_listing.html.twig' %}
+{% extends 'work-shop/_listing.html.twig' %}
 
 {% set listing_name = 'Symfony Backoffice Blueprint' %}
 {% set listing_eyebrow = 'Blueprint' %}
@@ -7,11 +7,11 @@
 {# Matches the shipped screenshot dimensions, so nothing is cropped. #}
 {% set listing_image_aspect = '1600 / 692' %}
 {% set listing_images = [
-    asset('images/shop/symfony-backoffice-app.png'),
-    asset('images/shop/symfony-backoffice-import.png'),
-    asset('images/shop/symfony-backoffice-api.png'),
-    asset('images/shop/symfony-backoffice-profiler.png'),
-    asset('images/shop/symfony-backoffice-telemetry.png'),
+    asset('images/work-shop/symfony-backoffice-app.png'),
+    asset('images/work-shop/symfony-backoffice-import.png'),
+    asset('images/work-shop/symfony-backoffice-api.png'),
+    asset('images/work-shop/symfony-backoffice-profiler.png'),
+    asset('images/work-shop/symfony-backoffice-telemetry.png'),
 ] %}
 {% set listing_tagline = 'A working Symfony back office built on Flow PHP. Read it, run it, take the patterns to your own project.' %}
 
@@ -144,7 +144,7 @@
 {% endblock %}
 
 {% block listing_aside %}
-    <a href="{{ path('shop_blueprint_how_it_works') }}"
+    <a href="{{ path('work_shop_blueprint_how_it_works') }}"
        class="group mt-4 flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-sm no-underline transition-colors hover:border-slate-300 hover:bg-slate-50 hover:no-underline dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.05]">
         <span class="font-medium text-slate-900 transition-colors group-hover:text-orange-300 dark:text-white dark:group-hover:text-orange-100">How it works before you buy</span>
         <span aria-hidden="true" class="muted transition-transform group-hover:translate-x-0.5">→</span>

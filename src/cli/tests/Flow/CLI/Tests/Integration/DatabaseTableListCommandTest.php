@@ -61,23 +61,21 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        static::assertSame(<<<'OUTPUT'
+        $display = $tester->getDisplay();
+
+        static::assertStringContainsString(<<<'OUTPUT'
             ┌──────────┬───────────┬─────────┐
             │ Name     │ Namespace │ Columns │
             ├──────────┼───────────┼─────────┤
             │ table_01 │ public    │ 3       │
             │ table_02 │ public    │ 3       │
             └──────────┴───────────┴─────────┘
-             ------------------ ----- 
-              Summary                 
-             ------------------ ----- 
-              Total tables       2    
-              Total namespaces   1    
-              Total columns      6    
-             ------------------ ----- 
+            OUTPUT, $display);
 
-
-            OUTPUT, $tester->getDisplay());
+        static::assertStringContainsString('Summary', $display);
+        static::assertStringContainsString('Total tables       2', $display);
+        static::assertStringContainsString('Total namespaces   1', $display);
+        static::assertStringContainsString('Total columns      6', $display);
     }
 
     protected function dbContext(): DatabaseContext

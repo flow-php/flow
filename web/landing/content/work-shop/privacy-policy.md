@@ -155,4 +155,3 @@ address, and material changes are reflected by updating the date above.
 ## 13. Contact
 
 For any privacy question or request, contact us at support@flow-php.com.
-Our Terms of Sale are available at [Terms of Sale](/work-shop/terms-of-sales).
