@@ -11,7 +11,7 @@ use Symfony\Component\Routing\RouterInterface;
 
 use function Flow\Types\DSL\type_instance_of;
 
-final class ShopControllerTest extends WebTestCase
+final class WorkShopControllerTest extends WebTestCase
 {
     public function test_consulting_books_a_call_and_shows_photos(): void
     {
@@ -26,8 +26,8 @@ final class ShopControllerTest extends WebTestCase
         static::assertStringContainsString('Why there is no price here', $text);
         static::assertGreaterThan(0, $crawler->filter('main a[href^="https://calendar.proton.me/"]')->count());
         static::assertGreaterThan(0, $crawler->filter('main a[href^="mailto:"]')->count());
-        static::assertSame(1, $crawler->filter('[data-controller~="shop-carousel"]')->count());
-        static::assertGreaterThan(1, $crawler->filter('[data-shop-carousel-target="slide"]')->count());
+        static::assertSame(1, $crawler->filter('[data-controller~="work-shop-carousel"]')->count());
+        static::assertGreaterThan(1, $crawler->filter('[data-work-shop-carousel-target="slide"]')->count());
     }
 
     public function test_legal_links_appear_only_where_something_is_sold(): void
@@ -45,7 +45,7 @@ final class ShopControllerTest extends WebTestCase
         static::assertSame(0, $consulting->filter('main a[href="/work-shop/terms-of-sales"]')->count());
     }
 
-    public function test_legal_pages_are_scoped_to_the_shop(): void
+    public function test_legal_pages_are_scoped_to_the_work_shop(): void
     {
         $client = self::createClient();
 
@@ -87,7 +87,7 @@ final class ShopControllerTest extends WebTestCase
         static::assertSame(1, $crawler->filter('main a[href="/work-shop/blueprints/how-it-works"]')->count());
     }
 
-    public function test_header_does_not_link_to_shop(): void
+    public function test_header_does_not_link_to_work_shop(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/');
@@ -96,7 +96,7 @@ final class ShopControllerTest extends WebTestCase
         static::assertSame(0, $crawler->filter('header a[href^="/work-shop"]')->count());
     }
 
-    public function test_shop_is_excluded_from_the_sitemap(): void
+    public function test_work_shop_is_excluded_from_the_sitemap(): void
     {
         $client = self::createClient();
         $client->request('GET', '/sitemap.default.xml');
@@ -105,7 +105,7 @@ final class ShopControllerTest extends WebTestCase
         static::assertStringNotContainsString('/work-shop', (string) $client->getResponse()->getContent());
     }
 
-    public function test_shop_index_renders_categories_and_listings(): void
+    public function test_work_shop_index_renders_categories_and_listings(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/work-shop');
@@ -143,8 +143,8 @@ final class ShopControllerTest extends WebTestCase
         // Access is not granted automatically, so the page has to say so before anything else.
         static::assertStringContainsString('Access is not sent automatically', $text);
         static::assertGreaterThan(0, $crawler->filter('main a[href="https://polar.sh/flow-php/portal"]')->count());
-        static::assertGreaterThan(0, $crawler->filter('main [data-controller~="shop-order"]')->count());
-        static::assertGreaterThan(0, $crawler->filter('main [data-controller~="shop-confetti"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main [data-controller~="work-shop-order"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main [data-controller~="work-shop-confetti"]')->count());
         static::assertGreaterThan(0, $crawler->filter('main a[href^="mailto:support@flow-php.com"]')->count());
         static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop"]')->count());
     }
@@ -157,7 +157,11 @@ final class ShopControllerTest extends WebTestCase
             ->assert(self::getContainer()->get('router'))
             ->getRouteCollection();
 
-        foreach (['shop_subscription_bronze', 'shop_subscription_silver', 'shop_subscription_gold'] as $route) {
+        foreach ([
+            'work_shop_subscription_bronze',
+            'work_shop_subscription_silver',
+            'work_shop_subscription_gold',
+        ] as $route) {
             static::assertNull($routes->get($route), $route);
         }
     }
@@ -172,8 +176,10 @@ final class ShopControllerTest extends WebTestCase
         $text = $crawler->filter('main')->text();
         static::assertStringContainsString('Privacy Policy', $text);
         static::assertStringContainsString('GDPR', $text);
-        static::assertGreaterThan(0, $crawler->filter('section#shop-privacy h2')->count());
+        static::assertGreaterThan(0, $crawler->filter('section#work-shop-privacy h2')->count());
         static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop"]')->count());
+        // The counterpart legal page is linked from the template, so the markdown holds prose only.
+        static::assertSame(1, $crawler->filter('main a[href="/work-shop/terms-of-sales"]')->count());
     }
 
     public function test_terms_of_sales_renders_markdown_content(): void
@@ -186,8 +192,10 @@ final class ShopControllerTest extends WebTestCase
         $text = $crawler->filter('main')->text();
         static::assertStringContainsString('Terms of Sale and Use', $text);
         static::assertStringContainsString('Merchant of Record', $text);
-        static::assertGreaterThan(0, $crawler->filter('section#shop-terms h2')->count());
+        static::assertGreaterThan(0, $crawler->filter('section#work-shop-terms h2')->count());
         static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop"]')->count());
+        // The counterpart legal page is linked from the template, so the markdown holds prose only.
+        static::assertSame(1, $crawler->filter('main a[href="/work-shop/privacy-policy"]')->count());
     }
 
     public function test_symfony_backoffice_cta_opens_embedded_checkout(): void
@@ -197,10 +205,12 @@ final class ShopControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
 
-        $cta = $crawler->filter('main a[data-controller~="shop-checkout"][data-action~="shop-checkout#open"]');
+        $cta = $crawler->filter(
+            'main a[data-controller~="work-shop-checkout"][data-action~="work-shop-checkout#open"]',
+        );
         static::assertSame(1, $cta->count());
-        static::assertNotEmpty($cta->attr('data-shop-checkout-url-value'));
-        static::assertSame($cta->attr('data-shop-checkout-url-value'), $cta->attr('href'));
+        static::assertNotEmpty($cta->attr('data-work-shop-checkout-url-value'));
+        static::assertSame($cta->attr('data-work-shop-checkout-url-value'), $cta->attr('href'));
     }
 
     public function test_symfony_backoffice_has_carousel_and_covered_features(): void
@@ -212,8 +222,8 @@ final class ShopControllerTest extends WebTestCase
         static::assertStringContainsString('$59', $crawler->filter('main')->text());
         static::assertStringContainsString('excl. tax', $crawler->filter('main')->text());
         static::assertStringContainsString('One schema, four jobs', $crawler->filter('main')->text());
-        static::assertSame(1, $crawler->filter('[data-controller~="shop-carousel"]')->count());
-        static::assertGreaterThan(1, $crawler->filter('[data-shop-carousel-target="slide"]')->count());
+        static::assertSame(1, $crawler->filter('[data-controller~="work-shop-carousel"]')->count());
+        static::assertGreaterThan(1, $crawler->filter('[data-work-shop-carousel-target="slide"]')->count());
     }
 
     #[Override]

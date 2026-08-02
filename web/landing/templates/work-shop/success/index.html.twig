@@ -30,7 +30,7 @@
         }
     ] %}
 
-    <section {{ stimulus_controller('shop_confetti') }}
+    <section {{ stimulus_controller('work_shop_confetti') }}
              class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-16 lg:mt-24 mb-24">
         <div class="mx-auto max-w-3xl text-center">
             <span class="eyebrow">
@@ -38,7 +38,7 @@
                 Order complete
             </span>
             <h1 class="mt-3 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-                <button type="button" data-action="shop-confetti#burst" title="Again"
+                <button type="button" data-action="work-shop-confetti#burst" title="Again"
                         class="rounded-lg transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent">
                     Thank you. Really.
                 </button>
@@ -72,7 +72,7 @@
                    class="btn btn-primary px-5 py-2.5">
                     Open your order in Polar
                 </a>
-                <a href="{{ path('shop') }}" class="btn btn-secondary px-5 py-2.5 no-underline">
+                <a href="{{ path('work_shop') }}" class="btn btn-secondary px-5 py-2.5 no-underline">
                     Back to the Work-Shop
                 </a>
             </div>
@@ -94,10 +94,10 @@
             </ol>
         </div>
 
-        <div {{ stimulus_controller('shop_order') }} hidden
+        <div {{ stimulus_controller('work_shop_order') }} hidden
              class="mx-auto mt-8 max-w-3xl rounded-xl border border-slate-200 bg-white/60 px-6 py-4 text-center dark:border-white/10 dark:bg-white/[0.03]">
             <h2 class="text-xs font-semibold uppercase tracking-wide muted">Order reference</h2>
-            <p data-shop-order-target="reference"
+            <p data-work-shop-order-target="reference"
                class="mt-1.5 break-all font-mono text-sm text-slate-900 dark:text-white"></p>
             <p class="mt-2 text-xs muted leading-relaxed">
                 Quote this if you contact us. Receipts and order history live in the

@@ -12,7 +12,7 @@
 
 {% block main %}
     <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
-        <a href="{{ path('shop') }}"
+        <a href="{{ path('work_shop') }}"
            class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white no-underline">
             <span aria-hidden="true">←</span> Back to the Work-Shop
         </a>
@@ -21,7 +21,13 @@
             Legal
         </span>
     </section>
-    <section id="shop-privacy" class="shop-legal mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-4 mb-16">
+    <section id="work-shop-privacy" class="work-shop-legal mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-4">
         {{ privacy_markdown|markdown_to_html }}
+    </section>
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-4 mb-16">
+        <p class="text-sm text-slate-600 dark:text-white/70">
+            Our Terms of Sale are available at
+            <a href="{{ path('work_shop_terms_of_sales') }}" class="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Terms of Sale</a>.
+        </p>
     </section>
 {% endblock %}
