@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-08-01
+## [Unreleased] - 2026-08-02
 
 ### Added
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Work-Shop section under /work-shop with Blueprint, consulting, how-it-works and success pages** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +19,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2577](https://github.com/flow-php/flow/pull/2577) - **flow-php/postgresql - test notifications are scheduled server side instead of spawning a PHP subprocess** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - PostHog now runs in cookieless mode** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - sponsor page consulting link points to the Work-Shop** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - query recording moved from flow-php/postgresql as ProfilerClient, QueryRecorder and QueryRecorderOptions** - [@norberttech](https://github.com/norberttech)
@@ -48,6 +49,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2577](https://github.com/flow-php/flow/pull/2577) - **flow-php/cli - table list test no longer depends on symfony/console border rendering** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - long running console commands no longer retain queries for a panel that never renders** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - PIE no longer falls back to a source build on Alpine** - [@norberttech](https://github.com/norberttech)
 - [#2567](https://github.com/flow-php/flow/pull/2567) - **flow-php/filesystem - NativeLocalFilesystem::list() now yields matches sorted by path** - [@norberttech](https://github.com/norberttech)
