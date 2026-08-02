@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-08-02
 
 ### Added
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - Floe reading and writing playground examples** - [@norberttech](https://github.com/norberttech)
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - orders.xlsx, orders.floe and partitioned CSV playground datasets** - [@norberttech](https://github.com/norberttech)
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - test asserting every example references a shipped and registered dataset** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Work-Shop section under /work-shop with Blueprint, consulting, how-it-works and success pages** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Polar embedded checkout on the Blueprint listing** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Terms of Sale and Privacy Policy for the Work-Shop** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +22,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - every playground example reads from the shared data/ datasets** - [@norberttech](https://github.com/norberttech)
 - [#2577](https://github.com/flow-php/flow/pull/2577) - **flow-php/postgresql - test notifications are scheduled server side instead of spawning a PHP subprocess** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - PostHog now runs in cookieless mode** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - sponsor page consulting link points to the Work-Shop** - [@norberttech](https://github.com/norberttech)
@@ -49,6 +53,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - example input files are now written into the static build** - [@norberttech](https://github.com/norberttech)
 - [#2577](https://github.com/flow-php/flow/pull/2577) - **flow-php/cli - table list test no longer depends on symfony/console border rendering** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/symfony-postgresql-bundle - long running console commands no longer retain queries for a panel that never renders** - [@norberttech](https://github.com/norberttech)
 - [#2568](https://github.com/flow-php/flow/pull/2568) - **flow-php/flow-php-ext - PIE no longer falls back to a source build on Alpine** - [@norberttech](https://github.com/norberttech)
@@ -66,6 +71,7 @@
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - per-example input/ directories** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Datadog RUM and its session replay** - [@norberttech](https://github.com/norberttech)
 - [#2571](https://github.com/flow-php/flow/pull/2571) - **flow-php/postgresql - Client\Debug namespace with RecordingClient, QueryLog, QueryLogOptions and RecordedQuery** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Span::contextScope() and Span::setContextScope()** - [@norberttech](https://github.com/norberttech)
