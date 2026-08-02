@@ -38,10 +38,27 @@ final readonly class ExamplesSourceProvider implements SourceProvider
                             'example' => $example,
                             'option' => $option,
                         ]);
+
+                        foreach ($this->examples->dataFiles($topic, $example, $option) as $path) {
+                            $sources[] = new Source('example_option_data', [
+                                'topic' => $topic,
+                                'example' => $example,
+                                'option' => $option,
+                                'path' => $path,
+                            ]);
+                        }
                     }
                 } else {
                     $sources[] = new Source('example', ['topic' => $topic, 'example' => $example]);
                     $sources[] = new Source('example_playground', ['topic' => $topic, 'example' => $example]);
+
+                    foreach ($this->examples->dataFiles($topic, $example) as $path) {
+                        $sources[] = new Source('example_data', [
+                            'topic' => $topic,
+                            'example' => $example,
+                            'path' => $path,
+                        ]);
+                    }
                 }
             }
         }

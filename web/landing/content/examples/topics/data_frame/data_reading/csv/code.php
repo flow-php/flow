@@ -9,7 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_csv(
-        __DIR__ . '/input/dataset.csv',
+        __DIR__ . '/data/orders.csv',
         with_header: true,
         empty_to_null: true,
         separator: ',',
