@@ -1,6 +1,0 @@
-id,name,price,quantity,active,created_at
-1,Product A,19.99,10,true,2024-01-15
-2,Product B,29.99,5,false,2024-01-16
-3,Product C,39.99,8,true,2024-01-17
-4,Product D,49.99,3,true,2024-01-18
-5,Product E,59.99,12,false,2024-01-19

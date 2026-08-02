@@ -9,7 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_excel(
-        __DIR__ . '/input/dataset.xlsx',
+        __DIR__ . '/data/orders.xlsx',
     ))
     ->collect()
     ->write(to_output(truncate: false))

@@ -14,7 +14,7 @@ $fs = fstab()->for('file');
 
 if ($fs->status(path(__DIR__ . '/output/schema.json')) === null) {
     $schema = data_frame()
-        ->read(from_csv(__DIR__ . '/input/dataset.csv'))
+        ->read(from_csv(__DIR__ . '/data/orders.csv'))
         ->limit(100) // Limiting the number of rows to read will speed up the process but might bring less accurate results
         ->autoCast()
         ->schema();
@@ -28,7 +28,7 @@ if ($fs->status(path(__DIR__ . '/output/schema.json')) === null) {
 
 // Reading schemaless data formats with predefined schema can significantly improve performance
 data_frame()
-    ->read(from_csv(__DIR__ . '/input/dataset.csv', schema: $schema))
+    ->read(from_csv(__DIR__ . '/data/orders.csv', schema: $schema))
     ->collect()
     ->write(to_output(truncate: false, output: Output::rows_and_schema))
     ->run();

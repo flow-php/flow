@@ -21,7 +21,13 @@ Parameters:
     'data/orders.json': asset('wasm/data/orders.json'),
     'data/orders.csv': asset('wasm/data/orders.csv'),
     'data/orders.jsonl': asset('wasm/data/orders.jsonl'),
-    'data/orders.parquet': asset('wasm/data/orders.parquet')
+    'data/orders.parquet': asset('wasm/data/orders.parquet'),
+    'data/orders.xlsx': asset('wasm/data/orders.xlsx'),
+    'data/orders.floe': asset('wasm/data/orders.floe'),
+    'data/partitioned/color=blue/sku=A/products.csv': asset('wasm/data/partitioned/color=blue/sku=A/products.csv'),
+    'data/partitioned/color=green/sku=A/products.csv': asset('wasm/data/partitioned/color=green/sku=A/products.csv'),
+    'data/partitioned/color=red/sku=A/products.csv': asset('wasm/data/partitioned/color=red/sku=A/products.csv'),
+    'data/partitioned/color=red/sku=B/products.csv': asset('wasm/data/partitioned/color=red/sku=B/products.csv')
 } %}
 {% for virtualPath, relativePath in data_files|default({}) %}
     {% if option is defined and option is not null %}

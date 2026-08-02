@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\{data_frame, to_output};
+use function Flow\Floe\DSL\from_floe;
 
 require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
-    ->read(from_parquet(
-        __DIR__ . '/data/orders.parquet',
-    ))
+    ->read(from_floe(__DIR__ . '/data/orders.floe'))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();
