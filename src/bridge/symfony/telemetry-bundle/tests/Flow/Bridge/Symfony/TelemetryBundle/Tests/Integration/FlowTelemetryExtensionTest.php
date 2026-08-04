@@ -49,7 +49,10 @@ use Flow\Telemetry\Tests\Mother\ExporterSpy;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
 use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -1385,6 +1388,93 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertInstanceOf(
             TraceIdRatioBasedSampler::class,
             $container->get('flow.telemetry.tracer_provider.sampler.delegate'),
+        );
+    }
+
+    public function test_parent_based_sampler_defaults_root_to_always_on(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [
+                        'sampler' => ['type' => 'parent_based'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(ParentBasedSampler::class, $container->get('flow.telemetry.tracer_provider.sampler'));
+        static::assertInstanceOf(
+            AlwaysOnSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.root'),
+        );
+    }
+
+    public function test_default_sampler_is_parent_based_with_always_on_root(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(ParentBasedSampler::class, $container->get('flow.telemetry.tracer_provider.sampler'));
+        static::assertInstanceOf(
+            AlwaysOnSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.root'),
+        );
+    }
+
+    public function test_parent_based_sampler_with_always_off_root(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [
+                        'sampler' => [
+                            'type' => 'parent_based',
+                            'root' => ['type' => 'always_off'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(ParentBasedSampler::class, $container->get('flow.telemetry.tracer_provider.sampler'));
+        static::assertInstanceOf(
+            AlwaysOffSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.root'),
+        );
+    }
+
+    public function test_parent_based_sampler_with_trace_id_ratio_root(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [
+                        'sampler' => [
+                            'type' => 'parent_based',
+                            'root' => ['type' => 'trace_id_ratio', 'ratio' => 0.25],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(
+            TraceIdRatioBasedSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.root'),
         );
     }
 

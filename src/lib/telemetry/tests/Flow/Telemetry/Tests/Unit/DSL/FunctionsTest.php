@@ -9,6 +9,7 @@ use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -25,9 +26,11 @@ use Flow\Telemetry\Provider\Void\VoidLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\GenericEvent;
 use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanLimits;
 use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -358,6 +361,28 @@ final class FunctionsTest extends TestCase
         $provider = tracer_provider($processor, $clock, $contextStorage);
 
         static::assertInstanceOf(TracerProvider::class, $provider);
+    }
+
+    public function test_tracer_provider_default_sampler_honours_an_unsampled_remote_parent(): void
+    {
+        $processor = $this->createSpanProcessor();
+        $contextStorage = new MemoryContextStorage(Context::root()->withActiveSpan(SpanContext::createRemote(
+            TraceId::generate(),
+            SpanId::generate(),
+            SpanId::generate(),
+            TraceFlags::default(),
+        )));
+
+        $tracer = tracer_provider($processor, ClockMother::frozen(), $contextStorage)->tracer(
+            $this->testResource,
+            'test',
+        );
+
+        $span = $tracer->span('child', SpanKind::SERVER);
+        $tracer->complete($span);
+
+        static::assertFalse($span->isRecording());
+        static::assertSame([], $processor->endedSpans());
     }
 
     public function test_tracer_provider_with_context_storage(): void

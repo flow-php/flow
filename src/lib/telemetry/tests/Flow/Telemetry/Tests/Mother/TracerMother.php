@@ -13,6 +13,7 @@ use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
@@ -27,6 +28,7 @@ final class TracerMother
         ?ClockInterface $clock = null,
         ?ContextStorage $contextStorage = null,
         ?Resource $resource = null,
+        ?Sampler $sampler = null,
     ): Tracer {
         return new Tracer(
             $resource ?? ResourceMother::default(),
@@ -34,7 +36,7 @@ final class TracerMother
             $processor ?? new VoidSpanProcessor(),
             $clock ?? ClockMother::frozen(),
             $contextStorage ?? new MemoryContextStorage(),
-            new SuppressingSampler(new AlwaysOnSampler()),
+            $sampler ?? new SuppressingSampler(new AlwaysOnSampler()),
         );
     }
 

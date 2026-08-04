@@ -27,6 +27,7 @@ use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\MetricProcessor;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -216,7 +217,7 @@ function otlp_exporter(Transport $transport, ErrorHandler $errorHandler = new Er
 function otlp_tracer_provider(
     SpanProcessor $processor,
     ClockInterface $clock,
-    Sampler $sampler = new AlwaysOnSampler(),
+    Sampler $sampler = new ParentBasedSampler(new AlwaysOnSampler()),
     ContextStorage $contextStorage = new MemoryContextStorage(),
 ): TracerProvider {
     return new TracerProvider($processor, $clock, $contextStorage, $sampler);

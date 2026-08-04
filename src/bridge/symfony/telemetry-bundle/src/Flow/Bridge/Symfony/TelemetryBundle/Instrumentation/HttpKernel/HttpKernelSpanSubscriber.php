@@ -60,6 +60,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private Propagator $propagator,
         private bool $contextPropagation = true,
         private bool $contextPropagationQuery = false,
+        private bool $requireTraceContext = false,
         private ?RouteNamePathMap $routePaths = null,
         private RouteNaming $routeNaming = RouteNaming::Path,
     ) {
@@ -139,6 +140,18 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         if ($event->isMainRequest() && $this->contextPropagation) {
             $this->extractContextFromRequest($request);
+
+            // No inbound context means no upstream sampling decision to honour. Suppress the whole request
+            // rather than skipping just this span, so lower-level instrumentation (DBAL, cache) and
+            // kernel.terminate listeners do not emit orphan root spans - same reasoning as an excluded path.
+            if ($this->requireTraceContext && $this->contextStorage->current()->activeSpan() === null) {
+                $request->attributes->set(
+                    self::SUPPRESSION_SCOPE_ATTRIBUTE,
+                    $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing()),
+                );
+
+                return;
+            }
         }
 
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;

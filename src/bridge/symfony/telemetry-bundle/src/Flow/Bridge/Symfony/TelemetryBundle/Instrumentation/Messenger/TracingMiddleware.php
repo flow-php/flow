@@ -161,7 +161,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $handlingContext = $this->contextStorage->current();
             $mutated = false;
 
-            if ($this->traceHandler && $handlingContext->isTracingSuppressed()) {
+            if ($isWorkerConsumed && $this->traceHandler && $handlingContext->isTracingSuppressed()) {
                 $handlingContext = $handlingContext->withoutSuppressedTracing();
                 $mutated = true;
             }

@@ -407,7 +407,7 @@ function tracer_provider(
     SpanProcessor $processor,
     ClockInterface $clock,
     ContextStorage $contextStorage,
-    Sampler $sampler = new AlwaysOnSampler(),
+    Sampler $sampler = new ParentBasedSampler(new AlwaysOnSampler()),
     SpanLimits $limits = new SpanLimits(),
     ErrorHandler $errorHandler = new ErrorLogHandler(),
 ): TracerProvider {
