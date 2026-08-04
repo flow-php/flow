@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-08-02
+## [Unreleased] - 2026-08-04
 
 ### Added
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - configurable sampler.root for the parent_based sampler** - [@norberttech](https://github.com/norberttech)
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - instrumentation.http_kernel.require_trace_context to trace only requests arriving with a trace context** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - self-hosted mermaid, loaded lazily only on pages with a diagram** - [@norberttech](https://github.com/norberttech)
 - [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - Floe reading and writing playground examples** - [@norberttech](https://github.com/norberttech)
 - [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - orders.xlsx, orders.floe and partitioned CSV playground datasets** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +25,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/telemetry - default sampler is now ParentBasedSampler(AlwaysOnSampler), matching the OpenTelemetry SDK** - [@norberttech](https://github.com/norberttech)
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - default sampler.type is now parent_based** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - mermaid is initialized once per theme change instead of once per diagram** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - diagram wrapper stays hidden until its diagram is drawn** - [@norberttech](https://github.com/norberttech)
 - [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - every playground example reads from the shared data/ datasets** - [@norberttech](https://github.com/norberttech)
@@ -56,6 +60,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - messenger sync transport no longer lifts request tracing suppression** - [@norberttech](https://github.com/norberttech)
+- [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/telemetry-otlp-bridge - otlp_tracer_provider() no longer overrides the parent-based sampling default** - [@norberttech](https://github.com/norberttech)
 - [f41412](https://github.com/flow-php/flow/commit/f41412b8c13e0db4e20d517449620131cba4d939) - **add required cache-key to Blacksmith docker builder setup** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - diagrams drawn on top of each other because mermaid derived ids from the clock** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - panzoom instances and zoom listeners leaking on every theme toggle** - [@norberttech](https://github.com/norberttech)
