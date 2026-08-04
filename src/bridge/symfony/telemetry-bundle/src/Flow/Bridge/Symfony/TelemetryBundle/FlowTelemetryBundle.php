@@ -142,6 +142,9 @@ use function ucfirst;
 
 use const LOG_PID;
 
+/**
+ * @type FlowTelemetryInstrumentationConfig = array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, context_propagation_query?: bool, require_trace_context?: bool, route_naming?: 'path'|'name', trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, security?: array{enabled?: bool, fields?: array{id?: array{enabled?: bool, attribute?: string}, roles?: array{enabled?: bool, attribute?: string}, email?: array{enabled?: bool, attribute?: string, getter?: string}}}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}}
+ */
 final class FlowTelemetryBundle extends AbstractBundle
 {
     private const string CACHE_ADAPTER_INTERFACE = 'Symfony\\Component\\Cache\\Adapter\\AdapterInterface';
@@ -425,7 +428,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->children()
             ->enumNode('type')
             ->values(['always_on', 'always_off', 'trace_id_ratio', 'parent_based', 'attribute_matching', 'service'])
-            ->defaultValue('always_on')
+            ->defaultValue('parent_based')
             ->end()
             ->floatNode('ratio')
             ->info('Sampling ratio for trace_id_ratio type (0.0 to 1.0)')
@@ -461,6 +464,21 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->variableNode('matcher')
             ->info('attribute_matching: the matcher tree (all/any/not or a leaf rule { path, mode, value, case_sensitive? }); nestable to any depth')
             ->defaultNull()
+            ->end()
+            ->arrayNode('root')
+            ->info('parent_based: sampler used for root spans that have no parent (default: always_on). Set to always_off to trace only requests that arrive with a sampled traceparent.')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->enumNode('type')
+            ->values(['always_on', 'always_off', 'trace_id_ratio'])
+            ->defaultValue('always_on')
+            ->end()
+            ->floatNode('ratio')
+            ->defaultValue(1.0)
+            ->min(0.0)
+            ->max(1.0)
+            ->end()
+            ->end()
             ->end()
             ->arrayNode('delegate')
             ->info('attribute_matching: sampler that decides spans which do not match (default: always_on)')
@@ -557,6 +575,10 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->end()
             ->booleanNode('context_propagation_query')
             ->info('Also extract trace context from the URL query string (for links / full-page navigations that cannot send headers); headers take precedence. Security: lets callers inject a traceparent, so keep off unless needed. Requires context_propagation.')
+            ->defaultFalse()
+            ->end()
+            ->booleanNode('require_trace_context')
+            ->info('Only trace requests that arrive with a trace context (traceparent header, or query string when context_propagation_query is on). Requests without one are suppressed entirely, including their DBAL/cache spans. Scoped to HTTP only - console commands and messenger workers are unaffected. Requires context_propagation.')
             ->defaultFalse()
             ->end()
             ->enumNode('route_naming')
@@ -897,7 +919,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: FlowTelemetryInstrumentationConfig, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -1873,7 +1895,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     {
         $samplerServiceId = 'flow.telemetry.tracer_provider.sampler';
         // @mago-expect analysis:mixed-assignment
-        $type = $config['type'] ?? 'always_on';
+        $type = $config['type'] ?? 'parent_based';
 
         switch ($type) {
             case 'service':
@@ -1905,9 +1927,12 @@ final class FlowTelemetryBundle extends AbstractBundle
                 break;
 
             case 'parent_based':
-                $rootSamplerServiceId = $samplerServiceId . '.root';
-                $rootSamplerDefinition = new Definition(AlwaysOnSampler::class);
-                $builder->setDefinition($rootSamplerServiceId, $rootSamplerDefinition);
+                $rootConfig = is_array($config['root'] ?? null) ? $config['root'] : [];
+                $rootSamplerServiceId = $this->buildDelegateSampler(
+                    $rootConfig,
+                    $samplerServiceId . '.root',
+                    $builder,
+                );
 
                 $definition = new Definition(ParentBasedSampler::class);
                 $definition->setArgument(0, new Reference($rootSamplerServiceId));
@@ -1938,8 +1963,9 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Build the leaf delegate sampler (always_on / always_off / trace_id_ratio) for an
-     * attribute_matching sampler and return its service id.
+     * Build a leaf sampler (always_on / always_off / trace_id_ratio) from a { type, ratio } config
+     * fragment and return its service id. Used for the attribute_matching delegate and the
+     * parent_based root.
      *
      * @param array<array-key, mixed> $config
      */
@@ -2924,7 +2950,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}} $config
+     * @param FlowTelemetryInstrumentationConfig $config
      */
     private function registerInstrumentation(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
@@ -2942,6 +2968,10 @@ final class FlowTelemetryBundle extends AbstractBundle
             $builder->setParameter(
                 'flow.telemetry.http_kernel.context_propagation_query',
                 ($httpKernelConfig['context_propagation_query'] ?? false) && class_exists(self::HTTP_FOUNDATION_REQUEST_CARRIER),
+            );
+            $builder->setParameter(
+                'flow.telemetry.http_kernel.require_trace_context',
+                ($httpKernelConfig['require_trace_context'] ?? false) && class_exists(self::HTTP_FOUNDATION_REQUEST_CARRIER),
             );
             $builder->setParameter(
                 'flow.telemetry.http_kernel.trace_controller',
@@ -3464,7 +3494,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}} $config
+     * @param FlowTelemetryInstrumentationConfig $config
      */
     private function registerParameterOnlyInstrumentation(array $config, ContainerBuilder $builder): void
     {

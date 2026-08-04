@@ -377,11 +377,15 @@ pass_through_log_processor($exporter)
 For high-volume pipelines, consider sampling to reduce telemetry volume:
 
 ```php
-use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use function Flow\Telemetry\DSL\{parent_based_sampler, trace_id_ratio_based_sampler};
 
-// Always sample (default)
-tracer_provider($processor, $clock, $contextStorage, new AlwaysOnSampler())
+// Honor the parent's decision; sample 10% of traces that originate here
+tracer_provider($processor, $clock, $contextStorage, parent_based_sampler(trace_id_ratio_based_sampler(0.1)))
 ```
+
+See the [breaking change note](../libs/telemetry.md#sampling) in the telemetry library docs: the default sampler
+changed from `AlwaysOnSampler` to `ParentBasedSampler(AlwaysOnSampler)`, so spans whose parent is unsampled are now
+dropped.
 
 ### Resource Attributes
 

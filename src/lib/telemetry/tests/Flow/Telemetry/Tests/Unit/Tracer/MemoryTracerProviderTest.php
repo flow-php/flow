@@ -7,6 +7,7 @@ namespace Flow\Telemetry\Tests\Unit\Tracer;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
@@ -14,6 +15,7 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
@@ -50,6 +52,28 @@ final class MemoryTracerProviderTest extends TestCase
         static::assertNotSame($tracer1, $tracer2);
         static::assertSame($tracer1->name(), $tracer2->name());
         static::assertSame($tracer1->version(), $tracer2->version());
+    }
+
+    public function test_default_sampler_honours_an_unsampled_remote_parent(): void
+    {
+        $processor = new MemorySpanProcessor(new VoidExporter());
+        $contextStorage = new MemoryContextStorage(Context::root()->withActiveSpan(SpanContext::createRemote(
+            TraceId::generate(),
+            SpanId::generate(),
+            SpanId::generate(),
+            TraceFlags::default(),
+        )));
+
+        $tracer = (new TracerProvider($processor, ClockMother::frozen(), $contextStorage))->tracer(
+            ResourceMother::default(),
+            'test',
+        );
+
+        $span = $tracer->span('child', SpanKind::SERVER);
+        $tracer->complete($span);
+
+        static::assertFalse($span->isRecording());
+        static::assertSame([], $processor->endedSpans());
     }
 
     public function test_processor_flush_returns_true(): void

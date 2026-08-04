@@ -11,9 +11,12 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessag
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Messenger\FailingSender;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -31,6 +34,11 @@ use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
 use Throwable;
 
+use function Flow\Telemetry\DSL\context;
+use function Flow\Telemetry\DSL\memory_context_storage;
+use function Flow\Telemetry\DSL\resource;
+use function Flow\Telemetry\DSL\telemetry;
+use function Flow\Telemetry\DSL\tracer_provider;
 use function interface_exists;
 
 #[CoversClass(TracingMiddleware::class)]
@@ -334,6 +342,37 @@ final class TracingMiddlewareTest extends TestCase
         static::assertTrue($processSpan->context()->traceId->equals($outer->context()->traceId));
         static::assertSame($outer->context()->spanId->toHex(), $processSpan->context()->parentSpanId?->toHex());
         static::assertCount(0, $processSpan->links());
+    }
+
+    public function test_sync_transport_dispatch_does_not_lift_request_suppression(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $contextStorage = memory_context_storage(context()->withSuppressedTracing());
+
+        $telemetryInstance = telemetry(
+            resource(['service.name' => 'test']),
+            tracerProvider: tracer_provider(
+                $processor,
+                new SystemClock(),
+                $contextStorage,
+                new SuppressingSampler(new AlwaysOnSampler()),
+            ),
+        );
+
+        $bus = new MessageBus([
+            new TracingMiddleware($telemetryInstance, $contextStorage),
+            new HandleMessageMiddleware(new HandlersLocator([TestMessage::class => [new TestMessageHandler()]])),
+        ]);
+
+        // SyncTransport adds ReceivedStamp but only Worker adds ConsumedByWorkerStamp - the suppression lift
+        // is meant for a genuine worker poll, not for a message handled synchronously in the same request.
+        $bus->dispatch(new Envelope(new TestMessage('hello'), [new ReceivedStamp('sync')]));
+
+        static::assertCount(
+            0,
+            $processor->endedSpans(),
+            'a sync-transport dispatch must not lift request-level tracing suppression',
+        );
     }
 
     public function test_worker_consumed_message_is_a_root_trace(): void

@@ -4,8 +4,8 @@ package: flow-php/telemetry
 
 # Telemetry
 
-Flow Telemetry is a lightweight, OpenTelemetry-compatible observability library for PHP applications.
-It provides a unified API for distributed tracing, metrics collection, and structured logging with minimal dependencies.
+Flow Telemetry is a lightweight, OpenTelemetry-compatible observability library for PHP applications. It provides a
+unified API for distributed tracing, metrics collection, and structured logging with minimal dependencies.
 
 [PACKAGE_NAV]
 
@@ -17,8 +17,8 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Telemetry
 
-The `Telemetry` class is the main entry point for all observability operations.
-It manages providers for each signal type and provides access to Tracers, Meters, and Loggers.
+The `Telemetry` class is the main entry point for all observability operations. It manages providers for each signal
+type and provides access to Tracers, Meters, and Loggers.
 
 > **Note**: The core telemetry library provides contracts and basic exporters like Console, Memory, and Void.
 > To send telemetry to external backends, you need the either use
@@ -165,9 +165,9 @@ $telemetry->flush();    // Export any buffered data
 $telemetry->shutdown(); // Flush and close transports
 ```
 
-`registerShutdownFunction()` holds only a **weak reference**: it does not keep the `Telemetry` instance
-alive, and an instance that was garbage collected before process end is skipped. Keep the instance
-referenced (e.g. in your container) for as long as it should be shut down at exit.
+`registerShutdownFunction()` holds only a **weak reference**: it does not keep the `Telemetry` instance alive, and an
+instance that was garbage collected before process end is skipped. Keep the instance referenced (e.g. in your container)
+for as long as it should be shut down at exit.
 
 > For production OTLP export setup, see
 > the [OTLP Bridge documentation](/documentation/components/bridges/telemetry-otlp-bridge.md).
@@ -175,10 +175,9 @@ referenced (e.g. in your container) for as long as it should be shut down at exi
 ## High Level Overview
 
 Flow Telemetry is designed as a **contract library** that defines interfaces and provides basic implementations for
-observability.
-While the library works standalone with built-in Console, Memory, and Void exporters, its true power comes when paired
-with the [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md) for sending data to Application
-Performance Monitoring (APM) backends.
+observability. While the library works standalone with built-in Console, Memory, and Void exporters, its true power
+comes when paired with the [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md) for sending data to
+Application Performance Monitoring (APM) backends.
 
 ### Architecture with OpenTelemetry Collector
 
@@ -288,8 +287,8 @@ $tracer->complete($span);
 
 **Nesting spans:**
 
-Creating a span does not make it the current one — per the OpenTelemetry specification, span creation must not
-change the active context. A span created inside another becomes its child only if the outer span was activated:
+Creating a span does not make it the current one — per the OpenTelemetry specification, span creation must not change
+the active context. A span created inside another becomes its child only if the outer span was activated:
 
 ```php
 <?php
@@ -309,8 +308,8 @@ try {
 Without `activate()`, `charge-card` is a sibling of `process-order`, not a child.
 
 Detach scopes in reverse order of activation, and before completing the span. `Scope::detach()` returns
-`Scope::DETACHED` on success, `Scope::INACTIVE` if the scope was already detached, and `Scope::MISMATCH` if it was
-not the innermost active scope.
+`Scope::DETACHED` on success, `Scope::INACTIVE` if the scope was already detached, and `Scope::MISMATCH` if it was not
+the innermost active scope.
 
 Do **not** activate a span whose lifetime is an object rather than a block — a file stream, a database cursor, a
 long-running transaction handle. Several of those are open at once, so activating them makes each the parent of
@@ -329,7 +328,8 @@ $result = $tracer->trace('fetch-user', function () use ($userId) {
 **Suppressing tracing for a region:**
 
 Set the tracing-suppression flag on the active context to make any spans created within a region **non-recording**
-(never sampled, never exported). This is OpenTelemetry's tracing-scoped suppression (the equivalent of `suppressTracing`)
+(never sampled, never exported). This is OpenTelemetry's tracing-scoped suppression (the equivalent of
+`suppressTracing`)
 — useful to silence noisy background work such as a queue worker's transport polling. Only traces are affected;
 **metrics and logs still flow**.
 
@@ -446,8 +446,8 @@ $logger->debug('Cache hit', ['key' => 'user:123', 'ttl' => 3600]);
 
 ## Attribute and Cardinality Limits
 
-Flow Telemetry enforces limits on signals following the OpenTelemetry specification.
-This prevents unbounded memory growth and ensures telemetry data doesn't exceed collector size limits.
+Flow Telemetry enforces limits on signals following the OpenTelemetry specification. This prevents unbounded memory
+growth and ensures telemetry data doesn't exceed collector size limits.
 
 ### Default Limits
 
@@ -515,23 +515,22 @@ $meterProvider = meter_provider(
 - **String value too long**: Values are truncated to the configured limit
 - **Array values**: Each string element is truncated individually
 
-Dropped attribute counts are tracked per signal and included in exported telemetry data
-for observability.
+Dropped attribute counts are tracked per signal and included in exported telemetry data for observability.
 
 ### Metric Cardinality Overflow
 
-When a metric instrument exceeds its cardinality limit, new attribute combinations are
-redirected to an overflow aggregator. The overflow data point has a single attribute:
-`otel.metric.overflow: true`. All measurements that would create new attribute combinations
-beyond the limit are aggregated into this overflow data point.
+When a metric instrument exceeds its cardinality limit, new attribute combinations are redirected to an overflow
+aggregator. The overflow data point has a single attribute:
+`otel.metric.overflow: true`. All measurements that would create new attribute combinations beyond the limit are
+aggregated into this overflow data point.
 
-This follows the OpenTelemetry specification for metrics overflow handling - measurements
-are never dropped, they are aggregated into the overflow bucket for observability.
+This follows the OpenTelemetry specification for metrics overflow handling - measurements are never dropped, they are
+aggregated into the overflow bucket for observability.
 
 ## Processors
 
-Processors handle the lifecycle of telemetry signals, determining when and how data is passed to exporters.
-They sit between the instrumentation (Tracer, Meter, Logger) and the exporters.
+Processors handle the lifecycle of telemetry signals, determining when and how data is passed to exporters. They sit
+between the instrumentation (Tracer, Meter, Logger) and the exporters.
 
 ```mermaid
 ---
@@ -563,8 +562,8 @@ flowchart LR
 
 **Batching processor example:**
 
-The batching processor collects signals until a configured batch size is reached, then exports them all at once.
-This reduces network overhead and improves performance in production environments.
+The batching processor collects signals until a configured batch size is reached, then exports them all at once. This
+reduces network overhead and improves performance in production environments.
 
 ```php
 <?php
@@ -590,14 +589,14 @@ Each signal type has its own processor implementations:
 
 ### Filtering by attributes
 
-Attribute filtering drops (or keeps) signals based on their attributes, which is useful for reducing
-noise — for example discarding health-check spans or bot traffic before it reaches an exporter. For spans
-and metrics this is a processor wrapping an inner processor; for logs it is a middleware in a
+Attribute filtering drops (or keeps) signals based on their attributes, which is useful for reducing noise — for example
+discarding health-check spans or bot traffic before it reaches an exporter. For spans and metrics this is a processor
+wrapping an inner processor; for logs it is a middleware in a
 [log pipeline](#log-processing-pipeline) (see below). Both forward only the signals that survive an
 `AttributeFilter`.
 
-An `AttributeFilter` evaluates a single root **matcher**. The leaf matcher, `attribute_rule()`, targets
-an attribute *path* and applies a `MatchMode`:
+An `AttributeFilter` evaluates a single root **matcher**. The leaf matcher, `attribute_rule()`, targets an attribute
+*path* and applies a `MatchMode`:
 
 | Family   | Modes                                                                                 |
 |----------|---------------------------------------------------------------------------------------|
@@ -605,11 +604,10 @@ an attribute *path* and applies a `MatchMode`:
 | Ordering | `GREATER_THAN`, `GREATER_THAN_EQUAL`, `LESS_THAN`, `LESS_THAN_EQUAL`                  |
 | Pattern  | `REGEXP`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS` (operate on the value's string form) |
 
-A path is one segment (a top-level attribute key) or several segments descending into nested array
-values (e.g. `['user', 'id']`). The pattern modes accept a per-rule `caseSensitive` flag (default `true`).
+A path is one segment (a top-level attribute key) or several segments descending into nested array values (e.g.
+`['user', 'id']`). The pattern modes accept a per-rule `caseSensitive` flag (default `true`).
 
-Rules compose with the `all()`, `any()` and `not()` matchers — each is itself a matcher, so they nest
-freely:
+Rules compose with the `all()`, `any()` and `not()` matchers — each is itself a matcher, so they nest freely:
 
 ```php
 <?php
@@ -641,10 +639,10 @@ A single rule can be passed directly, without wrapping it in `all()`/`any()`:
 $filter = attribute_filter(attribute_rule('http.route', MatchMode::EQUAL, '/health'));
 ```
 
-By default a match **excludes** the signal (drops it). Set `exclude: false` to keep ONLY matching
-signals, and point the filter at resource and/or scope attributes instead of the signal's own with
-`sources` (a list — the matcher is run against each and OR-combined, so a signal matches if the matcher
-matches in **any** listed source):
+By default a match **excludes** the signal (drops it). Set `exclude: false` to keep ONLY matching signals, and point the
+filter at resource and/or scope attributes instead of the signal's own with
+`sources` (a list — the matcher is run against each and OR-combined, so a signal matches if the matcher matches in
+**any** listed source):
 
 ```php
 <?php
@@ -668,10 +666,10 @@ $filter = attribute_filter(
 );
 ```
 
-The matcher tree is compiled to a small PHP matcher cached on disk (in the system temp directory by
-default, or a directory passed as `cacheDir`) so per-signal evaluation stays cheap. When the cache
-directory is not writable — or a matcher cannot be compiled — the processor transparently falls back to
-interpreted matching. Custom matchers implement the `Matcher` interface (and optionally
+The matcher tree is compiled to a small PHP matcher cached on disk (in the system temp directory by default, or a
+directory passed as `cacheDir`) so per-signal evaluation stays cheap. When the cache directory is not writable — or a
+matcher cannot be compiled — the processor transparently falls back to interpreted matching. Custom matchers implement
+the `Matcher` interface (and optionally
 `CompilableMatcher` to take part in code generation).
 
 > **Security:** the compiled matcher is `require`d, so the cache directory must be **trusted** — never
@@ -728,15 +726,20 @@ attributes set at the call site win over them. Implement `LogMiddleware` to add 
 
 ## Sampling
 
-A `Sampler` decides, at span **start**, whether a span is recorded and exported. This is the OpenTelemetry-idiomatic
-way to drop spans — a dropped span never records, so it never reaches a processor or exporter.
+A `Sampler` decides, at span **start**, whether a span is recorded and exported. This is the OpenTelemetry-idiomatic way
+to drop spans — a dropped span never records, so it never reaches a processor or exporter.
+
+> **Breaking change.** `TracerProvider` and the `tracer_provider()` DSL helper now default their sampler to
+> `ParentBasedSampler(AlwaysOnSampler)` instead of `AlwaysOnSampler`, matching the OpenTelemetry SDK
+> default of `parentbased_always_on`. Spans whose parent is unsampled are now dropped. To restore the
+> previous behaviour, pass `always_on_sampler()` explicitly.
 
 | Sampler                    | DSL                                              | Behavior                                                                                                        |
 |----------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `AlwaysOnSampler`          | `always_on_sampler()`                            | Record + sample every span (the default)                                                                        |
+| `AlwaysOnSampler`          | `always_on_sampler()`                            | Record + sample every span                                                                                      |
 | `AlwaysOffSampler`         | `always_off_sampler()`                           | Drop every span                                                                                                 |
 | `TraceIdRatioBasedSampler` | `trace_id_ratio_based_sampler($ratio)`           | Sample a deterministic fraction of traces                                                                       |
-| `ParentBasedSampler`       | `parent_based_sampler($root)`                    | Honor the parent's decision; use the root sampler for parentless spans                                          |
+| `ParentBasedSampler`       | `parent_based_sampler($root)`                    | Honor the parent's decision; use the root sampler for parentless spans (the default)                            |
 | `AttributeMatchingSampler` | `attribute_matching_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
 
 `AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) — the
@@ -868,8 +871,8 @@ $propagator->inject($context, $carrier);
 
 ### Resource
 
-A **Resource** represents the entity producing telemetry - your application, service, or component.
-It contains attributes that identify where telemetry data originated.
+A **Resource** represents the entity producing telemetry - your application, service, or component. It contains
+attributes that identify where telemetry data originated.
 
 Common resource attributes:
 
@@ -890,19 +893,19 @@ $resource = resource([
 ]);
 ```
 
-The Resource is passed to the Telemetry instance and automatically attached to all spans, metrics, and logs.
-This allows APM backends to filter and group telemetry by service, environment, or any other attribute.
+The Resource is passed to the Telemetry instance and automatically attached to all spans, metrics, and logs. This allows
+APM backends to filter and group telemetry by service, environment, or any other attribute.
 
 ### Resource Detectors
 
-Resource detectors automatically discover information about the entity producing telemetry.
-Instead of manually specifying resource attributes, detectors can inspect the environment
-to populate attributes like OS type, hostname, process ID, and service information.
+Resource detectors automatically discover information about the entity producing telemetry. Instead of manually
+specifying resource attributes, detectors can inspect the environment to populate attributes like OS type, hostname,
+process ID, and service information.
 
 #### Default Detection
 
-The simplest way to detect resources is using the `resource_detector()` function, which provides
-a sensible default chain of detectors:
+The simplest way to detect resources is using the `resource_detector()` function, which provides a sensible default
+chain of detectors:
 
 ```php
 <?php
@@ -929,8 +932,8 @@ This returns a `Resource` with attributes from OS, host, process, Composer, and 
 
 #### Custom Detection Chain
 
-Use `chain_detector()` to combine specific detectors. Later detectors take precedence
-over earlier ones when there are conflicting attribute keys:
+Use `chain_detector()` to combine specific detectors. Later detectors take precedence over earlier ones when there are
+conflicting attribute keys:
 
 ```php
 <?php
@@ -962,8 +965,8 @@ $resource = manual_detector([
 
 #### Caching Detection Results
 
-Resource detection can involve filesystem reads (e.g., `/etc/machine-id` for host ID).
-Use `caching_detector()` to cache results and avoid repeated detection:
+Resource detection can involve filesystem reads (e.g., `/etc/machine-id` for host ID). Use `caching_detector()` to cache
+results and avoid repeated detection:
 
 ```php
 <?php
@@ -973,8 +976,8 @@ use function Flow\Telemetry\DSL\{caching_detector, resource_detector};
 $resource = caching_detector(resource_detector())->detect();
 ```
 
-The cache is stored in `sys_get_temp_dir()/flow_telemetry_resource.cache` by default.
-You can specify a custom path as the second argument.
+The cache is stored in `sys_get_temp_dir()/flow_telemetry_resource.cache` by default. You can specify a custom path as
+the second argument.
 
 #### Environment Variables
 
@@ -983,8 +986,8 @@ The `EnvironmentDetector` reads standard OpenTelemetry environment variables:
 - `OTEL_SERVICE_NAME` - Sets the `service.name` attribute
 - `OTEL_RESOURCE_ATTRIBUTES` - Sets additional attributes in `key=value,key2=value2` format
 
-Per the OpenTelemetry Resource SDK specification, `,` and `=` inside keys and values MUST be
-percent-encoded (other characters MAY be); both keys and values are percent-decoded. For example,
+Per the OpenTelemetry Resource SDK specification, `,` and `=` inside keys and values MUST be percent-encoded (other
+characters MAY be); both keys and values are percent-decoded. For example,
 `note=a%2Cb` yields the attribute `note` with value `a,b`.
 
 ```bash
@@ -992,13 +995,13 @@ export OTEL_SERVICE_NAME=my-service
 export OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment.name=production
 ```
 
-These environment variables take highest precedence in the default detector chain,
-allowing runtime configuration without code changes.
+These environment variables take highest precedence in the default detector chain, allowing runtime configuration
+without code changes.
 
 ### InstrumentationScope
 
-An **InstrumentationScope** identifies the library or component that generates telemetry.
-It allows APM backends to attribute telemetry to specific instrumentation and filter by library version.
+An **InstrumentationScope** identifies the library or component that generates telemetry. It allows APM backends to
+attribute telemetry to specific instrumentation and filter by library version.
 
 ```php
 <?php

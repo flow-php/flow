@@ -378,9 +378,12 @@ flow_telemetry:
   tracer_provider:
     error_handler: default  # name from error_handlers; defaults to "default"
     sampler:
-      type: always_on   # always_on|always_off|trace_id_ratio|parent_based|attribute_matching|service
+      type: parent_based  # always_on|always_off|trace_id_ratio|parent_based|attribute_matching|service (default)
       ratio: 1.0        # Sampling ratio (0.0-1.0, only for trace_id_ratio)
       service_id: null  # Custom sampler service (only for type: service)
+      root:
+        type: always_on  # parent_based only: always_on|always_off|trace_id_ratio (default)
+        ratio: 1.0       # root.type: trace_id_ratio only
     processor:
       type: batching    # composite|memory|batching|passthrough|void|attribute_filtering|service
       batch_size: 512
@@ -392,17 +395,49 @@ flow_telemetry:
 
 | Type                 | Description                                                                                       |
 |----------------------|---------------------------------------------------------------------------------------------------|
-| `always_on`          | Sample all traces (default)                                                                       |
+| `always_on`          | Sample all traces                                                                                 |
 | `always_off`         | Sample no traces                                                                                  |
 | `trace_id_ratio`     | Sample based on trace ID ratio                                                                    |
-| `parent_based`       | Respect parent span's sampling decision                                                           |
+| `parent_based`       | Respect the parent span's sampling decision; root spans fall back to `root` (**default**)         |
 | `attribute_matching` | Drop spans matching an attribute matcher (start-time attrs); defer the rest to a delegate sampler |
 | `service`            | Custom sampler service                                                                            |
 
-**`attribute_matching`** is the OTel-idiomatic way to drop spans by attribute — the decision is made at span start, so a
+### `parent_based` root sampler
+
+`root` selects the sampler used for spans that have no parent — that is, requests arriving with no
+`traceparent` header, or with a malformed one. It accepts `always_on` (default), `always_off`, and
+`trace_id_ratio` (with `ratio`).
+
+Setting `root.type: always_off` produces OpenTelemetry's `parentbased_always_off` behaviour: a trace is
+recorded only when an upstream service passes a sampled `traceparent`. This is the configuration to use
+when sampling is decided by a proxy such as nginx:
+
+```yaml
+flow_telemetry:
+  tracer_provider:
+    sampler:
+      type: parent_based
+      root:
+        type: always_off
+```
+
+Note that the sampler is global. Under `root.type: always_off`, console commands stop producing traces
+entirely, and so do messenger worker spans — even when the request that dispatched the message was
+sampled, because a worker-consumed span deliberately starts its own trace linked to the producer rather
+than continuing the producer's trace.
+
+If you want that behaviour for HTTP only, leave `root.type` at `always_on` and use
+`instrumentation.http_kernel.require_trace_context` instead.
+
+### `attribute_matching` sampler
+
+`attribute_matching` is the OTel-idiomatic way to drop spans by attribute — the decision is made at span start, so a
 matched span never records or reaches a processor. It only sees attributes available at span start (not end-state values
 like status codes). It reuses the same `matcher` / `exclude` / `sources` / `cache_dir` options as the
 [`attribute_filtering`](#attribute_filtering) processor, plus a `delegate` sampler for spans that don't match:
+
+`delegate` only accepts leaf sampler types (`always_on` | `always_off` | `trace_id_ratio`), not `parent_based` — so an
+`attribute_matching` sampler cannot honour upstream sampling decisions for spans that don't match its matcher.
 
 ```yaml
 flow_telemetry:
@@ -1073,6 +1108,10 @@ flow_telemetry:
 The schema replaced the `type: <name>` discriminator with a sub-block whose key matches the implementation. There is no
 BC shim.
 
+**Breaking change:** the default `sampler.type` changed from `always_on` to `parent_based` (see
+[TracerProvider](#tracerprovider) above). Spans whose parent carries an unsampled `traceparent` are now dropped by
+default; pass `sampler.type: always_on` explicitly to restore the previous behaviour.
+
 **Before (legacy schema)**
 
 ```yaml
@@ -1128,6 +1167,7 @@ flow_telemetry:
       enabled: true
       context_propagation: true  # Extract context from incoming headers
       context_propagation_query: false  # Also extract from the URL query string (off by default; see note below)
+      require_trace_context: false  # Suppress requests without a trace context (off by default; see note below)
       route_naming: path  # Span name / http.route source: 'path' (template, e.g. /orders/{id}; default) or 'name'
       trace_controller: true                  # Controller body span (default ON)
       trace_controller_resolution: false      # controller.get_callable span (default OFF)
@@ -1177,6 +1217,18 @@ exists, so disabling `http_kernel` or excluding the path produces none.
 
 The resolution and argument toggles install service decorators only when enabled, so they add zero overhead
 when off.
+
+`require_trace_context` suppresses any request that arrives without a trace context, including its DBAL
+and cache spans. It is scoped to HTTP: console commands and messenger workers are unaffected. It requires
+`context_propagation: true` and the `flow-php/symfony-http-foundation-telemetry-bridge` package; without
+either, the flag is silently ignored and requests are traced as if it were unset.
+
+Use `require_trace_context: true` when a proxy such as nginx decides sampling for inbound traffic but you
+still want cron jobs and workers traced. Use `sampler.root.type: always_off` when you want the
+require-an-upstream-decision rule applied to every entry point in the process. The flag only checks
+whether a trace context is *present*, not whether it was sampled, so it does not honour an upstream
+`sampled=0` decision on its own — that comes from the `parent_based` sampler's default. Pairing it with
+`sampler.type: always_on` reintroduces traces for requests nginx explicitly declined to sample.
 
 #### Security
 
@@ -1950,8 +2002,10 @@ flow_telemetry:
 
   tracer_provider:
     sampler:
-      type: trace_id_ratio
-      ratio: 0.1  # Sample 10% of traces in production
+      type: parent_based
+      root:
+        type: trace_id_ratio
+        ratio: 0.1  # sample 10% of traces that originate here; upstream decisions are always honoured
     processor:
       type: batching
       batch_size: 512

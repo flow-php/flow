@@ -33,6 +33,7 @@ return static function (ContainerConfigurator $container): void {
             service('flow.telemetry.propagator'),
             '%flow.telemetry.http_kernel.context_propagation%',
             '%flow.telemetry.http_kernel.context_propagation_query%',
+            '%flow.telemetry.http_kernel.require_trace_context%',
             service('flow.telemetry.http_kernel.route_name_path_map'),
             // arg $routeNaming (RouteNaming enum) is set in FlowTelemetryBundle::registerInstrumentation.
         ])

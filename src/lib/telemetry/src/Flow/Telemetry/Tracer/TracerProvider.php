@@ -11,6 +11,7 @@ use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
@@ -44,7 +45,7 @@ final readonly class TracerProvider
         private SpanProcessor $processor,
         private ClockInterface $clock,
         private ContextStorage $contextStorage,
-        private Sampler $sampler = new AlwaysOnSampler(),
+        private Sampler $sampler = new ParentBasedSampler(new AlwaysOnSampler()),
         private SpanLimits $limits = new SpanLimits(),
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {}

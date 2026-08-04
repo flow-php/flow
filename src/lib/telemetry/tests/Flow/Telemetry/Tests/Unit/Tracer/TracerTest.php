@@ -19,6 +19,10 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+use function Flow\Telemetry\DSL\always_off_sampler;
+use function Flow\Telemetry\DSL\always_on_sampler;
+use function Flow\Telemetry\DSL\parent_based_sampler;
+
 final class TracerTest extends TestCase
 {
     public function test_active_span_returns_current_span_context(): void
@@ -424,5 +428,42 @@ final class TracerTest extends TestCase
         $tracer->complete($parent);
 
         static::assertCount(0, $processor->endedSpans());
+    }
+
+    public function test_parent_based_always_off_root_drops_the_whole_trace(): void
+    {
+        $processor = TracerMother::createMemoryProcessor();
+        $tracer = TracerMother::create(processor: $processor, sampler: parent_based_sampler(always_off_sampler()));
+
+        $root = $tracer->span('root', SpanKind::SERVER);
+        $scope = $tracer->activate($root);
+        $child = $tracer->span('child', SpanKind::INTERNAL);
+
+        $tracer->complete($child);
+        $scope->detach();
+        $tracer->complete($root);
+
+        static::assertFalse($root->isRecording());
+        static::assertFalse($child->isRecording());
+        static::assertFalse($child->context()->traceFlags->isSampled());
+        static::assertSame([], $processor->endedSpans());
+    }
+
+    public function test_parent_based_always_on_root_records_the_whole_trace(): void
+    {
+        $processor = TracerMother::createMemoryProcessor();
+        $tracer = TracerMother::create(processor: $processor, sampler: parent_based_sampler(always_on_sampler()));
+
+        $root = $tracer->span('root', SpanKind::SERVER);
+        $scope = $tracer->activate($root);
+        $child = $tracer->span('child', SpanKind::INTERNAL);
+
+        $tracer->complete($child);
+        $scope->detach();
+        $tracer->complete($root);
+
+        static::assertTrue($root->isRecording());
+        static::assertTrue($child->isRecording());
+        static::assertCount(2, $processor->endedSpans());
     }
 }
