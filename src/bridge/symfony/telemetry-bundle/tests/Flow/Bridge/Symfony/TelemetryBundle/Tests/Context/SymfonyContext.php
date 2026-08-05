@@ -56,7 +56,7 @@ final class SymfonyContext
                     'enabled' => '%env(bool:FLOW_TELEMETRY_TEST_EXPORTERS_ENABLED)%',
                     'otlp' => [
                         'transport' => [
-                            'endpoint' => '%env(default::FLOW_TELEMETRY_TEST_OTLP_ENDPOINT)%',
+                            'endpoint' => '%env(string:FLOW_TELEMETRY_TEST_OTLP_ENDPOINT)%',
                         ],
                     ],
                 ],
