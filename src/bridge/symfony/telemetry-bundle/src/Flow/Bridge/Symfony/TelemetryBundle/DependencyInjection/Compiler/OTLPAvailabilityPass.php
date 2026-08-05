@@ -16,6 +16,13 @@ final class OTLPAvailabilityPass implements CompilerPassInterface
 
     public function process(ContainerBuilder $container): void
     {
+        if (
+            $container->hasParameter('flow.telemetry.enabled')
+            && $container->getParameter('flow.telemetry.enabled') !== true
+        ) {
+            return;
+        }
+
         $otlpAvailable = class_exists(self::OTLP_BRIDGE_CLASS);
         $container->setParameter('flow.telemetry.otlp_available', $otlpAvailable);
 

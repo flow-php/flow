@@ -231,6 +231,10 @@ final class FlowTelemetryBundle extends AbstractBundle
         $definition
             ->rootNode()
             ->children()
+            ->booleanNode('enabled')
+            ->info('Enable the bundle. When false no flow.telemetry.* service is registered (default: true)')
+            ->defaultTrue()
+            ->end()
             ->arrayNode('resource')
             ->info(
                 'OpenTelemetry Resource configuration with automatic detection (https://opentelemetry.io/docs/specs/semconv/resource/)',
@@ -919,18 +923,40 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: FlowTelemetryInstrumentationConfig, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
+     * @param array{enabled: bool, resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: FlowTelemetryInstrumentationConfig, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $builder->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
-        $builder->setParameter('flow.telemetry.capture_framework_channels', $config['capture_framework_channels'] ?? false);
-        $builder->setParameter('flow.telemetry.channel_attribute_target', $config['channel_attribute_target'] ?? 'both');
+        if (!is_bool($config['enabled'])) {
+            throw new InvalidConfigurationException(
+                'flow_telemetry.enabled is evaluated when the container is compiled, so environment variables '
+                . 'are not supported. Use a per-environment config file (config/packages/prod/flow_telemetry.yaml) '
+                . 'or a container parameter instead.',
+            );
+        }
+
+        $builder->resolveEnvPlaceholders($config);
+
+        $builder->setParameter('flow.telemetry.enabled', $config['enabled']);
 
         $tracers = ($config['tracers'] ?? []) + ['default' => []];
         $meters = ($config['meters'] ?? []) + ['default' => []];
         $loggers = ($config['loggers'] ?? []) + ['default' => []];
+
+        if (!$config['enabled']) {
+            $this->registerGlobalServices($config, $builder);
+            $this->registerNoOpTelemetry($config, $builder);
+            $this->registerTracers($tracers, $builder);
+            $this->registerMeters($meters, $builder);
+            $this->registerLoggers($loggers, $builder);
+
+            return;
+        }
+
+        $builder->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
+        $builder->setParameter('flow.telemetry.capture_framework_channels', $config['capture_framework_channels'] ?? false);
+        $builder->setParameter('flow.telemetry.channel_attribute_target', $config['channel_attribute_target'] ?? 'both');
 
         $this->registerGlobalServices($config, $builder);
         $errorHandlers = $config['error_handlers'] ?? [];
@@ -3496,6 +3522,44 @@ final class FlowTelemetryBundle extends AbstractBundle
     /**
      * @param FlowTelemetryInstrumentationConfig $config
      */
+    /**
+     * @param array{resource?: array{custom?: array<string, mixed>}} $config
+     */
+    private function registerNoOpTelemetry(array $config, ContainerBuilder $builder): void
+    {
+        $resource = new Definition(Resource::class);
+        $resource->setFactory([Resource::class, 'create']);
+        $resource->setArgument(0, $config['resource']['custom'] ?? []);
+
+        $tracerProvider = new Definition(TracerProvider::class);
+        $tracerProvider->setArguments([
+            new Definition(VoidSpanProcessor::class),
+            new Reference('flow.telemetry.clock'),
+            new Reference('flow.telemetry.context_storage'),
+            new Definition(AlwaysOffSampler::class),
+        ]);
+
+        $meterProvider = new Definition(MeterProvider::class);
+        $meterProvider->setArguments([
+            new Definition(VoidMetricProcessor::class),
+            new Reference('flow.telemetry.clock'),
+        ]);
+
+        $loggerProvider = new Definition(LoggerProvider::class);
+        $loggerProvider->setArguments([
+            new Definition(VoidLogProcessor::class),
+            new Reference('flow.telemetry.clock'),
+            new Reference('flow.telemetry.context_storage'),
+        ]);
+
+        $telemetry = new Definition(Telemetry::class);
+        $telemetry->setArguments([$resource, $tracerProvider, $meterProvider, $loggerProvider]);
+        $telemetry->setPublic(true);
+
+        $builder->setDefinition('flow.telemetry', $telemetry);
+        $builder->setAlias(Telemetry::class, 'flow.telemetry')->setPublic(true);
+    }
+
     private function registerParameterOnlyInstrumentation(array $config, ContainerBuilder $builder): void
     {
         $httpClientConfig = $config['http_client'] ?? [];

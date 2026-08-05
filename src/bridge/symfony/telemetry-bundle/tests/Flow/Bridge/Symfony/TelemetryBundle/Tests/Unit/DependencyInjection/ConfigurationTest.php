@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Context\ConfigurationContext;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 
 use function sprintf;
 
@@ -940,5 +941,46 @@ final class ConfigurationTest extends TestCase
                 ],
             ],
         ]);
+    }
+
+    public function test_enabled_defaults_to_true_when_omitted(): void
+    {
+        static::assertTrue($this->context->processConfig(['resource' => []])['enabled']);
+    }
+
+    public function test_enabled_can_be_disabled(): void
+    {
+        static::assertFalse($this->context->processConfig(['resource' => [], 'enabled' => false])['enabled']);
+    }
+
+    public function test_root_disabled_does_not_conflict_with_nested_enabled(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'enabled' => false,
+            'instrumentation' => ['http_kernel' => ['enabled' => true]],
+        ]);
+
+        static::assertFalse($config['enabled']);
+        static::assertTrue($config['instrumentation']['http_kernel']['enabled']);
+    }
+
+    public function test_nested_config_is_still_validated_when_root_is_disabled(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'enabled' => false,
+            'instrumentation' => ['http_kernel' => ['route_naming' => 'not_a_valid_strategy']],
+        ]);
+    }
+
+    public function test_root_shorthand_false_is_rejected(): void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Invalid type for path "flow_telemetry". Expected "array", but got "bool"');
+
+        $this->context->processRawConfig(false);
     }
 }

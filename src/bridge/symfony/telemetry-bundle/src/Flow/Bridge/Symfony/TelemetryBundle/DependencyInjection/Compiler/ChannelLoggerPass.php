@@ -58,6 +58,8 @@ final class ChannelLoggerPass implements CompilerPassInterface
 
     private const string CAPTURE_PARAMETER = 'flow.telemetry.capture_framework_channels';
 
+    private const string ENABLED_PARAMETER = 'flow.telemetry.enabled';
+
     private const string ATTRIBUTE_TARGET_PARAMETER = 'flow.telemetry.channel_attribute_target';
 
     private const string FRAMEWORK_TAG = 'monolog.logger';
@@ -119,6 +121,13 @@ final class ChannelLoggerPass implements CompilerPassInterface
 
     private function capturesFrameworkChannels(ContainerBuilder $container): bool
     {
+        if (
+            $container->hasParameter(self::ENABLED_PARAMETER)
+            && $container->getParameter(self::ENABLED_PARAMETER) !== true
+        ) {
+            return false;
+        }
+
         if (!$container->hasParameter(self::CAPTURE_PARAMETER)) {
             return false;
         }

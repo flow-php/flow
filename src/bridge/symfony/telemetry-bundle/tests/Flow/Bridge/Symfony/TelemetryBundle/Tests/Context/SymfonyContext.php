@@ -41,6 +41,47 @@ final class SymfonyContext
         return $this->kernel;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function fullyPopulatedTelemetryConfig(bool $enabled): array
+    {
+        return [
+            'enabled' => $enabled,
+            'resource' => ['custom' => ['deployment.tenant' => '%env(default::FLOW_TELEMETRY_TEST_TENANT)%']],
+            'exporters' => [
+                'memory' => ['memory' => null],
+                'void' => ['void' => null],
+                'otlp_http' => [
+                    'enabled' => '%env(bool:FLOW_TELEMETRY_TEST_EXPORTERS_ENABLED)%',
+                    'otlp' => [
+                        'transport' => [
+                            'endpoint' => '%env(default::FLOW_TELEMETRY_TEST_OTLP_ENDPOINT)%',
+                        ],
+                    ],
+                ],
+            ],
+            'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => 'memory']],
+            'instrumentation' => [
+                'http_kernel' => [
+                    'enabled' => true,
+                    'trace_controller_resolution' => true,
+                    'trace_controller_arguments' => true,
+                    'trace_controller_argument_resolvers' => true,
+                ],
+                'console' => ['enabled' => true],
+                'messenger' => ['enabled' => true],
+                'http_client' => ['enabled' => true],
+                'psr18_client' => ['enabled' => true],
+                'dbal' => ['enabled' => true],
+                'cache' => ['enabled' => true],
+            ],
+            'tracers' => ['app' => []],
+            'meters' => ['app' => []],
+            'loggers' => ['app' => []],
+        ];
+    }
+
     public function getContainer(): ContainerInterface
     {
         if ($this->kernel === null) {
