@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-08-06
 
 ### Added
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - DefinitionClassResolver resolving a definition class through parent chains and %parameter% placeholders** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - ServiceIdPatterns matching a service id against exact ids and regular expressions** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - unit and integration tests for CacheTelemetryPass and Psr18ClientTelemetryPass** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - root enabled flag, disabled keeps a no-op Telemetry and drops all machinery** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - flow.telemetry.enabled container parameter, always defined** - [@norberttech](https://github.com/norberttech)
 - [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - configurable sampler.root for the parent_based sampler** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +30,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - class lookup uses ContainerBuilder::getReflectionClass() so container invalidation resources are registered** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - exclude pattern matching extracted out of the compiler passes into ServiceIdPatterns** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - ChannelLoggerPass keeps #[WithTelemetryChannel] wiring but never captures framework channels when disabled** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - FrameworkLoggerPass and OTLPAvailabilityPass no longer run when disabled** - [@norberttech](https://github.com/norberttech)
 - [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/telemetry - default sampler is now ParentBasedSampler(AlwaysOnSampler), matching the OpenTelemetry SDK** - [@norberttech](https://github.com/norberttech)
@@ -64,6 +69,10 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - cache pools inheriting their class from a parent definition are now traced** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - pools and PSR-18 clients whose class is a %parameter% are now traced** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - Psr18ClientTelemetryPass no longer decorates abstract definitions and breaks the container build** - [@norberttech](https://github.com/norberttech)
+- [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - instrumentation.cache.exclude_pools now takes effect for framework pools** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - %env()% placeholders in skipped config sections no longer break the dumped container** - [@norberttech](https://github.com/norberttech)
 - [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/symfony-telemetry-bundle - messenger sync transport no longer lifts request tracing suppression** - [@norberttech](https://github.com/norberttech)
 - [#2582](https://github.com/flow-php/flow/pull/2582) - **flow-php/telemetry-otlp-bridge - otlp_tracer_provider() no longer overrides the parent-based sampling default** - [@norberttech](https://github.com/norberttech)
