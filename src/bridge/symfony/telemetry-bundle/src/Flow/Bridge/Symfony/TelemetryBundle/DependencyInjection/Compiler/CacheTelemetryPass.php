@@ -16,7 +16,6 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 use function is_a;
-use function preg_match;
 
 final class CacheTelemetryPass implements CompilerPassInterface
 {
@@ -35,12 +34,16 @@ final class CacheTelemetryPass implements CompilerPassInterface
             ? $container->getParameter('flow.telemetry.cache.exclude_pools')
             : [];
 
+        $excluded = new ServiceIdPatterns($excludePools);
+
+        $resolver = new DefinitionClassResolver($container);
+
         $taggedServices = $container->findTaggedServiceIds('cache.pool');
 
         $innerPools = [];
 
         foreach ($taggedServices as $serviceId => $_tags) {
-            if ($this->isExcluded($serviceId, $excludePools)) {
+            if ($excluded->matches($serviceId)) {
                 continue;
             }
 
@@ -50,7 +53,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
                 continue;
             }
 
-            $serviceClass = $serviceDefinition->getClass();
+            $serviceClass = $resolver->resolve($serviceDefinition);
 
             if ($serviceClass === null) {
                 continue;
@@ -90,30 +93,5 @@ final class CacheTelemetryPass implements CompilerPassInterface
             $container->hasParameter('flow.telemetry.cache.flush_deferred')
             && $container->getParameter('flow.telemetry.cache.flush_deferred') === true
         );
-    }
-
-    /**
-     * @param array<string> $patterns
-     */
-    private function isExcluded(string $serviceId, array $patterns): bool
-    {
-        foreach ($patterns as $pattern) {
-            if ($this->matchesPattern($serviceId, $pattern)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function matchesPattern(string $serviceId, string $pattern): bool
-    {
-        $result = @preg_match($pattern, $serviceId);
-
-        if ($result !== false) {
-            return (bool) $result;
-        }
-
-        return $serviceId === $pattern;
     }
 }

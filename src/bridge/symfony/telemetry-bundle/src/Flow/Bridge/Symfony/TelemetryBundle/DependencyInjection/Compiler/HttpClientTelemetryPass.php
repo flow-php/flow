@@ -11,8 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
-use function preg_match;
-
 final class HttpClientTelemetryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
@@ -30,10 +28,12 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
             ? $container->getParameter('flow.telemetry.http_client.exclude_clients')
             : [];
 
+        $excluded = new ServiceIdPatterns($excludeClients);
+
         $taggedServices = $container->findTaggedServiceIds('http_client.client');
 
         foreach ($taggedServices as $serviceId => $_tags) {
-            if ($this->isExcluded($serviceId, $excludeClients)) {
+            if ($excluded->matches($serviceId)) {
                 continue;
             }
 
@@ -48,30 +48,5 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
 
             $container->setDefinition($decoratorId, $definition);
         }
-    }
-
-    /**
-     * @param array<string> $patterns
-     */
-    private function isExcluded(string $serviceId, array $patterns): bool
-    {
-        foreach ($patterns as $pattern) {
-            if ($this->matchesPattern($serviceId, $pattern)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function matchesPattern(string $serviceId, string $pattern): bool
-    {
-        $result = @preg_match($pattern, $serviceId);
-
-        if ($result !== false) {
-            return (bool) $result;
-        }
-
-        return $serviceId === $pattern;
     }
 }

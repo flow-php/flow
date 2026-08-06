@@ -1494,6 +1494,12 @@ flow_telemetry:
       flush_deferred: false   # opt-in; see below
 ```
 
+Every service tagged `cache.pool` is traced, including the framework's own internal pools
+(`cache.system`, `cache.validator`, `cache.serializer`, `cache.property_info`, `cache.app`,
+`cache.doctrine.*`). Use `exclude_pools` to opt any of them out - entries are matched as an exact
+service id or, when the value is a valid regular expression, as a pattern. Before 0.43.0 those pools
+were skipped by a bug; see the [upgrade note](/documentation/upgrading.md#upgrading-from-042x-to-043x).
+
 ##### Deferred writes on a Doctrine DBAL cache pool
 
 A cache pool backed by `cache.adapter.doctrine_dbal` defers writes and flushes them from the pool's own

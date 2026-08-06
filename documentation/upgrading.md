@@ -62,12 +62,12 @@ try {
 
 On `d = 2024-01-01, 2024-01-02, 2024-01-03, 2024-01-04` and `s = 100, 200, 300, 400`:
 
-| Before                                                      | After                    |
-|-------------------------------------------------------------|--------------------------|
-| `sum(ref('s'))->over(window()->orderBy(ref('d')))` → `1000, 1000, 1000, 1000` | `100, 300, 600, 1000`    |
-| `average()`, `count()` over an ordered window - whole partition | rows up to the current row's peers |
-| `window()->partitionBy(ref('dept'))` - whole partition       | unchanged                |
-| empty frame                                                  | `sum()`/`average()` → `null`, `count()` → `0` |
+| Before                                                                        | After                                         |
+|-------------------------------------------------------------------------------|-----------------------------------------------|
+| `sum(ref('s'))->over(window()->orderBy(ref('d')))` → `1000, 1000, 1000, 1000` | `100, 300, 600, 1000`                         |
+| `average()`, `count()` over an ordered window - whole partition               | rows up to the current row's peers            |
+| `window()->partitionBy(ref('dept'))` - whole partition                        | unchanged                                     |
+| empty frame                                                                   | `sum()`/`average()` → `null`, `count()` → `0` |
 
 Restore the previous result:
 
@@ -79,17 +79,17 @@ sum(ref('s'))->over(window()->orderBy(ref('d'))->rowsBetween(unbounded_preceding
 
 On `s = 100, 100, 300` ordered by a distinct column:
 
-| Before                                                                  | After                                  |
-|-------------------------------------------------------------------------|----------------------------------------|
+| Before                                                                    | After                                           |
+|---------------------------------------------------------------------------|-------------------------------------------------|
 | `count(ref('s'))` counts rows sharing the current row's value → `2, 2, 1` | counts non-null values in the frame → `1, 2, 3` |
-| `count()` threw `Count WindowFunction function requires a reference.`     | counts every row in the frame (`COUNT(*)`) |
+| `count()` threw `Count WindowFunction function requires a reference.`     | counts every row in the frame (`COUNT(*)`)      |
 
 ### 5) `flow-php/etl` - `partitionBy()` no longer sets `orderBy()`
 
-| Before                                                                       | After   |
-|------------------------------------------------------------------------------|---------|
-| `window()->orderBy(ref('date'))->partitionBy(ref('dept'))->order()` → `['dept']` | `['date']` |
-| `window()->partitionBy(ref('dept'))->order()` → `['dept']`                     | `[]`    |
+| Before                                                                                                   | After                                             |
+|----------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `window()->orderBy(ref('date'))->partitionBy(ref('dept'))->order()` → `['dept']`                         | `['date']`                                        |
+| `window()->partitionBy(ref('dept'))->order()` → `['dept']`                                               | `[]`                                              |
 | `rank()`/`dense_rank()`/`row_number()` over a `partitionBy()`-only window ranked by the partition column | throws `... requires to be ordered by one column` |
 
 Add the ordering explicitly:
@@ -100,15 +100,15 @@ rank()->over(window()->partitionBy(ref('dept'))->orderBy(ref('salary')->desc()))
 
 ### 6) `flow-php/etl` - `WindowFunction::apply()` receives a `WindowContext`
 
-| Before                                                    | After                                            |
-|------------------------------------------------------------|--------------------------------------------------|
-| `apply(Row $row, Rows $partition, FlowContext $context)`    | `apply(WindowContext $window)`                    |
-| `$row`                                                      | `$window->row()`                                  |
-| `$partition`                                                | `$window->partition()`                            |
-| `$context`                                                  | `$window->flowContext()`                          |
-| —                                                           | `$window->frame()` - rows within the current row's frame |
-| —                                                           | `$window->index()` - position in the ordered partition |
-| `row_number()` on duplicate rows → `1, 1, 3`                | `1, 2, 3`                                         |
+| Before                                                   | After                                                    |
+|----------------------------------------------------------|----------------------------------------------------------|
+| `apply(Row $row, Rows $partition, FlowContext $context)` | `apply(WindowContext $window)`                           |
+| `$row`                                                   | `$window->row()`                                         |
+| `$partition`                                             | `$window->partition()`                                   |
+| `$context`                                               | `$window->flowContext()`                                 |
+| —                                                        | `$window->frame()` - rows within the current row's frame |
+| —                                                        | `$window->index()` - position in the ordered partition   |
+| `row_number()` on duplicate rows → `1, 1, 3`             | `1, 2, 3`                                                |
 
 Implementations must no longer sort; `$window->partition()` and `$window->frame()` are already ordered.
 
@@ -126,6 +126,31 @@ Implementations must no longer sort; `$window->partition()` and `$window->frame(
 | config `flow_postgresql.profiler.max_parameters` | `flow_postgresql.profiler.max_retained_parameters`                   |
 
 Applies to `flow-php/postgresql` users only through the bundle; `Client\Telemetry` is unchanged.
+
+### 8) `flow-php/symfony-telemetry-bundle` - cache pools and PSR-18 clients that were silently skipped are now traced
+
+| Before                                                                                                                                               | After                                                               |
+|------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| `cache.system`, `cache.validator`, `cache.serializer`, `cache.property_info`, `cache.app`, `cache.doctrine.*`, `cache.http_client.pool` - not traced | traced: `cache.*` spans and `flow.cache.hits` / `flow.cache.misses` |
+| pool or client whose class is a `%parameter%` - not traced                                                                                           | traced                                                              |
+| tag-aware pool whose class is a `%parameter%` - got the non-tag-aware decorator                                                                      | gets `TagAwareTraceableCacheAdapter`                                |
+| PSR-18 client behind an autoconfigured or abstract parent definition - container build failed with *"has a reference to an abstract definition"*     | compiles; the client is traced                                      |
+| `instrumentation.cache.exclude_pools` entries for framework pools - had no effect                                                                    | take effect                                                         |
+
+To keep the previous set of traced pools, exclude the framework's own:
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    cache:
+      exclude_pools:
+        - 'cache.system'
+        - 'cache.validator'
+        - 'cache.serializer'
+        - 'cache.property_info'
+        - '/^cache\.doctrine\..*/'
+        - 'cache.http_client.pool'
+```
 
 ---
 
@@ -2378,7 +2403,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _    (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _     (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.
