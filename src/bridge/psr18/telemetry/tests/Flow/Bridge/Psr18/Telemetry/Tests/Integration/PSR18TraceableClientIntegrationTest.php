@@ -4,18 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr18\Telemetry\Tests\Integration;
 
-use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\LoggerProvider;
-use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Bridge\Psr18\Telemetry\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
-use Flow\Telemetry\Resource;
-use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
-use Flow\Telemetry\Tracer\TracerProvider;
 use Nyholm\Psr7\Request;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -29,7 +21,7 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
     public function test_real_http_request_creates_span(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $httpClient = new Psr18Client(new MockHttpClient(new MockResponse('ok', ['http_code' => 200])));
         $traceableClient = psr18_traceable_client($httpClient, $telemetry);
@@ -56,21 +48,5 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
 
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($span->status());
-    }
-
-    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
-    {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
-
-        return new Telemetry(
-            Resource::create([
-                'service.name' => 'integration-test',
-                'service.version' => '1.0.0',
-            ]),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new MemoryMetricProcessor(new VoidExporter()), $clock),
-            new LoggerProvider(new MemoryLogProcessor(new VoidExporter()), $clock, $contextStorage),
-        );
     }
 }
