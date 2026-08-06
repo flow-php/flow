@@ -17,6 +17,13 @@ final class FrameworkLoggerPass implements CompilerPassInterface
 
     public function process(ContainerBuilder $container): void
     {
+        if (
+            $container->hasParameter('flow.telemetry.enabled')
+            && $container->getParameter('flow.telemetry.enabled') !== true
+        ) {
+            return;
+        }
+
         $frameworkLogger = $container->hasParameter('flow.telemetry.framework_logger')
             ? $container->getParameter('flow.telemetry.framework_logger')
             : null;

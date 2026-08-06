@@ -19,6 +19,14 @@ final readonly class ConfigurationContext
      */
     public function processConfig(array $config): array
     {
+        return $this->processRawConfig($config);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function processRawConfig(mixed $config): array
+    {
         $extension = (new FlowTelemetryBundle())->getContainerExtension();
 
         if (!$extension instanceof ConfigurationExtensionInterface) {

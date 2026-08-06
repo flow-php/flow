@@ -32,6 +32,30 @@ This bundle integrates Flow PHP's Telemetry library with Symfony applications. I
 - **Configurable exporters** - Console, memory, void, or OTLP with multiple transport options
 - **Full Symfony configuration** - Configure everything through Symfony's config system
 
+## Enabling and Disabling
+
+The bundle is enabled by default. `enabled: false` keeps `Flow\Telemetry\Telemetry` autowirable but removes
+everything behind it — exporters, transports, resource detectors, instrumentation, profiler and the shutdown hook.
+
+```yaml
+# config/packages/prod/flow_telemetry.yaml
+flow_telemetry:
+  enabled: false
+```
+
+The surviving `Telemetry` uses void processors with sampling off: spans are non-recording, logs and metrics go
+nowhere, `flush()` is a no-op. Named tracers, meters, loggers and `#[WithTelemetryChannel]` channel loggers are
+still registered, so no injection point breaks. No Symfony service is decorated, and `framework_logger` /
+`capture_framework_channels` are ignored — aliasing `logger` to a void logger would discard application logs.
+
+`flow.telemetry.enabled` is always defined as a container parameter, `true` or `false`.
+
+`enabled` is read at compile time, so `%env()%` is rejected — a placeholder would leave telemetry wired while you
+believed it was off. Use a per-environment config file, or a parameter holding a literal bool. Environment
+variables work everywhere else in the tree, including sections disabled mode drops.
+
+For a runtime switch that keeps services and only stops egress, use `exporters.<name>.enabled`.
+
 ## Configuration Reference
 
 > Any `error_handler:` field that appears under a provider, processor, or `otlp` exporter references a name from the

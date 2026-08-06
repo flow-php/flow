@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTrans
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\CompiledIdCollectorPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Telemetry\SpySpanProcessor;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
@@ -54,8 +55,12 @@ use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
 use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
+use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
+use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -67,6 +72,7 @@ use function extension_loaded;
 use function interface_exists;
 use function is_file;
 use function random_bytes;
+use function restore_exception_handler;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
@@ -76,6 +82,13 @@ use function unlink;
 #[CoversClass(FrameworkLoggerPass::class)]
 final class FlowTelemetryExtensionTest extends KernelTestCase
 {
+    #[Override]
+    protected function tearDown(): void
+    {
+        restore_exception_handler();
+        parent::tearDown();
+    }
+
     public function test_auto_alias_when_logger_service_is_symfony_default(): void
     {
         $this->bootKernel([
@@ -1709,6 +1722,153 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                             'error_handler' => 'missing',
                         ],
                     ],
+                ]);
+            },
+        ]);
+    }
+
+    public function test_fully_populated_config_wires_telemetry_when_enabled(): void
+    {
+        $collector = new CompiledIdCollectorPass();
+
+        $this->bootKernel([
+            'config' => function (TestKernel $kernel) use ($collector): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => ['utf8' => true, 'resource' => __DIR__ . '/../Fixtures/config/routes.php'],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                    'http_client' => ['default_options' => []],
+                    'messenger' => [
+                        'default_bus' => 'messenger.bus.default',
+                        'buses' => ['messenger.bus.default' => null],
+                    ],
+                ]);
+                $kernel->addTestExtensionConfig(
+                    'flow_telemetry',
+                    $this->symfonyContext()->fullyPopulatedTelemetryConfig(true),
+                );
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) use (
+                    $collector,
+                ): void {
+                    $container->addCompilerPass($collector, PassConfig::TYPE_AFTER_REMOVING, -1024);
+                });
+            },
+        ]);
+
+        static::assertTrue($this->getContainer()->getParameter('flow.telemetry.enabled'));
+        static::assertTrue($this->getContainer()->has(Telemetry::class));
+
+        static::assertNotSame([], $collector->flowTelemetryIds());
+        static::assertContains('argument_resolver.flow_telemetry', $collector->ids);
+        static::assertContains('controller_resolver.flow_telemetry', $collector->ids);
+        static::assertContains('flow.telemetry.messenger.middleware', $collector->ids);
+    }
+
+    public function test_fully_populated_config_keeps_only_the_contract_when_disabled(): void
+    {
+        $collector = new CompiledIdCollectorPass();
+
+        $this->bootKernel([
+            'config' => function (TestKernel $kernel) use ($collector): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => ['utf8' => true, 'resource' => __DIR__ . '/../Fixtures/config/routes.php'],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                    'http_client' => ['default_options' => []],
+                    'messenger' => [
+                        'default_bus' => 'messenger.bus.default',
+                        'buses' => ['messenger.bus.default' => null],
+                    ],
+                ]);
+                $kernel->addTestExtensionConfig(
+                    'flow_telemetry',
+                    $this->symfonyContext()->fullyPopulatedTelemetryConfig(false),
+                );
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) use (
+                    $collector,
+                ): void {
+                    $container->addCompilerPass($collector, PassConfig::TYPE_AFTER_REMOVING, -1024);
+                });
+            },
+        ]);
+
+        static::assertFalse($this->getContainer()->getParameter('flow.telemetry.enabled'));
+
+        static::assertEqualsCanonicalizing(
+            [
+                'flow.telemetry',
+                Telemetry::class,
+                'flow.telemetry.clock',
+                'flow.telemetry.context_storage',
+                'flow.telemetry.psr3.log_record_converter',
+                'flow.telemetry.default.tracer',
+                'flow.telemetry.app.tracer',
+                'flow.telemetry.default.meter',
+                'flow.telemetry.app.meter',
+                'flow.telemetry.default.logger',
+                'flow.telemetry.default.logger.psr3',
+                'flow.telemetry.app.logger',
+                'flow.telemetry.app.logger.psr3',
+            ],
+            $collector->flowTelemetryIds(),
+        );
+        static::assertSame(['flow.telemetry.enabled'], $collector->flowTelemetryParameters());
+
+        static::assertNotContains('argument_resolver.flow_telemetry', $collector->ids);
+        static::assertNotContains('controller_resolver.flow_telemetry', $collector->ids);
+        static::assertNotContains('flow.telemetry.messenger.middleware', $collector->ids);
+    }
+
+    public function test_disabled_telemetry_is_autowirable_and_records_nothing(): void
+    {
+        $this->bootKernel([
+            'config' => function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig(
+                    'flow_telemetry',
+                    $this->symfonyContext()->fullyPopulatedTelemetryConfig(false),
+                );
+            },
+        ]);
+
+        $telemetry = $this->symfonyContext()->getService(Telemetry::class, Telemetry::class);
+
+        static::assertFalse($telemetry->tracer('app')->span('work')->isRecording());
+
+        $telemetry->logger('app')->info('this must go nowhere');
+        $telemetry->meter('app')->createCounter('things')->add(1);
+
+        static::assertTrue($telemetry->flush());
+    }
+
+    public function test_env_placeholders_in_skipped_sections_do_not_break_the_dumped_container(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'profiler' => [
+                        'enabled' => false,
+                        'capture_logs' => '%env(bool:FLOW_TELEMETRY_TEST_PROFILER_CAPTURE)%',
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertTrue($this->getContainer()->getParameter('flow.telemetry.enabled'));
+    }
+
+    public function test_env_placeholder_for_enabled_is_rejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('flow_telemetry.enabled is evaluated when the container is compiled');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'enabled' => '%env(bool:FLOW_TELEMETRY_ENABLED)%',
                 ]);
             },
         ]);
