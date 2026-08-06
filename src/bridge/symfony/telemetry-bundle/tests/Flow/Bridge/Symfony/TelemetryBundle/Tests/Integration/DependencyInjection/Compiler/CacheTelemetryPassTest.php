@@ -127,9 +127,7 @@ final class CacheTelemetryPassTest extends KernelTestCase
     }
 
     /**
-     * Decorating cache.app retargets FrameworkBundle's NamespacedPoolInterface alias onto a decorator that cannot
-     * implement it, and decorating httplug.http_client does the same to the HttpAsyncClient alias. Both fail
-     * lint:container. CheckAliasValidityPass is not part of normal compilation - ContainerLintCommand adds it, from
+     * CheckAliasValidityPass is not part of normal compilation - ContainerLintCommand adds it, from
      * framework-bundle 7.3 - so it has to be registered explicitly here.
      */
     public function test_container_lint_passes_with_every_instrumentation_enabled(): void
@@ -161,7 +159,6 @@ final class CacheTelemetryPassTest extends KernelTestCase
             },
         ]);
 
-        // the point of the fix: lint passes *and* the pools stay decorated
         static::assertContains('cache.app.flow_telemetry', $collector->ids);
         static::assertContains('httplug.http_client.flow_telemetry', $collector->ids);
     }

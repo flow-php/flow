@@ -25,7 +25,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -43,7 +43,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -58,7 +58,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -73,7 +73,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -88,7 +88,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -103,7 +103,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 
@@ -122,7 +122,7 @@ final class InterfaceAliasRepointerTest extends TestCase
 
         (new InterfaceAliasRepointer($container))->repoint(
             'cache.app',
-            'cache.app.flow_telemetry',
+            'cache.app.flow_telemetry.inner',
             TraceableCacheAdapter::class,
         );
 

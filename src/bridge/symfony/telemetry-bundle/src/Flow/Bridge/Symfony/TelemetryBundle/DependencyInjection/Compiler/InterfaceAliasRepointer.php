@@ -11,13 +11,8 @@ use function interface_exists;
 use function is_a;
 
 /**
- * Decorating a service silently retargets every interface alias pointing at it. When the decorator does not
- * implement one of those interfaces, CheckAliasValidityPass (framework-bundle >= 7.3) fails the build - e.g.
- * FrameworkBundle aliases NamespacedPoolInterface to cache.app, which our cache decorator cannot satisfy.
- *
- * Such an alias is pointed back at the undecorated inner service, so the alias keeps resolving to a class that
- * honours its contract. Consumers type-hinting that interface get the untraced pool; every other consumer -
- * by service id, or by an interface the decorator does implement - still gets the traced one.
+ * Decorating a service silently retargets every interface alias pointing at it, and CheckAliasValidityPass
+ * (framework-bundle >= 7.3) fails the build when the decorator cannot implement one of them.
  */
 final readonly class InterfaceAliasRepointer
 {
@@ -28,7 +23,7 @@ final readonly class InterfaceAliasRepointer
     /**
      * @param class-string $decoratorClass
      */
-    public function repoint(string $decoratedServiceId, string $decoratorId, string $decoratorClass): void
+    public function repoint(string $decoratedServiceId, string $innerServiceId, string $decoratorClass): void
     {
         foreach ($this->container->getAliases() as $aliasId => $alias) {
             if ((string) $alias !== $decoratedServiceId) {
@@ -43,8 +38,7 @@ final readonly class InterfaceAliasRepointer
                 continue;
             }
 
-            $innerId = $decoratorId . '.inner';
-            $innerAlias = new Alias($innerId, $alias->isPublic());
+            $innerAlias = new Alias($innerServiceId, $alias->isPublic());
 
             if ($alias->isDeprecated()) {
                 // getDeprecation() substitutes the id into the template; asking for the placeholder itself

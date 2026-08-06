@@ -66,7 +66,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
 
             $container->setDefinition($decoratorId, $decoratorDefinition);
 
-            $aliasRepointer->repoint($serviceId, $decoratorId, PSR18TraceableClient::class);
+            $aliasRepointer->repoint($serviceId, $decoratedId, PSR18TraceableClient::class);
         }
     }
 }

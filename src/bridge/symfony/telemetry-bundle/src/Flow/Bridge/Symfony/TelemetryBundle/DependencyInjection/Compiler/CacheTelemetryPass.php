@@ -76,7 +76,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
 
             $container->setDefinition($decoratorId, $definition);
 
-            $aliasRepointer->repoint($serviceId, $decoratorId, $adapterClass);
+            $aliasRepointer->repoint($serviceId, $decoratedId, $adapterClass);
 
             $innerPools[] = new Reference($decoratedId);
         }
