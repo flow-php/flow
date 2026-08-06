@@ -12,9 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
-use function class_exists;
 use function is_a;
-use function preg_match;
 
 final class Psr18ClientTelemetryPass implements CompilerPassInterface
 {
@@ -33,12 +31,26 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
             ? $container->getParameter('flow.telemetry.psr18_client.exclude_clients')
             : [];
 
+        $excluded = new ServiceIdPatterns($excludeClients);
+
+        $resolver = new DefinitionClassResolver($container);
+
         foreach ($container->getDefinitions() as $serviceId => $definition) {
-            if ($this->isExcluded($serviceId, $excludeClients)) {
+            if ($excluded->matches($serviceId)) {
                 continue;
             }
 
-            if (!$this->implementsPsr18Interface($definition)) {
+            if ($definition->isAbstract()) {
+                continue;
+            }
+
+            $class = $resolver->resolve($definition);
+
+            if ($class === null || $class === PSR18TraceableClient::class) {
+                continue;
+            }
+
+            if (!is_a($class, ClientInterface::class, true)) {
                 continue;
             }
 
@@ -52,49 +64,5 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
 
             $container->setDefinition($decoratorId, $decoratorDefinition);
         }
-    }
-
-    private function implementsPsr18Interface(Definition $definition): bool
-    {
-        $class = $definition->getClass();
-
-        if ($class === null) {
-            return false;
-        }
-
-        if ($class === PSR18TraceableClient::class) {
-            return false;
-        }
-
-        if (!class_exists($class)) {
-            return false;
-        }
-
-        return is_a($class, ClientInterface::class, true);
-    }
-
-    /**
-     * @param array<string> $patterns
-     */
-    private function isExcluded(string $serviceId, array $patterns): bool
-    {
-        foreach ($patterns as $pattern) {
-            if ($this->matchesPattern($serviceId, $pattern)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function matchesPattern(string $serviceId, string $pattern): bool
-    {
-        $result = @preg_match($pattern, $serviceId);
-
-        if ($result !== false) {
-            return (bool) $result;
-        }
-
-        return $serviceId === $pattern;
     }
 }
