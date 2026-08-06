@@ -1500,6 +1500,24 @@ Every service tagged `cache.pool` is traced, including the framework's own inter
 service id or, when the value is a valid regular expression, as a pattern. Before 0.43.0 those pools
 were skipped by a bug; see the [upgrade note](/documentation/upgrading.md#upgrading-from-042x-to-043x).
 
+##### Interface aliases the decorator cannot satisfy
+
+FrameworkBundle aliases `Psr\Cache\CacheItemPoolInterface`, `Symfony\Contracts\Cache\CacheInterface` and
+`Symfony\Contracts\Cache\NamespacedPoolInterface` to `cache.app`. The traceable decorator implements the first two
+but not `NamespacedPoolInterface`, which would make `bin/console lint:container` fail on
+`CheckAliasValidityPass` (framework-bundle >= 7.3).
+
+Any such alias is therefore pointed back at the **undecorated** pool, so it keeps resolving to a class that honours
+its contract. The practical effect:
+
+| How you inject the pool | What you get |
+|---|---|
+| by service id (`cache.app`), or `CacheItemPoolInterface` / `CacheInterface` | traced |
+| by `NamespacedPoolInterface` | **not traced** |
+
+The same rule applies to PSR-18 client instrumentation and FrameworkBundle's
+`Http\Client\HttpAsyncClient` alias.
+
 ##### Deferred writes on a Doctrine DBAL cache pool
 
 A cache pool backed by `cache.adapter.doctrine_dbal` defers writes and flushes them from the pool's own

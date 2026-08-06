@@ -35,6 +35,8 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
 
         $resolver = new DefinitionClassResolver($container);
 
+        $aliasRepointer = new InterfaceAliasRepointer($container);
+
         foreach ($container->getDefinitions() as $serviceId => $definition) {
             if ($excluded->matches($serviceId)) {
                 continue;
@@ -63,6 +65,8 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
             $decoratorDefinition->setArgument(1, new Reference(Telemetry::class));
 
             $container->setDefinition($decoratorId, $decoratorDefinition);
+
+            $aliasRepointer->repoint($serviceId, $decoratorId, PSR18TraceableClient::class);
         }
     }
 }
