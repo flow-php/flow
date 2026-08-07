@@ -99,6 +99,29 @@ final class ArrayContentDetectorTest extends TestCase
 
     public static function provide_map_data(): Generator
     {
+        yield 'integer key, string value' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_string(),
+            ],
+            false,
+            true,
+        ];
+
+        yield 'integer key, mixed values' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_string(),
+                type_integer(),
+            ],
+            false,
+            false,
+        ];
+
         yield 'string string' => [
             [
                 type_string(),
@@ -107,7 +130,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_string(),
             ],
             false,
-            true,
+            false,
         ];
 
         yield 'string structure{map<string,string>,list<int>}' => [
@@ -145,7 +168,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_map(type_string(), type_map(type_string(), type_string())),
             ],
             false,
-            true,
+            false,
         ];
 
         yield 'array of nulls' => [
@@ -175,9 +198,20 @@ final class ArrayContentDetectorTest extends TestCase
             false,
         ];
 
-        yield 'simple map' => [
+        yield 'homogeneous string keys' => [
             [
                 type_string(),
+            ],
+            [
+                type_string(),
+            ],
+            false,
+            true,
+        ];
+
+        yield 'integer keys are never structural' => [
+            [
+                type_integer(),
             ],
             [
                 type_string(),
@@ -213,7 +247,7 @@ final class ArrayContentDetectorTest extends TestCase
             false,
         ];
 
-        yield 'map with string key, of maps string with string' => [
+        yield 'string keys, of maps string with string' => [
             [
                 type_string(),
             ],
@@ -221,7 +255,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_map(type_string(), type_map(type_string(), type_string())),
             ],
             false,
-            false,
+            true,
         ];
 
         yield 'array of nulls' => [
@@ -234,7 +268,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_null(),
             ],
             false,
-            false,
+            true,
         ];
 
         yield 'array of empty arrays' => [
@@ -247,7 +281,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_array(),
             ],
             false,
-            false,
+            true,
         ];
     }
 

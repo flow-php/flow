@@ -130,14 +130,23 @@ final class TypeDetectorTest extends TestCase
             'list<string>',
         ];
 
-        yield 'simple map' => [
+        yield 'homogeneous string keys are structural, not a map' => [
             [
                 'one' => 'one',
                 'two' => 'two',
                 'three' => 'three',
             ],
+            StructureType::class,
+            'structure{one: string, two: string, three: string}',
+        ];
+
+        yield 'integer keys, non list' => [
+            [
+                1 => 'one',
+                2 => 'two',
+            ],
             MapType::class,
-            'map<string, string>',
+            'map<integer, string>',
         ];
 
         yield 'simple structure' => [
@@ -150,14 +159,14 @@ final class TypeDetectorTest extends TestCase
                     2,
                     3,
                 ],
-                'map' => [
+                'nested' => [
                     'one' => 'one',
                     'two' => 'two',
                     'three' => 'three',
                 ],
             ],
             StructureType::class,
-            'structure{one: string, two: string, three: string, list: list<integer>, map: map<string, string>}',
+            'structure{one: string, two: string, three: string, list: list<integer>, nested: structure{one: string, two: string, three: string}}',
         ];
 
         yield 'list of unique same structures' => [
@@ -187,14 +196,14 @@ final class TypeDetectorTest extends TestCase
             'list<?integer>',
         ];
 
-        yield 'nullable map of string to int' => [
+        yield 'string keys with leading nulls' => [
             [
                 'one' => null,
                 'two' => null,
                 'three' => 3,
             ],
-            MapType::class,
-            'map<string, ?integer>',
+            StructureType::class,
+            'structure{one: null, two: null, three: integer}',
         ];
 
         yield 'structure with first null element and then mixed int and string' => [
@@ -208,7 +217,7 @@ final class TypeDetectorTest extends TestCase
             'structure{one: null, two: null, three: integer, four: string}',
         ];
 
-        yield 'map with string key, of maps string with string' => [
+        yield 'string keys, nested all the way down' => [
             [
                 'one' => [
                     'map' => [
@@ -225,8 +234,8 @@ final class TypeDetectorTest extends TestCase
                     ],
                 ],
             ],
-            MapType::class,
-            'map<string, map<string, map<string, string>>>',
+            StructureType::class,
+            'structure{one: structure{map: structure{one: string, two: string, three: string}}, two: structure{map: structure{one: string, two: string, three: string}}}',
         ];
 
         yield 'empty array' => [
@@ -413,14 +422,23 @@ final class TypeDetectorTest extends TestCase
             'list<list<integer>>',
         ];
 
-        yield 'map with null' => [
+        yield 'string keys with an interleaved null' => [
             [
                 'one' => 'one',
                 'two' => null,
                 'three' => 'three',
             ],
-            MapType::class,
-            'map<string, ?string>',
+            StructureType::class,
+            'structure{one: string, two: null, three: string}',
+        ];
+
+        yield 'string keys, all null' => [
+            [
+                'one' => null,
+                'two' => null,
+            ],
+            StructureType::class,
+            'structure{one: null, two: null}',
         ];
     }
 

@@ -101,6 +101,46 @@ final class ComparatorTest extends TestCase
             type_structure(['id' => type_integer(), 'name' => type_string(), 'active' => type_boolean()]),
             false,
         ];
+        yield [
+            type_structure(['a' => type_integer()]),
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            false,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer()]),
+            false,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            true,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer()], ['b' => type_integer()]),
+            false,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer()], ['c' => type_string()]),
+            false,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], [], false),
+            type_structure(['a' => type_integer()], [], true),
+            false,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], [], true),
+            type_structure(['a' => type_integer()], [], true),
+            true,
+        ];
+        yield [
+            type_structure(['a' => type_integer()], ['b' => type_string()], true),
+            type_structure(['a' => type_integer()], ['b' => type_string()], true),
+            true,
+        ];
     }
 
     public static function type_not_comparable_data_provider(): Generator

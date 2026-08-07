@@ -105,6 +105,13 @@ final class XMLEncoder implements Encoder
      */
     private function normalize(string $name, Type $type, mixed $value): XMLNode|XMLAttribute
     {
+        if ($type instanceof StructureType && count($type->optionalElements())) {
+            throw new RuntimeException(sprintf(
+                'XML encoder does not support structure optional elements, given: %s',
+                $type->toString(),
+            ));
+        }
+
         if (str_starts_with($name, $this->attributePrefix)) {
             return new XMLAttribute(substr($name, strlen($this->attributePrefix)), type_string()->cast($value));
         }

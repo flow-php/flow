@@ -82,7 +82,9 @@ final class OpenAPIToFlowConverterTest extends TestCase
         ];
 
         $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "map<string, array<mixed>>", got "map<string, string>".');
+        $this->expectExceptionMessage(
+            'Expected type "map<string, array<mixed>>", got "structure{invalid_prop: string}".',
+        );
 
         $converter->fromOpenAPI($openApiSpec);
     }

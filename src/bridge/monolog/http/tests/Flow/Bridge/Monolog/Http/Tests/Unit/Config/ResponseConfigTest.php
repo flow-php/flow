@@ -48,7 +48,7 @@ final class ResponseConfigTest extends FlowTestCase
     {
         $this->expectException(InvalidTypeException::class);
         $this->expectExceptionMessage(
-            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"',
+            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: string, offset: string}"',
         );
 
         new ResponseConfig(sanitizers: [

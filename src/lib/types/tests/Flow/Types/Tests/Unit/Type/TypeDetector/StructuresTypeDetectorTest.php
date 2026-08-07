@@ -10,8 +10,7 @@ use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function json_decode;
@@ -44,7 +43,13 @@ final class StructuresTypeDetectorTest extends TestCase
                     'name' => type_string(),
                     'url' => type_string(),
                 ]),
-                'payload' => type_map(key_type: type_string(), value_type: type_optional(type_string())),
+                'payload' => type_structure([
+                    'ref' => type_null(),
+                    'ref_type' => type_string(),
+                    'master_branch' => type_string(),
+                    'description' => type_string(),
+                    'pusher_type' => type_string(),
+                ]),
                 'public' => type_boolean(),
                 'created_at' => type_string(),
                 'org' => type_structure([

@@ -87,6 +87,10 @@ final readonly class ArrayContentDetector
      */
     public function isMap(): bool
     {
+        if ($this->firstKeyType() instanceof StringType) {
+            return false;
+        }
+
         return 1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount && !$this->isList;
     }
 
@@ -96,11 +100,7 @@ final readonly class ArrayContentDetector
             return false;
         }
 
-        return (
-            0 !== $this->uniqueValuesTypeCount
-            && 1 === $this->uniqueKeysTypeCount
-            && $this->firstKeyType() instanceof StringType
-        );
+        return 1 === $this->uniqueKeysTypeCount && $this->firstKeyType() instanceof StringType;
     }
 
     /**

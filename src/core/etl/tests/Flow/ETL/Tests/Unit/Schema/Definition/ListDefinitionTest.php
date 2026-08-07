@@ -8,7 +8,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
-use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -79,20 +78,17 @@ final class ListDefinitionTest extends FlowTestCase
             string_schema('col'),
             string_schema('col'),
         ];
-    }
 
-    public static function provideMergeWithExpectedTypeCases(): Generator
-    {
         yield 'integer list with float list produces float list' => [
             list_schema('col', type_list(type_integer())),
             list_schema('col', type_list(type_float())),
-            ListDefinition::class,
+            list_schema('col', type_list(type_float())),
         ];
 
-        yield 'different element type produces json' => [
+        yield 'different element type widens the element, staying a list' => [
             list_schema('col', type_list(type_integer())),
             list_schema('col', type_list(type_string())),
-            JsonDefinition::class,
+            list_schema('col', type_list(type_string())),
         ];
     }
 
@@ -194,20 +190,6 @@ final class ListDefinitionTest extends FlowTestCase
     public function test_merge(Definition $definition, Definition $other, Definition $expected): void
     {
         static::assertEquals($expected, $definition->merge($other));
-    }
-
-    /**
-     * @param Definition<mixed> $definition
-     * @param Definition<mixed> $other
-     * @param class-string $expectedClass
-     */
-    #[DataProvider('provideMergeWithExpectedTypeCases')]
-    public function test_merge_produces_expected_type(
-        Definition $definition,
-        Definition $other,
-        string $expectedClass,
-    ): void {
-        static::assertInstanceOf($expectedClass, $definition->merge($other));
     }
 
     public function test_merge_with_null_definition_keeps_original_type(): void

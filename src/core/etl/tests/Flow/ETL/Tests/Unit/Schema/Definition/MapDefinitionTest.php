@@ -8,7 +8,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
-use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -20,6 +19,7 @@ use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
@@ -84,14 +84,23 @@ final class MapDefinitionTest extends FlowTestCase
             string_schema('col'),
             string_schema('col'),
         ];
-    }
 
-    public static function provideMergeWithExpectedTypeCases(): Generator
-    {
-        yield 'different map type produces json' => [
+        yield 'different value type widens the value, staying a map' => [
             map_schema('col', type_map(type_string(), type_integer())),
             map_schema('col', type_map(type_string(), type_string())),
-            JsonDefinition::class,
+            map_schema('col', type_map(type_string(), type_string())),
+        ];
+
+        yield 'numeric value types promote to float' => [
+            map_schema('col', type_map(type_string(), type_integer())),
+            map_schema('col', type_map(type_string(), type_float())),
+            map_schema('col', type_map(type_string(), type_float())),
+        ];
+
+        yield 'different key type widens the key to string' => [
+            map_schema('col', type_map(type_integer(), type_integer())),
+            map_schema('col', type_map(type_string(), type_integer())),
+            map_schema('col', type_map(type_string(), type_integer())),
         ];
     }
 
@@ -197,20 +206,6 @@ final class MapDefinitionTest extends FlowTestCase
     public function test_merge(Definition $definition, Definition $other, Definition $expected): void
     {
         static::assertEquals($expected, $definition->merge($other));
-    }
-
-    /**
-     * @param Definition<mixed> $definition
-     * @param Definition<mixed> $other
-     * @param class-string $expectedClass
-     */
-    #[DataProvider('provideMergeWithExpectedTypeCases')]
-    public function test_merge_produces_expected_type(
-        Definition $definition,
-        Definition $other,
-        string $expectedClass,
-    ): void {
-        static::assertInstanceOf($expectedClass, $definition->merge($other));
     }
 
     public function test_merge_with_null_definition_keeps_original_type(): void

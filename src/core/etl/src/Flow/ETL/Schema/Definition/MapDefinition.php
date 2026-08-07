@@ -151,17 +151,9 @@ final readonly class MapDefinition implements Definition
         }
 
         if ($definition instanceof self) {
-            if (type_equals($this->type, $definition->type)) {
-                return new self(
-                    $this->ref,
-                    $this->type,
-                    $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata),
-                );
-            }
-
-            return new JsonDefinition(
+            return new self(
                 $this->ref,
+                (new TypeMerge())->mergeMaps($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );
