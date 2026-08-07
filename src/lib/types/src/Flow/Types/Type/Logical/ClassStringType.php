@@ -19,14 +19,14 @@ use function is_object;
 use function is_string;
 
 /**
- * @template T of object
+ * @template T of class-string
  *
- * @implements Type<class-string<T>>
+ * @implements Type<T>
  */
 final readonly class ClassStringType implements Type
 {
     /**
-     * @param null|class-string<T> $class
+     * @param null|T $class
      */
     public function __construct(
         public ?string $class = null,
@@ -50,6 +50,9 @@ final readonly class ClassStringType implements Type
         return new self($data['class'] ?? null);
     }
 
+    /**
+     * @return T
+     */
     public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
@@ -59,6 +62,9 @@ final readonly class ClassStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return T
+     */
     public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
@@ -68,6 +74,7 @@ final readonly class ClassStringType implements Type
         if (is_string($value)) {
             if (class_exists($value) || interface_exists($value)) {
                 if ($this->class === null || is_a($value, $this->class, true)) {
+                    /** @var T $value */
                     return $value;
                 }
             }
@@ -77,6 +84,7 @@ final readonly class ClassStringType implements Type
             $className = $value::class;
 
             if ($this->class === null || is_a($className, $this->class, true)) {
+                /** @var T $className */
                 return $className;
             }
         }

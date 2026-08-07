@@ -6,8 +6,6 @@ namespace Flow\Types\Type;
 
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use UnitEnum;
@@ -27,9 +25,11 @@ use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
@@ -92,7 +92,7 @@ final class TypeDetector
             );
 
             if ($detector->isList()) {
-                return new ListType($detector->valueType());
+                return type_list($detector->valueType());
             }
 
             if ($detector->isMap()) {
@@ -107,7 +107,7 @@ final class TypeDetector
                     $elements[type_string()->assert($key)] = $this->detectType($item);
                 }
 
-                return new StructureType($elements);
+                return type_structure($elements);
             }
 
             return type_array();

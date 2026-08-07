@@ -10,12 +10,10 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 
 use function array_key_exists;
-use function count;
-use function Flow\ETL\DSL\definition_from_type;
+use function array_keys;
 use function Flow\Types\DSL\type_equals;
 use function sprintf;
 
@@ -31,7 +29,7 @@ final readonly class StructureDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @param StructureType<TElement> $type
+     * @param StructureType<array<array-key, TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -70,45 +68,44 @@ final readonly class StructureDefinition implements Definition
             return false;
         }
 
-        $thisElements = $this->type->elements();
-        $definitionElements = $definition->type->elements();
+        $declaredRequired = $this->type->elements();
+        $declaredOptional = $this->type->optionalElements();
+        $givenRequired = $definition->type->elements();
+        $givenOptional = $definition->type->optionalElements();
 
-        if (count($thisElements) !== count($definitionElements)) {
-            return false;
-        }
+        $compatibility = new ElementCompatibility();
 
-        foreach ($thisElements as $name => $element) {
-            if (!array_key_exists($name, $definitionElements)) {
+        foreach ($declaredRequired as $name => $element) {
+            // A given optional element may be absent, so it cannot satisfy a declared required one.
+            if (!array_key_exists($name, $givenRequired)) {
                 return false;
             }
 
-            $thisElement = $element;
-            $thisElementNullable = false;
-            $definitionElement = $definitionElements[$name];
-            $definitionElementNullable = false;
+            if (!$compatibility->isCompatible($this->ref->name() . '.' . $name, $element, $givenRequired[$name])) {
+                return false;
+            }
+        }
 
-            if ($thisElement instanceof OptionalType) {
-                $thisElement = $thisElement->base();
-                $thisElementNullable = true;
+        foreach ($declaredOptional as $name => $element) {
+            if (array_key_exists($name, $givenRequired)) {
+                $givenElement = $givenRequired[$name];
+            } elseif (array_key_exists($name, $givenOptional)) {
+                $givenElement = $givenOptional[$name];
+            } else {
+                continue;
             }
 
-            if ($definitionElement instanceof OptionalType) {
-                $definitionElement = $definitionElement->base();
-                $definitionElementNullable = true;
+            if (!$compatibility->isCompatible($this->ref->name() . '.' . $name, $element, $givenElement)) {
+                return false;
             }
+        }
 
-            $thisElementDef = definition_from_type(
-                $this->ref->name() . '.' . $name,
-                $thisElement,
-                $thisElementNullable,
-            );
-            $definitionElementDef = definition_from_type(
-                $definition->ref->name() . '.' . $name,
-                $definitionElement,
-                $definitionElementNullable,
-            );
+        if ($this->type->allowsExtra()) {
+            return true;
+        }
 
-            if (!$thisElementDef->isCompatible($definitionElementDef)) {
+        foreach ([...array_keys($givenRequired), ...array_keys($givenOptional)] as $name) {
+            if (!array_key_exists($name, $declaredRequired) && !array_key_exists($name, $declaredOptional)) {
                 return false;
             }
         }
@@ -167,17 +164,9 @@ final readonly class StructureDefinition implements Definition
         }
 
         if ($definition instanceof self) {
-            if (type_equals($this->type, $definition->type)) {
-                return new self(
-                    $this->ref,
-                    $this->type,
-                    $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata),
-                );
-            }
-
-            return new JsonDefinition(
+            return new self(
                 $this->ref,
+                (new TypeMerge())->mergeStructures($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );
@@ -223,7 +212,7 @@ final readonly class StructureDefinition implements Definition
     }
 
     /**
-     * @return StructureType<TElement>
+     * @return StructureType<array<array-key, TElement>>
      */
     public function type(): StructureType
     {

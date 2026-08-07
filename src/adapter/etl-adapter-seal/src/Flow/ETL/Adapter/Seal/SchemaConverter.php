@@ -102,6 +102,13 @@ final class SchemaConverter
      */
     private function flowToSealField(string $name, Type $type, bool $multiple, Metadata $metadata): AbstractField
     {
+        if ($type instanceof StructureType && count($type->optionalElements())) {
+            throw new RuntimeException(sprintf(
+                'Seal schema does not support structure optional elements, given: %s',
+                $type->toString(),
+            ));
+        }
+
         return match ($type::class) {
             EnumType::class,
             HTMLElementType::class,

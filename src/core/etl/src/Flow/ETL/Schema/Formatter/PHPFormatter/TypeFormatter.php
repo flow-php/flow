@@ -59,7 +59,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param ListType<mixed> $type
+     * @param ListType<list<mixed>> $type
      */
     private function formatListType(ListType $type, bool $nullable): string
     {
@@ -73,7 +73,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param MapType<array-key, mixed> $type
+     * @param MapType<array<array-key, mixed>> $type
      */
     private function formatMapType(MapType $type, bool $nullable): string
     {
@@ -123,7 +123,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      */
     private function formatStructureType(StructureType $type, bool $nullable): string
     {
@@ -135,10 +135,26 @@ final class TypeFormatter
             $fields[] = sprintf('"%s" => %s', $name, $this->format($element));
         }
 
+        $arguments = sprintf('elements: [%s]', implode(', ', $fields));
+
+        if (count($type->optionalElements())) {
+            $optionalFields = [];
+
+            foreach ($type->optionalElements() as $name => $element) {
+                $optionalFields[] = sprintf('"%s" => %s', $name, $this->format($element));
+            }
+
+            $arguments .= sprintf(', optional_elements: [%s]', implode(', ', $optionalFields));
+        }
+
+        if ($type->allowsExtra()) {
+            $arguments .= ', allow_extra: true';
+        }
+
         return sprintf(
-            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(elements: [%s]))' : '\%s(elements: [%s])',
+            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(%s))' : '\%s(%s)',
             $reflection->getName(),
-            implode(', ', $fields),
+            $arguments,
         );
     }
 }

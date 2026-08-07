@@ -17,7 +17,9 @@ use function Flow\Types\DSL\type_time;
 use function is_string;
 
 /**
- * @implements Type<\DateInterval>
+ * @template T of \DateInterval
+ *
+ * @implements Type<T>
  */
 final readonly class TimeType implements Type
 {

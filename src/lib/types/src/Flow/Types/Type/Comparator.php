@@ -122,23 +122,15 @@ final class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            if (count($left->elements()) !== count($right->elements())) {
+            if ($left->allowsExtra() !== $right->allowsExtra()) {
                 return false;
             }
 
-            $rightElements = $right->elements();
-
-            foreach ($left->elements() as $name => $field) {
-                if (!array_key_exists($name, $rightElements)) {
-                    return false;
-                }
-
-                if (!$this->equals($field, $rightElements[$name])) {
-                    return false;
-                }
+            if (!$this->elementsEqual($left->elements(), $right->elements())) {
+                return false;
             }
 
-            return true;
+            return $this->elementsEqual($left->optionalElements(), $right->optionalElements());
         }
 
         return $left->toString() === $right->toString();
@@ -169,6 +161,29 @@ final class Comparator
         }
 
         return false;
+    }
+
+    /**
+     * @param array<array-key, Type<mixed>> $left
+     * @param array<array-key, Type<mixed>> $right
+     */
+    private function elementsEqual(array $left, array $right): bool
+    {
+        if (count($left) !== count($right)) {
+            return false;
+        }
+
+        foreach ($left as $name => $element) {
+            if (!array_key_exists($name, $right)) {
+                return false;
+            }
+
+            if (!$this->equals($element, $right[$name])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

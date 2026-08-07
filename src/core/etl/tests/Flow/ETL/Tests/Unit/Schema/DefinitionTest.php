@@ -17,7 +17,6 @@ use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
@@ -158,7 +157,7 @@ final class DefinitionTest extends FlowTestCase
     public function test_merging_two_different_lists(): void
     {
         static::assertEquals(
-            json_schema('list'),
+            list_schema('list', type_list(type_string())),
             list_schema('list', type_list(type_string()))->merge(list_schema('list', type_list(type_integer()))),
         );
     }
@@ -166,7 +165,7 @@ final class DefinitionTest extends FlowTestCase
     public function test_merging_two_different_maps(): void
     {
         static::assertEquals(
-            json_schema('map'),
+            map_schema('map', type_map(type_string(), type_string())),
             map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(
                 type_string(),
                 type_integer(),
@@ -177,7 +176,10 @@ final class DefinitionTest extends FlowTestCase
     public function test_merging_two_different_structures(): void
     {
         static::assertEquals(
-            json_schema('structure'),
+            structure_schema('structure', type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+            ])),
             structure_schema('structure', type_structure([
                 'street' => type_string(),
                 'city' => type_string(),

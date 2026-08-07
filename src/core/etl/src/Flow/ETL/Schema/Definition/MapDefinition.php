@@ -30,7 +30,7 @@ final readonly class MapDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @param MapType<TKey, TValue> $type
+     * @param MapType<array<TKey, TValue>> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -151,17 +151,9 @@ final readonly class MapDefinition implements Definition
         }
 
         if ($definition instanceof self) {
-            if (type_equals($this->type, $definition->type)) {
-                return new self(
-                    $this->ref,
-                    $this->type,
-                    $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata),
-                );
-            }
-
-            return new JsonDefinition(
+            return new self(
                 $this->ref,
+                (new TypeMerge())->mergeMaps($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );
@@ -207,7 +199,7 @@ final readonly class MapDefinition implements Definition
     }
 
     /**
-     * @return MapType<TKey, TValue>
+     * @return MapType<array<TKey, TValue>>
      */
     public function type(): MapType
     {

@@ -85,13 +85,17 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
         if ($definition->type() instanceof StructureType) {
             $buffer[] = $indention . '|-- ' . $entry . ': structure';
 
-            /** @var StructureType<array<string, Type<mixed>>> $structureType */
+            /** @var StructureType<array<array-key, mixed>> $structureType */
             $structureType = $definition->type();
 
             $fields = [];
 
             foreach ($structureType->elements() as $name => $type) {
                 $fields += $this->formatStructureElement($name, $type, $fields, 1);
+            }
+
+            foreach ($structureType->optionalElements() as $name => $type) {
+                $fields += $this->formatStructureElement($name . '?', $type, $fields, 1);
             }
 
             $buffer = array_merge($buffer, $fields);
@@ -130,6 +134,10 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             foreach ($structureType->elements() as $nextName => $nextType) {
                 $fields += $this->formatStructureElement($nextName, $nextType, $fields, $level + 1);
+            }
+
+            foreach ($structureType->optionalElements() as $nextName => $nextType) {
+                $fields += $this->formatStructureElement($nextName . '?', $nextType, $fields, $level + 1);
             }
 
             $buffer = array_merge($buffer, $fields);

@@ -96,6 +96,13 @@ final class SchemaConverter
      */
     private function flowToParquet(string $name, Type $type, bool $nullable): Column
     {
+        if ($type instanceof StructureType && count($type->optionalElements())) {
+            throw new RuntimeException(sprintf(
+                'Parquet schema does not support structure optional elements, given: %s',
+                $type->toString(),
+            ));
+        }
+
         $repetition = $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED;
 
         return match ($type::class) {

@@ -16,7 +16,9 @@ use function preg_match;
 use const LIBXML_NOERROR;
 
 /**
- * @implements Type<HTMLDocument>
+ * @template T of HTMLDocument
+ *
+ * @implements Type<T>
  */
 final readonly class HTMLType implements Type
 {

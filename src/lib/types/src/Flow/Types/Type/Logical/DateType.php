@@ -19,7 +19,9 @@ use function is_numeric;
 use function is_string;
 
 /**
- * @implements Type<\DateTimeInterface>
+ * @template T of \DateTimeInterface
+ *
+ * @implements Type<T>
  */
 final readonly class DateType implements Type
 {

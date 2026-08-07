@@ -6,6 +6,8 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Tests\Unit\Type\Fixtures\NumericStringableObject;
+use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +42,12 @@ final class NumericStringTypeTest extends TestCase
 
     public static function cast_data_provider(): Generator
     {
+        yield 'numeric string' => [
+            'value' => '1234',
+            'expected' => '1234',
+            'exceptionClass' => null,
+        ];
+
         yield 'integer' => [
             'value' => 1234,
             'expected' => '1234',
@@ -54,6 +62,18 @@ final class NumericStringTypeTest extends TestCase
 
         yield 'string' => [
             'value' => 'string',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'numeric stringable' => [
+            'value' => new NumericStringableObject(),
+            'expected' => '1234.5',
+            'exceptionClass' => null,
+        ];
+
+        yield 'non numeric stringable' => [
+            'value' => new StringableObject(),
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];

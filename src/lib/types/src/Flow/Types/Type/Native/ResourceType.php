@@ -11,10 +11,15 @@ use Flow\Types\Type;
 use function is_resource;
 
 /**
- * @implements Type<resource>
+ * @template T of resource
+ *
+ * @implements Type<T>
  */
 final readonly class ResourceType implements Type
 {
+    /**
+     * @return resource
+     */
     public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
@@ -24,6 +29,9 @@ final readonly class ResourceType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return resource
+     */
     public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {

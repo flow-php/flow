@@ -37,7 +37,7 @@ final class ListEntry implements Entry
 
     /**
      * @param TList $value
-     * @param ListType<T> $type
+     * @param ListType<list<T>> $type
      *
      * @throws InvalidArgumentException
      */
@@ -123,7 +123,7 @@ final class ListEntry implements Entry
     }
 
     /**
-     * @return ListType<T>
+     * @return ListType<list<T>>
      */
     public function type(): ListType
     {

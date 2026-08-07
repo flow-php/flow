@@ -73,6 +73,7 @@ final class GitContext
         $this->git(['-C', $directory, 'config', 'user.email', 'ci@flow-php.com']);
         $this->git(['-C', $directory, 'config', 'user.name', 'Flow PHP']);
         $this->git(['-C', $directory, 'config', 'commit.gpgsign', 'false']);
+        $this->git(['-C', $directory, 'config', 'tag.gpgsign', 'false']);
         $this->git(['-C', $directory, 'remote', 'add', 'origin', self::REPOSITORY_URL]);
         $this->git(['-C', $directory, 'commit', '--quiet', '--allow-empty', '-m', 'fixture commit']);
 

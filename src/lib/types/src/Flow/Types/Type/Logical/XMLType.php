@@ -15,7 +15,9 @@ use function Flow\Types\DSL\type_xml;
 use function is_string;
 
 /**
- * @implements Type<\DOMDocument|XMLDocument>
+ * @template T of \DOMDocument|XMLDocument
+ *
+ * @implements Type<T>
  */
 final readonly class XMLType implements Type
 {

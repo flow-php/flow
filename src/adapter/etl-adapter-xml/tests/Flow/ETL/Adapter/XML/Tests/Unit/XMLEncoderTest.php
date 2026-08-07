@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\XMLEncoder;
 use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
@@ -154,6 +155,20 @@ final class XMLEncoderTest extends FlowTestCase
                 'zip' => '31-021',
             ]], ['address' => type_structure(['city' => type_string(), 'zip' => type_string()])])])[0],
         );
+    }
+
+    public function test_encoding_structure_with_optional_elements_throws(): void
+    {
+        $encoder = new XMLEncoder(new DOMDocumentWriter());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'XML encoder does not support structure optional elements, given: structure{city: string, zip?: string}',
+        );
+
+        $encoder->encode([new TypedRowValues(['address' => ['city' => 'Krakow']], ['address' => type_structure([
+            'city' => type_string(),
+        ], ['zip' => type_string()])])]);
     }
 
     public function test_encodes_null_scalar_as_an_empty_node(): void

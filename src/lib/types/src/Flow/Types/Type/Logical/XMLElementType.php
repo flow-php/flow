@@ -15,7 +15,9 @@ use function Flow\Types\DSL\type_instance_of;
 use function is_string;
 
 /**
- * @implements Type<\DOMElement|Element>
+ * @template T of \DOMElement|Element
+ *
+ * @implements Type<T>
  */
 final readonly class XMLElementType implements Type
 {

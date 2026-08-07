@@ -25,7 +25,9 @@ use function is_string;
 use function json_encode;
 
 /**
- * @implements Type<string>
+ * @template T of string
+ *
+ * @implements Type<T>
  */
 final readonly class StringType implements Type
 {

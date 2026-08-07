@@ -8,7 +8,9 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
- * @implements Type<null>
+ * @template T of null
+ *
+ * @implements Type<T>
  */
 final class NullType implements Type
 {

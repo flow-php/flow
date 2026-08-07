@@ -16,7 +16,9 @@ use function is_float;
 use function is_scalar;
 
 /**
- * @implements Type<float>
+ * @template T of float
+ *
+ * @implements Type<T>
  */
 final readonly class FloatType implements Type
 {

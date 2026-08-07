@@ -78,6 +78,25 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
             SCHEMA, (new ASCIISchemaFormatter())->format($schema));
     }
 
+    public function test_format_schema_with_optional_structure_elements(): void
+    {
+        $schema = schema(structure_schema('user', type_structure([
+            'id' => type_integer(),
+            'address' => type_structure(['city' => type_string()], ['zip' => type_string()]),
+        ], ['nickname' => type_string()])));
+
+        self::assertCommandOutputIdentical(<<<'SCHEMA'
+            schema
+            |-- user: structure
+            |    |-- id: integer
+            |    |-- address: structure
+            |        |-- city: string
+            |        |-- zip?: string
+            |    |-- nickname?: string
+
+            SCHEMA, (new ASCIISchemaFormatter())->format($schema));
+    }
+
     public function test_format_nested_schema_as_table(): void
     {
         $schema = schema(

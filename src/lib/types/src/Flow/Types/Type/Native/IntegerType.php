@@ -18,7 +18,9 @@ use function is_object;
 use function is_scalar;
 
 /**
- * @implements Type<int>
+ * @template T of int
+ *
+ * @implements Type<T>
  */
 final readonly class IntegerType implements Type
 {

@@ -12,15 +12,9 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\OptionalType;
-use Flow\Types\Type\Native\FloatType;
-use Flow\Types\Type\Native\IntegerType;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_is_any;
-use function Flow\Types\DSL\type_is_nullable;
-use function Flow\Types\DSL\type_optional;
 use function sprintf;
 
 /**
@@ -35,7 +29,7 @@ final readonly class ListDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @param ListType<TElement> $type
+     * @param ListType<list<TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -150,36 +144,9 @@ final readonly class ListDefinition implements Definition
         }
 
         if ($definition instanceof self) {
-            if (type_equals($this->type, $definition->type)) {
-                return new self(
-                    $this->ref,
-                    $this->type,
-                    $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata),
-                );
-            }
-
-            $thisElementType = $this->type->element();
-            $definitionElementType = $definition->type->element();
-
-            if (
-                type_is_any($thisElementType, IntegerType::class, FloatType::class)
-                && type_is_any($definitionElementType, IntegerType::class, FloatType::class)
-            ) {
-                return new self(
-                    $this->ref,
-                    new ListType(
-                        type_is_nullable($thisElementType) || type_is_nullable($definitionElementType)
-                            ? type_optional(type_float())
-                            : type_float(),
-                    ),
-                    $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata),
-                );
-            }
-
-            return new JsonDefinition(
+            return new self(
                 $this->ref,
+                (new TypeMerge())->mergeLists($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );
@@ -225,7 +192,7 @@ final readonly class ListDefinition implements Definition
     }
 
     /**
-     * @return ListType<TElement>
+     * @return ListType<list<TElement>>
      */
     public function type(): ListType
     {

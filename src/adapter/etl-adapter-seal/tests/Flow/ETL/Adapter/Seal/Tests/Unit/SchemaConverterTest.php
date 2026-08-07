@@ -101,6 +101,22 @@ final class SchemaConverterTest extends FlowTestCase
         to_seal_schema(schema(str_schema('name')), 'index');
     }
 
+    public function test_throws_when_structure_has_optional_elements(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Seal schema does not support structure optional elements, given: structure{name: string, nickname?: string}',
+        );
+
+        to_seal_schema(
+            schema(
+                str_schema('id'),
+                structure_schema('author', type_structure(['name' => type_string()], ['nickname' => type_string()])),
+            ),
+            'index',
+        );
+    }
+
     public function test_using_metadata_to_override_default_field_flags(): void
     {
         $sealSchema = to_seal_schema(

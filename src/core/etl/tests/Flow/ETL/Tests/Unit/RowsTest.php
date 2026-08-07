@@ -22,7 +22,6 @@ use function Flow\ETL\DSL\boolean_entry;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
@@ -867,7 +866,7 @@ final class RowsTest extends FlowTestCase
             row(list_entry('list', [1, 2], type_list(type_integer()))),
         );
 
-        static::assertEquals(schema(json_schema('list')), $rows->schema());
+        static::assertEquals(schema(list_schema('list', type_list(type_string()))), $rows->schema());
     }
 
     public function test_rows_serialization(): void

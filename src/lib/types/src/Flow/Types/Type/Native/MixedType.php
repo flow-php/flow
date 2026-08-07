@@ -7,7 +7,9 @@ namespace Flow\Types\Type\Native;
 use Flow\Types\Type;
 
 /**
- * @implements Type<mixed>
+ * @template T of mixed
+ *
+ * @implements Type<T>
  */
 final class MixedType implements Type
 {

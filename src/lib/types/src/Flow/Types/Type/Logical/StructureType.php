@@ -34,25 +34,25 @@ use function str_starts_with;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @template T
+ * @template-covariant T of array<array-key, mixed>
  *
- * @implements Type<array<array-key, T>>
+ * @implements Type<T>
  */
 final readonly class StructureType implements Type
 {
     /**
-     * @var array<array-key, Type<T>>
+     * @var array<array-key, Type<value-of<T>>>
      */
     private array $elements;
 
     /**
-     * @var array<array-key, Type<T>>
+     * @var array<array-key, Type<value-of<T>>>
      */
     private array $optionalElements;
 
     /**
-     * @param array<array-key, Type<T>> $elements
-     * @param array<array-key, Type<T>> $optionalElements
+     * @param array<array-key, Type<value-of<T>>> $elements
+     * @param array<array-key, Type<value-of<T>>> $optionalElements
      *
      * @throws InvalidArgumentException
      */
@@ -80,7 +80,7 @@ final readonly class StructureType implements Type
     /**
      * @param array<string, mixed> $data
      *
-     * @return StructureType<mixed>
+     * @return StructureType<array<array-key, mixed>>
      */
     public static function fromArray(array $data): self
     {
@@ -111,6 +111,9 @@ final readonly class StructureType implements Type
         return $this->allowExtra;
     }
 
+    /**
+     * @return T
+     */
     public function assert(mixed $value): array
     {
         if ($this->isValid($value)) {
@@ -120,6 +123,9 @@ final readonly class StructureType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return T
+     */
     public function cast(mixed $value): array
     {
         try {

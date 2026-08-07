@@ -17,7 +17,9 @@ use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
 
 /**
- * @implements Type<HTMLElement>
+ * @template T of HTMLElement
+ *
+ * @implements Type<T>
  */
 final readonly class HTMLElementType implements Type
 {

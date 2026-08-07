@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -81,5 +82,29 @@ final class FlowToParquetSchemaTest extends FlowTestCase
                 map_schema('map', type_map(type_string(), type_integer())),
             )),
         );
+    }
+
+    public function test_converting_structure_with_optional_elements_throws(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Parquet schema does not support structure optional elements, given: structure{a: string, b?: string}',
+        );
+
+        (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure(['a' => type_string()], [
+            'b' => type_string(),
+        ]))));
+    }
+
+    public function test_converting_nested_structure_with_optional_elements_throws(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Parquet schema does not support structure optional elements, given: structure{b: string, c?: string}',
+        );
+
+        (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure([
+            'a' => type_structure(['b' => type_string()], ['c' => type_string()]),
+        ]))));
     }
 }

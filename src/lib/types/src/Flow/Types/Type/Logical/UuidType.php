@@ -15,7 +15,9 @@ use function is_object;
 use function is_string;
 
 /**
- * @implements Type<Uuid>
+ * @template T of Uuid
+ *
+ * @implements Type<T>
  */
 final readonly class UuidType implements Type
 {
