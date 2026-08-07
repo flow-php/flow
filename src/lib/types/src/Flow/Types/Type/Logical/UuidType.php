@@ -30,6 +30,9 @@ final readonly class UuidType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return Uuid
+     */
     public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {

@@ -29,6 +29,9 @@ use function json_encode;
  */
 final class NonEmptyStringType implements Type
 {
+    /**
+     * @return non-empty-string
+     */
     public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
@@ -38,6 +41,9 @@ final class NonEmptyStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {

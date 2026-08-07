@@ -71,7 +71,7 @@ The DSL definition can thus be considered the library's API, located in the
 file [functions.php](/src/lib/types/src/Flow/Types/DSL/functions.php).
 
 One of the library's key principles is tight integration with static code analysis tools. This is achieved through
-proper use of template mechanisms and type narrowing, `@template` and `@phpstan-assert`.
+proper use of template mechanisms and type narrowing, `@template` and `@assert`.
 
 More details can be found at:
 
@@ -80,6 +80,26 @@ More details can be found at:
 - [Narrowing Types](https://phpstan.org/writing-php-code/narrowing-types)
 
 Therefore, it is critical that all classes and functions in this library are properly documented in PHPDoc.
+
+Two rules follow from that, and both are load-bearing rather than stylistic.
+
+**Every implementation restates `@return` when its own type is narrower than its native signature.** Mago resolves a
+return type from the implementation's docblock, never from the interface's — an implementation that declares
+`assert(mixed $value): string` and omits `@return non-empty-string` silently hands back `string`, discarding exactly
+the narrowing the library exists to provide. This produces no diagnostic on its own: the resulting program is valid,
+and nothing observes an inferred type.
+[`TypeNarrowing`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/TypeNarrowing.php) funnels every `type_*()`
+through `assert()`, `cast()` and `isValid()` into sinks that accept only the narrow type, so `just analyze` fails on
+the line where a narrowing is lost.
+
+**Every implementation declares `@template T of X` and `@implements Type<T>`, including those where nothing can bind
+`T` to anything but its own bound.** These templates look like ceremony and are not. Mago's `flow-php` analyzer plugin
+builds a `type_structure()` shape by reading type parameter 0 off each element's concrete class; an element class with
+no type parameters makes the plugin discard the *entire* shape, degrading it to `array<array-key, mixed>` — again with
+no diagnostic.
+[`StructureShapeInference`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/StructureShapeInference.php)
+pins those shapes so `just analyze` fails if this is broken. Removing the templates requires an upstream mago change
+that resolves the element through the `Flow\Types\Type` template instead.
 
 ## Testing
 
