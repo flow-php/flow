@@ -292,6 +292,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new EnsureStart($this, $prefix);
     }
 
+    public function enumName(): EnumName
+    {
+        return new EnumName($this);
+    }
+
+    public function enumValue(): EnumValue
+    {
+        return new EnumValue($this);
+    }
+
     public function equals(mixed $ref): Equals
     {
         return new Equals($this, $ref);

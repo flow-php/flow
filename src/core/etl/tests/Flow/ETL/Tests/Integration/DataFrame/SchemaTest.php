@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Pipeline;
 use Flow\ETL\Schema;
+use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_map;
@@ -14,6 +15,8 @@ use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -77,6 +80,19 @@ final class SchemaTest extends FlowIntegrationTestCase
             $rows->toArray(),
         );
         static::assertEquals(schema(int_schema('id'), str_schema('name'), null_schema('active')), $rows->schema());
+    }
+
+    public function test_getting_schema_of_enum_column_with_null_values(): void
+    {
+        static::assertEquals(
+            schema(enum_schema('status', BackedStringEnum::class, nullable: true)),
+            df()
+                ->read(from_rows(rows(
+                    row(enum_entry('status', BackedStringEnum::one)),
+                    row(enum_entry('status', null)),
+                )))
+                ->schema(),
+        );
     }
 
     public function test_getting_schema(): void
