@@ -152,6 +152,21 @@ flow_telemetry:
         - 'cache.http_client.pool'
 ```
 
+### 9) `flow-php/types` - a `Type` implementation's generic parameter is the value it represents
+
+| Before                           | After                                    |
+|----------------------------------|------------------------------------------|
+| `ListType<string>`               | `ListType<list<string>>`                 |
+| `MapType<string, int>`           | `MapType<array<string, int>>`            |
+| `StructureType<mixed>`           | `StructureType<array<array-key, mixed>>` |
+| `ClassStringType<Foo>`           | `ClassStringType<class-string<Foo>>`     |
+| `ListType::element(): Type<T>`   | `Type<value-of<T>>`                      |
+| `MapType::key(): Type<TKey>`     | `Type<key-of<T>>`                        |
+| `MapType::value(): Type<TValue>` | `Type<value-of<T>>`                      |
+| `type_string(): Type`            | `type_string(): StringType`              |
+
+Update `ListType`, `MapType`, `StructureType` and `ClassStringType` parameters in your own docblocks.
+
 ---
 
 ## Upgrading from 0.41.x to 0.42.x
