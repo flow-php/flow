@@ -91,6 +91,8 @@ use Flow\ETL\Function\ConcatWithSeparator;
 use Flow\ETL\Function\Count;
 use Flow\ETL\Function\DateTimeFormat;
 use Flow\ETL\Function\DenseRank;
+use Flow\ETL\Function\EnumName;
+use Flow\ETL\Function\EnumValue;
 use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\Exists;
 use Flow\ETL\Function\First;
@@ -1388,6 +1390,18 @@ function cast(mixed $value, string|Type $type): Cast
 function coalesce(ScalarFunction ...$values): Coalesce
 {
     return new Coalesce(...$values);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function enum_name(mixed $value): EnumName
+{
+    return new EnumName($value);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function enum_value(mixed $value): EnumValue
+{
+    return new EnumValue($value);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]

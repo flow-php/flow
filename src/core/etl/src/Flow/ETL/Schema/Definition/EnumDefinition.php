@@ -137,13 +137,18 @@ final readonly class EnumDefinition implements Definition
             return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
         }
 
-        if ($definition instanceof self && $definition->enumClass === $this->enumClass) {
-            return new self(
-                $this->ref,
-                $this->enumClass,
-                $this->nullable || $definition->nullable,
-                $this->metadata->merge($definition->metadata),
-            );
+        if ($definition instanceof self) {
+            // A null enum value carries no class, EnumEntry falls back to UnitEnum, so the concrete side wins.
+            $enumClass = $this->enumClass === UnitEnum::class ? $definition->enumClass : $this->enumClass;
+
+            if ($enumClass === $definition->enumClass || $definition->enumClass === UnitEnum::class) {
+                return new self(
+                    $this->ref,
+                    $enumClass,
+                    $this->nullable || $definition->nullable,
+                    $this->metadata->merge($definition->metadata),
+                );
+            }
         }
 
         if ($definition instanceof StringDefinition) {

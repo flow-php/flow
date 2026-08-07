@@ -16,6 +16,7 @@ use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use UnitEnum;
 
 use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
@@ -194,6 +195,32 @@ final class EnumDefinitionTest extends FlowTestCase
 
         static::assertInstanceOf(EnumDefinition::class, $merged);
         static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_with_unit_enum_class_adopts_concrete_enum_class(): void
+    {
+        $merged = enum_schema('col', BackedStringEnum::class)->merge(enum_schema('col', UnitEnum::class, true));
+
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertSame(BackedStringEnum::class, $merged->enumClass());
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_when_this_is_unit_enum_class_adopts_concrete_enum_class(): void
+    {
+        $merged = enum_schema('col', UnitEnum::class, true)->merge(enum_schema('col', BackedStringEnum::class));
+
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertSame(BackedStringEnum::class, $merged->enumClass());
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_of_two_unit_enum_classes_stays_unit_enum(): void
+    {
+        $merged = enum_schema('col', UnitEnum::class, true)->merge(enum_schema('col', UnitEnum::class, true));
+
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertSame(UnitEnum::class, $merged->enumClass());
     }
 
     public function test_merge_with_different_entry_name_throws_exception(): void
