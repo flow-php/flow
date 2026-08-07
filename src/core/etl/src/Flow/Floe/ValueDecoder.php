@@ -186,7 +186,7 @@ final class ValueDecoder
      */
     private function listDecoder(Type $type): Decoding\ValueDecoder
     {
-        /** @var ListType<mixed> $type */
+        /** @var ListType<list<mixed>> $type */
         $element = $type->element();
 
         if ($element instanceof IntegerType) {
@@ -205,7 +205,7 @@ final class ValueDecoder
      */
     private function mapDecoder(Type $type): Decoding\ValueDecoder
     {
-        /** @var MapType<array-key, mixed> $type */
+        /** @var MapType<array<array-key, mixed>> $type */
         $key = $type->key();
 
         $keyDecoder = match (true) {
@@ -231,7 +231,7 @@ final class ValueDecoder
      */
     private function structureDecoder(Type $type): Decoding\ValueDecoder
     {
-        /** @var StructureType<mixed> $type */
+        /** @var StructureType<array<array-key, mixed>> $type */
         $elements = [];
 
         foreach ($type->elements() as $name => $elementType) {

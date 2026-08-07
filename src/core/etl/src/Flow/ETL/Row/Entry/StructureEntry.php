@@ -39,7 +39,7 @@ final class StructureEntry implements Entry
 
     /**
      * @param TStruct $value
-     * @param StructureType<T> $type
+     * @param StructureType<array<array-key, T>> $type
      *
      * @throws InvalidArgumentException
      */
@@ -129,7 +129,7 @@ final class StructureEntry implements Entry
     }
 
     /**
-     * @return StructureType<T>
+     * @return StructureType<array<array-key, T>>
      */
     public function type(): StructureType
     {

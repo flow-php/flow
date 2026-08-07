@@ -16,7 +16,9 @@ use function is_string;
 use function mb_strtolower;
 
 /**
- * @implements Type<bool>
+ * @template T of bool
+ *
+ * @implements Type<T>
  */
 final readonly class BooleanType implements Type
 {

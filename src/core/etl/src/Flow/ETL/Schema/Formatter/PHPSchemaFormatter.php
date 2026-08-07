@@ -162,7 +162,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
      */
     private function mapType(Definition $definition): string
     {
-        /** @var MapType<array-key, mixed> $type */
+        /** @var MapType<array<array-key, mixed>> $type */
         $type = $definition->type();
         $reflection = new ReflectionFunction("\Flow\ETL\DSL\\map_schema");
 
@@ -213,7 +213,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
      */
     private function structureType(Definition $definition): string
     {
-        /** @var StructureType<array<string, Type<mixed>>> $type */
+        /** @var StructureType<array<array-key, mixed>> $type */
         $type = $definition->type();
         $reflection = new ReflectionFunction("\Flow\ETL\DSL\\structure_schema");
 

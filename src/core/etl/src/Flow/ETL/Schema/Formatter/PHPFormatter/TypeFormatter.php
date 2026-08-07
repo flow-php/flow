@@ -59,7 +59,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param ListType<mixed> $type
+     * @param ListType<list<mixed>> $type
      */
     private function formatListType(ListType $type, bool $nullable): string
     {
@@ -73,7 +73,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param MapType<array-key, mixed> $type
+     * @param MapType<array<array-key, mixed>> $type
      */
     private function formatMapType(MapType $type, bool $nullable): string
     {
@@ -123,7 +123,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      */
     private function formatStructureType(StructureType $type, bool $nullable): string
     {

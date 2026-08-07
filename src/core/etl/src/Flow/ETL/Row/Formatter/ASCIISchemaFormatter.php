@@ -85,7 +85,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
         if ($definition->type() instanceof StructureType) {
             $buffer[] = $indention . '|-- ' . $entry . ': structure';
 
-            /** @var StructureType<array<string, Type<mixed>>> $structureType */
+            /** @var StructureType<array<array-key, mixed>> $structureType */
             $structureType = $definition->type();
 
             $fields = [];

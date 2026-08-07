@@ -21,7 +21,9 @@ use function str_starts_with;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @implements Type<array>
+ * @template T of array
+ *
+ * @implements Type<T>
  */
 final readonly class ArrayType implements Type
 {

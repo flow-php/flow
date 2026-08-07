@@ -175,7 +175,7 @@ final class ValueEncoder
      */
     private function listEncoder(Type $type): Encoding\ValueEncoder
     {
-        /** @var ListType<mixed> $type */
+        /** @var ListType<list<mixed>> $type */
         $element = $type->element();
 
         if ($element instanceof IntegerType) {
@@ -194,7 +194,7 @@ final class ValueEncoder
      */
     private function mapEncoder(Type $type): Encoding\ValueEncoder
     {
-        /** @var MapType<array-key, mixed> $type */
+        /** @var MapType<array<array-key, mixed>> $type */
         $key = $type->key();
 
         $keyEncoder = match (true) {
@@ -211,7 +211,7 @@ final class ValueEncoder
      */
     private function structureEncoder(Type $type): Encoding\ValueEncoder
     {
-        /** @var StructureType<mixed> $type */
+        /** @var StructureType<array<array-key, mixed>> $type */
         $elements = [];
 
         foreach ($type->elements() as $name => $elementType) {

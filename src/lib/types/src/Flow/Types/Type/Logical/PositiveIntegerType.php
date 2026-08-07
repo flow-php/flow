@@ -17,7 +17,9 @@ use function is_int;
 use function is_numeric;
 
 /**
- * @implements Type<int<0, max>>
+ * @template T of int<0, max>
+ *
+ * @implements Type<T>
  */
 final readonly class PositiveIntegerType implements Type
 {

@@ -410,13 +410,15 @@ final class StructureTypeTest extends TestCase
 
     public function test_allows_extra_false_by_default(): void
     {
-        $type = new StructureType(['id' => type_integer()]);
+        $type = type_structure(['id' => type_integer()]);
+        // @mago-expect analysis:non-existent-method
         static::assertFalse($type->allowsExtra());
     }
 
     public function test_allows_extra_true_when_set(): void
     {
-        $type = new StructureType(['id' => type_integer()], [], true);
+        $type = type_structure(['id' => type_integer()], [], true);
+        // @mago-expect analysis:non-existent-method
         static::assertTrue($type->allowsExtra());
     }
 
@@ -450,7 +452,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_constructor_allows_empty_required_if_optional_provided(): void
     {
-        $type = new StructureType([], ['id' => type_integer()]);
+        $type = type_structure([], ['id' => type_integer()]);
         static::assertEmpty($type->elements());
         static::assertNotEmpty($type->optionalElements());
     }
@@ -474,7 +476,8 @@ final class StructureTypeTest extends TestCase
     public function test_elements(): void
     {
         $map = ['map' => type_map(type_string(), type_float())];
-        static::assertEquals($map, (new StructureType($map))->elements());
+        // @mago-expect analysis:non-existent-method
+        static::assertEquals($map, type_structure($map)->elements());
     }
 
     #[DataProvider('is_valid_data_provider')]
@@ -498,7 +501,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_normalization_with_allow_extra(): void
     {
-        $type = new StructureType(
+        $type = type_structure(
             [
                 'string' => type_string(),
                 'float' => type_float(),
@@ -515,7 +518,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_normalization_with_optional_elements(): void
     {
-        $type = new StructureType(['id' => type_integer()], ['name' => type_string(), 'active' => type_boolean()]);
+        $type = type_structure(['id' => type_integer()], ['name' => type_string(), 'active' => type_boolean()]);
         $normalized = $type->normalize();
         $recreated = StructureType::fromArray($normalized);
 
@@ -526,14 +529,16 @@ final class StructureTypeTest extends TestCase
     public function test_optional_elements(): void
     {
         $optionalElements = ['name' => type_string(), 'active' => type_boolean()];
-        $type = new StructureType(['id' => type_integer()], $optionalElements);
+        $type = type_structure(['id' => type_integer()], $optionalElements);
 
+        // @mago-expect analysis:non-existent-method
         static::assertEquals($optionalElements, $type->optionalElements());
     }
 
     public function test_optional_elements_empty_by_default(): void
     {
-        $type = new StructureType(['id' => type_integer()]);
+        $type = type_structure(['id' => type_integer()]);
+        // @mago-expect analysis:non-existent-method
         static::assertEmpty($type->optionalElements());
     }
 

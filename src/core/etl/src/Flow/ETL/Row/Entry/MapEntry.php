@@ -38,7 +38,7 @@ final class MapEntry implements Entry
 
     /**
      * @param TMap $value
-     * @param MapType<TKey, TValue> $type
+     * @param MapType<array<TKey, TValue>> $type
      *
      * @throws InvalidArgumentException
      */
@@ -124,7 +124,7 @@ final class MapEntry implements Entry
     }
 
     /**
-     * @return MapType<TKey, TValue>
+     * @return MapType<array<TKey, TValue>>
      */
     public function type(): MapType
     {

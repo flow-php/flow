@@ -29,7 +29,7 @@ final readonly class StructureDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @param StructureType<TElement> $type
+     * @param StructureType<array<array-key, TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -212,7 +212,7 @@ final readonly class StructureDefinition implements Definition
     }
 
     /**
-     * @return StructureType<TElement>
+     * @return StructureType<array<array-key, TElement>>
      */
     public function type(): StructureType
     {

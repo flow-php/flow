@@ -11,7 +11,6 @@ use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Type\Logical\StructureType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -104,13 +103,13 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
 
         yield 'allow extra accepts an undeclared key' => [
-            structure_schema('data', new StructureType(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
             true,
         ];
 
         yield 'allow extra accepts an undeclared optional key' => [
-            structure_schema('data', new StructureType(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
             structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
             true,
         ];
@@ -129,7 +128,7 @@ final class StructureDefinitionTest extends FlowTestCase
 
         yield 'openness is read from the declared side only' => [
             structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', new StructureType(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
             true,
         ];
 
@@ -241,8 +240,8 @@ final class StructureDefinitionTest extends FlowTestCase
 
         yield 'allow extra is the union of both sides' => [
             structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', new StructureType(['id' => type_integer()], [], true)),
-            structure_schema('data', new StructureType(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
         ];
 
         yield 'allow extra false on both sides stays false' => [

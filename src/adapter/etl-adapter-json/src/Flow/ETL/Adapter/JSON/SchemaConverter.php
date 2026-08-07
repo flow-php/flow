@@ -1020,7 +1020,7 @@ final class SchemaConverter
     }
 
     /**
-     * @param MapType<array-key, mixed> $type
+     * @param MapType<array<array-key, mixed>> $type
      *
      * @return array<string, mixed>
      */
@@ -1041,7 +1041,7 @@ final class SchemaConverter
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      *
      * @return array<string, mixed>
      */

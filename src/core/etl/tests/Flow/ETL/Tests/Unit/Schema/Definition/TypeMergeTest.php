@@ -7,8 +7,6 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 use Flow\ETL\Schema\Definition\TypeMerge;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -259,9 +257,9 @@ final class TypeMergeTest extends FlowTestCase
     }
 
     /**
-     * @param StructureType<mixed> $left
-     * @param StructureType<mixed> $right
-     * @param StructureType<mixed> $expected
+     * @param StructureType<array<array-key, mixed>> $left
+     * @param StructureType<array<array-key, mixed>> $right
+     * @param StructureType<array<array-key, mixed>> $expected
      */
     #[DataProvider('provideStructureCases')]
     public function test_merging_structures(StructureType $left, StructureType $right, StructureType $expected): void
@@ -272,18 +270,18 @@ final class TypeMergeTest extends FlowTestCase
     public function test_merging_lists_directly(): void
     {
         static::assertEquals(
-            new ListType(type_float()),
-            (new TypeMerge())->mergeLists(new ListType(type_integer()), new ListType(type_float())),
+            type_list(type_float()),
+            (new TypeMerge())->mergeLists(type_list(type_integer()), type_list(type_float())),
         );
     }
 
     public function test_merging_maps_directly(): void
     {
         static::assertEquals(
-            new MapType(type_string(), type_float()),
+            type_map(type_string(), type_float()),
             (new TypeMerge())->mergeMaps(
-                new MapType(type_string(), type_integer()),
-                new MapType(type_string(), type_float()),
+                type_map(type_string(), type_integer()),
+                type_map(type_string(), type_float()),
             ),
         );
     }
@@ -293,9 +291,9 @@ final class TypeMergeTest extends FlowTestCase
         static::assertSame(
             'structure{b: string, a?: string, c?: string}',
             (new TypeMerge())
-                ->mergeStructures(
-                    new StructureType(['b' => type_string(), 'a' => type_string()]),
-                    new StructureType(['c' => type_string(), 'b' => type_string()]),
+                ->merge(
+                    type_structure(['b' => type_string(), 'a' => type_string()]),
+                    type_structure(['c' => type_string(), 'b' => type_string()]),
                 )
                 ->toString(),
         );

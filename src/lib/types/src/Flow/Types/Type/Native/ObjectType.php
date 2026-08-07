@@ -10,12 +10,17 @@ use Flow\Types\Type;
 use function is_object;
 
 /**
- * @implements Type<object>
+ * @template T of object
+ *
+ * @implements Type<T>
  */
 final class ObjectType implements Type
 {
     public function __construct() {}
 
+    /**
+     * @return object
+     */
     public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {

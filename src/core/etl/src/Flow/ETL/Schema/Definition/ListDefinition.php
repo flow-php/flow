@@ -29,7 +29,7 @@ final readonly class ListDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @param ListType<TElement> $type
+     * @param ListType<list<TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -192,7 +192,7 @@ final readonly class ListDefinition implements Definition
     }
 
     /**
-     * @return ListType<TElement>
+     * @return ListType<list<TElement>>
      */
     public function type(): ListType
     {

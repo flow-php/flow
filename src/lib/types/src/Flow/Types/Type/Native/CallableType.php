@@ -11,7 +11,9 @@ use Flow\Types\Type;
 use function is_callable;
 
 /**
- * @implements Type<callable>
+ * @template T of callable
+ *
+ * @implements Type<T>
  */
 final readonly class CallableType implements Type
 {

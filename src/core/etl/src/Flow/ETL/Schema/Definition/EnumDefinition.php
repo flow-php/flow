@@ -50,9 +50,7 @@ final readonly class EnumDefinition implements Definition
 
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
-        /** @var EnumType<TEnum> $type */
-        $type = type_enum($enumClass);
-        $this->type = $type;
+        $this->type = type_enum($enumClass);
     }
 
     /**

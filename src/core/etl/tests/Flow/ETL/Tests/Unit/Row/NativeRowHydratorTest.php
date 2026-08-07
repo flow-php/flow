@@ -220,7 +220,7 @@ final class NativeRowHydratorTest extends FlowTestCase
             ],
         ];
 
-        /** @var StructureType<mixed> $allowExtraStructure */
+        /** @var StructureType<array<array-key, mixed>> $allowExtraStructure */
         $allowExtraStructure = type_structure(['a' => type_integer()], ['b' => type_string()], true);
 
         yield 'containers from raw values' => [

@@ -53,6 +53,9 @@ final readonly class InstanceOfType implements Type
         return new self($data['class']);
     }
 
+    /**
+     * @return T
+     */
     public function assert(mixed $value): object
     {
         if ($this->isValid($value)) {
@@ -62,6 +65,9 @@ final readonly class InstanceOfType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return T
+     */
     public function cast(mixed $value): object
     {
         if (is_object($value) && is_a($value, $this->class, true)) {

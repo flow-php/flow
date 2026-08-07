@@ -20,8 +20,11 @@ use function array_keys;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class TypeMerge
 {
@@ -88,14 +91,14 @@ final readonly class TypeMerge
      * @template TLeft
      * @template TRight
      *
-     * @param ListType<TLeft> $left
-     * @param ListType<TRight> $right
+     * @param ListType<list<TLeft>> $left
+     * @param ListType<list<TRight>> $right
      *
-     * @return ListType<mixed>
+     * @return ListType<list<mixed>>
      */
     public function mergeLists(ListType $left, ListType $right): ListType
     {
-        return new ListType($this->merge($left->element(), $right->element()));
+        return type_list($this->merge($left->element(), $right->element()));
     }
 
     /**
@@ -104,15 +107,14 @@ final readonly class TypeMerge
      * @template TRightKey of array-key
      * @template TRightValue
      *
-     * @param MapType<TLeftKey, TLeftValue> $left
-     * @param MapType<TRightKey, TRightValue> $right
+     * @param MapType<array<TLeftKey, TLeftValue>> $left
+     * @param MapType<array<TRightKey, TRightValue>> $right
      *
-     * @return MapType<array-key, mixed>
+     * @return MapType<array<array-key, mixed>>
      */
     public function mergeMaps(MapType $left, MapType $right): MapType
     {
-        // Map keys are always array-key, so the only reachable widening is integer and string to string.
-        return new MapType(
+        return type_map(
             type_equals($left->key(), $right->key()) ? $left->key() : type_string(),
             $this->merge($left->value(), $right->value()),
         );
@@ -122,10 +124,10 @@ final readonly class TypeMerge
      * @template TLeft
      * @template TRight
      *
-     * @param StructureType<TLeft> $left
-     * @param StructureType<TRight> $right
+     * @param StructureType<array<array-key, TLeft>> $left
+     * @param StructureType<array<array-key, TRight>> $right
      *
-     * @return StructureType<mixed>
+     * @return StructureType<array<array-key, mixed>>
      */
     public function mergeStructures(StructureType $left, StructureType $right): StructureType
     {
@@ -160,6 +162,6 @@ final readonly class TypeMerge
             }
         }
 
-        return new StructureType($required, $optional, $left->allowsExtra() || $right->allowsExtra());
+        return type_structure($required, $optional, $left->allowsExtra() || $right->allowsExtra());
     }
 }

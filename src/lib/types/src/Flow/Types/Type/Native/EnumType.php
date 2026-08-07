@@ -69,6 +69,9 @@ final readonly class EnumType implements Type
         return new self($class);
     }
 
+    /**
+     * @return T
+     */
     public function assert(mixed $value): UnitEnum
     {
         if ($this->isValid($value)) {

@@ -13,10 +13,15 @@ use function is_numeric;
 use function is_string;
 
 /**
- * @implements Type<numeric-string>
+ * @template T of numeric-string
+ *
+ * @implements Type<T>
  */
 final class NumericStringType implements Type
 {
+    /**
+     * @return numeric-string
+     */
     public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
@@ -26,6 +31,9 @@ final class NumericStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return numeric-string
+     */
     public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
@@ -37,8 +45,10 @@ final class NumericStringType implements Type
         }
 
         if ($value instanceof Stringable) {
-            if (is_numeric((string) $value)) {
-                return (string) $value;
+            $stringValue = (string) $value;
+
+            if (is_numeric($stringValue)) {
+                return $stringValue;
             }
         }
 

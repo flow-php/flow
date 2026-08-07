@@ -61,6 +61,9 @@ final readonly class OptionalType implements Type
         return new self(TypeFactory::fromArray($data['base']));
     }
 
+    /**
+     * @return T
+     */
     public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
@@ -78,6 +81,9 @@ final readonly class OptionalType implements Type
         return $this->base;
     }
 
+    /**
+     * @return T
+     */
     public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {
