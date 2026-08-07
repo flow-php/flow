@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-08-07
 
 ### Added
+- [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_value() scalar function projecting an enum to its backing value** - [@norberttech](https://github.com/norberttech)
+- [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_name() scalar function projecting an enum to its case name** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - ElementCompatibility for structure element matching** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - TypeMerge merges structures, lists and maps instead of collapsing to json** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - StructureShapeInference fixture guarding type_structure() shape inference** - [@norberttech](https://github.com/norberttech)
@@ -78,6 +80,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - schema of an enum column mixing null and non-null values no longer fails to merge** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - string-keyed arrays infer as structures, never maps** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - type equality compares optional elements and allow_extra** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - assert() and cast() no longer widen the return declared by Type** - [@norberttech](https://github.com/norberttech)
