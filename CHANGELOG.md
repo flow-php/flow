@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-08-07
 
 ### Added
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - static analysis fixture pinning the narrowed type of every type_*() through assert(), cast() and isValid()** - [@norberttech](https://github.com/norberttech)
 - [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_value() scalar function projecting an enum to its backing value** - [@norberttech](https://github.com/norberttech)
 - [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_name() scalar function projecting an enum to its case name** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - ElementCompatibility for structure element matching** - [@norberttech](https://github.com/norberttech)
@@ -35,6 +36,8 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - assertion tags dropped the @phpstan- prefix** - [@norberttech](https://github.com/norberttech)
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - architecture docs record why every implementation keeps its @template and restates @return** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - a Type implementation's generic parameter is now the value it represents** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - type_*() return their concrete class instead of Type, except type_from_array()** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - MapType takes one generic parameter instead of two** - [@norberttech](https://github.com/norberttech)
@@ -80,6 +83,9 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - NonEmptyStringType and PositiveIntegerType erased their narrow type on assert() and cast()** - [@norberttech](https://github.com/norberttech)
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - UuidType::cast(), UnionType::cast() and IntersectionType::cast() resolved to mixed** - [@norberttech](https://github.com/norberttech)
+- [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - EnumType::cast() resolved to UnitEnum instead of the enum class** - [@norberttech](https://github.com/norberttech)
 - [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - schema of an enum column mixing null and non-null values no longer fails to merge** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - string-keyed arrays infer as structures, never maps** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - type equality compares optional elements and allow_extra** - [@norberttech](https://github.com/norberttech)
