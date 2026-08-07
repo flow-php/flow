@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-08-06
+## [Unreleased] - 2026-08-07
 
 ### Added
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - ElementCompatibility for structure element matching** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - TypeMerge merges structures, lists and maps instead of collapsing to json** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - StructureShapeInference fixture guarding type_structure() shape inference** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - DefinitionClassResolver resolving a definition class through parent chains and %parameter% placeholders** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - ServiceIdPatterns matching a service id against exact ids and regular expressions** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - unit and integration tests for CacheTelemetryPass and Psr18ClientTelemetryPass** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +33,12 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - a Type implementation's generic parameter is now the value it represents** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - type_*() return their concrete class instead of Type, except type_from_array()** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - MapType takes one generic parameter instead of two** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - conflicting structure elements widen to string, promoting numerics losslessly** - [@norberttech](https://github.com/norberttech)
+- [b5819f](https://github.com/flow-php/flow/commit/b5819f3203655b2778440e512fc73932bc63f273) - **refactor(flow-php/symfony-telemetry-bundle): tidy up InterfaceAliasRepointe** - [@norberttech](https://github.com/norberttech)
+- [#2585](https://github.com/flow-php/flow/pull/2585) - **flow-php/symfony-telemetry-bundle - aliases the decorator cannot implement now resolve to the untraced pool** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - class lookup uses ContainerBuilder::getReflectionClass() so container invalidation resources are registered** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - exclude pattern matching extracted out of the compiler passes into ServiceIdPatterns** - [@norberttech](https://github.com/norberttech)
 - [#2583](https://github.com/flow-php/flow/pull/2583) - **flow-php/symfony-telemetry-bundle - ChannelLoggerPass keeps #[WithTelemetryChannel] wiring but never captures framework channels when disabled** - [@norberttech](https://github.com/norberttech)
@@ -69,6 +78,15 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - string-keyed arrays infer as structures, never maps** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - type equality compares optional elements and allow_extra** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - assert() and cast() no longer widen the return declared by Type** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl - match() accepts exactly what StructureType::isValid() accepts** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl-adapter-parquet - optional structure elements are rejected instead of silently written** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl-adapter-seal - optional structure elements are rejected instead of silently written** - [@norberttech](https://github.com/norberttech)
+- [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/etl-adapter-xml - optional structure elements are rejected instead of silently written** - [@norberttech](https://github.com/norberttech)
+- [#2585](https://github.com/flow-php/flow/pull/2585) - **flow-php/symfony-telemetry-bundle - lint:container no longer fails on interface aliases retargeted by instrumentation decorators** - [@norberttech](https://github.com/norberttech)
+- [#2585](https://github.com/flow-php/flow/pull/2585) - **flow-php/psr18-telemetry-bridge - declare nyholm/psr7 already used by its tests** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - cache pools inheriting their class from a parent definition are now traced** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - pools and PSR-18 clients whose class is a %parameter% are now traced** - [@norberttech](https://github.com/norberttech)
 - [#2584](https://github.com/flow-php/flow/pull/2584) - **flow-php/symfony-telemetry-bundle - Psr18ClientTelemetryPass no longer decorates abstract definitions and breaks the container build** - [@norberttech](https://github.com/norberttech)
@@ -104,6 +122,10 @@
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - Span::contextScope() and Span::setContextScope()** - [@norberttech](https://github.com/norberttech)
 - [#2561](https://github.com/flow-php/flow/pull/2561) - **flow-php/telemetry - MemoryContextStorage::store()** - [@norberttech](https://github.com/norberttech)
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - QEMU setup from Docker image builds.** - [@norberttech](https://github.com/norberttech)
+
+### Security
+- [#2585](https://github.com/flow-php/flow/pull/2585) - **flow-php/arrow-ext - re-pin dtolnay/rust-toolchain to a commit reachable from upstream** - [@norberttech](https://github.com/norberttech)
+- [#2585](https://github.com/flow-php/flow/pull/2585) - **flow-php/flow-php-ext - re-pin dtolnay/rust-toolchain to a commit reachable from upstream** - [@norberttech](https://github.com/norberttech)
 
 ## [0.42.0] - 2026-07-27
 
