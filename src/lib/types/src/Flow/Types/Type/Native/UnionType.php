@@ -95,6 +95,9 @@ final readonly class UnionType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return TLeft|TRight
+     */
     public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {

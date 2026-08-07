@@ -75,7 +75,7 @@ final readonly class ArrayContentDetector
     }
 
     /**
-     * @phpstan-assert-if-true Type<int> $this->firstKeyType()
+     * @assert-if-true Type<int> $this->firstKeyType()
      */
     public function isList(): bool
     {
@@ -83,7 +83,7 @@ final readonly class ArrayContentDetector
     }
 
     /**
-     * @phpstan-assert-if-true Type<int|string> $this->firstKeyType()
+     * @assert-if-true Type<int|string> $this->firstKeyType()
      */
     public function isMap(): bool
     {

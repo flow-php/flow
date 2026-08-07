@@ -21,7 +21,7 @@ interface Type
      *
      * @return T
      *
-     * @phpstan-assert T $value
+     * @assert T $value
      */
     public function assert(mixed $value): mixed;
 
@@ -39,10 +39,10 @@ interface Type
     /**
      * Checks if the value is of the type of this object, returning a boolean instead of throwing.
      * When this method returns true, static analysis tools narrow the value's type to T at the call site
-     * (via @phpstan-assert-if-true). Use this when you want to branch on the result; use assert() when you
+     * (via @assert-if-true). Use this when you want to branch on the result; use assert() when you
      * want the call to fail loudly on a mismatch.
      *
-     * @phpstan-assert-if-true T $value
+     * @assert-if-true T $value
      */
     public function isValid(mixed $value): bool;
 

@@ -92,6 +92,9 @@ final readonly class IntersectionType implements Type
         return $value;
     }
 
+    /**
+     * @return TLeft&TRight
+     */
     public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {

@@ -23,6 +23,9 @@ use function is_numeric;
  */
 final readonly class PositiveIntegerType implements Type
 {
+    /**
+     * @return int<0, max>
+     */
     public function assert(mixed $value): int
     {
         if ($this->isValid($value)) {
@@ -32,6 +35,9 @@ final readonly class PositiveIntegerType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return int<0, max>
+     */
     public function cast(mixed $value): int
     {
         if ($this->isValid($value)) {

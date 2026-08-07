@@ -81,6 +81,9 @@ final readonly class EnumType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return T
+     */
     public function cast(mixed $value): UnitEnum
     {
         if ($this->isValid($value)) {
@@ -95,8 +98,9 @@ final readonly class EnumType implements Type
                     throw new CastingException($value, $this);
                 }
 
+                // is_a() above narrows $enumClass to class-string<BackedEnum>, so ::from() loses T; assert() rebinds it.
                 // @mago-ignore analysis:possibly-static-access-on-interface
-                return $enumClass::from($value);
+                return $this->assert($enumClass::from($value));
             }
 
             throw new CastingException($value, $this);
