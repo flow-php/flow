@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -30,12 +31,14 @@ use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_class_string;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_uuid;
 
 final class UnionDefinitionTest extends FlowTestCase
 {
@@ -275,6 +278,38 @@ final class UnionDefinitionTest extends FlowTestCase
 
         static::assertTrue($def->matches(str_entry('col', 'value')));
         static::assertTrue($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_member_for_carries_nullability_and_metadata(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true, Metadata::with('key', 'value'));
+
+        static::assertEquals(int_schema('col', true, Metadata::with('key', 'value')), $def->memberFor(1));
+    }
+
+    public function test_member_for_resolves_the_first_non_null_member_for_null(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertEquals(string_schema('col'), $def->memberFor(null));
+    }
+
+    public function test_member_for_resolves_the_member_accepting_the_value(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertEquals(int_schema('col'), $def->memberFor(1));
+        static::assertEquals(string_schema('col'), $def->memberFor('value'));
+    }
+
+    public function test_member_for_throws_for_a_value_outside_every_member(): void
+    {
+        $def = union_schema('col', type_union(type_uuid(), type_datetime()));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "col": array value does not match any member of union type');
+
+        $def->memberFor([1, 2]);
     }
 
     /**

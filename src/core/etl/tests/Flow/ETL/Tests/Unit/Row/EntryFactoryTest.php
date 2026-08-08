@@ -18,6 +18,7 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
@@ -72,6 +73,7 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_uuid;
 
 final class EntryFactoryTest extends FlowTestCase
 {
@@ -240,6 +242,66 @@ final class EntryFactoryTest extends FlowTestCase
             int_entry('e', null, metadata: Metadata::with('k', 1)),
             (new EntryFactory())->fromDefinition(integer_schema('e', true, Metadata::with('k', 1)), null),
         );
+    }
+
+    public function test_from_definition_with_union_resolves_the_member_matching_the_value(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_integer());
+
+        static::assertEquals(int_entry('e', 42), (new EntryFactory())->fromDefinition(union_schema('e', $type), 42));
+    }
+
+    public function test_from_definition_with_union_resolves_the_first_member_for_a_matching_value(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_integer());
+
+        static::assertEquals(str_entry('e', 'x'), (new EntryFactory())->fromDefinition(union_schema('e', $type), 'x'));
+    }
+
+    public function test_from_definition_with_union_carries_metadata_onto_the_resolved_entry(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_integer());
+
+        static::assertEquals(
+            int_entry('e', 42, metadata: Metadata::with('k', 1)),
+            (new EntryFactory())->fromDefinition(union_schema('e', $type, metadata: Metadata::with('k', 1)), 42),
+        );
+    }
+
+    public function test_from_definition_with_nullable_union_and_null_value(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_integer());
+
+        $entry = (new EntryFactory())->fromDefinition(union_schema('e', $type, true), null);
+
+        static::assertEquals(str_entry('e', null), $entry);
+        static::assertTrue($entry->definition()->isNullable());
+    }
+
+    public function test_from_definition_with_non_nullable_union_and_null_value(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_integer());
+
+        $entry = (new EntryFactory())->fromDefinition(union_schema('e', $type), null);
+
+        static::assertNull($entry->value());
+        static::assertTrue($entry->definition()->isNullable());
+    }
+
+    public function test_from_definition_with_union_throws_for_a_value_outside_every_member(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_uuid(), type_datetime());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "e": array value does not match any member of union type');
+
+        (new EntryFactory())->fromDefinition(union_schema('e', $type), [1, 2]);
     }
 
     public function test_date(): void

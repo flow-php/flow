@@ -16,6 +16,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
@@ -40,9 +41,11 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -52,6 +55,8 @@ use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_positive_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_uuid;
 use function serialize;
 
 final class NativeRowHydratorTest extends FlowTestCase
@@ -61,6 +66,19 @@ final class NativeRowHydratorTest extends FlowTestCase
      */
     public static function serializable_datasets(): Generator
     {
+        /** @var UnionType<mixed, mixed> $union */
+        $union = type_union(type_string(), type_integer());
+
+        yield 'union column across members, null and absent' => [
+            schema(int_schema('id'), union_schema('a', $union, true)),
+            [
+                new RawRowValues(['id' => 1, 'a' => 42]),
+                new RawRowValues(['id' => 2, 'a' => 'x']),
+                new RawRowValues(['id' => 3, 'a' => null]),
+                new RawRowValues(['id' => 4]),
+            ],
+        ];
+
         yield 'scalars over multiple rows' => [
             schema(int_schema('id'), str_schema('name', nullable: true), float_schema('p'), bool_schema('a')),
             [
@@ -151,6 +169,29 @@ final class NativeRowHydratorTest extends FlowTestCase
      */
     public static function castable_datasets(): Generator
     {
+        /** @var UnionType<mixed, mixed> $union */
+        $union = type_union(type_string(), type_integer());
+
+        yield 'union column across members, null and absent' => [
+            schema(int_schema('id'), union_schema('a', $union, true)),
+            [
+                new RawRowValues(['id' => 1, 'a' => 42]),
+                new RawRowValues(['id' => 2, 'a' => 'x']),
+                new RawRowValues(['id' => 3, 'a' => null]),
+                new RawRowValues(['id' => 4]),
+                new RawRowValues(['id' => 5, 'a' => '42']),
+                new RawRowValues(['id' => 6, 'a' => 1.5]),
+            ],
+        ];
+
+        yield 'union column with per-value metadata' => [
+            schema(union_schema('a', $union, true)),
+            [
+                new RawRowValues(['a' => 42], ['a' => Metadata::fromArray(['k' => 'v'])]),
+                new RawRowValues(['a' => 'x'], ['a' => Metadata::fromArray(['k' => 'v'])]),
+            ],
+        ];
+
         yield 'scalar columns from raw strings and coercion edges' => [
             schema(int_schema('id'), float_schema('price'), bool_schema('active'), str_schema('name')),
             [
@@ -285,6 +326,14 @@ final class NativeRowHydratorTest extends FlowTestCase
      */
     public static function throwing_cast_datasets(): Generator
     {
+        /** @var UnionType<mixed, mixed> $unmatchable */
+        $unmatchable = type_union(type_uuid(), type_datetime());
+
+        yield 'union column with a value outside every member' => [
+            schema(union_schema('a', $unmatchable)),
+            [new RawRowValues(['a' => [1, 2]])],
+        ];
+
         yield 'invalid uuid string' => [
             schema(uuid_schema('u')),
             [new RawRowValues(['u' => 'not-a-uuid'])],

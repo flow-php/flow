@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\EntryTypeResolver;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
@@ -109,6 +111,21 @@ final readonly class UnionDefinition implements Definition
         }
 
         return $this->type->isValid($entry->value());
+    }
+
+    /**
+     * @throws InvalidArgumentException when the value matches no member of the union
+     *
+     * @return Definition<mixed>
+     */
+    public function memberFor(mixed $value): Definition
+    {
+        return definition_from_type(
+            $this->ref,
+            (new EntryTypeResolver())->fromUnion($this->type, $value, $this->ref->name()),
+            $this->nullable,
+            $this->metadata,
+        );
     }
 
     public function merge(Definition $definition): Definition

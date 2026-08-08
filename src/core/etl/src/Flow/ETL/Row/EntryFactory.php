@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
@@ -75,6 +76,10 @@ final class EntryFactory
      */
     public function fromDefinition(Definition $definition, mixed $value): Entry
     {
+        if ($definition instanceof UnionDefinition) {
+            $definition = $definition->memberFor($value);
+        }
+
         $variant = $value === null && !$definition->isNullable() ? $definition->makeNullable() : $definition;
 
         return $this->instantiators->for($variant->entryClass())->instantiate(
