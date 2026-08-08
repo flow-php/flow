@@ -62,7 +62,11 @@ final readonly class UnionDefinition implements Definition
             return false;
         }
 
-        return type_equals($this->type, $definition->type());
+        if (type_equals($this->type, $definition->type())) {
+            return true;
+        }
+
+        return (new UnionMembers())->contains($this, $definition);
     }
 
     public function isNullable(): bool
@@ -129,6 +133,15 @@ final readonly class UnionDefinition implements Definition
                 $this->ref,
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
+            );
+        }
+
+        if ((new UnionMembers())->contains($this, $definition)) {
+            return new self(
+                $this->ref,
+                $this->type,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
             );
         }
 

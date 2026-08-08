@@ -8,6 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\NullDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\NullType;
@@ -16,6 +17,10 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\null_schema;
+use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class NullDefinitionTest extends FlowTestCase
 {
@@ -186,5 +191,14 @@ final class NullDefinitionTest extends FlowTestCase
     public function test_type_is_null_type(): void
     {
         static::assertInstanceOf(NullType::class, null_schema('id')->type());
+    }
+
+    public function test_merge_with_union_returns_nullable_union(): void
+    {
+        $merged = null_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('integer|string', $merged->type()->toString());
+        static::assertTrue($merged->isNullable());
     }
 }

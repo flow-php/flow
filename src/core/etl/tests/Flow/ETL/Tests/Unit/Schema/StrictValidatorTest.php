@@ -116,7 +116,7 @@ final class StrictValidatorTest extends FlowTestCase
     {
         $context = schema_validate(
             expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
-            given: schema(string_schema('value')),
+            given: schema(bool_schema('value')),
             validator: schema_strict_validator(),
         );
 
@@ -124,9 +124,20 @@ final class StrictValidatorTest extends FlowTestCase
         static::assertEquals(
             [new MismatchedDefinition(
                 union_schema('value', type_union(type_string(), type_integer())),
-                string_schema('value'),
+                bool_schema('value'),
             )],
             $context->mismatchedDefinitions(),
+        );
+    }
+
+    public function test_given_schema_with_union_member_definition(): void
+    {
+        static::assertTrue(
+            schema_validate(
+                expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
+                given: schema(string_schema('value')),
+                validator: schema_strict_validator(),
+            )->isValid(),
         );
     }
 

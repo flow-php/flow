@@ -117,6 +117,15 @@ final readonly class StringDefinition implements Definition
             return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
         }
 
+        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
+            return new UnionDefinition(
+                $this->ref,
+                $definition->type(),
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
+        }
+
         return new self(
             $this->ref,
             $this->nullable || $definition->isNullable(),

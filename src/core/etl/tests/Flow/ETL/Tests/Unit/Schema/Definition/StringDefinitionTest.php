@@ -8,6 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -18,6 +19,11 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class StringDefinitionTest extends FlowTestCase
 {
@@ -240,5 +246,21 @@ final class StringDefinitionTest extends FlowTestCase
         $def = string_schema('name');
 
         static::assertSame('string', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = string_schema('col')->merge(union_schema('col', type_union(type_string(), type_boolean())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|string', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_string_returns_string(): void
+    {
+        static::assertInstanceOf(
+            StringDefinition::class,
+            string_schema('col')->merge(union_schema('col', type_union(type_boolean(), type_integer()))),
+        );
     }
 }

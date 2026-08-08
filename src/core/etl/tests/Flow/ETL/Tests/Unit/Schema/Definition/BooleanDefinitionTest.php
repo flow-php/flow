@@ -9,6 +9,7 @@ use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -19,6 +20,11 @@ use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class BooleanDefinitionTest extends FlowTestCase
 {
@@ -250,5 +256,20 @@ final class BooleanDefinitionTest extends FlowTestCase
         $def = bool_schema('flag');
 
         static::assertSame('boolean', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = bool_schema('col')->merge(union_schema('col', type_union(type_boolean(), type_integer())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|integer', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        bool_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
     }
 }

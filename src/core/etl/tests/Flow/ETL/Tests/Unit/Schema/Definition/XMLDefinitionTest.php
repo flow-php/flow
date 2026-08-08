@@ -8,6 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -17,8 +18,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_xml;
 
 final class XMLDefinitionTest extends FlowTestCase
 {
@@ -250,5 +257,20 @@ final class XMLDefinitionTest extends FlowTestCase
         $def = xml_schema('document');
 
         static::assertSame('xml', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = xml_schema('col')->merge(union_schema('col', type_union(type_xml(), type_boolean())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|xml', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        xml_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
     }
 }

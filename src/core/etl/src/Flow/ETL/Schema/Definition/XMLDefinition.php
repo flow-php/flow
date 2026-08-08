@@ -134,6 +134,15 @@ final readonly class XMLDefinition implements Definition
             );
         }
 
+        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
+            return new UnionDefinition(
+                $this->ref,
+                $definition->type(),
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
+        }
+
         throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 

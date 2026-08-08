@@ -20,13 +20,17 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -66,10 +70,46 @@ final class UnionDefinitionTest extends FlowTestCase
             false,
         ];
 
-        yield 'union with non union' => [
+        yield 'union with its string member' => [
             union_schema('col', type_union(type_string(), type_integer())),
             string_schema('col'),
+            true,
+        ];
+
+        yield 'union with its integer member' => [
+            union_schema('col', type_union(type_string(), type_integer())),
+            int_schema('col'),
+            true,
+        ];
+
+        yield 'union with a type that is not a member' => [
+            union_schema('col', type_union(type_string(), type_integer())),
+            float_schema('col'),
             false,
+        ];
+
+        yield 'nullable union with nullable member' => [
+            union_schema('col', type_union(type_string(), type_integer()), true),
+            int_schema('col', true),
+            true,
+        ];
+
+        yield 'not nullable union with nullable member' => [
+            union_schema('col', type_union(type_string(), type_integer()), false),
+            int_schema('col', true),
+            false,
+        ];
+
+        yield 'union with optional member' => [
+            union_schema('col', type_union(type_optional(type_string()), type_integer())),
+            string_schema('col'),
+            true,
+        ];
+
+        yield 'union with a member that has no definition' => [
+            union_schema('col', type_union(type_class_string(), type_string())),
+            string_schema('col'),
+            true,
         ];
     }
 
@@ -154,6 +194,14 @@ final class UnionDefinitionTest extends FlowTestCase
     public function test_is_compatible(Definition $definition, Definition $other, bool $expected): void
     {
         static::assertSame($expected, $definition->isCompatible($other));
+    }
+
+    public function test_is_compatible_with_list_of_union_elements(): void
+    {
+        static::assertTrue(definition_from_type(
+            'col',
+            type_list(type_union(type_integer(), type_string())),
+        )->isCompatible(definition_from_type('col', type_list(type_integer()))));
     }
 
     public function test_is_same_with_different_metadata(): void
@@ -258,6 +306,49 @@ final class UnionDefinitionTest extends FlowTestCase
         $this->expectException(RuntimeException::class);
 
         $def->merge(new BooleanDefinition('col'));
+    }
+
+    public function test_merge_with_non_member_throws_exception(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Cannot merge Flow\ETL\Schema\Definition\UnionDefinition with Flow\ETL\Schema\Definition\FloatDefinition',
+        );
+
+        $def->merge(float_schema('col'));
+    }
+
+    public function test_merge_with_nullable_union_member_returns_nullable_union(): void
+    {
+        $merged = union_schema('col', type_union(type_string(), type_integer()), false)->merge(int_schema('col', true));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('integer|string', $merged->type()->toString());
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_with_union_member_merges_metadata(): void
+    {
+        $merged = union_schema(
+            'col',
+            type_union(type_string(), type_integer()),
+            false,
+            Metadata::with('a', '1'),
+        )->merge(int_schema('col', false, Metadata::with('b', '2')));
+
+        static::assertSame('1', $merged->metadata()->get('a'));
+        static::assertSame('2', $merged->metadata()->get('b'));
+    }
+
+    public function test_merge_with_union_member_returns_union(): void
+    {
+        $merged = union_schema('col', type_union(type_string(), type_integer()))->merge(int_schema('col'));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('integer|string', $merged->type()->toString());
+        static::assertFalse($merged->isNullable());
     }
 
     public function test_normalize(): void

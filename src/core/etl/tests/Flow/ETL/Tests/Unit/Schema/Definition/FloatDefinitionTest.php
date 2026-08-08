@@ -9,6 +9,7 @@ use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\FloatDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -20,6 +21,12 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class FloatDefinitionTest extends FlowTestCase
 {
@@ -274,5 +281,20 @@ final class FloatDefinitionTest extends FlowTestCase
         $def = float_schema('amount');
 
         static::assertSame('float', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = float_schema('col')->merge(union_schema('col', type_union(type_float(), type_boolean())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|float', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        float_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
     }
 }

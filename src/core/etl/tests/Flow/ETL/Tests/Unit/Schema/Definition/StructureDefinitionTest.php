@@ -9,6 +9,7 @@ use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -19,12 +20,14 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
 
 final class StructureDefinitionTest extends FlowTestCase
 {
@@ -481,5 +484,25 @@ final class StructureDefinitionTest extends FlowTestCase
         $def = structure_schema('data', type_structure(['name' => type_string()]));
 
         static::assertStringContainsString('structure', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = structure_schema('col', type_structure([
+            'a' => type_integer(),
+        ]))->merge(union_schema('col', type_union(type_structure(['a' => type_integer()]), type_boolean())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|structure{a: integer}', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        structure_schema('col', type_structure(['a' => type_integer()]))->merge(union_schema('col', type_union(
+            type_integer(),
+            type_string(),
+        )));
     }
 }

@@ -10,6 +10,7 @@ use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\EnumDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -23,6 +24,12 @@ use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_enum;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class EnumDefinitionTest extends FlowTestCase
 {
@@ -304,5 +311,26 @@ final class EnumDefinitionTest extends FlowTestCase
         $def = enum_schema('status', BackedStringEnum::class);
 
         static::assertStringContainsString('enum', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = enum_schema('col', BackedStringEnum::class)->merge(union_schema('col', type_union(
+            type_enum(BackedStringEnum::class),
+            type_boolean(),
+        )));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|enum<Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum>', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        enum_schema('col', BackedStringEnum::class)->merge(union_schema('col', type_union(
+            type_integer(),
+            type_string(),
+        )));
     }
 }
