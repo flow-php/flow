@@ -27,16 +27,22 @@ final readonly class UnionDefinition implements Definition
     private Reference $ref;
 
     /**
+     * @var UnionType<mixed, mixed>
+     */
+    private UnionType $type;
+
+    /**
      * @param UnionType<mixed, mixed> $type
      */
     public function __construct(
         string|Reference $ref,
-        private UnionType $type,
+        UnionType $type,
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
+        $this->type = (new UnionTypeNormalizer())->normalize($type);
     }
 
     /**

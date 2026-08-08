@@ -9,12 +9,16 @@ use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\schema_validate;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_array;
 
 final class SelectiveValidatorTest extends FlowTestCase
 {
@@ -52,6 +56,17 @@ final class SelectiveValidatorTest extends FlowTestCase
             schema_validate(
                 expected: schema(integer_schema('id'), string_schema('name'), bool_schema('active')),
                 given: schema(integer_schema('id'), string_schema('name'), bool_schema('active', true)),
+                validator: schema_selective_validator(),
+            )->isValid(),
+        );
+    }
+
+    public function test_given_schema_inferred_from_empty_arrays_against_declared_array_type(): void
+    {
+        static::assertTrue(
+            schema_validate(
+                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                given: data_frame()->read(from_array([['id' => 1, 'a' => []], ['id' => 2, 'a' => []]]))->schema(),
                 validator: schema_selective_validator(),
             )->isValid(),
         );

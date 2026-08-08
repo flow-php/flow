@@ -27,6 +27,7 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_integer;
@@ -137,6 +138,21 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
         static::assertFalse($def->metadata()->has('key'));
+    }
+
+    public function test_array_member_is_normalized_to_json(): void
+    {
+        static::assertSame(
+            'json|string',
+            union_schema('col', type_union(type_string(), type_array()))->type()->toString(),
+        );
+    }
+
+    public function test_normalized_array_member_survives_a_normalize_round_trip(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_array()));
+
+        static::assertEquals($def, definition_from_array($def->normalize()));
     }
 
     public function test_definition_from_type_creates_union_definition(): void
@@ -403,5 +419,18 @@ final class UnionDefinitionTest extends FlowTestCase
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
         static::assertSame('integer|string', $def->type()->toString());
+    }
+
+    public function test_union_member_and_standalone_array_resolve_to_the_same_definition(): void
+    {
+        $standalone = definition_from_type('col', type_array());
+        $member = definition_from_type(
+            'col',
+            union_schema('col', type_union(type_string(), type_array()))->type()->types()->all()[1],
+        );
+
+        static::assertInstanceOf(JsonDefinition::class, $standalone);
+        static::assertInstanceOf(JsonDefinition::class, $member);
+        static::assertTrue($standalone->isSame($member));
     }
 }

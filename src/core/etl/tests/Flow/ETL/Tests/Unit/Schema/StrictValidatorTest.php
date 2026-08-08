@@ -8,6 +8,9 @@ use Flow\ETL\Schema\Validator\MismatchedDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\null_schema;
@@ -17,6 +20,7 @@ use function Flow\ETL\DSL\schema_validate;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -136,6 +140,17 @@ final class StrictValidatorTest extends FlowTestCase
             schema_validate(
                 expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
                 given: schema(string_schema('value')),
+                validator: schema_strict_validator(),
+            )->isValid(),
+        );
+    }
+
+    public function test_given_schema_inferred_from_empty_arrays_against_declared_array_type(): void
+    {
+        static::assertTrue(
+            schema_validate(
+                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                given: data_frame()->read(from_array([['id' => 1, 'a' => []], ['id' => 2, 'a' => []]]))->schema(),
                 validator: schema_strict_validator(),
             )->isValid(),
         );

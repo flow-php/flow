@@ -62,6 +62,7 @@ use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -69,6 +70,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_union;
 
 final class EntryFactoryTest extends FlowTestCase
@@ -191,6 +193,32 @@ final class EntryFactoryTest extends FlowTestCase
     public function test_create_trusted_scalar_with_type(): void
     {
         static::assertEquals(int_entry('e', 5), (new EntryFactory())->create('e', 5, type_integer()));
+    }
+
+    public function test_create_with_array_type_and_null_value(): void
+    {
+        static::assertEquals(json_entry('e', null), (new EntryFactory())->create('e', null, type_array()));
+    }
+
+    public function test_create_with_array_type_normalizes_object_shaped_value_to_json_object(): void
+    {
+        static::assertEquals(
+            json_object_entry('e', ['a' => 1]),
+            (new EntryFactory())->create('e', ['a' => 1], type_array()),
+        );
+    }
+
+    public function test_create_with_array_type_normalizes_value_to_json(): void
+    {
+        static::assertEquals(json_entry('e', [1, 2]), (new EntryFactory())->create('e', [1, 2], type_array()));
+    }
+
+    public function test_create_with_time_zone_type_normalizes_value_to_string(): void
+    {
+        static::assertEquals(
+            str_entry('e', 'UTC'),
+            (new EntryFactory())->create('e', new DateTimeZone('UTC'), type_time_zone()),
+        );
     }
 
     public function test_from_definition_instantiates_a_native_value(): void

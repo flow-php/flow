@@ -16,6 +16,20 @@ A schema consists of entry definitions that specify:
 - **Nullable**: Whether NULL values are permitted
 - **Metadata**: Key-value pairs for additional context
 
+## Arrays in a Schema
+
+`type_array()` declares a `json` column. The data layer has no array type - parquet, Spark and Floe all express an
+array as a JSON object or a JSON collection - so a declared `array<mixed>` is projected onto `json`, and the value is
+stored as a `Flow\Types\Value\Json`, which preserves whether it was an object or a collection.
+
+```php
+definition_from_type('tags', type_array())->type()->toString();   // "json"
+union_schema('tags', type_union(type_string(), type_array()))->type()->toString();   // "json|string"
+```
+
+Declare the concrete shape whenever it is known - `type_list()`, `type_map()` or `type_structure()` keep element typing
+that `json` throws away, and adapters can map them onto native nested types.
+
 ## Schema Validation Strategies
 
 Flow PHP provides two built-in validation strategies:
