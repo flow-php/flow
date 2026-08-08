@@ -283,6 +283,13 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        $def = structure_schema('col', type_structure(['name' => type_string()]));
+
+        static::assertFalse($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
+    }
+
     public function test_does_not_match_entry_with_different_name(): void
     {
         $def = structure_schema('data', type_structure(['name' => type_string()]));
@@ -451,11 +458,34 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_matches_any_entry_with_same_name(): void
+    public function test_nullable_does_not_match_an_entry_of_a_different_type(): void
+    {
+        $def = structure_schema('col', type_structure(['name' => type_string()]), true);
+
+        static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_nullable_matches_a_null_entry_with_same_name(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
         static::assertTrue($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
+    }
+
+    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
+    {
+        $def = structure_schema('col', type_structure(['name' => type_string()]), true);
+
+        static::assertTrue($def->matches(int_entry('col', null)));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        $def = structure_schema('col', type_structure(['name' => type_string()]), true);
+
+        static::assertTrue($def->matches(structure_entry('col', ['name' => 'John'], type_structure([
+            'name' => type_string(),
+        ]))));
     }
 
     public function test_rename(): void

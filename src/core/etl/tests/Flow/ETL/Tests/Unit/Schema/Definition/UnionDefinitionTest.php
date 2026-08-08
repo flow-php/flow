@@ -163,6 +163,13 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertSame('col', $definition->entry()->name());
     }
 
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertFalse($def->matches(int_entry('col', null)));
+    }
+
     public function test_does_not_match_entry_with_different_name(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()));
@@ -386,11 +393,32 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertEquals($def, definition_from_array($def->normalize()));
     }
 
-    public function test_nullable_matches_any_entry_with_same_name(): void
+    public function test_nullable_does_not_match_an_entry_of_a_type_outside_the_union(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()), true);
 
-        static::assertTrue($def->matches(bool_entry('col', true)));
+        static::assertFalse($def->matches(bool_entry('col', true)));
+    }
+
+    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(int_entry('col', null)));
+    }
+
+    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(bool_entry('col', null)));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(int_entry('col', 1)));
     }
 
     public function test_rename(): void

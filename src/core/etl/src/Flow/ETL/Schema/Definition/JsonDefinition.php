@@ -93,12 +93,12 @@ final readonly class JsonDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        if ($this->isNullable() && $entry->is($this->ref)) {
-            return true;
-        }
-
         if (!$entry->is($this->ref)) {
             return false;
+        }
+
+        if ($entry->value() === null) {
+            return $this->isNullable();
         }
 
         return $entry->type() instanceof JsonType;

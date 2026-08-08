@@ -98,6 +98,13 @@ final class FloatDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        $def = float_schema('col');
+
+        static::assertFalse($def->matches(float_entry('col', null)));
+    }
+
     public function test_does_not_match_entry_with_different_name(): void
     {
         $def = float_schema('amount');
@@ -248,11 +255,32 @@ final class FloatDefinitionTest extends FlowTestCase
         static::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_matches_any_entry_with_same_name(): void
+    public function test_nullable_does_not_match_an_entry_of_a_different_type(): void
+    {
+        $def = float_schema('col', true);
+
+        static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_nullable_matches_a_null_entry_with_same_name(): void
     {
         $def = float_schema('col', true);
 
         static::assertTrue($def->matches(float_entry('col', null)));
+    }
+
+    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
+    {
+        $def = float_schema('col', true);
+
+        static::assertTrue($def->matches(int_entry('col', null)));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        $def = float_schema('col', true);
+
+        static::assertTrue($def->matches(float_entry('col', 1.5)));
     }
 
     public function test_rename(): void
