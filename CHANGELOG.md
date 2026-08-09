@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-08-07
+## [Unreleased] - 2026-08-09
 
 ### Added
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - UnionDefinition::memberFor() resolving a union member from a value** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - CommonType resolving a common type for incompatible definitions** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - UnionMembers and UnionTypeNormalizer collaborators** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - static analysis fixture pinning the narrowed type of every type_*() through assert(), cast() and isValid()** - [@norberttech](https://github.com/norberttech)
 - [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_value() scalar function projecting an enum to its backing value** - [@norberttech](https://github.com/norberttech)
 - [#2587](https://github.com/flow-php/flow/pull/2587) - **flow-php/etl - enum_name() scalar function projecting an enum to its case name** - [@norberttech](https://github.com/norberttech)
@@ -36,6 +39,9 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - array inside a union projects to json** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - incompatible containers widen to json at column and element level** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/flow-php-ext - Rust contributing guide documents both extensions** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - assertion tags dropped the @phpstan- prefix** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - architecture docs record why every implementation keeps its @template and restates @return** - [@norberttech](https://github.com/norberttech)
 - [#2586](https://github.com/flow-php/flow/pull/2586) - **flow-php/types - a Type implementation's generic parameter is now the value it represents** - [@norberttech](https://github.com/norberttech)
@@ -83,6 +89,13 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - nightly build bypasses the cache to refresh the base image and apt packages.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - union definitions accept and merge their own members** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - declared array no longer breaks entry creation** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - Definition::matches() respects nullability** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - Definition::matches() compares type parameters** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - Definition::merge() no longer throws on incompatible types** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - union columns build the correct entry per value** - [@norberttech](https://github.com/norberttech)
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/flow-php-ext - native hydrator resolves union columns per row** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - NonEmptyStringType and PositiveIntegerType erased their narrow type on assert() and cast()** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - UuidType::cast(), UnionType::cast() and IntersectionType::cast() resolved to mixed** - [@norberttech](https://github.com/norberttech)
 - [#2588](https://github.com/flow-php/flow/pull/2588) - **flow-php/types - EnumType::cast() resolved to UnitEnum instead of the enum class** - [@norberttech](https://github.com/norberttech)
@@ -124,6 +137,7 @@
 - [2cae92](https://github.com/flow-php/flow/commit/2cae92b176d22eb294c505c7576255fcfd4ee804) - **static analysis baseline adr** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - lossy date/datetime widening to integer and float** - [@norberttech](https://github.com/norberttech)
 - [#2580](https://github.com/flow-php/flow/pull/2580) - **flow-php/web - render-blocking mermaid CDN script loaded on every page** - [@norberttech](https://github.com/norberttech)
 - [#2579](https://github.com/flow-php/flow/pull/2579) - **flow-php/web - per-example input/ directories** - [@norberttech](https://github.com/norberttech)
 - [#2572](https://github.com/flow-php/flow/pull/2572) - **flow-php/web - Datadog RUM and its session replay** - [@norberttech](https://github.com/norberttech)
