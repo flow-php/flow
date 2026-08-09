@@ -92,12 +92,12 @@ final readonly class StringDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        if ($this->isNullable() && $entry->is($this->ref)) {
-            return true;
-        }
-
         if (!$entry->is($this->ref)) {
             return false;
+        }
+
+        if ($entry->value() === null) {
+            return $this->isNullable();
         }
 
         return $entry->type() instanceof StringType;
@@ -115,6 +115,15 @@ final readonly class StringDefinition implements Definition
 
         if ($definition instanceof NullDefinition) {
             return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
+        }
+
+        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
+            return new UnionDefinition(
+                $this->ref,
+                $definition->type(),
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
         }
 
         return new self(

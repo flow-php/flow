@@ -125,15 +125,15 @@ final readonly class MapDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        if ($this->isNullable() && $entry->is($this->ref)) {
-            return true;
-        }
-
         if (!$entry->is($this->ref)) {
             return false;
         }
 
-        return $entry->type() instanceof MapType;
+        if ($entry->value() === null) {
+            return $this->isNullable();
+        }
+
+        return $entry->type() instanceof MapType && $this->type->isValid($entry->value());
     }
 
     public function merge(Definition $definition): Definition
@@ -167,7 +167,16 @@ final readonly class MapDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
+            return new UnionDefinition(
+                $this->ref,
+                $definition->type(),
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
+        }
+
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

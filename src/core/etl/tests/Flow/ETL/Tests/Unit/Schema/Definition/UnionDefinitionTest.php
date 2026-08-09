@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -20,17 +21,24 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_class_string;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_uuid;
 
 final class UnionDefinitionTest extends FlowTestCase
 {
@@ -66,10 +74,46 @@ final class UnionDefinitionTest extends FlowTestCase
             false,
         ];
 
-        yield 'union with non union' => [
+        yield 'union with its string member' => [
             union_schema('col', type_union(type_string(), type_integer())),
             string_schema('col'),
+            true,
+        ];
+
+        yield 'union with its integer member' => [
+            union_schema('col', type_union(type_string(), type_integer())),
+            int_schema('col'),
+            true,
+        ];
+
+        yield 'union with a type that is not a member' => [
+            union_schema('col', type_union(type_string(), type_integer())),
+            float_schema('col'),
             false,
+        ];
+
+        yield 'nullable union with nullable member' => [
+            union_schema('col', type_union(type_string(), type_integer()), true),
+            int_schema('col', true),
+            true,
+        ];
+
+        yield 'not nullable union with nullable member' => [
+            union_schema('col', type_union(type_string(), type_integer()), false),
+            int_schema('col', true),
+            false,
+        ];
+
+        yield 'union with optional member' => [
+            union_schema('col', type_union(type_optional(type_string()), type_integer())),
+            string_schema('col'),
+            true,
+        ];
+
+        yield 'union with a member that has no definition' => [
+            union_schema('col', type_union(type_class_string(), type_string())),
+            string_schema('col'),
+            true,
         ];
     }
 
@@ -99,12 +143,34 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
+    public function test_array_member_is_normalized_to_json(): void
+    {
+        static::assertSame(
+            'json|string',
+            union_schema('col', type_union(type_string(), type_array()))->type()->toString(),
+        );
+    }
+
+    public function test_normalized_array_member_survives_a_normalize_round_trip(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_array()));
+
+        static::assertEquals($def, definition_from_array($def->normalize()));
+    }
+
     public function test_definition_from_type_creates_union_definition(): void
     {
         $definition = definition_from_type('col', type_union(type_string(), type_integer()));
 
         static::assertInstanceOf(UnionDefinition::class, $definition);
         static::assertSame('col', $definition->entry()->name());
+    }
+
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertFalse($def->matches(int_entry('col', null)));
     }
 
     public function test_does_not_match_entry_with_different_name(): void
@@ -154,6 +220,14 @@ final class UnionDefinitionTest extends FlowTestCase
     public function test_is_compatible(Definition $definition, Definition $other, bool $expected): void
     {
         static::assertSame($expected, $definition->isCompatible($other));
+    }
+
+    public function test_is_compatible_with_list_of_union_elements(): void
+    {
+        static::assertTrue(definition_from_type(
+            'col',
+            type_list(type_union(type_integer(), type_string())),
+        )->isCompatible(definition_from_type('col', type_list(type_integer()))));
     }
 
     public function test_is_same_with_different_metadata(): void
@@ -206,6 +280,38 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertTrue($def->matches(int_entry('col', 1)));
     }
 
+    public function test_member_for_carries_nullability_and_metadata(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true, Metadata::with('key', 'value'));
+
+        static::assertEquals(int_schema('col', true, Metadata::with('key', 'value')), $def->memberFor(1));
+    }
+
+    public function test_member_for_resolves_the_first_non_null_member_for_null(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertEquals(string_schema('col'), $def->memberFor(null));
+    }
+
+    public function test_member_for_resolves_the_member_accepting_the_value(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertEquals(int_schema('col'), $def->memberFor(1));
+        static::assertEquals(string_schema('col'), $def->memberFor('value'));
+    }
+
+    public function test_member_for_throws_for_a_value_outside_every_member(): void
+    {
+        $def = union_schema('col', type_union(type_uuid(), type_datetime()));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "col": array value does not match any member of union type');
+
+        $def->memberFor([1, 2]);
+    }
+
     /**
      * @param Definition<mixed> $definition
      * @param Definition<mixed> $other
@@ -251,13 +357,49 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertInstanceOf(JsonDefinition::class, $def->merge($other));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
-        $this->expectException(RuntimeException::class);
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
+    }
 
-        $def->merge(new BooleanDefinition('col'));
+    public function test_merge_with_non_member_falls_back_to_string(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()));
+
+        static::assertSame('string', $def->merge(float_schema('col'))->type()->toString());
+    }
+
+    public function test_merge_with_nullable_union_member_returns_nullable_union(): void
+    {
+        $merged = union_schema('col', type_union(type_string(), type_integer()), false)->merge(int_schema('col', true));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('integer|string', $merged->type()->toString());
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_with_union_member_merges_metadata(): void
+    {
+        $merged = union_schema(
+            'col',
+            type_union(type_string(), type_integer()),
+            false,
+            Metadata::with('a', '1'),
+        )->merge(int_schema('col', false, Metadata::with('b', '2')));
+
+        static::assertSame('1', $merged->metadata()->get('a'));
+        static::assertSame('2', $merged->metadata()->get('b'));
+    }
+
+    public function test_merge_with_union_member_returns_union(): void
+    {
+        $merged = union_schema('col', type_union(type_string(), type_integer()))->merge(int_schema('col'));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('integer|string', $merged->type()->toString());
+        static::assertFalse($merged->isNullable());
     }
 
     public function test_normalize(): void
@@ -279,11 +421,32 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertEquals($def, definition_from_array($def->normalize()));
     }
 
-    public function test_nullable_matches_any_entry_with_same_name(): void
+    public function test_nullable_does_not_match_an_entry_of_a_type_outside_the_union(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()), true);
 
-        static::assertTrue($def->matches(bool_entry('col', true)));
+        static::assertFalse($def->matches(bool_entry('col', true)));
+    }
+
+    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(int_entry('col', null)));
+    }
+
+    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(bool_entry('col', null)));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        $def = union_schema('col', type_union(type_string(), type_integer()), true);
+
+        static::assertTrue($def->matches(int_entry('col', 1)));
     }
 
     public function test_rename(): void
@@ -312,5 +475,18 @@ final class UnionDefinitionTest extends FlowTestCase
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
         static::assertSame('integer|string', $def->type()->toString());
+    }
+
+    public function test_union_member_and_standalone_array_resolve_to_the_same_definition(): void
+    {
+        $standalone = definition_from_type('col', type_array());
+        $member = definition_from_type(
+            'col',
+            union_schema('col', type_union(type_string(), type_array()))->type()->types()->all()[1],
+        );
+
+        static::assertInstanceOf(JsonDefinition::class, $standalone);
+        static::assertInstanceOf(JsonDefinition::class, $member);
+        static::assertTrue($standalone->isSame($member));
     }
 }

@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
@@ -80,6 +81,19 @@ final class SchemaTest extends FlowIntegrationTestCase
             $rows->toArray(),
         );
         static::assertEquals(schema(int_schema('id'), str_schema('name'), null_schema('active')), $rows->schema());
+    }
+
+    public function test_getting_schema_of_a_column_holding_both_an_empty_array_and_a_structure(): void
+    {
+        static::assertEquals(
+            schema(json_schema('a')),
+            df()->read(from_array([['a' => []], ['a' => ['x' => 1]]]))->schema(),
+        );
+    }
+
+    public function test_getting_schema_of_a_column_holding_unrelated_types(): void
+    {
+        static::assertEquals(schema(str_schema('a')), df()->read(from_array([['a' => 1], ['a' => true]]))->schema());
     }
 
     public function test_getting_schema_of_enum_column_with_null_values(): void

@@ -92,12 +92,12 @@ final readonly class DateDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        if ($this->isNullable() && $entry->is($this->ref)) {
-            return true;
-        }
-
         if (!$entry->is($this->ref)) {
             return false;
+        }
+
+        if ($entry->value() === null) {
+            return $this->isNullable();
         }
 
         return $entry->type() instanceof DateType;
@@ -141,23 +141,16 @@ final readonly class DateDefinition implements Definition
             );
         }
 
-        if ($definition instanceof FloatDefinition) {
-            return new FloatDefinition(
+        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
+            return new UnionDefinition(
                 $this->ref,
+                $definition->type(),
                 $this->nullable || $definition->isNullable(),
                 $this->metadata->merge($definition->metadata()),
             );
         }
 
-        if ($definition instanceof IntegerDefinition) {
-            return new IntegerDefinition(
-                $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

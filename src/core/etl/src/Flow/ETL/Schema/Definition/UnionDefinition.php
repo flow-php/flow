@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\EntryTypeResolver;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
@@ -27,16 +29,22 @@ final readonly class UnionDefinition implements Definition
     private Reference $ref;
 
     /**
+     * @var UnionType<mixed, mixed>
+     */
+    private UnionType $type;
+
+    /**
      * @param UnionType<mixed, mixed> $type
      */
     public function __construct(
         string|Reference $ref,
-        private UnionType $type,
+        UnionType $type,
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
+        $this->type = (new UnionTypeNormalizer())->normalize($type);
     }
 
     /**
@@ -62,7 +70,11 @@ final readonly class UnionDefinition implements Definition
             return false;
         }
 
-        return type_equals($this->type, $definition->type());
+        if (type_equals($this->type, $definition->type())) {
+            return true;
+        }
+
+        return (new UnionMembers())->contains($this, $definition);
     }
 
     public function isNullable(): bool
@@ -90,15 +102,30 @@ final readonly class UnionDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        if ($this->isNullable() && $entry->is($this->ref)) {
-            return true;
-        }
-
         if (!$entry->is($this->ref)) {
             return false;
         }
 
+        if ($entry->value() === null) {
+            return $this->isNullable();
+        }
+
         return $this->type->isValid($entry->value());
+    }
+
+    /**
+     * @throws InvalidArgumentException when the value matches no member of the union
+     *
+     * @return Definition<mixed>
+     */
+    public function memberFor(mixed $value): Definition
+    {
+        return definition_from_type(
+            $this->ref,
+            (new EntryTypeResolver())->fromUnion($this->type, $value, $this->ref->name()),
+            $this->nullable,
+            $this->metadata,
+        );
     }
 
     public function merge(Definition $definition): Definition
@@ -132,7 +159,16 @@ final readonly class UnionDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        if ((new UnionMembers())->contains($this, $definition)) {
+            return new self(
+                $this->ref,
+                $this->type,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
+        }
+
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

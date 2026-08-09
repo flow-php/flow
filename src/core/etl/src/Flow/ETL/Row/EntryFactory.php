@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
@@ -22,6 +23,7 @@ use TypeError;
 
 use function array_values;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_string;
 
 final class EntryFactory
@@ -74,6 +76,10 @@ final class EntryFactory
      */
     public function fromDefinition(Definition $definition, mixed $value): Entry
     {
+        if ($definition instanceof UnionDefinition) {
+            $definition = $definition->memberFor($value);
+        }
+
         $variant = $value === null && !$definition->isNullable() ? $definition->makeNullable() : $definition;
 
         return $this->instantiators->for($variant->entryClass())->instantiate(
@@ -90,6 +96,8 @@ final class EntryFactory
      */
     private function build(string $name, mixed $value, Type $type, ?Metadata $metadata, bool $cast): Entry
     {
+        $declaredType = $type;
+
         try {
             if ($type instanceof OptionalType) {
                 $type = $type->base();
@@ -127,7 +135,12 @@ final class EntryFactory
 
             $definition = definition_from_type($name, $type, $value === null, $metadata);
 
-            return $this->fromDefinition($definition, $this->prepareValue($value, $definition->type(), $cast));
+            return $this->fromDefinition($definition, $this->prepareValue(
+                $value,
+                $declaredType,
+                $definition->type(),
+                $cast,
+            ));
 
             // @mago-ignore analysis:avoid-catching-error
         } catch (InvalidArgumentException|CastingException|TypeError $e) {
@@ -139,18 +152,23 @@ final class EntryFactory
     }
 
     /**
-     * @param Type<mixed> $type
+     * @param Type<mixed> $declaredType
+     * @param Type<mixed> $entryType
      */
-    private function prepareValue(mixed $value, Type $type, bool $cast): mixed
+    private function prepareValue(mixed $value, Type $declaredType, Type $entryType, bool $cast): mixed
     {
-        if ($value === null || !$cast) {
+        if ($value === null) {
             return $value;
         }
 
-        if ($type instanceof ListType) {
-            return array_values($type->cast($value));
+        if (!$cast && type_equals($declaredType, $entryType)) {
+            return $value;
         }
 
-        return $type->cast($value);
+        if ($entryType instanceof ListType) {
+            return array_values($entryType->cast($value));
+        }
+
+        return $entryType->cast($value);
     }
 }

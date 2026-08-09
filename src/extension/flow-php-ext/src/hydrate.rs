@@ -11,9 +11,9 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, Function};
 
 use crate::ctx::{
-    array_key_index, call_handle, call_handle_on, ce_method_ref, construct_with_zvals,
-    find_class, ht_add, ht_find_key, ht_insert, ht_insert_key, property_offset,
-    write_slot, zval_str, Ctx, HtKey,
+    array_key_index, call_handle, call_handle_on, call_handle_transparent, ce_method_ref,
+    construct_with_zvals, find_class, ht_add, ht_find_key, ht_insert, ht_insert_key,
+    property_offset, write_slot, zval_str, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
@@ -389,6 +389,9 @@ pub(crate) struct HydrateColumn {
     pub(crate) nullable: bool,
     pub(crate) entry_ce: &'static ClassEntry,
     pub(crate) entry_slots: (u32, u32, u32),
+    /// A union column's concrete type is a per-row property, so `entry_ce` above - resolved
+    /// once per column from the value-blind `entryClass()` - does not apply to it.
+    pub(crate) member_for: Option<&'static Function>,
 }
 
 impl HydrateColumn {
@@ -451,6 +454,7 @@ pub(crate) fn build_hydrate_plan(
         .ok_or_else(|| ext_exception("flow_php expected Schema::definitions to return an array"))?;
 
     let mut columns = Vec::with_capacity(definitions_ht.len());
+    let union_ce = find_class("Flow\\ETL\\Schema\\Definition\\UnionDefinition")?;
 
     ht_for_each(definitions_ht, |_, _, def_zv| {
         let def_obj = expect_object(def_zv, "a Definition")?;
@@ -486,6 +490,12 @@ pub(crate) fn build_hydrate_plan(
         let entry_ce = find_class(&entry_class_name)?;
         let entry_slots = entry_slots(entry_slot_cache, entry_ce)?;
 
+        let member_for = if def_obj.instance_of(union_ce) {
+            Some(ce_method_ref(def_ce, "memberFor")?)
+        } else {
+            None
+        };
+
         columns.push(HydrateColumn {
             numeric_key,
             name_zv,
@@ -493,6 +503,7 @@ pub(crate) fn build_hydrate_plan(
             nullable,
             entry_ce,
             entry_slots,
+            member_for,
         });
 
         Ok(())
@@ -507,22 +518,44 @@ pub(crate) fn build_hydrate_plan(
 
 /// Resolves the `(definition, entry class, entry slots)` triple for one column
 /// occurrence, mirroring `PhpRowHydrator::instantiate` + `EntryFactory::fromDefinition`:
-/// the common path shares the retained base `Definition`; per-value metadata takes
-/// the new instance `$def->setMetadata(...)` returns, and a null value on a
-/// non-nullable definition produces a fresh `makeNullable()` variant.
+/// the common path shares the retained base `Definition`; a union column resolves its
+/// member from the value; per-value metadata takes the new instance
+/// `$def->setMetadata(...)` returns, and a null value on a non-nullable definition
+/// produces a fresh `makeNullable()` variant.
 pub(crate) fn resolve_entry_definition(
     column: &HydrateColumn,
     metadata: Option<&Zval>,
-    value_is_null: bool,
+    value: Option<&Zval>,
     entry_slot_cache: &mut EntrySlotCache,
     def_rare_cache: &mut DefRareFnCache,
 ) -> Result<(Zval, &'static ClassEntry, (u32, u32, u32)), PhpException> {
-    if metadata.is_none() && (!value_is_null || column.nullable) {
+    let value_is_null = value.is_none_or(Zval::is_null);
+
+    if column.member_for.is_none() && metadata.is_none() && (!value_is_null || column.nullable) {
         return Ok((column.base_def.shallow_clone(), column.entry_ce, column.entry_slots));
     }
 
-    let base_obj = column
-        .base_def
+    let resolved_def = match column.member_for {
+        Some(member_for) => {
+            let union_obj = column
+                .base_def
+                .object()
+                .ok_or_else(|| ext_exception("flow_php expected a Definition object"))?;
+            let mut args = [match value {
+                Some(value) => value.shallow_clone(),
+                None => {
+                    let mut null = Zval::new();
+                    null.set_null();
+                    null
+                }
+            }];
+
+            call_handle_transparent(member_for, Some(union_obj), &mut args)?
+        }
+        None => column.base_def.shallow_clone(),
+    };
+
+    let base_obj = resolved_def
         .object()
         .ok_or_else(|| ext_exception("flow_php expected a Definition object"))?;
 
@@ -537,7 +570,7 @@ pub(crate) fn resolve_entry_definition(
             "set per-value metadata",
         )?
     } else {
-        column.base_def.shallow_clone()
+        resolved_def.shallow_clone()
     };
 
     let variant_obj = variant
@@ -646,7 +679,7 @@ pub fn hydrate_rows(
             let (definition, entry_ce, entry_slots) = resolve_entry_definition(
                 column,
                 metadata,
-                value.is_null(),
+                Some(value),
                 entry_slot_cache,
                 def_rare_cache,
             )?;

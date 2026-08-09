@@ -132,13 +132,16 @@ nix-shell --arg with-pg-query-ext false --arg with-c true
 
 See [C - pg-query Extension Development](/documentation/contributing/c.md) for details.
 
-### arrow-ext Extension (Rust)
+### arrow-ext and flow-php-ext Extensions (Rust)
 
 ```shell
-nix-shell --arg with-arrow-ext false --arg with-rust true
+nix-shell --arg with-rust true
 ```
 
-See [Rust - Arrow Extension Development](/documentation/contributing/rust.md) for details.
+`with-arrow-ext` and `with-flow-php-ext` both default to `!with-rust`, so this single flag already turns the prebuilt
+extensions off for both.
+
+See [Rust - Extension Development](/documentation/contributing/rust.md) for details.
 
 ### Protobuf / gRPC Code Generation (protoc)
 

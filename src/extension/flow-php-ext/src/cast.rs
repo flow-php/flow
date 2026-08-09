@@ -748,7 +748,7 @@ pub fn cast_rows(
                         let (definition, entry_ce, entry_slots) = resolve_entry_definition(
                             column,
                             None,
-                            true,
+                            None,
                             entry_slot_cache,
                             def_rare_cache,
                         )?;
@@ -761,17 +761,10 @@ pub fn cast_rows(
                         } else {
                             None
                         };
-                        let value_is_null = value.is_null();
-
-                        let (definition, entry_ce, entry_slots) = resolve_entry_definition(
-                            column,
-                            metadata,
-                            value_is_null,
-                            entry_slot_cache,
-                            def_rare_cache,
-                        )?;
-
-                        let casted = if value_is_null {
+                        // Cast first: `PhpRowHydrator::cast()` hands `fromDefinition()` the
+                        // already-cast value, so a union column must pick its member from that
+                        // same value for both engines to agree.
+                        let casted = if value.is_null() {
                             null_zval()
                         } else {
                             match cast_value(&cast_column.kind, value, ctx)? {
@@ -790,6 +783,14 @@ pub fn cast_rows(
                                 }
                             }
                         };
+
+                        let (definition, entry_ce, entry_slots) = resolve_entry_definition(
+                            column,
+                            metadata,
+                            Some(&casted),
+                            entry_slot_cache,
+                            def_rare_cache,
+                        )?;
 
                         (definition, entry_ce, entry_slots, casted)
                     }

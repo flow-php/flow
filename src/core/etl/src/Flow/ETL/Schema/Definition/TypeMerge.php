@@ -7,10 +7,12 @@ namespace Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
@@ -20,14 +22,24 @@ use function array_keys;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function in_array;
 
 final readonly class TypeMerge
 {
+    private const CONTAINERS = [
+        ArrayType::class,
+        JsonType::class,
+        ListType::class,
+        MapType::class,
+        StructureType::class,
+    ];
+
     /**
      * @param Type<mixed> $left
      * @param Type<mixed> $right
@@ -81,6 +93,11 @@ final readonly class TypeMerge
 
         if ($left instanceof MapType && $right instanceof MapType) {
             return $this->mergeMaps($left, $right);
+        }
+
+        // json holds any container shape without flattening it to text, so it beats the string fallback below.
+        if (in_array($left::class, self::CONTAINERS, true) && in_array($right::class, self::CONTAINERS, true)) {
+            return type_json();
         }
 
         // Inference cannot throw, so an irreconcilable pair widens to the most permissive type instead.

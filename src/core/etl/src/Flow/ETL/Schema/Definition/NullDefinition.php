@@ -84,7 +84,7 @@ final readonly class NullDefinition implements Definition
 
     public function matches(Entry $entry): bool
     {
-        return $entry->is($this->ref);
+        return $entry->is($this->ref) && $entry->value() === null;
     }
 
     public function merge(Definition $definition): Definition

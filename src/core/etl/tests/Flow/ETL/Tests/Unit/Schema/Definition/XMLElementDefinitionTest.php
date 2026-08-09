@@ -8,6 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -17,8 +18,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_xml_element;
 
 final class XMLElementDefinitionTest extends FlowTestCase
 {
@@ -79,6 +86,13 @@ final class XMLElementDefinitionTest extends FlowTestCase
         static::assertTrue($withMeta->metadata()->has('key'));
         static::assertSame('value', $withMeta->metadata()->get('key'));
         static::assertFalse($def->metadata()->has('key'));
+    }
+
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        $def = xml_element_schema('col');
+
+        static::assertFalse($def->matches(xml_element_entry('col', null)));
     }
 
     public function test_does_not_match_entry_with_different_name(): void
@@ -196,13 +210,11 @@ final class XMLElementDefinitionTest extends FlowTestCase
         $def->merge(xml_element_schema('other'));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = xml_element_schema('col');
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -217,11 +229,32 @@ final class XMLElementDefinitionTest extends FlowTestCase
         static::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_matches_any_entry_with_same_name(): void
+    public function test_nullable_does_not_match_an_entry_of_a_different_type(): void
+    {
+        $def = xml_element_schema('col', true);
+
+        static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_nullable_matches_a_null_entry_with_same_name(): void
     {
         $def = xml_element_schema('col', true);
 
         static::assertTrue($def->matches(xml_element_entry('col', null)));
+    }
+
+    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
+    {
+        $def = xml_element_schema('col', true);
+
+        static::assertTrue($def->matches(int_entry('col', null)));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        $def = xml_element_schema('col', true);
+
+        static::assertTrue($def->matches(xml_element_entry('col', '<item>value</item>')));
     }
 
     public function test_rename(): void
@@ -250,5 +283,24 @@ final class XMLElementDefinitionTest extends FlowTestCase
         $def = xml_element_schema('element');
 
         static::assertSame('xml_element', $def->type()->toString());
+    }
+
+    public function test_merge_with_union_containing_this_type_returns_union(): void
+    {
+        $merged = xml_element_schema('col')->merge(union_schema('col', type_union(type_xml_element(), type_boolean())));
+
+        static::assertInstanceOf(UnionDefinition::class, $merged);
+        static::assertSame('boolean|xml_element', $merged->type()->toString());
+    }
+
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
+    {
+        static::assertSame(
+            'string',
+            xml_element_schema('col')
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }

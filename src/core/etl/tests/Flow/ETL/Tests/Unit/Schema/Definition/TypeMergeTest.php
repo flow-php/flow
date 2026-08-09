@@ -11,11 +11,13 @@ use Flow\Types\Type\Logical\StructureType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
@@ -145,9 +147,27 @@ final class TypeMergeTest extends FlowTestCase
             type_string(),
         ];
 
-        yield 'list against a map widens to string' => [
+        yield 'list against a map widens to json' => [
             type_list(type_string()),
             type_map(type_string(), type_string()),
+            type_json(),
+        ];
+
+        yield 'array against a structure widens to json' => [
+            type_array(),
+            type_structure(['id' => type_integer()]),
+            type_json(),
+        ];
+
+        yield 'json against a list widens to json' => [
+            type_json(),
+            type_list(type_string()),
+            type_json(),
+        ];
+
+        yield 'array against a scalar widens to string' => [
+            type_array(),
+            type_integer(),
             type_string(),
         ];
     }

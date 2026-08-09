@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
@@ -34,6 +35,17 @@ final class CastTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_cast_to_array_produces_json_entry(): void
+    {
+        $rows = df()
+            ->read(from_array([['a' => '[1,2,3]']]))
+            ->withEntry('b', ref('a')->cast('array'))
+            ->fetch();
+
+        static::assertInstanceOf(JsonEntry::class, $rows->first()->entries()->get('b'));
+        static::assertSame('[1,2,3]', $rows->first()->entries()->get('b')->toString());
     }
 
     public function test_cast_non_deterministic_values(): void
