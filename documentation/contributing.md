@@ -111,6 +111,6 @@ It's mandatory to follow all of them without any exceptions unless explicitly ov
 - [Development Guidelines](/documentation/contributing/guidelines.md)
 - [Benchmarks](/documentation/contributing/benchmarks.md)
 - Extension Development
-  - [Rust - Arrow Extension](/documentation/contributing/rust.md)
+  - [Rust - arrow-ext & flow-php-ext](/documentation/contributing/rust.md)
   - [C - pg-query Extension](/documentation/contributing/c.md)
   - [WASM - Interactive Playground](/documentation/contributing/wasm.md)

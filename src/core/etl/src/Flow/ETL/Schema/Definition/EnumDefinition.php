@@ -120,7 +120,7 @@ final readonly class EnumDefinition implements Definition
             return $this->isNullable();
         }
 
-        return $entry->type() instanceof EnumType;
+        return $entry->type() instanceof EnumType && $this->type->isValid($entry->value());
     }
 
     public function merge(Definition $definition): Definition
@@ -168,7 +168,7 @@ final readonly class EnumDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

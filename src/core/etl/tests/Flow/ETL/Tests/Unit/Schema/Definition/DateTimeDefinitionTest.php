@@ -241,13 +241,11 @@ final class DateTimeDefinitionTest extends FlowTestCase
         $def->merge(datetime_schema('other'));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = datetime_schema('col');
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -326,10 +324,14 @@ final class DateTimeDefinitionTest extends FlowTestCase
         static::assertSame('boolean|datetime', $merged->type()->toString());
     }
 
-    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        datetime_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
+        static::assertSame(
+            'string',
+            datetime_schema('col')
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }

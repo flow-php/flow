@@ -357,25 +357,18 @@ final class UnionDefinitionTest extends FlowTestCase
         static::assertInstanceOf(JsonDefinition::class, $def->merge($other));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
-    public function test_merge_with_non_member_throws_exception(): void
+    public function test_merge_with_non_member_falls_back_to_string(): void
     {
         $def = union_schema('col', type_union(type_string(), type_integer()));
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage(
-            'Cannot merge Flow\ETL\Schema\Definition\UnionDefinition with Flow\ETL\Schema\Definition\FloatDefinition',
-        );
-
-        $def->merge(float_schema('col'));
+        static::assertSame('string', $def->merge(float_schema('col'))->type()->toString());
     }
 
     public function test_merge_with_nullable_union_member_returns_nullable_union(): void

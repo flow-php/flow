@@ -146,7 +146,7 @@ final readonly class StructureDefinition implements Definition
             return $this->isNullable();
         }
 
-        return $entry->type() instanceof StructureType;
+        return $entry->type() instanceof StructureType && $this->type->isValid($entry->value());
     }
 
     public function merge(Definition $definition): Definition
@@ -189,7 +189,7 @@ final readonly class StructureDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

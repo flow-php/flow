@@ -142,7 +142,7 @@ final readonly class XMLElementDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

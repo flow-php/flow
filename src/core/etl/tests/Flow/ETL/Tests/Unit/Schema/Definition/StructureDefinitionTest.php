@@ -16,6 +16,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
@@ -23,6 +24,7 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -283,11 +285,37 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
+    public function test_does_not_match_a_map_entry_holding_a_structure_shaped_value(): void
+    {
+        $def = structure_schema('col', type_structure(['a' => type_integer()]));
+
+        static::assertFalse($def->matches(map_entry('col', ['a' => 1], type_map(type_string(), type_integer()))));
+    }
+
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
         static::assertFalse($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
+    }
+
+    public function test_does_not_match_an_entry_of_a_different_structure_instantiation(): void
+    {
+        $def = structure_schema('col', type_structure(['a' => type_integer()]));
+
+        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
+            'b' => type_string(),
+        ]))));
+    }
+
+    public function test_does_not_match_an_entry_with_extra_elements_when_extra_is_not_allowed(): void
+    {
+        $def = structure_schema('col', type_structure(['a' => type_integer()]));
+
+        static::assertFalse($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
+            'a' => type_integer(),
+            'b' => type_string(),
+        ]))));
     }
 
     public function test_does_not_match_entry_with_different_name(): void
@@ -386,6 +414,26 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->isNullable());
     }
 
+    public function test_matches_an_entry_with_extra_elements_when_extra_is_allowed(): void
+    {
+        $def = structure_schema('col', type_structure(['a' => type_integer()], [], true));
+
+        static::assertTrue($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
+            'a' => type_integer(),
+            'b' => type_string(),
+        ]))));
+    }
+
+    public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
+    {
+        $def = structure_schema('col', type_structure(['a' => type_integer()]));
+
+        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
+            'b' => type_string(),
+        ]))));
+        static::assertFalse($def->isCompatible(structure_schema('col', type_structure(['b' => type_string()]))));
+    }
+
     public function test_matches_entry_with_same_name_and_type(): void
     {
         $def = structure_schema('data', type_structure(['name' => type_string()]));
@@ -432,13 +480,11 @@ final class StructureDefinitionTest extends FlowTestCase
         $def->merge(structure_schema('other', type_structure(['name' => type_string()])));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -526,13 +572,14 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertSame('boolean|structure{a: integer}', $merged->type()->toString());
     }
 
-    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        structure_schema('col', type_structure(['a' => type_integer()]))->merge(union_schema('col', type_union(
-            type_integer(),
-            type_string(),
-        )));
+        static::assertSame(
+            'string',
+            structure_schema('col', type_structure(['a' => type_integer()]))
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }

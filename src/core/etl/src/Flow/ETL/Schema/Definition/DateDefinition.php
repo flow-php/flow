@@ -141,22 +141,6 @@ final readonly class DateDefinition implements Definition
             );
         }
 
-        if ($definition instanceof FloatDefinition) {
-            return new FloatDefinition(
-                $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
-        if ($definition instanceof IntegerDefinition) {
-            return new IntegerDefinition(
-                $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
         if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
             return new UnionDefinition(
                 $this->ref,
@@ -166,7 +150,7 @@ final readonly class DateDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

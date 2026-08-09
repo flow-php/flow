@@ -213,13 +213,11 @@ final class HTMLElementDefinitionTest extends FlowTestCase
         $def->merge(html_element_schema('other'));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = html_element_schema('col');
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -302,10 +300,14 @@ final class HTMLElementDefinitionTest extends FlowTestCase
         static::assertSame('boolean|html_element', $merged->type()->toString());
     }
 
-    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        html_element_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
+        static::assertSame(
+            'string',
+            html_element_schema('col')
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }

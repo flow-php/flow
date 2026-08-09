@@ -133,7 +133,7 @@ final readonly class MapDefinition implements Definition
             return $this->isNullable();
         }
 
-        return $entry->type() instanceof MapType;
+        return $entry->type() instanceof MapType && $this->type->isValid($entry->value());
     }
 
     public function merge(Definition $definition): Definition
@@ -176,7 +176,7 @@ final readonly class MapDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

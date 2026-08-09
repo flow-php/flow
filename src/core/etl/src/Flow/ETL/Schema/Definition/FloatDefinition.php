@@ -133,14 +133,6 @@ final readonly class FloatDefinition implements Definition
             );
         }
 
-        if ($definition instanceof DateDefinition || $definition instanceof DateTimeDefinition) {
-            return new self(
-                $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
         if ($definition instanceof StringDefinition) {
             return new StringDefinition(
                 $this->ref,
@@ -158,7 +150,7 @@ final readonly class FloatDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        return (new CommonType())->merge($this, $definition);
     }
 
     public function metadata(): Metadata

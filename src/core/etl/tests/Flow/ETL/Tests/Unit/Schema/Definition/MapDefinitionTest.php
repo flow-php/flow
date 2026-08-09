@@ -16,6 +16,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
@@ -24,6 +25,7 @@ use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
@@ -119,11 +121,25 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
+    public function test_does_not_match_a_list_entry_holding_a_map_shaped_value(): void
+    {
+        $def = map_schema('col', type_map(type_integer(), type_integer()));
+
+        static::assertFalse($def->matches(list_entry('col', [1, 2], type_list(type_integer()))));
+    }
+
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
         static::assertFalse($def->matches(map_entry('col', null, type_map(type_string(), type_integer()))));
+    }
+
+    public function test_does_not_match_an_entry_of_a_different_map_instantiation(): void
+    {
+        $def = map_schema('col', type_map(type_string(), type_integer()));
+
+        static::assertFalse($def->matches(map_entry('col', ['a' => 'x'], type_map(type_string(), type_string()))));
     }
 
     public function test_does_not_match_entry_with_different_name(): void
@@ -197,6 +213,21 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertFalse($def->isNullable());
     }
 
+    public function test_matches_an_empty_map_entry_of_a_different_instantiation(): void
+    {
+        $def = map_schema('col', type_map(type_string(), type_integer()));
+
+        static::assertTrue($def->matches(map_entry('col', [], type_map(type_string(), type_string()))));
+    }
+
+    public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
+    {
+        $def = map_schema('col', type_map(type_string(), type_integer()));
+
+        static::assertFalse($def->matches(map_entry('col', ['a' => 'x'], type_map(type_string(), type_string()))));
+        static::assertFalse($def->isCompatible(map_schema('col', type_map(type_string(), type_string()))));
+    }
+
     public function test_matches_entry_with_same_name_and_type(): void
     {
         $def = map_schema('data', type_map(type_string(), type_integer()));
@@ -245,13 +276,11 @@ final class MapDefinitionTest extends FlowTestCase
         $def->merge(map_schema('other', type_map(type_string(), type_integer())));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -333,13 +362,14 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertSame('boolean|map<string, integer>', $merged->type()->toString());
     }
 
-    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        map_schema('col', type_map(type_string(), type_integer()))->merge(union_schema('col', type_union(
-            type_integer(),
-            type_string(),
-        )));
+        static::assertSame(
+            'string',
+            map_schema('col', type_map(type_string(), type_integer()))
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }

@@ -242,13 +242,11 @@ final class TimeDefinitionTest extends FlowTestCase
         $def->merge(time_schema('other'));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception(): void
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
     {
         $def = time_schema('col');
 
-        $this->expectException(RuntimeException::class);
-
-        $def->merge(new BooleanDefinition('col'));
+        static::assertSame('string', $def->merge(new BooleanDefinition('col'))->type()->toString());
     }
 
     public function test_normalize(): void
@@ -327,10 +325,14 @@ final class TimeDefinitionTest extends FlowTestCase
         static::assertSame('boolean|time', $merged->type()->toString());
     }
 
-    public function test_merge_with_union_not_containing_this_type_throws_exception(): void
+    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
     {
-        $this->expectException(RuntimeException::class);
-
-        time_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
+        static::assertSame(
+            'string',
+            time_schema('col')
+                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->type()
+                ->toString(),
+        );
     }
 }
