@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-08-10
+## [0.43.0] - 2026-08-10
 
 ### Added
 - [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - UnionDefinition::memberFor() resolving a union member from a value** - [@norberttech](https://github.com/norberttech)
