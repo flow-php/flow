@@ -61,6 +61,7 @@ final readonly class PositiveIntegerType implements Type
             }
 
             if (is_numeric($value)) {
+                // @mago-expect analysis:no-value
                 return $this->assert((int) $value);
             }
 

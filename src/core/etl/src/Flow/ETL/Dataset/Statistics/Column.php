@@ -107,7 +107,7 @@ final class Column
         }
 
         if ($entry instanceof StringEntry) {
-            $valueLength = mb_strlen(is_scalar($entry->value()) ? (string) $entry->value() : '');
+            $valueLength = mb_strlen(is_scalar($entry->value()) ? $entry->value() : '');
             $this->maxLength = max($this->maxLength ?? $valueLength, $valueLength);
             $this->minLength = min($this->minLength ?? $valueLength, $valueLength);
 

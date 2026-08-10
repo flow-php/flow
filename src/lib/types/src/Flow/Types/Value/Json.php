@@ -57,14 +57,6 @@ final readonly class Json implements JsonSerializable, Stringable
 
     public static function isValid(string $value): bool
     {
-        if ($value === '') {
-            return false;
-        }
-
-        if ('{' !== $value[0] && '[' !== $value[0]) {
-            return false;
-        }
-
         if (
             !(str_starts_with($value, '{') && str_ends_with($value, '}'))
             && !(str_starts_with($value, '[') && str_ends_with($value, ']'))

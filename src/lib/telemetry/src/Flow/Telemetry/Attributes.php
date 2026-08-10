@@ -229,6 +229,7 @@ final readonly class Attributes
         }
 
         if (is_scalar($value)) {
+            // @mago-expect analysis:never-return
             return $value;
         }
 

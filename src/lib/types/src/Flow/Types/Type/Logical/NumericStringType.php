@@ -41,6 +41,7 @@ final class NumericStringType implements Type
         }
 
         if (is_numeric($value)) {
+            // @mago-expect analysis:invalid-return-statement
             return (string) $value;
         }
 
