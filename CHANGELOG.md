@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-08-09
+## [Unreleased] - 2026-08-10
 
 ### Added
 - [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - UnionDefinition::memberFor() resolving a union member from a value** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +39,7 @@
 - [#2557](https://github.com/flow-php/flow/pull/2557) - **ci - reusable job-docker-image.yml workflow shared by baseline and release.** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [723244](https://github.com/flow-php/flow/commit/7232445e38065c0c78ddb3983d672ed221c7e4a4) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - array inside a union projects to json** - [@norberttech](https://github.com/norberttech)
 - [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/etl - incompatible containers widen to json at column and element level** - [@norberttech](https://github.com/norberttech)
 - [#2589](https://github.com/flow-php/flow/pull/2589) - **flow-php/flow-php-ext - Rust contributing guide documents both extensions** - [@norberttech](https://github.com/norberttech)
