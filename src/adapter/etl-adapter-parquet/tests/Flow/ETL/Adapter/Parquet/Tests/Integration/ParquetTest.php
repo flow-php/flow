@@ -98,6 +98,35 @@ final class ParquetTest extends FlowTestCase
         static::assertSame(2, data_frame($config)->read(from_parquet($path, engine: new PhpParquetEngine()))->count());
     }
 
+    public function test_round_trip_of_inferred_nested_arrays_projected_to_json(): void
+    {
+        $path = path('memory://var/inferred_nested_arrays.parquet');
+        $config = config();
+
+        data_frame($config)
+            ->read(from_array([
+                ['body' => ['data' => [1, 'a'], 'id' => 1]],
+                ['body' => ['data' => [], 'id' => 2]],
+            ]))
+            ->collect()
+            ->write(to_parquet($path))
+            ->run();
+
+        $rows = data_frame($config)->read(from_parquet($path))->fetch();
+
+        static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
+
+        $first = $rows[0]->valueOf('body');
+        static::assertIsArray($first);
+        static::assertInstanceOf(Json::class, $first['data']);
+        static::assertSame([1, 'a'], $first['data']->toArray());
+
+        $second = $rows[1]->valueOf('body');
+        static::assertIsArray($second);
+        static::assertInstanceOf(Json::class, $second['data']);
+        static::assertSame([], $second['data']->toArray());
+    }
+
     public function test_round_trip_of_nested_json_values(): void
     {
         $path = path('memory://var/nested_json.parquet');

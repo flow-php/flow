@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
@@ -334,6 +335,19 @@ final class StructureDefinitionTest extends FlowTestCase
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_array_element_is_projected_to_json(): void
+    {
+        static::assertSame(
+            'structure{data: json, nested: structure{items: list<json>}}',
+            structure_schema('body', type_structure([
+                'data' => type_array(),
+                'nested' => type_structure(['items' => type_list(type_array())]),
+            ]))
+                ->type()
+                ->toString(),
+        );
     }
 
     public function test_empty_array_element_is_projected_to_json(): void

@@ -9,6 +9,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\UnionType;
 
@@ -51,7 +52,7 @@ final readonly class TypeProjection
      */
     public function project(Type $type): Type
     {
-        if ($type instanceof EmptyArrayType) {
+        if ($type instanceof EmptyArrayType || $type instanceof ArrayType) {
             return type_json();
         }
 

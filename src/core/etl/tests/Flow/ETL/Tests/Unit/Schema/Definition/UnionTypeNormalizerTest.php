@@ -46,13 +46,13 @@ final class UnionTypeNormalizerTest extends FlowTestCase
         );
     }
 
-    public function test_array_nested_in_a_container_member_is_not_normalized(): void
+    public function test_array_nested_in_a_container_member_is_normalized(): void
     {
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_list(type_array()), type_map(type_string(), type_array()));
 
         static::assertSame(
-            'list<array<mixed>>|map<string, array<mixed>>',
+            'list<json>|map<string, json>',
             (new UnionTypeNormalizer())
                 ->normalize($type)
                 ->toString(),
