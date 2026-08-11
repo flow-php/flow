@@ -29,16 +29,22 @@ final readonly class ListDefinition implements Definition
     private Reference $ref;
 
     /**
+     * @var ListType<list<TElement>>
+     */
+    private ListType $type;
+
+    /**
      * @param ListType<list<TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
-        private ListType $type,
+        ListType $type,
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
+        $this->type = (new TypeProjection())->list($type);
     }
 
     /**

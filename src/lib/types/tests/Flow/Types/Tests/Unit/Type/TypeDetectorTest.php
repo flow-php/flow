@@ -25,6 +25,7 @@ use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
@@ -240,8 +241,8 @@ final class TypeDetectorTest extends TestCase
 
         yield 'empty array' => [
             [],
-            ArrayType::class,
-            'array<mixed>',
+            EmptyArrayType::class,
+            'array{}',
         ];
 
         yield 'list with null' => [
@@ -439,6 +440,108 @@ final class TypeDetectorTest extends TestCase
             ],
             StructureType::class,
             'structure{one: null, two: null}',
+        ];
+
+        yield 'heterogeneous list of int and string' => [
+            [1, 'a'],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'heterogeneous list of int and float' => [
+            [1, 1.5],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'heterogeneous map of int to mixed' => [
+            [1 => 'a', 2 => 3],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'structure with mixed value types' => [
+            ['a' => 1, 'b' => 'x'],
+            StructureType::class,
+            'structure{a: integer, b: string}',
+        ];
+
+        yield 'mixed int and string keys' => [
+            [0 => 'a', 'x' => 'b'],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'heterogeneous list of array and string' => [
+            [[1], 'a'],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'list with only an empty array' => [
+            [[]],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'list with only empty arrays' => [
+            [[], []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'empty array before a list' => [
+            [[], [1, 2]],
+            ListType::class,
+            'list<array<mixed>>',
+        ];
+
+        yield 'empty array after a list' => [
+            [[1, 2], []],
+            ListType::class,
+            'list<list<integer>>',
+        ];
+
+        yield 'empty array before a structure' => [
+            [[], ['id' => '1']],
+            ListType::class,
+            'list<array<mixed>>',
+        ];
+
+        yield 'empty array after a structure' => [
+            [['id' => '1'], []],
+            ListType::class,
+            'list<structure{id: string}>',
+        ];
+
+        yield 'structure with an empty array element' => [
+            ['data' => []],
+            StructureType::class,
+            'structure{data: array{}}',
+        ];
+
+        yield 'structure with an empty array element and a scalar' => [
+            ['data' => [], 'x' => 1],
+            StructureType::class,
+            'structure{data: array{}, x: integer}',
+        ];
+
+        yield 'non-list integer keys with empty array values' => [
+            [1 => [], 2 => []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'null before an empty array' => [
+            [null, []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'null after an empty array' => [
+            [[], null],
+            ArrayType::class,
+            'array<mixed>',
         ];
     }
 

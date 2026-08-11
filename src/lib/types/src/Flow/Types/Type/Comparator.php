@@ -14,6 +14,7 @@ use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
@@ -87,16 +88,17 @@ final class Comparator
             return true;
         }
 
-        if ($left instanceof ArrayType) {
+        if ($left instanceof ArrayType || $left instanceof EmptyArrayType) {
             return (
                 $right instanceof ArrayType
+                || $right instanceof EmptyArrayType
                 || $right instanceof ListType
                 || $right instanceof MapType
                 || $right instanceof StructureType
             );
         }
 
-        if ($right instanceof ArrayType) {
+        if ($right instanceof ArrayType || $right instanceof EmptyArrayType) {
             return $left instanceof ListType || $left instanceof MapType || $left instanceof StructureType;
         }
 

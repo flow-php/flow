@@ -6,11 +6,13 @@ namespace Flow\Types\Type;
 
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -43,10 +45,13 @@ final readonly class ArrayContentDetector
     ) {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
-        $this->uniqueKeysTypeCount = $uniqueKeysType->reduceOptionals()->without(type_array(), type_null())->count();
+        $this->uniqueKeysTypeCount = $uniqueKeysType
+            ->reduceOptionals()
+            ->without(type_array(), type_empty_array(), type_null())
+            ->count();
         $this->uniqueValuesTypeCount = $this->uniqueValuesType
             ->reduceOptionals()
-            ->without(type_array(), type_null())
+            ->without(type_array(), type_empty_array(), type_null())
             ->count();
     }
 
@@ -111,6 +116,11 @@ final readonly class ArrayContentDetector
         $type = null;
 
         foreach ($this->uniqueValuesType->all() as $nextType) {
+            // Otherwise [[], [1, 2]] would infer list<array{}>, which rejects [1, 2].
+            if ($nextType instanceof EmptyArrayType) {
+                $nextType = type_array();
+            }
+
             if (null === $type) {
                 $type = $nextType;
 

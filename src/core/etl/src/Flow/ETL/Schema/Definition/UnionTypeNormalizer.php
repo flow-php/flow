@@ -22,12 +22,13 @@ final readonly class UnionTypeNormalizer
     {
         $members = [];
         $changed = false;
+        $projection = new TypeProjection();
 
         foreach ($type->types()->all() as $member) {
             $normalizedMember = match (true) {
                 $member instanceof ArrayType => type_json(),
                 $member instanceof OptionalType && $member->base() instanceof ArrayType => type_optional(type_json()),
-                default => $member,
+                default => $projection->project($member),
             };
 
             if ($normalizedMember !== $member) {

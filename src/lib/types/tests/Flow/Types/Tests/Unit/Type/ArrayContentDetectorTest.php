@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -94,6 +95,41 @@ final class ArrayContentDetectorTest extends TestCase
             ],
             false,
             false,
+        ];
+
+        yield 'empty array excluded from the value type count' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_empty_array(),
+                type_list(type_integer()),
+            ],
+            true,
+            true,
+        ];
+
+        yield 'only empty arrays is not a list' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_empty_array(),
+            ],
+            true,
+            false,
+        ];
+
+        yield 'heterogeneous arrays still excluded from the value type count' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_array(),
+                type_structure(['id' => type_integer()]),
+            ],
+            true,
+            true,
         ];
     }
 
@@ -182,6 +218,29 @@ final class ArrayContentDetectorTest extends TestCase
             ],
             false,
             false,
+        ];
+
+        yield 'integer key with only empty array values is not a map' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_empty_array(),
+            ],
+            false,
+            false,
+        ];
+
+        yield 'empty array excluded from the map value type count' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_string(),
+                type_empty_array(),
+            ],
+            false,
+            true,
         ];
     }
 
@@ -283,6 +342,52 @@ final class ArrayContentDetectorTest extends TestCase
             false,
             true,
         ];
+
+        yield 'string keys with empty array values' => [
+            [
+                type_string(),
+            ],
+            [
+                type_empty_array(),
+            ],
+            false,
+            true,
+        ];
+    }
+
+    public static function provide_value_type_data(): Generator
+    {
+        yield 'empty array degrades to array<mixed> as an element type' => [
+            [
+                type_empty_array(),
+                type_list(type_integer()),
+            ],
+            'array<mixed>',
+        ];
+
+        yield 'first non-empty type wins over a later empty array' => [
+            [
+                type_list(type_integer()),
+                type_empty_array(),
+            ],
+            'list<integer>',
+        ];
+
+        yield 'null before an empty array becomes optional array<mixed>' => [
+            [
+                type_null(),
+                type_empty_array(),
+                type_list(type_integer()),
+            ],
+            '?array<mixed>',
+        ];
+
+        yield 'only an empty array degrades to array<mixed>' => [
+            [
+                type_empty_array(),
+            ],
+            'array<mixed>',
+        ];
     }
 
     /**
@@ -321,6 +426,18 @@ final class ArrayContentDetectorTest extends TestCase
         static::assertSame(
             $expected,
             (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isStructure(),
+        );
+    }
+
+    /**
+     * @param array<Type<mixed>> $values
+     */
+    #[DataProvider('provide_value_type_data')]
+    public function test_value_type(array $values, string $expected): void
+    {
+        static::assertSame(
+            $expected,
+            (new ArrayContentDetector(new Types(type_integer()), new Types(...$values), true))->valueType()->toString(),
         );
     }
 }

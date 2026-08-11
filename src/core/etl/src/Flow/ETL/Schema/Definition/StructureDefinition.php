@@ -29,16 +29,22 @@ final readonly class StructureDefinition implements Definition
     private Reference $ref;
 
     /**
+     * @var StructureType<array<array-key, TElement>>
+     */
+    private StructureType $type;
+
+    /**
      * @param StructureType<array<array-key, TElement>> $type
      */
     public function __construct(
         string|Reference $ref,
-        private StructureType $type,
+        StructureType $type,
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
+        $this->type = (new TypeProjection())->structure($type);
     }
 
     /**
