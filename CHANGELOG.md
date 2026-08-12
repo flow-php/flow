@@ -1,3 +1,18 @@
+## [Unreleased] - 2026-08-12
+
+### Added
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array{} empty array type with type_empty_array() DSL function** - [@norberttech](https://github.com/norberttech)
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-parquet - nested json and uuid values round-trip through parquet encode and decode** - [@norberttech](https://github.com/norberttech)
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/arrow-ext - nested uuid values read as canonical strings, map writes throw exceptions instead of aborting the process** - [@norberttech](https://github.com/norberttech)
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - Floe inferred schema preserves first batch nullability instead of making every column nullable** - [@norberttech](https://github.com/norberttech)
+- [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array type detection never returns a type that rejects its own input** - [@norberttech](https://github.com/norberttech)
+
 ## [0.43.0] - 2026-08-10
 
 ### Added
