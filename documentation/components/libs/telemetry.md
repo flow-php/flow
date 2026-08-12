@@ -287,7 +287,7 @@ $tracer->complete($span);
 
 **Nesting spans:**
 
-Creating a span does not make it the current one — per the OpenTelemetry specification, span creation must not change
+Creating a span does not make it the current one - per the OpenTelemetry specification, span creation must not change
 the active context. A span created inside another becomes its child only if the outer span was activated:
 
 ```php
@@ -311,7 +311,7 @@ Detach scopes in reverse order of activation, and before completing the span. `S
 `Scope::DETACHED` on success, `Scope::INACTIVE` if the scope was already detached, and `Scope::MISMATCH` if it was not
 the innermost active scope.
 
-Do **not** activate a span whose lifetime is an object rather than a block — a file stream, a database cursor, a
+Do **not** activate a span whose lifetime is an object rather than a block - a file stream, a database cursor, a
 long-running transaction handle. Several of those are open at once, so activating them makes each the parent of
 whichever is opened next, producing a staircase instead of siblings. Start such spans and leave them inactive.
 
@@ -329,8 +329,8 @@ $result = $tracer->trace('fetch-user', function () use ($userId) {
 
 Set the tracing-suppression flag on the active context to make any spans created within a region **non-recording**
 (never sampled, never exported). This is OpenTelemetry's tracing-scoped suppression (the equivalent of
-`suppressTracing`)
-— useful to silence noisy background work such as a queue worker's transport polling. Only traces are affected;
+`suppressTracing`) -
+useful to silence noisy background work such as a queue worker's transport polling. Only traces are affected;
 **metrics and logs still flow**.
 
 ```php
@@ -589,7 +589,7 @@ Each signal type has its own processor implementations:
 
 ### Filtering by attributes
 
-Attribute filtering drops (or keeps) signals based on their attributes, which is useful for reducing noise — for example
+Attribute filtering drops (or keeps) signals based on their attributes, which is useful for reducing noise - for example
 discarding health-check spans or bot traffic before it reaches an exporter. For spans and metrics this is a processor
 wrapping an inner processor; for logs it is a middleware in a
 [log pipeline](#log-processing-pipeline) (see below). Both forward only the signals that survive an
@@ -607,7 +607,7 @@ An `AttributeFilter` evaluates a single root **matcher**. The leaf matcher, `att
 A path is one segment (a top-level attribute key) or several segments descending into nested array values (e.g.
 `['user', 'id']`). The pattern modes accept a per-rule `caseSensitive` flag (default `true`).
 
-Rules compose with the `all()`, `any()` and `not()` matchers — each is itself a matcher, so they nest freely:
+Rules compose with the `all()`, `any()` and `not()` matchers - each is itself a matcher, so they nest freely:
 
 ```php
 <?php
@@ -641,7 +641,7 @@ $filter = attribute_filter(attribute_rule('http.route', MatchMode::EQUAL, '/heal
 
 By default a match **excludes** the signal (drops it). Set `exclude: false` to keep ONLY matching signals, and point the
 filter at resource and/or scope attributes instead of the signal's own with
-`sources` (a list — the matcher is run against each and OR-combined, so a signal matches if the matcher matches in
+`sources` (a list - the matcher is run against each and OR-combined, so a signal matches if the matcher matches in
 **any** listed source):
 
 ```php
@@ -667,18 +667,18 @@ $filter = attribute_filter(
 ```
 
 The matcher tree is compiled to a small PHP matcher cached on disk (in the system temp directory by default, or a
-directory passed as `cacheDir`) so per-signal evaluation stays cheap. When the cache directory is not writable — or a
-matcher cannot be compiled — the processor transparently falls back to interpreted matching. Custom matchers implement
+directory passed as `cacheDir`) so per-signal evaluation stays cheap. When the cache directory is not writable - or a
+matcher cannot be compiled - the processor transparently falls back to interpreted matching. Custom matchers implement
 the `Matcher` interface (and optionally
 `CompilableMatcher` to take part in code generation).
 
-> **Security:** the compiled matcher is `require`d, so the cache directory must be **trusted** — never
+> **Security:** the compiled matcher is `require`d, so the cache directory must be **trusted** - never
 > writable by untrusted users. Rule values are escaped (via `var_export`) and signal attributes are
 > never written into the generated code, so neither can inject PHP; the risk is a shared, writable cache
 > directory letting another user pre-plant code at the deterministic file path. The default
-> (`sys_get_temp_dir()`) is world-accessible — pass an application-private `cacheDir` in multi-tenant
+> (`sys_get_temp_dir()`) is world-accessible - pass an application-private `cacheDir` in multi-tenant
 > environments. The directory is created with `0700` (owner-only); pass `cacheDirPermissions` to widen it
-> (e.g. `0750` when a different reader user shares the group), validated to `0`–`0777` and applied only on
+> (e.g. `0750` when a different reader user shares the group), validated to `0` - `0777` and applied only on
 > creation.
 
 For **spans** and **metrics**, filtering is a processor that wraps an inner processor:
@@ -727,7 +727,7 @@ attributes set at the call site win over them. Implement `LogMiddleware` to add 
 ## Sampling
 
 A `Sampler` decides, at span **start**, whether a span is recorded and exported. This is the OpenTelemetry-idiomatic way
-to drop spans — a dropped span never records, so it never reaches a processor or exporter.
+to drop spans - a dropped span never records, so it never reaches a processor or exporter.
 
 > **Breaking change.** `TracerProvider` and the `tracer_provider()` DSL helper now default their sampler to
 > `ParentBasedSampler(AlwaysOnSampler)` instead of `AlwaysOnSampler`, matching the OpenTelemetry SDK
@@ -742,10 +742,10 @@ to drop spans — a dropped span never records, so it never reaches a processor 
 | `ParentBasedSampler`       | `parent_based_sampler($root)`                    | Honor the parent's decision; use the root sampler for parentless spans (the default)                            |
 | `AttributeMatchingSampler` | `attribute_matching_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
 
-`AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) — the
+`AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) - the
 `AttributeFilter` (matcher tree, compiled drop-closure, `sources`, `exclude` polarity). A match drops the span (the
 default) or keeps only matching spans (`exclude: false`); everything else is decided by the `$delegate` sampler, so it
-composes with ratio/parent-based sampling. It only sees attributes available at span start — end-state attributes
+composes with ratio/parent-based sampling. It only sees attributes available at span start - end-state attributes
 (status codes, durations) are not visible, so end-attribute filtering remains
 a [span processor](#filtering-by-attributes)
 concern.

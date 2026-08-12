@@ -2,7 +2,7 @@
 
 [DOC_LINK:/documentation/components/core/core]
 
-- [📚 API Reference](/documentation/api/core)
+- [API Reference](/documentation/api/core)
 
 [TOC]
 

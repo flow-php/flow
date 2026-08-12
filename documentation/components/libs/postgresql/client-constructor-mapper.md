@@ -4,12 +4,12 @@
 
 [TOC]
 
-`ConstructorMapper` maps a database row directly into a class constructor by name. It performs no type coercion — values from the driver are passed through as-is. Use it when:
+`ConstructorMapper` maps a database row directly into a class constructor by name. It performs no type coercion - values from the driver are passed through as-is. Use it when:
 
-- The driver's PHP types (`int`, `string`, `bool`, `\DateTimeImmutable`, …) already match your DTO's parameter types,
+- The driver's PHP types (`int`, `string`, `bool`, `\DateTimeImmutable`, ...) already match your DTO's parameter types,
 - Column names match constructor parameter names exactly (use SQL `AS` aliases when they don't).
 
-For coercion (e.g. JSONB string → array, date string → `\DateTimeImmutable`), use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) instead — optionally chained in front of `ConstructorMapper`.
+For coercion (e.g. JSONB string → array, date string → `\DateTimeImmutable`), use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) instead - optionally chained in front of `ConstructorMapper`.
 
 ## DSL
 
@@ -45,7 +45,7 @@ $user = $client->fetchInto(
 );
 ```
 
-## fetchInto() — First Object or Null
+## fetchInto() - First Object or Null
 
 Returns the first row mapped to an object, or `null` if no rows:
 
@@ -59,7 +59,7 @@ $user = $client->fetchInto(
 );
 ```
 
-## fetchOneInto() — Exactly One Object
+## fetchOneInto() - Exactly One Object
 
 Throws `QueryException` if zero or more than one row:
 
@@ -79,7 +79,7 @@ try {
 }
 ```
 
-## fetchAllInto() — All Objects
+## fetchAllInto() - All Objects
 
 Returns an array of objects:
 
@@ -174,7 +174,7 @@ $flag = $client->fetchInto(
 
 ## Extra Columns
 
-Extra columns in the row that don't match constructor parameters are silently ignored — you can `SELECT *` and only consume what you declare:
+Extra columns in the row that don't match constructor parameters are silently ignored - you can `SELECT *` and only consume what you declare:
 
 ```php
 <?php

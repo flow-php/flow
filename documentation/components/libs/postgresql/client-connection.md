@@ -120,7 +120,7 @@ $params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
 
 `withDatabaseSuffix()` appends a suffix to the configured database name. The base DSN stays constant
 and only the suffix changes per environment, which makes per-worker parallel-test databases work
-(`mydb` → `mydb_test7`) without a second DSN. The suffix is appended verbatim — nothing is inserted
+(`mydb` → `mydb_test7`) without a second DSN. The suffix is appended verbatim - nothing is inserted
 automatically, so include a separator yourself if you want one (e.g. `_test7`). An empty suffix is a
 no-op:
 
@@ -133,7 +133,7 @@ $params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
     ->withDatabaseSuffix('_test7'); // database() === 'mydb_test7'
 ```
 
-When combined with `withDatabase()`, apply the override first — the suffix is appended to the
+When combined with `withDatabase()`, apply the override first - the suffix is appended to the
 overridden name (`withDatabase('other')->withDatabaseSuffix('_test')` ⇒ `other_test`).
 
 ## Connection Lifecycle

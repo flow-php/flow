@@ -60,7 +60,7 @@ not provide any help or support for those cases.
 - more predictable behavior
 - reduced cost of maintaining backward compatibility
 - easier to find an actual extension points
-- impossible to mock classes that aren’t marked as `final` in tests (which is a good thing, users shouldn’t mock Flow classes in their test suites)
+- impossible to mock classes that aren't marked as `final` in tests (which is a good thing, users shouldn't mock Flow classes in their test suites)
 
 ## Alternatives Considered (optional)
 ---

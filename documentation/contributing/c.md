@@ -3,7 +3,7 @@
 [TOC]
 
 This document describes how to develop the `pg-query-ext` PHP extension, which is written in C
-and wraps [libpg_query](https://github.com/pganalyze/libpg_query) — a C library that uses the
+and wraps [libpg_query](https://github.com/pganalyze/libpg_query) - a C library that uses the
 actual PostgreSQL parser.
 
 ## Overview
@@ -101,7 +101,7 @@ The extension is only half of the story. A given `libpg_query` version pins a sp
 
 The PHP library round-trips parse trees as protobuf (`pg_query_parse_protobuf` → mutate → `pg_query_deparse`).
 Protobuf encodes each `Node` oneof case by its **field number**. When a new PG major inserts a node, every
-later field number shifts — so if the C library is bumped but the PHP stubs are left stale, PHP serializes
+later field number shifts - so if the C library is bumped but the PHP stubs are left stale, PHP serializes
 parse trees with the wrong tags and `pg_query_deparse` can fail to unpack them and **segfault** (a real
 incident: PG17→PG18 left the stubs stale and crashed CI intermittently, while a stale nix pin hid it locally).
 
@@ -110,11 +110,11 @@ When you change the `libpg_query` version, do **all** of the following, then run
 1. Bump the C side (`src/extension/pg-query-ext/Makefile` `PG_VERSION` / vendored copy).
 2. Bump the nix pin in `.nix/pkgs/php-pg-query-ext/package.nix` to the **same** `libpg_query` tag, and
    update its `hash` (`nix-prefetch-url --unpack <github-archive-url>` → `nix hash convert --to sri`).
-3. Regenerate the PHP stubs from the new grammar — sync `resources/proto/pg_query.proto` from
+3. Regenerate the PHP stubs from the new grammar - sync `resources/proto/pg_query.proto` from
    `vendor/libpg_query/protobuf/pg_query.proto` (keep the `option php_namespace` / `php_metadata_namespace`
    lines) then run `just gen-protobuf-pg` inside `nix-shell --arg with-protoc true`.
 4. Handle any grammar changes in the query builder / AST (e.g. new `Constraint` fields, restructured
-   clauses) — `mago analyze` and the suite will surface these.
+   clauses) - `mago analyze` and the suite will surface these.
 
 ### Always validate against the full PHP suite, not just the PHPT tests
 
@@ -123,7 +123,7 @@ parse/deparse round-trips where grammar drift bites. After any extension change,
 shell whose extension matches what you changed:
 
 ```bash
-# uses the nix-built extension (the package.nix pin) — must match the vendored/CI version
+# uses the nix-built extension (the package.nix pin) - must match the vendored/CI version
 nix-shell --run "just test"
 
 # or, at minimum, the suites that exercise parse/deparse round-trips:

@@ -158,6 +158,23 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
             ->run();
     }
 
+    public function test_inferred_heterogeneous_array_does_not_satisfy_a_declared_list(): void
+    {
+        $declared = type_structure(['data' => type_list(type_structure(['id' => type_string()]))]);
+
+        // Companion to the empty-array pin above: a future change may deliberately let []
+        // satisfy a declared list, but a heterogeneous payload never may — relaxing both
+        // together would let [1, 'a'] pass as list<structure{id: string}>.
+        static::assertFalse($declared->isValid(['data' => [1, 'a']]));
+
+        $this->expectException(SchemaValidationException::class);
+
+        data_frame()
+            ->read(from_array([['user' => ['data' => [1, 'a']]]]))
+            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->run();
+    }
+
     public function test_mixed_shapes_in_one_batch_stay_a_structure(): void
     {
         $declared = type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]);

@@ -16,7 +16,7 @@ The factory method **must** have this exact signature:
 public static function fromRow(array $row) : self;
 ```
 
-The method **does not** receive the mapping `Context`. If your factory needs access to the originating `Query`, executing `Client`, or user-supplied data, implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly — see the *Custom RowMapper* section of the [ConstructorMapper documentation](/documentation/components/libs/postgresql/client-constructor-mapper.md#custom-rowmapper).
+The method **does not** receive the mapping `Context`. If your factory needs access to the originating `Query`, executing `Client`, or user-supplied data, implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly - see the *Custom RowMapper* section of the [ConstructorMapper documentation](/documentation/components/libs/postgresql/client-constructor-mapper.md#custom-rowmapper).
 
 For simple 1:1 constructor-parameter mapping, use [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md). For type-driven coercion via `flow-php/types`, use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md).
 
@@ -68,7 +68,7 @@ $user = $client->fetchOneInto(
 );
 ```
 
-## fetchInto() — First Object or Null
+## fetchInto() - First Object or Null
 
 Returns the first row mapped via the factory, or `null` if no rows:
 
@@ -82,7 +82,7 @@ $user = $client->fetchInto(
 );
 ```
 
-## fetchAllInto() — All Objects
+## fetchAllInto() - All Objects
 
 ```php
 <?php
@@ -124,7 +124,7 @@ See [Cursors](/documentation/components/libs/postgresql/client-cursor.md) for de
 | Factory method is declared but not `public`       | `Factory method "<class>::<method>()" must be declared public` |
 | Factory method throws any `\Throwable`            | `Failed to map row to "<class>": <original message>`, with the original exception available via `MappingException::getPrevious()` |
 
-Validation of `$class` / `$method` (existence, `static`, `public`) runs **eagerly in the constructor** — a misconfigured mapper fails fast at wiring time, not at query time. Exceptions thrown by the factory method itself surface on the matching `map()` call and are wrapped in a `MappingException` whose `getPrevious()` returns the original throwable.
+Validation of `$class` / `$method` (existence, `static`, `public`) runs **eagerly in the constructor** - a misconfigured mapper fails fast at wiring time, not at query time. Exceptions thrown by the factory method itself surface on the matching `map()` call and are wrapped in a `MappingException` whose `getPrevious()` returns the original throwable.
 
 ## When to Reach for Something Else
 

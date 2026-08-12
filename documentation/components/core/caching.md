@@ -84,8 +84,8 @@ data_frame()
 ```
 
 A `Serializer` writes to and reads from streams, so the default `FilesystemCache` streams the payload
-directly to and from the cache file. `PSRSimpleCache` materializes the payload string — its PSR-16
-backend stores string values — bounded by `cacheBatchSize`.
+directly to and from the cache file. `PSRSimpleCache` materializes the payload string - its PSR-16
+backend stores string values - bounded by `cacheBatchSize`.
 
 You can swap the serializer per cache; the default `FilesystemCache` shares the same serializer as the
 rest of the pipeline (so it uses the context hydrator):
@@ -98,5 +98,5 @@ use function Flow\ETL\DSL\filesystem_cache;
 filesystem_cache(serializer: new MyCustomSerializer());
 ```
 
-`FilesystemCache` stores each entry in a file named after the cache key, with no extension — the
+`FilesystemCache` stores each entry in a file named after the cache key, with no extension - the
 on-disk bytes are whatever the configured serializer produced.

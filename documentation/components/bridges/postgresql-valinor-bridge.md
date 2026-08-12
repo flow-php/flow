@@ -61,7 +61,7 @@ $users = $client->fetchAllInto(
 
 ## Combining With `TypeMapper` for Value Coercion
 
-PostgreSQL drivers return values as PHP scalars or strings — e.g. `JSONB` arrives as a JSON-encoded string, `TIMESTAMP` as `'2026-01-01 14:30:00'`, `UUID` as a string. Valinor is strict about types, so feeding raw row arrays directly often fails.
+PostgreSQL drivers return values as PHP scalars or strings - e.g. `JSONB` arrives as a JSON-encoded string, `TIMESTAMP` as `'2026-01-01 14:30:00'`, `UUID` as a string. Valinor is strict about types, so feeding raw row arrays directly often fails.
 
 The cleanest pattern is to chain `TypeMapper` (from flow-php/postgresql) **in front of** the Valinor mapper. `TypeMapper` casts each row column to a concrete type via [flow-php/types](/documentation/components/libs/types.md), and the resulting array is passed to Valinor for object construction.
 

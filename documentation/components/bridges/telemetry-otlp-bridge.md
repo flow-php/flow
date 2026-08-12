@@ -5,9 +5,8 @@ package: flow-php/telemetry-otlp-bridge
 # Telemetry OTLP Bridge
 
 The OTLP (OpenTelemetry Protocol) Bridge provides serializers and transports for sending telemetry data to
-OpenTelemetry-compatible backends.
-It extends the [Flow Telemetry](/documentation/components/libs/telemetry.md) library with production-ready export
-capabilities.
+OpenTelemetry-compatible backends. It extends the [Flow Telemetry](/documentation/components/libs/telemetry.md) library
+with production-ready export capabilities.
 
 [PACKAGE_NAV]
 
@@ -47,7 +46,7 @@ $transport = otlp_curl_transport(
     serializer: otlp_json_serializer(),
 );
 
-// With custom options (timeouts in milliseconds — see "Timeouts" below)
+// With custom options (timeouts in milliseconds - see "Timeouts" below)
 $transport = otlp_curl_transport(
     endpoint: 'https://otlp.example.com:4318',
     serializer: otlp_json_serializer(),
@@ -62,8 +61,8 @@ $transport = otlp_curl_transport(
 ### gRPC Transport
 
 The gRPC transport uses the native gRPC protocol for high-performance binary communication. It requires the `ext-grpc`
-PHP extension. OTLP/gRPC mandates Protobuf, so the transport instantiates the protobuf request factory internally —
-no serializer parameter.
+PHP extension. OTLP/gRPC mandates Protobuf, so the transport instantiates the protobuf request factory internally - no
+serializer parameter.
 
 ```php
 <?php
@@ -83,19 +82,19 @@ $transport = otlp_grpc_transport(
 );
 ```
 
-> **Note**: gRPC has no separate connect timeout — `timeoutMs` is the per-call deadline that bounds DNS, connect, send,
+> **Note**: gRPC has no separate connect timeout - `timeoutMs` is the per-call deadline that bounds DNS, connect, send,
 > and receive together. See [Timeouts](#timeouts).
 
 ### Stream Transport
 
 The Stream transport implements
-the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/).
-It writes JSONL to either an absolute file path or a `php://` stream wrapper. The handle is opened once in
-the constructor and reused across `send()` calls; each call appends one JSON Line under `LOCK_EX` so concurrent
-writers interleave at line boundaries.
+the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/). It writes JSONL to
+either an absolute file path or a `php://` stream wrapper. The handle is opened once in the constructor and reused
+across `send()` calls; each call appends one JSON Line under `LOCK_EX` so concurrent writers interleave at line
+boundaries.
 
-Only JSON encoding is supported per the spec — the transport hard-codes the JSON serializer; there is no
-serializer parameter.
+Only JSON encoding is supported per the spec - the transport hard-codes the JSON serializer; there is no serializer
+parameter.
 
 ```php
 <?php
@@ -120,9 +119,9 @@ $transport = otlp_stream_transport(
 `filePermissions` and `createDirectories` apply only when the destination is a file path; they are ignored for
 `php://` URIs. For production deployments.
 
-One transport instance writes to one destination. To split logs, metrics, and traces across multiple files,
-build three transports and wire them to three exporters. To keep all signals in one file (the OpenTelemetry
-Collector handles mixed JSONL just fine), reuse the same destination across exporters.
+One transport instance writes to one destination. To split logs, metrics, and traces across multiple files, build three
+transports and wire them to three exporters. To keep all signals in one file (the OpenTelemetry Collector handles mixed
+JSONL just fine), reuse the same destination across exporters.
 
 ## Wire Encoding
 
@@ -130,9 +129,9 @@ The OTLP spec defines fixed encodings per transport. The bridge enforces them.
 
 | Transport | JSON | Protobuf | Notes                                                                      |
 |-----------|:----:|:--------:|----------------------------------------------------------------------------|
-| Curl      |  ✅   |    ✅     | OTLP/HTTP supports both; pick a serializer when constructing the transport |
-| gRPC      |  ❌   |    ✅     | OTLP/gRPC mandates Protobuf; the transport builds it internally            |
-| Stream    |  ✅   |    ❌     | OTLP File Exporter spec only supports JSON                                 |
+| Curl      | yes  |   yes    | OTLP/HTTP supports both; pick a serializer when constructing the transport |
+| gRPC      |  no  |   yes    | OTLP/gRPC mandates Protobuf; the transport builds it internally            |
+| Stream    | yes  |    no    | OTLP File Exporter spec only supports JSON                                 |
 
 For curl, pass `otlp_json_serializer()` (default) or `otlp_protobuf_serializer()`:
 
@@ -141,10 +140,10 @@ For curl, pass `otlp_json_serializer()` (default) or `otlp_protobuf_serializer()
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_json_serializer, otlp_protobuf_serializer};
 
-// JSON over HTTP — default; great for development and debugging
+// JSON over HTTP - default; great for development and debugging
 $transport = otlp_curl_transport('http://localhost:4318');
 
-// Protobuf over HTTP — smaller payloads; recommended for production
+// Protobuf over HTTP - smaller payloads; recommended for production
 $transport = otlp_curl_transport('http://localhost:4318', otlp_protobuf_serializer());
 ```
 
@@ -152,11 +151,11 @@ The Protobuf serializer requires the `google/protobuf` package.
 
 ## Timeouts
 
-The production recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or
-sidecar), so the roundtrip is sub-millisecond and a stuck collector never freezes your PHP process at shutdown.
+The production recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or sidecar),
+so the roundtrip is sub-millisecond and a stuck collector never freezes your PHP process at shutdown.
 
 The curl transport is **synchronous**: each `send()` blocks up to `timeout_ms`, then returns or throws. Keeping export
-off the hot path is the batching processor's job — it flushes only every `batch_size` signals (or on age / flush /
+off the hot path is the batching processor's job - it flushes only every `batch_size` signals (or on age / flush /
 shutdown). gRPC progresses in the background, so its per-call deadline stays at **250 ms**.
 
 | Transport   | Setting                 | Default | Unit         | Bounds                                                           |
@@ -172,19 +171,19 @@ shutdown). gRPC progresses in the background, so its per-call deadline stays at 
 | gRPC        | `shutdownTimeoutMs`     |    5000 | milliseconds | Wall-clock budget for draining pending calls at shutdown         |
 
 Against a local collector each send is sub-millisecond, so the defaults are only ceilings. On failure `send()` throws
-synchronously — `TransportException`, or `FailoverTransportException` once the batch is forwarded to the failover. Async
-curl is tuned differently — see [Asynchronous transport](#async-curl-transport).
+synchronously - `TransportException`, or `FailoverTransportException` once the batch is forwarded to the failover. Async
+curl is tuned differently - see [Asynchronous transport](#async-curl-transport).
 
 ```php
 <?php
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_options, otlp_curl_transport, otlp_grpc_transport};
 
-// Local collector — defaults are usually fine
+// Local collector - defaults are usually fine
 $curl = otlp_curl_transport('http://localhost:4318');
 $grpc = otlp_grpc_transport('localhost:4317');
 
-// Remote collector — raise both to suit your network
+// Remote collector - raise both to suit your network
 $remoteCurl = otlp_curl_transport(
     endpoint: 'https://otlp.example.com:4318',
     options: otlp_curl_options()
@@ -206,7 +205,7 @@ $remoteGrpc = otlp_grpc_transport(
 ## Long-running workers {#long-running-workers}
 
 The synchronous curl transport completes each request before `send()` returns, so nothing ages out between messages.
-Keeping export off the worker's hot path is the **batching processor** — it flushes per `batch_size` signals or age
+Keeping export off the worker's hot path is the **batching processor** - it flushes per `batch_size` signals or age
 limit. In a Symfony Messenger worker the bundle flushes after each message and on stop (see the
 [Symfony telemetry bundle](/documentation/components/bridges/symfony-telemetry-bundle.md)); keep a local Collector so
 each flush stays sub-millisecond. For non-blocking dispatch, see [Asynchronous transport](#async-curl-transport).
@@ -216,9 +215,9 @@ each flush stays sub-millisecond. For non-blocking dispatch, see [Asynchronous t
 `AsyncCurlTransport` uses `curl_multi` for non-blocking I/O: `send()` queues the request and returns without waiting.
 Opt in with `otlp_async_curl_transport()` or the bundle's `transport.type: 'async_curl'`.
 
-A queued request only advances while the host pumps the handle — on the next `send()`, `shutdown()`, or `tick()`.
+A queued request only advances while the host pumps the handle - on the next `send()`, `shutdown()`, or `tick()`.
 `tick()` is bounded and select-driven: it drives pending requests for up to `pump_timeout_ms` (default **100 ms**), so a
-local backend completes within a single tick. `0` falls back to one non-blocking exec round (rarely enough — prefer the
+local backend completes within a single tick. `0` falls back to one non-blocking exec round (rarely enough - prefer the
 default).
 
 ```php
@@ -231,11 +230,11 @@ $transport->tick();
 ```
 
 In a Symfony Messenger worker with `messenger` instrumentation enabled, the bundle pumps every `async_curl` transport on
-`WorkerRunningEvent` (~1s when idle) — the cadence the **1500 ms** `connect_timeout_ms` default is sized for. Elsewhere
+`WorkerRunningEvent` (~1s when idle) - the cadence the **1500 ms** `connect_timeout_ms` default is sized for. Elsewhere
 you must call `tick()` yourself.
 
 Failures surface on a later `send()`/`tick()`/`shutdown()` (no caller on the stack), so they go to the failover
-transport or, without one, the injected `ErrorHandler` (5th constructor arg, default `ErrorLogHandler`) — which is why
+transport or, without one, the injected `ErrorHandler` (5th constructor arg, default `ErrorLogHandler`) - which is why
 the async transport takes an error handler and the synchronous one just throws.
 
 Prefer the synchronous `curl` transport unless you need non-blocking dispatch and can guarantee a pump cadence.
@@ -243,33 +242,33 @@ Prefer the synchronous `curl` transport unless you need non-blocking dispatch an
 ## Failover Transport
 
 Both `CurlTransport` and `GrpcTransport` accept an optional `Transport $failover` argument. When set, batches that
-failed on the primary are forwarded to the failover transport so telemetry is preserved even when the primary backend
-is unreachable. A typical pairing is **gRPC primary → Stream (JSONL on disk) failover** so a downed collector still
-leaves recoverable data the operator can replay later.
+failed on the primary are forwarded to the failover transport so telemetry is preserved even when the primary backend is
+unreachable. A typical pairing is **gRPC primary → Stream (JSONL on disk) failover** so a downed collector still leaves
+recoverable data the operator can replay later.
 
 ### How it works
 
 The transport defers error handling to the *next* `send()` or `shutdown()`. When the next call drains the prior
 in-flight request:
 
-1. **Primary OK** — the batch is dropped from the pending list. Nothing else happens.
-2. **Primary failed, failover accepted** — the prior batch is forwarded to `failover->send()`; data preserved. The
+1. **Primary OK** - the batch is dropped from the pending list. Nothing else happens.
+2. **Primary failed, failover accepted** - the prior batch is forwarded to `failover->send()`; data preserved. The
    transport still raises a `FailoverTransportException` so the operator is informed primary is degraded.
-3. **Primary failed, failover also failed** — the prior batch is lost. The exception carries both throwables in the
+3. **Primary failed, failover also failed** - the prior batch is lost. The exception carries both throwables in the
    `failures` list.
 
-In every case the **current** request is dispatched to the primary *before* the exception is raised, so the new batch
-is never lost due to a prior failure.
+In every case the **current** request is dispatched to the primary *before* the exception is raised, so the new batch is
+never lost due to a prior failure.
 
 On `shutdown()`, the primary drains pending requests, applies the same forwarding logic, then calls
-`failover->shutdown()` (cascade). The failover lifecycle is owned by the primary — you do not need to shut it down
+`failover->shutdown()` (cascade). The failover lifecycle is owned by the primary - you do not need to shut it down
 separately.
 
 ### Behavior matrix
 
 | Primary | Failover send | Outcome                         | Exception                                                |
 |---------|---------------|---------------------------------|----------------------------------------------------------|
-| OK      | —             | Data delivered                  | none                                                     |
+| OK      | -             | Data delivered                  | none                                                     |
 | Failed  | OK            | Data preserved via failover     | `FailoverTransportException` (1 entry, `failover: null`) |
 | Failed  | Failed        | Data lost; both errors surfaced | `FailoverTransportException` (1 entry, both errors)      |
 
@@ -278,8 +277,8 @@ exporters keep working. The structured `$exception->failures` list is available 
 
 ```php
 foreach ($exception->failures as $failure) {
-    $failure['primary'];   // \Throwable — the primary error
-    $failure['failover'];  // \Throwable|null — null means failover absorbed the batch
+    $failure['primary'];   // \Throwable - the primary error
+    $failure['failover'];  // \Throwable|null - null means failover absorbed the batch
 }
 ```
 
@@ -307,7 +306,7 @@ $transport = otlp_curl_transport(
 ### Edge case: blocking on shutdown
 
 The drain logic uses each backend's native non-blocking primitive where it exists. **gRPC's `UnaryCall::wait()` is
-blocking by design** — when the second flush arrives before the prior call resolved, it waits for resolution before
+blocking by design** - when the second flush arrives before the prior call resolved, it waits for resolution before
 forwarding to failover. This is mitigated by the per-call `timeoutMs` deadline; configure it tight enough that a stuck
 collector cannot hang shutdown indefinitely. See [Timeouts](#timeouts).
 
@@ -315,9 +314,9 @@ collector cannot hang shutdown indefinitely. See [Timeouts](#timeouts).
 
 - The failover is **single-level**: a failover transport cannot itself declare another failover. Compose multiple
   primaries instead if you need cascading destinations.
-- Forwarding to the failover happens on the *next* flush, not at the moment of failure. A single batch lost between
-  the first send and process exit is surfaced from `shutdown()`.
-- The failover transport receives the original `Signals` instance — it sees the same content the primary did.
+- Forwarding to the failover happens on the *next* flush, not at the moment of failure. A single batch lost between the
+  first send and process exit is surfaced from `shutdown()`.
+- The failover transport receives the original `Signals` instance - it sees the same content the primary did.
 
 ## Complete Setup
 

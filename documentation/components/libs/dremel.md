@@ -2,7 +2,7 @@
 
 [DOC_LINK:/documentation/introduction.md]
 
-- [➡️ Installation](/documentation/installation/packages/dremel.md)
+- [Installation](/documentation/installation/packages/dremel.md)
 
 ## Installation
 

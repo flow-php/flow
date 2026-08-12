@@ -69,7 +69,7 @@ Three small immutable value objects in `Flow\Telemetry\Batch` carry the payload 
 
 Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. `attach()` returns a
 `Scope` that must be detached in reverse order; a span becomes the parent of later spans only while its scope is
-attached — see `Tracer::activate()`.
+attached - see `Tracer::activate()`.
 
 | Implementation         | Package              | Description                                |
 |------------------------|----------------------|--------------------------------------------|

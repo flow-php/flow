@@ -25,14 +25,14 @@ nix-shell --arg with-rust true
 This provides the Rust toolchain, clang, libclang, and PHP dev headers for building either extension from source.
 
 `with-arrow-ext` and `with-flow-php-ext` both default to `!with-rust`, so `--arg with-rust true` already turns the
-prebuilt extensions off — you do not need to pass them yourself. Pass `--arg with-arrow-ext false` or
+prebuilt extensions off - you do not need to pass them yourself. Pass `--arg with-arrow-ext false` or
 `--arg with-flow-php-ext false` only to override an explicit `true`; `shell.nix` asserts when either is combined with
 `--arg with-rust true`, because a prebuilt extension and a source build would collide.
 
 > [!IMPORTANT]
 > `make build` does **not** make PHP pick up the freshly compiled extension. Each Makefile's `test` target loads the
 > binary explicitly with `php -d extension=...`. To use a new build from anything else, run `make install`, pass
-> `-d extension=` yourself, or re-enter `nix-shell` — see [Rebuilding after a source change](#rebuilding-after-a-source-change).
+> `-d extension=` yourself, or re-enter `nix-shell` - see [Rebuilding after a source change](#rebuilding-after-a-source-change).
 
 ## Project Structure
 
@@ -96,7 +96,7 @@ Clean build artifacts:
 nix-shell --arg with-rust true --run "cd src/extension/<extension> && make clean"
 ```
 
-Run the PHP-side test suites against the prebuilt extension — note these use the **default** shell, not the Rust one:
+Run the PHP-side test suites against the prebuilt extension - note these use the **default** shell, not the Rust one:
 
 ```bash
 nix-shell --run "just test --testsuite=lib-parquet-integration"      # arrow-ext

@@ -20,6 +20,26 @@ final class AutoCasterTest extends TestCase
         static::assertSame('not a timezone', (new AutoCaster())->cast('not a timezone'));
     }
 
+    public function test_auto_casting_string_that_stays_string_keeps_original_whitespace(): void
+    {
+        static::assertSame(' abc ', (new AutoCaster())->cast(' abc '));
+    }
+
+    public function test_auto_casting_whitespace_padded_boolean_false(): void
+    {
+        static::assertFalse((new AutoCaster())->cast(' false '));
+    }
+
+    public function test_auto_casting_whitespace_padded_boolean_true(): void
+    {
+        static::assertTrue((new AutoCaster())->cast(' true '));
+    }
+
+    public function test_auto_casting_whitespace_padded_integer(): void
+    {
+        static::assertSame(123, (new AutoCaster())->cast(' 123 '));
+    }
+
     public function test_auto_casting_timezone_offset_to_timezone(): void
     {
         static::assertEquals(new DateTimeZone('+05:30'), (new AutoCaster())->cast('+05:30'));

@@ -54,7 +54,7 @@ DestinationStream::append(string $data) : self;
 DestinationStream::fromResource($resource) : self;
 ```
 
-- `Mount` - a value object identifying a filesystem mount by its URI protocol (`file`, `memory`, `aws-s3`, `warehouse`, …)
+- `Mount` - a value object identifying a filesystem mount by its URI protocol (`file`, `memory`, `aws-s3`, `warehouse`, ...)
 
 ```php
 <?php
@@ -100,10 +100,10 @@ final readonly class FileStatus
 }
 ```
 
-`size` and `lastModifiedAt` come from the backend's list/head response for free — no extra stream is
+`size` and `lastModifiedAt` come from the backend's list/head response for free - no extra stream is
 opened, no extra HTTP call made. They're `null` when the backend can't provide them (e.g. `StdOutFilesystem`).
 
-- `Path::protocol() : string` — returns the raw URI scheme (`'file'`, `'aws-s3'`, `'warehouse'`).
+- `Path::protocol() : string` - returns the raw URI scheme (`'file'`, `'aws-s3'`, `'warehouse'`).
 
 - `FilesystemTable` - a registry of filesystems keyed by mount protocol
 
@@ -116,8 +116,8 @@ FilesystemTable::unmount(Filesystem $filesystem) : void;
 ```
 
 Every mount must have a unique protocol. Two mounts of the same protocol throw
-`InvalidArgumentException`. A filesystem can be mounted under any protocol you choose — e.g. two S3
-buckets mounted under `warehouse` and `archive` — and resolved at runtime via
+`InvalidArgumentException`. A filesystem can be mounted under any protocol you choose - e.g. two S3
+buckets mounted under `warehouse` and `archive` - and resolved at runtime via
 `$table->for('warehouse')` or `$table->for($path)`.
 
 ## Usage
@@ -157,7 +157,7 @@ $stream->close();
 `FilesystemTable` coupled with the `Copy` / `Move` operations lets you copy or move files between any
 two mounted filesystems. Same-filesystem moves use the backend's native `mv` (local rename, S3
 CopyObject + DeleteObject, Azure CopyBlob + DeleteBlob). Cross-filesystem moves stream bytes from
-source to destination in chunks and remove the source afterwards — **not atomic**: if the source
+source to destination in chunks and remove the source afterwards - **not atomic**: if the source
 removal fails after a successful write, the destination is present and the source remains; re-running
 is idempotent.
 

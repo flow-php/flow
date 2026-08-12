@@ -6,7 +6,7 @@
 
 Window functions are a special type of function that perform calculations on a set of rows that are related to the
 current row. Unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a
-single output row — the rows retain their separate identities. Behind the scenes, the window function is able to access
+single output row - the rows retain their separate identities. Behind the scenes, the window function is able to access
 more than just the current row of the query result.
 
 To narrow window function to a specific set of rows, you need to use `window`. Window is used to partition dataset into
@@ -124,7 +124,7 @@ sum(ref('salary'))->over(
 | `unbounded_following()`  | the last row of the partition         |
 
 Bounds are clamped to the partition, so `preceding(2)` on the first row simply starts at the first row. A frame that
-falls entirely outside the partition is empty — `sum()` and `average()` then return `null`
+falls entirely outside the partition is empty - `sum()` and `average()` then return `null`
 and `count()` returns `0`, matching SQL.
 
 `rowsBetween()` counts physical rows (SQL `ROWS` mode). `RANGE` with offsets, `GROUPS` and `EXCLUDE`

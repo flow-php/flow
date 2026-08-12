@@ -24,4 +24,4 @@ composer require flow-php/etl:~--FLOW_PHP_VERSION--
 
 ## Suggested Extensions
 
-- `ext-bcmath` — for more precise calculations (bundled with PHP, enable via your system package manager)
+- `ext-bcmath` - for more precise calculations (bundled with PHP, enable via your system package manager)

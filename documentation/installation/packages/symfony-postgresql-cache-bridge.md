@@ -24,8 +24,8 @@ composer require flow-php/symfony-postgresql-cache-bridge:~--FLOW_PHP_VERSION--
 
 ## Recommended Packages
 
-- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) — registers the cache adapter and catalog provider automatically via Symfony bundle configuration
+- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) - registers the cache adapter and catalog provider automatically via Symfony bundle configuration
 
 ## Recommended Extensions
 
-- `ext-pgsql` — required for database connections and query execution
+- `ext-pgsql` - required for database connections and query execution

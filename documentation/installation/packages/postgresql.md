@@ -23,8 +23,8 @@ composer require flow-php/postgresql:~--FLOW_PHP_VERSION--
 
 ## Suggested Extensions
 
-- `ext-pgsql` — required for Client, database connections and query execution (bundled with PHP, enable via your system package manager)
-- `ext-protobuf` — for faster protobuf parsing performance (bundled with PHP, enable via your system package manager)
+- `ext-pgsql` - required for Client, database connections and query execution (bundled with PHP, enable via your system package manager)
+- `ext-protobuf` - for faster protobuf parsing performance (bundled with PHP, enable via your system package manager)
 
 ```bash
 # Required for QueryBuilder/Parser - SQL parsing and AST manipulation

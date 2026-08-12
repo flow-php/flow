@@ -131,6 +131,30 @@ final class ArrayContentDetectorTest extends TestCase
             true,
             true,
         ];
+
+        yield 'scalar with an empty array is not a list' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_string(),
+                type_empty_array(),
+            ],
+            true,
+            false,
+        ];
+
+        yield 'scalar with a heterogeneous array is not a list' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_string(),
+                type_array(),
+            ],
+            true,
+            false,
+        ];
     }
 
     public static function provide_map_data(): Generator
@@ -231,12 +255,24 @@ final class ArrayContentDetectorTest extends TestCase
             false,
         ];
 
-        yield 'empty array excluded from the map value type count' => [
+        yield 'scalar with an empty array is not a map' => [
             [
                 type_integer(),
             ],
             [
                 type_string(),
+                type_empty_array(),
+            ],
+            false,
+            false,
+        ];
+
+        yield 'list values with an empty array are still a map' => [
+            [
+                type_integer(),
+            ],
+            [
+                type_list(type_integer()),
                 type_empty_array(),
             ],
             false,
@@ -357,15 +393,15 @@ final class ArrayContentDetectorTest extends TestCase
 
     public static function provide_value_type_data(): Generator
     {
-        yield 'empty array degrades to array<mixed> as an element type' => [
+        yield 'empty array before a list keeps the list type' => [
             [
                 type_empty_array(),
                 type_list(type_integer()),
             ],
-            'array<mixed>',
+            'list<integer>',
         ];
 
-        yield 'first non-empty type wins over a later empty array' => [
+        yield 'empty array after a list keeps the list type' => [
             [
                 type_list(type_integer()),
                 type_empty_array(),
@@ -373,13 +409,13 @@ final class ArrayContentDetectorTest extends TestCase
             'list<integer>',
         ];
 
-        yield 'null before an empty array becomes optional array<mixed>' => [
+        yield 'null with an empty array becomes an optional list' => [
             [
                 type_null(),
                 type_empty_array(),
                 type_list(type_integer()),
             ],
-            '?array<mixed>',
+            '?list<integer>',
         ];
 
         yield 'only an empty array degrades to array<mixed>' => [
@@ -387,6 +423,37 @@ final class ArrayContentDetectorTest extends TestCase
                 type_empty_array(),
             ],
             'array<mixed>',
+        ];
+
+        yield 'empty array with a structure degrades to array<mixed>' => [
+            [
+                type_structure(['id' => type_integer()]),
+                type_empty_array(),
+            ],
+            'array<mixed>',
+        ];
+
+        yield 'heterogeneous array with a list degrades to array<mixed>' => [
+            [
+                type_array(),
+                type_list(type_integer()),
+            ],
+            'array<mixed>',
+        ];
+
+        yield 'only null stays null' => [
+            [
+                type_null(),
+            ],
+            'null',
+        ];
+
+        yield 'null with a string becomes an optional string' => [
+            [
+                type_null(),
+                type_string(),
+            ],
+            '?string',
         ];
     }
 

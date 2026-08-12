@@ -9,8 +9,8 @@ package: flow-php/arrow-ext
 [TOC]
 
 [Apache Arrow](https://arrow.apache.org/) is a language-independent columnar memory format for flat and hierarchical data.
-The Arrow ecosystem provides high-performance implementations for common data operations — including I/O for formats like
-Parquet, CSV, JSON, and Arrow IPC — in C++, Rust, Java, Python, and other languages.
+The Arrow ecosystem provides high-performance implementations for common data operations - including I/O for formats like
+Parquet, CSV, JSON, and Arrow IPC - in C++, Rust, Java, Python, and other languages.
 
 This extension brings the [Arrow Rust ecosystem](https://github.com/apache/arrow-rs) into PHP via
 [ext-php-rs](https://github.com/extphprs/ext-php-rs). It exposes Arrow's native readers and writers through
@@ -21,16 +21,16 @@ PHP streaming interfaces, letting PHP applications benefit from Rust-level perfo
 
 ### Current Scope
 
-The first module exposed through this extension is **Apache Parquet** — a columnar storage format widely used in data
+The first module exposed through this extension is **Apache Parquet** - a columnar storage format widely used in data
 engineering and analytics.
 
 ### Planned Modules
 
 The Arrow Rust crates offer additional I/O capabilities that are candidates for future exposure through this extension:
 
-- **CSV** — high-performance CSV reading/writing with automatic type inference and Arrow-native batching
-- **JSON** — Arrow-backed JSON line (JSONL/NDJSON) reading/writing with schema support
-- **IPC** — Arrow's own binary streaming/file format for zero-copy data exchange between processes and languages
+- **CSV** - high-performance CSV reading/writing with automatic type inference and Arrow-native batching
+- **JSON** - Arrow-backed JSON line (JSONL/NDJSON) reading/writing with schema support
+- **IPC** - Arrow's own binary streaming/file format for zero-copy data exchange between processes and languages
 
 ## Features
 
@@ -45,7 +45,7 @@ The Arrow Rust crates offer additional I/O capabilities that are candidates for 
 ## Requirements
 
 - PHP 8.3+
-- Rust toolchain (rustc, cargo) — install from [rustup.rs](https://rustup.rs/)
+- Rust toolchain (rustc, cargo) - install from [rustup.rs](https://rustup.rs/)
 - clang / libclang (for ext-php-rs bindgen)
 - make
 
@@ -243,7 +243,7 @@ $writer = new Writer($stream, $schema, 'SNAPPY', [
 | Method | Parameters | Returns | Description |
 |---|---|---|---|
 | `read` | `int $length, int $offset` | `string` | Read `$length` bytes starting at `$offset` |
-| `size` | — | `?int` | Return total size in bytes, or `null` if unknown |
+| `size` | - | `?int` | Return total size in bytes, or `null` if unknown |
 
 **`Flow\Arrow\OutputStream`**
 
@@ -257,19 +257,19 @@ $writer = new Writer($stream, $schema, 'SNAPPY', [
 
 | Method | Parameters | Returns | Description |
 |---|---|---|---|
-| `__construct` | `RandomAccessFile $source, array $options = []` | — | Open a Parquet source for reading |
-| `schema` | — | `array` | Return the file schema as nested arrays |
-| `metadata` | — | `array` | Return file-level metadata (row count, row groups, key-value metadata) |
+| `__construct` | `RandomAccessFile $source, array $options = []` | - | Open a Parquet source for reading |
+| `schema` | - | `array` | Return the file schema as nested arrays |
+| `metadata` | - | `array` | Return file-level metadata (row count, row groups, key-value metadata) |
 | `readNextRowGroup` | `?array $columns = null` | `?array` | Read next row group as columnar batch, or `null` when exhausted |
-| `close` | — | `void` | Release resources |
+| `close` | - | `void` | Release resources |
 
 **`Flow\Arrow\Parquet\Writer`**
 
 | Method | Parameters | Returns | Description |
 |---|---|---|---|
-| `__construct` | `OutputStream $stream, array $schema, string $compression = 'SNAPPY', array $options = []` | — | Open a Parquet destination for writing |
+| `__construct` | `OutputStream $stream, array $schema, string $compression = 'SNAPPY', array $options = []` | - | Open a Parquet destination for writing |
 | `writeBatch` | `array $batch` | `void` | Write a columnar batch (`['col' => [values...]]`) |
-| `close` | — | `void` | Flush and finalize the Parquet file |
+| `close` | - | `void` | Flush and finalize the Parquet file |
 
 **`Flow\Arrow\Parquet\Exception`**
 
@@ -318,7 +318,7 @@ make test
 
 - Built with [ext-php-rs](https://github.com/extphprs/ext-php-rs), which generates PHP bindings from Rust code
 - Uses Apache Arrow and Parquet Rust crates from the [Arrow ecosystem](https://github.com/apache/arrow-rs)
-- All compression codecs compiled into the extension — no external PHP compression extensions needed
+- All compression codecs compiled into the extension - no external PHP compression extensions needed
 - PHP streaming interfaces (`RandomAccessFile`, `OutputStream`) called from Rust via ext-php-rs callbacks
 - Columnar batch format aligns with Parquet's native columnar storage
 - PIE-compatible via `ext/config.m4` that delegates to `cargo build`

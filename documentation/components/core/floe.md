@@ -40,7 +40,7 @@ data_frame()
 
 When the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md) is loaded, the
 strict read and the write fuse frame-split + value decode/encode + hydrate/dehydrate into one native
-call per batch. It is transparent — the on-disk format is unchanged and the rows are byte-for-byte
+call per batch. It is transparent - the on-disk format is unchanged and the rows are byte-for-byte
 identical to the pure-PHP engine.
 
 ## Save Modes
@@ -74,7 +74,7 @@ data_frame()
 ```
 
 > Floe additionally supports appending into a **single** file through the low-level
-> `Flow\Floe\FloeWriter::append()` API — appended batches must match the file's schema (a drifted
+> `Flow\Floe\FloeWriter::append()` API - appended batches must match the file's schema (a drifted
 > batch throws `IncompatibleSchemaException`; schema evolution is only available through
 > `merge_floe()`). The DataFrame `Append` save mode uses the sibling-file behavior for consistency
 > with the rest of Flow.
@@ -140,7 +140,7 @@ $schema = from_floe(__DIR__ . '/output.floe')->schema(flow_context(config()));
 
 The low-level reader pulls just the head or tail of a single `.floe` file without a DataFrame. `tail()`
 reads the row count from the footer and seeks past the leading sections, so it decodes only from the
-boundary section onward — the leading rows are never read:
+boundary section onward - the leading rows are never read:
 
 ```php
 <?php
@@ -167,7 +167,7 @@ from the footer.
 ## Merging Files
 
 `merge_floe()` combines several `.floe` files (same or append-compatible evolving schema) into one.
-The default byte-splices frame regions without re-encoding a single row — O(bytes); `compact: true`
+The default byte-splices frame regions without re-encoding a single row - O(bytes); `compact: true`
 re-encodes every row, coalescing same-schema runs into fewer sections:
 
 ```php
@@ -181,18 +181,18 @@ merge_floe(
 );
 ```
 
-Sources must evolve the running merged schema cleanly — otherwise `IncompatibleSchemaException` is
+Sources must evolve the running merged schema cleanly - otherwise `IncompatibleSchemaException` is
 thrown before anything is written. Each source's per-section partition combinations are preserved
 (deduped into the merged footer table), so sources with differing combinations merge without error.
 `merge_floe()` works on the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
 
 ## Whole-Value Serialization
 
-The whole-value serialization paths — the [cache](/documentation/components/core/caching.md) and
-`Flow\Floe\FloeSerializer` (the config default serializer) — stream: `serialize(Rows, DestinationStream)`
+The whole-value serialization paths - the [cache](/documentation/components/core/caching.md) and
+`Flow\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
 goes through `FloeStreamWriter` and `unserialize(SourceStream)` through the strict `FloeStreamReader::rows()`
 read in batches of `batchSize` rows (default 1000), so the engine holds one batch at a time. The batch size
-never changes the produced bytes — only the memory bound. String payloads round-trip through the
+never changes the produced bytes - only the memory bound. String payloads round-trip through the
 `Flow\Serializer\DSL` helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value
 `unserialize()` verifies the decoded row count against the footer and rejects torn payloads. Numbers and
 guidance live in the [caching documentation](/documentation/components/core/caching.md).
@@ -201,7 +201,7 @@ guidance live in the [caching documentation](/documentation/components/core/cach
 
 A `.floe` file is a fixed 6-byte header, a stream of length-prefixed frames, and a JSON footer that a
 reader can locate from the last 8 bytes without scanning the body. The schema lives **only in the
-footer** — there is no inline schema frame. All multi-byte integers are **little-endian**.
+footer** - there is no inline schema frame. All multi-byte integers are **little-endian**.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -211,7 +211,7 @@ footer** — there is no inline schema frame. All multi-byte integers are **litt
 │    PARTITIONS  (0x03)   emitted when combination changes │
 │    ROW         (0x02)   one frame per row                │
 │    ROW         (0x02)                                    │
-│    …                                                     │
+│    ...                                                     │
 ├──────────────────────────────────────────────────────────┤
 │ FOOTER FRAME   (0x06)                                    │
 │    footer JSON  +  TRAILER (8 bytes)                     │
@@ -231,7 +231,7 @@ footer** — there is no inline schema frame. All multi-byte integers are **litt
 
 ### Frame envelope
 
-Every frame — `ROW`, `PARTITIONS`, `FOOTER` — shares the same envelope: a 1-byte type, a
+Every frame - `ROW`, `PARTITIONS`, `FOOTER` - shares the same envelope: a 1-byte type, a
 4-byte little-endian body length, then the body.
 
 ```
@@ -242,19 +242,19 @@ Every frame — `ROW`, `PARTITIONS`, `FOOTER` — shares the same envelope: a 1-
         0x02 ROW   0x03 PARTITIONS   0x06 FOOTER
 ```
 
-The file's schema is not a frame — it carries **exactly one schema**, fixed at session start (explicit,
+The file's schema is not a frame - it carries **exactly one schema**, fixed at session start (explicit,
 or the first batch's union) and stored only in the footer (see `schema` below). A row narrower than the
 schema rides it (see the ROW absent flag). A later batch that introduces a new column or an incompatible
-type throws `IncompatibleSchemaException` — schema evolution lives only in `merge_floe()`.
+type throws `IncompatibleSchemaException` - schema evolution lives only in `merge_floe()`.
 
-- **ROW (`0x02`)** — one row encoded **by column** against the file schema: for each schema
-  column, in order, a one-byte presence flag —
-  - `0x01` **present** — followed by the value encoded per the column's schema type, no per-value tag.
-  - `0x00` **null** — the value is null.
-  - `0x02` **null with metadata** — a null value carrying per-value metadata that diverges from the
+- **ROW (`0x02`)** - one row encoded **by column** against the file schema: for each schema
+  column, in order, a one-byte presence flag -
+  - `0x01` **present** - followed by the value encoded per the column's schema type, no per-value tag.
+  - `0x00` **null** - the value is null.
+  - `0x02` **null with metadata** - a null value carrying per-value metadata that diverges from the
     column's schema metadata: a metadata block (4-byte little-endian JSON length + JSON), no value.
-  - `0x03` **absent** — the row has no such column.
-  - `0x04` **present with metadata** — a divergent-metadata block (4-byte length + JSON) followed by
+  - `0x03` **absent** - the row has no such column.
+  - `0x04` **present with metadata** - a divergent-metadata block (4-byte length + JSON) followed by
     the encoded value.
 
   The two metadata flags (`0x02`, `0x04`) appear only when a row's per-value metadata differs from the
@@ -263,12 +263,12 @@ type throws `IncompatibleSchemaException` — schema evolution lives only in `me
   `BOOLEAN`, `STRING`, `ARRAY`, `DATETIME`, `UUID`, `JSON`). A row whose columns exactly match the
   section, with no divergent metadata, produces the same bytes as a plain positional encode. One frame
   per row.
-- **PARTITIONS (`0x03`)** — the partition key/value pairs for the section that follows: a 4-byte count
+- **PARTITIONS (`0x03`)** - the partition key/value pairs for the section that follows: a 4-byte count
   followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
   whose combination differs from the previous one; the reader starts at the empty combination, so an
   unpartitioned first section emits none and a later change back to unpartitioned emits a `count=0`
   frame.
-- **FOOTER (`0x06`)** — the footer JSON followed by the trailer (below).
+- **FOOTER (`0x06`)** - the footer JSON followed by the trailer (below).
 
 ### Footer
 
@@ -308,5 +308,5 @@ scanning rows**:
 ```
 
 A reader seeks to `EOF − 8`, reads the trailer, verifies the trailing `FLOE` magic, then seeks back
-`footer length` bytes to parse the footer JSON — two ranged reads, no body scan. This is what powers
+`footer length` bytes to parse the footer JSON - two ranged reads, no body scan. This is what powers
 `FloeExtractor::schema()` and offset/limit pushdown.

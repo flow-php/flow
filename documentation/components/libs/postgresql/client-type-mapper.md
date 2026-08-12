@@ -8,9 +8,9 @@
 
 - **Strict type validation** of incoming row data,
 - **Coercion** of raw driver values (e.g. JSONB strings into arrays, date strings into `\DateTimeImmutable`, JSONB into typed structures or `Flow\Types\Value\Json`),
-- **Composition** with another `RowMapper` (e.g. [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) or the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md)) — the cast result is forwarded to the next mapper.
+- **Composition** with another `RowMapper` (e.g. [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) or the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md)) - the cast result is forwarded to the next mapper.
 
-Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenient counterpart of `assert()` — it tries to coerce the value into the requested type before validating. For `JSONB`-style columns this means a JSON string starting with `{` or `[` is automatically `json_decode`'d before the inner Type is applied.
+Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenient counterpart of `assert()` - it tries to coerce the value into the requested type before validating. For `JSONB`-style columns this means a JSON string starting with `{` or `[` is automatically `json_decode`'d before the inner Type is applied.
 
 ## DSL
 
@@ -21,7 +21,7 @@ type_mapper(Type<TType> $type, ?RowMapper<TNext> $next = null) : TypeMapper<TTyp
 - When `$next` is `null`, `map()` returns whatever `$type->cast()` produces.
 - When `$next` is provided, the cast result is forwarded to `$next->map()` and `$next`'s return value becomes the mapper's output.
 
-## Basic Usage — Validating a Row Shape
+## Basic Usage - Validating a Row Shape
 
 ```php
 <?php
@@ -96,7 +96,7 @@ $json->toArray();                  // ['theme' => 'dark', 'notifications' => tru
 
 ### JSONB → Plain String
 
-When you want the raw JSON text — for example to forward it to an HTTP response without re-encoding:
+When you want the raw JSON text - for example to forward it to an HTTP response without re-encoding:
 
 ```php
 <?php
@@ -267,7 +267,7 @@ $order = $client->fetchInto(
 
 ### Chained with the Valinor Bridge
 
-For complex object graphs (nested DTOs, lists of value objects), combine `TypeMapper` with the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) — `TypeMapper` decodes JSONB and parses dates, then Valinor builds the strict object tree.
+For complex object graphs (nested DTOs, lists of value objects), combine `TypeMapper` with the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) - `TypeMapper` decodes JSONB and parses dates, then Valinor builds the strict object tree.
 
 ## Error Handling
 

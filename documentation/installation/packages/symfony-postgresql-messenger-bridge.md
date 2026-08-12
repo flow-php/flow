@@ -24,8 +24,8 @@ composer require flow-php/symfony-postgresql-messenger-bridge:~--FLOW_PHP_VERSIO
 
 ## Recommended Packages
 
-- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) — registers the transport factory and catalog provider automatically via Symfony bundle configuration
+- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) - registers the transport factory and catalog provider automatically via Symfony bundle configuration
 
 ## Recommended Extensions
 
-- `ext-pgsql` — required for database connections and query execution
+- `ext-pgsql` - required for database connections and query execution

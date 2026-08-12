@@ -4,7 +4,7 @@ package: flow-php/symfony-postgresql-cache-bridge
 
 # Symfony PostgreSQL Cache Bridge
 
-A Symfony Cache adapter backed by Flow PHP's native PostgreSQL library. Replaces `symfony/doctrine-dbal-adapter` without requiring Doctrine DBAL — cache items are stored directly in PostgreSQL using Flow's query builder and client.
+A Symfony Cache adapter backed by Flow PHP's native PostgreSQL library. Replaces `symfony/doctrine-dbal-adapter` without requiring Doctrine DBAL - cache items are stored directly in PostgreSQL using Flow's query builder and client.
 
 [PACKAGE_NAV]
 
@@ -22,7 +22,7 @@ For Symfony framework integration (config-driven pool registration, automatic mi
 
 `FlowPostgreSqlCacheAdapter` extends Symfony's `AbstractAdapter` and implements `PruneableInterface`. Items are stored in a single PostgreSQL table with `item_id`, `item_data` (`bytea`), `item_lifetime` (`int`, nullable), and `item_time` (`int`).
 
-- **Saves** are issued as `INSERT … ON CONFLICT (item_id) DO UPDATE SET …` inside a transaction (which converts to `SAVEPOINT` automatically when nested).
+- **Saves** are issued as `INSERT ... ON CONFLICT (item_id) DO UPDATE SET ...` inside a transaction (which converts to `SAVEPOINT` automatically when nested).
 - **Reads** project rows through `CASE WHEN item_lifetime IS NULL OR item_lifetime + item_time > now() THEN item_data ELSE NULL END`. Expired rows still come back from Postgres but with `data = NULL`; the adapter treats them as misses and deletes them in the same request.
 - **`prune()`** runs a single bulk `DELETE` of every expired row, optionally restricted to the pool namespace.
 - **Marshalling** uses Symfony's `DefaultMarshaller` by default; pass a custom `MarshallerInterface` to the constructor to override.
@@ -31,8 +31,8 @@ For Symfony framework integration (config-driven pool registration, automatic mi
 
 The adapter accepts either `ConnectionParameters` or a `Client`:
 
-- **Pass `ConnectionParameters`** *(recommended default)* — the adapter opens (and owns) its own `pg_connect`. Cache writes never participate in transactions running on a `Client` shared with application code, so a caller's rollback can't silently undo cached values.
-- **Pass a `Client`** — the adapter reuses the supplied connection. Lifetime and transaction semantics are the caller's responsibility. Use this only when you know what you are doing (tight connection budget, explicit need to share state).
+- **Pass `ConnectionParameters`** *(recommended default)* - the adapter opens (and owns) its own `pg_connect`. Cache writes never participate in transactions running on a `Client` shared with application code, so a caller's rollback can't silently undo cached values.
+- **Pass a `Client`** - the adapter reuses the supplied connection. Lifetime and transaction semantics are the caller's responsibility. Use this only when you know what you are doing (tight connection budget, explicit need to share state).
 
 ## Usage
 
@@ -90,8 +90,8 @@ new FlowPostgreSqlCacheAdapter(
 
 Postgres has no row-level TTL, so expired rows are removed by either of two paths:
 
-- **Lazy** — a read of the same key triggers a delete of that one row.
-- **Explicit** — calling `$cache->prune()` (or `bin/console cache:pool:prune` when the adapter is wired into a Symfony app) bulk-deletes everything past its expiry.
+- **Lazy** - a read of the same key triggers a delete of that one row.
+- **Explicit** - calling `$cache->prune()` (or `bin/console cache:pool:prune` when the adapter is wired into a Symfony app) bulk-deletes everything past its expiry.
 
 Without periodic pruning, dead rows accumulate in the table even though they are invisible to readers.
 

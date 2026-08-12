@@ -7,6 +7,46 @@ specific version to ensure a smooth upgrade process.
 
 ---
 
+## Upgrading from 0.43.x to 0.44.x
+
+### 1) `flow-php/etl-adapter-json` - `to_json()`/`to_json_lines()` write list/map/structure/array entries as nested JSON
+
+| Before                                                            | After                                          |
+|-------------------------------------------------------------------|------------------------------------------------|
+| `{"tags":"[1,2,3]"}` (escaped JSON string)                        | `{"tags":[1,2,3]}`                             |
+| nested `DateTimeInterface`/`Uuid`/`UnitEnum` `json_encode`d as-is | datetime format / canonical string / case name |
+| non-array value under a container type → `""`                     | `null`                                         |
+
+### 2) `flow-php/etl` - Floe inferred schema keeps the first batch's nullability
+
+| Before                                                            | After                                           |
+|-------------------------------------------------------------------|-------------------------------------------------|
+| inferred schema - every column nullable                           | nullability taken from the first batch's values |
+| `null` in batch ≥ 2 in a column non-nullable in batch 1 - written | throws                                          |
+
+Columns that may only become null in later batches, declare the schema explicitly:
+`to_floe($path)->withSchema($schema)`.
+
+### 3) `flow-php/types` - `detectType([])` returns `array{}`
+
+| Before                                                  | After                |
+|---------------------------------------------------------|----------------------|
+| `(new TypeDetector())->detectType([])` → `array<mixed>` | `array{}`            |
+| -                                                       | `type_empty_array()` |
+
+### 4) `flow-php/types` - array type detection never returns a type that rejects its own input
+
+| Before                                                            | After                 |
+|-------------------------------------------------------------------|-----------------------|
+| `detectType([5 => 'a', 6 => []])` → `map<integer, string>`        | `array<mixed>`        |
+| `detectType(['a', []])` → `list<string>`                          | `array<mixed>`        |
+| `detectType([['id' => '1'], []])` → `list<structure{id: string}>` | `list<array<mixed>>`  |
+| `detectType([[1, 2], [null]])` → `list<list<integer>>`            | `list<array<mixed>>`  |
+| `detectType([[1.2], [4.0, 5]])` → `list<list<float>>`             | `list<array<mixed>>`  |
+| `detectType([[], [1, 2]])` → `list<array<mixed>>`                 | `list<list<integer>>` |
+
+---
+
 ## Upgrading from 0.42.x to 0.43.x
 
 ### 1) `flow-php/etl` - `to_transformation()` expands a `Transformation` once per loader, not once per batch
@@ -25,8 +65,8 @@ Unchanged: any pipeline using `->collect()`, `drop()`, `select()`, `mask_columns
 |----------------------------------------------------|-------------------------------------------------------------------|
 | `$tracer->span('x')` makes the span current        | does not; `$tracer->activate($span): Scope` does                  |
 | `$tracer->complete($span)` also detaches the scope | ends the span only                                                |
-| `span(…, SpanContext $parentContext)`              | `span(…, Context $parent)`                                        |
-| `trace(…, SpanContext $parentContext)`             | `trace(…, Context $parent)`                                       |
+| `span(..., SpanContext $parentContext)`            | `span(..., Context $parent)`                                      |
+| `trace(..., SpanContext $parentContext)`           | `trace(..., Context $parent)`                                     |
 | `Scope::detach()` always returns `0`               | returns `Scope::DETACHED`, `Scope::INACTIVE` or `Scope::MISMATCH` |
 
 Call sites relying on implicit nesting still compile and silently produce siblings. Rewrite each one that needs
@@ -106,8 +146,8 @@ rank()->over(window()->partitionBy(ref('dept'))->orderBy(ref('salary')->desc()))
 | `$row`                                                   | `$window->row()`                                         |
 | `$partition`                                             | `$window->partition()`                                   |
 | `$context`                                               | `$window->flowContext()`                                 |
-| —                                                        | `$window->frame()` - rows within the current row's frame |
-| —                                                        | `$window->index()` - position in the ordered partition   |
+| -                                                        | `$window->frame()` - rows within the current row's frame |
+| -                                                        | `$window->index()` - position in the ordered partition   |
 | `row_number()` on duplicate rows → `1, 1, 3`             | `1, 2, 3`                                                |
 
 Implementations must no longer sort; `$window->partition()` and `$window->frame()` are already ordered.
@@ -181,8 +221,8 @@ Update `ListType`, `MapType`, `StructureType` and `ClassStringType` parameters i
 
 The worker-cycle span and the `trace: worker`/`both` modes are gone; a consumed message is a `process` span and a
 produced one a `send` span. The `messenger:consume` worker loop is suppressed via
-`instrumentation.console.exclude_commands` — which now **fully suppresses** matching commands (previously it only
-skipped the console span) and defaults to `['messenger:consume']` — so transport-poll/idle-tick work does not surface
+`instrumentation.console.exclude_commands` - which now **fully suppresses** matching commands (previously it only
+skipped the console span) and defaults to `['messenger:consume']` - so transport-poll/idle-tick work does not surface
 and the long-lived `messenger:consume` console span is dropped. Per-message handler traces are still recorded. Set
 `console.exclude_commands: []` to trace the worker loop.
 
@@ -203,7 +243,7 @@ and the long-lived `messenger:consume` console span is dropped. Per-message hand
 | `cache.operation: saveDeferred/deleteItem/deleteItems/invalidateTags` | `save_deferred/delete_item/delete_items/invalidate_tags` |
 
 Cache spans now match the DBAL/messenger convention (dotted lowercase, low cardinality). The `{key}` and `{pool}`
-that were baked into the span name move out of it — they were already available as the `cache.key` and `cache.pool`
+that were baked into the span name move out of it - they were already available as the `cache.key` and `cache.pool`
 attributes. Rename these series in dashboards and alerts, and update any filters on the camelCase `cache.operation`
 values.
 
@@ -274,10 +314,10 @@ The `db.client.operation.duration` metric now uses only low-cardinality dimensio
 | `doctrine.dbal.transaction.begin`/`.commit`/`.rollback` (always) | one `BEGIN TRANSACTION` span per transaction (`grouped`)                                   |
 | `doctrine.dbal.connection.exec`/`.query` span names              | semconv `{db.operation.name} {db.collection.name}` (e.g. `SELECT users`)                   |
 | `doctrine.dbal.statement.execute`/`.prepare` span names          | semconv `{db.operation.name} {db.collection.name}`                                         |
-| config `instrumentation.dbal.log_sql`                            | removed — `db.query.text` is always recorded (bounded by `max_sql_length`)                 |
-| —                                                                | config `instrumentation.dbal.transaction_spans`: `grouped` (default)/`per_operation`/`off` |
-| —                                                                | config `instrumentation.dbal.collect_metrics` (default `true`)                             |
-| —                                                                | config `instrumentation.dbal.include_parameters`/`max_parameters`/`max_parameter_length`   |
+| config `instrumentation.dbal.log_sql`                            | removed - `db.query.text` is always recorded (bounded by `max_sql_length`)                 |
+| -                                                                | config `instrumentation.dbal.transaction_spans`: `grouped` (default)/`per_operation`/`off` |
+| -                                                                | config `instrumentation.dbal.collect_metrics` (default `true`)                             |
+| -                                                                | config `instrumentation.dbal.include_parameters`/`max_parameters`/`max_parameter_length`   |
 
 Query spans now carry `db.system.name`, `db.namespace`, `server.address`, `server.port`, `db.operation.name`,
 `db.collection.name`, `db.response.returned_rows` and (on error) `db.response.status_code`, and the instrumentation
@@ -306,7 +346,7 @@ emits `db.client.operation.duration` and `db.client.response.returned_rows` metr
 |-------------------------------------------------|----------------------------------------------|
 | server span `url.full`                          | removed                                      |
 | server span `url.path` = URI incl. query        | path only; query moves to `url.query`        |
-| —                                               | server span `user_agent.original`            |
+| -                                               | server span `user_agent.original`            |
 | client span name `{method} {host}`              | `{method}`                                   |
 | client span `server.port` only when non-default | always set (scheme default 80/443 filled in) |
 
@@ -323,7 +363,7 @@ Applies to the HttpKernel server span and to the `http_client`/`psr18_client` cl
 | `messaging.symfony.bus`                                            | `flow.messenger.bus`                                     |
 | consume span `process {ShortClass}`                                | `process {transport}`                                    |
 | dispatch span `send {ShortClass}`                                  | `send`                                                   |
-| config `instrumentation.messenger.metrics_duration_unit`: `s`/`ms` | removed — `messaging.process.duration` is always seconds |
+| config `instrumentation.messenger.metrics_duration_unit`: `s`/`ms` | removed - `messaging.process.duration` is always seconds |
 | `Instrumentation\Messenger\MessengerMetricDurationUnit`            | removed                                                  |
 
 ### 12) `flow-php/phpunit-telemetry-bridge` - `test.*` keys aligned with the OTel test registry; durations in seconds
@@ -333,7 +373,7 @@ Applies to the HttpKernel server span and to the `http_client`/`psr18_client` cl
 | `test.name`                                       | `test.case.name`                                       |
 | `test.status`                                     | `test.case.result.status`                              |
 | `test.suite`                                      | `test.suite.name`                                      |
-| —                                                 | `test.suite.run.status`: `success`/`failure`/`skipped` |
+| -                                                 | `test.suite.run.status`: `success`/`failure`/`skipped` |
 | `test.id`                                         | `flow.phpunit.test.id`                                 |
 | `test.class`                                      | `flow.phpunit.test.class`                              |
 | `test.method`                                     | `flow.phpunit.test.method`                             |
@@ -347,7 +387,7 @@ Applies to the HttpKernel server span and to the `http_client`/`psr18_client` cl
 | `flow.phpunit.suite.duration` unit `ms`           | `s` (values rescaled)                                  |
 | `flow.phpunit.test.memory.*` unit `bytes`         | `By`                                                   |
 | `flow.phpunit.test.count`/`suite.test_count` unit | `{test}`                                               |
-| —                                                 | resource attribute `telemetry.sdk.version`             |
+| -                                                 | resource attribute `telemetry.sdk.version`             |
 
 ### 13) `flow-php/filesystem`, `flow-php/etl`, `flow-php/postgresql` - flow-custom keys under `flow.*`; UCUM units
 
@@ -415,7 +455,7 @@ Keep the registered `Telemetry` instance referenced for as long as it should be 
 | `$validator->isValid($expected, $given)`      | `$validator->validate($expected, $given)->isValid()`             |
 | `schema_validate(...): bool`                  | `schema_validate(...): ValidationContext`                        |
 | `new SchemaValidationException($exp, $given)` | `new SchemaValidationException($exp, $given, ValidationContext)` |
-| —                                             | `SchemaValidationException::context(): ValidationContext`        |
+| -                                             | `SchemaValidationException::context(): ValidationContext`        |
 
 Custom `SchemaValidator` implementations must return a `Flow\ETL\Schema\Validator\ValidationContext`
 built from the missing, mismatched (`MismatchedDefinition`), and unexpected definitions they reject.
@@ -451,10 +491,10 @@ Custom `Cache` implementations must adopt the `Rows`-only signatures.
 | `new FilesystemCache($filesystem, $serializer, $cacheDir)`                             | `new FilesystemCache($filesystem, $cacheDir, $serializer)`             |
 | caching or serializing a `DateTime`/`DateTimeImmutable` subclass (e.g. Carbon)         | throws `Flow\Floe\Exception\FloeException`                             |
 
-Delete cache directories written by 0.41 — the old serialized payloads are unreadable. Convert
+Delete cache directories written by 0.41 - the old serialized payloads are unreadable. Convert
 `DateTime`/`DateTimeImmutable` subclasses to `DateTime`/`DateTimeImmutable` before caching or serializing.
 
-A Floe file carries exactly one schema, and sort / join / group-by spill batches through it — a pipeline with a drifting
+A Floe file carries exactly one schema, and sort / join / group-by spill batches through it - a pipeline with a drifting
 or schemaless source must declare column types at the source so nullable columns carry a concrete type
 (`DataFrame::match($schema)` validates but does not retype values):
 
@@ -466,10 +506,10 @@ or schemaless source must declare column types at the source so nullable columns
 
 `RouteNamePathMap` instead of the router
 
-| Before                                                | After                                                               |
-|-------------------------------------------------------|---------------------------------------------------------------------|
-| `new HttpKernelSpanSubscriber(…, router: $router, …)` | `new HttpKernelSpanSubscriber(…, routePaths: $routeNamePathMap, …)` |
-| `?RouterInterface $router = null`                     | `?RouteNamePathMap $routePaths = null`                              |
+| Before                                                    | After                                                                   |
+|-----------------------------------------------------------|-------------------------------------------------------------------------|
+| `new HttpKernelSpanSubscriber(..., router: $router, ...)` | `new HttpKernelSpanSubscriber(..., routePaths: $routeNamePathMap, ...)` |
+| `?RouterInterface $router = null`                         | `?RouteNamePathMap $routePaths = null`                                  |
 
 Applies only to direct construction; services wired by the bundle need no change.
 
@@ -491,10 +531,10 @@ Applies only to direct construction; services wired by the bundle need no change
 | `MemorySort` throwing `Flow\ETL\Exception\OutOfMemoryException` | removed                                                                   |
 | `new ExternalSort($cache, $bucketsCount)`                       | removed; `sortBy()` pipelines `BucketingProcessor` + `MergeSortProcessor` |
 | `ConfigBuilder::externalSortFilesystem(string)`                 | `external_sort()->filesystemProtocol(string)`                             |
-| —                                                               | `external_sort()->runSize(int)` (default `10000`)                         |
-| —                                                               | `external_sort()->bucketsCount(int)` (default `100`)                      |
-| —                                                               | `external_sort()->batchSize(int)` (default `1000`)                        |
-| —                                                               | `external_sort()->storage(BucketsStorage)` (default `FilesystemBuckets`)  |
+| -                                                               | `external_sort()->runSize(int)` (default `10000`)                         |
+| -                                                               | `external_sort()->bucketsCount(int)` (default `100`)                      |
+| -                                                               | `external_sort()->batchSize(int)` (default `1000`)                        |
+| -                                                               | `external_sort()->storage(BucketsStorage)` (default `FilesystemBuckets`)  |
 
 To sort in memory, opt in explicitly:
 
@@ -513,7 +553,7 @@ data_frame(config_builder()->sort(memory_sort()))->read(...)->sortBy(ref('id'))-
 | `Equal` on object values (Uuid, etc.): always `false`                 | compared with `==`                                                     |
 | `Flow\ETL\Processor\HashJoin\HashTable`                               | `Flow\ETL\Join\HashJoin\HashTable`                                     |
 | `Flow\ETL\Processor\HashJoin\Bucket`                                  | removed                                                                |
-| —                                                                     | `Expression::comparison()`, `All::comparisons()`, `Any::comparisons()` |
+| -                                                                     | `Expression::comparison()`, `All::comparisons()`, `Any::comparisons()` |
 
 `Rows::joinRight()` emits matched rows in left-probe order and unmatched right rows last.
 
@@ -522,12 +562,12 @@ data_frame(config_builder()->sort(memory_sort()))->read(...)->sortBy(ref('id'))-
 | Before                                                    | After                                                                   |
 |-----------------------------------------------------------|-------------------------------------------------------------------------|
 | `join()` holds right side in memory, keeps left row order | join buckets spilled to disk (Floe files), left row order not preserved |
-| —                                                         | `ConfigBuilder::join(hash_join())`                                      |
-| —                                                         | `hash_join()->storage(BucketsStorage)` (default `FilesystemBuckets`)    |
-| —                                                         | `hash_join()->bucketsCount(int)` (default `64`)                         |
-| —                                                         | `hash_join()->batchSize(int)` (default `1000`)                          |
-| —                                                         | `Flow\ETL\Bucketing\ResidentBucketsStorage`                             |
-| —                                                         | `Flow\ETL\Bucketing\Storage\MemoryBuckets`                              |
+| -                                                         | `ConfigBuilder::join(hash_join())`                                      |
+| -                                                         | `hash_join()->storage(BucketsStorage)` (default `FilesystemBuckets`)    |
+| -                                                         | `hash_join()->bucketsCount(int)` (default `64`)                         |
+| -                                                         | `hash_join()->batchSize(int)` (default `1000`)                          |
+| -                                                         | `Flow\ETL\Bucketing\ResidentBucketsStorage`                             |
+| -                                                         | `Flow\ETL\Bucketing\Storage\MemoryBuckets`                              |
 
 To keep the right side in memory and preserve left row order:
 
@@ -545,7 +585,7 @@ data_frame(config_builder()->join(hash_join()->storage(new MemoryBuckets())))
 | `Serializer::serialize(object $serializable): string`                                     | `Serializer::serialize(Rows $rows, DestinationStream $destination): void` |
 | `Serializer::unserialize(string $serialized, array $classes): object`                     | `Serializer::unserialize(SourceStream $source): Rows`                     |
 | `CompressingSerializer`/`NativePHPSerializer` throw `Flow\ETL\Exception\RuntimeException` | throw `Flow\Serializer\Exception\SerializationException`                  |
-| —                                                                                         | `Flow\Floe\FloeSerializer` (the default)                                  |
+| -                                                                                         | `Flow\Floe\FloeSerializer` (the default)                                  |
 
 ### 26) `flow-php/etl` - `EntryFactory` API reshaped
 
@@ -553,7 +593,7 @@ data_frame(config_builder()->join(hash_join()->storage(new MemoryBuckets())))
 |---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | `EntryFactory::create(string $entryName, mixed $value, Schema\|Definition\|null $schema = null)`  | `EntryFactory::create(string $name, mixed $value, ?Type $type = null, ?Metadata $metadata = null)` |
 | `EntryFactory::createAs(string $entryName, mixed $value, Type $type, ?Metadata $metadata = null)` | `EntryFactory::cast(string $name, mixed $value, Type $type, ?Metadata $metadata = null)`           |
-| —                                                                                                 | `EntryFactory::fromDefinition(Definition $definition, mixed $value): Entry`                        |
+| -                                                                                                 | `EntryFactory::fromDefinition(Definition $definition, mixed $value): Entry`                        |
 | `to_entry($name, $data, EntryFactory $entryFactory)`                                              | `to_entry($name, $data, EntryFactory $entryFactory = new EntryFactory())`                          |
 | `ConfigBuilder::build(EntryFactory $entryFactory = new EntryFactory())`                           | `ConfigBuilder::build()`                                                                           |
 
@@ -561,11 +601,11 @@ data_frame(config_builder()->join(hash_join()->storage(new MemoryBuckets())))
 
 | Before                                                  | After                                                                                                                                                     |
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| —                                                       | `Flow\ETL\Row\Encoder<TPhysical>`: `encode(list<TypedRowValues>): list<TPhysical>`, `decode(list<TPhysical>): list<RawRowValues>`                         |
-| —                                                       | `Flow\ETL\Row\Hydrator`: `cast(list<RawRowValues>, ?Schema): Rows`, `hydrate(list<RawRowValues>, ?Schema): Rows`, `dehydrate(Rows): list<TypedRowValues>` |
-| —                                                       | `Flow\ETL\Row\RawRowValues`, `Flow\ETL\Row\TypedRowValues`                                                                                                |
-| —                                                       | `Flow\ETL\Row\PhpRowHydrator`, `NativeRowHydrator`, `AdaptiveRowHydrator` (the default)                                                                   |
-| —                                                       | `ConfigBuilder::hydrator(Hydrator)`, `Config::hydrator()`, `FlowContext::hydrator()`                                                                      |
+| -                                                       | `Flow\ETL\Row\Encoder<TPhysical>`: `encode(list<TypedRowValues>): list<TPhysical>`, `decode(list<TPhysical>): list<RawRowValues>`                         |
+| -                                                       | `Flow\ETL\Row\Hydrator`: `cast(list<RawRowValues>, ?Schema): Rows`, `hydrate(list<RawRowValues>, ?Schema): Rows`, `dehydrate(Rows): list<TypedRowValues>` |
+| -                                                       | `Flow\ETL\Row\RawRowValues`, `Flow\ETL\Row\TypedRowValues`                                                                                                |
+| -                                                       | `Flow\ETL\Row\PhpRowHydrator`, `NativeRowHydrator`, `AdaptiveRowHydrator` (the default)                                                                   |
+| -                                                       | `ConfigBuilder::hydrator(Hydrator)`, `Config::hydrator()`, `FlowContext::hydrator()`                                                                      |
 | `array_to_row($data, EntryFactory $entryFactory, ...)`  | `array_to_row($data, Hydrator $hydrator = new AdaptiveRowHydrator(), ...)`                                                                                |
 | `array_to_rows($data, EntryFactory $entryFactory, ...)` | `array_to_rows($data, Hydrator $hydrator = new AdaptiveRowHydrator(), ...)`                                                                               |
 
@@ -576,7 +616,7 @@ calls `$context->hydrator()->hydrate(...)`.
 
 Under a schema, entries emit in schema-definition order (was data-key order with missing columns appended); a schema
 column missing from the source hydrates as a typed null (was a `StringEntry` null); a column absent from the schema is
-dropped. When the `flow_php` extension is loaded, `AdaptiveRowHydrator` runs hydration natively — pin the pure-PHP
+dropped. When the `flow_php` extension is loaded, `AdaptiveRowHydrator` runs hydration natively - pin the pure-PHP
 engine with `config_builder()->hydrator(new PhpRowHydrator())`.
 
 ### 28) `flow-php/etl-adapter-csv`, `-json`, `-parquet`, `-xml`, `-excel`, `-doctrine`, `-postgresql`, `-seal`, `-text`,
@@ -592,14 +632,14 @@ engine with `config_builder()->hydrator(new PhpRowHydrator())`.
 | `Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer`                                                                  | `Flow\ETL\Adapter\Excel\ExcelEncoder`                                                                                                            |
 | `Flow\ETL\Adapter\Doctrine\RowsNormalizer`                                                                                   | `Flow\ETL\Adapter\Doctrine\DbalEncoder`                                                                                                          |
 | `Flow\ETL\Adapter\Seal\RowsNormalizer`, `RowsNormalizer\EntryNormalizer`                                                     | `Flow\ETL\Adapter\Seal\SealEncoder`                                                                                                              |
-| —                                                                                                                            | `Flow\ETL\Adapter\Text\TextEncoder`, `Flow\ETL\Adapter\PostgreSql\PostgreSqlEncoder`, `Flow\ETL\Adapter\GoogleSheet\GoogleSheetEncoder`          |
+| -                                                                                                                            | `Flow\ETL\Adapter\Text\TextEncoder`, `Flow\ETL\Adapter\PostgreSql\PostgreSqlEncoder`, `Flow\ETL\Adapter\GoogleSheet\GoogleSheetEncoder`          |
 | `Flow\ETL\Adapter\Doctrine\TypesMap::flowRowTypes(Row)`                                                                      | `TypesMap::flowSchemaTypes(Schema)`                                                                                                              |
 | `Flow\ETL\Adapter\PostgreSql\EntryTypesMap::mapEntry(Entry)`                                                                 | `EntryTypesMap::map(string $column, Type $type, mixed $value)`                                                                                   |
 | `InsertQueryBuilder::build(Rows, ...)`                                                                                       | `InsertQueryBuilder::build(array $values, Schema, ...)`                                                                                          |
 | `UpdateQueryBuilder::build(Row, ...)`, `DeleteQueryBuilder::build(Row, ...)`                                                 | `build(array $value, Schema, ...)`                                                                                                               |
 | CSV/JSON/XML/Excel/Seal writers (no `dateFormat`)                                                                            | `dateFormat = 'Y-m-d'` encoder constructor param                                                                                                 |
 | Excel `timeFormat = 'H:i:s'`                                                                                                 | `timeFormat = '%H:%I:%S'`                                                                                                                        |
-| —                                                                                                                            | `withDateFormat()` on `CSVLoader`, `JsonLoader`, `JsonLinesLoader`, `XMLLoader`, `ExcelLoader`, `SealLoader`; `SealLoader::withDateTimeFormat()` |
+| -                                                                                                                            | `withDateFormat()` on `CSVLoader`, `JsonLoader`, `JsonLinesLoader`, `XMLLoader`, `ExcelLoader`, `SealLoader`; `SealLoader::withDateTimeFormat()` |
 
 Behavioural changes: CSV/JSON/XML/Excel/Seal `date` columns render with `dateFormat` (`Y-m-d`, was `dateTimeFormat`);
 XML `date`/`time` columns render (was `InvalidArgumentException`); Seal `time` columns render as microseconds (was
@@ -624,11 +664,11 @@ dropped when a schema was set); Excel now appends `_input_file_uri` under `putIn
 | rows carry all columns into grouping                                       | only `groupBy` refs + aggregator refs are spilled                                    |
 | STRICT schema mode throws for a missing aggregate column under `groupBy()` | row gets a `null` entry for it; aggregators skip `null`                              |
 | group output follows input order (incidental)                              | follows hash-bucket order                                                            |
-| —                                                                          | `AggregatingFunction::references(): ?array`                                          |
-| —                                                                          | `ConfigBuilder::groupBy(hash_group_by())`                                            |
-| —                                                                          | `hash_group_by()->storage(BucketsStorage)` (default `FilesystemBuckets`)             |
-| —                                                                          | `hash_group_by()->bucketsCount(int)` (default `64`)                                  |
-| —                                                                          | `hash_group_by()->batchSize(int)` (default `1000`)                                   |
+| -                                                                          | `AggregatingFunction::references(): ?array`                                          |
+| -                                                                          | `ConfigBuilder::groupBy(hash_group_by())`                                            |
+| -                                                                          | `hash_group_by()->storage(BucketsStorage)` (default `FilesystemBuckets`)             |
+| -                                                                          | `hash_group_by()->bucketsCount(int)` (default `64`)                                  |
+| -                                                                          | `hash_group_by()->batchSize(int)` (default `1000`)                                   |
 
 Custom aggregators must implement `references()` - return the references the aggregator reads, or
 `null` when they cannot be statically enumerated (disables spill column pruning).
@@ -744,15 +784,15 @@ the same trace.
 | async via `CurlTransport`                                      | async via `AsyncCurlTransport` / `otlp_async_curl_transport()` / `transport.type: 'async_curl'` |
 | `CurlTransportOptions::DEFAULT_TIMEOUT_MS` `250`               | `10000`                                                                                         |
 | bundle `curl` `timeout_ms` `250`                               | `10000`                                                                                         |
-| —                                                              | `async_curl` `connect_timeout_ms` `1500`, `pump_timeout_ms` `100`                               |
+| -                                                              | `async_curl` `connect_timeout_ms` `1500`, `pump_timeout_ms` `100`                               |
 
 ### 6) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
 
 | Before                                         | After                                                                              |
 |------------------------------------------------|------------------------------------------------------------------------------------|
-| `flow:migrations:* --connection=<name>` (`-c`) | removed — every migration command uses the configured migrations connection        |
+| `flow:migrations:* --connection=<name>` (`-c`) | removed - every migration command uses the configured migrations connection        |
 | migrator stack registered for every connection | registered only for the migrations connection                                      |
-| —                                              | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection) |
+| -                                              | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection) |
 
 To run migrations against a non-default connection, set `migrations.connection` instead of passing `-c`:
 
@@ -826,11 +866,11 @@ Rename these series in dashboards and alerts.
 | (no span selection)                           | `instrumentation.messenger.trace`: `worker`/`handlers`/`both` (default)/`none` |
 | (no link selection)                           | `instrumentation.messenger.link`: `dispatcher`/`worker`/`both` (default)       |
 
-Remove `propagation_style` from config — `continue` mode is gone (it made the consumer span absorb the queue wait time).
+Remove `propagation_style` from config - `continue` mode is gone (it made the consumer span absorb the queue wait time).
 `trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
 `link` selects the consumer span's links. `link: worker`/`both` requires `trace` to include the worker, otherwise the
 config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP
-client, …) is suppressed during the receive loop so it does not surface as orphan spans — no `messenger.receive` span,
+client, ...) is suppressed during the receive loop so it does not surface as orphan spans - no `messenger.receive` span,
 no orphans either way.
 
 ---
@@ -847,7 +887,7 @@ no orphans either way.
 | `ColumnShape['default']` / `DomainShape['default']` `?string` | `?array{literal: string, type: ?ColumnTypeShape, kind: string}`             |
 
 `Column::create()` / `Domain::create()` still accept `bool|float|int|string|Expression|null`. Schema arrays serialized
-by `Column::normalize()` / `Domain::normalize()` before 0.40 must be regenerated — `fromArray()` reads the nested
+by `Column::normalize()` / `Domain::normalize()` before 0.40 must be regenerated - `fromArray()` reads the nested
 `default` shape only.
 
 ### 2) `flow-php/telemetry` - Log severity filtering moved to a pipeline middleware
@@ -996,7 +1036,7 @@ percent-decoded.
 
 ### 1) `flow-php/types` - PHPStan extension extracted to `flow-php/phpstan-types-bridge`
 
-The `StructureTypeReturnTypeExtension` — which narrows the return type of `type_structure()` for PHPStan — has been
+The `StructureTypeReturnTypeExtension` - which narrows the return type of `type_structure()` for PHPStan - has been
 moved out of `flow-php/types` into a dedicated package, `flow-php/phpstan-types-bridge`.
 `flow-php/types` no longer ships any PHPStan code.
 
@@ -1053,7 +1093,7 @@ includes:
 | `MemoryMetricExporter::metrics()`                                                  | `MemoryExporter::metrics()`                                      |
 | `Exporter::transports()`                                                           | removed                                                          |
 | `(Span\|Metric\|Log)Exporter::export(array $items) : bool`                         | `Exporter::export(Flow\Telemetry\Signal\Signals $signal) : bool` |
-| —                                                                                  | `Exporter::shutdown() : void` (added)                            |
+| -                                                                                  | `Exporter::shutdown() : void` (added)                            |
 
 ### 2) `flow-php/telemetry` - `Transport` contract relocated to OTLP bridge
 
@@ -1073,16 +1113,16 @@ Applies to `SpanProcessor`, `MetricProcessor`, `LogProcessor`.
 | Before                             | After                       |
 |------------------------------------|-----------------------------|
 | `exporter() : SpanExporter` (etc.) | removed                     |
-| —                                  | `shutdown() : void` (added) |
+| -                                  | `shutdown() : void` (added) |
 
 ### 4) `flow-php/telemetry` - `Serializer` contract removed
 
-| Before                                                               | After                                                                                                       |
-|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `Flow\Telemetry\Serializer\Serializer`                               | removed                                                                                                     |
-| `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer` (interface)   | renamed to `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcRequestFactory` (class)                               |
-| `CurlTransport(string $endpoint, Serializer $serializer, …)`         | `CurlTransport(string $endpoint, JsonSerializer\|ProtobufSerializer $serializer = new JsonSerializer(), …)` |
-| `GrpcTransport(string $endpoint, ProtobufSerializer $serializer, …)` | `GrpcTransport(string $endpoint, …)` — serializer parameter removed                                         |
+| Before                                                                 | After                                                                                                         |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `Flow\Telemetry\Serializer\Serializer`                                 | removed                                                                                                       |
+| `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer` (interface)     | renamed to `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcRequestFactory` (class)                                 |
+| `CurlTransport(string $endpoint, Serializer $serializer, ...)`         | `CurlTransport(string $endpoint, JsonSerializer\|ProtobufSerializer $serializer = new JsonSerializer(), ...)` |
+| `GrpcTransport(string $endpoint, ProtobufSerializer $serializer, ...)` | `GrpcTransport(string $endpoint, ...)` - serializer parameter removed                                         |
 
 ### 5) `flow-php/telemetry` - `ErrorHandler` contract added
 
@@ -1120,7 +1160,7 @@ New namespace `Flow\Telemetry\ErrorHandler` with: `ErrorHandler` (interface), `E
 | `CurlTransportOptions::withConnectTimeout(int $seconds)`, default `10`                                              | `CurlTransportOptions::withConnectTimeout(int $milliseconds)`, default `250`                                                                                                                            |
 | `CurlTransportOptions::timeout()`                                                                                   | `CurlTransportOptions::timeoutMs()`                                                                                                                                                                     |
 | `CurlTransportOptions::connectTimeout()`                                                                            | `CurlTransportOptions::connectTimeoutMs()`                                                                                                                                                              |
-| —                                                                                                                   | `CurlTransportOptions::withShutdownTimeout(int $milliseconds)` / `shutdownTimeoutMs()`, default `5000` (added)                                                                                          |
+| -                                                                                                                   | `CurlTransportOptions::withShutdownTimeout(int $milliseconds)` / `shutdownTimeoutMs()`, default `5000` (added)                                                                                          |
 | `otlp_curl_transport(string $endpoint, Serializer $serializer, CurlTransportOptions $options)`                      | `otlp_curl_transport(string $endpoint, JsonSerializer\|ProtobufSerializer $serializer = new JsonSerializer(), CurlTransportOptions $options = new CurlTransportOptions(), ?Transport $failover = null)` |
 | `otlp_grpc_transport(string $endpoint, ProtobufSerializer $serializer, array $headers = [], bool $insecure = true)` | `otlp_grpc_transport(string $endpoint, array $headers = [], bool $insecure = true, int $timeoutMs = 250, int $shutdownTimeoutMs = 5000, ?Transport $failover = null)`                                   |
 
@@ -1130,14 +1170,14 @@ New transport, no removal counterpart.
 
 | Before | After                                                                                                     |
 |--------|-----------------------------------------------------------------------------------------------------------|
-| —      | `Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport`                                                    |
-| —      | `otlp_stream_transport(string $destination, int $filePermissions = 0644, bool $createDirectories = true)` |
+| -      | `Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport`                                                    |
+| -      | `otlp_stream_transport(string $destination, int $filePermissions = 0644, bool $createDirectories = true)` |
 
 ### 10) `flow-php/telemetry-otlp-bridge` - `open-telemetry/gen-otlp-protobuf` dependency dropped
 
-| Before                                            | After                                                                                                |
-|---------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| `open-telemetry/gen-otlp-protobuf` (required dep) | removed; protobuf classes shipped inside the bridge under the same `Opentelemetry\Proto\…` namespace |
+| Before                                            | After                                                                                                  |
+|---------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `open-telemetry/gen-otlp-protobuf` (required dep) | removed; protobuf classes shipped inside the bridge under the same `Opentelemetry\Proto\...` namespace |
 
 ### 11) `flow-php/symfony-telemetry-bundle` - Configuration schema rewrite
 
@@ -1152,12 +1192,12 @@ No BC shim. Configurations from 0.36 must be rewritten.
 | `transport.timeout` (seconds, default `30`)                                                     | `transport.timeout_ms` (default `250`)                                                 |
 | `transport.connect_timeout` (seconds, default `10`)                                             | `transport.connect_timeout_ms` (default `250`)                                         |
 | `transport.http_client_service_id` / `request_factory_service_id` / `stream_factory_service_id` | removed                                                                                |
-| —                                                                                               | `transport.type: stream` (added)                                                       |
-| —                                                                                               | `transport.shutdown_timeout_ms` default `5000` (added)                                 |
-| —                                                                                               | `transport.failover: { type: …, … }` on curl/grpc primaries (added)                    |
-| —                                                                                               | top-level `error_handlers:` map (added)                                                |
-| —                                                                                               | `error_handler: <name>` references on providers, processors, otlp exporter (added)     |
-| —                                                                                               | top-level `framework_logger: <name>` (added)                                           |
+| -                                                                                               | `transport.type: stream` (added)                                                       |
+| -                                                                                               | `transport.shutdown_timeout_ms` default `5000` (added)                                 |
+| -                                                                                               | `transport.failover: { type: ..., ... }` on curl/grpc primaries (added)                |
+| -                                                                                               | top-level `error_handlers:` map (added)                                                |
+| -                                                                                               | `error_handler: <name>` references on providers, processors, otlp exporter (added)     |
+| -                                                                                               | top-level `framework_logger: <name>` (added)                                           |
 
 Before:
 
@@ -1211,11 +1251,11 @@ flow_telemetry:
 | `curl_timeout` / `30` (seconds)                  | `curl_timeout_ms` / `250` (ms)                                                   |
 | `curl_connect_timeout` / `10` (s)                | `curl_connect_timeout_ms` / `250` (ms)                                           |
 | `transport: curl\|grpc`                          | `transport: curl\|grpc\|stream`                                                  |
-| —                                                | `grpc_timeout_ms` / `250` (added)                                                |
-| —                                                | `shutdown_timeout_ms` / `5000` (added)                                           |
-| —                                                | `batch_size` / `512` (added)                                                     |
-| —                                                | `error_handler` / `error_log` and `error_handler_*` family (added)               |
-| —                                                | `stream_file_permissions` / `0644`, `stream_create_directories` / `true` (added) |
+| -                                                | `grpc_timeout_ms` / `250` (added)                                                |
+| -                                                | `shutdown_timeout_ms` / `5000` (added)                                           |
+| -                                                | `batch_size` / `512` (added)                                                     |
+| -                                                | `error_handler` / `error_log` and `error_handler_*` family (added)               |
+| -                                                | `stream_file_permissions` / `0644`, `stream_create_directories` / `true` (added) |
 | Default span/metric/log processors: pass-through | Default span/metric/log processors: batching (`batch_size: 512`)                 |
 
 `otel_collector_url` / `FLOW_PHPUNIT_OTEL_COLLECTOR_URL` remain deprecated aliases for `endpoint` with
@@ -1245,7 +1285,7 @@ type-safe DSL functions.
 
 ### 2) `flow-php/postgresql` - `Condition` now extends `Expression`
 
-Conditions are now expressions — they can be used in SELECT lists, CASE WHEN, ORDER BY, etc.
+Conditions are now expressions - they can be used in SELECT lists, CASE WHEN, ORDER BY, etc.
 
 ```php
 // Conditions can now be aliased and used as expressions:
@@ -1272,8 +1312,8 @@ Function names have been unified following standard SQL builder conventions (jOO
 | `cond_and()`         | `and_()`                  | Drop `cond_` prefix, trailing underscore for PHP keyword  |
 | `cond_or()`          | `or_()`                   | Drop `cond_` prefix, trailing underscore for PHP keyword  |
 | `cond_not()`         | `not_()`                  | Drop `cond_` prefix, trailing underscore for PHP keyword  |
-| `any_sub_select()`   | `any_()`                  | Unified — accepts both `Expression` and `SelectFinalStep` |
-| `all_sub_select()`   | `all_()`                  | Unified — accepts both `Expression` and `SelectFinalStep` |
+| `any_sub_select()`   | `any_()`                  | Unified - accepts both `Expression` and `SelectFinalStep` |
+| `all_sub_select()`   | `all_()`                  | Unified - accepts both `Expression` and `SelectFinalStep` |
 | `cond_true()`        | `is_true(literal(true))`  | Use `is_true()` with literal                              |
 | `cond_false()`       | `is_true(literal(false))` | Use `is_true()` with literal                              |
 | `bool_cond()`        | `is_true()`               | Wraps expression as boolean condition                     |
@@ -1363,7 +1403,7 @@ unpacked `Protocol::$name` / `Protocol::scheme()` / `Protocol::is()` are mechani
 | `$fs->protocol()->validateScheme($path)` | `$fs->mount()->supports($path) \|\| throw new InvalidSchemeException(...)`                         |
 | `new Protocol('file')`                   | `new Mount('file')` (if you need a Mount) or plain `'file'` (FilesystemTable::for accepts strings) |
 
-**`Backend` enum removed.** There's no closed set of backends anymore — any filesystem can mount under any protocol. The
+**`Backend` enum removed.** There's no closed set of backends anymore - any filesystem can mount under any protocol. The
 Symfony bundle schema now uses a plain string `type:` field (see below). If you branched on `Backend` cases in
 application code, replace with string comparisons against the factory `type()` or the mount protocol, whichever fits.
 
@@ -1387,12 +1427,12 @@ final readonly class Mount
 (local filesystems have a sensible default). DSL factory functions (`native_local_filesystem`, `memory_filesystem`,
 `stdout_filesystem`, `aws_s3_filesystem`,
 `azure_filesystem`) accept `string $protocol` as the **last** argument with a sensible default (`'file'`, `'memory'`,
-`'stdout'`, `'aws-s3'`, `'azure-blob'`) and build the `Mount` internally — no caller change needed unless you
+`'stdout'`, `'aws-s3'`, `'azure-blob'`) and build the `Mount` internally - no caller change needed unless you
 instantiate the filesystem class directly or mount two filesystems of the same backend under distinct protocols.
 
 **Auto-alias dropped.** Previously, mounting a single filesystem of a given backend would auto-register its canonical
 scheme as an additional alias (e.g. mounting S3 as `warehouse` also made `aws-s3`
-available). That behavior is gone — every mount is registered under exactly the protocol you pick. If you need two
+available). That behavior is gone - every mount is registered under exactly the protocol you pick. If you need two
 protocols for the same filesystem, mount it twice explicitly.
 
 **`FilesystemTable::for(Path|Protocol)` → `for(Path|string)`.** Pass a `Path` or a plain protocol string.
@@ -1439,7 +1479,7 @@ flow_filesystem:
           type: file
         memory:
           type: memory
-        aws-s3: # mount protocol — can be any valid URI scheme
+        aws-s3: # mount protocol - can be any valid URI scheme
           type: aws_s3               # factory lookup key
           bucket: '%env(S3_BUCKET)%'
 ```
@@ -1448,7 +1488,7 @@ Benefits of the new shape:
 
 - Mount the same backend twice under different protocols (e.g. `warehouse` + `archive` both `type: aws_s3` with
   different buckets).
-- Protocol names are no longer tied to factory names — pick whatever reads well in your application.
+- Protocol names are no longer tied to factory names - pick whatever reads well in your application.
 
 Built-in `type` values: `file`, `memory`, `stdout`, `aws_s3`, `azure_blob`.
 
@@ -1482,19 +1522,19 @@ The DI tag attribute is renamed from `protocol` to `type`. `FilesystemFactoryReg
 | Before                       | After                                                        |
 |------------------------------|--------------------------------------------------------------|
 | `--long` (default: off)      | 4-column output is now the default; use `--short` to drop it |
-| `--no-limit`                 | Removed — default is unlimited now. Use `--limit=N` to cap.  |
+| `--no-limit`                 | Removed - default is unlimited now. Use `--limit=N` to cap.  |
 | (no `--page-size`)           | New `--page-size=N` (default `10`) controls table page size  |
 | (no `--offset`)              | New `--offset=N` skips the first N entries                   |
 | `--format=json` → JSON array | `--format=json` now emits NDJSON (one JSON object per line)  |
 
 Default behavior: list all entries, paginated in tables of 10 rows; interactive terminals prompt between pages (Enter
-continues, "no" stops), piped output flows continuously. Size is formatted with binary units, Modified as ISO-8601 —
+continues, "no" stops), piped output flows continuously. Size is formatted with binary units, Modified as ISO-8601 -
 both read from the backend listing response, no per-file HEAD.
 
 ### 11) `flow-php/symfony-filesystem-bundle` - `flow:filesystem:stat` rejects pattern paths
 
 `stat` now returns `Command::FAILURE` with a clear error when given a pattern path (`memory://*.txt`,
-`**/*.parquet`, …). Previously it returned metadata for the first match — confusing semantics. Use
+`**/*.parquet`, ...). Previously it returned metadata for the first match - confusing semantics. Use
 `flow:filesystem:ls` for pattern inspection.
 
 ### 12) `flow-php/filesystem-async-aws-bridge`,
@@ -1508,7 +1548,7 @@ cases work without passing it:
 aws_s3_filesystem($bucket, $client);                              // mounts under 'aws-s3'
 azure_filesystem($blobService);                                   // mounts under 'azure-blob'
 
-// Pick a different protocol — e.g. mount the same bucket twice
+// Pick a different protocol - e.g. mount the same bucket twice
 aws_s3_filesystem($bucket, $client, protocol: 'warehouse');
 azure_filesystem($blobService, protocol: 'archive');
 ```
@@ -1551,7 +1591,7 @@ to the Output.
 // Before
 new FlowBufferedResponse($extractor, new CsvOutput(), $transformations);
 
-// After — same defaults, new constructor param available
+// After - same defaults, new constructor param available
 new FlowBufferedResponse($extractor, new CsvOutput(), $transformations, filesystem: 'memory');
 ```
 
@@ -2418,7 +2458,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _     (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _       (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

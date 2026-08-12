@@ -364,7 +364,8 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<float>>',
+            // [4.0, 5, 6] detects as array<mixed> (float + integer), which fits no narrower element type.
+            'list<array<mixed>>',
         ];
 
         yield 'list of lists with null' => [
@@ -420,7 +421,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<array<mixed>>',
         ];
 
         yield 'string keys with an interleaved null' => [
@@ -493,7 +494,7 @@ final class TypeDetectorTest extends TestCase
         yield 'empty array before a list' => [
             [[], [1, 2]],
             ListType::class,
-            'list<array<mixed>>',
+            'list<list<integer>>',
         ];
 
         yield 'empty array after a list' => [
@@ -511,7 +512,7 @@ final class TypeDetectorTest extends TestCase
         yield 'empty array after a structure' => [
             [['id' => '1'], []],
             ListType::class,
-            'list<structure{id: string}>',
+            'list<array<mixed>>',
         ];
 
         yield 'structure with an empty array element' => [
@@ -534,6 +535,36 @@ final class TypeDetectorTest extends TestCase
 
         yield 'null before an empty array' => [
             [null, []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'string with an empty array' => [
+            ['a', []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'empty array with a string' => [
+            [[], 'a'],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'string with an empty array and a null' => [
+            ['a', [], null],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'non-list integer keys with a string and an empty array' => [
+            [5 => 'a', 6 => []],
+            ArrayType::class,
+            'array<mixed>',
+        ];
+
+        yield 'non-list integer keys with a string and a mixed-keys array' => [
+            [5 => 'a', 6 => [1 => 'x', 'y' => 2]],
             ArrayType::class,
             'array<mixed>',
         ];

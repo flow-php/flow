@@ -79,7 +79,7 @@ foreach ($firstTen as $row) {
 $allRows = $dataFrame->fetch(); // Can cause memory exhaustion
 ```
 
-> **⚠️ Memory Warning**: The `fetch()` method loads all requested rows into memory at once. Without a limit parameter,
+> **Memory Warning**: The `fetch()` method loads all requested rows into memory at once. Without a limit parameter,
 > it will attempt to load the entire dataset into memory, which can cause memory exhaustion. Always use with a reasonable
 > limit or prefer generator-based methods.
 
@@ -92,7 +92,7 @@ $totalCount = $dataFrame->count();
 echo "Total rows: $totalCount\n";
 ```
 
-> **⚠️ Performance Warning**: The `count()` method must process the entire dataset to return the total count, which can
+> **Performance Warning**: The `count()` method must process the entire dataset to return the total count, which can
 > be expensive for large datasets. Consider whether you actually need the exact count or if an approximation would
 > suffice.
 

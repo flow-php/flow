@@ -19,7 +19,7 @@ the [installation page](/documentation/installation/packages/symfony-postgresql-
 ## Overview
 
 This bundle is built on top of [flow-php/postgresql](/documentation/components/libs/postgresql.md)
-and [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) — see those pages for the underlying
+and [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) - see those pages for the underlying
 client, query builders, catalog, and migration engine.
 
 For telemetry support (tracing, metrics, query logging per connection),
@@ -53,7 +53,7 @@ flow_postgresql:
 
 Each connection may override individual parts of the parsed DSN. Every key maps 1:1 onto an immutable
 `ConnectionParameters` method in the `flow-php/postgresql` library; the bundle adds no logic of its own.
-Overrides are applied at service-factory time, so values may be `%env(...)%` placeholders — they are
+Overrides are applied at service-factory time, so values may be `%env(...)%` placeholders - they are
 resolved at runtime, not when the configuration is parsed.
 
 ```yaml
@@ -79,7 +79,7 @@ flow_postgresql:
 | `password`      | string | `null`  | Replaces the password parsed from the DSN.                |
 | `dbname_suffix` | string | `''`    | Appends the given suffix to the configured database name. |
 
-`dbname`/`host`/`port`/`user`/`password` are applied first, then `dbname_suffix` **last** — so
+`dbname`/`host`/`port`/`user`/`password` are applied first, then `dbname_suffix` **last** - so
 `dbname: 'foo'` + `dbname_suffix: '_test'` yields `foo_test`. A connection with only `dsn` behaves
 exactly as before.
 
@@ -125,7 +125,7 @@ flow_postgresql:
 ### Web Profiler
 
 Adds a **Flow PostgreSQL** panel to the Symfony Web Profiler listing the SQL executed during the
-current request — like the Doctrine bundle's Queries panel, but for the Flow PostgreSQL client and
+current request - like the Doctrine bundle's Queries panel, but for the Flow PostgreSQL client and
 independent of telemetry. Each connection's client is decorated with a recording wrapper that
 captures statement, bound parameters, duration, returned/affected rows, the calling code location,
 and failures.
@@ -143,16 +143,16 @@ flow_postgresql:
 
 The log is bounded: at most `max_queries` entries are retained and the panel notes when older ones were
 dropped. Because bound parameters dominate memory, a query binding more than `max_retained_parameters`
-values keeps none of them — such queries show "parameters omitted" and cannot be explained from the panel.
+values keeps none of them - such queries show "parameters omitted" and cannot be explained from the panel.
 The all-or-nothing rule is deliberate, and the reason this option is not named like the per-connection
 `telemetry.max_parameters` (which keeps the first N): the panel re-binds the retained parameters to run
 EXPLAIN, and a partial list is not a valid query. Statements themselves are bounded by
-`max_query_length` — a batch `INSERT` with a thousand `VALUES` tuples is over 100 KB of SQL, so retaining
+`max_query_length` - a batch `INSERT` with a thousand `VALUES` tuples is over 100 KB of SQL, so retaining
 `max_queries` of them uncut would cost hundreds of megabytes. Truncated statements are marked in the panel
 and cannot be explained from it.
 
-Recording is dev-only and adds nothing in production: when the profiler is disabled — or
-WebProfilerBundle is absent in `enabled: ~` mode — no connection is decorated. A single connection
+Recording is dev-only and adds nothing in production: when the profiler is disabled - or
+WebProfilerBundle is absent in `enabled: ~` mode - no connection is decorated. A single connection
 can opt out while the profiler is on:
 
 ```yaml
@@ -165,11 +165,11 @@ flow_postgresql:
 
 Recording follows `kernel.debug`, like DoctrineBundle's `dbal.profiling`. With `enabled: ~` the panel is
 wired only when WebProfilerBundle is registered **and** the kernel runs in debug mode, so
-`bin/console --no-debug` — which compiles a separate container — decorates no connection and records
+`bin/console --no-debug` - which compiles a separate container - decorates no connection and records
 nothing. `enabled: true` forces recording on regardless of debug mode.
 
 When `migrations` are enabled, a separate **Flow Migrations** panel reports the migrations connection's
-executed, pending and unavailable migrations (with execution time) — like the Doctrine Migrations
+executed, pending and unavailable migrations (with execution time) - like the Doctrine Migrations
 bundle's panel. It queries the database on every profiled request; set `profiler.migrations: false`
 to disable it while keeping the query panel:
 
@@ -183,7 +183,7 @@ flow_postgresql:
 
 Migrations are configured at the top level, not per connection, and always run against a single connection.
 Set `connection` to choose which one; when omitted it defaults to the default (first) connection. Every migration
-command operates on that connection — there is no per-command connection override.
+command operates on that connection - there is no per-command connection override.
 
 ```yaml
 flow_postgresql:
@@ -207,15 +207,15 @@ flow_postgresql:
 
 #### `drop_if_exists`
 
-Set `drop_if_exists: true` to render every diff-generated `DROP` with `IF EXISTS` — useful for convergence migrations
+Set `drop_if_exists: true` to render every diff-generated `DROP` with `IF EXISTS` - useful for convergence migrations
 that run against both fresh and legacy databases. Default `false`, so a missing object fails loudly (drift detection).
 Override for a single run with the [`--drop-if-exists`](#generating-migrations-from-schema-diff) flag.
 
 #### Accessing the service container in a migration
 
 When migrations are enabled, the bundle injects the application's service container into the migration context under
-`FlowPostgreSqlBundle::SERVICE_CONTAINER`. This gives migrations access to resolved parameters — including values
-that Symfony resolves at container build time, such as decrypted secrets and `%env(...)%` processors — and to any
+`FlowPostgreSqlBundle::SERVICE_CONTAINER`. This gives migrations access to resolved parameters - including values
+that Symfony resolves at container build time, such as decrypted secrets and `%env(...)%` processors - and to any
 service, matching the behaviour of Doctrine's container-aware migrations.
 
 Read it through `MigrationContext::attribute()`, which throws when the attribute is absent (use `hasAttribute()` to
@@ -252,7 +252,7 @@ return new class implements Migration {
 #### Passing custom attributes via configuration
 
 Injecting the whole container forces any service a migration needs to be public. To avoid that, declare extra
-attributes under `migrations.context` — they are merged into the migration context next to the container. Each value
+attributes under `migrations.context` - they are merged into the migration context next to the container. Each value
 can be a literal, an `@service_id` reference (use `@@` to keep a literal leading `@`), a `%parameter%` placeholder, or
 a `%env(VAR)%` expression. Referenced services may be private.
 
@@ -367,7 +367,7 @@ Multiple catalog providers can be combined. They are merged via `ChainCatalogPro
 
 By default `flow:migrations:diff` compares **every** object found in the database against the catalog, so any
 object that is not described by a catalog provider is reported as a difference to drop. That is a problem when some
-objects are created outside of migrations — for example tables generated dynamically from user-uploaded content, or
+objects are created outside of migrations - for example tables generated dynamically from user-uploaded content, or
 a whole schema owned by another system. List those objects under `migrations.exclude` and they are skipped while the
 diff is generated (the migrations tracking table is always excluded automatically).
 
@@ -389,7 +389,7 @@ Each entry defines **exactly one** matcher:
 
 | Key           | Excludes                                                            |
 |---------------|--------------------------------------------------------------------|
-| `schema`      | The named schema and every object inside it (tables, views, sequences, functions, …) |
+| `schema`      | The named schema and every object inside it (tables, views, sequences, functions, ...) |
 | `table`       | A table by exact name (shorthand for `exact` narrowed to tables)   |
 | `exact`       | Any object whose name matches exactly                              |
 | `starts_with` | Any object whose name starts with the given prefix                 |
@@ -399,9 +399,9 @@ Each entry defines **exactly one** matcher:
 
 The `exact`, `starts_with`, `ends_with`, `pattern` and `policy_id` matchers can be narrowed with optional scopes:
 
-- `type` — limit to a single object type: `table`, `view`, `materialized_view`, `sequence`, `function`,
+- `type` - limit to a single object type: `table`, `view`, `materialized_view`, `sequence`, `function`,
   `procedure`, `domain` or `extension`. When omitted, the matcher applies to every type.
-- `for_schema` — limit to a single schema. When omitted, the matcher applies to every schema.
+- `for_schema` - limit to a single schema. When omitted, the matcher applies to every schema.
 
 Tables and whole schemas are filtered before they are introspected, so excluding dynamically created tables also
 avoids the cost of reading their columns, indexes and constraints on every diff.
@@ -438,7 +438,7 @@ These commands are always available, regardless of migration configuration.
 | `flow:database:drop`   | Drop the configured database (requires `--force`) |
 | `flow:sql:run`         | Execute SQL directly on the database              |
 
-The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not —
+The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not -
 they always run against the configured migrations connection.
 
 ### Migration Commands
@@ -580,7 +580,7 @@ php bin/console flow:migrations:migrate --connection=reporting
 
 The bundle integrates
 with [flow-php/symfony-postgresql-messenger-bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md)
-to provide a Symfony Messenger transport backed by Flow's native PostgreSQL client — no Doctrine DBAL required.
+to provide a Symfony Messenger transport backed by Flow's native PostgreSQL client - no Doctrine DBAL required.
 
 ### Setup
 
@@ -643,7 +643,7 @@ the [Symfony PostgreSQL Messenger Bridge](/documentation/components/bridges/symf
 
 The bundle integrates
 with [flow-php/symfony-postgresql-cache-bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md) to
-provide PSR-6 / Symfony Cache pools backed by Flow's native PostgreSQL client — no Doctrine DBAL required. The adapter
+provide PSR-6 / Symfony Cache pools backed by Flow's native PostgreSQL client - no Doctrine DBAL required. The adapter
 implements `PruneableInterface`, so `cache:pool:prune` works out of the box.
 
 Each pool is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated from
@@ -681,8 +681,8 @@ flow_postgresql:
 
 Each pool registers two services:
 
-- `flow.postgresql.cache.pool.<name>` — the cache adapter (public).
-- `flow.postgresql.cache.pool.<name>.catalog_provider` — tagged `flow.postgresql.catalog_provider`, so the table is
+- `flow.postgresql.cache.pool.<name>` - the cache adapter (public).
+- `flow.postgresql.cache.pool.<name>.catalog_provider` - tagged `flow.postgresql.catalog_provider`, so the table is
   included in `flow:migrations:diff`.
 
 3. Wire the pools into Symfony's cache framework via `cache.adapter.psr6`:
@@ -753,11 +753,11 @@ the [Symfony PostgreSQL Cache Bridge](/documentation/components/bridges/symfony-
 
 The bundle integrates
 with [flow-php/symfony-postgresql-session-bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
-to provide a Symfony session handler backed by Flow's native PostgreSQL client — no PDO or Doctrine DBAL required. The
+to provide a Symfony session handler backed by Flow's native PostgreSQL client - no PDO or Doctrine DBAL required. The
 table layout is byte-compatible with `PdoSessionHandler`, so existing session rows can be reused as-is.
 
 The handler is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated
-from the `Client` services used by application code. This is what makes `LOCK_TRANSACTIONAL` safe by default — the
+from the `Client` services used by application code. This is what makes `LOCK_TRANSACTIONAL` safe by default - the
 session's transaction lives on a dedicated connection and never wraps unrelated request work.
 
 ### Setup
@@ -787,11 +787,11 @@ flow_postgresql:
 
 Enabling the section registers three services:
 
-- `flow.postgresql.session.handler` — the `FlowPostgreSqlSessionHandler` (public, also aliased to
+- `flow.postgresql.session.handler` - the `FlowPostgreSqlSessionHandler` (public, also aliased to
   `\SessionHandlerInterface`).
-- `flow.postgresql.session.catalog_provider` — tagged `flow.postgresql.catalog_provider`, so the `sessions` table is
+- `flow.postgresql.session.catalog_provider` - tagged `flow.postgresql.catalog_provider`, so the `sessions` table is
   included in `flow:migrations:diff`.
-- `flow.postgresql.session.purge_command` — see [Purging Sessions](#purging-sessions).
+- `flow.postgresql.session.purge_command` - see [Purging Sessions](#purging-sessions).
 
 3. Wire the handler into Symfony's session framework:
 
@@ -831,7 +831,7 @@ php bin/console flow:migrations:migrate
 
 By default the handler opens its own `pg_connect` derived from the named connection's parameters. That isolation is what keeps the session handler's transactions / locks from leaking into the connection used by application code.
 
-Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Use only when you have an explicit reason — tight connection budget or a deliberate need to keep session state on the same connection as application code.
+Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Use only when you have an explicit reason - tight connection budget or a deliberate need to keep session state on the same connection as application code.
 
 ### Purging Sessions
 
@@ -845,7 +845,7 @@ php bin/console flow:postgresql:session:purge
 # Or explicitly:
 php bin/console flow:postgresql:session:purge --expired
 
-# Wipe every session (logs everyone out — destructive)
+# Wipe every session (logs everyone out - destructive)
 php bin/console flow:postgresql:session:purge --all
 ```
 
@@ -858,7 +858,7 @@ the [Symfony PostgreSQL Session Bridge](/documentation/components/bridges/symfon
 
 The bundle integrates
 with [flow-php/phpunit-postgresql-bridge](/documentation/components/bridges/phpunit-postgresql-bridge.md) to
-automatically wrap each PHPUnit test in a database transaction and roll it back after the test finishes — keeping your
+automatically wrap each PHPUnit test in a database transaction and roll it back after the test finishes - keeping your
 test database clean without manual teardown.
 
 ### Setup

@@ -45,7 +45,7 @@ flow --help
 
 ## Running a pipeline
 
-Write a pipeline file that *returns* a `DataFrame` — `run` executes it for you, so do not call
+Write a pipeline file that *returns* a `DataFrame` - `run` executes it for you, so do not call
 `->run()` yourself:
 
 ```php
@@ -69,22 +69,22 @@ $ docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest run
 
 ## Bundled extensions
 
-Alongside PHP 8.5 and the extensions Flow's adapters need — `bcmath`, `gmp`, `pdo_mysql`,
-`pdo_pgsql`, `pdo_sqlite`, `pgsql`, and the `brotli`, `lz4`, `snappy`, `zstd` codecs — the image ships four extensions
+Alongside PHP 8.5 and the extensions Flow's adapters need - `bcmath`, `gmp`, `pdo_mysql`,
+`pdo_pgsql`, `pdo_sqlite`, `pgsql`, and the `brotli`, `lz4`, `snappy`, `zstd` codecs - the image ships four extensions
 that Flow detects and uses automatically:
 
 | Extension  | Package                                                                       | Effect when loaded                                                                                                                                     |
 |------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | `AdaptiveRowHydrator` and `AdaptiveFloeEncoder` run native, fusing every Floe read/write and every raw-scalar hydration into one native call per batch |
 | `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` selects `ArrowParquetEngine`, so Parquet reads and writes run native                                                           |
-| `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all — SQL parsing, normalization and AST manipulation                                                       |
-| `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP — measured ~69x faster end to end                                             |
+| `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all - SQL parsing, normalization and AST manipulation                                                       |
+| `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP - measured ~69x faster end to end                                             |
 
 `pdo_pgsql` and `pgsql` link libpq 18 from the PGDG repository, matching the PostgreSQL 18 grammar
 `pg_query` is built against. PHP 8.5 additionally compiles in `lexbor`, `uri` and Zend OPcache unconditionally.
 
 > [!NOTE]
-> `Parser::parse()` decodes a protobuf AST, and protobuf caps message nesting at 100 levels — roughly 23 levels of
+> `Parser::parse()` decodes a protobuf AST, and protobuf caps message nesting at 100 levels - roughly 23 levels of
 > nested subqueries. Deeper SQL fails to decode regardless of whether `protobuf` is loaded; the extension changes
 > speed, not that ceiling.
 
