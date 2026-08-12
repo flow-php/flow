@@ -97,6 +97,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $rows = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
+        static::assertFalse($rows->schema()->get('body')->isNullable());
 
         $first = $rows[0]->valueOf('body');
         static::assertIsArray($first);
