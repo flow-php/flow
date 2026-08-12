@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\UnionType;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -45,13 +46,52 @@ final class UnionTypeNormalizerTest extends FlowTestCase
         );
     }
 
-    public function test_array_nested_in_a_container_member_is_not_normalized(): void
+    public function test_array_nested_in_a_container_member_is_normalized(): void
     {
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_list(type_array()), type_map(type_string(), type_array()));
 
         static::assertSame(
-            'list<array<mixed>>|map<string, array<mixed>>',
+            'list<json>|map<string, json>',
+            (new UnionTypeNormalizer())
+                ->normalize($type)
+                ->toString(),
+        );
+    }
+
+    public function test_empty_array_member_is_normalized_to_json(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_list(type_string()), type_empty_array());
+
+        static::assertSame(
+            'json|list<string>',
+            (new UnionTypeNormalizer())
+                ->normalize($type)
+                ->toString(),
+        );
+    }
+
+    public function test_empty_array_nested_in_a_container_member_is_normalized(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_list(type_empty_array()), type_map(type_string(), type_empty_array()));
+
+        static::assertSame(
+            'list<json>|map<string, json>',
+            (new UnionTypeNormalizer())
+                ->normalize($type)
+                ->toString(),
+        );
+    }
+
+    public function test_optional_empty_array_member_is_normalized_to_optional_json(): void
+    {
+        /** @var UnionType<mixed, mixed> $type */
+        $type = type_union(type_string(), type_optional(type_empty_array()));
+
+        static::assertSame(
+            'json|null|string',
             (new UnionTypeNormalizer())
                 ->normalize($type)
                 ->toString(),

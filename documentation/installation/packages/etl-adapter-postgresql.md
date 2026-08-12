@@ -23,7 +23,7 @@ composer require flow-php/etl-adapter-postgresql:~--FLOW_PHP_VERSION--
 
 ## Suggested Extensions
 
-- `ext-pgsql` — required for database connections (bundled with PHP, enable via your system package manager)
+- `ext-pgsql` - required for database connections (bundled with PHP, enable via your system package manager)
 
 ```bash
 # For SQL parsing and query building

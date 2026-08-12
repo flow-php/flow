@@ -282,6 +282,7 @@ use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
@@ -2197,6 +2198,7 @@ function definition_from_type(
         $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
         $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
         $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),
+        $type instanceof EmptyArrayType => new JsonDefinition($ref, $nullable, $metadata),
         $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
         $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
         $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),

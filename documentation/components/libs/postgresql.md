@@ -370,8 +370,8 @@ The library ships two default mappers, both available via DSL functions, plus an
 | --- | --- |
 | [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md) | Map row columns directly to constructor parameters by name (1:1). No type coercion. |
 | [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md) | Delegate row → object construction to a public static factory method (`self::fromRow(array $row)`). Useful when the target class has a private constructor or needs custom coercion inside the factory. |
-| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, …). Optionally chains into another `RowMapper`. |
-| [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) ⚠️ | Strict object hydration of complex graphs via cuyz/valinor. **Requires the separate `flow-php/postgresql-valinor-bridge` package.** |
+| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, ...). Optionally chains into another `RowMapper`. |
+| [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) | Strict object hydration of complex graphs via cuyz/valinor. **Requires the separate `flow-php/postgresql-valinor-bridge` package.** |
 
 ### Detailed Documentation
 
@@ -710,7 +710,7 @@ foreach (catalog_comparator()->compare($current, $target)->generate() as $sql) {
 ### `dropIfExists`
 
 By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails loudly (drift detection).
-Set `dropIfExists: true` to render every diff-generated drop with `IF EXISTS` — useful for convergence migrations
+Set `dropIfExists: true` to render every diff-generated drop with `IF EXISTS` - useful for convergence migrations
 that must run against both fresh and legacy databases:
 
 ```php

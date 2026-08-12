@@ -4,7 +4,7 @@ package: flow-php/symfony-postgresql-session-bridge
 
 # Symfony PostgreSQL Session Bridge
 
-A Symfony session handler backed by Flow PHP's native PostgreSQL library. Replaces `PdoSessionHandler` without requiring PDO or Doctrine DBAL — sessions are stored directly in PostgreSQL using Flow's query builder and client.
+A Symfony session handler backed by Flow PHP's native PostgreSQL library. Replaces `PdoSessionHandler` without requiring PDO or Doctrine DBAL - sessions are stored directly in PostgreSQL using Flow's query builder and client.
 
 [PACKAGE_NAV]
 
@@ -23,16 +23,16 @@ For Symfony framework integration (config-driven handler registration, automatic
 `FlowPostgreSqlSessionHandler` extends Symfony's `AbstractSessionHandler`. Sessions are stored in a single PostgreSQL table whose schema is byte-compatible with `PdoSessionHandler`'s default layout: `sess_id`, `sess_data` (`bytea`), `sess_lifetime` (`int`, absolute Unix expiry), `sess_time` (`int`).
 
 - **Reads** select `sess_data` and `sess_lifetime` for the requested session id; rows whose `sess_lifetime < now()` are treated as misses.
-- **Writes** are issued as `INSERT … ON CONFLICT (sess_id) DO UPDATE SET …` with `sess_lifetime = now() + ttl`.
-- **`gc()`** records the request's expiry cutoff and defers the actual `DELETE FROM sessions WHERE sess_lifetime < now()` until `close()` — same contract as `PdoSessionHandler`, so the deletion does not run while the session row is locked.
+- **Writes** are issued as `INSERT ... ON CONFLICT (sess_id) DO UPDATE SET ...` with `sess_lifetime = now() + ttl`.
+- **`gc()`** records the request's expiry cutoff and defers the actual `DELETE FROM sessions WHERE sess_lifetime < now()` until `close()` - same contract as `PdoSessionHandler`, so the deletion does not run while the session row is locked.
 - **`purgeExpired()` / `purgeAll()`** are explicit maintenance methods that bypass the request lifecycle.
 
 ## Connection Ownership
 
 The handler accepts either `ConnectionParameters` or a `Client`:
 
-- **Pass `ConnectionParameters`** *(recommended default)* — the handler opens (and owns) its own `pg_connect`. The connection is created lazily on first use; `close()` releases it along with the rest of the per-request state. Required for safe `LOCK_TRANSACTIONAL` semantics.
-- **Pass a `Client`** — the handler reuses the supplied connection and never closes it (the caller owns the lifetime). Use this only when you know what you are doing (tight connection budget, explicit need to share state).
+- **Pass `ConnectionParameters`** *(recommended default)* - the handler opens (and owns) its own `pg_connect`. The connection is created lazily on first use; `close()` releases it along with the rest of the per-request state. Required for safe `LOCK_TRANSACTIONAL` semantics.
+- **Pass a `Client`** - the handler reuses the supplied connection and never closes it (the caller owns the lifetime). Use this only when you know what you are doing (tight connection budget, explicit need to share state).
 
 ## Usage
 
@@ -84,15 +84,15 @@ new FlowPostgreSqlSessionHandler(
 
 Three constants control how concurrent requests for the same session id are serialized. They mirror `PdoSessionHandler`:
 
-- **`LOCK_TRANSACTIONAL`** *(default)* — `doRead` opens a transaction with `SELECT … FOR UPDATE` on the row; `doWrite` / `doDestroy` commits it. Strongest guarantee, scoped to the row.
-- **`LOCK_ADVISORY`** — acquires `pg_advisory_lock(<session_id_as_bigint>)` before reading, releases it on write/destroy/close. The session id is converted to a bigint using the same first-8-bytes-as-little-endian scheme as `PdoSessionHandler`, so applications mixing both handlers will collide on the same key.
-- **`LOCK_NONE`** — no locking. Last write wins. Use only when you can prove serial access.
+- **`LOCK_TRANSACTIONAL`** *(default)* - `doRead` opens a transaction with `SELECT ... FOR UPDATE` on the row; `doWrite` / `doDestroy` commits it. Strongest guarantee, scoped to the row.
+- **`LOCK_ADVISORY`** - acquires `pg_advisory_lock(<session_id_as_bigint>)` before reading, releases it on write/destroy/close. The session id is converted to a bigint using the same first-8-bytes-as-little-endian scheme as `PdoSessionHandler`, so applications mixing both handlers will collide on the same key.
+- **`LOCK_NONE`** - no locking. Last write wins. Use only when you can prove serial access.
 
 ## Cleaning Up Expired Rows
 
 PHP triggers `SessionHandlerInterface::gc()` probabilistically based on `session.gc_probability`. The handler defers the actual delete to `close()`, so PHP's normal GC cycle works without further wiring.
 
-For deterministic cleanup (e.g. on a cron) call `purgeExpired()` directly. To wipe everything, call `purgeAll()` — it runs `TRUNCATE` and returns `0` because PostgreSQL does not report row counts for that operation.
+For deterministic cleanup (e.g. on a cron) call `purgeExpired()` directly. To wipe everything, call `purgeAll()` - it runs `TRUNCATE` and returns `0` because PostgreSQL does not report row counts for that operation.
 
 ## Table Schema
 

@@ -17,7 +17,7 @@ docker compose up -d
 Service and test env config (database URLs, S3/Redis/Azurite/OTel endpoints, the filesystem cache dir) lives in the
 committed `.env.dist`, loaded for both PHPUnit and phpbench by the root `bootstrap.php`. The `.dist` defaults match the
 `compose.yml.dist` ports, so a standard setup needs no extra step. If you shift service ports in your own `compose.yml`,
-copy `.env.dist` to `.env` (gitignored) and set the shifted values there — `.env` overrides `.env.dist` per-variable:
+copy `.env.dist` to `.env` (gitignored) and set the shifted values there - `.env` overrides `.env.dist` per-variable:
 
 ```shell
 cp .env.dist .env

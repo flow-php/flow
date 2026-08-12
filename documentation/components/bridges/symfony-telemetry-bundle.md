@@ -19,7 +19,7 @@ the [installation page](/documentation/installation/packages/symfony-telemetry-b
 
 ## Overview
 
-This bundle is built on top of [flow-php/telemetry](/documentation/components/libs/telemetry.md) — see that page for the
+This bundle is built on top of [flow-php/telemetry](/documentation/components/libs/telemetry.md) - see that page for the
 underlying `Telemetry`, tracer/meter/logger API, and processor/exporter primitives. For exporting to OTLP-compatible
 backends, it also uses the [Telemetry OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md).
 
@@ -35,7 +35,7 @@ This bundle integrates Flow PHP's Telemetry library with Symfony applications. I
 ## Enabling and Disabling
 
 The bundle is enabled by default. `enabled: false` keeps `Flow\Telemetry\Telemetry` autowirable but removes everything
-behind it — exporters, transports, resource detectors, instrumentation, profiler and the shutdown hook.
+behind it - exporters, transports, resource detectors, instrumentation, profiler and the shutdown hook.
 
 ```yaml
 # config/packages/prod/flow_telemetry.yaml
@@ -46,11 +46,11 @@ flow_telemetry:
 The surviving `Telemetry` uses void processors with sampling off: spans are non-recording, logs and metrics go nowhere,
 `flush()` is a no-op. Named tracers, meters, loggers and `#[WithTelemetryChannel]` channel loggers are still registered,
 so no injection point breaks. No Symfony service is decorated, and `framework_logger` /
-`capture_framework_channels` are ignored — aliasing `logger` to a void logger would discard application logs.
+`capture_framework_channels` are ignored - aliasing `logger` to a void logger would discard application logs.
 
 `flow.telemetry.enabled` is always defined as a container parameter, `true` or `false`.
 
-`enabled` is read at compile time, so `%env()%` is rejected — a placeholder would leave telemetry wired while you
+`enabled` is read at compile time, so `%env()%` is rejected - a placeholder would leave telemetry wired while you
 believed it was off. Use a per-environment config file, or a parameter holding a literal bool. Environment variables
 work everywhere else in the tree, including sections disabled mode drops.
 
@@ -132,12 +132,12 @@ flow_telemetry:
 ### Telemetry Lifecycle
 
 Terminate events are **flush points**, never shutdown points. On `kernel.terminate` and `console.terminate`
-the bundle flushes buffered signals and pumps async transports, but keeps the transport open — the terminating unit of
+the bundle flushes buffered signals and pumps async transports, but keeps the transport open - the terminating unit of
 work is not necessarily the last work of the process: a command may be nested inside another command via
 `Application::run()`, a messenger worker keeps consuming after each handled message, and a long-running runtime
-(FrankenPHP worker mode, RoadRunner, …) reuses the kernel across requests.
+(FrankenPHP worker mode, RoadRunner, ...) reuses the kernel across requests.
 
-Transport shutdown — final drain plus close — happens exactly once, at real process end, through a shutdown function
+Transport shutdown - final drain plus close - happens exactly once, at real process end, through a shutdown function
 registered when the `Telemetry` service is created. PHP runs it on normal completion, `exit()`, uncaught exceptions, and
 fatal errors, so in a classic one-process-per-request runtime (PHP-FPM, mod_php) it still runs at the end of every
 request. Only a hard kill (SIGKILL, segfault) skips it, in which case everything already flushed at request/message
@@ -221,11 +221,11 @@ If `error_handlers:` is omitted (or `default` is missing inside it), the bundle 
 
 Service IDs registered by the bundle (predictable for `decorates:`):
 
-- `flow.telemetry.error_handler.<name>` — e.g. `flow.telemetry.error_handler.default`
+- `flow.telemetry.error_handler.<name>` - e.g. `flow.telemetry.error_handler.default`
 
 #### error_log (default)
 
-Writes formatted Throwables via PHP's `error_log()` — stderr in CLI by default, or the `error_log` ini setting
+Writes formatted Throwables via PHP's `error_log()` - stderr in CLI by default, or the `error_log` ini setting
 otherwise. Matches the OTEL spec recommendation to log to standard error output.
 
 | Option            | Type    | Default            | Description                                                   |
@@ -338,7 +338,7 @@ custom:
 ### Exporters (named definitions)
 
 The bundle exposes a **top-level named map** of exporters. The implementation is selected by the **sub-block name**
-under each entry — there is no separate `type:` key. Each exporter must declare exactly one of the supported sub-blocks:
+under each entry - there is no separate `type:` key. Each exporter must declare exactly one of the supported sub-blocks:
 `otlp`, `service`, `console`, `memory`, `void`. Per-signal processors reference exporters by name.
 
 ```yaml
@@ -361,7 +361,7 @@ flow_telemetry:
 | `void`    | none                           | Discards everything (no-op)               |
 
 Every exporter also accepts an `enabled` flag (default `true`). When it resolves to `false`, the exporter does not ship
-anything to its backend, but **profiler capture and all other exporters keep working** — so telemetry stays visible in
+anything to its backend, but **profiler capture and all other exporters keep working** - so telemetry stays visible in
 the Symfony profiler without being sent to a collector.
 
 The flag accepts a literal boolean or an environment variable:
@@ -388,8 +388,8 @@ flow_telemetry:
 
 Service IDs registered by the bundle (predictable for `decorates:`):
 
-- `flow.telemetry.exporter.<name>` — e.g. `flow.telemetry.exporter.otlp`
-- `flow.telemetry.exporter.<name>.transport` — only when the exporter uses the `otlp` sub-block
+- `flow.telemetry.exporter.<name>` - e.g. `flow.telemetry.exporter.otlp`
+- `flow.telemetry.exporter.<name>.transport` - only when the exporter uses the `otlp` sub-block
 
 ### TracerProvider
 
@@ -426,7 +426,7 @@ flow_telemetry:
 
 ### `parent_based` root sampler
 
-`root` selects the sampler used for spans that have no parent — that is, requests arriving with no
+`root` selects the sampler used for spans that have no parent - that is, requests arriving with no
 `traceparent` header, or with a malformed one. It accepts `always_on` (default), `always_off`, and
 `trace_id_ratio` (with `ratio`).
 
@@ -444,7 +444,7 @@ flow_telemetry:
 ```
 
 Note that the sampler is global. Under `root.type: always_off`, console commands stop producing traces entirely, and so
-do messenger worker spans — even when the request that dispatched the message was sampled, because a worker-consumed
+do messenger worker spans - even when the request that dispatched the message was sampled, because a worker-consumed
 span deliberately starts its own trace linked to the producer rather than continuing the producer's trace.
 
 If you want that behaviour for HTTP only, leave `root.type` at `always_on` and use
@@ -452,12 +452,12 @@ If you want that behaviour for HTTP only, leave `root.type` at `always_on` and u
 
 ### `attribute_matching` sampler
 
-`attribute_matching` is the OTel-idiomatic way to drop spans by attribute — the decision is made at span start, so a
+`attribute_matching` is the OTel-idiomatic way to drop spans by attribute - the decision is made at span start, so a
 matched span never records or reaches a processor. It only sees attributes available at span start (not end-state values
 like status codes). It reuses the same `matcher` / `exclude` / `sources` / `cache_dir` options as the
 [`attribute_filtering`](#attribute_filtering) processor, plus a `delegate` sampler for spans that don't match:
 
-`delegate` only accepts leaf sampler types (`always_on` | `always_off` | `trace_id_ratio`), not `parent_based` — so an
+`delegate` only accepts leaf sampler types (`always_on` | `always_off` | `trace_id_ratio`), not `parent_based` - so an
 `attribute_matching` sampler cannot honour upstream sampling decisions for spans that don't match its matcher.
 
 ```yaml
@@ -502,7 +502,7 @@ flow_telemetry:
       error_handler: default
 ```
 
-**Pipeline** (logs only) — chain middleware (enrich/filter) before a terminal sink:
+**Pipeline** (logs only) - chain middleware (enrich/filter) before a terminal sink:
 
 ```yaml
 flow_telemetry:
@@ -520,7 +520,7 @@ flow_telemetry:
 #### Console output (CLI verbosity)
 
 The Flow equivalent of Symfony's Monolog `ConsoleHandler`: while a console command runs, emitted log records are also
-printed to that command's output, filtered by the command's verbosity (`-v`/`-vv`/`-vvv`). This is **display only** — it
+printed to that command's output, filtered by the command's verbosity (`-v`/`-vv`/`-vvv`). This is **display only** - it
 does not change what the configured processor exports (OTLP, etc.). It is **off by default**; like MonologBundle's
 console handler, enable it explicitly (typically only in `dev`):
 
@@ -549,7 +549,7 @@ step.
 
 `-vvv` is the most verbose flag Symfony has and the default map stops at `DEBUG`, so with the defaults `TRACE` logs are
 never echoed to the console (they still reach your exporters, e.g. OTLP). To see `TRACE` on the console, remap a flag to
-it with `verbosity_levels` — keyed by the Symfony verbosity constant name, valued by a Flow severity name
+it with `verbosity_levels` - keyed by the Symfony verbosity constant name, valued by a Flow severity name
 (`TRACE|DEBUG|INFO|WARN|ERROR|FATAL`). For example, point `-vvv` at `TRACE`:
 
 ```yaml
@@ -561,7 +561,7 @@ flow_telemetry:
         VERBOSITY_DEBUG: TRACE   # -vvv now shows TRACE and everything above it
 ```
 
-You can override any rung the same way — for instance, show `INFO` and above with no flag at all:
+You can override any rung the same way - for instance, show `INFO` and above with no flag at all:
 
 ```yaml
 flow_telemetry:
@@ -625,15 +625,15 @@ processor:
 ```
 
 By default a batch is exported only when it reaches `batch_size`, when `flush()`/`shutdown()` is called, or when the
-process exits. In a request-scoped app that is fine — the request ends and the buffer drains. In a **long-running
+process exits. In a request-scoped app that is fine - the request ends and the buffer drains. In a **long-running
 process** (Symfony Messenger workers, daemons, or persistent runtimes such as ReactPHP, RoadRunner, Swoole, AMP, or
 FrankenPHP worker mode) a low-rate signal can sit in the buffer until 512 accumulate or the process stops. Set
 `max_batch_age` (e.g. `15.0`) to bound how long any single signal waits before export; leave it unset for request-scoped
 apps where behavior is unchanged.
 
-> **PHP limitation — idle processes.** PHP has no background timer thread, so the age deadline is evaluated
-> only when a signal is processed, not on a wall-clock schedule. A **fully idle** process — nothing ending
-> spans or processing metrics/logs — cannot self-flush a partial batch on the age trigger. That residual
+> **PHP limitation - idle processes.** PHP has no background timer thread, so the age deadline is evaluated
+> only when a signal is processed, not on a wall-clock schedule. A **fully idle** process - nothing ending
+> spans or processing metrics/logs - cannot self-flush a partial batch on the age trigger. That residual
 > case needs an external flush: the Messenger worker-event flush subscriber, a runtime loop calling
 > `Telemetry::flush()`, or `shutdown()` when the process exits. The deadline is measured from a monotonic
 > clock (`hrtime`), so it is immune to wall-clock adjustments.
@@ -669,14 +669,14 @@ single **sink**. This is the log-only way to combine more than one processing st
 | Option       | Type   | Default      | Description                                                                                                        |
 |--------------|--------|--------------|--------------------------------------------------------------------------------------------------------------------|
 | `middleware` | list   | `[]`         | Ordered middleware; the first to drop a record short-circuits the rest                                             |
-| `sink`       | object | – (required) | Terminal processor (`memory`, `batching`, `passthrough`, `void`, `service`, or `composite`) that exports survivors |
+| `sink`       | object | - (required) | Terminal processor (`memory`, `batching`, `passthrough`, `void`, `service`, or `composite`) that exports survivors |
 
 Each `middleware` entry has a `type` and its own options:
 
 | `type`                | Options                                                                                        | Effect                                           |
 |-----------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------|
 | `enriching`           | `attributes` (map)                                                                             | Merges default attributes (call-site values win) |
-| `severity_filtering`  | `minimum_severity` (`trace`…`fatal`, default `info`)                                           | Drops records below the level                    |
+| `severity_filtering`  | `minimum_severity` (`trace`...`fatal`, default `info`)                                           | Drops records below the level                    |
 | `attribute_filtering` | `matcher`, `exclude`, `sources`, `cache_dir` (see [attribute_filtering](#attribute_filtering)) | Drops/keeps records by attribute matcher         |
 
 ```yaml
@@ -695,27 +695,27 @@ processor:
 
 #### attribute_filtering
 
-Drops (or keeps) signals based on their attributes — useful for reducing noise, e.g. discarding health-check or bot
+Drops (or keeps) signals based on their attributes - useful for reducing noise, e.g. discarding health-check or bot
 traffic before it is exported. On `tracer_provider` and `meter_provider` it is a **processor** that wraps an
 `inner_processor` (which receives the survivors). On `logger_provider` it is instead a **middleware** inside a
-[`pipeline`](#pipeline-logger_provider-only) (no `inner_processor` — the pipeline's `sink` receives the survivors). The
+[`pipeline`](#pipeline-logger_provider-only) (no `inner_processor` - the pipeline's `sink` receives the survivors). The
 `matcher`/`exclude`/`sources`/`cache_dir` options below apply in both forms.
 
 | Option                  | Type         | Default                                     | Description                                                                                                                                                                                                                                             |
 |-------------------------|--------------|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `matcher`               | object       | – (required)                                | The matcher tree (see below)                                                                                                                                                                                                                            |
+| `matcher`               | object       | - (required)                                | The matcher tree (see below)                                                                                                                                                                                                                            |
 | `exclude`               | boolean      | `true`                                      | `true`: drop matching signals; `false`: keep ONLY matching signals                                                                                                                                                                                      |
-| `sources`               | list of enum | `[signal]`                                  | Which attribute sets to inspect: any of `signal`, `resource`, `scope`. The matcher is evaluated against each listed source and OR-combined — a signal matches if it matches in **any** source                                                           |
+| `sources`               | list of enum | `[signal]`                                  | Which attribute sets to inspect: any of `signal`, `resource`, `scope`. The matcher is evaluated against each listed source and OR-combined - a signal matches if it matches in **any** source                                                           |
 | `cache_dir`             | string       | `%kernel.cache_dir%/flow_telemetry_filters` | Directory for the compiled matcher cache                                                                                                                                                                                                                |
-| `cache_dir_permissions` | int          | `0o700`                                     | Octal mode applied when the cache directory is **created** (owner-only by default, since it holds `require`d PHP; subject to umask). Write it as a YAML octal literal, e.g. `0o750`. Only applies on creation — an existing directory is left untouched |
-| `inner_processor`       | object       | – (required for span/metric)                | **tracer/meter only** — the wrapped processor that receives surviving signals (leaf types only: `memory`, `batching`, `passthrough`, `void`, `service`). For logs, omit it: the [`pipeline`](#pipeline-logger_provider-only) `sink` receives survivors  |
+| `cache_dir_permissions` | int          | `0o700`                                     | Octal mode applied when the cache directory is **created** (owner-only by default, since it holds `require`d PHP; subject to umask). Write it as a YAML octal literal, e.g. `0o750`. Only applies on creation - an existing directory is left untouched |
+| `inner_processor`       | object       | - (required for span/metric)                | **tracer/meter only** - the wrapped processor that receives surviving signals (leaf types only: `memory`, `batching`, `passthrough`, `void`, `service`). For logs, omit it: the [`pipeline`](#pipeline-logger_provider-only) `sink` receives survivors  |
 
 The `matcher` is a tree. Each node is **exactly one** of:
 
-- `all: [ … ]` — a list of child matchers; matches when **every** child matches (AND).
-- `any: [ … ]` — a list of child matchers; matches when **at least one** child matches (OR).
-- `not: { … }` — a single child matcher; matches when the child does **not**.
-- a **leaf rule** carrying a `path` (the four kinds are mutually exclusive — mixing them in one node is a configuration
+- `all: [ ... ]` - a list of child matchers; matches when **every** child matches (AND).
+- `any: [ ... ]` - a list of child matchers; matches when **at least one** child matches (OR).
+- `not: { ... }` - a single child matcher; matches when the child does **not**.
+- a **leaf rule** carrying a `path` (the four kinds are mutually exclusive - mixing them in one node is a configuration
   error).
 
 Composites and leaves nest to any depth, so arbitrary combinations of ANDs, ORs and NOTs are expressible. A leaf rule
@@ -731,7 +731,7 @@ accepts:
 **Modes:** `equal`, `not_equal`, `greater_than`, `greater_than_equal`, `less_than`, `less_than_equal`, `regexp`,
 `starts_with`, `ends_with`, `contains`.
 
-Drop health-check and bot logs (drop if **any** branch matches) — on `logger_provider`, attribute filtering is a
+Drop health-check and bot logs (drop if **any** branch matches) - on `logger_provider`, attribute filtering is a
 middleware inside a [`pipeline`](#pipeline-logger_provider-only); the `sink` receives the survivors:
 
 ```yaml
@@ -768,7 +768,7 @@ flow_telemetry:
         exporter: otlp
 ```
 
-Inspect more than one source at once — drop a signal whose route is `/health` whether that attribute sits on the signal
+Inspect more than one source at once - drop a signal whose route is `/health` whether that attribute sits on the signal
 itself **or** on the resource:
 
 ```yaml
@@ -783,7 +783,7 @@ flow_telemetry:
         exporter: otlp
 ```
 
-Deeply nested combinations — drop a span when it is a fast internal call **or** a non-health route on a flagged tenant
+Deeply nested combinations - drop a span when it is a fast internal call **or** a non-health route on a flagged tenant
 (`(duration < 5 AND internal) OR (tenant = a AND NOT route ^= /health)`):
 
 ```yaml
@@ -808,17 +808,17 @@ flow_telemetry:
 `attribute_filtering` middleware exposes the record's severity to the matcher as two reserved **signal** keys, so
 per-channel (or per-attribute) severity thresholds are expressible alongside any other attribute:
 
-- `log.severity` — the OpenTelemetry severity **number** (`trace`=1, `debug`=5, `info`=9, `warn`=13, `error`=17,
-  `fatal`=21), for ordered comparisons (`greater_than_equal`, …).
-- `log.severity_name` — the level **name** (`TRACE`…`FATAL`), for `equal`/`regexp`.
+- `log.severity` - the OpenTelemetry severity **number** (`trace`=1, `debug`=5, `info`=9, `warn`=13, `error`=17,
+  `fatal`=21), for ordered comparisons (`greater_than_equal`, ...).
+- `log.severity_name` - the level **name** (`TRACE`...`FATAL`), for `equal`/`regexp`.
 
-These keys exist only for the filter decision — they are never exported (severity already travels in the native OTLP
+These keys exist only for the filter decision - they are never exported (severity already travels in the native OTLP
 `severityNumber`/`severityText` fields) and they shadow any user attribute of the same name. Because they live on the
-`signal` source, an `all` node that combines severity with another attribute needs that attribute on `signal` too — the
+`signal` source, an `all` node that combines severity with another attribute needs that attribute on `signal` too - the
 channel's `flow.log.channel` attribute is on `signal` under the default `channel_attribute_target: both`.
 
 Keep `error`+ from the `payments` channel but `debug`+ from the `importer` channel (`exclude: false` keeps only matching
-records — exactly the case a single global [`severity_filtering`](#pipeline-logger_provider-only) threshold cannot
+records - exactly the case a single global [`severity_filtering`](#pipeline-logger_provider-only) threshold cannot
 express):
 
 ```yaml
@@ -847,7 +847,7 @@ threshold varies by channel or another attribute.
 
 The matcher is compiled to a cached PHP matcher in `cache_dir` (the project cache directory by default) so per-signal
 evaluation stays cheap; it falls back to interpreted matching when the directory is not writable. Because the compiled
-file is `require`d, `cache_dir` must be **trusted** (not writable by untrusted users) — the project cache directory is
+file is `require`d, `cache_dir` must be **trusted** (not writable by untrusted users) - the project cache directory is
 application-private, so the default is safe.
 
 ### Exporter Definitions
@@ -901,7 +901,7 @@ exporters:
 #### service
 
 Aliases an existing user-defined service implementing `Flow\Telemetry\Exporter\Exporter`. This is the escape hatch for
-APM-specific exporters (Datadog, New Relic, custom) that don't go through OTLP — define your exporter as a Symfony
+APM-specific exporters (Datadog, New Relic, custom) that don't go through OTLP - define your exporter as a Symfony
 service in your own `services.yaml` and reference it by id.
 
 ```yaml
@@ -925,7 +925,7 @@ Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 | `stream`     | `StreamTransport`    | JSONL to a file path or `php://` stream.                                                                                                                  |
 | `service`    | user service         | Aliases an existing transport service id.                                                                                                                 |
 
-Prefer `curl`. Use `async_curl` only for non-blocking dispatch — in a Messenger worker the bundle pumps it on
+Prefer `curl`. Use `async_curl` only for non-blocking dispatch - in a Messenger worker the bundle pumps it on
 `WorkerRunningEvent`; elsewhere you must call `tick()` yourself. See the
 [OTLP bridge async transport section](/documentation/components/bridges/telemetry-otlp-bridge.md#async-curl-transport).
 
@@ -974,8 +974,8 @@ exporters:
   rejected at config-validation time.
 - The bundle registers `flow.telemetry.exporter.<name>.failover.transport` for the failover service id.
 
-For the underlying behavior — when a forwarded batch is treated as absorbed vs. lost, the shape of
-`FailoverTransportException`, and the cascade-shutdown contract — see the
+For the underlying behavior - when a forwarded batch is treated as absorbed vs. lost, the shape of
+`FailoverTransportException`, and the cascade-shutdown contract - see the
 [OTLP bridge Failover Transport section](/documentation/components/bridges/telemetry-otlp-bridge.md#failover-transport).
 
 #### curl (default)
@@ -1019,7 +1019,7 @@ exporters:
 #### grpc
 
 gRPC transport. `encoding` is rejected by validation (OTLP/gRPC mandates Protobuf, built internally), and
-`connect_timeout_ms` is rejected because gRPC has no separate connect bound — `timeout_ms` is the per-call deadline
+`connect_timeout_ms` is rejected because gRPC has no separate connect bound - `timeout_ms` is the per-call deadline
 covering DNS, connect, send and receive together.
 
 | Option                | Type    | Default | Description                                                                  |
@@ -1045,7 +1045,7 @@ exporters:
 #### stream
 
 OTLP File Exporter ([spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/)). Writes one JSON Line per
-batch to the configured destination — either an absolute file path or a `php://` stream wrapper — with
+batch to the configured destination - either an absolute file path or a `php://` stream wrapper - with
 `LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; `encoding` and HTTP-specific options
 (`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
 
@@ -1072,7 +1072,7 @@ exporters:
         endpoint: 'php://stdout'
 ```
 
-To write all three signal types to one file, point three exporters at the same destination — the OpenTelemetry
+To write all three signal types to one file, point three exporters at the same destination - the OpenTelemetry
 Collector's `otlpjsonfile` receiver handles mixed `resourceLogs` / `resourceMetrics` / `resourceSpans` lines.
 
 #### service
@@ -1209,10 +1209,10 @@ performed after their response.
 The request (SERVER) span follows the OpenTelemetry HTTP semantic conventions for its name and `http.route`, controlled
 by `route_naming`:
 
-- `path` (default) — the route **path template**, e.g. `GET /orders/{id}` (low cardinality, semconv value for
+- `path` (default) - the route **path template**, e.g. `GET /orders/{id}` (low cardinality, semconv value for
   `http.route`); resolved from a `[route name => path]` map built once per deployment by an optional cache warmer
   (`cache:warmup`) and rebuilt lazily when missing, so the router is never queried on the request path.
-- `name` — the Symfony **route name**, e.g. `GET order_show`.
+- `name` - the Symfony **route name**, e.g. `GET order_show`.
 - Sub-requests (`render(controller(...))`) have no route, so they are named after the **controller**
   (`GET App\Controller\NavigationController::top`); a request that matches no route at all uses the method only (`GET`).
 
@@ -1220,16 +1220,16 @@ In addition to the request span, the bundle can trace the controller lifecycle a
 instrumentation scope, kind `INTERNAL`). They are emitted only while the request span exists, so disabling `http_kernel`
 or excluding the path produces none.
 
-- `trace_controller` (default **true**) — the controller **body** execution. The span is named after the resolved
+- `trace_controller` (default **true**) - the controller **body** execution. The span is named after the resolved
   controller (e.g. `App\Controller\OrderController::import`) and carries `code.function.name`
   and `flow.symfony.controller` attributes. It starts after argument resolution and completes at
   `kernel.view`/`kernel.response`, so it excludes resolution time and appears in both the OTLP export and the Flow
   Telemetry profiler panel.
-- `trace_controller_resolution` (default **false**) — controller resolution
+- `trace_controller_resolution` (default **false**) - controller resolution
   (`ControllerResolverInterface::getController()`), emitted as a `controller.get_callable` span.
-- `trace_controller_arguments` (default **false**) — argument resolution as a single aggregate
+- `trace_controller_arguments` (default **false**) - argument resolution as a single aggregate
   `controller.get_arguments` span.
-- `trace_controller_argument_resolvers` (default **false**) — one `controller.argument_value_resolver` span per value
+- `trace_controller_argument_resolvers` (default **false**) - one `controller.argument_value_resolver` span per value
   resolver invocation (finer-grained, higher cardinality).
 
 The resolution and argument toggles install service decorators only when enabled, so they add zero overhead when off.
@@ -1243,7 +1243,7 @@ Use `require_trace_context: true` when a proxy such as nginx decides sampling fo
 cron jobs and workers traced. Use `sampler.root.type: always_off` when you want the require-an-upstream-decision rule
 applied to every entry point in the process. The flag only checks whether a trace context is *present*, not whether it
 was sampled, so it does not honour an upstream
-`sampled=0` decision on its own — that comes from the `parent_based` sampler's default. Pairing it with
+`sampled=0` decision on its own - that comes from the `parent_based` sampler's default. Pairing it with
 `sampler.type: always_on` reintroduces traces for requests nginx explicitly declined to sample.
 
 #### Security
@@ -1312,7 +1312,7 @@ just the command's own span). Patterns match the command name exactly or as a re
 delimiters). It is honored **regardless of whether console spans are enabled**, so worker suppression works even with
 `console.enabled: false`.
 
-Instrumentation that starts its **own root trace** is unaffected — in particular messenger per-message handlers, which
+Instrumentation that starts its **own root trace** is unaffected - in particular messenger per-message handlers, which
 the middleware records as separate traces. So excluding `messenger:consume` (the default)
 silences the worker loop (transport poll, idle-tick co-listeners) while still tracing each handled message.
 
@@ -1334,20 +1334,20 @@ flow_telemetry:
       span_naming: transport       # Span name suffix: 'transport' (default), 'message_name' or 'message_fqcn'
 ```
 
-The tracing middleware is injected into **every** message bus automatically — no manual `framework.messenger`
+The tracing middleware is injected into **every** message bus automatically - no manual `framework.messenger`
 middleware configuration is needed.
 
-`trace: true` (default) emits one span per message — `process` for consumed messages, `send` for produced ones. What
+`trace: true` (default) emits one span per message - `process` for consumed messages, `send` for produced ones. What
 follows the operation in the span name is controlled by `span_naming`:
 
-- `transport` (default) — the OTEL semconv destination, e.g. `process async` / `send async`. The transport is unknown
+- `transport` (default) - the OTEL semconv destination, e.g. `process async` / `send async`. The transport is unknown
   when a dispatch starts (routing happens deeper in the middleware stack), so the producer span is renamed once the
   message has been sent; a message routed to multiple transports (or handled in-process)
   keeps the operation-only name (`send`).
-- `message_name` — the message short class name, e.g. `send CreateOrderMessage` /
+- `message_name` - the message short class name, e.g. `send CreateOrderMessage` /
   `process CreateOrderMessage`. Deviates from the OTEL messaging semconv pattern (`{operation} {destination}`)
   but is far more descriptive; the official OTel Symfony contrib instrumentation names its messenger spans the same way.
-- `message_fqcn` — the fully qualified class name, e.g. `send App\Message\CreateOrderMessage`.
+- `message_fqcn` - the fully qualified class name, e.g. `send App\Message\CreateOrderMessage`.
 
 The transport stays on the `messaging.destination.name` attribute and the message class on
 `flow.messenger.message.class` regardless of the naming mode. The whole `messenger:consume` command is **suppressed**
@@ -1355,7 +1355,7 @@ The transport stays on the `messaging.destination.name` attribute and the messag
 [`console.exclude_commands`](#console), default `['messenger:consume']`) so the worker's between-message work (transport
 poll, idle-tick co-listeners) does not surface: a suppression flag is set on the telemetry context when the command
 starts and cleared when it terminates. Suppression is tracing-scoped (matching OpenTelemetry)
-and enforced by a sampler — metrics and logs are unaffected. `TracingMiddleware` lifts the suppression per message, so
+and enforced by a sampler - metrics and logs are unaffected. `TracingMiddleware` lifts the suppression per message, so
 the `process` span and everything it calls are traced normally. Because the command is suppressed, the long-lived
 `messenger:consume` console span is not emitted in the worker; worker liveness is covered by the messenger metrics.
 
@@ -1383,7 +1383,7 @@ Flushing per message means one exporter round-trip per message. For high-through
 still exports on a time bound rather than per message.
 
 The OTLP `curl` transport sends synchronously, so the per-message flush exports the batch and reports its outcome before
-the handler returns — there is nothing to pump between messages and no request left in flight to stall until shutdown.
+the handler returns - there is nothing to pump between messages and no request left in flight to stall until shutdown.
 Each flush blocks up to the curl `timeout_ms`, so keep a Collector close to the worker (loopback/UDS/sidecar)
 to keep that sub-millisecond (see [Timeouts](#timeouts)).
 
@@ -1508,7 +1508,7 @@ The same rule applies to PSR-18 client instrumentation and FrameworkBundle's
 ##### Deferred writes on a Doctrine DBAL cache pool
 
 A cache pool backed by `cache.adapter.doctrine_dbal` defers writes and flushes them from the pool's own commit path at
-process shutdown — outside any request/message span. Each such write then surfaces as an orphan `doctrine.dbal.*` trace
+process shutdown - outside any request/message span. Each such write then surfaces as an orphan `doctrine.dbal.*` trace
 (a `BEGIN TRANSACTION` span wrapping `statement.prepare`/`execute`), one per query.
 
 `flush_deferred: true` drains those deferred writes at request/command termination and after each consumed message,
@@ -1529,9 +1529,9 @@ exported):
 
 ### Web Profiler
 
-Adds a **Flow Telemetry** panel to the Symfony Web Profiler showing the signals captured during the current request —
+Adds a **Flow Telemetry** panel to the Symfony Web Profiler showing the signals captured during the current request -
 the resource attributes, spans as a timeline waterfall, the instrumentation scopes that produced them, metrics, and
-(when `capture_logs` is enabled) logs — so telemetry is visible locally without an external OTLP backend. The toolbar
+(when `capture_logs` is enabled) logs - so telemetry is visible locally without an external OTLP backend. The toolbar
 shows the total signal count; the panel breaks it down per signal type. It also lists the **configured instruments**
 (named tracers/meters/loggers and their scope attributes) so those are visible even when an instrument did not emit this
 request.
@@ -1547,7 +1547,7 @@ flow_telemetry:
 
 When enabled, the bundle mirrors every exported traces/metrics batch into a shared in-memory store by decorating the
 exporters the `tracer_provider` / `meter_provider` (and, with `capture_logs: true`, the
-`logger_provider`) reference. OTLP export is unaffected — the real exporter still receives every batch.
+`logger_provider`) reference. OTLP export is unaffected - the real exporter still receives every batch.
 
 The store is exposed under the stable, public service id **`flow.telemetry.profiler.store`**.
 
@@ -1566,9 +1566,9 @@ Configure named tracers, meters, and loggers with custom attributes.
 
 `attributes` has two sub-keys:
 
-- **`scope`** — attributes attached to the instrumentation scope itself (shared by every signal emitted through this
+- **`scope`** - attributes attached to the instrumentation scope itself (shared by every signal emitted through this
   tracer/meter/logger). These are what a `sources: [scope]` filter inspects.
-- **`signal`** — default attributes merged into every individual signal (each span/metric data point/log record)
+- **`signal`** - default attributes merged into every individual signal (each span/metric data point/log record)
   emitted through this instrument. Attributes passed at the call site (e.g. `$logger->info('...', ['env' => 'dev'])`)
   override the configured defaults of the same key. These are what a `sources: [signal]` filter inspects (the default).
 
@@ -1604,8 +1604,8 @@ a PSR-3 wrapper service for every named Telemetry logger at `flow.telemetry.<nam
 Telemetry loggers usable as Symfony's `logger` service, removing the need for Monolog when telemetry is the only logging
 destination.
 
-In addition, the bundle always registers a `default` logger, meter, and tracer — `flow.telemetry.default.logger`,
-`flow.telemetry.default.logger.psr3`, `flow.telemetry.default.meter`, `flow.telemetry.default.tracer` — regardless of
+In addition, the bundle always registers a `default` logger, meter, and tracer - `flow.telemetry.default.logger`,
+`flow.telemetry.default.logger.psr3`, `flow.telemetry.default.meter`, `flow.telemetry.default.tracer` - regardless of
 what is configured under `loggers`/`meters`/`tracers`. Defining your own `default` entry under those keys is allowed and
 will override the auto-default.
 
@@ -1637,10 +1637,10 @@ flow_telemetry:
 
 ### Logging Channels
 
-Channels let you route different parts of your application to different telemetry loggers — the Flow Telemetry
-equivalent of Monolog channels — without installing Monolog. Each channel is a [named logger](#named-instruments);
+Channels let you route different parts of your application to different telemetry loggers - the Flow Telemetry
+equivalent of Monolog channels - without installing Monolog. Each channel is a [named logger](#named-instruments);
 messages emitted through it carry a `flow.log.channel` attribute, so you can filter and group them per channel in your
-backend. Where that attribute is placed — the instrumentation scope, every emitted record, or both — is controlled by
+backend. Where that attribute is placed - the instrumentation scope, every emitted record, or both - is controlled by
 [`channel_attribute_target`](#channel-attribute-placement).
 
 A service opts into a channel by carrying the `flow.telemetry.channel` tag. The recommended way is the
@@ -1665,7 +1665,7 @@ final class OrderSubscriber
 ```
 
 The autowired `LoggerInterface` now resolves to `flow.telemetry.events.logger.psr3` instead of the default logger. A
-tagged service may instead typehint the native `Flow\Telemetry\Logger\Logger` — it resolves to that channel's native
+tagged service may instead typehint the native `Flow\Telemetry\Logger\Logger` - it resolves to that channel's native
 logger (`flow.telemetry.events.logger`), the instance the PSR-3 wrapper delegates to. Both the PSR-3 interface and the
 native class are bound, so either typehint works.
 
@@ -1682,15 +1682,15 @@ services:
 
 - Each distinct channel is synthesized on demand as `flow.telemetry.<channel>.logger` (+ its PSR-3 wrapper
   `flow.telemetry.<channel>.logger.psr3`), carrying a `flow.log.channel: <channel>` attribute placed per
-  [`channel_attribute_target`](#channel-attribute-placement) — unless a logger of that name already exists, which is
+  [`channel_attribute_target`](#channel-attribute-placement) - unless a logger of that name already exists, which is
   then reused untouched (so the `flow.log.channel` attribute is only added to loggers the bundle creates).
 - To route a service to the bundle's main logger, use the `default` channel (`#[WithTelemetryChannel('default')]`). A
-  `default` logger always exists, so it is reused as-is rather than re-created. Every channel name — including `app`,
-  which carries no special meaning here — behaves the same way.
-- For every channel in use, two named-argument autowiring aliases are registered — `LoggerInterface $<channel>Logger`
-  (the PSR-3 wrapper) and `Logger $<channel>Logger` (the native Flow `Logger`) — so any service can request a channel
+  `default` logger always exists, so it is reused as-is rather than re-created. Every channel name - including `app`,
+  which carries no special meaning here - behaves the same way.
+- For every channel in use, two named-argument autowiring aliases are registered - `LoggerInterface $<channel>Logger`
+  (the PSR-3 wrapper) and `Logger $<channel>Logger` (the native Flow `Logger`) - so any service can request a channel
   logger by argument name (e.g. `LoggerInterface $eventsLogger`, `Logger $httpClientLogger`) without the tag.
-- On a tagged service, an explicit `@logger` reference is rewritten to the channel logger as well — in both constructor
+- On a tagged service, an explicit `@logger` reference is rewritten to the channel logger as well - in both constructor
   arguments and method calls (e.g. `setLogger()`), preserving the reference's invalid-behavior flag.
 - A channel already declared under `loggers` is **not** overwritten, so you can customise its `version`, `schema_url`,
   or `attributes`. Because declaring it opts out of synthesis, set `flow.log.channel` yourself if you want it:
@@ -1702,16 +1702,16 @@ flow_telemetry:
       version: '1.0.0'
       attributes:
         scope:
-          flow.log.channel: events    # not auto-added for a declared logger — set it explicitly
+          flow.log.channel: events    # not auto-added for a declared logger - set it explicitly
           team: checkout
 ```
 
 #### Capturing Framework Channels
 
 Symfony's own services already declare channels by tagging themselves `monolog.logger` (the router, the request logger,
-the event dispatcher, the HTTP client, cache pools, the messenger, …) — that tag comes from FrameworkBundle and is
+the event dispatcher, the HTTP client, cache pools, the messenger, ...) - that tag comes from FrameworkBundle and is
 present whether or not MonologBundle is installed. Enable `capture_framework_channels` and the bundle **consumes that
-tag**, routing these framework channels to Flow telemetry loggers exactly the way MonologBundle would — making it a
+tag**, routing these framework channels to Flow telemetry loggers exactly the way MonologBundle would - making it a
 drop-in replacement for Monolog's channel routing, without Monolog.
 
 It is **disabled by default**, because MonologBundle claims the same `monolog.logger` tag: if both are installed and
@@ -1726,7 +1726,7 @@ flow_telemetry:
 Each framework channel becomes `flow.telemetry.<channel>.logger` (e.g. `flow.telemetry.router.logger`,
 `flow.telemetry.http_client.logger`), carries the `flow.log.channel` attribute (placed per
 [`channel_attribute_target`](#channel-attribute-placement)), and gets the
-`LoggerInterface $<channel>Logger` / `Logger $<channel>Logger` autowiring aliases — the same treatment as an explicitly
+`LoggerInterface $<channel>Logger` / `Logger $<channel>Logger` autowiring aliases - the same treatment as an explicitly
 tagged service. A channel you declare under `loggers` still wins, so you can customise any framework channel's scope.
 
 Services that opt in explicitly via `#[WithTelemetryChannel]` / the `flow.telemetry.channel` tag are always routed
@@ -1736,7 +1736,7 @@ regardless of this flag.
 
 The synthesized `flow.log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal
 **
-(log record), or to **both**. `channel_attribute_target` controls this for **all** synthesized channel loggers —
+(log record), or to **both**. `channel_attribute_target` controls this for **all** synthesized channel loggers -
 framework-captured and `#[WithTelemetryChannel]` alike:
 
 ```yaml
@@ -1744,11 +1744,11 @@ flow_telemetry:
   channel_attribute_target: both   # both (default) | scope | signal
 ```
 
-- **`scope`** — `flow.log.channel` sits on the instrumentation scope. Filter by channel with an
+- **`scope`** - `flow.log.channel` sits on the instrumentation scope. Filter by channel with an
   [`attribute_filtering`](#attribute_filtering) processor using `sources: [scope]`. Not present on individual records.
-- **`signal`** — `flow.log.channel` is merged into every emitted record, so it is visible per-record and filterable with
+- **`signal`** - `flow.log.channel` is merged into every emitted record, so it is visible per-record and filterable with
   the default `sources: [signal]` (the closest match to how Monolog stamps the channel on each record).
-- **`both`** (default) — placed on the scope *and* every record, so it is filterable either way at the cost of storing
+- **`both`** (default) - placed on the scope *and* every record, so it is filterable either way at the cost of storing
   the attribute on each record.
 
 This only governs channels the bundle synthesizes; a channel you declare yourself under `loggers` opts out of synthesis,
@@ -1760,13 +1760,13 @@ so set `flow.log.channel` explicitly on whichever of `attributes.scope` / `attri
 
 #### Coexisting with MonologBundle
 
-You can run this bundle **alongside MonologBundle** — as long as `capture_framework_channels` stays `false` (the
+You can run this bundle **alongside MonologBundle** - as long as `capture_framework_channels` stays `false` (the
 default). The two are independent because they read different DI tags: framework capture reads Symfony's
 `monolog.logger`, while the `#[WithTelemetryChannel]` attribute uses this bundle's own `flow.telemetry.channel` tag,
 which Monolog never looks at. With the flag off, this bundle never touches `monolog.logger`, so:
 
-- MonologBundle keeps full ownership of every framework channel (router, request, Doctrine, …) and the default `app`
-  logger — uncontested.
+- MonologBundle keeps full ownership of every framework channel (router, request, Doctrine, ...) and the default `app`
+  logger - uncontested.
 - `#[WithTelemetryChannel('events')]` still scopes an individual class: it binds only that service's `LoggerInterface`
   (and native `Logger`) to the Flow telemetry channel logger. Because the binding fills the argument directly, it wins
   over Monolog's global `LoggerInterface` autowiring alias for that one class; every other class keeps resolving to
@@ -1777,8 +1777,8 @@ same
 `monolog.logger`-tagged services, and the outcome depends on compiler-pass ordering. Ownership of the framework channels
 is all-or-nothing:
 
-- **Flow telemetry owns the framework channels** — `capture_framework_channels: true`, MonologBundle not installed.
-- **Monolog owns the framework channels, Flow scopes specific classes** — `capture_framework_channels: false`,
+- **Flow telemetry owns the framework channels** - `capture_framework_channels: true`, MonologBundle not installed.
+- **Monolog owns the framework channels, Flow scopes specific classes** - `capture_framework_channels: false`,
   MonologBundle installed.
 
 The `#[WithTelemetryChannel]` attribute works in both setups.
@@ -1852,10 +1852,10 @@ continue a trace into AJAX requests or multi-step flows.
 |-------------------------------|----------------------------------------------------------------------|
 | `flow_traceparent()`          | the W3C `traceparent` string (empty when there is no request span)   |
 | `flow_trace_context()`        | array of propagation fields (`traceparent`, `tracestate`, `baggage`) |
-| `flow_trace_context_meta()`   | one `<meta name="…" content="…">` tag per field (HTML-safe)          |
+| `flow_trace_context_meta()`   | one `<meta name="..." content="...">` tag per field (HTML-safe)          |
 | `flow_trace_context_url(url)` | the URL with the context appended to its query string                |
 
-**AJAX (headers).** Render the context as meta tags and send them back as request headers — the next request continues
+**AJAX (headers).** Render the context as meta tags and send them back as request headers - the next request continues
 the trace automatically (`context_propagation` extracts them):
 
 ```twig
@@ -1894,7 +1894,7 @@ flow_telemetry:
 ```
 
 **From a controller / service (PHP).** The same helpers are available without Twig. Inject
-`TraceContextProvider` for the raw context, or `TraceContextUrlGenerator` (an opt-in wrapper around the router — it does
+`TraceContextProvider` for the raw context, or `TraceContextUrlGenerator` (an opt-in wrapper around the router - it does
 not replace it, so `path()`/`url()` stay untouched):
 
 ```php
@@ -1911,14 +1911,14 @@ final class CheckoutController extends AbstractController
 
     public function step1(): Response
     {
-        // append to a URL you generated yourself…
+        // append to a URL you generated yourself...
         $next = $this->traceContext->appendToUrl($this->generateUrl('checkout_step_2'));
 
-        // …or let the wrapper generate + append in one call
+        // ...or let the wrapper generate + append in one call
         $next = $this->traceContextUrls->generate('checkout_step_2');
 
         // raw fields, e.g. to forward as headers on an outgoing call
-        $headers = $this->traceContext->current(); // ['traceparent' => …, 'baggage' => …]
+        $headers = $this->traceContext->current(); // ['traceparent' => ..., 'baggage' => ...]
 
         return $this->redirect($next);
     }

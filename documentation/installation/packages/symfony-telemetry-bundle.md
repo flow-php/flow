@@ -27,13 +27,13 @@ composer require flow-php/symfony-telemetry-bundle:~--FLOW_PHP_VERSION--
 
 ## Suggested Dependencies
 
-- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) — for PostgreSQL database management and migrations with telemetry support
-- [flow-php/symfony-http-foundation-telemetry-bridge](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md) — for HTTP trace context propagation (extract incoming / inject outgoing W3C trace headers)
-- [flow-php/psr18-telemetry-bridge](/documentation/installation/packages/psr18-telemetry-bridge.md) — for PSR-18 HTTP client tracing
-- [flow-php/telemetry-otlp-bridge](/documentation/installation/packages/telemetry-otlp-bridge.md) — for OTLP exporter support
-- [symfony/messenger](https://packagist.org/packages/symfony/messenger) — for Messenger tracing middleware
-- [twig/twig](https://packagist.org/packages/twig/twig) — for Twig template tracing
+- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) - for PostgreSQL database management and migrations with telemetry support
+- [flow-php/symfony-http-foundation-telemetry-bridge](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md) - for HTTP trace context propagation (extract incoming / inject outgoing W3C trace headers)
+- [flow-php/psr18-telemetry-bridge](/documentation/installation/packages/psr18-telemetry-bridge.md) - for PSR-18 HTTP client tracing
+- [flow-php/telemetry-otlp-bridge](/documentation/installation/packages/telemetry-otlp-bridge.md) - for OTLP exporter support
+- [symfony/messenger](https://packagist.org/packages/symfony/messenger) - for Messenger tracing middleware
+- [twig/twig](https://packagist.org/packages/twig/twig) - for Twig template tracing
 
 ## Optional Dependencies
 
-- [doctrine/dbal](https://packagist.org/packages/doctrine/dbal) — for Doctrine DBAL tracing
+- [doctrine/dbal](https://packagist.org/packages/doctrine/dbal) - for Doctrine DBAL tracing

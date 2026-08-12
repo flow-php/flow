@@ -6,6 +6,7 @@ namespace Flow\Types\Type;
 
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Json;
 
 use function count;
@@ -13,6 +14,7 @@ use function Flow\Types\DSL\get_type;
 use function Flow\Types\DSL\type_float;
 use function is_array;
 use function is_string;
+use function trim;
 
 final readonly class AutoCaster
 {
@@ -73,6 +75,12 @@ final readonly class AutoCaster
             return null;
         }
 
-        return $narrowedType->cast($value);
+        if ($narrowedType instanceof StringType) {
+            return $value;
+        }
+
+        // narrow() detects on the trimmed value, so cast must see the same input -
+        // BooleanType::cast(' false ') misses its 'false' match and truthiness makes it true
+        return $narrowedType->cast(trim($value));
     }
 }

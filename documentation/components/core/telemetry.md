@@ -187,7 +187,7 @@ $transport = otlp_curl_transport(
 #### gRPC Transport
 
 For gRPC endpoints (requires ext-grpc). OTLP/gRPC mandates Protobuf, so the transport builds the request factory
-internally — no serializer parameter.
+internally - no serializer parameter.
 
 ```php
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;

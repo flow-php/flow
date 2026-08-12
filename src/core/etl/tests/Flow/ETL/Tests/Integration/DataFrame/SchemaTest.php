@@ -32,6 +32,10 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_structure;
 use function range;
 
 final class SchemaTest extends FlowIntegrationTestCase
@@ -88,6 +92,22 @@ final class SchemaTest extends FlowIntegrationTestCase
         static::assertEquals(
             schema(json_schema('a')),
             df()->read(from_array([['a' => []], ['a' => ['x' => 1]]]))->schema(),
+        );
+    }
+
+    public function test_getting_schema_of_a_structure_with_a_nested_empty_array(): void
+    {
+        static::assertEquals(
+            schema(structure_schema('body', type_structure(['data' => type_json(), 'id' => type_integer()]))),
+            df()->read(from_array([['body' => ['data' => [], 'id' => 1]]]))->schema(),
+        );
+    }
+
+    public function test_getting_schema_of_a_structure_with_a_nested_heterogeneous_array(): void
+    {
+        static::assertEquals(
+            schema(structure_schema('body', type_structure(['data' => type_json(), 'id' => type_integer()]))),
+            df()->read(from_array([['body' => ['data' => [1, 'a'], 'id' => 1]]]))->schema(),
         );
     }
 

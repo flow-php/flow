@@ -142,6 +142,27 @@ final class JsonTest extends FlowTestCase
             JSON, $content);
     }
 
+    public function test_list_of_structures_json_file(): void
+    {
+        df()
+            ->read(from_array([
+                ['id' => 2, 'tags' => [['t' => 'a'], ['t' => 'b']]],
+            ]))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_list_of_structures.json'))
+            ->run();
+
+        $content = file_get_contents($path);
+
+        if ($content === false) {
+            static::fail('Failed to read file content');
+        }
+
+        static::assertStringContainsString(<<<'JSON'
+            [{"id":2,"tags":[{"t":"a"},{"t":"b"}]}]
+            JSON, $content);
+    }
+
     public function test_partitioning_json_file(): void
     {
         df()

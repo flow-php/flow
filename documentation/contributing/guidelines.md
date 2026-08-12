@@ -116,7 +116,7 @@ The project is tested against all three versions, so you can use any of them for
 # Tools
 
 There are several tools used in this project to help with development, testing, and building the project.
-They are exposed as `just` recipes — run `just --list` to see every available task.
+They are exposed as `just` recipes - run `just --list` to see every available task.
 
 - `just lint` runs all linters (Mago format check, Mago lint, monorepo validation).
 - `just analyze` runs static analysis (Mago).

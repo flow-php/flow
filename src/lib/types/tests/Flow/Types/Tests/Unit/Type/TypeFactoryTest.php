@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
+use Flow\Types\Type\TypeFactory;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -12,6 +13,7 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
@@ -62,6 +64,13 @@ final class TypeFactoryTest extends TestCase
     {
         $datetime = type_datetime();
         static::assertEquals($datetime, type_from_array($datetime->normalize()));
+    }
+
+    public function test_normalizing_and_creating_empty_array_type(): void
+    {
+        $emptyArray = type_empty_array();
+        static::assertEquals($emptyArray, type_from_array($emptyArray->normalize()));
+        static::assertEquals($emptyArray, TypeFactory::fromString('empty_array'));
     }
 
     public function test_normalizing_and_creating_enum_type(): void

@@ -1,13 +1,13 @@
 ---
 seo_title: Documentation
-seo_description: Strongly typed, memory-efficient data processing for PHP — installation, quick start, adapters, examples, and references.
+seo_description: Strongly typed, memory-efficient data processing for PHP - installation, quick start, adapters, examples, and references.
 ---
 
 # Flow PHP
 
 Flow is a strongly typed, memory-efficient data processing framework for PHP.
 It gives you a single fluent API to read, transform, and write data across CSV,
-JSON, XML, Parquet, REST, RDBMS, SEAL, and more — without per-format
+JSON, XML, Parquet, REST, RDBMS, SEAL, and more - without per-format
 boilerplate.
 
 If you build pipelines, ETL jobs, exports, imports, or reporting in PHP and
@@ -44,10 +44,10 @@ constant memory regardless of input size.
 
 Every Flow pipeline has three stages:
 
-- **Extract** — `->read(...)` pulls rows from a source (file, API, database).
-- **Transform** — `->filter()`, `->withEntry()`, `->map()`, `->join()`,
+- **Extract** - `->read(...)` pulls rows from a source (file, API, database).
+- **Transform** - `->filter()`, `->withEntry()`, `->map()`, `->join()`,
   `->groupBy()`, `->window()`, and friends shape the rows.
-- **Load** — `->write(...)` streams the result into a sink; `->run()` executes
+- **Load** - `->write(...)` streams the result into a sink; `->run()` executes
   the whole thing.
 
 Data moves through the pipeline as **DataFrame → Rows → Row → Entry**, with
@@ -57,25 +57,25 @@ every value strongly typed.
 
 **New to Flow**
 
-- [Installation](/documentation/installation) — Composer setup and runtime tips.
-- [Quick Start](/documentation/quick-start) — From empty project to working
+- [Installation](/documentation/installation) - Composer setup and runtime tips.
+- [Quick Start](/documentation/quick-start) - From empty project to working
   pipeline in five minutes.
 
 **Learn the API**
 
-- [Data Frame](/documentation/components/core/core) — the core: filter, map,
+- [Data Frame](/documentation/components/core/core) - the core: filter, map,
   join, group by, window, partition, sort, limit.
-- [DSL Reference](/documentation/dsl/core) — every function in the DSL, with
+- [DSL Reference](/documentation/dsl/core) - every function in the DSL, with
   signatures and examples.
 
 **Working with a specific source or sink**
 
-- Browse [Adapters](/documentation/components/adapters/csv) — CSV, JSON, XML,
+- Browse [Adapters](/documentation/components/adapters/csv) - CSV, JSON, XML,
   Parquet, Avro, Excel, HTTP, PostgreSQL, Doctrine, SEAL, ChartJS.
 
 **See it running**
 
-- [Examples](/data_frame/data_reading/array) — runnable snippets grouped by
+- [Examples](/data_frame/data_reading/array) - runnable snippets grouped by
   topic and format. Open any example in the Playground.
 
 **Going to production**
@@ -88,7 +88,7 @@ every value strongly typed.
 ## What Flow isn't
 
 Flow is not a database engine, a query planner, or a distributed compute
-framework. It runs inside any PHP runtime — CLI, FPM, queue worker — and
+framework. It runs inside any PHP runtime - CLI, FPM, queue worker - and
 processes rows in constant memory. If you need cluster-scale joins or SQL
 planning, reach for Spark or Trino. If you need ergonomic, type-safe data
 pipelines inside a PHP application, you're in the right place.

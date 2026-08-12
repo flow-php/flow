@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -58,6 +59,16 @@ final class ComparatorTest extends TestCase
         yield [type_list(type_string()), type_array()];
         yield [type_map(type_string(), type_integer()), type_array()];
         yield [type_structure(['id' => type_integer()]), type_array()];
+
+        yield [type_empty_array(), type_empty_array()];
+        yield [type_empty_array(), type_array()];
+        yield [type_array(), type_empty_array()];
+        yield [type_empty_array(), type_list(type_string())];
+        yield [type_empty_array(), type_map(type_string(), type_integer())];
+        yield [type_empty_array(), type_structure(['id' => type_integer()])];
+        yield [type_list(type_string()), type_empty_array()];
+        yield [type_map(type_string(), type_integer()), type_empty_array()];
+        yield [type_structure(['id' => type_integer()]), type_empty_array()];
     }
 
     public static function type_comparison_data_provider(): Generator
@@ -151,6 +162,10 @@ final class ComparatorTest extends TestCase
         yield [type_array(), type_integer()];
         yield [type_array(), type_boolean()];
         yield [type_string(), type_array()];
+        yield [type_empty_array(), type_string()];
+        yield [type_empty_array(), type_integer()];
+        yield [type_empty_array(), type_boolean()];
+        yield [type_string(), type_empty_array()];
     }
 
     /**

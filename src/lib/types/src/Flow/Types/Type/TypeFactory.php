@@ -23,6 +23,7 @@ use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_html_element;
@@ -70,6 +71,7 @@ final class TypeFactory
             'non_empty_string' => type_non_empty_string(),
             'callable' => type_callable(),
             'array' => type_array(),
+            'empty_array' => type_empty_array(),
             'enum' => EnumType::fromArray($data),
             'null' => type_null(),
             'object' => type_object(),

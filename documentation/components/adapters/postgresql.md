@@ -438,8 +438,8 @@ Two helpers convert between a Flow `Schema` and a PostgreSQL table definition:
 - `pgsql_table_to_flow_schema()` turns a `Flow\PostgreSql\Schema\Table` back into a Flow `Schema`.
 
 Column types are resolved through the shared `EntryTypesMap` (Flow type → PostgreSQL column type), and per-column
-details — primary keys, unique constraints, indexes, length, precision/scale, defaults, identity, generated columns,
-and explicit type overrides — are driven by `PostgreSqlMetadata` entries attached to each schema definition.
+details - primary keys, unique constraints, indexes, length, precision/scale, defaults, identity, generated columns,
+and explicit type overrides - are driven by `PostgreSqlMetadata` entries attached to each schema definition.
 
 ### Creating a Table from a Flow Schema
 
@@ -512,7 +512,7 @@ expressed by attaching the same name to several definitions.
 
 For composite indexes and unique constraints, column order matters. By default columns are ordered the way they appear
 in the schema. Pass an explicit `$position` (ascending, lower first) to `index()` / `indexUnique()` to control the
-order independently of schema field order — useful, for example, for a keyset-pagination index where the leading
+order independently of schema field order - useful, for example, for a keyset-pagination index where the leading
 column must serve `ORDER BY`:
 
 ```php
@@ -533,7 +533,7 @@ $table = to_pgsql_schema_table(
 // => CREATE INDEX orders_created_at_id_idx ON public.orders (created_at, id)
 ```
 
-Columns without an explicit position default to the end (`PHP_INT_MAX`), and schema order breaks ties — so leaving
+Columns without an explicit position default to the end (`PHP_INT_MAX`), and schema order breaks ties - so leaving
 positions off keeps the schema-order behavior.
 
 #### A Column in Multiple Indexes
@@ -549,7 +549,7 @@ $schema = schema(
 );
 ```
 
-> Index and unique-constraint names must not contain a colon (`:`) — it is reserved internally as the name/position
+> Index and unique-constraint names must not contain a colon (`:`) - it is reserved internally as the name/position
 > separator and passing one throws an `InvalidArgumentException`.
 
 ### Reading a Flow Schema back from a Table

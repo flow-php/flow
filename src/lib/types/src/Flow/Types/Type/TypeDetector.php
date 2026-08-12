@@ -18,6 +18,7 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
@@ -82,7 +83,7 @@ final class TypeDetector
 
         if (is_array($value)) {
             if ([] === $value) {
-                return type_array();
+                return type_empty_array();
             }
 
             $detector = new ArrayContentDetector(

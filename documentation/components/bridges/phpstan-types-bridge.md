@@ -59,4 +59,4 @@ includes:
     - vendor/flow-php/phpstan-types-bridge/extension.neon
 ```
 
-That's it — `type_structure()` calls are now narrowed by PHPStan across your codebase.
+That's it - `type_structure()` calls are now narrowed by PHPStan across your codebase.

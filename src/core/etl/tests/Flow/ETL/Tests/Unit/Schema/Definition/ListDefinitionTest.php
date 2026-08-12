@@ -22,7 +22,9 @@ use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -149,6 +151,16 @@ final class ListDefinitionTest extends FlowTestCase
         $def = list_schema('col', type_list(type_integer()));
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_array_element_is_projected_to_json(): void
+    {
+        static::assertSame('list<json>', list_schema('items', type_list(type_array()))->type()->toString());
+    }
+
+    public function test_empty_array_element_is_projected_to_json(): void
+    {
+        static::assertSame('list<json>', list_schema('items', type_list(type_empty_array()))->type()->toString());
     }
 
     public function test_entry_class(): void

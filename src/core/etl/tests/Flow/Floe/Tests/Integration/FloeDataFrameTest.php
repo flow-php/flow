@@ -8,14 +8,21 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeEngine;
 use Flow\Floe\NativeFloeEncoder;
+use Flow\Types\Value\Json;
 
 use function Flow\ETL\DSL\append;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
 
 final class FloeDataFrameTest extends FlowIntegrationTestCase
 {
@@ -71,6 +78,62 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ->read(from_floe($path, engine: FloeEngine::php))
                 ->count(),
         );
+    }
+
+    public function test_inferred_nested_arrays_are_projected_to_json_and_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('nested-arrays.floe');
+
+        data_frame()
+            ->read(from_array([
+                ['body' => ['data' => [1, 'a'], 'id' => 1]],
+                ['body' => ['data' => [], 'id' => 2]],
+            ]))
+            ->collect()
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
+        static::assertFalse($rows->schema()->get('body')->isNullable());
+
+        $first = $rows[0]->valueOf('body');
+        static::assertIsArray($first);
+        static::assertInstanceOf(Json::class, $first['data']);
+        static::assertSame([1, 'a'], $first['data']->toArray());
+
+        $second = $rows[1]->valueOf('body');
+        static::assertIsArray($second);
+        static::assertInstanceOf(Json::class, $second['data']);
+        static::assertSame([], $second['data']->toArray());
+    }
+
+    public function test_list_of_json_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('list-json.floe');
+
+        data_frame()
+            ->read(from_rows(rows(row(list_entry(
+                'json_list',
+                [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])],
+                type_list(type_json()),
+            )))))
+            ->saveMode(overwrite())
+            ->write(to_floe($path))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
+
+        $list = $rows[0]->valueOf('json_list');
+        static::assertIsArray($list);
+        static::assertInstanceOf(Json::class, $list[0]);
+        static::assertSame(['a' => 1], $list[0]->toArray());
+        static::assertInstanceOf(Json::class, $list[1]);
+        static::assertSame([1, 'b'], $list[1]->toArray());
     }
 
     public function test_input_file_uri_is_added_when_configured(): void

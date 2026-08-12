@@ -23,7 +23,7 @@ nix-shell
 That's all, after running this command you will have all the necessary tools and dependencies.
 Nix will create a new shell with all the necessary tools and dependencies for the project.
 
-By default, we’re using [Starship](https://starship.rs/) to provide a nice bash prompt.
+By default, we're using [Starship](https://starship.rs/) to provide a nice bash prompt.
 You can override it by creating `/.nix/shell/starship.toml` based on `/.nix/shell/starship.toml.dist` 
 file. 
 

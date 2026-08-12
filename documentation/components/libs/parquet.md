@@ -16,12 +16,12 @@ For detailed installation instructions, see the [installation page](/documentati
 
 The parquet library supports a pluggable engine system with two implementations:
 
-- **PHP Engine** (`PhpParquetEngine`) — Pure PHP implementation. Works everywhere with no extra dependencies beyond
+- **PHP Engine** (`PhpParquetEngine`) - Pure PHP implementation. Works everywhere with no extra dependencies beyond
   optional compression extensions.
-- **Arrow Engine** (`ArrowParquetEngine`) — Uses
+- **Arrow Engine** (`ArrowParquetEngine`) - Uses
   the [arrow PHP extension](/documentation/components/extensions/arrow-ext.md) for native Rust-powered performance. All
   compression codecs are built into the extension.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) — Default. Automatically selects Arrow if the `arrow` extension is
+- **Adaptive Engine** (`AdaptiveParquetEngine`) - Default. Automatically selects Arrow if the `arrow` extension is
   loaded, otherwise falls back to PHP.
 
 ### Engine Selection
@@ -763,9 +763,9 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 | Encoding            | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
 |---------------------|-------------|------------|---------|--------------|----------------------|
-| PLAIN               | ✅           | ✅          | ✅       | ✅            | ✅                    |
-| RLE_DICTIONARY      | ✅           | ✅          | ✅       | ✅            | ❌                    |
-| DELTA_BINARY_PACKED | ✅           | ❌          | ❌       | ❌            | ❌                    |
+| PLAIN               | yes           | yes          | yes       | yes            | yes                    |
+| RLE_DICTIONARY      | yes           | yes          | yes       | yes            | no                    |
+| DELTA_BINARY_PACKED | yes           | no          | no       | no            | no                    |
 
 ### Performance Guidelines
 

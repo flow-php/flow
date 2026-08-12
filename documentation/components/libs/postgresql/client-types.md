@@ -59,7 +59,7 @@ PHP values are automatically converted when binding parameters:
 | `bool`               | BOOLEAN                   | `true` → `'t'`, `false` → `'f'`                                                   |
 | `null`               | NULL                      |                                                                                   |
 | `\DateTimeInterface` | TIMESTAMP                 | Normalized to UTC; use `typed()` with `ValueType::TIMESTAMPTZ` to keep the offset |
-| `array`              | ⚠️ Ambiguous              | Use `typed()` to specify JSON or ARRAY                                            |
+| `array`              | Ambiguous              | Use `typed()` to specify JSON or ARRAY                                            |
 
 ### The Array Ambiguity
 

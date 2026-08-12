@@ -73,7 +73,7 @@ to be moved to the next milestone.
 
 Opening a pull request without reaching out first might get rejected and eventually closed.   
 
-**🐛 Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without a proposal issue.
+**Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without a proposal issue.
 Bug fix can should only carry fixes of existing code, additions (especially to our DSL) require a `Proposal` first. 
 
 ## Issue Types 

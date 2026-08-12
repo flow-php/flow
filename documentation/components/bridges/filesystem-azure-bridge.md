@@ -51,8 +51,8 @@ $sdk = azure_blob_service(
 To use the Azure Blob filesystem with Flow, you need to mount the filesystem to the configuration.
 This operation will mount the Azure Blob filesystem to the fstab instance available in the DataFrame runtime.
 
-The **mount protocol** — the URI scheme under which the filesystem is registered in the
-`FilesystemTable` — defaults to `'azure-blob'`. Override via the third argument
+The **mount protocol** - the URI scheme under which the filesystem is registered in the
+`FilesystemTable` - defaults to `'azure-blob'`. Override via the third argument
 (`azure_filesystem($blobService, $options, protocol: 'warehouse')`) when you need to mount the same
 container under a different scheme.
 
@@ -81,5 +81,5 @@ data_frame($config)
 
 `FileStatus` values returned from `list()` and `status()` carry `size` (from the `Content-Length`
 header / listing property) and `lastModifiedAt` (from the `Last-Modified` header, parsed as RFC 7231)
-populated directly from the Azure response — no extra stream is opened when the CLI
+populated directly from the Azure response - no extra stream is opened when the CLI
 `flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.

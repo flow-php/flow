@@ -97,16 +97,16 @@ data_frame()
     ->run();
 ```
 
-This walks `?per_page=100&page=1,2,3…` until the `items` path of a response comes back empty.
+This walks `?per_page=100&page=1,2,3...` until the `items` path of a response comes back empty.
 
 ### Supported strategies
 
 ```php
-// page number - ?per_page=100&page=1,2,3…          default stop: empty page at records_path
+// page number - ?per_page=100&page=1,2,3...          default stop: empty page at records_path
 http_pagination_page_number(http_request_option_query('page'),
     page_size: 100, size_option: http_request_option_query('per_page'), records_path: 'items');
 
-// offset / limit - ?limit=100&offset=0,100,200…    default stop: total_path reached, else empty page
+// offset / limit - ?limit=100&offset=0,100,200...    default stop: total_path reached, else empty page
 http_pagination_offset(http_request_option_query('offset'), http_request_option_query('limit'),
     limit: 100, total_path: 'meta.total');
 

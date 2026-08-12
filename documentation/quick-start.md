@@ -66,7 +66,7 @@ data_frame()
     ->read(from_csv(__DIR__ . '/orders_flow.csv'))
 ```
 
-In this example we’re using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\CSVExtractor` class.
+In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\CSVExtractor` class.
 
 All file-based extractors accept [glob path patterns](https://github.com/webmozarts/glob), allowing you to read multiple files at once.
 
@@ -120,7 +120,7 @@ There can be more than one writer in the pipeline
     ->write(to_csv(__DIR__ . '/daily_revenue.csv'))
 ```
 
-In this example we’re first using the `to_output()` which just prints the data to the console as a simple ASCII table without
+In this example we're first using the `to_output()` which just prints the data to the console as a simple ASCII table without
 truncating the output.
 
 ```php

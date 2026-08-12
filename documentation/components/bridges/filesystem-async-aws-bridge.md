@@ -28,8 +28,8 @@ $aws = aws_s3_filesystem(
 $fstab = fstab($aws);
 ```
 
-The **mount protocol** — the URI scheme under which the filesystem is registered in the
-`FilesystemTable` — defaults to `'aws-s3'`. Override by passing a fourth argument (e.g.
+The **mount protocol** - the URI scheme under which the filesystem is registered in the
+`FilesystemTable` - defaults to `'aws-s3'`. Override by passing a fourth argument (e.g.
 `aws_s3_filesystem($bucket, $client, options: new Options(), protocol: 'warehouse')`) when you
 need to mount the same bucket twice under distinct names or pick a scheme more meaningful to
 your application.
@@ -59,5 +59,5 @@ data_frame($config)
 ```
 
 `FileStatus` values returned from `list()` and `status()` carry `size` (from S3 `Size` / `ContentLength`)
-and `lastModifiedAt` (from `LastModified`) populated directly from the S3 response — no extra HEAD call
+and `lastModifiedAt` (from `LastModified`) populated directly from the S3 response - no extra HEAD call
 is issued when the CLI `flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.

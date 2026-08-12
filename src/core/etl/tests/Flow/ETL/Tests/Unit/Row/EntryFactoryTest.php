@@ -65,8 +65,10 @@ use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
@@ -213,6 +215,23 @@ final class EntryFactoryTest extends FlowTestCase
     public function test_create_with_array_type_normalizes_value_to_json(): void
     {
         static::assertEquals(json_entry('e', [1, 2]), (new EntryFactory())->create('e', [1, 2], type_array()));
+    }
+
+    public function test_create_with_empty_array_type_normalizes_value_to_json(): void
+    {
+        static::assertEquals(json_entry('e', []), (new EntryFactory())->create('e', [], type_empty_array()));
+    }
+
+    public function test_empty_array_infers_a_json_entry(): void
+    {
+        static::assertEquals(json_entry('e', []), (new EntryFactory())->create('e', []));
+    }
+
+    public function test_structure_with_empty_array_element_infers_a_json_element(): void
+    {
+        static::assertEquals(structure_entry('e', ['data' => Json::fromArray([])], type_structure([
+            'data' => type_json(),
+        ])), (new EntryFactory())->create('e', ['data' => []]));
     }
 
     public function test_create_with_time_zone_type_normalizes_value_to_string(): void

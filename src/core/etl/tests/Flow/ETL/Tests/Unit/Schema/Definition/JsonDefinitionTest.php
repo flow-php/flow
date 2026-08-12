@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
@@ -22,6 +23,7 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_string;
@@ -107,6 +109,11 @@ final class JsonDefinitionTest extends FlowTestCase
         $def = json_schema('col');
 
         static::assertFalse($def->matches(int_entry('col', 1)));
+    }
+
+    public function test_empty_array_type_produces_json_definition(): void
+    {
+        static::assertInstanceOf(JsonDefinition::class, definition_from_type('data', type_empty_array()));
     }
 
     public function test_entry_class(): void

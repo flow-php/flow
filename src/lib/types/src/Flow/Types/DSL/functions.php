@@ -39,6 +39,7 @@ use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\CallableType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
@@ -419,6 +420,15 @@ function type_positive_integer(): PositiveIntegerType
 function type_non_empty_string(): NonEmptyStringType
 {
     return new NonEmptyStringType();
+}
+
+/**
+ * @return EmptyArrayType<array{}>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_empty_array(): EmptyArrayType
+{
+    return new EmptyArrayType();
 }
 
 /**

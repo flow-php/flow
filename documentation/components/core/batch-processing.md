@@ -69,7 +69,7 @@ $dataFrame = data_frame()
     ->run();
 ```
 
-> **⚠️ Memory Warning**: The `collect()` method loads all data into memory at once. This can cause memory exhaustion
+> **Memory Warning**: The `collect()` method loads all data into memory at once. This can cause memory exhaustion
 > with large datasets. Use only when:
 > - You're certain the entire dataset fits comfortably in available memory
 > - You need operations that require all data (like sorting)

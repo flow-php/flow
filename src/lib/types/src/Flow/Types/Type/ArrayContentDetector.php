@@ -6,11 +6,17 @@ namespace Flow\Types\Type;
 
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -31,6 +37,8 @@ final readonly class ArrayContentDetector
 
     private int $uniqueValuesTypeCount;
 
+    private bool $valueTypesConsistent;
+
     /**
      * @param Types<mixed> $uniqueKeysType
      * @param Types<mixed> $uniqueValuesType
@@ -43,11 +51,24 @@ final readonly class ArrayContentDetector
     ) {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
-        $this->uniqueKeysTypeCount = $uniqueKeysType->reduceOptionals()->without(type_array(), type_null())->count();
-        $this->uniqueValuesTypeCount = $this->uniqueValuesType
+        $this->uniqueKeysTypeCount = $uniqueKeysType
             ->reduceOptionals()
-            ->without(type_array(), type_null())
+            ->without(type_array(), type_empty_array(), type_null())
             ->count();
+
+        $countedValueTypes = $this->uniqueValuesType->reduceOptionals()->without(
+            type_array(),
+            type_empty_array(),
+            type_null(),
+        );
+        $this->uniqueValuesTypeCount = $countedValueTypes->count();
+        // Ignoring array<mixed>/array{} values in the count is only sound when the counted type
+        // is an array itself - a scalar mixed with arrays has no common list/map value type.
+        $this->valueTypesConsistent =
+            !$this->uniqueValuesType->reduceOptionals()->hasAny(type_array(), type_empty_array())
+            || $countedValueTypes->first() instanceof ListType
+            || $countedValueTypes->first() instanceof MapType
+            || $countedValueTypes->first() instanceof StructureType;
     }
 
     /**
@@ -79,7 +100,12 @@ final readonly class ArrayContentDetector
      */
     public function isList(): bool
     {
-        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType() instanceof IntegerType && $this->isList;
+        return (
+            1 === $this->uniqueValuesTypeCount
+            && $this->valueTypesConsistent
+            && $this->firstKeyType() instanceof IntegerType
+            && $this->isList
+        );
     }
 
     /**
@@ -91,7 +117,12 @@ final readonly class ArrayContentDetector
             return false;
         }
 
-        return 1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount && !$this->isList;
+        return (
+            1 === $this->uniqueValuesTypeCount
+            && 1 === $this->uniqueKeysTypeCount
+            && $this->valueTypesConsistent
+            && !$this->isList
+        );
     }
 
     public function isStructure(): bool
@@ -109,29 +140,31 @@ final readonly class ArrayContentDetector
     public function valueType(): Type
     {
         $type = null;
+        $nullable = false;
+        $hasUntypedArray = false;
+        $hasEmptyArray = false;
 
         foreach ($this->uniqueValuesType->all() as $nextType) {
-            if (null === $type) {
-                $type = $nextType;
-
-                continue;
-            }
-
-            if ($type instanceof NullType) {
-                $type = type_optional($nextType);
-
-                continue;
-            }
-
             if ($nextType instanceof NullType) {
-                $type = type_optional($type);
+                $nullable = true;
+            } elseif ($nextType instanceof EmptyArrayType) {
+                $hasEmptyArray = true;
+            } elseif ($nextType instanceof ArrayType) {
+                $hasUntypedArray = true;
+            } elseif (null === $type) {
+                $type = $nextType;
             }
         }
 
-        if ($type === null) {
-            return type_optional(type_string());
+        if (null === $type && !$hasUntypedArray && !$hasEmptyArray) {
+            return $nullable ? type_null() : type_optional(type_string());
         }
 
-        return $type;
+        // An array<mixed> value fits no narrower type; [] fits any list or map but not a structure.
+        if ($hasUntypedArray || null === $type || $hasEmptyArray && !$type->isValid([])) {
+            $type = type_array();
+        }
+
+        return $nullable ? type_optional($type) : $type;
     }
 }

@@ -33,6 +33,6 @@ $dataFrame = data_frame()
 
 ## Performance Considerations
 
-> **⚠️ Performance Warning**: The `offset()` method must iterate through and process all skipped rows to reach the
+> **Performance Warning**: The `offset()` method must iterate through and process all skipped rows to reach the
 > offset position. For large offsets (e.g., `offset(1000000)`), this can significantly impact performance as the DataFrame
 > still needs to read and process all data up to the offset point.

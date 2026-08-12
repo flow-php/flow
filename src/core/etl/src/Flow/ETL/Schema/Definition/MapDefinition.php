@@ -30,16 +30,22 @@ final readonly class MapDefinition implements Definition
     private Reference $ref;
 
     /**
+     * @var MapType<array<TKey, TValue>>
+     */
+    private MapType $type;
+
+    /**
      * @param MapType<array<TKey, TValue>> $type
      */
     public function __construct(
         string|Reference $ref,
-        private MapType $type,
+        MapType $type,
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
+        $this->type = (new TypeProjection())->map($type);
     }
 
     /**

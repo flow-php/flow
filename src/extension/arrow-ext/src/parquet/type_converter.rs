@@ -200,7 +200,19 @@ fn convert_binary_values<O: OffsetSizeTrait>(arr: &GenericBinaryArray<O>) -> Vec
     result
 }
 
-fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval> {
+fn uuid_to_string(b: &[u8]) -> String {
+    format!(
+        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+        b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+        b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]
+    )
+}
+
+fn is_uuid_field(field: Option<&Field>) -> bool {
+    field.is_some_and(|f| f.try_extension_type::<Uuid>().is_ok())
+}
+
+fn convert_single_arrow_value(array: &dyn Array, index: usize, is_uuid: bool) -> PhpResult<Zval> {
     if array.is_null(index) {
         let mut zv = Zval::new();
         zv.set_null();
@@ -309,7 +321,12 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
         DataType::FixedSizeBinary(_) => {
             let arr = downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?;
             let mut zv = Zval::new();
-            zv.set_binary(arr.value(index).to_vec());
+            if is_uuid && arr.value(index).len() == 16 {
+                zv.set_string(&uuid_to_string(arr.value(index)), false)
+                    .map_err(|_| parquet_exception("Failed to set UUID string value"))?;
+            } else {
+                zv.set_binary(arr.value(index).to_vec());
+            }
             Ok(zv)
         }
         DataType::Date32 => {
@@ -372,12 +389,13 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             zv.set_double(float_val);
             Ok(zv)
         }
-        DataType::List(_) => {
+        DataType::List(element_field) => {
             let list_array = downcast_array::<ListArray>(array, "ListArray")?;
+            let element_is_uuid = is_uuid_field(Some(element_field));
             let values = list_array.value(index);
             let mut ht = ZendHashTable::with_capacity(values.len() as u32);
             for j in 0..values.len() {
-                let child_zv = convert_single_arrow_value(values.as_ref(), j)?;
+                let child_zv = convert_single_arrow_value(values.as_ref(), j, element_is_uuid)?;
                 ht.push(child_zv)
                     .map_err(|_| parquet_exception("Failed to build list element"))?;
             }
@@ -385,12 +403,13 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             zv.set_hashtable(ht);
             Ok(zv)
         }
-        DataType::LargeList(_) => {
+        DataType::LargeList(element_field) => {
             let list_array = downcast_array::<LargeListArray>(array, "LargeListArray")?;
+            let element_is_uuid = is_uuid_field(Some(element_field));
             let values = list_array.value(index);
             let mut ht = ZendHashTable::with_capacity(values.len() as u32);
             for j in 0..values.len() {
-                let child_zv = convert_single_arrow_value(values.as_ref(), j)?;
+                let child_zv = convert_single_arrow_value(values.as_ref(), j, element_is_uuid)?;
                 ht.push(child_zv)
                     .map_err(|_| parquet_exception("Failed to build list element"))?;
             }
@@ -403,7 +422,11 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             let mut ht = ZendHashTable::with_capacity(fields.len() as u32);
             for (col_idx, field) in fields.iter().enumerate() {
                 let child_array = struct_array.column(col_idx);
-                let child_zv = convert_single_arrow_value(child_array.as_ref(), index)?;
+                let child_zv = convert_single_arrow_value(
+                    child_array.as_ref(),
+                    index,
+                    is_uuid_field(Some(field)),
+                )?;
                 ht.insert(field.name().as_str(), child_zv)
                     .map_err(|_| parquet_exception("Failed to build struct field"))?;
             }
@@ -411,15 +434,22 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             zv.set_hashtable(ht);
             Ok(zv)
         }
-        DataType::Map(_, _) => {
+        DataType::Map(entries_field, _) => {
             let map_array = downcast_array::<MapArray>(array, "MapArray")?;
+            let (key_is_uuid, val_is_uuid) = match entries_field.data_type() {
+                DataType::Struct(entry_fields) if entry_fields.len() == 2 => (
+                    is_uuid_field(Some(&entry_fields[0])),
+                    is_uuid_field(Some(&entry_fields[1])),
+                ),
+                _ => (false, false),
+            };
             let entries = map_array.value(index);
             let keys_array = entries.column(0);
             let values_array = entries.column(1);
             let mut ht = ZendHashTable::with_capacity(entries.len() as u32);
             for j in 0..entries.len() {
-                let key_zv = convert_single_arrow_value(keys_array.as_ref(), j)?;
-                let val_zv = convert_single_arrow_value(values_array.as_ref(), j)?;
+                let key_zv = convert_single_arrow_value(keys_array.as_ref(), j, key_is_uuid)?;
+                let val_zv = convert_single_arrow_value(values_array.as_ref(), j, val_is_uuid)?;
                 let key_str = if let Some(s) = key_zv.str() {
                     s.to_string()
                 } else if let Some(l) = key_zv.long() {
@@ -567,7 +597,7 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
 
         DataType::FixedSizeBinary(_) => {
             let arr = downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?;
-            let is_uuid = field.is_some_and(|f| f.try_extension_type::<Uuid>().is_ok());
+            let is_uuid = is_uuid_field(field);
             let len = arr.len();
             let mut result = Vec::with_capacity(len);
             for i in 0..len {
@@ -575,13 +605,7 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
                 if arr.is_null(i) {
                     zv.set_null();
                 } else if is_uuid && arr.value(i).len() == 16 {
-                    let b = arr.value(i);
-                    let uuid = format!(
-                        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-                        b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
-                        b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]
-                    );
-                    zv.set_string(&uuid, false)
+                    zv.set_string(&uuid_to_string(arr.value(i)), false)
                         .map_err(|_| parquet_exception("Failed to set UUID string value"))?;
                 } else {
                     zv.set_binary(arr.value(i).to_vec());
@@ -670,9 +694,10 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
 
         DataType::List(_) | DataType::LargeList(_) | DataType::Struct(_) | DataType::Map(_, _) => {
             let len = array.len();
+            let is_uuid = is_uuid_field(field);
             let mut result = Vec::with_capacity(len);
             for i in 0..len {
-                result.push(convert_single_arrow_value(array, i)?);
+                result.push(convert_single_arrow_value(array, i, is_uuid)?);
             }
             Ok(result)
         }
@@ -1399,14 +1424,7 @@ pub fn php_array_to_arrow(
             )?;
 
             let entries_struct = StructArray::try_new(
-                Fields::from(vec![
-                    Field::new(key_field.name(), key_field.data_type().clone(), false),
-                    Field::new(
-                        val_field.name(),
-                        val_field.data_type().clone(),
-                        val_field.is_nullable(),
-                    ),
-                ]),
+                Fields::from(vec![key_field.clone(), val_field.clone()]),
                 vec![key_array, val_array],
                 None,
             )
@@ -1415,13 +1433,16 @@ pub fn php_array_to_arrow(
             let offsets_buffer = OffsetBuffer::new(ScalarBuffer::from(offsets));
             let null_buffer = NullBuffer::from(null_bits);
 
-            Ok(Arc::new(MapArray::new(
+            let map_array = MapArray::try_new(
                 entries_field.clone(),
                 offsets_buffer,
                 entries_struct,
                 Some(null_buffer),
                 false,
-            )) as ArrayRef)
+            )
+            .map_err(|e| format!("Column '{}': {}", column_name, e))?;
+
+            Ok(Arc::new(map_array) as ArrayRef)
         }
         _ => Err(format!(
             "Column '{}': unsupported data type {:?} in writer",

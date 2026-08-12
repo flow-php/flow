@@ -280,7 +280,7 @@ data_frame()
 ```
 
 Partition values from the path become regular row columns. When the extractor is given a schema that
-does not declare a partition column, the column is appended to the schema as a **string** column —
+does not declare a partition column, the column is appended to the schema as a **string** column -
 declare it explicitly (e.g. `int_schema('date')`) to read partition values as a different type.
 
 ### Partition Pruning

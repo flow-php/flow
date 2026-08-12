@@ -176,6 +176,37 @@ final class ArrowParquetEngineReadTest extends TestCase
         unlink($path);
     }
 
+    public function test_read_nested_uuid_as_canonical_strings(): void
+    {
+        $path = __DIR__ . '/var/test-arrow-read-nested-uuid-' . generate_random_string() . '.parquet';
+        $uuid = 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a';
+
+        $schema = Schema::with(
+            FlatColumn::uuid('top_uuid'),
+            NestedColumn::struct('body', [FlatColumn::uuid('id'), FlatColumn::json('data')]),
+            NestedColumn::list('uuid_list', ListElement::uuid()),
+        );
+
+        (new Writer())->write($path, $schema, [[
+            'top_uuid' => $uuid,
+            'body' => ['id' => $uuid, 'data' => '{"a":1}'],
+            'uuid_list' => [$uuid, $uuid],
+        ]]);
+
+        $engine = new ArrowParquetEngine();
+        $parquetFile = (new Reader())->read($path);
+        $result = iterator_to_array($engine->readValues(
+            NativeLocalSourceStream::open(path_real($path)),
+            $parquetFile->schema(),
+        ));
+
+        static::assertSame($uuid, $result[0]['top_uuid']);
+        static::assertSame(['id' => $uuid, 'data' => '{"a":1}'], $result[0]['body']);
+        static::assertSame([$uuid, $uuid], $result[0]['uuid_list']);
+
+        unlink($path);
+    }
+
     public function test_read_with_column_projection(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-proj-' . generate_random_string() . '.parquet';

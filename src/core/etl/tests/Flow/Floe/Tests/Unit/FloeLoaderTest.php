@@ -62,6 +62,24 @@ final class FloeLoaderTest extends TestCase
         static::assertSame('memory://out.floe', to_floe(path('memory://out.floe'))->destination()->uri());
     }
 
+    public function test_inferred_schema_preserves_nullability(): void
+    {
+        $context = flow_context(config());
+        $path = path('memory://nullability.floe');
+
+        $loader = to_floe($path);
+        $loader->load(
+            rows(row(int_entry('id', 1), str_entry('note', 'a')), row(int_entry('id', 2), str_entry('note', null))),
+            $context,
+        );
+        $loader->closure($context);
+
+        $schema = from_floe($path)->schema($context);
+
+        static::assertFalse($schema->get('id')->isNullable());
+        static::assertTrue($schema->get('note')->isNullable());
+    }
+
     public function test_load_to_path_without_extension_reports_failure(): void
     {
         $this->expectException(RuntimeException::class);

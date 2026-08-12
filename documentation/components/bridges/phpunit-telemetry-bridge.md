@@ -43,10 +43,10 @@ Add the extension to your `phpunit.xml.dist`:
 | Parameter              | Environment variable                     | Default                 | Description                                                                                                                                                          |
 |------------------------|------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `service_name`         | `FLOW_PHPUNIT_OTEL_SERVICE_NAME`         | `phpunit`               | Service name reported in telemetry data                                                                                                                              |
-| `resource_attributes`  | `FLOW_PHPUNIT_OTEL_RESOURCE_ATTRIBUTES`  | —                       | Extra resource attributes as `name=value,name2=value2` (URL-encode commas/spaces). Merged last, so they override detected attributes and may override `service.name` |
+| `resource_attributes`  | `FLOW_PHPUNIT_OTEL_RESOURCE_ATTRIBUTES`  | - | Extra resource attributes as `name=value,name2=value2` (URL-encode commas/spaces). Merged last, so they override detected attributes and may override `service.name` |
 | `transport`            | `FLOW_PHPUNIT_OTEL_TRANSPORT`            | `curl`                  | Transport type: `curl`, `grpc`, or `stream`                                                                                                                          |
 | `endpoint`             | `FLOW_PHPUNIT_OTEL_ENDPOINT`             | `http://localhost:4318` | OTLP endpoint URL (curl/grpc) or destination path (stream)                                                                                                           |
-| `headers`              | `FLOW_PHPUNIT_OTEL_HEADERS`              | —                       | Additional headers (see [Authentication](#authentication))                                                                                                           |
+| `headers`              | `FLOW_PHPUNIT_OTEL_HEADERS`              | - | Additional headers (see [Authentication](#authentication))                                                                                                           |
 | `emit_traces`          | `FLOW_PHPUNIT_OTEL_EMIT_TRACES`          | `true`                  | Enable/disable trace emission                                                                                                                                        |
 | `emit_metrics`         | `FLOW_PHPUNIT_OTEL_EMIT_METRICS`         | `true`                  | Enable/disable metric emission                                                                                                                                       |
 | `emit_test_spans`      | `FLOW_PHPUNIT_OTEL_EMIT_TEST_SPANS`      | `true`                  | Create individual spans for each test                                                                                                                                |
@@ -59,7 +59,7 @@ Add the extension to your `phpunit.xml.dist`:
 ### Curl transport (`transport=curl`)
 
 Timeouts are in **milliseconds** (defaults assume a local collector on loopback / sidecar). `timeout_ms` is the
-per-request deadline; `shutdown_timeout_ms` (shared, see above) is a wall-clock budget enforced at shutdown only —
+per-request deadline; `shutdown_timeout_ms` (shared, see above) is a wall-clock budget enforced at shutdown only -
 it lets you keep `timeout_ms` tight for steady-state without freezing graceful exit.
 
 | Parameter                 | Environment variable                        | Default | Description                                 |
@@ -69,18 +69,18 @@ it lets you keep `timeout_ms` tight for steady-state without freezing graceful e
 | `curl_compression`        | `FLOW_PHPUNIT_OTEL_CURL_COMPRESSION`        | `false` | Enable automatic response decompression     |
 | `curl_follow_redirects`   | `FLOW_PHPUNIT_OTEL_CURL_FOLLOW_REDIRECTS`   | `true`  | Follow HTTP redirects                       |
 | `curl_max_redirects`      | `FLOW_PHPUNIT_OTEL_CURL_MAX_REDIRECTS`      | `3`     | Maximum number of redirects to follow       |
-| `curl_proxy`              | `FLOW_PHPUNIT_OTEL_CURL_PROXY`              | —       | Proxy server URL (e.g. `http://proxy:8080`) |
+| `curl_proxy`              | `FLOW_PHPUNIT_OTEL_CURL_PROXY`              | - | Proxy server URL (e.g. `http://proxy:8080`) |
 | `curl_ssl_verify_peer`    | `FLOW_PHPUNIT_OTEL_CURL_SSL_VERIFY_PEER`    | `true`  | Verify SSL peer certificate                 |
 | `curl_ssl_verify_host`    | `FLOW_PHPUNIT_OTEL_CURL_SSL_VERIFY_HOST`    | `true`  | Verify SSL host name                        |
-| `curl_ssl_cert_path`      | `FLOW_PHPUNIT_OTEL_CURL_SSL_CERT_PATH`      | —       | Path to client SSL certificate              |
-| `curl_ssl_key_path`       | `FLOW_PHPUNIT_OTEL_CURL_SSL_KEY_PATH`       | —       | Path to client SSL private key              |
-| `curl_ca_info_path`       | `FLOW_PHPUNIT_OTEL_CURL_CA_INFO_PATH`       | —       | Path to CA certificate bundle               |
+| `curl_ssl_cert_path`      | `FLOW_PHPUNIT_OTEL_CURL_SSL_CERT_PATH`      | - | Path to client SSL certificate              |
+| `curl_ssl_key_path`       | `FLOW_PHPUNIT_OTEL_CURL_SSL_KEY_PATH`       | - | Path to client SSL private key              |
+| `curl_ca_info_path`       | `FLOW_PHPUNIT_OTEL_CURL_CA_INFO_PATH`       | - | Path to CA certificate bundle               |
 | `curl_serializer`         | `FLOW_PHPUNIT_OTEL_CURL_SERIALIZER`         | `json`  | Payload serializer: `json` or `protobuf`    |
 
 ### gRPC transport (`transport=grpc`)
 
 Requires the `grpc` PHP extension and the `google/protobuf` package. Payload is always protobuf (per OTLP/gRPC spec).
-gRPC has no separate connect timeout — `grpc_timeout_ms` is the per-call deadline that bounds DNS, connect, send and
+gRPC has no separate connect timeout - `grpc_timeout_ms` is the per-call deadline that bounds DNS, connect, send and
 receive together.
 
 | Parameter         | Environment variable                | Default | Description                       |
@@ -134,7 +134,7 @@ Appends formatted Throwables (one per line) to a destination. The handle is open
 
 | Parameter                          | Environment variable                                 | Default            | Description                                                |
 |------------------------------------|------------------------------------------------------|--------------------|------------------------------------------------------------|
-| `error_handler_destination`        | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_DESTINATION`        | —                  | File path or `php://stdout`/`php://stderr`/etc. (required) |
+| `error_handler_destination`        | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_DESTINATION`        | - | File path or `php://stdout`/`php://stderr`/etc. (required) |
 | `error_handler_file_permissions`   | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_FILE_PERMISSIONS`   | `0644`             | Permissions for newly created files (ignored for `php://`) |
 | `error_handler_create_directories` | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_CREATE_DIRECTORIES` | `true`             | Create parent directories of the destination if missing    |
 | `error_handler_message_prefix`     | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_MESSAGE_PREFIX`     | `[flow-telemetry]` | Prefix prepended to every line                             |
@@ -154,7 +154,7 @@ Sends RFC 5424 syslog frames over UDP. Useful when test runs ship to a centraliz
 
 | Parameter                | Environment variable                       | Default          | Description                   |
 |--------------------------|--------------------------------------------|------------------|-------------------------------|
-| `error_handler_host`     | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_HOST`     | —                | Remote syslog host (required) |
+| `error_handler_host`     | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_HOST`     | - | Remote syslog host (required) |
 | `error_handler_port`     | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_PORT`     | `514`            | Remote syslog port            |
 | `error_handler_ident`    | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_IDENT`    | `flow-telemetry` | Syslog identity tag           |
 | `error_handler_facility` | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER_FACILITY` | `user`           | RFC 5424 facility             |
@@ -216,7 +216,7 @@ unset.
 (which populate `$_ENV` / `$_SERVER` but don't always call `putenv()`) are picked up the same as shell env vars.
 
 > [!IMPORTANT]
-> When setting boolean env vars through PHPUnit's `<env>` directive in `phpunit.xml.dist`, add `verbatim="true"` —
+> When setting boolean env vars through PHPUnit's `<env>` directive in `phpunit.xml.dist`, add `verbatim="true"` -
 > otherwise
 > PHPUnit casts the bare strings `"true"` / `"false"` to PHP booleans, which `putenv()` then stringifies to `"1"` /
 `""`, and
@@ -228,7 +228,7 @@ unset.
 >
 > This only applies to `<env>` in PHPUnit XML; real shell env vars and `.env` entries are already plain strings.
 
-Typical usage — credentials stay out of version control:
+Typical usage - credentials stay out of version control:
 
 ```bash
 export FLOW_PHPUNIT_OTEL_ENDPOINT="https://alloy.example.com:4318"
@@ -242,7 +242,7 @@ export FLOW_PHPUNIT_OTEL_HEADERS="Authorization=Bearer%20${ALLOY_TOKEN}"
 The `otel_collector_url` parameter and its `FLOW_PHPUNIT_OTEL_COLLECTOR_URL` environment variable are deprecated and
 trigger `E_USER_DEPRECATED`. They remain functional as an alias for `endpoint` with `transport=curl`.
 
-Mixing the deprecated parameter with any of the new-shape parameters throws `InvalidArgumentException` — migrate
+Mixing the deprecated parameter with any of the new-shape parameters throws `InvalidArgumentException` - migrate
 fully when you switch.
 
 ## Features

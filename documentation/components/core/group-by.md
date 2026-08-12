@@ -41,11 +41,11 @@ However, the result of this operation is not very useful. It will just return a 
 
 To make it more useful, you need to use one of the aggregation functions.
 
-[➡️ Aggregations](/documentation/components/core/aggregations.md)
+[Aggregations](/documentation/components/core/aggregations.md)
 
 ## Buckets Storage
 
-`groupBy()` partitions rows by the hashed grouping key into buckets through a `BucketsStorage` — the
+`groupBy()` partitions rows by the hashed grouping key into buckets through a `BucketsStorage` - the
 same abstraction used by [external sort](/documentation/components/core/sort.md) and
 [join](/documentation/components/core/join.md). The default is `FilesystemBuckets`: buckets are
 spilled to the local filesystem cache directory (as Floe files), so memory usage is bounded by the
@@ -81,15 +81,15 @@ data_frame(
 
 Before rows are spilled to buckets, they are pruned to only the columns the group by actually reads:
 the grouping references plus every column referenced by the aggregators. A row that is missing one of
-those columns is normalized to a `null` entry for it (Spark/DuckDB semantics) — aggregators silently
+those columns is normalized to a `null` entry for it (Spark/DuckDB semantics) - aggregators silently
 skip `null` values, and STRICT schema mode does not throw for aggregate columns missing under a
 `groupBy()`.
 
 Custom aggregators participate through `AggregatingFunction::references()`: return the references the
-aggregator reads, or `null` when they cannot be statically enumerated — returning `null` disables
+aggregator reads, or `null` when they cannot be statically enumerated - returning `null` disables
 column pruning for the whole pipeline (rows are spilled with all their columns).
 
 ### Output order
 
-Grouped output follows hash-bucket order, not input order. Group order was never a contract — apply
+Grouped output follows hash-bucket order, not input order. Group order was never a contract - apply
 [sortBy](/documentation/components/core/sort.md) after aggregation when a specific order is needed.

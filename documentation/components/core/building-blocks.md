@@ -24,7 +24,7 @@ $rows = rows(
 );
 ```
 
-Rows are the main data structure in Flow ETL, they’re used to represent data in the data frame.
+Rows are the main data structure in Flow ETL, they're used to represent data in the data frame.
 Extractors are yielding Rows and Loaders are saving Rows.
 
 The same can be achieved using the following code:

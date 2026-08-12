@@ -15,7 +15,9 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -110,6 +112,67 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         }
 
         static::assertSame($expected, $matched);
+    }
+
+    public function test_declared_array_element_does_not_match_a_list_payload(): void
+    {
+        // A declared array<mixed> element collapses to json in the Definition, and json
+        // never matches an inferred list payload.
+        $this->expectException(SchemaValidationException::class);
+
+        data_frame()
+            ->read(from_array([['user' => ['data' => [1, 2]]]]))
+            ->match(
+                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema_selective_validator(),
+            )
+            ->run();
+    }
+
+    public function test_declared_array_element_matches_a_heterogeneous_payload(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        data_frame()
+            ->read(from_array([['user' => ['data' => [1, 'a']]]]))
+            ->match(
+                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema_selective_validator(),
+            )
+            ->run();
+    }
+
+    public function test_inferred_empty_array_does_not_satisfy_a_declared_list(): void
+    {
+        $declared = type_structure(['data' => type_list(type_structure(['id' => type_string()]))]);
+
+        // The value alone is a valid empty list — but matching compares schemas, and the
+        // inferred empty array is projected onto json, which no list declaration accepts.
+        static::assertTrue($declared->isValid(['data' => []]));
+
+        $this->expectException(SchemaValidationException::class);
+
+        data_frame()
+            ->read(from_array([['user' => ['data' => []]]]))
+            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->run();
+    }
+
+    public function test_inferred_heterogeneous_array_does_not_satisfy_a_declared_list(): void
+    {
+        $declared = type_structure(['data' => type_list(type_structure(['id' => type_string()]))]);
+
+        // Companion to the empty-array pin above: a future change may deliberately let []
+        // satisfy a declared list, but a heterogeneous payload never may — relaxing both
+        // together would let [1, 'a'] pass as list<structure{id: string}>.
+        static::assertFalse($declared->isValid(['data' => [1, 'a']]));
+
+        $this->expectException(SchemaValidationException::class);
+
+        data_frame()
+            ->read(from_array([['user' => ['data' => [1, 'a']]]]))
+            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->run();
     }
 
     public function test_mixed_shapes_in_one_batch_stay_a_structure(): void

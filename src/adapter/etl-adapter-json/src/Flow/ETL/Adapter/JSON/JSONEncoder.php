@@ -41,9 +41,6 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
-use function json_encode;
-
-use const JSON_THROW_ON_ERROR;
 
 /**
  * @implements Encoder<array<string, mixed>>
@@ -87,7 +84,7 @@ final class JSONEncoder implements Encoder
     /**
      * @param Type<mixed> $type
      *
-     * @return null|array<string, mixed>|bool|float|int|string
+     * @return null|array<array-key, mixed>|bool|float|int|string
      */
     private function renderValue(Type $type, mixed $value): string|float|int|bool|array|null
     {
@@ -104,8 +101,8 @@ final class JSONEncoder implements Encoder
             UuidType::class => $value instanceof Uuid ? $value->toString() : '',
             XMLType::class, XMLElementType::class => $this->xmlToString($value),
             ListType::class, MapType::class, StructureType::class, ArrayType::class => is_array($value)
-                ? json_encode($value, JSON_THROW_ON_ERROR)
-                : '',
+                ? $this->normalizeArray($value)
+                : null,
             default => $this->scalar($value),
         };
     }
@@ -127,6 +124,36 @@ final class JSONEncoder implements Encoder
             $value instanceof DOMElement => $this->domString($value->C14N()),
             $value instanceof Element => $this->domString($value->c14n()),
             default => '',
+        };
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     *
+     * @return array<array-key, mixed>
+     */
+    private function normalizeArray(array $value): array
+    {
+        $normalized = [];
+
+        foreach (array_keys($value) as $key) {
+            $normalized[$key] = $this->normalizeValue($value[$key]);
+        }
+
+        return $normalized;
+    }
+
+    private function normalizeValue(mixed $value): string|float|int|bool|array|null
+    {
+        return match (true) {
+            $value instanceof DateTimeInterface => $value->format($this->dateTimeFormat),
+            $value instanceof DateInterval => date_interval_to_microseconds($value),
+            $value instanceof Uuid => $value->toString(),
+            $value instanceof Json => $this->normalizeArray($value->toArray()),
+            $value instanceof UnitEnum => $value->name,
+            is_array($value) => $this->normalizeArray($value),
+            is_string($value), is_int($value), is_float($value), is_bool($value) => $value,
+            default => null,
         };
     }
 
