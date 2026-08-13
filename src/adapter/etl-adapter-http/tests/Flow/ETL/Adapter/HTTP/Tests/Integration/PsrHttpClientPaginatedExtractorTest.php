@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\CastingException;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -339,6 +340,24 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
         )->extract(flow_context(config())));
 
         static::assertInstanceOf(StructureEntry::class, $rows[0]->first()->get('response_body'));
+    }
+
+    public function test_schema_typed_response_body_with_missing_field(): void
+    {
+        $client = new Client(new Psr17Factory());
+        $client->addResponse(PaginationMother::jsonResponse(['login' => 'flow-php']));
+
+        $this->expectException(CastingException::class);
+
+        iterator_to_array(from_http_paginated(
+            $client,
+            PaginationMother::request('GET', 'https://api.example.com/orgs/flow-php'),
+            http_pagination_cursor('next', http_request_option_query('cursor')),
+            schema(structure_schema('response_body', type_structure([
+                'login' => type_string(),
+                'id' => type_integer(),
+            ]))),
+        )->extract(flow_context(config())));
     }
 
     public function test_schema_typed_response_body_via_with_schema(): void

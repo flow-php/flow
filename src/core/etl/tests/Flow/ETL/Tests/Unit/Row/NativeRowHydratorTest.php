@@ -319,6 +319,11 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'empty cast batch' => [schema(int_schema('id')), []];
+
+        yield 'all-optional structure with no matching keys' => [
+            schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
+            [new RawRowValues(['st' => ['other' => 1]])],
+        ];
     }
 
     /**
@@ -394,9 +399,19 @@ final class NativeRowHydratorTest extends FlowTestCase
             [new RawRowValues(['l' => [-3]])],
         ];
 
-        yield 'all-optional structure with no matching keys' => [
-            schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
-            [new RawRowValues(['st' => ['other' => 1]])],
+        yield 'structure missing required element' => [
+            schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))),
+            [new RawRowValues(['data' => ['id' => 1]])],
+        ];
+
+        yield 'structure present-null required element' => [
+            schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))),
+            [new RawRowValues(['data' => ['id' => 1, 'name' => null]])],
+        ];
+
+        yield 'structure present-null optional element' => [
+            schema(structure_schema('data', type_structure(['id' => type_integer()], ['name' => type_string()]))),
+            [new RawRowValues(['data' => ['id' => 1, 'name' => null]])],
         ];
     }
 

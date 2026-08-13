@@ -16,6 +16,7 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\DSL\bool_schema;
@@ -49,6 +50,15 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertInstanceOf(StringEntry::class, $rows->first()->get('name'));
         static::assertTrue($rows->first()->get('name')->definition()->isNullable());
         static::assertSame(['id' => 1, 'name' => null], $rows->first()->toArray());
+    }
+
+    public function test_cast_throws_on_missing_required_structure_element(): void
+    {
+        $this->expectException(CastingException::class);
+
+        (new PhpRowHydrator())->cast([new RawRowValues(['data' => [
+            'id' => 1,
+        ]])], schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))));
     }
 
     public function test_casts_datetime_and_uuid_strings(): void

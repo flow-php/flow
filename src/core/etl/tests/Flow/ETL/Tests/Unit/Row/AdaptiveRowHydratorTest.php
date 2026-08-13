@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\CastingException;
 
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
@@ -15,6 +16,10 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class AdaptiveRowHydratorTest extends FlowTestCase
 {
@@ -44,5 +49,14 @@ final class AdaptiveRowHydratorTest extends FlowTestCase
 
         static::assertSame(1, $rows->first()->valueOf('id'));
         static::assertSame('x', $rows->first()->valueOf('name'));
+    }
+
+    public function test_cast_throws_on_missing_required_structure_element(): void
+    {
+        $this->expectException(CastingException::class);
+
+        (new AdaptiveRowHydrator())->cast([new RawRowValues(['data' => [
+            'id' => 1,
+        ]])], schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))));
     }
 }

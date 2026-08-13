@@ -63,9 +63,9 @@ final class TypeMapperTest extends TestCase
         ];
 
         yield 'jsonb list element has wrong type' => [
-            ['tags' => '["php", 42, "flow"]'],
+            ['tags' => '["php"]'],
             type_structure([
-                'tags' => type_list(type_string()),
+                'tags' => type_list(type_uuid()),
             ]),
         ];
     }

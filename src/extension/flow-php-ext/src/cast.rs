@@ -540,12 +540,18 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
             for element in elements {
                 let Some(item) = values.get(element.name.as_str()) else {
                     if element.required {
-                        // PHP feeds cast(null) to absent required elements
+                        // PHP throws MissingElementCastingException for absent required elements
                         return Ok(None);
                     }
 
                     continue;
                 };
+
+                if item.is_null() && !matches!(element.kind, CastKind::Optional(_)) {
+                    // PHP throws MissingElementCastingException for present-null elements
+                    // whose type rejects null - required and structure-level optional alike
+                    return Ok(None);
+                }
 
                 let Some(casted) = cast_value(&element.kind, item, ctx)? else {
                     return Ok(None);

@@ -10,8 +10,8 @@ use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 
-use function Flow\ETL\DSL\{schema, datetime_schema, date_schema, uuid_schema, json_schema, list_schema, map_schema, structure_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_positive_integer};
+use function Flow\ETL\DSL\{schema, datetime_schema, date_schema, uuid_schema, json_schema, list_schema, map_schema};
+use function Flow\Types\DSL\{type_list, type_map, type_integer, type_string, type_positive_integer};
 
 $throwing = [
     'uuid invalid' => [schema(uuid_schema('u')), [new RawRowValues(['u' => 'not-a-uuid'])]],
@@ -37,10 +37,6 @@ $throwing = [
     'positive int list negative' => [
         schema(list_schema('l', type_list(type_positive_integer()))),
         [new RawRowValues(['l' => [-3]])],
-    ],
-    'all-optional structure' => [
-        schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
-        [new RawRowValues(['st' => ['other' => 1]])],
     ],
 ];
 
@@ -86,4 +82,3 @@ string map int keys         exception:match aborted:yes
 list bad keys               exception:match aborted:yes
 positive int list string    exception:match aborted:yes
 positive int list negative  exception:match aborted:yes
-all-optional structure      exception:match aborted:yes

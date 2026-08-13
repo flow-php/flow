@@ -96,6 +96,10 @@ $datasets = [
             new RawRowValues(['id' => null], ['id' => Metadata::fromArray(['k' => 'v2'])]),
         ],
     ],
+    'all_optional_st' => [
+        schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
+        [new RawRowValues(['st' => ['other' => 1]])],
+    ],
     'empty' => [schema(int_schema('id')), []],
 ];
 
@@ -135,6 +139,7 @@ uuid_json        cast:yes
 containers       cast:yes
 exotic_fallback  cast:yes
 fill_and_metadata cast:yes
+all_optional_st  cast:yes
 empty            cast:yes
 schema_mutation  cast:yes
 null_schema      cast:yes

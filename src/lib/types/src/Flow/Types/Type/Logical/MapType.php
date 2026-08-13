@@ -14,6 +14,7 @@ use Flow\Types\Value\Json;
 use Throwable;
 
 use function array_key_exists;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
@@ -94,7 +95,7 @@ final readonly class MapType implements Type
             }
 
             if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-                return $this->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
+                $value = type_array()->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
             }
 
             if (!is_array($value)) {

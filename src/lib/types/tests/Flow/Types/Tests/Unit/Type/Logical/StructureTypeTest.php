@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use DateTimeZone;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\MissingElementCastingException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use Generator;
+use JsonException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -23,9 +26,11 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
 
 final class StructureTypeTest extends TestCase
 {
@@ -300,6 +305,118 @@ final class StructureTypeTest extends TestCase
             ],
             'exceptionClass' => null,
         ];
+
+        yield 'throws on missing required element' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => ['id' => 1],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'throws on present null required element' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => ['id' => 1, 'name' => null],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'throws on empty payload' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => [],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'throws on null payload' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'throws on scalar payload' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => 'hello',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'optional-wrapped required element stays null when present-null' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_optional(type_string())]),
+            'value' => ['id' => 1, 'name' => null],
+            'expected' => ['id' => 1, 'name' => null],
+            'exceptionClass' => null,
+        ];
+
+        yield 'union-with-null element stays null when present-null' => [
+            'structure' => type_structure(['id' => type_integer(), 'tag' => type_union(type_string(), type_null())]),
+            'value' => ['id' => 1, 'tag' => null],
+            'expected' => ['id' => 1, 'tag' => null],
+            'exceptionClass' => null,
+        ];
+
+        yield 'structure-level optional scalar element throws on present-null' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
+            'value' => ['id' => 1, 'name' => null],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'structure-level optional list element throws on present-null' => [
+            'structure' => type_structure(['id' => type_integer()], ['tags' => type_list(type_string())]),
+            'value' => ['id' => 1, 'tags' => null],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'absent optional element stays absent' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
+            'value' => ['id' => 1],
+            'expected' => ['id' => 1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'present optional element is cast' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
+            'value' => ['id' => 1, 'name' => 123],
+            'expected' => ['id' => 1, 'name' => '123'],
+            'exceptionClass' => null,
+        ];
+
+        yield 'empty payload casts into all-optional structure' => [
+            'structure' => type_structure([], ['data' => type_list(type_string())]),
+            'value' => [],
+            'expected' => [],
+            'exceptionClass' => null,
+        ];
+
+        yield 'empty JSON object casts into all-optional structure' => [
+            'structure' => type_structure([], ['data' => type_list(type_string())]),
+            'value' => '{}',
+            'expected' => [],
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid JSON string payload casts element-wise' => [
+            'structure' => type_structure(['id' => type_integer()]),
+            'value' => '{"id":"1"}',
+            'expected' => ['id' => 1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'partial JSON string payload throws naming the element' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => '{"id":1}',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'malformed JSON string payload' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => '{invalid',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
     public static function is_valid_data_provider(): Generator
@@ -389,6 +506,18 @@ final class StructureTypeTest extends TestCase
             'expected' => true,
         ];
 
+        yield 'valid empty payload for all-optional structure' => [
+            'structure' => type_structure([], ['name' => type_string()]),
+            'value' => [],
+            'expected' => true,
+        ];
+
+        yield 'invalid empty payload when required elements exist' => [
+            'structure' => type_structure(['id' => type_integer()]),
+            'value' => [],
+            'expected' => false,
+        ];
+
         yield 'invalid structure with wrong type for optional element' => [
             'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
             'value' => ['id' => 1, 'name' => 123],
@@ -447,6 +576,42 @@ final class StructureTypeTest extends TestCase
             $structure->cast($value);
         } else {
             static::assertSame($expected, $structure->cast($value));
+        }
+    }
+
+    public function test_cast_malformed_json_string_payload_chains_json_exception(): void
+    {
+        try {
+            type_structure(['id' => type_integer(), 'name' => type_string()])->cast('{invalid');
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertInstanceOf(JsonException::class, $e->getPrevious());
+        }
+    }
+
+    public function test_cast_missing_required_element_exception_names_the_element(): void
+    {
+        try {
+            type_structure(['id' => type_integer(), 'name' => type_string()])->cast(['id' => 1]);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            $previous = $e->getPrevious();
+            static::assertInstanceOf(MissingElementCastingException::class, $previous);
+            static::assertSame('name', $previous->element);
+        }
+    }
+
+    public function test_cast_nested_structure_missing_element_chains_through_both_levels(): void
+    {
+        try {
+            type_structure(['address' => type_structure(['zip' => type_string()])])->cast(['address' => []]);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            $addressLevel = $e->getPrevious();
+            static::assertInstanceOf(CastingException::class, $addressLevel);
+            $elementLevel = $addressLevel->getPrevious();
+            static::assertInstanceOf(MissingElementCastingException::class, $elementLevel);
+            static::assertSame('zip', $elementLevel->element);
         }
     }
 
