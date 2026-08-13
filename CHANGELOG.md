@@ -1,13 +1,19 @@
-## [Unreleased] - 2026-08-12
+## [Unreleased] - 2026-08-13
 
 ### Added
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - MissingElementCastingException naming the failing structure element via getPrevious()** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array{} empty array type with type_empty_array() DSL function** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - JSON string payloads for structure/list/map decode and cast element-wise** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - structure cast no longer fabricates values for absent or null elements whose type rejects null** - [@norberttech](https://github.com/norberttech)
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - list/map cast of null throws instead of returning an empty collection** - [@norberttech](https://github.com/norberttech)
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - structures with only optional elements accept an empty payload** - [@norberttech](https://github.com/norberttech)
+- [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/flow-php-ext - native cast defers null non-optional elements to PHP, keeping exception parity** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-parquet - nested json and uuid values round-trip through parquet encode and decode** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/arrow-ext - nested uuid values read as canonical strings, map writes throw exceptions instead of aborting the process** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - Floe inferred schema preserves first batch nullability instead of making every column nullable** - [@norberttech](https://github.com/norberttech)
