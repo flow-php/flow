@@ -100,6 +100,20 @@ final class MapTypeTest extends TestCase
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
+
+        yield 'JSON string payload casts element-wise' => [
+            'value' => '{"a":"1"}',
+            'mapType' => type_map(type_string(), type_integer()),
+            'expected' => ['a' => 1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'malformed JSON string payload' => [
+            'value' => '{invalid',
+            'mapType' => type_map(type_string(), type_integer()),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
     public static function is_valid_data_provider(): Generator

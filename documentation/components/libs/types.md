@@ -96,6 +96,15 @@ $variable = $input->get('some-input');
 $string = type_string()->cast($variable); 
 ```
 
+Casting structures, lists and maps:
+
+- a structure element that is absent, or present with `null`, throws `CastingException` when the element's type does
+  not accept `null` - `getPrevious()` returns a `MissingElementCastingException` whose `element` property names the
+  failing element
+- elements whose type accepts `null` (`type_optional(...)`, `type_union(..., type_null())`) cast `null` to `null`;
+  an absent optional element stays absent from the output
+- `type_list(...)->cast(null)` and `type_map(...)->cast(null)` throw `CastingException`
+- a JSON string payload is decoded and cast element-wise, exactly like an array payload
 
 ### Complex Types 
 

@@ -45,6 +45,18 @@ Columns that may only become null in later batches, declare the schema explicitl
 | `detectType([[1.2], [4.0, 5]])` → `list<list<float>>`             | `list<array<mixed>>`  |
 | `detectType([[], [1, 2]])` → `list<array<mixed>>`                 | `list<list<integer>>` |
 
+### 5) `flow-php/types` - structure/list/map casting no longer fabricates missing data
+
+| Before                                                                                                                                 | After                     |
+|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
+| `type_structure(['id' => type_integer(), 'name' => type_string()])->cast(['id' => 1])` → `['id' => 1, 'name' => '']`                   | throws `CastingException` |
+| same type, `->cast(['id' => 1, 'name' => null])` → `['id' => 1, 'name' => '']`                                                         | throws `CastingException` |
+| same type, `->cast([])`, `->cast(null)` → `['id' => 0, 'name' => '']`                                                                  | throws `CastingException` |
+| `type_structure(['id' => type_integer()], ['name' => type_string()])->cast(['id' => 1, 'name' => null])` → `['id' => 1, 'name' => '']` | throws `CastingException` |
+| `type_list(type_string())->cast(null)` → `['']`                                                                                        | throws `CastingException` |
+| `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` → throws                                                                | `['id' => 1]`             |
+| `type_list(type_integer())->cast('["1","2"]')` → throws                                                                                | `[1, 2]`                  |
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x
@@ -2458,7 +2470,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _       (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _        (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

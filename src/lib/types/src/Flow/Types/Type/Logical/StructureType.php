@@ -7,6 +7,7 @@ namespace Flow\Types\Type\Logical;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\MissingElementCastingException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 use Throwable;
@@ -18,6 +19,7 @@ use function array_key_exists;
 use function array_keys;
 use function array_merge;
 use function count;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
@@ -134,23 +136,33 @@ final readonly class StructureType implements Type
             }
 
             if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-                return $this->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
+                $value = type_array()->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
+            }
+
+            if (!is_array($value)) {
+                throw new CastingException($value, $this);
             }
 
             $castedStructure = [];
 
-            // Cast required elements
             foreach ($this->elements as $elementName => $elementType) {
-                $castedStructure[$elementName] = is_array($value) && array_key_exists($elementName, $value)
-                    ? $elementType->cast($value[$elementName])
-                    : $elementType->cast(null);
+                if (($value[$elementName] ?? null) === null && !$elementType->isValid(null)) {
+                    throw new MissingElementCastingException(null, $elementType, (string) $elementName);
+                }
+
+                $castedStructure[$elementName] = $elementType->cast($value[$elementName] ?? null);
             }
 
-            // Cast optional elements only if they are present in the input
             foreach ($this->optionalElements as $elementName => $elementType) {
-                if (is_array($value) && array_key_exists($elementName, $value)) {
-                    $castedStructure[$elementName] = $elementType->cast($value[$elementName]);
+                if (!array_key_exists($elementName, $value)) {
+                    continue;
                 }
+
+                if ($value[$elementName] === null && !$elementType->isValid(null)) {
+                    throw new MissingElementCastingException(null, $elementType, (string) $elementName);
+                }
+
+                $castedStructure[$elementName] = $elementType->cast($value[$elementName]);
             }
 
             return $this->assert($castedStructure);
@@ -173,25 +185,22 @@ final readonly class StructureType implements Type
             return false;
         }
 
-        if (array_is_list($value)) {
+        if ($value !== [] && array_is_list($value)) {
             return false;
         }
 
-        // Check if we have all required elements
         foreach ($this->elements as $name => $element) {
             if (!array_key_exists($name, $value) || !$element->isValid($value[$name])) {
                 return false;
             }
         }
 
-        // Check optional elements (if present, they must be valid)
         foreach ($this->optionalElements as $name => $element) {
             if (array_key_exists($name, $value) && !$element->isValid($value[$name])) {
                 return false;
             }
         }
 
-        // If allow_extra is false, check that we don't have unexpected keys
         if (!$this->allowExtra) {
             $allKnownKeys = array_merge(array_keys($this->elements), array_keys($this->optionalElements));
             $extraKeys = array_diff(array_keys($value), $allKnownKeys);

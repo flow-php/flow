@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use DateTimeZone;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Logical\ListType;
 use Generator;
@@ -19,6 +20,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_uuid;
 
 final class ListTypeTest extends TestCase
 {
@@ -100,6 +102,34 @@ final class ListTypeTest extends TestCase
             'expected' => [1],
             'exceptionClass' => null,
         ];
+
+        yield 'JSON string payload casts element-wise' => [
+            'value' => '["1","2"]',
+            'listType' => type_list(type_integer()),
+            'expected' => [1, 2],
+            'exceptionClass' => null,
+        ];
+
+        yield 'malformed JSON string payload' => [
+            'value' => '[invalid',
+            'listType' => type_list(type_integer()),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'cast(null) throws' => [
+            'value' => null,
+            'listType' => type_list(type_string()),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'scalar into single-item list stays' => [
+            'value' => 'hello',
+            'listType' => type_list(type_string()),
+            'expected' => ['hello'],
+            'exceptionClass' => null,
+        ];
     }
 
     public static function is_valid_data_provider(): Generator
@@ -178,6 +208,16 @@ final class ListTypeTest extends TestCase
             $listType->cast($value);
         } else {
             static::assertSame($expected, $listType->cast($value));
+        }
+    }
+
+    public function test_cast_element_failure_chains_previous(): void
+    {
+        try {
+            type_list(type_uuid())->cast(['not-a-uuid']);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertNotNull($e->getPrevious());
         }
     }
 

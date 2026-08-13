@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\CastingException;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -91,6 +92,48 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
 
         static::assertSame('norberttech', $norbertResponseBody['login']);
         static::assertSame('tomaszhanc', $tomekResponseBody['login']);
+    }
+
+    public function test_schema_typed_response_body_with_empty_body(): void
+    {
+        $factory = new Psr17Factory();
+        $client = new Client($factory);
+        $client->addResponse(new Response(200, ['Content-Type' => 'application/json'], '{}'));
+
+        $this->expectException(CastingException::class);
+
+        from_static_http_requests(
+            $client,
+            [$factory->createRequest('GET', 'https://api.github.com/users/norberttech')],
+            schema(structure_schema('response_body', type_structure([
+                'login' => type_string(),
+                'id' => type_integer(),
+            ]))),
+        )
+            ->extract(flow_context(config()))
+            ->current();
+    }
+
+    public function test_schema_typed_response_body_with_missing_field(): void
+    {
+        $factory = new Psr17Factory();
+        $client = new Client($factory);
+        $client->addResponse(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'login' => 'norberttech',
+        ], JSON_THROW_ON_ERROR)));
+
+        $this->expectException(CastingException::class);
+
+        from_static_http_requests(
+            $client,
+            [$factory->createRequest('GET', 'https://api.github.com/users/norberttech')],
+            schema(structure_schema('response_body', type_structure([
+                'login' => type_string(),
+                'id' => type_integer(),
+            ]))),
+        )
+            ->extract(flow_context(config()))
+            ->current();
     }
 
     public function test_schema_typed_response_body(): void
