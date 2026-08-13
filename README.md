@@ -76,7 +76,7 @@ difference!
 
 ## GitHub Stars
 
-[![Star History Chart](https://api.star-history.com/svg?repos=flow-php/flow&type=Date)](https://star-history.com/#flow-php/flow&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=flow-php/flow&type=Date)](https://star-history.dera.page/#flow-php/flow&Date)
 
 <a href="https://starmapper.bruniaux.com/flow-php/flow">
   <picture>
