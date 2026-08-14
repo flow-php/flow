@@ -16,9 +16,13 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\path;
 use function unlink;
 
@@ -138,5 +142,28 @@ final class JsonLinesTest extends FlowTestCase
                 ->fetch()
                 ->toArray(),
         );
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_json_lines(): void
+    {
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(
+                select('id'),
+                to_json_lines($path = __DIR__ . '/var/test_transformation_loader.jsonl'),
+            ))
+            ->run();
+
+        $rows = df()->read(from_json_lines($path))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
+
+        if (file_exists($path)) {
+            unlink($path);
+        }
     }
 }

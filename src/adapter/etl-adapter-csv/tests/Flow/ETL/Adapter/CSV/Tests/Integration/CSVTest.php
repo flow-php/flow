@@ -13,9 +13,12 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\to_transformation;
 use function implode;
 use function mkdir;
 use function unlink;
@@ -64,6 +67,26 @@ final class CSVTest extends FlowTestCase
             ->run();
 
         static::assertEquals(100, df()->read(from_csv($path))->count());
+
+        if (file_exists($path)) {
+            unlink($path);
+        }
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_csv(): void
+    {
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(select('id'), to_csv($path = __DIR__ . '/var/test_transformation_loader.csv')))
+            ->run();
+
+        $rows = df()->read(from_csv($path))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
 
         if (file_exists($path)) {
             unlink($path);

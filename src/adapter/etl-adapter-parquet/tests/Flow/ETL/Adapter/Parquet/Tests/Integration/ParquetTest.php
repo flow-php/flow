@@ -16,7 +16,6 @@ use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
 
-use function array_diff;
 use function array_keys;
 use function extension_loaded;
 use function file_exists;
@@ -26,15 +25,19 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
@@ -43,10 +46,6 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_uuid;
-use function is_dir;
-use function is_file;
-use function rmdir;
-use function scandir;
 use function unlink;
 
 final class ParquetTest extends FlowTestCase
@@ -301,43 +300,26 @@ final class ParquetTest extends FlowTestCase
         static::assertTrue($config->fstab()->for($path)->status($path)?->isFile());
     }
 
-    /**
-     * @param string $path
-     */
-    private function cleanDirectory(string $path): void
+    public function test_transformation_loader_writes_all_batches_to_parquet(): void
     {
-        if (file_exists($path) && is_dir($path)) {
-            $scanResult = scandir($path);
+        data_frame()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(
+                select('id'),
+                to_parquet($path = __DIR__ . '/var/test_transformation_loader.parquet'),
+            ))
+            ->run();
 
-            if ($scanResult === false) {
-                return;
-            }
+        $rows = data_frame()->read(from_parquet($path))->fetch();
 
-            $files = array_diff($scanResult, ['..', '.']);
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
 
-            foreach ($files as $file) {
-                if (is_file($path . DIRECTORY_SEPARATOR . $file)) {
-                    $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
-                } else {
-                    $this->cleanDirectory($path . DIRECTORY_SEPARATOR . $file);
-                }
-            }
-
-            rmdir($path);
-        }
-    }
-
-    /**
-     * @param string $path
-     */
-    private function removeFile(string $path): void
-    {
         if (file_exists($path)) {
-            if (is_dir($path)) {
-                $this->cleanDirectory($path);
-            } else {
-                unlink($path);
-            }
+            unlink($path);
         }
     }
 }

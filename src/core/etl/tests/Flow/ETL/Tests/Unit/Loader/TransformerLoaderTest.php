@@ -102,6 +102,26 @@ final class TransformerLoaderTest extends FlowTestCase
         );
     }
 
+    public function test_stateful_loader_is_closed_once_across_batches(): void
+    {
+        $context = flow_context(config());
+        $spy = new SpyLoader();
+        $loader = to_transformation(select('id'), $spy);
+
+        for ($id = 1; $id <= 3; $id++) {
+            $loader->load(rows(row(int_entry('id', $id))), $context);
+        }
+
+        $loader->closure($context);
+
+        static::assertSame(3, $spy->loadsCount);
+        static::assertSame(1, $spy->closureCount);
+        static::assertSame(
+            [[['id' => 1]], [['id' => 2]], [['id' => 3]]],
+            array_map(static fn(Rows $rows): array => $rows->toArray(), $spy->loadedRows),
+        );
+    }
+
     public function test_stateful_transformation_keeps_state_across_batches(): void
     {
         $context = flow_context(config());
@@ -173,5 +193,16 @@ final class TransformerLoaderTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_wrapped_loader_receives_the_outer_flow_context(): void
+    {
+        $context = flow_context(config());
+        $spy = new SpyLoader();
+        $loader = to_transformation(select('id'), $spy);
+
+        $loader->load(rows(row(int_entry('id', 1))), $context);
+
+        static::assertSame([$context], $spy->contexts);
     }
 }

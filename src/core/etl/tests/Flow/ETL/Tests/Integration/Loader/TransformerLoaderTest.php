@@ -4,27 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Loader;
 
-use Flow\ETL\Loader;
+use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\ETL\Tests\Double\SpyLoader;
-use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\LimitTransformer;
 
 use function array_column;
+use function file_get_contents;
 use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\batch_size;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\drop;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\limit;
 use function Flow\ETL\DSL\mask_columns;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\to_stream;
 use function Flow\ETL\DSL\to_transformation;
 
-final class TransformerLoaderTest extends FlowTestCase
+final class TransformerLoaderTest extends FlowIntegrationTestCase
 {
     public function test_transformer_loader_with_add_row_index_transformation(): void
     {
@@ -52,14 +55,15 @@ final class TransformerLoaderTest extends FlowTestCase
 
     public function test_transformer_loader_with_batch_size_transformation(): void
     {
-        $loader = $this->createMock(Loader::class);
-        $loader->expects(self::exactly(2))->method('load');
+        $loader = new SpyLoader();
 
         df()
             ->read(new FakeStaticOrdersExtractor(1000))
             ->collect()
             ->write(to_transformation(batch_size(500), $loader))
             ->run();
+
+        static::assertSame(2, $loader->loadsCount);
     }
 
     public function test_transformer_loader_with_add_row_index_transformation_across_batches(): void
@@ -224,5 +228,28 @@ final class TransformerLoaderTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_transformer_loader_with_stream_loader_across_batches(): void
+    {
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_stream(
+                    $path = $this->cacheDir->suffix('transformation_stream.txt')->path(),
+                    output: Output::rows_count,
+                ),
+            ))
+            ->run();
+
+        $content = file_get_contents($path);
+
+        if ($content === false) {
+            static::fail('Failed to read file content');
+        }
+
+        static::assertSame("Rows: 4\nRows: 4\nRows: 4\n", $content);
     }
 }

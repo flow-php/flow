@@ -54,13 +54,16 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader
                 // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
                 $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
-                $this->transformationDataFrame ??= $transformer
-                    ->transform(df($context->config)->from($this->transformationRows))
-                    ->load($this->loader);
+                $this->transformationDataFrame ??= $transformer->transform(
+                    df($context->config)->from($this->transformationRows),
+                );
 
                 if (!$this->transformationRows->stopped()) {
                     $this->transformationRows->swap($rows);
-                    $this->transformationDataFrame->run();
+
+                    foreach ($this->transformationDataFrame->get() as $transformedRows) {
+                        $this->loader->load($transformedRows, $context);
+                    }
                 }
             }
 
