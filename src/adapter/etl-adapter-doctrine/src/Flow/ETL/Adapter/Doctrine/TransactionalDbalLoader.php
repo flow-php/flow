@@ -11,6 +11,8 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\OverridingLoader;
 use Flow\ETL\Rows;
 use Throwable;
 
@@ -19,7 +21,7 @@ use function count;
 /**
  * @phpstan-import-type Params from DriverManager
  */
-final class TransactionalDbalLoader implements Loader
+final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
 {
     private ?Connection $connection = null;
 
@@ -57,6 +59,18 @@ final class TransactionalDbalLoader implements Loader
         return $loader;
     }
 
+    /**
+     * Closing happens outside the transaction, each wrapped loader publishes its own destination.
+     */
+    public function closure(FlowContext $context): void
+    {
+        foreach ($this->loaders as $loader) {
+            if ($loader instanceof Closure) {
+                $loader->closure($context);
+            }
+        }
+    }
+
     public function load(Rows $rows, FlowContext $context): void
     {
         if ($rows->count() === 0) {
@@ -74,6 +88,11 @@ final class TransactionalDbalLoader implements Loader
 
             throw $e;
         }
+    }
+
+    public function loaders(): array
+    {
+        return $this->loaders;
     }
 
     public function withIsolationLevel(TransactionIsolationLevel $level): self

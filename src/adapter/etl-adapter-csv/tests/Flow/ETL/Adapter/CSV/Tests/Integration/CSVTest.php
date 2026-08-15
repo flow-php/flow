@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
+use function Flow\ETL\DSL\write_with_retries;
 use function implode;
 use function mkdir;
 use function unlink;
@@ -67,6 +68,23 @@ final class CSVTest extends FlowTestCase
             ->run();
 
         static::assertEquals(100, df()->read(from_csv($path))->count());
+
+        if (file_exists($path)) {
+            unlink($path);
+        }
+    }
+
+    public function test_retry_loader_publishes_csv_under_overwrite(): void
+    {
+        df()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
+            ->batchSize(2)
+            ->saveMode(overwrite())
+            ->write(write_with_retries(to_csv($path = __DIR__ . '/var/test_retry_loader_overwrite.csv')))
+            ->run();
+
+        static::assertFileExists($path);
+        static::assertSame(4, df()->read(from_csv($path))->count());
 
         if (file_exists($path)) {
             unlink($path);

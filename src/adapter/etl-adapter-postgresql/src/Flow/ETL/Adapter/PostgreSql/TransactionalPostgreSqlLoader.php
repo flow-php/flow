@@ -8,6 +8,8 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\OverridingLoader;
 use Flow\ETL\Rows;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
@@ -22,7 +24,7 @@ use function Flow\PostgreSql\DSL\set_transaction;
  * Each batch of rows is processed in its own transaction. If any loader
  * fails, the entire batch is rolled back.
  */
-final class TransactionalPostgreSqlLoader implements Loader
+final class TransactionalPostgreSqlLoader implements Closure, Loader, OverridingLoader
 {
     private ?IsolationLevel $isolationLevel = null;
 
@@ -42,6 +44,18 @@ final class TransactionalPostgreSqlLoader implements Loader
         $this->loaders = $loaders;
     }
 
+    /**
+     * Closing happens outside the transaction, each wrapped loader publishes its own destination.
+     */
+    public function closure(FlowContext $context): void
+    {
+        foreach ($this->loaders as $loader) {
+            if ($loader instanceof Closure) {
+                $loader->closure($context);
+            }
+        }
+    }
+
     public function load(Rows $rows, FlowContext $context): void
     {
         if ($rows->count() === 0) {
@@ -59,6 +73,11 @@ final class TransactionalPostgreSqlLoader implements Loader
 
             throw $e;
         }
+    }
+
+    public function loaders(): array
+    {
+        return $this->loaders;
     }
 
     public function withIsolationLevel(IsolationLevel $level): self

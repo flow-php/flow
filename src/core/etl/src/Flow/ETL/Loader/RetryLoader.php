@@ -19,7 +19,7 @@ use Flow\ETL\Time\Sleep;
 use Flow\ETL\Time\SystemSleep;
 use Throwable;
 
-final readonly class RetryLoader implements Loader
+final readonly class RetryLoader implements Closure, Loader, OverridingLoader
 {
     public function __construct(
         private Loader $loader,
@@ -27,6 +27,13 @@ final readonly class RetryLoader implements Loader
         private DelayFactory $delayFactory = new FixedMilliseconds(200),
         private Sleep $sleep = new SystemSleep(),
     ) {}
+
+    public function closure(FlowContext $context): void
+    {
+        if ($this->loader instanceof Closure) {
+            $this->loader->closure($context);
+        }
+    }
 
     public function load(Rows $rows, FlowContext $context): void
     {
@@ -62,5 +69,12 @@ final readonly class RetryLoader implements Loader
 
             throw $e;
         }
+    }
+
+    public function loaders(): array
+    {
+        return [
+            $this->loader,
+        ];
     }
 }

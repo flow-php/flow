@@ -7,8 +7,11 @@ namespace Flow\ETL\Tests\Unit\Loader;
 use Flow\ETL\Exception\FailedRetryException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\ArrayLoader;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Time\FakeSleep;
 use LogicException;
 use PHPUnit\Framework\TestCase;
@@ -26,6 +29,64 @@ use function Flow\ETL\DSL\write_with_retries;
 
 final class RetryLoaderTest extends TestCase
 {
+    public function test_closure_is_a_no_op_for_a_loader_that_is_not_closure_aware(): void
+    {
+        $output = [];
+
+        write_with_retries(new ArrayLoader($output))->closure(flow_context(config()));
+
+        static::assertSame([], $output);
+    }
+
+    public function test_closure_is_forwarded_to_the_wrapped_loader(): void
+    {
+        $context = flow_context(config());
+        $spy = new SpyLoader();
+        $loader = write_with_retries($spy);
+
+        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->closure($context);
+
+        static::assertSame(1, $spy->loadsCount);
+        static::assertSame(1, $spy->closureCount);
+        static::assertSame([$context], $spy->closureContexts);
+    }
+
+    public function test_closure_is_not_covered_by_the_retry_strategy(): void
+    {
+        $failingLoader = new class() implements Closure, Loader {
+            public int $closureCount = 0;
+
+            public function closure(FlowContext $context): void
+            {
+                $this->closureCount++;
+
+                throw new RuntimeException('Commit failed');
+            }
+
+            public function load(Rows $rows, FlowContext $context): void {}
+        };
+
+        $sleep = new FakeSleep();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Commit failed');
+
+        try {
+            write_with_retries(loader: $failingLoader, sleep: $sleep)->closure(flow_context(config()));
+        } finally {
+            static::assertSame(1, $failingLoader->closureCount);
+            static::assertSame(0, $sleep->sleepCount());
+        }
+    }
+
+    public function test_exposing_the_wrapped_loader(): void
+    {
+        $spy = new SpyLoader();
+
+        static::assertSame([$spy], write_with_retries($spy)->loaders());
+    }
+
     public function test_exhausting_all_retries(): void
     {
         $mockLoader = $this->createMock(Loader::class);

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 use Flow\ETL\Adapter\PostgreSql\TransactionalPostgreSqlLoader;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
+use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
@@ -21,6 +22,25 @@ use function str_contains;
 
 final class TransactionalPostgreSqlLoaderTest extends TestCase
 {
+    public function test_closure_is_forwarded_to_every_closure_aware_loader(): void
+    {
+        $context = flow_context();
+        $spy1 = new SpyLoader();
+        $spy2 = new SpyLoader();
+
+        (new TransactionalPostgreSqlLoader(
+            $this->createStub(Client::class),
+            $spy1,
+            $this->createStub(Loader::class),
+            $spy2,
+        ))->closure($context);
+
+        static::assertSame(1, $spy1->closureCount);
+        static::assertSame(1, $spy2->closureCount);
+        static::assertSame([$context], $spy1->closureContexts);
+        static::assertSame([$context], $spy2->closureContexts);
+    }
+
     public function test_commits_after_running_every_loader(): void
     {
         $client = $this->createMock(Client::class);
@@ -52,6 +72,17 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $this->expectExceptionMessage('loader failed');
 
         (new TransactionalPostgreSqlLoader($client, $failing))->load(rows(row(int_entry('id', 1))), flow_context());
+    }
+
+    public function test_exposing_the_wrapped_loaders(): void
+    {
+        $first = $this->createStub(Loader::class);
+        $second = $this->createStub(Loader::class);
+
+        static::assertSame(
+            [$first, $second],
+            (new TransactionalPostgreSqlLoader($this->createStub(Client::class), $first, $second))->loaders(),
+        );
     }
 
     public function test_requires_at_least_one_loader(): void

@@ -20,8 +20,12 @@ configurable strategies.
 
 ### RetryLoader
 
-The `RetryLoader` is a decorator that wraps any existing loader with retry capabilities. It implements the same `Loader`
-interface, making it transparent to use in your data pipelines.
+The `RetryLoader` is a decorator that wraps any existing loader with retry capabilities. It implements `Loader` and
+`Loader\Closure`, and forwards `closure()` to the wrapped loader, so file loaders finalize and publish their
+destination as they normally would.
+
+Only `load()` is retried. A failure while closing is not retried, because closing publishes the destination and cannot
+be resumed from a partial state.
 
 ```php
 <?php
@@ -150,7 +154,6 @@ multiple times produces the same result.
 **Examples of idempotent loader operations:**
 
 - Database `UPSERT` (INSERT ON CONFLICT UPDATE)
-- File overwrites
 - HTTP PUT requests
 - Database UPDATE with specific WHERE clauses
 
@@ -169,6 +172,24 @@ Non-idempotent operations may produce different results or unintended side effec
 - Database `INSERT` without conflict resolution
 - File appends
 - Counter increments
+
+### File Loaders
+
+Do not wrap file loaders such as `to_csv()`, `to_json()` or `to_parquet()` in `write_with_retries()`, regardless of the
+save mode. A file loader appends each batch to a stream that stays open for the whole run, and a retry has nothing to
+roll back, so a batch that fails after part of it reached the stream is written twice:
+
+```php
+data_frame()
+    ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
+    ->batchSize(2)
+    ->saveMode(overwrite())
+    // a transient failure in the first batch leaves ids 1 and 2 in the file twice
+    ->write(write_with_retries(to_csv($path)))
+    ->run();
+```
+
+`overwrite()` replaces the destination once per run, not once per batch, so it does not undo a duplicated batch.
 
 ## Advanced Configuration
 

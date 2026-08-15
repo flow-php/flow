@@ -11,6 +11,11 @@ use Flow\ETL\Rows;
 
 final class SpyLoader implements Closure, Loader
 {
+    /**
+     * @var array<FlowContext>
+     */
+    public array $closureContexts = [];
+
     public int $closureCount = 0;
 
     /**
@@ -27,6 +32,7 @@ final class SpyLoader implements Closure, Loader
 
     public function closure(FlowContext $context): void
     {
+        $this->closureContexts[] = $context;
         $this->closureCount++;
     }
 
@@ -39,6 +45,7 @@ final class SpyLoader implements Closure, Loader
 
     public function reset(): void
     {
+        $this->closureContexts = [];
         $this->closureCount = 0;
         $this->contexts = [];
         $this->loadedRows = [];
