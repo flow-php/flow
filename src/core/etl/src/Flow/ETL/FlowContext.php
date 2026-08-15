@@ -25,6 +25,8 @@ final class FlowContext
 
     private readonly Functions $functions;
 
+    private ?FilesystemStreams $streams = null;
+
     private ?TelemetryContext $telemetryContext = null;
 
     public function __construct(
@@ -81,7 +83,7 @@ final class FlowContext
 
     public function streams(): FilesystemStreams
     {
-        return $this->config->filesystemStreams();
+        return $this->streams ??= new FilesystemStreams($this->config->fstab());
     }
 
     public function telemetry(): TelemetryContext

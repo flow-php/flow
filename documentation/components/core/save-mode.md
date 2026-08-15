@@ -28,6 +28,27 @@ use Flow\ETL\Filesystem\SaveMode;
     ->run();
 ```
 
+The save mode applies only to the DataFrame it is called on. DataFrames built from the same `Config` do not share it, so every DataFrame that needs a non-default mode must set its own:
+
+```php
+$config = config();
+
+(data_frame($config))
+    ->read(from_array([['id' => 1]]))
+    ->mode(SaveMode::Overwrite)
+    ->write(to_csv(__DIR__ . '/first.csv'))
+    ->run();
+
+(data_frame($config))
+    ->read(from_array([['id' => 2]]))
+    ->write(to_csv(__DIR__ . '/second.csv'))
+    ->run();
+
+// The second DataFrame runs with ExceptionIfExists, not Overwrite.
+// Running it again throws:
+// RuntimeException: Destination path "/path/to/second.csv" already exists
+```
+
 ## Save Mode Behavior
 
 ### ExceptionIfExists (Default)

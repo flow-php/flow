@@ -12,7 +12,6 @@ use Flow\ETL\Config\Join\HashJoinConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
@@ -37,7 +36,6 @@ final readonly class Config
         private Serializer $serializer,
         private ClockInterface $clock,
         private FilesystemTable $filesystemTable,
-        private FilesystemStreams $filesystemStreams,
         private Optimizer $optimizer,
         private bool $putInputIntoRows,
         private Hydrator $hydrator,
@@ -76,11 +74,6 @@ final readonly class Config
     public function clock(): ClockInterface
     {
         return $this->clock;
-    }
-
-    public function filesystemStreams(): FilesystemStreams
-    {
-        return $this->filesystemStreams;
     }
 
     public function fstab(): FilesystemTable

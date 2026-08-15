@@ -57,6 +57,18 @@ Columns that may only become null in later batches, declare the schema explicitl
 | `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` → throws                                                                | `['id' => 1]`             |
 | `type_list(type_integer())->cast('["1","2"]')` → throws                                                                                | `[1, 2]`                  |
 
+### 6) `flow-php/etl` - `FilesystemStreams` is owned per `FlowContext`, not per `Config`
+
+| Before                                                                                  | After                                            |
+|-----------------------------------------------------------------------------------------|--------------------------------------------------|
+| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | applies only to the `DataFrame` it is called on  |
+| a failed run left its `DestinationStream` registered; the retry appended to it          | each run has its own registry; the retry refuses |
+| `Config::filesystemStreams()`                                                           | removed                                          |
+| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                          |
+
+Pipelines that relied on a save mode set on an earlier frame sharing the same `Config` must call
+`saveMode()` on each frame. Build `Config` through `Config::builder()` / `Config::default()`.
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x
