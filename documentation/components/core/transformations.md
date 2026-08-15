@@ -236,9 +236,88 @@ The `Transformation` is expanded **once per loader instance**, on the first batc
 streamed through that same pipeline. Stateful transformations - `limit()`, `add_row_index()` - therefore apply across
 the whole stream, not per batch.
 
-Batching transformations (`batch_size()`, `batch_by()`) expand to a `Processor`, which re-batches only within the
-batches the outer pipeline hands the loader - a `Loader` never sees the stream. To re-batch the pipeline itself, use
-`$df->batchSize(...)` instead of `to_transformation(batch_size(...), ...)`.
+### Batch-Local Operations
+
+The nested pipeline is driven once per incoming batch, and the source it reads from yields exactly that one batch.
+What an operation does with that depends on what it expands to:
+
+- a `Transformer` (`Rows -> Rows`) is built once and keeps its state across batches, so it is correct;
+- a `Processor` (`Generator<Rows> -> Generator<Rows>`) buffers only the single batch it is handed, so it answers for
+  that batch alone - with no error and no warning.
+
+Of the built-in transformations only `batch_size()` and `Flow\ETL\Transformation\BatchBy` expand to a `Processor`. A
+custom `Transformation` reaches the rest through the `DataFrame` methods it calls.
+
+The following are batch-local but complete - every input row still reaches the loader, only the ordering, grouping or
+batch boundaries are computed per batch instead of over the stream:
+
+| Called inside a `Transformation` | Batch-local result |
+|---|---|
+| `sortBy()` | each batch is sorted on its own, the stream is not |
+| `aggregate()` | one result row per batch instead of one for the whole stream |
+| `groupBy()->aggregate()` | groups are never merged across batches |
+| `over(window()->partitionBy(...))`, `row_number()` | the window covers one batch |
+| `pivot()` | one pivoted set per batch |
+| `batchBy()` | the rows and their order are correct, only the chunk boundaries are not |
+| `collect()` | collects a single batch, so it does nothing |
+
+### Operations That Lose Rows
+
+`offset()` and `cache()` are not merely reordered or mis-grouped - rows never arrive:
+
+- `offset()` skips its offset inside every batch separately. With batches smaller than the offset, every batch is
+  consumed whole: `->offset(2)` over 3 batches of 2 rows never calls `load()` at all, where 4 rows is correct. The run
+  reports success and writes an empty output.
+- `cache($id)` keeps only the last batch under that id. Over the same source the run reports 6 rows and
+  `df()->read(from_cache($id))` reads back 2. A partially written cache under a user-chosen id is read back later, in
+  another job, with nothing to signal that it is incomplete.
+
+### Operations That Stay Correct
+
+Do not avoid these - `select()`, `withEntry()` with a scalar function, `map()`, `filter()`, `add_row_index()`,
+`limit()`, `until()`, `dropDuplicates()` and `join()` all behave inside a `Transformation` the way they do outside it.
+`join()` buffers its right side as a separate complete frame and streams the left side row by row, so it matches every
+row. `limit()`, `until()` and `dropDuplicates()` return exactly what they return on the outer frame.
+
+Window functions also go through `withEntry()` - `withEntry('avg', average(ref('v'))->over(window()))` passes a
+`WindowFunction`, not a scalar function, and belongs in the batch-local table above.
+
+### Making a Batch-Local Operation Global
+
+Collect the outer frame before writing, so the single batch the nested pipeline receives is the whole stream:
+
+```php
+use Flow\ETL\{DataFrame, Transformation};
+use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
+
+$sortById = new class implements Transformation {
+    public function transform(DataFrame $dataFrame): DataFrame
+    {
+        return $dataFrame->sortBy(ref('id'));
+    }
+};
+
+df()
+    ->read(from_array([/* ... */]))
+    ->collect()                                  // or ->batchSize(-1)
+    ->write(to_transformation($sortById, to_output()))
+    ->run();
+```
+
+This holds the whole dataset in memory. Calling `->collect()` **inside** the transformation does not help, it collects
+the one batch it was handed.
+
+Running the operation on the outer frame instead is always correct and costs nothing:
+
+```php
+df()
+    ->read(from_array([/* ... */]))
+    ->sortBy(ref('id'))
+    ->write(to_output())
+    ->run();
+```
+
+To re-batch the pipeline itself, use `$df->batchSize(...)` instead of `to_transformation(batch_size(...), ...)`.
 
 ## Creating Custom Transformations
 
