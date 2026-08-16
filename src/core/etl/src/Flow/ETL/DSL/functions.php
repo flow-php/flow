@@ -40,6 +40,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
@@ -162,6 +163,7 @@ use Flow\ETL\Retry\DelayFactory\Jitter;
 use Flow\ETL\Retry\DelayFactory\Linear;
 use Flow\ETL\Retry\RetryStrategy;
 use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
+use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
@@ -2634,6 +2636,15 @@ function retry_on_exception_types(array $exception_types, int $limit): OnExcepti
     return new OnExceptionTypes($exception_types, $limit);
 }
 
+/**
+ * @param array<class-string<\Throwable>> $exception_types
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function retry_any_throwable_except(array $exception_types, int $limit): AnyThrowableExcept
+{
+    return new AnyThrowableExcept($exception_types, $limit);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function delay_linear(Duration $delay, Duration $increment): Linear
 {
@@ -2688,7 +2699,7 @@ function duration_minutes(int $minutes): Duration
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
 function write_with_retries(
     Loader $loader,
-    RetryStrategy $retry_strategy = new AnyThrowable(3),
+    RetryStrategy $retry_strategy = new AnyThrowableExcept([InvalidLogicException::class], 3),
     DelayFactory $delay_factory = new FixedMilliseconds(200),
     Sleep $sleep = new SystemSleep(),
 ): RetryLoader {

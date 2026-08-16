@@ -99,7 +99,10 @@ final class TransformerLoaderTest extends FlowIntegrationTestCase
             ->write(to_transformation(batch_size(4), $loader))
             ->run();
 
-        static::assertSame(6, $loader->loadsCount);
+        // The nested pipeline is driven once over the whole stream, so batch_size(4) re-batches the stream instead of
+        // each incoming batch - the same [4, 2] the outer frame's batchSize(4) produces.
+        static::assertSame(2, $loader->loadsCount);
+        static::assertSame([4, 2], $loader->loadedRowCounts());
     }
 
     public function test_transformer_loader_with_drop_transformation(): void

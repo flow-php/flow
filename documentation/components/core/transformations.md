@@ -232,62 +232,13 @@ This pattern is particularly useful when you need to:
 - Create transformation pipelines that can be reused
 - Separate transformation logic from extraction and loading
 
-The `Transformation` is expanded **once per loader instance**, on the first batch, and every subsequent batch is
-streamed through that same pipeline. Stateful transformations - `limit()`, `add_row_index()` - therefore apply across
-the whole stream, not per batch.
-
-### Batch-Local Operations
-
-The nested pipeline is driven once per incoming batch, and the source it reads from yields exactly that one batch.
-What an operation does with that depends on what it expands to:
-
-- a `Transformer` (`Rows -> Rows`) is built once and keeps its state across batches, so it is correct;
-- a `Processor` (`Generator<Rows> -> Generator<Rows>`) buffers only the single batch it is handed, so it answers for
-  that batch alone - with no error and no warning.
-
-Of the built-in transformations only `batch_size()` and `Flow\ETL\Transformation\BatchBy` expand to a `Processor`. A
-custom `Transformation` reaches the rest through the `DataFrame` methods it calls.
-
-The following are batch-local but complete - every input row still reaches the loader, only the ordering, grouping or
-batch boundaries are computed per batch instead of over the stream:
-
-| Called inside a `Transformation` | Batch-local result |
-|---|---|
-| `sortBy()` | each batch is sorted on its own, the stream is not |
-| `aggregate()` | one result row per batch instead of one for the whole stream |
-| `groupBy()->aggregate()` | groups are never merged across batches |
-| `over(window()->partitionBy(...))`, `row_number()` | the window covers one batch |
-| `pivot()` | one pivoted set per batch |
-| `batchBy()` | the rows and their order are correct, only the chunk boundaries are not |
-| `collect()` | collects a single batch, so it does nothing |
-
-### Operations That Lose Rows
-
-`offset()` and `cache()` are not merely reordered or mis-grouped - rows never arrive:
-
-- `offset()` skips its offset inside every batch separately. With batches smaller than the offset, every batch is
-  consumed whole: `->offset(2)` over 3 batches of 2 rows never calls `load()` at all, where 4 rows is correct. The run
-  reports success and writes an empty output.
-- `cache($id)` keeps only the last batch under that id. Over the same source the run reports 6 rows and
-  `df()->read(from_cache($id))` reads back 2. A partially written cache under a user-chosen id is read back later, in
-  another job, with nothing to signal that it is incomplete.
-
-### Operations That Stay Correct
-
-Do not avoid these - `select()`, `withEntry()` with a scalar function, `map()`, `filter()`, `add_row_index()`,
-`limit()`, `until()`, `dropDuplicates()` and `join()` all behave inside a `Transformation` the way they do outside it.
-`join()` buffers its right side as a separate complete frame and streams the left side row by row, so it matches every
-row. `limit()`, `until()` and `dropDuplicates()` return exactly what they return on the outer frame.
-
-Window functions also go through `withEntry()` - `withEntry('avg', average(ref('v'))->over(window()))` passes a
-`WindowFunction`, not a scalar function, and belongs in the batch-local table above.
-
-### Making a Batch-Local Operation Global
-
-Collect the outer frame before writing, so the single batch the nested pipeline receives is the whole stream:
+The `Transformation` is expanded **once per loader instance**, on the first batch, and the nested pipeline is then
+driven a single time over the whole stream. Every operation inside it answers exactly as it does on the outer frame -
+`limit()` and `add_row_index()` apply across the stream, not per batch.
 
 ```php
 use Flow\ETL\{DataFrame, Transformation};
+
 use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
 
 $sortById = new class implements Transformation {
@@ -299,25 +250,54 @@ $sortById = new class implements Transformation {
 
 df()
     ->read(from_array([/* ... */]))
-    ->collect()                                  // or ->batchSize(-1)
     ->write(to_transformation($sortById, to_output()))
     ->run();
 ```
 
-This holds the whole dataset in memory. Calling `->collect()` **inside** the transformation does not help, it collects
-the one batch it was handed.
+### Memory Cost
 
-Running the operation on the outer frame instead is always correct and costs nothing:
+Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside
+the loader. Three groups:
+
+| Cost | Operations |
+|---|---|
+| Grows with the whole stream | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` |
+| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint` |
+| Constant | `select()`, `withEntry()`, `map()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()` |
+
+The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
+`offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes
+each batch as it passes. They need the whole stream to answer correctly, not to accumulate it.
+
+### Chunk Shape and Order
+
+`batch_size()`, `batchBy()` and `partitionBy()` change only which rows are grouped into the `Rows` handed to the
+wrapped loader. No row is lost or mis-assigned.
+
+`partitionBy()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
+emitting it in input order. `batchBy()` preserves input order and only cuts the batches at the group boundaries.
+
+To re-batch the pipeline itself rather than what reaches the wrapped loader, call `$df->batchSize(...)` on the frame.
+
+### Failure Behaviour
+
+A failure inside a `Transformation` propagates out of the loader, and no loader in that segment is closed - exactly
+as a failing loader on an outer frame is never closed.
+
+`->onError(...)` on the outer frame governs that propagation the same way it does for a plain loader. When the
+handler declines to propagate, the run continues, later batches are processed through a fresh nested pipeline, and
+the wrapped loader is closed. A rebuilt pipeline starts empty: anything the previous one had accumulated is gone, and
+stateful operations such as `add_row_index()` restart their counters.
+
+The handler is **not** inherited by the nested pipeline, which always propagates. To make a failure between the
+transformation's own steps recoverable, set the handler inside it:
 
 ```php
-df()
-    ->read(from_array([/* ... */]))
-    ->sortBy(ref('id'))
-    ->write(to_output())
-    ->run();
+$dataFrame->onError(ignore_error_handler())->map(/* ... */);
 ```
 
-To re-batch the pipeline itself, use `$df->batchSize(...)` instead of `to_transformation(batch_size(...), ...)`.
+None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the
+point of failure can be left behind.
 
 ## Creating Custom Transformations
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Loader;
 
 use Flow\ETL\Exception\FailedRetryException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\ArrayLoader;
@@ -25,10 +26,20 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\retry_any_throwable;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\write_with_retries;
 
 final class RetryLoaderTest extends TestCase
 {
+    public function test_a_transformer_loader_cannot_be_wrapped(): void
+    {
+        $this->expectException(InvalidLogicException::class);
+        $this->expectExceptionMessage('RetryLoader cannot wrap a TransformerLoader');
+
+        write_with_retries(to_transformation(select('id'), new SpyLoader()));
+    }
+
     public function test_closure_is_a_no_op_for_a_loader_that_is_not_closure_aware(): void
     {
         $output = [];

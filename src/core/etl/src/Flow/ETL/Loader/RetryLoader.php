@@ -6,6 +6,7 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\FailedRetryException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Retry\DelayFactory;
@@ -13,7 +14,7 @@ use Flow\ETL\Retry\DelayFactory\Fixed\FixedMilliseconds;
 use Flow\ETL\Retry\FailedRetry;
 use Flow\ETL\Retry\RetriesRecord;
 use Flow\ETL\Retry\RetryStrategy;
-use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
+use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
 use Flow\ETL\Rows;
 use Flow\ETL\Time\Sleep;
 use Flow\ETL\Time\SystemSleep;
@@ -23,10 +24,21 @@ final readonly class RetryLoader implements Closure, Loader, OverridingLoader
 {
     public function __construct(
         private Loader $loader,
-        private RetryStrategy $retryStrategy = new AnyThrowable(3),
+        private RetryStrategy $retryStrategy = new AnyThrowableExcept([InvalidLogicException::class], 3),
         private DelayFactory $delayFactory = new FixedMilliseconds(200),
         private Sleep $sleep = new SystemSleep(),
-    ) {}
+    ) {
+        // Retries are per batch, but a Transformation drives one nested pipeline across the whole stream: by the time
+        // a batch fails, the pipeline has already consumed the batches after it, so re-offering that batch feeds it
+        // into a pipeline that moved on. Retrying the destination instead is well defined.
+        if ($this->loader instanceof TransformerLoader) {
+            throw new InvalidLogicException(
+                'RetryLoader cannot wrap a TransformerLoader, retries are per batch while a Transformation spans the '
+                . 'whole stream. Retry the destination instead: '
+                . 'to_transformation($transformation, write_with_retries($loader)).',
+            );
+        }
+    }
 
     public function closure(FlowContext $context): void
     {

@@ -69,6 +69,42 @@ Columns that may only become null in later batches, declare the schema explicitl
 Pipelines that relied on a save mode set on an earlier frame sharing the same `Config` must call
 `saveMode()` on each frame. Build `Config` through `Config::builder()` / `Config::default()`.
 
+### 7) `flow-php/etl` - `RetryLoader` no longer retries `InvalidLogicException` by default
+
+| Before | After |
+|---|---|
+| `new RetryLoader($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
+| `write_with_retries($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
+| an `InvalidLogicException` was attempted 4 times with delays between | attempted once, no delay |
+
+`AnyThrowable` itself is unchanged. To keep retrying every throwable, pass it explicitly:
+
+```php
+write_with_retries($loader, retry_any_throwable(3));
+```
+
+New helper for the deny-list strategy:
+
+```php
+write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::class], 3));
+```
+
+### 8) `flow-php/etl` - operations inside a `Transformation` answer for the whole stream
+
+| Before (0.43.x) | After |
+|---|---|
+| `$df->sortBy(ref('id'))` inside a `Transformation` sorted each batch on its own | sorts the whole stream |
+| `$df->aggregate(...)` / `groupBy()->aggregate()` / `pivot()` / window functions inside a `Transformation` answered per batch | answer for the whole stream |
+| `$df->offset(2)` inside a `Transformation` lost rows | skips exactly the offset across the stream |
+| `$df->cache($id)` inside a `Transformation` persisted one batch | persists the whole stream |
+| `$df->batchBy(...)` / `$df->partitionBy(...)` / `batch_size(...)` cut chunks at the incoming batches | cut chunks over the stream |
+| `$df->join(...)` / `$df->partitionBy(...)` inside a `Transformation` emitted rows in input order | emit rows grouped by key |
+| `write_with_retries(to_transformation(...))` | throws `InvalidLogicException`, use `to_transformation(..., write_with_retries($loader))` |
+| `Flow\ETL\Extractor\SwappableRowsExtractor` | removed (internal `FeedExtractor` replaces it) |
+
+`sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` and `join()` buffer
+proportional to the data, as on an outer frame.
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x
