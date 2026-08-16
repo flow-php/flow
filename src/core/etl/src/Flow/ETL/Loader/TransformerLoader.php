@@ -88,6 +88,7 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader
                 if ($this->transformationFiber === null) {
                     try {
                         $frame = $transformer->transform(df($context->config)->from($this->transformationRows));
+
                         // @mago-ignore analysis:avoid-catching-error
                         // Nothing is hidden - the FiberError is rethrown as the previous exception. It only ever
                         // means the Transformation triggered the frame, which no message from the engine explains.

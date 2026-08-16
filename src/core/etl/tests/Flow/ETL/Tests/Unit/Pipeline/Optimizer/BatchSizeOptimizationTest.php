@@ -11,6 +11,7 @@ use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
 use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Tests\Double\WrappingLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 
@@ -40,6 +41,46 @@ final class BatchSizeOptimizationTest extends FlowTestCase
         $pipeline = new Pipeline(from_rows(rows()));
 
         static::assertFalse((new BatchSizeOptimization())->isFor(StreamLoader::output(), $pipeline));
+    }
+
+    public function test_for_pipeline_with_wrapped_loader(): void
+    {
+        $pipeline = new Pipeline(from_rows(rows()));
+
+        static::assertTrue((new BatchSizeOptimization())->isFor(
+            new WrappingLoader(new DbalLoader('test', [])),
+            $pipeline,
+        ));
+    }
+
+    public function test_for_pipeline_with_wrapped_loader_nested_three_levels_deep(): void
+    {
+        $pipeline = new Pipeline(from_rows(rows()));
+
+        static::assertTrue((new BatchSizeOptimization())->isFor(
+            new WrappingLoader(new WrappingLoader(new WrappingLoader(new DbalLoader('test', [])))),
+            $pipeline,
+        ));
+    }
+
+    public function test_for_pipeline_with_wrapper_hiding_a_supported_loader_behind_an_unsupported_one(): void
+    {
+        $pipeline = new Pipeline(from_rows(rows()));
+
+        static::assertTrue((new BatchSizeOptimization())->isFor(
+            new WrappingLoader(StreamLoader::output(), new DbalLoader('test', [])),
+            $pipeline,
+        ));
+    }
+
+    public function test_for_pipeline_with_wrapper_overriding_only_unsupported_loaders(): void
+    {
+        $pipeline = new Pipeline(from_rows(rows()));
+
+        static::assertFalse((new BatchSizeOptimization())->isFor(
+            new WrappingLoader(StreamLoader::output()),
+            $pipeline,
+        ));
     }
 
     public function test_for_pipeline_without_loaders(): void
