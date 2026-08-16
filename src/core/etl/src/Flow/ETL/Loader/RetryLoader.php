@@ -22,22 +22,15 @@ use Throwable;
 
 final readonly class RetryLoader implements Closure, Loader, OverridingLoader
 {
+    private LoaderTree $loaderTree;
+
     public function __construct(
         private Loader $loader,
         private RetryStrategy $retryStrategy = new AnyThrowableExcept([InvalidLogicException::class], 3),
         private DelayFactory $delayFactory = new FixedMilliseconds(200),
         private Sleep $sleep = new SystemSleep(),
     ) {
-        // Retries are per batch, but a Transformation drives one nested pipeline across the whole stream: by the time
-        // a batch fails, the pipeline has already consumed the batches after it, so re-offering that batch feeds it
-        // into a pipeline that moved on. Retrying the destination instead is well defined.
-        if ($this->loader instanceof TransformerLoader) {
-            throw new InvalidLogicException(
-                'RetryLoader cannot wrap a TransformerLoader, retries are per batch while a Transformation spans the '
-                . 'whole stream. Retry the destination instead: '
-                . 'to_transformation($transformation, write_with_retries($loader)).',
-            );
-        }
+        $this->loaderTree = new LoaderTree();
     }
 
     public function closure(FlowContext $context): void
@@ -52,6 +45,24 @@ final readonly class RetryLoader implements Closure, Loader, OverridingLoader
         $context->telemetry()->loadingStarted($this);
 
         try {
+            // Retries re-offer the failed batch to the same loader instance. A loader that holds state across load()
+            // calls which cannot be rewound may have already advanced past this batch - and Flow cannot determine
+            // from outside whether re-offering is safe (statefulness of a wrapped Transformer is undetectable; a
+            // Transformation's drive has consumed later batches). The whole wrapped tree is checked, because a
+            // wrapper that is itself replay-safe can hold one that is not. Checked per load() because
+            // withTransformation() can arm a drive after this wrapper was built; placed before the retry loop so the
+            // refusal surfaces as itself and is never re-reported as a FailedRetryException after N attempts.
+            foreach ($this->loaderTree->flatten($this->loader) as $wrapped) {
+                if ($wrapped instanceof ReplayAware && !$wrapped->replaySafe()) {
+                    throw new InvalidLogicException(
+                        'RetryLoader cannot wrap this loader: it holds state across load() calls that cannot be '
+                        . 'rewound, so Flow cannot tell whether re-offering a failed batch is safe. Retry the '
+                        . 'destination instead: to_transformation($transformation, write_with_retries($loader)) or '
+                        . 'to_branch($condition, write_with_retries($loader))->withTransformation($transformation).',
+                    );
+                }
+            }
+
             $attemptNumber = 0;
             $retriesRecord = new RetriesRecord();
 

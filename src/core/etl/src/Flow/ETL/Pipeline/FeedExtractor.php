@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Extractor;
+namespace Flow\ETL\Pipeline;
 
 use Fiber;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Generator;

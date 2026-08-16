@@ -82,6 +82,22 @@ $strategy = retry_on_exception_types([
 
 This is useful when you want to retry transient failures but immediately fail on logic errors or data validation issues.
 
+### Any Throwable Except Strategy
+
+Retries on any thrown exception except the listed types, which fail immediately:
+
+```php
+use function Flow\ETL\DSL\retry_any_throwable_except;
+
+$strategy = retry_any_throwable_except([
+    \Flow\ETL\Exception\InvalidLogicException::class,
+], 3);
+```
+
+This is the default strategy for both `new RetryLoader($loader)` and `write_with_retries($loader)`:
+`AnyThrowableExcept([InvalidLogicException::class], 3)` - every throwable is retried up to 3 times except
+`InvalidLogicException`, which fails after a single attempt with no delay.
+
 ## Delay Factories
 
 Delay factories determine **how long** to wait between retry attempts. Different strategies help avoid overwhelming
@@ -190,6 +206,18 @@ data_frame()
 ```
 
 `overwrite()` replaces the destination once per run, not once per batch, so it does not undo a duplicated batch.
+
+### Transformation Loaders
+
+Wrapping `to_transformation(...)` or a `to_branch(...)` armed with `withTransformation(...)` in
+`write_with_retries()` or `RetryLoader` throws `InvalidLogicException` at the first `load()`, at any nesting
+depth. These loaders hold state across `load()` calls and cannot replay a failed batch. Retry the destination
+instead:
+
+```php
+to_transformation($transformation, write_with_retries($loader));
+to_branch($condition, write_with_retries($loader))->withTransformation($transformation);
+```
 
 ## Advanced Configuration
 

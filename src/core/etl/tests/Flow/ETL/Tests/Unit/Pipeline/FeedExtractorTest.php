@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Extractor;
+namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use Fiber;
 use FiberError;
-use Flow\ETL\Extractor\FeedExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Pipeline\FeedExtractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 

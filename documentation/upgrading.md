@@ -99,11 +99,23 @@ write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::c
 | `$df->cache($id)` inside a `Transformation` persisted one batch | persists the whole stream |
 | `$df->batchBy(...)` / `$df->partitionBy(...)` / `batch_size(...)` cut chunks at the incoming batches | cut chunks over the stream |
 | `$df->join(...)` / `$df->partitionBy(...)` inside a `Transformation` emitted rows in input order | emit rows grouped by key |
-| `write_with_retries(to_transformation(...))` | throws `InvalidLogicException`, use `to_transformation(..., write_with_retries($loader))` |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` silently answered over an empty stream | throws `InvalidLogicException` |
+| `write_with_retries($loader)` around `to_transformation(...)` (any wrapped step) or around a `to_branch(...)` armed with `withTransformation(...)`, at any nesting depth | throws `InvalidLogicException` at the first `load()`, use `to_transformation(..., write_with_retries($loader))` or `to_branch(..., write_with_retries($loader))->withTransformation(...)` |
 | `Flow\ETL\Extractor\SwappableRowsExtractor` | removed (internal `FeedExtractor` replaces it) |
 
 `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` and `join()` buffer
 proportional to the data, as on an outer frame.
+
+### 9) `flow-php/etl` - `to_branch()->withTransformation()` drives its `Transformation` once over the whole stream
+
+| Before (0.43.x) | After |
+|---|---|
+| the `Transformation` ran on each filtered batch in its own `DataFrame` | one nested pipeline spans the stream |
+| `$df->sortBy(...)` in a branch transformation sorted each batch alone | sorts the whole branch stream |
+| `$df->aggregate(...)` / `limit()` / other `Processor`-backed operations answered per batch | answer once for the stream |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` returned per-batch answers | throws `InvalidLogicException` |
+| the wrapped loader received exactly one `load()` per outer batch | receives output as the transformation produces it; blocking operations deliver at `closure()` |
+| telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows | counts the rows offered to the branch |
 
 ---
 

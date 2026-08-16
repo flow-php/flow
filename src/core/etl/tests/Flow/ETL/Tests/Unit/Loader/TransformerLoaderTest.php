@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Loader;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
@@ -53,13 +54,16 @@ final class TransformerLoaderTest extends FlowTestCase
             static fn(Row $row): Row => $row->valueOf('id') === 1 ? throw new RuntimeException('boom') : $row,
         )), $spy);
 
+        $thrown = null;
+
         try {
             $loader->load(rows(row(int_entry('id', 1))), $context);
-
-            static::fail('Expected the failure to reach the caller even though the handler declined it.');
         } catch (RuntimeException $e) {
-            static::assertSame('boom', $e->getMessage());
+            $thrown = $e;
         }
+
+        static::assertInstanceOf(RuntimeException::class, $thrown);
+        static::assertSame('boom', $thrown->getMessage());
 
         $loader->load(rows(row(int_entry('id', 2))), $context);
         $loader->closure($context);
@@ -80,13 +84,16 @@ final class TransformerLoaderTest extends FlowTestCase
             static fn(Row $row): Row => $row->valueOf('id') === 1 ? throw new RuntimeException('boom') : $row,
         )), $spy);
 
+        $thrown = null;
+
         try {
             $loader->load(rows(row(int_entry('id', 1))), $failed);
-
-            static::fail('Expected the nested map() to propagate.');
         } catch (RuntimeException $e) {
-            static::assertSame('boom', $e->getMessage());
+            $thrown = $e;
         }
+
+        static::assertInstanceOf(RuntimeException::class, $thrown);
+        static::assertSame('boom', $thrown->getMessage());
 
         $loader->load(rows(row(int_entry('id', 2))), $next);
         $loader->closure($next);
@@ -96,6 +103,24 @@ final class TransformerLoaderTest extends FlowTestCase
             array_map(static fn(Rows $rows): array => $rows->toArray(), $spy->loadedRows),
         );
         static::assertSame([$next], $spy->contexts);
+    }
+
+    public function test_a_batch_from_a_new_run_does_not_reuse_a_suspended_drive(): void
+    {
+        $first = flow_context(config());
+        $second = flow_context(config());
+        $spy = new SpyLoader();
+        $loader = to_transformation(add_row_index('n', StartFrom::ONE), $spy);
+
+        // Run 1 dies via a sibling step, so closure() never runs and the drive is left suspended, not dropped.
+        $loader->load(rows(row(int_entry('id', 1))), $first);
+        $loader->load(rows(row(int_entry('id', 2))), $second);
+
+        static::assertSame(
+            [[['id' => 1, 'n' => 1]], [['id' => 2, 'n' => 1]]],
+            array_map(static fn(Rows $rows): array => $rows->toArray(), $spy->loadedRows),
+        );
+        static::assertSame([$first, $second], $spy->contexts);
     }
 
     public function test_a_terminated_drive_skips_later_batches_and_still_closes_the_wrapped_loader(): void
@@ -114,6 +139,23 @@ final class TransformerLoaderTest extends FlowTestCase
 
         static::assertSame(2, $spy->loadsCount);
         static::assertSame([1, 1], $spy->loadedRowCounts());
+        static::assertSame(1, $spy->closureCount);
+    }
+
+    public function test_closure_for_a_new_run_does_not_drain_a_dead_runs_drive(): void
+    {
+        $dead = flow_context(config());
+        $next = flow_context(config());
+        $spy = new SpyLoader();
+        $loader = to_transformation(new CallbackTransformation(
+            static fn(DataFrame $df): DataFrame => $df->collect(),
+        ), $spy);
+
+        // Run 1 buffers a batch in the drive and dies without closure(); run 2 routes no batches to this loader.
+        $loader->load(rows(row(int_entry('id', 1))), $dead);
+        $loader->closure($next);
+
+        static::assertSame(0, $spy->loadsCount);
         static::assertSame(1, $spy->closureCount);
     }
 
@@ -148,25 +190,29 @@ final class TransformerLoaderTest extends FlowTestCase
 
         static::assertSame(0, $throwing->loadsCount);
 
+        $thrown = null;
+
         try {
             $loader->closure($context);
-
-            static::fail('Expected the drain to rethrow the wrapped loader failure.');
         } catch (RuntimeException $e) {
-            static::assertSame($failure, $e);
+            $thrown = $e;
         }
+
+        static::assertSame($failure, $thrown);
 
         static::assertSame(1, $throwing->loadsCount);
 
         $loader->load(rows(row(int_entry('id', 3))), $context);
 
+        $thrown = null;
+
         try {
             $loader->closure($context);
-
-            static::fail('Expected the second drain to rethrow the wrapped loader failure.');
         } catch (RuntimeException $e) {
-            static::assertSame($failure, $e);
+            $thrown = $e;
         }
+
+        static::assertSame($failure, $thrown);
 
         static::assertSame(2, $throwing->loadsCount);
     }
@@ -180,13 +226,15 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(select('id'), $throwing);
 
         foreach ([1, 2] as $id) {
+            $thrown = null;
+
             try {
                 $loader->load(rows(row(int_entry('id', $id))), $context);
-
-                static::fail('Expected the wrapped loader failure to propagate.');
             } catch (RuntimeException $e) {
-                static::assertSame($failure, $e);
+                $thrown = $e;
             }
+
+            static::assertSame($failure, $thrown);
         }
 
         static::assertSame(2, $throwing->loadsCount);
@@ -218,6 +266,8 @@ final class TransformerLoaderTest extends FlowTestCase
         // (Segment.php:98 vs :119), so no loader in the segment is closed.
         $spy = new SpyLoader();
 
+        $thrown = null;
+
         try {
             df()
                 ->read(from_array([['id' => 1], ['id' => 2]]))
@@ -225,11 +275,12 @@ final class TransformerLoaderTest extends FlowTestCase
                     static fn(Row $row): Row => throw new RuntimeException('boom'),
                 )), $spy))
                 ->run();
-
-            static::fail('Expected the nested map() to fail the run.');
         } catch (RuntimeException $e) {
-            static::assertSame('boom', $e->getMessage());
+            $thrown = $e;
         }
+
+        static::assertInstanceOf(RuntimeException::class, $thrown);
+        static::assertSame('boom', $thrown->getMessage());
 
         static::assertSame(0, $spy->closureCount);
         static::assertSame(0, $spy->loadsCount);
@@ -257,6 +308,41 @@ final class TransformerLoaderTest extends FlowTestCase
             [[['id' => 1], ['id' => 2], ['id' => 3]]],
             array_map(static fn(Rows $rows): array => $rows->toArray(), $spy->loadedRows),
         );
+    }
+
+    public function test_a_rebuilt_drive_does_not_re_report_the_same_runs_limit(): void
+    {
+        $telemetry = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+        $loader = to_transformation(select('id'), new ThrowingLoader(new LimitReachedException(1)));
+
+        // The first load drops the drive; the second arrives on the SAME run, rebuilds it, and the sink throws again.
+        // One logical limit event, so exactly one report.
+        $loader->load(rows(row(int_entry('id', 1))), $telemetry->flowContext);
+        $loader->load(rows(row(int_entry('id', 2))), $telemetry->flowContext);
+
+        static::assertCount(1, $telemetry->logs->entriesContaining('Limit reached'));
+        static::assertEmpty($telemetry->logs->entriesContaining('Loading failed'));
+    }
+
+    public function test_a_second_run_reports_its_own_limit(): void
+    {
+        $first = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+        $second = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+        $loader = to_transformation(select('id'), new ThrowingLoader(new LimitReachedException(1)));
+
+        // Run 1 dies without closure(), so only the run-change check can re-arm reporting for run 2.
+        $loader->load(rows(row(int_entry('id', 1))), $first->flowContext);
+        $loader->load(rows(row(int_entry('id', 2))), $second->flowContext);
+
+        static::assertCount(1, $first->logs->entriesContaining('Limit reached'));
+        static::assertCount(1, $second->logs->entriesContaining('Limit reached'));
+        static::assertEmpty($second->logs->entriesContaining('Loading failed'));
+    }
+
+    public function test_a_transformer_loader_is_never_replay_safe(): void
+    {
+        static::assertFalse(to_transformation(select('id'), new SpyLoader())->replaySafe());
+        static::assertFalse(to_transformation(new LimitTransformer(1), new SpyLoader())->replaySafe());
     }
 
     public function test_limit_reached_is_reported_once_per_loader(): void

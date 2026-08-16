@@ -5,19 +5,24 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\TransformationDrive;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Throwable;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-
-final class BranchingLoader implements Closure, Loader, OverridingLoader
+final class BranchingLoader implements Closure, Loader, OverridingLoader, ReplayAware
 {
+    private ?TransformationDrive $drive = null;
+
+    private bool $limitReached = false;
+
+    private ?FlowContext $runContext = null;
+
     private ?Transformation $transformation = null;
 
     public function __construct(
@@ -27,8 +32,28 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
 
     public function closure(FlowContext $context): void
     {
-        if ($this->loader instanceof Closure) {
-            $this->loader->closure($context);
+        try {
+            try {
+                // A drive left behind by a dead earlier run must not be drained here - it would commit that run's
+                // buffered rows under the dead run's context. The finally below discards it, exactly as load() does.
+                if ($this->drive !== null && $this->drive->drivenBy($context)) {
+                    $this->drive->drain();
+                }
+            } catch (Throwable $failure) {
+                // Same ruling as TransformerLoader::closure(): a drain failure never reached load(), so the
+                // ErrorHandler rules here; declining means the run continues and the loader must still close.
+                if ($context->errorHandler()->throw($failure, new Rows())) {
+                    throw $failure;
+                }
+            }
+
+            if ($this->loader instanceof Closure) {
+                $this->loader->closure($context);
+            }
+        } finally {
+            $this->drive = null;
+            $this->limitReached = false;
+            $this->runContext = null;
         }
     }
 
@@ -37,15 +62,39 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $rows = (new ScalarFunctionFilterTransformer($this->condition))->transform($rows, $context);
-
-            if ($this->transformation) {
-                $rows = df($context->config)->read(from_rows($rows))->with($this->transformation)->fetch();
+            // Same ruling split as TransformerLoader::load(): drivenBy() decides rebuild, this field decides the
+            // limit-dedup reset - a mid-run drive rebuild must not re-arm limit reporting.
+            if ($this->runContext !== $context) {
+                $this->runContext = $context;
+                $this->limitReached = false;
             }
 
-            $this->loader->load($rows, $context);
+            $branchRows = (new ScalarFunctionFilterTransformer($this->condition))->transform($rows, $context);
+
+            if ($this->transformation === null) {
+                $this->loader->load($branchRows, $context);
+            } else {
+                if ($this->drive === null || !$this->drive->drivenBy($context)) {
+                    $this->drive = new TransformationDrive($this->transformation, $this->loader, $context);
+                }
+
+                try {
+                    $this->drive->feed($branchRows);
+                } catch (Throwable $failure) {
+                    $this->drive = null;
+
+                    throw $failure;
+                }
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (LimitReachedException $e) {
+            if (!$this->limitReached) {
+                $this->limitReached = true;
+                $context->telemetry()->limitReached(['limit' => $e->limit]);
+            }
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => 0]);
         } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
@@ -58,6 +107,12 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
         return [
             $this->loader,
         ];
+    }
+
+    public function replaySafe(): bool
+    {
+        // No transformation: a fresh stateless ScalarFunctionFilterTransformer per call - replay-safe.
+        return $this->transformation === null;
     }
 
     public function withTransformation(Transformation $transformation): self

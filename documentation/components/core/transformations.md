@@ -236,6 +236,10 @@ The `Transformation` is expanded **once per loader instance**, on the first batc
 driven a single time over the whole stream. Every operation inside it answers exactly as it does on the outer frame -
 `limit()` and `add_row_index()` apply across the stream, not per batch.
 
+`to_branch($condition, $loader)->withTransformation($transformation)` drives its `Transformation` the same way: the
+condition filters each batch first, and one nested pipeline then spans the whole filtered stream. The memory cost,
+chunk shape and failure behaviour below apply to it unchanged.
+
 ```php
 use Flow\ETL\{DataFrame, Transformation};
 

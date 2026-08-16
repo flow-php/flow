@@ -39,7 +39,7 @@ use function Flow\ETL\DSL\window;
  * The values below are the outer-frame ground truth: running the same operation on the outer frame produces them
  * byte for byte. If one of them starts failing, the nested drive regressed - do not "fix" the assertion.
  *
- * See .claude/tasks/transformation-loader-bug/06-repair-nested-transformation-drive.md.
+ * See documentation/components/core/transformations.md.
  */
 final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestCase
 {
