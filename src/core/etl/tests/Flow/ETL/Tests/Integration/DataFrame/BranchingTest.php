@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_memory;
 
@@ -48,6 +49,61 @@ final class BranchingTest extends FlowIntegrationTestCase
                 ['id' => 6, 'group' => 'C'],
             ],
             $memoryBC->dump(),
+        );
+    }
+
+    public function test_branching_with_aggregate_transformation_answers_once_for_the_stream(): void
+    {
+        df()
+            ->read(from_array([
+                ['id' => 5, 'group' => 'A'],
+                ['id' => 4, 'group' => 'B'],
+                ['id' => 3, 'group' => 'A'],
+                ['id' => 2, 'group' => 'B'],
+                ['id' => 1, 'group' => 'A'],
+                ['id' => 0, 'group' => 'B'],
+            ]))
+            ->batchSize(2)
+            ->write(to_branch(
+                ref('group')->equals(lit('A')),
+                to_memory($memoryA = new ArrayMemory()),
+            )->withTransformation(new class implements Transformation {
+                public function transform(DataFrame $dataFrame): DataFrame
+                {
+                    return $dataFrame->aggregate(sum(ref('id')));
+                }
+            }))
+            ->run();
+
+        static::assertSame([['id_sum' => 9]], $memoryA->dump());
+    }
+
+    public function test_branching_with_blocking_transformation_sorts_the_whole_branch(): void
+    {
+        df()
+            ->read(from_array([
+                ['id' => 5, 'group' => 'A'],
+                ['id' => 4, 'group' => 'B'],
+                ['id' => 3, 'group' => 'A'],
+                ['id' => 2, 'group' => 'B'],
+                ['id' => 1, 'group' => 'A'],
+                ['id' => 0, 'group' => 'B'],
+            ]))
+            ->batchSize(2)
+            ->write(to_branch(
+                ref('group')->equals(lit('A')),
+                to_memory($memoryA = new ArrayMemory()),
+            )->withTransformation(new class implements Transformation {
+                public function transform(DataFrame $dataFrame): DataFrame
+                {
+                    return $dataFrame->sortBy(ref('id'));
+                }
+            }))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1, 'group' => 'A'], ['id' => 3, 'group' => 'A'], ['id' => 5, 'group' => 'A']],
+            $memoryA->dump(),
         );
     }
 

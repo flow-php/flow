@@ -15,7 +15,7 @@ use function Flow\ETL\DSL\rows;
  * already-sorted partition - WindowProcessor sorts before calling it - so the fixtures carry the order
  * rather than relying on the function to impose one.
  *
- * Expectations derived from PostgreSQL, see .claude/tasks/window-functions/02-frame-performance.summary.md.
+ * Expectations derived from PostgreSQL.
  */
 final class RankingContext
 {

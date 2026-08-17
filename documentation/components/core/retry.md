@@ -20,8 +20,12 @@ configurable strategies.
 
 ### RetryLoader
 
-The `RetryLoader` is a decorator that wraps any existing loader with retry capabilities. It implements the same `Loader`
-interface, making it transparent to use in your data pipelines.
+The `RetryLoader` is a decorator that wraps any existing loader with retry capabilities. It implements `Loader` and
+`Loader\Closure`, and forwards `closure()` to the wrapped loader, so file loaders finalize and publish their
+destination as they normally would.
+
+Only `load()` is retried. A failure while closing is not retried, because closing publishes the destination and cannot
+be resumed from a partial state.
 
 ```php
 <?php
@@ -77,6 +81,22 @@ $strategy = retry_on_exception_types([
 ```
 
 This is useful when you want to retry transient failures but immediately fail on logic errors or data validation issues.
+
+### Any Throwable Except Strategy
+
+Retries on any thrown exception except the listed types, which fail immediately:
+
+```php
+use function Flow\ETL\DSL\retry_any_throwable_except;
+
+$strategy = retry_any_throwable_except([
+    \Flow\ETL\Exception\InvalidLogicException::class,
+], 3);
+```
+
+This is the default strategy for both `new RetryLoader($loader)` and `write_with_retries($loader)`:
+`AnyThrowableExcept([InvalidLogicException::class], 3)` - every throwable is retried up to 3 times except
+`InvalidLogicException`, which fails after a single attempt with no delay.
 
 ## Delay Factories
 
@@ -150,7 +170,6 @@ multiple times produces the same result.
 **Examples of idempotent loader operations:**
 
 - Database `UPSERT` (INSERT ON CONFLICT UPDATE)
-- File overwrites
 - HTTP PUT requests
 - Database UPDATE with specific WHERE clauses
 
@@ -169,6 +188,44 @@ Non-idempotent operations may produce different results or unintended side effec
 - Database `INSERT` without conflict resolution
 - File appends
 - Counter increments
+
+### File Loaders
+
+Do not wrap file loaders such as `to_csv()`, `to_json()` or `to_parquet()` in `write_with_retries()`, regardless of the
+save mode. A file loader appends each batch to a stream that stays open for the whole run, and a retry has nothing to
+roll back, so a batch that fails after part of it reached the stream is written twice:
+
+```php
+data_frame()
+    ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
+    ->batchSize(2)
+    ->saveMode(overwrite())
+    // a transient failure in the first batch leaves ids 1 and 2 in the file twice
+    ->write(write_with_retries(to_csv($path)))
+    ->run();
+```
+
+`overwrite()` replaces the destination once per run, not once per batch, so it does not undo a duplicated batch.
+
+### Transformation Loaders
+
+Wrapping `to_transformation(...)` or a `to_branch(...)` armed with `withTransformation(...)` in
+`write_with_retries()` or `RetryLoader` throws `InvalidLogicException` at the first `load()`, at any nesting
+depth. These loaders hold state across `load()` calls and cannot replay a failed batch. Retry the destination
+instead:
+
+```php
+to_transformation($transformation, write_with_retries($loader));
+to_branch($condition, write_with_retries($loader))->withTransformation($transformation);
+```
+
+When the destination is a transactional wrapper (`to_dbal_transaction()`, `to_pgsql_transaction()`), put the
+wrapper inside `write_with_retries()`, not the other way around - a retry inside an aborted database
+transaction can never succeed; wrapping the transaction gives every attempt a fresh one:
+
+```php
+to_transformation($transformation, write_with_retries(to_pgsql_transaction($client, $loader)));
+```
 
 ## Advanced Configuration
 

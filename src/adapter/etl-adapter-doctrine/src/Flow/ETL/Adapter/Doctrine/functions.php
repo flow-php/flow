@@ -318,9 +318,13 @@ function postgresql_update_options(array $primary_key_columns = [], array $updat
 }
 
 /**
- * Execute multiple loaders within a database transaction.
- * Each batch of rows will be processed in its own transaction.
- * If any loader fails, the entire batch will be rolled back.
+ * Execute multiple loaders within database transactions.
+ * Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when
+ * the loader is closed (blocking operations drain there) are committed in one final transaction.
+ * If any loader fails, the open transaction is rolled back.
+ * Atomicity requires every wrapped loader to use the same connection as the wrapper: pass one live
+ * Connection to both - a wrapped loader built from array params opens its own connection and
+ * escapes the transaction.
  *
  * @param array<string, mixed>|Connection $connection
  * @param Loader ...$loaders - Loaders to execute within the transaction

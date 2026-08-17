@@ -947,12 +947,6 @@ final class DataFrame
                 $this->pipeline->add(
                     new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order()),
                 );
-            } else {
-                $this->collect();
-
-                if (count($reference->window()->order())) {
-                    $this->sortBy(...$reference->window()->order());
-                }
             }
 
             $this->pipeline->add(new WindowProcessor($entry, $reference));

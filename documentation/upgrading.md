@@ -57,6 +57,76 @@ Columns that may only become null in later batches, declare the schema explicitl
 | `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` → throws                                                                | `['id' => 1]`             |
 | `type_list(type_integer())->cast('["1","2"]')` → throws                                                                                | `[1, 2]`                  |
 
+### 6) `flow-php/etl` - `FilesystemStreams` is owned per `FlowContext`, not per `Config`
+
+| Before                                                                                  | After                                            |
+|-----------------------------------------------------------------------------------------|--------------------------------------------------|
+| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | applies only to the `DataFrame` it is called on  |
+| a failed run left its `DestinationStream` registered; the retry appended to it          | each run has its own registry; the retry refuses |
+| `Config::filesystemStreams()`                                                           | removed                                          |
+| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                          |
+
+Pipelines that relied on a save mode set on an earlier frame sharing the same `Config` must call
+`saveMode()` on each frame. Build `Config` through `Config::builder()` / `Config::default()`.
+
+### 7) `flow-php/etl` - `RetryLoader` no longer retries `InvalidLogicException` by default
+
+| Before                                                               | After                                                       |
+|----------------------------------------------------------------------|-------------------------------------------------------------|
+| `new RetryLoader($loader)` default strategy `new AnyThrowable(3)`    | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
+| `write_with_retries($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
+| an `InvalidLogicException` was attempted 4 times with delays between | attempted once, no delay                                    |
+
+`AnyThrowable` itself is unchanged. To keep retrying every throwable, pass it explicitly:
+
+```php
+write_with_retries($loader, retry_any_throwable(3));
+```
+
+New helper for the deny-list strategy:
+
+```php
+write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::class], 3));
+```
+
+### 8) `flow-php/etl` - operations inside a `Transformation` answer for the whole stream
+
+| Before                                                                                                                                                                   | After                                                                                                                                                                                     |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$df->sortBy(ref('id'))` inside a `Transformation` sorted each batch on its own                                                                                          | sorts the whole stream                                                                                                                                                                    |
+| `$df->aggregate(...)` / `groupBy()->aggregate()` / `pivot()` / window functions inside a `Transformation` answered per batch                                             | answer for the whole stream                                                                                                                                                               |
+| `$df->offset(2)` inside a `Transformation` lost rows                                                                                                                     | skips exactly the offset across the stream                                                                                                                                                |
+| `$df->cache($id)` inside a `Transformation` persisted one batch                                                                                                          | persists the whole stream                                                                                                                                                                 |
+| `$df->batchBy(...)` / `$df->partitionBy(...)` / `batch_size(...)` cut chunks at the incoming batches                                                                     | cut chunks over the stream                                                                                                                                                                |
+| `$df->join(...)` / `$df->partitionBy(...)` inside a `Transformation` emitted rows in input order                                                                         | emit rows grouped by key                                                                                                                                                                  |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` silently answered over an empty stream                                                                | throws `InvalidLogicException`                                                                                                                                                            |
+| `write_with_retries($loader)` around `to_transformation(...)` (any wrapped step) or around a `to_branch(...)` armed with `withTransformation(...)`, at any nesting depth | throws `InvalidLogicException` at the first `load()`, use `to_transformation(..., write_with_retries($loader))` or `to_branch(..., write_with_retries($loader))->withTransformation(...)` |
+| `Flow\ETL\Extractor\SwappableRowsExtractor`                                                                                                                              | removed (internal `FeedExtractor` replaces it)                                                                                                                                            |
+
+`sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` and `join()` buffer
+proportional to the data, as on an outer frame.
+
+### 9) `flow-php/etl` - `to_branch()->withTransformation()` drives its `Transformation` once over the whole stream
+
+| Before                                                                                        | After                                                                                         |
+|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| the `Transformation` ran on each filtered batch in its own `DataFrame`                        | one nested pipeline spans the stream                                                          |
+| `$df->sortBy(...)` in a branch transformation sorted each batch alone                         | sorts the whole branch stream                                                                 |
+| `$df->aggregate(...)` / `limit()` / other `Processor`-backed operations answered per batch    | answer once for the stream                                                                    |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` returned per-batch answers | throws `InvalidLogicException`                                                                |
+| the wrapped loader received exactly one `load()` per outer batch                              | receives output as the transformation produces it; blocking operations deliver at `closure()` |
+| telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows               | counts the rows offered to the branch                                                         |
+
+### 10) `flow-php/etl-adapter-doctrine` / `flow-php/etl-adapter-postgresql` - transactional loaders run
+`closure()` inside a transaction
+
+| Before                                                                                                      | After                                                                               |
+|-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| `to_dbal_transaction()` / `to_pgsql_transaction()` never called `closure()` on wrapped loaders              | forwards `closure()` to every wrapped loader, inside one final transaction          |
+| blocking operations inside a wrapped `Transformation` answered per batch, each batch in its own transaction | answer for the whole stream, delivered at `closure()` in a single transaction       |
+| -                                                                                                           | a failure during the final transaction rolls back the drained delivery and rethrows |
+| `withIsolationLevel()` applied to per-batch transactions                                                    | applies to every transaction the wrapper opens                                      |
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x
@@ -2470,7 +2540,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _        (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _         (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

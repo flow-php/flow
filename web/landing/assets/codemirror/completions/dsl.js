@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 826
+ * Total functions: 844
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -3696,6 +3696,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\enum_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:enum" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },                {
+        label: "enum_name",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">enum_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnumName</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\enum_name(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },                {
         label: "enum_schema",
         type: "function",
         detail: "flow\u002Ddsl\u002Dschema",
@@ -3712,6 +3727,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\enum_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "enum_value",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">enum_value</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnumValue</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\enum_value(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },                {
         label: "environment_detector",
@@ -4762,6 +4792,60 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\from_path_partitions(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_pgsql_cursor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_pgsql_cursor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sql|string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlCursorExtractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PostgreSQL cursor extractor using server-side cursors for memory-efficient extraction.<br>Uses DECLARE CURSOR + FETCH to stream data without loading entire result set into memory.<br>This is the only way to achieve true low memory extraction with PHP\'s ext-pgsql.<br>Note: Requires a transaction context (auto-started if not in one).<br>@param Client $client PostgreSQL client<br>@param Sql|string $query SQL query to execute (wrapped in DECLARE CURSOR)<br>@param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \\Flow\\PostgreSql\\DSL\\typed()} to force a specific PostgreSQL type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\from_pgsql_cursor(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_pgsql_key_set",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_pgsql_key_set</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sql|string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">KeySet</span> <span class=\"fn-param\">$keySet</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlKeySetExtractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PostgreSQL extractor using keyset (cursor-based) pagination.<br>More efficient than LIMIT/OFFSET for large datasets - uses indexed WHERE conditions<br>instead of skipping rows.<br>@param Client $client PostgreSQL client<br>@param Sql|string $query SQL query to execute (must have ORDER BY matching keyset columns)<br>@param KeySet $keySet Columns to use for keyset pagination<br>@param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \\Flow\\PostgreSql\\DSL\\typed()} to force a specific PostgreSQL type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\from_pgsql_key_set(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:keySet" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_pgsql_limit_offset",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_pgsql_limit_offset</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sql|string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlLimitOffsetExtractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PostgreSQL extractor using LIMIT/OFFSET pagination.<br>Suitable for smaller datasets. For large datasets, consider using keyset pagination<br>(from_pgsql_key_set) which is more efficient.<br>@param Client $client PostgreSQL client<br>@param Sql|string $query SQL query to execute (must have ORDER BY clause)<br>@param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \\Flow\\PostgreSql\\DSL\\typed()} to force a specific PostgreSQL type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\from_pgsql_limit_offset(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
         boost: 10
     },                {
         label: "from_pipeline",
@@ -6310,7 +6394,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">list_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ListType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ListDefinition</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param ListType<T>|Type<list<T>> $type<br>@return ListDefinition<T>
+                    @template T<br>@param ListType<list<T>>|Type<list<T>> $type<br>@return ListDefinition<T>
                 </div>
                             `
             return div
@@ -6535,7 +6619,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">map_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MapType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MapDefinition</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template TKey of array-key<br>@template TValue<br>@param MapType<TKey, TValue>|Type<array<TKey, TValue>> $type<br>@return MapDefinition<TKey, TValue>
+                    @template TKey of array-key<br>@template TValue<br>@param MapType<array<TKey, TValue>>|Type<array<TKey, TValue>> $type<br>@return MapDefinition<TKey, TValue>
                 </div>
                             `
             return div
@@ -7483,7 +7567,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Context\\MemoryContextStorage::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
+                    <span class=\"fn-name\">otlp_tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\ParentBasedSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Context\\MemoryContextStorage::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Create a tracer provider configured for OTLP export.<br>@param SpanProcessor $processor The processor for handling spans<br>@param ClockInterface $clock The clock for timestamps<br>@param Sampler $sampler The sampler for deciding whether to record spans<br>@param ContextStorage $contextStorage The context storage for propagating trace context
@@ -7819,6 +7903,138 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\pgsql_connection_params(" + "$" + "{" + "1:database" + "}" + ", " + "$" + "{" + "2:host" + "}" + ", " + "$" + "{" + "3:port" + "}" + ", " + "$" + "{" + "4:user" + "}" + ", " + "$" + "{" + "5:password" + "}" + ", " + "$" + "{" + "6:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_delete_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_delete_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$primaryKeys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeleteOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create delete options for PostgreSQL loader.<br>@param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_delete_options(" + "$" + "{" + "1:primaryKeys" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_insert_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_insert_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$skipConflicts</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$conflictColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$conflictConstraint</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$updateColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">InsertOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create insert options for PostgreSQL loader.<br>@param bool $skipConflicts If true, use ON CONFLICT DO NOTHING<br>@param list<string> $conflictColumns Column names for ON CONFLICT (columns)<br>@param null|string $conflictConstraint Constraint name for ON CONFLICT ON CONSTRAINT<br>@param list<string> $updateColumns Columns to update on conflict (empty = all non-key columns)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_insert_options(" + "$" + "{" + "1:skipConflicts" + "}" + ", " + "$" + "{" + "2:conflictColumns" + "}" + ", " + "$" + "{" + "3:conflictConstraint" + "}" + ", " + "$" + "{" + "4:updateColumns" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_pagination_key_asc",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_pagination_key_asc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_pagination_key_asc(" + "$" + "{" + "1:column" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_pagination_key_desc",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_pagination_key_desc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_pagination_key_desc(" + "$" + "{" + "1:column" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_pagination_key_set",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_pagination_key_set</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Key</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeySet</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_pagination_key_set(" + "$" + "{" + "1:keys" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_schema_sort_by_type",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeStrategy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_schema_sort_by_type(" + "$" + "{" + "1:typesMap" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_table_to_flow_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_table_to_flow_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Table</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a PostgreSQL table definition into a Flow Schema.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_table_to_flow_schema(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:typesMap" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pgsql_update_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pgsql_update_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$primaryKeys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UpdateOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create update options for PostgreSQL loader.<br>@param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\pgsql_update_options(" + "$" + "{" + "1:primaryKeys" + "}" + ")"),
         boost: 10
     },                {
         label: "pie_chart",
@@ -8596,6 +8812,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\retry_any_throwable(" + "$" + "{" + "1:limit" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "retry_any_throwable_except",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">retry_any_throwable_except</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$exception_types</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AnyThrowableExcept</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<class-string<\\Throwable>> $exception_types
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\retry_any_throwable_except(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
         boost: 10
     },                {
         label: "retry_on_exception_types",
@@ -10813,7 +11047,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">structure_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<mixed>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
+                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<array<array-key, mixed>>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
                 </div>
                             `
             return div
@@ -10846,7 +11080,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">structure_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StructureType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureDefinition</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param StructureType<T>|Type<array<string, T>> $type<br>@return StructureDefinition<T>
+                    @template T<br>@param StructureType<array<array-key, T>>|Type<array<array-key, T>> $type<br>@return StructureDefinition<T>
                 </div>
                             `
             return div
@@ -10864,7 +11098,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">struct_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<mixed>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
+                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<array<array-key, mixed>>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
                 </div>
                             `
             return div
@@ -11218,12 +11452,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BranchingLoader</span>
+                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transformation</span> <span class=\"fn-param\">$transformation</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BranchingLoader</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ", " + "$" + "{" + "3:transformation" + "}" + ")"),
         boost: 10
     },                {
         label: "to_callable",
@@ -11422,7 +11656,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">to_dbal_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loaders</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransactionalDbalLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Execute multiple loaders within a database transaction.<br>Each batch of rows will be processed in its own transaction.<br>If any loader fails, the entire batch will be rolled back.<br>@param array<string, mixed>|Connection $connection<br>@param Loader ...$loaders - Loaders to execute within the transaction<br>@throws InvalidArgumentException
+                    Execute multiple loaders within database transactions.<br>Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when<br>the loader is closed (blocking operations drain there) are committed in one final transaction.<br>If any loader fails, the open transaction is rolled back.<br>Atomicity requires every wrapped loader to use the same connection as the wrapper: pass one live<br>Connection to both - a wrapped loader built from array params opens its own connection and<br>escapes the transaction.<br>@param array<string, mixed>|Connection $connection<br>@param Loader ...$loaders - Loaders to execute within the transaction<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
@@ -11563,6 +11797,57 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ", " + "$" + "{" + "5:engine" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_pgsql_schema_table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_pgsql_schema_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$tableName</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$databaseSchema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;public&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TableOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a Flow Schema into a PostgreSQL table definition.<br>@param string $databaseSchema PostgreSQL schema (namespace) the table belongs to<br>@param ?TableOptions $options table-level options the Flow Schema cannot express (e.g. UNLOGGED)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_schema_table(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:tableName" + "}" + ", " + "$" + "{" + "3:databaseSchema" + "}" + ", " + "$" + "{" + "4:typesMap" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_pgsql_table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_pgsql_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlLoader</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_table(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:table" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_pgsql_transaction",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loaders</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransactionalPostgreSqlLoader</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Execute multiple loaders within PostgreSQL transactions.<br>Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when<br>the loader is closed (blocking operations drain there) are committed in one final transaction.<br>If any loader fails, the open transaction is rolled back.<br>All wrapped loaders must use the same Client instance as the wrapper - a loader holding its own<br>Client escapes the transaction.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_transaction(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:loaders" + "}" + ")"),
         boost: 10
     },                {
         label: "to_seal_delete",
@@ -11764,7 +12049,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SpanLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\SpanLimits::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
+                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\ParentBasedSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SpanLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\SpanLimits::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Create a TracerProvider.<br>@param SpanProcessor $processor The processor for spans<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for context propagation<br>@param Sampler $sampler Sampling strategy for spans<br>@param SpanLimits $limits Limits for span attributes, events, and links<br>@param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
@@ -11908,10 +12193,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_array</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_array</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<array<mixed>>
+                    @return ArrayType<array<mixed>>
                 </div>
                             `
             return div
@@ -11944,10 +12229,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_boolean</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_boolean</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BooleanType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<bool>
+                    @return BooleanType<bool>
                 </div>
                             `
             return div
@@ -11962,10 +12247,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_callable</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_callable</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CallableType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<callable>
+                    @return CallableType<callable>
                 </div>
                             `
             return div
@@ -11980,10 +12265,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_class_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_class_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ClassStringType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T of object<br>@param null|class-string<T> $class<br>@return ($class is null ? Type<class-string> : Type<class-string<T>>)
+                    @template T of object<br>@param null|class-string<T> $class<br>@return ($class is null ? ClassStringType<class-string> : ClassStringType<class-string<T>>)
                 </div>
                             `
             return div
@@ -11998,10 +12283,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_date</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_date</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DateType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DateTimeInterface>
+                    @return DateType<\\DateTimeInterface>
                 </div>
                             `
             return div
@@ -12016,15 +12301,33 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_datetime</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_datetime</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DateTimeType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DateTimeInterface>
+                    @return DateTimeType<\\DateTimeInterface>
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\type_datetime()"),
+        boost: 10
+    },                {
+        label: "type_empty_array",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtype",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">type_empty_array</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EmptyArrayType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @return EmptyArrayType<array{}>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Types\\DSL\\type_empty_array()"),
         boost: 10
     },                {
         label: "type_enum",
@@ -12034,10 +12337,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_enum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_enum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnumType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T of UnitEnum<br>@param class-string<T> $class<br>@return Type<T>
+                    @template T of UnitEnum<br>@param class-string<T> $class<br>@return EnumType<T>
                 </div>
                             `
             return div
@@ -12070,10 +12373,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_float</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_float</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloatType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<float>
+                    @return FloatType<float>
                 </div>
                             `
             return div
@@ -12106,10 +12409,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_html</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_html</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HTMLType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<HTMLDocument>
+                    @return HTMLType<HTMLDocument>
                 </div>
                             `
             return div
@@ -12124,10 +12427,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_html_element</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_html_element</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HTMLElementType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<HTMLElement>
+                    @return HTMLElementType<HTMLElement>
                 </div>
                             `
             return div
@@ -12142,10 +12445,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_instance_of</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_instance_of</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$class</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">InstanceOfType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T of object<br>@param class-string<T> $class<br>@return Type<T>
+                    @template T of object<br>@param class-string<T> $class<br>@return InstanceOfType<T>
                 </div>
                             `
             return div
@@ -12160,10 +12463,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_integer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_integer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IntegerType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<int>
+                    @return IntegerType<int>
                 </div>
                             `
             return div
@@ -12178,10 +12481,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_intersection</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$first</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$second</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$types</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_intersection</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$first</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$second</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$types</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IntersectionType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param Type<T> $first<br>@param Type<T> $second<br>@param Type<T> ...$types<br>@return Type<T>
+                    @template T<br>@param Type<T> $first<br>@param Type<T> $second<br>@param Type<T> ...$types<br>@return IntersectionType<T, T>
                 </div>
                             `
             return div
@@ -12250,10 +12553,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_json</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_json</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<Json>
+                    @return JsonType<Json>
                 </div>
                             `
             return div
@@ -12268,10 +12571,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_list</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$element</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_list</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$element</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ListType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param Type<T> $element<br>@return Type<list<T>>
+                    @template T<br>@param Type<T> $element<br>@return ListType<list<T>>
                 </div>
                             `
             return div
@@ -12286,10 +12589,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_literal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string|int|float|bool</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_literal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string|int|float|bool</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LiteralType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T of bool|float|int|string<br>@param T $value<br>@return Type<T>
+                    @template T of bool|float|int|string<br>@param T $value<br>@return LiteralType<T>
                 </div>
                             `
             return div
@@ -12304,10 +12607,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$key_type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$value_type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$key_type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$value_type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MapType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template TKey of array-key<br>@template TValue<br>@param Type<TKey> $key_type<br>@param Type<TValue> $value_type<br>@return Type<array<TKey, TValue>>
+                    @template TKey of array-key<br>@template TValue<br>@param Type<TKey> $key_type<br>@param Type<TValue> $value_type<br>@return MapType<array<TKey, TValue>>
                 </div>
                             `
             return div
@@ -12340,10 +12643,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_mixed</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_mixed</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MixedType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<mixed>
+                    @return MixedType<mixed>
                 </div>
                             `
             return div
@@ -12358,10 +12661,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_non_empty_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_non_empty_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NonEmptyStringType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<non-empty-string>
+                    @return NonEmptyStringType<non-empty-string>
                 </div>
                             `
             return div
@@ -12376,10 +12679,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_null</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_null</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NullType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<null>
+                    @return NullType<null>
                 </div>
                             `
             return div
@@ -12394,10 +12697,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_numeric_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_numeric_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NumericStringType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<numeric-string>
+                    @return NumericStringType<numeric-string>
                 </div>
                             `
             return div
@@ -12412,10 +12715,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_object</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_object</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ObjectType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<object>
+                    @return ObjectType<object>
                 </div>
                             `
             return div
@@ -12430,10 +12733,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_optional</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_optional</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OptionalType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param Type<T> $type<br>@return Type<T>
+                    @template T<br>@param Type<T> $type<br>@return OptionalType<T>
                 </div>
                             `
             return div
@@ -12448,10 +12751,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_positive_integer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_positive_integer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PositiveIntegerType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<int<0, max>>
+                    @return PositiveIntegerType<int<0, max>>
                 </div>
                             `
             return div
@@ -12466,10 +12769,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_resource</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_resource</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ResourceType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<resource>
+                    @return ResourceType<resource>
                 </div>
                             `
             return div
@@ -12484,10 +12787,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_scalar</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_scalar</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ScalarType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<bool|float|int|string>
+                    @return ScalarType<bool|float|int|string>
                 </div>
                             `
             return div
@@ -12502,10 +12805,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_string</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<string>
+                    @return StringType<string>
                 </div>
                             `
             return div
@@ -12520,10 +12823,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$optional_elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$allow_extra</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$optional_elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$allow_extra</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param array<array-key, Type<T>> $elements<br>@param array<array-key, Type<T>> $optional_elements<br>@return StructureType<T>
+                    @template T<br>@param array<array-key, Type<T>> $elements<br>@param array<array-key, Type<T>> $optional_elements<br>@return StructureType<array<array-key, T>>
                 </div>
                             `
             return div
@@ -12538,10 +12841,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_time</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_time</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TimeType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DateInterval>
+                    @return TimeType<\\DateInterval>
                 </div>
                             `
             return div
@@ -12556,10 +12859,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_time_zone</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_time_zone</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TimeZoneType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DateTimeZone>
+                    @return TimeZoneType<\\DateTimeZone>
                 </div>
                             `
             return div
@@ -12574,10 +12877,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_union</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$first</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$second</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$types</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_union</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$first</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$second</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$types</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnionType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param Type<T> $first<br>@param Type<T> $second<br>@param Type<T> ...$types<br>@return Type<T>
+                    @template T<br>@param Type<T> $first<br>@param Type<T> $second<br>@param Type<T> ...$types<br>@return UnionType<T, T>
                 </div>
                             `
             return div
@@ -12592,10 +12895,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_uuid</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_uuid</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UuidType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<Uuid>
+                    @return UuidType<Uuid>
                 </div>
                             `
             return div
@@ -12610,10 +12913,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DOMDocument|XMLDocument>
+                    @return XMLType<\\DOMDocument|XMLDocument>
                 </div>
                             `
             return div
@@ -12628,10 +12931,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_xml_element</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                    <span class=\"fn-name\">type_xml_element</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLElementType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<\\DOMElement|Element>
+                    @return XMLElementType<\\DOMElement|Element>
                 </div>
                             `
             return div
@@ -13891,7 +14194,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">write_with_retries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RetryStrategy</span> <span class=\"fn-param\">$retry_strategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\RetryStrategy\\AnyThrowable::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DelayFactory</span> <span class=\"fn-param\">$delay_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\DelayFactory\\Fixed\\FixedMilliseconds::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sleep</span> <span class=\"fn-param\">$sleep</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Time\\SystemSleep::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RetryLoader</span>
+                    <span class=\"fn-name\">write_with_retries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RetryStrategy</span> <span class=\"fn-param\">$retry_strategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\RetryStrategy\\AnyThrowableExcept::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DelayFactory</span> <span class=\"fn-param\">$delay_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\DelayFactory\\Fixed\\FixedMilliseconds::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sleep</span> <span class=\"fn-param\">$sleep</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Time\\SystemSleep::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RetryLoader</span>
                 </div>
                             `
             return div

@@ -67,6 +67,7 @@ $application->addCommand(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php',
+            __DIR__ . '/../src/adapter/etl-adapter-postgresql/src/Flow/ETL/Adapter/PostgreSql/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-seal/src/Flow/ETL/Adapter/Seal/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php',

@@ -6,6 +6,7 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\FailedRetryException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Retry\DelayFactory;
@@ -13,26 +14,48 @@ use Flow\ETL\Retry\DelayFactory\Fixed\FixedMilliseconds;
 use Flow\ETL\Retry\FailedRetry;
 use Flow\ETL\Retry\RetriesRecord;
 use Flow\ETL\Retry\RetryStrategy;
-use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
+use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
 use Flow\ETL\Rows;
 use Flow\ETL\Time\Sleep;
 use Flow\ETL\Time\SystemSleep;
 use Throwable;
 
-final readonly class RetryLoader implements Loader
+final readonly class RetryLoader implements Closure, Loader, OverridingLoader
 {
+    private LoaderTree $loaderTree;
+
     public function __construct(
         private Loader $loader,
-        private RetryStrategy $retryStrategy = new AnyThrowable(3),
+        private RetryStrategy $retryStrategy = new AnyThrowableExcept([InvalidLogicException::class], 3),
         private DelayFactory $delayFactory = new FixedMilliseconds(200),
         private Sleep $sleep = new SystemSleep(),
-    ) {}
+    ) {
+        $this->loaderTree = new LoaderTree();
+    }
+
+    public function closure(FlowContext $context): void
+    {
+        if ($this->loader instanceof Closure) {
+            $this->loader->closure($context);
+        }
+    }
 
     public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this);
 
         try {
+            foreach ($this->loaderTree->flatten($this->loader) as $wrapped) {
+                if ($wrapped instanceof ReplayAware && !$wrapped->replaySafe()) {
+                    throw new InvalidLogicException(
+                        'RetryLoader cannot wrap this loader: it holds state across load() calls that cannot be '
+                        . 'rewound, so Flow cannot tell whether re-offering a failed batch is safe. Retry the '
+                        . 'destination instead: to_transformation($transformation, write_with_retries($loader)) or '
+                        . 'to_branch($condition, write_with_retries($loader))->withTransformation($transformation).',
+                    );
+                }
+            }
+
             $attemptNumber = 0;
             $retriesRecord = new RetriesRecord();
 
@@ -62,5 +85,12 @@ final readonly class RetryLoader implements Loader
 
             throw $e;
         }
+    }
+
+    public function loaders(): array
+    {
+        return [
+            $this->loader,
+        ];
     }
 }

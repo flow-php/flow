@@ -24,13 +24,17 @@ use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\time_entry;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\uuid_entry;
 
 final class ExcelLoaderTest extends FlowTestCase
@@ -345,6 +349,24 @@ final class ExcelLoaderTest extends FlowTestCase
         $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromEntry');
 
         to_excel('/tmp/test.xlsx')->withSheetNameFromEntry('category')->withSheetName('MySheet');
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_excel(): void
+    {
+        $outputPath = __DIR__ . '/var/output_transformation.xlsx';
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(select('id'), to_excel($outputPath)))
+            ->run();
+
+        $rows = df()->read(from_excel($outputPath))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
     }
 
     public function test_with_cell_styler(): void

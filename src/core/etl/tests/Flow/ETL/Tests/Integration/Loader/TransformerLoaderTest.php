@@ -4,27 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Loader;
 
-use Flow\ETL\Loader;
+use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\ETL\Tests\Double\SpyLoader;
-use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\LimitTransformer;
 
 use function array_column;
+use function file_get_contents;
 use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\batch_size;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\drop;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\limit;
 use function Flow\ETL\DSL\mask_columns;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\to_stream;
 use function Flow\ETL\DSL\to_transformation;
 
-final class TransformerLoaderTest extends FlowTestCase
+final class TransformerLoaderTest extends FlowIntegrationTestCase
 {
     public function test_transformer_loader_with_add_row_index_transformation(): void
     {
@@ -52,14 +55,15 @@ final class TransformerLoaderTest extends FlowTestCase
 
     public function test_transformer_loader_with_batch_size_transformation(): void
     {
-        $loader = $this->createMock(Loader::class);
-        $loader->expects(self::exactly(2))->method('load');
+        $loader = new SpyLoader();
 
         df()
             ->read(new FakeStaticOrdersExtractor(1000))
             ->collect()
             ->write(to_transformation(batch_size(500), $loader))
             ->run();
+
+        static::assertSame(2, $loader->loadsCount);
     }
 
     public function test_transformer_loader_with_add_row_index_transformation_across_batches(): void
@@ -95,7 +99,10 @@ final class TransformerLoaderTest extends FlowTestCase
             ->write(to_transformation(batch_size(4), $loader))
             ->run();
 
-        static::assertSame(6, $loader->loadsCount);
+        // The nested pipeline is driven once over the whole stream, so batch_size(4) re-batches the stream instead of
+        // each incoming batch - the same [4, 2] the outer frame's batchSize(4) produces.
+        static::assertSame(2, $loader->loadsCount);
+        static::assertSame([4, 2], $loader->loadedRowCounts());
     }
 
     public function test_transformer_loader_with_drop_transformation(): void
@@ -205,6 +212,52 @@ final class TransformerLoaderTest extends FlowTestCase
         );
     }
 
+    public function test_nested_transformer_loader_applies_the_inner_limit_across_the_stream(): void
+    {
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(select('id'), to_transformation(limit(5), to_memory($memory))))
+            ->run();
+
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]], $memory->dump());
+    }
+
+    public function test_nested_transformer_loader_keeps_row_index_continuous_across_batches(): void
+    {
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_transformation(add_row_index('n', StartFrom::ONE), to_memory($memory)),
+            ))
+            ->run();
+
+        static::assertSame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], array_column($memory->dump(), 'n'));
+    }
+
+    public function test_three_level_nested_transformer_loader_delivers_the_whole_stream_and_closes_once(): void
+    {
+        $loader = new SpyLoader();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_transformation(select('id'), to_transformation(add_row_index('n', StartFrom::ONE), $loader)),
+            ))
+            ->run();
+
+        static::assertSame(1, $loader->closureCount);
+        static::assertSame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], array_column($loader->loadedRowsToArray(), 'n'));
+    }
+
     public function test_transformer_loader_with_select_transformation(): void
     {
         $memory = new ArrayMemory();
@@ -224,5 +277,28 @@ final class TransformerLoaderTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_transformer_loader_with_stream_loader_across_batches(): void
+    {
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_stream(
+                    $path = $this->cacheDir->suffix('transformation_stream.txt')->path(),
+                    output: Output::rows_count,
+                ),
+            ))
+            ->run();
+
+        $content = file_get_contents($path);
+
+        if ($content === false) {
+            static::fail('Failed to read file content');
+        }
+
+        static::assertSame("Rows: 4\nRows: 4\nRows: 4\n", $content);
     }
 }

@@ -13,8 +13,12 @@ use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\to_transformation;
 
 final class XMLLoaderTest extends FlowIntegrationTestCase
 {
@@ -55,6 +59,26 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
                 ->fetch()
                 ->toArray(),
         );
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_xml(): void
+    {
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(select('id'), to_xml($path = $this->cacheDir->suffix('transformation.xml'))))
+            ->run();
+
+        $content = file_get_contents($path->path());
+
+        if ($content === false) {
+            static::fail('Failed to read file content');
+        }
+
+        static::assertStringNotContainsString('dropped by the transformation', $content);
+        static::assertCount(12, df()->read(from_xml($path, 'rows/row'))->fetch());
     }
 
     public function test_writing_empty_rows(): void

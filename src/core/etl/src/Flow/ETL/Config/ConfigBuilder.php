@@ -17,7 +17,6 @@ use Flow\ETL\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
@@ -131,7 +130,6 @@ final class ConfigBuilder
             $serializer,
             $this->getClock(),
             $this->fstab(),
-            new FilesystemStreams($this->fstab()),
             $optimizer,
             $this->putInputIntoRows,
             $hydrator,

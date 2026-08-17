@@ -121,6 +121,50 @@ data_frame()
 // XML entries are automatically converted to strings before database insertion
 ```
 
+## Transactional Loading
+
+`to_dbal_transaction()` wraps one or more loaders so every delivery happens inside a transaction: each batch of rows
+is loaded in its own transaction, and if any loader throws, the open transaction is rolled back:
+
+```php
+use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_transaction};
+
+data_frame()
+    ->read(from_array($data))
+    ->write(to_dbal_transaction(
+        $connection,
+        to_dbal_table_insert($connection, 'users'),
+        to_dbal_table_insert($connection, 'users_audit'),
+    ))
+    ->run();
+```
+
+Atomicity requires every wrapped loader to use the same connection as the wrapper - pass one live `Connection` to
+`to_dbal_transaction()` and to every wrapped loader. A loader built from array params (like
+`to_dbal_table_insert(['url' => $url], 'users')`) opens its own connection and escapes the transaction.
+
+Wrapped `to_transformation()` / `to_branch(...)->withTransformation(...)` steps with blocking operations (`sortBy()`,
+`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
+[transformations](../core/transformations.md)) buffer the stream and deliver it when the pipeline closes the loader;
+`to_dbal_transaction()` opens one final transaction around that delivery - the whole drained stream commits
+atomically, a failure during it rolls back.
+
+Do not place `write_with_retries()` inside the wrapper: on databases that abort the transaction after a failed
+statement (PostgreSQL), every retry attempt fails too. Wrap the transaction instead -
+`write_with_retries(to_dbal_transaction(...))` gives each attempt a fresh transaction (see
+[retry](../core/retry.md)).
+
+Use `withIsolationLevel()` to set the transaction isolation level; it applies to every transaction the wrapper opens,
+including the final one:
+
+```php
+use Doctrine\DBAL\TransactionIsolationLevel;
+
+to_dbal_transaction($connection, to_dbal_table_insert($connection, 'users'))
+    ->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
+```
+
 ## Extractor - DbalQuery
 
 This simple but powerful extractor let you extract data from a single or multiple parametrized queries.

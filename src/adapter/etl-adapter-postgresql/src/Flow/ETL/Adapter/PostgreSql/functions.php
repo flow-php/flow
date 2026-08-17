@@ -104,10 +104,13 @@ function to_pgsql_table(Client $client, string $table): PostgreSqlLoader
 }
 
 /**
- * Execute multiple loaders within a single PostgreSQL transaction.
+ * Execute multiple loaders within PostgreSQL transactions.
  *
- * Each batch of rows is processed in its own transaction. If any loader
- * fails, the entire batch is rolled back.
+ * Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when
+ * the loader is closed (blocking operations drain there) are committed in one final transaction.
+ * If any loader fails, the open transaction is rolled back.
+ * All wrapped loaders must use the same Client instance as the wrapper - a loader holding its own
+ * Client escapes the transaction.
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
 function to_pgsql_transaction(Client $client, Loader ...$loaders): TransactionalPostgreSqlLoader

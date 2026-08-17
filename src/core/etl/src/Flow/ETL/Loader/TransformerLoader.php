@@ -5,42 +5,49 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\Extractor\SwappableRowsExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function Flow\ETL\DSL\df;
-
-final class TransformerLoader implements Closure, Loader, OverridingLoader
+final class TransformerLoader implements Closure, Loader, OverridingLoader, ReplayAware
 {
+    private ?TransformationStream $stream = null;
+
     private bool $limitReached = false;
 
-    private ?DataFrame $transformationDataFrame = null;
-
-    private SwappableRowsExtractor $transformationRows;
+    private ?FlowContext $runContext = null;
 
     public function __construct(
         private readonly Transformer|Transformation $transformer,
         private readonly Loader $loader,
-    ) {
-        $this->transformationRows = new SwappableRowsExtractor();
-    }
+    ) {}
 
     public function closure(FlowContext $context): void
     {
-        if ($this->loader instanceof Closure) {
-            $this->loader->closure($context);
-        }
+        try {
+            try {
+                if ($this->stream !== null && $this->stream->drivenBy($context)) {
+                    $this->stream->drain();
+                }
+            } catch (Throwable $failure) {
+                if ($context->errorHandler()->throw($failure, new Rows())) {
+                    throw $failure;
+                }
+            }
 
-        $this->transformationDataFrame = null;
-        $this->transformationRows = new SwappableRowsExtractor();
-        $this->limitReached = false;
+            if ($this->loader instanceof Closure) {
+                $this->loader->closure($context);
+            }
+        } finally {
+            $this->stream = null;
+            $this->limitReached = false;
+            $this->runContext = null;
+        }
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -48,19 +55,27 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader
         $context->telemetry()->loadingStarted($this);
 
         try {
+            if ($this->runContext !== $context) {
+                $this->runContext = $context;
+                $this->limitReached = false;
+            }
+
             $transformer = $this->transformer;
 
             if ($transformer instanceof Transformer) {
                 // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
                 $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
-                $this->transformationDataFrame ??= $transformer
-                    ->transform(df($context->config)->from($this->transformationRows))
-                    ->load($this->loader);
+                if ($this->stream === null || !$this->stream->drivenBy($context)) {
+                    $this->stream = new TransformationStream($transformer, $this->loader, $context);
+                }
 
-                if (!$this->transformationRows->stopped()) {
-                    $this->transformationRows->swap($rows);
-                    $this->transformationDataFrame->run();
+                try {
+                    $this->stream->feed($rows);
+                } catch (Throwable $failure) {
+                    $this->stream = null;
+
+                    throw $failure;
                 }
             }
 
@@ -82,5 +97,10 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader
     public function loaders(): array
     {
         return [$this->loader];
+    }
+
+    public function replaySafe(): bool
+    {
+        return false;
     }
 }

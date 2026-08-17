@@ -394,8 +394,8 @@ df()
 
 ### Transactional Loading
 
-`to_pgsql_transaction()` wraps one or more loaders so each batch of rows is loaded inside a single transaction. If any
-loader throws, the whole batch is rolled back:
+`to_pgsql_transaction()` wraps one or more loaders so every delivery happens inside a transaction: each batch of rows
+is loaded in its own transaction, and if any loader throws, the open transaction is rolled back:
 
 ```php
 use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
@@ -412,7 +412,20 @@ df()
     ->run();
 ```
 
-Use `withIsolationLevel()` to set the transaction isolation level:
+Wrapped `to_transformation()` / `to_branch(...)->withTransformation(...)` steps with blocking operations (`sortBy()`,
+`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
+[transformations](../core/transformations.md)) buffer the stream and deliver it when the pipeline closes the loader;
+`to_pgsql_transaction()` opens one final transaction around that delivery - the whole drained stream commits
+atomically, a failure during it rolls back. Every wrapped loader must use the same `Client` instance as the wrapper -
+a loader holding its own `Client` escapes the transaction.
+
+Do not place `write_with_retries()` inside the wrapper: after a failed statement PostgreSQL aborts the whole
+transaction, so every retry attempt fails too. Wrap the transaction instead -
+`write_with_retries(to_pgsql_transaction(...))` gives each attempt a fresh transaction (see
+[retry](../core/retry.md)).
+
+Use `withIsolationLevel()` to set the transaction isolation level; it applies to every transaction the wrapper opens,
+including the final one:
 
 ```php
 to_pgsql_transaction($client, to_pgsql_table($client, 'users'))
@@ -421,13 +434,13 @@ to_pgsql_transaction($client, to_pgsql_table($client, 'users'))
 
 ## Loader DSL Functions Reference
 
-| Function                                       | Description                                         |
-|------------------------------------------------|-----------------------------------------------------|
-| `to_pgsql_table($client, $table)`              | Create a PostgreSQL loader for a table              |
-| `to_pgsql_transaction($client, ...$loaders)`   | Run multiple loaders within a single transaction    |
-| `pgsql_insert_options(...)`                    | Configure insert behavior (conflicts, upsert)       |
-| `pgsql_update_options($primaryKeys)`           | Configure update behavior (primary key columns)     |
-| `pgsql_delete_options($primaryKeys)`           | Configure delete behavior (primary key columns)     |
+| Function                                       | Description                                               |
+|------------------------------------------------|-----------------------------------------------------------|
+| `to_pgsql_table($client, $table)`              | Create a PostgreSQL loader for a table                    |
+| `to_pgsql_transaction($client, ...$loaders)`   | Run multiple loaders, every delivery inside a transaction |
+| `pgsql_insert_options(...)`                    | Configure insert behavior (conflicts, upsert)             |
+| `pgsql_update_options($primaryKeys)`           | Configure update behavior (primary key columns)           |
+| `pgsql_delete_options($primaryKeys)`           | Configure delete behavior (primary key columns)           |
 
 ## Schema Conversion
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\LoaderTree;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\BatchingProcessor;
@@ -21,6 +22,9 @@ use function in_array;
  * Be default all extractors are yielding rows one by one, in that case loaders like for example DbalLoader
  * would become a bottleneck because it would execute a single query for each row.
  * This optimization will detect that and will add a BatchingProcessor to the pipeline.
+ *
+ * The whole loader tree is searched, because an OverridingLoader that hides the loader it overrides would silently
+ * cost one query per row.
  */
 final class BatchSizeOptimization implements Optimization
 {
@@ -65,8 +69,14 @@ final class BatchSizeOptimization implements Optimization
             return false;
         }
 
-        if (in_array($element::class, $this->supportedLoaders, true)) {
-            return true;
+        if (!$element instanceof Loader) {
+            return false;
+        }
+
+        foreach ((new LoaderTree())->flatten($element) as $loader) {
+            if (in_array($loader::class, $this->supportedLoaders, true)) {
+                return true;
+            }
         }
 
         return false;

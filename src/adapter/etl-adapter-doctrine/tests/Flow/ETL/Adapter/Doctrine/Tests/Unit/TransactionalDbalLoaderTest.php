@@ -9,7 +9,13 @@ use Doctrine\DBAL\TransactionIsolationLevel;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\TransactionalDbalLoader;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
+use Flow\ETL\Tests\Double\SpyLoader;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
 
 final class TransactionalDbalLoaderTest extends TestCase
 {
@@ -24,6 +30,25 @@ final class TransactionalDbalLoaderTest extends TestCase
         static::assertInstanceOf(TransactionalDbalLoader::class, $transactionalLoader);
     }
 
+    public function test_closure_is_forwarded_to_every_closure_aware_loader(): void
+    {
+        $context = flow_context(config());
+        $spy1 = new SpyLoader();
+        $spy2 = new SpyLoader();
+
+        (new TransactionalDbalLoader(
+            ['driver' => 'pdo_sqlite', 'memory' => true],
+            $spy1,
+            new DbalLoader('test_table', ['driver' => 'pdo_sqlite', 'memory' => true]),
+            $spy2,
+        ))->closure($context);
+
+        static::assertSame(1, $spy1->closureCount);
+        static::assertSame(1, $spy2->closureCount);
+        static::assertSame([$context], $spy1->closureContexts);
+        static::assertSame([$context], $spy2->closureContexts);
+    }
+
     public function test_connection_from_params(): void
     {
         $params = ['driver' => 'pdo_sqlite', 'memory' => true];
@@ -32,6 +57,15 @@ final class TransactionalDbalLoaderTest extends TestCase
         $transactionalLoader = new TransactionalDbalLoader($params, $loader);
 
         static::assertInstanceOf(TransactionalDbalLoader::class, $transactionalLoader);
+    }
+
+    public function test_exposing_the_wrapped_loaders(): void
+    {
+        $params = ['driver' => 'pdo_sqlite', 'memory' => true];
+        $loader1 = new DbalLoader('test_table1', $params);
+        $loader2 = new DbalLoader('test_table2', $params);
+
+        static::assertSame([$loader1, $loader2], (new TransactionalDbalLoader($params, $loader1, $loader2))->loaders());
     }
 
     public function test_from_connection_static_method(): void
@@ -52,6 +86,25 @@ final class TransactionalDbalLoaderTest extends TestCase
         $this->expectExceptionMessage('At least one loader must be provided');
 
         new TransactionalDbalLoader([]);
+    }
+
+    public function test_the_original_failure_propagates_when_rollback_also_fails(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('beginTransaction');
+        $connection->expects(self::never())->method('commit');
+        $connection
+            ->expects(self::once())
+            ->method('rollBack')
+            ->willThrowException(new RuntimeException('rollback failed'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('closure failed');
+
+        TransactionalDbalLoader::fromConnection(
+            $connection,
+            new ClosureThrowingLoader(new RuntimeException('closure failed')),
+        )->closure(flow_context(config()));
     }
 
     public function test_sets_isolation_level(): void

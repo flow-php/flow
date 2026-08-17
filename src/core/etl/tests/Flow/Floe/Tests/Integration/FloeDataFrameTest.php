@@ -15,10 +15,14 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function Flow\Types\DSL\type_json;
@@ -182,6 +186,24 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
             ->run();
 
         static::assertSame(1, data_frame()->read(from_floe($path))->count());
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_floe(): void
+    {
+        $path = $this->cacheDir->suffix('transformation.floe');
+
+        data_frame()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withEntry('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->saveMode(overwrite())
+            ->write(to_transformation(select('id'), to_floe($path)))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
     }
 
     public function test_partitioned_round_trip_with_pruning(): void
