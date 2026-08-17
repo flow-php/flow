@@ -39,6 +39,28 @@ services:
         arguments:
             $githubToken: '%env(GITHUB_TOKEN)%'
 
+    # curl-based clients segfault in php-fpm on macOS (system proxy lookup via
+    # fork-unsafe Network.framework), so avatar fetching uses the stream-based client.
+    social_card.http_client:
+        class: Symfony\Component\HttpClient\NativeHttpClient
+
+    Flow\Website\SocialCard\AvatarCache:
+        arguments:
+            $httpClient: '@social_card.http_client'
+            $cacheDir: '%kernel.project_dir%/var/avatars'
+
+    Flow\Website\SocialCard\CardPainter:
+        arguments:
+            $resourcesDir: '%kernel.project_dir%/resources'
+
+    Flow\Website\SocialCard\Blog\CardGenerator:
+        arguments:
+            $publicDir: '%kernel.project_dir%/public'
+
+    Flow\Website\SocialCard\WorkShop\CardGenerator:
+        arguments:
+            $publicDir: '%kernel.project_dir%/public'
+
     Flow\Website\StaticSourceProvider\:
         resource: '../src/Flow/Website/StaticSourceProvider/'
         tags: ['static_content_generator.source_provider']

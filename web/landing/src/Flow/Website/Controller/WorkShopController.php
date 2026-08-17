@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
+use Flow\Website\SocialCard\WorkShop\CardGenerator;
+use Flow\Website\WorkShop\Listings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,16 +25,19 @@ final class WorkShopController extends AbstractController
     #[Route('/work-shop', name: 'work_shop', options: ['sitemap' => false])]
     public function index(): Response
     {
-        return $this->render('work-shop/index.html.twig');
+        return $this->render('work-shop/index.html.twig', [
+            'categories' => (new Listings())->all(),
+        ]);
     }
 
     #[Route('/work-shop/blueprints/symfony-backoffice', name: 'work_shop_blueprint_symfony', options: [
         'sitemap' => false,
     ])]
-    public function blueprintSymfony(): Response
+    public function blueprintSymfony(CardGenerator $socialCards): Response
     {
         return $this->render('work-shop/blueprints/symfony-backoffice/index.html.twig', [
             'listing_checkout_url' => $this->checkoutLinks['symfony_backoffice'] ?? null,
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('symfony-backoffice')),
         ]);
     }
 
@@ -49,10 +54,11 @@ final class WorkShopController extends AbstractController
     #[Route('/work-shop/ai/claude-skills', name: 'work_shop_ai_claude_skills', options: [
         'sitemap' => false,
     ])]
-    public function aiClaudeSkills(): Response
+    public function aiClaudeSkills(CardGenerator $socialCards): Response
     {
         return $this->render('work-shop/ai/claude-skills/index.html.twig', [
             'listing_checkout_url' => $this->checkoutLinks['claude_skills'] ?? null,
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('claude-skills')),
         ]);
     }
 
@@ -67,30 +73,33 @@ final class WorkShopController extends AbstractController
     #[Route('/work-shop/sponsoring/1-month', name: 'work_shop_sponsoring_1m', options: [
         'sitemap' => false,
     ])]
-    public function sponsoring1Month(): Response
+    public function sponsoring1Month(CardGenerator $socialCards): Response
     {
         return $this->render('work-shop/sponsoring/1-month/index.html.twig', [
             'listing_checkout_url' => $this->checkoutLinks['sponsoring_1m'] ?? null,
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('sponsoring-1-month')),
         ]);
     }
 
     #[Route('/work-shop/sponsoring/6-months', name: 'work_shop_sponsoring_6m', options: [
         'sitemap' => false,
     ])]
-    public function sponsoring6Months(): Response
+    public function sponsoring6Months(CardGenerator $socialCards): Response
     {
         return $this->render('work-shop/sponsoring/6-months/index.html.twig', [
             'listing_checkout_url' => $this->checkoutLinks['sponsoring_6m'] ?? null,
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('sponsoring-6-months')),
         ]);
     }
 
     #[Route('/work-shop/sponsoring/12-months', name: 'work_shop_sponsoring_12m', options: [
         'sitemap' => false,
     ])]
-    public function sponsoring12Months(): Response
+    public function sponsoring12Months(CardGenerator $socialCards): Response
     {
         return $this->render('work-shop/sponsoring/12-months/index.html.twig', [
             'listing_checkout_url' => $this->checkoutLinks['sponsoring_12m'] ?? null,
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('sponsoring-12-months')),
         ]);
     }
 
@@ -101,9 +110,11 @@ final class WorkShopController extends AbstractController
     }
 
     #[Route('/work-shop/consulting', name: 'work_shop_consulting', options: ['sitemap' => false])]
-    public function consulting(): Response
+    public function consulting(CardGenerator $socialCards): Response
     {
-        return $this->render('work-shop/consulting/index.html.twig');
+        return $this->render('work-shop/consulting/index.html.twig', [
+            'social_image' => $socialCards->generate((new Listings())->findBySlug('consulting')),
+        ]);
     }
 
     #[Route('/work-shop/terms-of-sales', name: 'work_shop_terms_of_sales', options: ['sitemap' => false])]

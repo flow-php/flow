@@ -32,9 +32,14 @@
             {% for post in posts %}
                 {% set postUrl = path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) %}
                 <article class="card card-hover flex flex-col">
-                    <time datetime="{{ post.date | date('c') }}" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">
-                        {{ post.date | date('M j, Y') }}
-                    </time>
+                    <div class="flex items-center justify-between gap-3">
+                        <time datetime="{{ post.date | date('c') }}" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">
+                            {{ post.date | date('M j, Y') }}
+                        </time>
+                        <a class="no-underline" href="{{ post.authorUrl }}" target="_blank" rel="noopener" title="@{{ post.author }}">
+                            <img class="h-6 w-6 rounded-full" src="{{ post.authorAvatarUrl(48) }}" alt="{{ post.author }}" loading="lazy"/>
+                        </a>
+                    </div>
                     <h2 class="mt-3 text-xl font-semibold tracking-tight">
                         <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100" href="{{ postUrl }}">
                             {{ post.title }}
