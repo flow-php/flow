@@ -19,10 +19,13 @@ use function count;
 use function Flow\PostgreSql\DSL\set_transaction;
 
 /**
- * Execute multiple loaders within a single PostgreSQL transaction.
+ * Execute multiple loaders within PostgreSQL transactions.
  *
- * Each batch of rows is processed in its own transaction. If any loader
- * fails, the entire batch is rolled back.
+ * Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when
+ * the loader is closed (blocking operations drain there) are committed in one final transaction.
+ * If any loader fails, the open transaction is rolled back.
+ * All wrapped loaders must use the same Client instance as the wrapper - a loader holding its own
+ * Client escapes the transaction.
  */
 final class TransactionalPostgreSqlLoader implements Closure, Loader, OverridingLoader
 {
@@ -45,15 +48,19 @@ final class TransactionalPostgreSqlLoader implements Closure, Loader, Overriding
     }
 
     /**
-     * Closing happens outside the transaction, each wrapped loader publishes its own destination.
+     * Rows a wrapped Transformation buffered (blocking operations - sortBy, aggregate, groupBy->aggregate,
+     * pivot, window functions, collect, join) are delivered during the forwarded closure() drain, so delivery
+     * here must be transactional too: one transaction over everything the drain flushes, rolled back when it fails.
      */
     public function closure(FlowContext $context): void
     {
-        foreach ($this->loaders as $loader) {
-            if ($loader instanceof Closure) {
-                $loader->closure($context);
+        $this->inTransaction(function () use ($context): void {
+            foreach ($this->loaders as $loader) {
+                if ($loader instanceof Closure) {
+                    $loader->closure($context);
+                }
             }
-        }
+        });
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -65,7 +72,11 @@ final class TransactionalPostgreSqlLoader implements Closure, Loader, Overriding
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $this->executeInTransaction($rows, $context);
+            $this->inTransaction(function () use ($rows, $context): void {
+                foreach ($this->loaders as $loader) {
+                    $loader->load($rows, $context);
+                }
+            });
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {
@@ -87,7 +98,10 @@ final class TransactionalPostgreSqlLoader implements Closure, Loader, Overriding
         return $this;
     }
 
-    private function executeInTransaction(Rows $rows, FlowContext $context): void
+    /**
+     * @param callable(): void $operation
+     */
+    private function inTransaction(callable $operation): void
     {
         $this->client->beginTransaction();
 
@@ -96,13 +110,15 @@ final class TransactionalPostgreSqlLoader implements Closure, Loader, Overriding
                 $this->client->execute(set_transaction()->isolationLevel($this->isolationLevel));
             }
 
-            foreach ($this->loaders as $loader) {
-                $loader->load($rows, $context);
-            }
+            $operation();
 
             $this->client->commit();
         } catch (Throwable $e) {
-            $this->client->rollBack();
+            try {
+                $this->client->rollBack();
+            } catch (Throwable) {
+                // the load/drain failure is the actionable error - a rollback failure must not mask it
+            }
 
             throw $e;
         }

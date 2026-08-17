@@ -212,6 +212,52 @@ final class TransformerLoaderTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_nested_transformer_loader_applies_the_inner_limit_across_the_stream(): void
+    {
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(select('id'), to_transformation(limit(5), to_memory($memory))))
+            ->run();
+
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]], $memory->dump());
+    }
+
+    public function test_nested_transformer_loader_keeps_row_index_continuous_across_batches(): void
+    {
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_transformation(add_row_index('n', StartFrom::ONE), to_memory($memory)),
+            ))
+            ->run();
+
+        static::assertSame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], array_column($memory->dump(), 'n'));
+    }
+
+    public function test_three_level_nested_transformer_loader_delivers_the_whole_stream_and_closes_once(): void
+    {
+        $loader = new SpyLoader();
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->batchSize(4)
+            ->write(to_transformation(
+                select('id'),
+                to_transformation(select('id'), to_transformation(add_row_index('n', StartFrom::ONE), $loader)),
+            ))
+            ->run();
+
+        static::assertSame(1, $loader->closureCount);
+        static::assertSame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], array_column($loader->loadedRowsToArray(), 'n'));
+    }
+
     public function test_transformer_loader_with_select_transformation(): void
     {
         $memory = new ArrayMemory();

@@ -9,8 +9,10 @@ use Doctrine\DBAL\TransactionIsolationLevel;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\TransactionalDbalLoader;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\SpyLoader;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -84,6 +86,25 @@ final class TransactionalDbalLoaderTest extends TestCase
         $this->expectExceptionMessage('At least one loader must be provided');
 
         new TransactionalDbalLoader([]);
+    }
+
+    public function test_the_original_failure_propagates_when_rollback_also_fails(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('beginTransaction');
+        $connection->expects(self::never())->method('commit');
+        $connection
+            ->expects(self::once())
+            ->method('rollBack')
+            ->willThrowException(new RuntimeException('rollback failed'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('closure failed');
+
+        TransactionalDbalLoader::fromConnection(
+            $connection,
+            new ClosureThrowingLoader(new RuntimeException('closure failed')),
+        )->closure(flow_context(config()));
     }
 
     public function test_sets_isolation_level(): void

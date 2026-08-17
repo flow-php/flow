@@ -219,6 +219,14 @@ to_transformation($transformation, write_with_retries($loader));
 to_branch($condition, write_with_retries($loader))->withTransformation($transformation);
 ```
 
+When the destination is a transactional wrapper (`to_dbal_transaction()`, `to_pgsql_transaction()`), put the
+wrapper inside `write_with_retries()`, not the other way around - a retry inside an aborted database
+transaction can never succeed; wrapping the transaction gives every attempt a fresh one:
+
+```php
+to_transformation($transformation, write_with_retries(to_pgsql_transaction($client, $loader)));
+```
+
 ## Advanced Configuration
 
 ### Custom Sleep Implementation

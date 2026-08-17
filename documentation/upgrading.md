@@ -91,7 +91,7 @@ write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::c
 
 ### 8) `flow-php/etl` - operations inside a `Transformation` answer for the whole stream
 
-| Before (0.43.x) | After |
+| Before | After |
 |---|---|
 | `$df->sortBy(ref('id'))` inside a `Transformation` sorted each batch on its own | sorts the whole stream |
 | `$df->aggregate(...)` / `groupBy()->aggregate()` / `pivot()` / window functions inside a `Transformation` answered per batch | answer for the whole stream |
@@ -108,7 +108,7 @@ proportional to the data, as on an outer frame.
 
 ### 9) `flow-php/etl` - `to_branch()->withTransformation()` drives its `Transformation` once over the whole stream
 
-| Before (0.43.x) | After |
+| Before | After |
 |---|---|
 | the `Transformation` ran on each filtered batch in its own `DataFrame` | one nested pipeline spans the stream |
 | `$df->sortBy(...)` in a branch transformation sorted each batch alone | sorts the whole branch stream |
@@ -116,6 +116,15 @@ proportional to the data, as on an outer frame.
 | a `Transformation` calling `$df->fetch()` / `count()` / `schema()` returned per-batch answers | throws `InvalidLogicException` |
 | the wrapped loader received exactly one `load()` per outer batch | receives output as the transformation produces it; blocking operations deliver at `closure()` |
 | telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows | counts the rows offered to the branch |
+
+### 10) `flow-php/etl-adapter-doctrine` / `flow-php/etl-adapter-postgresql` - transactional loaders run `closure()` inside a transaction
+
+| Before | After |
+|---|---|
+| `to_dbal_transaction()` / `to_pgsql_transaction()` never called `closure()` on wrapped loaders | forwards `closure()` to every wrapped loader, inside one final transaction |
+| blocking operations inside a wrapped `Transformation` answered per batch, each batch in its own transaction | answer for the whole stream, delivered at `closure()` in a single transaction |
+| - | a failure during the final transaction rolls back the drained delivery and rethrows |
+| `withIsolationLevel()` applied to per-batch transactions | applies to every transaction the wrapper opens |
 
 ---
 

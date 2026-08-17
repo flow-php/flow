@@ -60,15 +60,19 @@ final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
     }
 
     /**
-     * Closing happens outside the transaction, each wrapped loader publishes its own destination.
+     * Rows a wrapped Transformation buffered (blocking operations - sortBy, aggregate, groupBy->aggregate,
+     * pivot, window functions, collect, join) are delivered during the forwarded closure() drain, so delivery
+     * here must be transactional too: one transaction over everything the drain flushes, rolled back when it fails.
      */
     public function closure(FlowContext $context): void
     {
-        foreach ($this->loaders as $loader) {
-            if ($loader instanceof Closure) {
-                $loader->closure($context);
+        $this->inTransaction($this->connection(), function () use ($context): void {
+            foreach ($this->loaders as $loader) {
+                if ($loader instanceof Closure) {
+                    $loader->closure($context);
+                }
             }
-        }
+        });
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -80,7 +84,11 @@ final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $this->executeInTransaction($this->connection(), $rows, $context);
+            $this->inTransaction($this->connection(), function () use ($rows, $context): void {
+                foreach ($this->loaders as $loader) {
+                    $loader->load($rows, $context);
+                }
+            });
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {
@@ -113,7 +121,10 @@ final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
         return $this->connection;
     }
 
-    private function executeInTransaction(Connection $connection, Rows $rows, FlowContext $context): void
+    /**
+     * @param callable(): void $operation
+     */
+    private function inTransaction(Connection $connection, callable $operation): void
     {
         $previousIsolationLevel = null;
 
@@ -126,19 +137,25 @@ final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
             $connection->beginTransaction();
 
             try {
-                foreach ($this->loaders as $loader) {
-                    $loader->load($rows, $context);
-                }
+                $operation();
 
                 $connection->commit();
             } catch (Throwable $e) {
-                $connection->rollBack();
+                try {
+                    $connection->rollBack();
+                } catch (Throwable) {
+                    // the load/drain failure is the actionable error - a rollback failure must not mask it
+                }
 
                 throw $e;
             }
         } finally {
             if ($previousIsolationLevel !== null) {
-                $connection->setTransactionIsolation($previousIsolationLevel);
+                try {
+                    $connection->setTransactionIsolation($previousIsolationLevel);
+                } catch (Throwable) {
+                    // restoring connection state must not mask an in-flight failure
+                }
             }
         }
     }
