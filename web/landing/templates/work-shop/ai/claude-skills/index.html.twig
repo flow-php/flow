@@ -1,0 +1,124 @@
+{% extends 'work-shop/_listing.html.twig' %}
+
+{% set listing_name = 'Claude Code Skills' %}
+{% set listing_eyebrow = 'AI' %}
+{% set listing_price = '$10' %}
+{% set listing_available = true %}
+{% set listing_images = [
+    asset('images/work-shop/claude-skills.svg'),
+    asset('images/work-shop/claude-skills-workflow.svg'),
+] %}
+{% set listing_tagline = 'Claude Code plugins from the Flow PHP maintainer. A task-driven engineering workflow plus PHP code-quality skills, installed straight from a private marketplace repository.' %}
+
+{% block listing_body %}
+    <p class="mb-4">
+        Claude Code is only as disciplined as the instructions it works under. This is a private plugin
+        marketplace with two plugins: <strong class="font-semibold text-slate-900 dark:text-white">workflow</strong>,
+        a task-driven engineering process with eleven skills, and
+        <strong class="font-semibold text-slate-900 dark:text-white">php-code-quality</strong>, two skills that load
+        themselves whenever Claude touches PHP. They are the same skills used to build and maintain Flow PHP.
+    </p>
+    <p class="mb-4">
+        Install them once and they show up as slash commands in every project:
+    </p>
+    <pre class="mb-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm dark:border-white/10 dark:bg-white/[0.04]"><code>/plugin marketplace add flow-php-depot/claude-skills
+/plugin install workflow
+/plugin install php-code-quality</code></pre>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">The task file is the plan</h2>
+    <p class="mb-4">
+        The workflow plugin is built around one idea: planning produces a task file precise enough to implement
+        without guessing, implementation follows it with zero freedom, and reviews audit against it.
+        <code>/plan-task</code> runs a planner against project-specific challengers until the file is executable,
+        <code>/work-on-task</code> executes it exactly as written, and <code>/cleanup-task</code> and
+        <code>/review-task</code> close the loop on every change.
+    </p>
+    <p class="mb-4">
+        Tasks live in epic folders and accumulate sibling artifacts as they move through the chain, so a finished
+        epic is its own audit trail. <code>/cleanup-epic</code> and <code>/review-epic</code> then hunt the
+        failures single-task reviews cannot see: unowned requirements, drifted contracts, duplicated solutions.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Findings that survive an adversary</h2>
+    <p class="mb-4">
+        Review skills never hand you raw output. Every finding must survive a refute-by-default verifier before it
+        reaches you, and "clean" is always a valid result. Heavy reading and verification run in subagents, so your
+        conversation context stays small — and each skill asks whether to run multi-agent or single-agent, so you
+        choose the cost per invocation.
+    </p>
+    <p class="mb-4">
+        Nothing happens without you. Architectural decisions, fixes and branch changes are always your call — the
+        skills ask, with a recommendation and full context, and wait.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">PHP code quality that loads itself</h2>
+    <p class="mb-4">
+        The php-code-quality plugin needs no invocation. <code>php-type-narrowing</code> loads on PHP files and
+        pushes every signature, property and docblock to the narrowest honest type instead of <code>mixed</code>
+        or bare <code>array</code>. <code>php-testing</code> loads on test files and enforces tests that assert
+        behavior and survive refactoring: handcrafted stubs over mocks, ObjectMother over private helpers, unit
+        tests for edge cases and integration tests for happy paths.
+    </p>
+    <p class="mb-4">
+        On first use in a repository each skill detects the project's setup — the static analyzer and its
+        annotation dialect, how tests run — confirms it with you once, and never re-asks.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Adapts to your project</h2>
+    <p class="mb-4">
+        The skills are project-agnostic and work out of the box. To teach them your conventions you add extension
+        files — per project and shared with the team, or personal and applied in every repo. Sections resolve
+        independently: project wins, undefined sections fall back to your personal file, then to the built-in
+        defaults. A repo can override just its QA commands while inheriting your personal challenger lenses.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What's in the repository</h2>
+    <ul class="space-y-2">
+        {% for feature in [
+            'The workflow plugin: eleven skills covering plan, explain, implement, cleanup, review — per task and per epic',
+            'Companions that plug GitHub into the chain: /explain-issue reproduces an issue, /explain-pr tours any pull request, /catch-up restores context after time away',
+            'The php-code-quality plugin: type narrowing and testing rules that auto-load on PHP and test files',
+            'One marketplace repository — install only the plugins you want, they are independent',
+            'Extension points for project and personal conventions, documented per skill',
+            'Updates as the skills evolve, at no extra cost',
+        ] %}
+            <li class="flex items-start gap-3">
+                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100">✓</span>
+                <span>{{ feature }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What it is not</h2>
+    <p class="mb-4">
+        It is not a prompt pack. The skills are a process — gated steps, persisted artifacts, verification that
+        must come back clean — and they slow Claude down on purpose where being fast produces slop. You need
+        Claude Code itself; the plugins add no API costs of their own, but the multi-agent modes spend more of
+        your existing usage in exchange for thoroughness, and every skill offers the cheaper single-agent mode.
+    </p>
+{% endblock %}
+
+{% block listing_aside %}
+    <a href="{{ path('work_shop_ai_how_it_works') }}"
+       class="group mt-4 flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-sm no-underline transition-colors hover:border-slate-300 hover:bg-slate-50 hover:no-underline dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.05]">
+        <span class="font-medium text-slate-900 transition-colors group-hover:text-orange-300 dark:text-white dark:group-hover:text-orange-100">How it works before you buy</span>
+        <span aria-hidden="true" class="muted transition-transform group-hover:translate-x-0.5">→</span>
+    </a>
+    <p class="mt-4 text-xs muted leading-relaxed">
+        One-time payment, no subscription. The price is per seat: one seat covers one developer, and sharing a
+        licence is not allowed.
+    </p>
+    <p class="mt-3 text-xs muted leading-relaxed">
+        Buying for a team? Choose the number of seats at checkout. Whoever pays does not have to be one of the
+        developers, so a team lead or finance can buy and hand the seats out afterwards.
+    </p>
+    <p class="mt-3 text-xs muted leading-relaxed">
+        Use an email you can actually read at checkout. It is how you get into the Polar customer portal
+        afterwards, and there is no password, Polar sends a one-time code to that address.
+    </p>
+    <p class="mt-3 text-xs muted leading-relaxed">
+        Checkout never asks for a GitHub account. You open the order in that portal, connect GitHub there and
+        grant access seat by seat. GitHub then emails each person an invitation to accept — Claude Code installs
+        the marketplace over git, so the invitation is the access.
+    </p>
+{% endblock %}

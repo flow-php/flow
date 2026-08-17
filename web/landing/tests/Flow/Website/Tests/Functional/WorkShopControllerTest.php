@@ -114,14 +114,20 @@ final class WorkShopControllerTest extends WebTestCase
 
         $text = $crawler->filter('main')->text();
         static::assertStringContainsString('Blueprints', $text);
+        static::assertStringContainsString('AI', $text);
         static::assertStringContainsString('Consulting', $text);
         static::assertStringNotContainsString('Subscriptions', $text);
 
-        foreach (['/work-shop/blueprints/symfony-backoffice', '/work-shop/consulting'] as $href) {
+        foreach ([
+            '/work-shop/blueprints/symfony-backoffice',
+            '/work-shop/ai/claude-skills',
+            '/work-shop/consulting',
+        ] as $href) {
             static::assertGreaterThan(0, $crawler->filter('a[href="' . $href . '"]')->count(), $href);
         }
 
         static::assertStringContainsString('$59', $text);
+        static::assertStringContainsString('$10', $text);
         static::assertStringContainsString('excl. tax', $text);
         // Placeholder listings render as plain cards, so they must not become links.
         static::assertStringContainsString('More Blueprints', $text);
@@ -211,6 +217,62 @@ final class WorkShopControllerTest extends WebTestCase
         static::assertSame(1, $cta->count());
         static::assertNotEmpty($cta->attr('data-work-shop-checkout-url-value'));
         static::assertSame($cta->attr('data-work-shop-checkout-url-value'), $cta->attr('href'));
+    }
+
+    public function test_ai_how_it_works_explains_what_surprises_buyers(): void
+    {
+        $client = self::createClient();
+        $crawler = $client->request('GET', '/work-shop/ai/how-it-works');
+
+        self::assertResponseIsSuccessful();
+
+        $text = $crawler->filter('main')->text();
+        // The three things buyers get wrong, all of which have to appear before the CTA.
+        static::assertStringContainsString('Checkout never asks for your GitHub account', $text);
+        static::assertStringContainsString('Access is not sent automatically', $text);
+        static::assertStringContainsString('Your email address is the only key', $text);
+        static::assertStringContainsString('Merchant of Record', $text);
+        static::assertStringContainsString('VAT ID', $text);
+        // Delivery ends in an installed plugin, not a cloned repository.
+        static::assertStringContainsString('/plugin marketplace add flow-php-depot/claude-skills', $text);
+        static::assertSame(4, $crawler->filter('main ol li')->count());
+        static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop/ai/claude-skills"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop/terms-of-sales"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop/privacy-policy"]')->count());
+    }
+
+    public function test_claude_skills_cta_opens_embedded_checkout(): void
+    {
+        $client = self::createClient();
+        $crawler = $client->request('GET', '/work-shop/ai/claude-skills');
+
+        self::assertResponseIsSuccessful();
+
+        $cta = $crawler->filter(
+            'main a[data-controller~="work-shop-checkout"][data-action~="work-shop-checkout#open"]',
+        );
+        static::assertSame(1, $cta->count());
+        static::assertNotEmpty($cta->attr('data-work-shop-checkout-url-value'));
+        static::assertSame($cta->attr('data-work-shop-checkout-url-value'), $cta->attr('href'));
+    }
+
+    public function test_claude_skills_has_carousel_legal_links_and_covered_features(): void
+    {
+        $client = self::createClient();
+        $crawler = $client->request('GET', '/work-shop/ai/claude-skills');
+
+        self::assertResponseIsSuccessful();
+
+        $text = $crawler->filter('main')->text();
+        static::assertStringContainsString('$10', $text);
+        static::assertStringContainsString('excl. tax', $text);
+        static::assertStringContainsString('The task file is the plan', $text);
+        static::assertSame(1, $crawler->filter('[data-controller~="work-shop-carousel"]')->count());
+        static::assertGreaterThan(1, $crawler->filter('[data-work-shop-carousel-target="slide"]')->count());
+        static::assertSame(1, $crawler->filter('main a[href="/work-shop/ai/how-it-works"]')->count());
+        // Something is sold here, so the Terms of Sale govern the purchase.
+        static::assertSame(1, $crawler->filter('main a[href="/work-shop/terms-of-sales"]')->count());
+        static::assertSame(1, $crawler->filter('main a[href="/work-shop/privacy-policy"]')->count());
     }
 
     public function test_symfony_backoffice_has_carousel_and_covered_features(): void

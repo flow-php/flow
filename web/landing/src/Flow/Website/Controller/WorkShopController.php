@@ -46,6 +46,24 @@ final class WorkShopController extends AbstractController
         ]);
     }
 
+    #[Route('/work-shop/ai/claude-skills', name: 'work_shop_ai_claude_skills', options: [
+        'sitemap' => false,
+    ])]
+    public function aiClaudeSkills(): Response
+    {
+        return $this->render('work-shop/ai/claude-skills/index.html.twig', [
+            'listing_checkout_url' => $this->checkoutLinks['claude_skills'] ?? null,
+        ]);
+    }
+
+    #[Route('/work-shop/ai/how-it-works', name: 'work_shop_ai_how_it_works', options: [
+        'sitemap' => false,
+    ])]
+    public function aiHowItWorks(): Response
+    {
+        return $this->render('work-shop/ai/how-it-works/index.html.twig');
+    }
+
     #[Route('/work-shop/success', name: 'work_shop_success', options: ['sitemap' => false])]
     public function success(): Response
     {

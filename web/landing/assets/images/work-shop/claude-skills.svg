@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1b1925"/>
+            <stop offset="1" stop-color="#242031"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.05" r="0.9">
+            <stop offset="0" stop-color="#806dfe" stop-opacity="0.18"/>
+            <stop offset="0.55" stop-color="#ff5547" stop-opacity="0.06"/>
+            <stop offset="1" stop-color="#1b1925" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+
+    <rect width="1600" height="900" fill="url(#bg)"/>
+    <rect width="1600" height="900" fill="url(#glow)"/>
+
+    <text x="120" y="96" font-size="26" letter-spacing="6" fill="#ff5547">FLOW PHP · CLAUDE CODE SKILLS</text>
+    <text x="120" y="152" font-size="44" font-weight="bold" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif">Two plugins. Thirteen skills. One disciplined workflow.</text>
+
+    <rect x="120" y="200" width="1360" height="600" rx="18" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+    <rect x="120" y="200" width="1360" height="58" rx="18" fill="#211d30"/>
+    <rect x="120" y="230" width="1360" height="28" fill="#211d30"/>
+    <circle cx="162" cy="229" r="9" fill="#ff5547"/>
+    <circle cx="194" cy="229" r="9" fill="#e1761a"/>
+    <circle cx="226" cy="229" r="9" fill="#806dfe"/>
+    <text x="770" y="238" font-size="22" fill="#8b86a0" text-anchor="middle">claude</text>
+
+    <g font-size="28">
+        <text x="170" y="330" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin marketplace add flow-php-depot/claude-skills</tspan></text>
+        <text x="170" y="382" fill="#4ade80">✓ <tspan fill="#8b86a0">Marketplace</tspan> <tspan fill="#e7e4f2">flow-php-depot</tspan> <tspan fill="#8b86a0">added</tspan></text>
+
+        <text x="170" y="466" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin install workflow</tspan></text>
+        <text x="170" y="518" fill="#4ade80">✓ <tspan fill="#8b86a0">11 skills installed</tspan></text>
+        <text x="200" y="570" fill="#ff5547">/plan-task <tspan fill="#5c5773">·</tspan> /work-on-task <tspan fill="#5c5773">·</tspan> /cleanup-task <tspan fill="#5c5773">·</tspan> /review-task <tspan fill="#5c5773">·</tspan> /catch-up <tspan fill="#5c5773">…</tspan></text>
+
+        <text x="170" y="654" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin install php-code-quality</tspan></text>
+        <text x="170" y="706" fill="#4ade80">✓ <tspan fill="#8b86a0">2 skills installed</tspan> <tspan fill="#5c5773">—</tspan> <tspan fill="#8b86a0">auto-load whenever Claude touches PHP</tspan></text>
+
+        <text x="170" y="762" fill="#806dfe">&gt; <tspan fill="#e7e4f2">▮</tspan></text>
+    </g>
+</svg>

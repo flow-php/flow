@@ -13,6 +13,7 @@ parameters:
     turnstile_appearance_default: 'interaction-only'
     work_shop_checkout_links:
         symfony_backoffice: 'https://buy.polar.sh/polar_cl_KAb6EWLVtewQhsDZV2bGeqsxSxTWKOOvl1KAq4GbDlx'
+        claude_skills: 'https://buy.polar.sh/polar_cl_QnjB4VMjBIO0C06yYv4YnwuAwD1a8jOkooeFN1TGWOn'
 
 services:
     _defaults:

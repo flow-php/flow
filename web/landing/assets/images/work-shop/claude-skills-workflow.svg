@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1b1925"/>
+            <stop offset="1" stop-color="#242031"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.05" r="0.9">
+            <stop offset="0" stop-color="#806dfe" stop-opacity="0.18"/>
+            <stop offset="0.55" stop-color="#ff5547" stop-opacity="0.06"/>
+            <stop offset="1" stop-color="#1b1925" stop-opacity="0"/>
+        </radialGradient>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#5c5773" stroke-width="1.6"/>
+        </marker>
+    </defs>
+
+    <rect width="1600" height="900" fill="url(#bg)"/>
+    <rect width="1600" height="900" fill="url(#glow)"/>
+
+    <text x="120" y="96" font-size="26" letter-spacing="6" fill="#ff5547">PLUGIN · WORKFLOW</text>
+    <text x="120" y="152" font-size="44" font-weight="bold" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif">The task chain — every step gated by you</text>
+
+    <g font-size="27">
+        <rect x="120" y="230" width="256" height="76" rx="38" fill="#151220" stroke="#ff5547" stroke-width="2"/>
+        <text x="248" y="277" text-anchor="middle" fill="#e7e4f2">/plan-task</text>
+        <text x="248" y="346" text-anchor="middle" font-size="21" fill="#8b86a0">planner vs challengers</text>
+
+        <line x1="376" y1="268" x2="436" y2="268" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="444" y="230" width="290" height="76" rx="38" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+        <text x="589" y="277" text-anchor="middle" fill="#e7e4f2">/explain-task</text>
+        <text x="589" y="346" text-anchor="middle" font-size="21" fill="#8b86a0">challenge before code</text>
+
+        <line x1="734" y1="268" x2="794" y2="268" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="802" y="230" width="300" height="76" rx="38" fill="#151220" stroke="#806dfe" stroke-width="2"/>
+        <text x="952" y="277" text-anchor="middle" fill="#e7e4f2">/work-on-task</text>
+        <text x="952" y="346" text-anchor="middle" font-size="21" fill="#8b86a0">zero improvisation</text>
+
+        <line x1="1102" y1="268" x2="1162" y2="268" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="1170" y="230" width="310" height="76" rx="38" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+        <text x="1325" y="277" text-anchor="middle" fill="#e7e4f2">/cleanup-task</text>
+        <text x="1325" y="346" text-anchor="middle" font-size="21" fill="#8b86a0">verified findings only</text>
+
+        <path d="M 1325 306 L 1325 400 L 248 400 L 248 430" fill="none" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="120" y="438" width="256" height="76" rx="38" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+        <text x="248" y="485" text-anchor="middle" fill="#e7e4f2">/review-task</text>
+        <text x="248" y="554" text-anchor="middle" font-size="21" fill="#8b86a0">guided tour, chapter by chapter</text>
+
+        <line x1="376" y1="476" x2="436" y2="476" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="444" y="438" width="290" height="76" rx="38" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+        <text x="589" y="485" text-anchor="middle" fill="#e7e4f2">/cleanup-epic</text>
+        <text x="589" y="554" text-anchor="middle" font-size="21" fill="#8b86a0">cross-task audit</text>
+
+        <line x1="734" y1="476" x2="794" y2="476" stroke="#5c5773" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <rect x="802" y="438" width="300" height="76" rx="38" fill="#151220" stroke="#ff5547" stroke-width="2"/>
+        <text x="952" y="485" text-anchor="middle" fill="#e7e4f2">/review-epic</text>
+        <text x="952" y="554" text-anchor="middle" font-size="21" fill="#8b86a0">the epic as one system</text>
+    </g>
+
+    <rect x="120" y="620" width="1360" height="180" rx="18" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+    <text x="170" y="682" font-size="24" fill="#ff5547">COMPANIONS</text>
+    <g font-size="27">
+        <text x="170" y="740" fill="#e7e4f2">/explain-issue <tspan fill="#8b86a0">reproduce an issue</tspan></text>
+        <text x="820" y="740" fill="#e7e4f2">/explain-pr <tspan fill="#8b86a0">tour a pull request</tspan></text>
+        <text x="170" y="784" fill="#e7e4f2">/catch-up <tspan fill="#8b86a0">re-enter an epic</tspan></text>
+        <text x="820" y="784" fill="#e7e4f2">/commit-description <tspan fill="#8b86a0">drafts the msg</tspan></text>
+    </g>
+</svg>
