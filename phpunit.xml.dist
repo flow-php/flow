@@ -6,6 +6,8 @@
         colors="true"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
+        displayDetailsOnTestsThatTriggerDeprecations="true"
+        failOnDeprecation="true"
         cacheDirectory="var/phpunit/cache"
 >
     <testsuites>
@@ -289,7 +291,7 @@
             <directory>src/bridge/phpstan/types/tests/Flow/Bridge/PHPStan/Types/Tests/Unit</directory>
         </testsuite>
     </testsuites>
-    <source>
+    <source ignoreIndirectDeprecations="true">
         <include>
             <directory>src/adapter/**/src</directory>
             <directory>src/bridge/**/**/src</directory>

@@ -45,13 +45,6 @@ final readonly class RetryLoader implements Closure, Loader, OverridingLoader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            // Retries re-offer the failed batch to the same loader instance. A loader that holds state across load()
-            // calls which cannot be rewound may have already advanced past this batch - and Flow cannot determine
-            // from outside whether re-offering is safe (statefulness of a wrapped Transformer is undetectable; a
-            // Transformation's drive has consumed later batches). The whole wrapped tree is checked, because a
-            // wrapper that is itself replay-safe can hold one that is not. Checked per load() because
-            // withTransformation() can arm a drive after this wrapper was built; placed before the retry loop so the
-            // refusal surfaces as itself and is never re-reported as a FailedRetryException after N attempts.
             foreach ($this->loaderTree->flatten($this->loader) as $wrapped) {
                 if ($wrapped instanceof ReplayAware && !$wrapped->replaySafe()) {
                     throw new InvalidLogicException(

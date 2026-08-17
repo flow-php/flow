@@ -112,7 +112,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $loader = to_transformation(add_row_index('n', StartFrom::ONE), $spy);
 
-        // Run 1 dies via a sibling step, so closure() never runs and the drive is left suspended, not dropped.
+        // Run 1 dies via a sibling step, so closure() never runs and the stream is left suspended, not dropped.
         $loader->load(rows(row(int_entry('id', 1))), $first);
         $loader->load(rows(row(int_entry('id', 2))), $second);
 
@@ -151,7 +151,7 @@ final class TransformerLoaderTest extends FlowTestCase
             static fn(DataFrame $df): DataFrame => $df->collect(),
         ), $spy);
 
-        // Run 1 buffers a batch in the drive and dies without closure(); run 2 routes no batches to this loader.
+        // Run 1 buffers a batch in the stream and dies without closure(); run 2 routes no batches to this loader.
         $loader->load(rows(row(int_entry('id', 1))), $dead);
         $loader->closure($next);
 
@@ -220,7 +220,7 @@ final class TransformerLoaderTest extends FlowTestCase
     public function test_a_failed_drive_is_rebuilt_for_the_next_batch(): void
     {
         // The dead fiber is dropped, so the loader stays usable: the batch offered after a failure reaches a fresh
-        // drive and the destination again. Without this a RetryLoader could never re-offer a batch.
+        // stream and the destination again. Without this a RetryLoader could never re-offer a batch.
         $context = flow_context(config());
         $throwing = new ThrowingLoader($failure = new RuntimeException('boom'));
         $loader = to_transformation(select('id'), $throwing);
@@ -315,7 +315,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $telemetry = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
         $loader = to_transformation(select('id'), new ThrowingLoader(new LimitReachedException(1)));
 
-        // The first load drops the drive; the second arrives on the SAME run, rebuilds it, and the sink throws again.
+        // The first load drops the stream; the second arrives on the SAME run, rebuilds it, and the sink throws again.
         // One logical limit event, so exactly one report.
         $loader->load(rows(row(int_entry('id', 1))), $telemetry->flowContext);
         $loader->load(rows(row(int_entry('id', 2))), $telemetry->flowContext);

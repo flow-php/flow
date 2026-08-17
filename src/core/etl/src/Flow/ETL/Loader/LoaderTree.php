@@ -27,11 +27,11 @@ final readonly class LoaderTree
         while ($queue !== []) {
             $loader = array_shift($queue);
 
-            if ($visited->contains($loader)) {
+            if ($visited->offsetExists($loader)) {
                 continue;
             }
 
-            $visited->attach($loader);
+            $visited->offsetSet($loader);
             $flattened[] = $loader;
 
             if ($loader instanceof OverridingLoader) {

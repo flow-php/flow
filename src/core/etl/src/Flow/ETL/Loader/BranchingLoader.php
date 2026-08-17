@@ -9,7 +9,7 @@ use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\TransformationDrive;
+use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
@@ -17,7 +17,7 @@ use Throwable;
 
 final class BranchingLoader implements Closure, Loader, OverridingLoader, ReplayAware
 {
-    private ?TransformationDrive $drive = null;
+    private ?TransformationStream $stream = null;
 
     private bool $limitReached = false;
 
@@ -33,10 +33,10 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
     {
         try {
             try {
-                // A drive left behind by a dead earlier run must not be drained here - it would commit that run's
+                // A stream left behind by a dead earlier run must not be drained here - it would commit that run's
                 // buffered rows under the dead run's context. The finally below discards it, exactly as load() does.
-                if ($this->drive !== null && $this->drive->drivenBy($context)) {
-                    $this->drive->drain();
+                if ($this->stream !== null && $this->stream->drivenBy($context)) {
+                    $this->stream->drain();
                 }
             } catch (Throwable $failure) {
                 // Same ruling as TransformerLoader::closure(): a drain failure never reached load(), so the
@@ -50,7 +50,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
                 $this->loader->closure($context);
             }
         } finally {
-            $this->drive = null;
+            $this->stream = null;
             $this->limitReached = false;
             $this->runContext = null;
         }
@@ -62,7 +62,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
 
         try {
             // Same ruling split as TransformerLoader::load(): drivenBy() decides rebuild, this field decides the
-            // limit-dedup reset - a mid-run drive rebuild must not re-arm limit reporting.
+            // limit-dedup reset - a mid-run stream rebuild must not re-arm limit reporting.
             if ($this->runContext !== $context) {
                 $this->runContext = $context;
                 $this->limitReached = false;
@@ -73,14 +73,14 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
             if ($this->transformation === null) {
                 $this->loader->load($branchRows, $context);
             } else {
-                if ($this->drive === null || !$this->drive->drivenBy($context)) {
-                    $this->drive = new TransformationDrive($this->transformation, $this->loader, $context);
+                if ($this->stream === null || !$this->stream->drivenBy($context)) {
+                    $this->stream = new TransformationStream($this->transformation, $this->loader, $context);
                 }
 
                 try {
-                    $this->drive->feed($branchRows);
+                    $this->stream->feed($branchRows);
                 } catch (Throwable $failure) {
-                    $this->drive = null;
+                    $this->stream = null;
 
                     throw $failure;
                 }

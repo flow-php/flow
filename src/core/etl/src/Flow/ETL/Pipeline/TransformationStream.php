@@ -7,6 +7,7 @@ namespace Flow\ETL\Pipeline;
 use Fiber;
 use FiberError;
 use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Extractor\FeedExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
@@ -15,13 +16,9 @@ use Flow\ETL\Transformation;
 use function Flow\ETL\DSL\df;
 
 /**
- * One nested pipeline per outer run: built once, fed batch by batch, the sink called from inside the Fiber with
- * the outer FlowContext. Owns no failure policy - a throwable from feed()/drain() propagates and the owner
- * discards the whole drive; a drive terminated by a nested limit ignores later feeds and drains as a no-op.
- *
  * @internal
  */
-final readonly class TransformationDrive
+final readonly class TransformationStream
 {
     private Fiber $fiber;
 
@@ -38,8 +35,6 @@ final readonly class TransformationDrive
             $frame = $transformation->transform(df($context->config)->from($this->source));
 
             // @mago-ignore analysis:avoid-catching-error
-            // Nothing is hidden - the FiberError is rethrown as the previous exception. It only ever means the
-            // Transformation triggered the frame, which no message from the engine explains.
         } catch (FiberError $error) {
             throw new InvalidLogicException(
                 'A Transformation given to to_transformation() or to_branch()->withTransformation() must only '

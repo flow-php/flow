@@ -8,7 +8,7 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\TransformationDrive;
+use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
@@ -16,7 +16,7 @@ use Throwable;
 
 final class TransformerLoader implements Closure, Loader, OverridingLoader, ReplayAware
 {
-    private ?TransformationDrive $drive = null;
+    private ?TransformationStream $stream = null;
 
     private bool $limitReached = false;
 
@@ -31,15 +31,10 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
     {
         try {
             try {
-                // A drive left behind by a dead earlier run must not be drained here - it would commit that run's
-                // buffered rows under the dead run's context. The finally below discards it, exactly as load() does.
-                if ($this->drive !== null && $this->drive->drivenBy($context)) {
-                    $this->drive->drain();
+                if ($this->stream !== null && $this->stream->drivenBy($context)) {
+                    $this->stream->drain();
                 }
             } catch (Throwable $failure) {
-                // A drain failure never reached load(), so this is the only place the ErrorHandler can rule on it.
-                // Declining to propagate means the run continues, which on an outer frame leaves the loader closed -
-                // so fall through to the wrapped closure() instead of rethrowing.
                 if ($context->errorHandler()->throw($failure, new Rows())) {
                     throw $failure;
                 }
@@ -49,7 +44,7 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
                 $this->loader->closure($context);
             }
         } finally {
-            $this->drive = null;
+            $this->stream = null;
             $this->limitReached = false;
             $this->runContext = null;
         }
@@ -60,10 +55,6 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
         $context->telemetry()->loadingStarted($this);
 
         try {
-            // Deliberately NOT folded into TransformationDrive::drivenBy(): drivenBy() answers "was this DRIVE built
-            // for this run?" and decides rebuild; this field answers "is this a new RUN?" and decides the limit-dedup
-            // reset. A drive dropped after a mid-run failure leaves the run unchanged - the rebuild must not re-arm
-            // limit reporting, or one logical limit event would be reported once per rebuild instead of once per run.
             if ($this->runContext !== $context) {
                 $this->runContext = $context;
                 $this->limitReached = false;
@@ -75,20 +66,14 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
                 // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
                 $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
-                // A run that dies before the closure loop never reaches closure()'s reset, so a loader reused by a
-                // later run would resume the dead run's fiber and feed its rows through the dead run's context.
-                if ($this->drive === null || !$this->drive->drivenBy($context)) {
-                    $this->drive = new TransformationDrive($transformer, $this->loader, $context);
+                if ($this->stream === null || !$this->stream->drivenBy($context)) {
+                    $this->stream = new TransformationStream($transformer, $this->loader, $context);
                 }
 
                 try {
-                    $this->drive->feed($rows);
+                    $this->stream->feed($rows);
                 } catch (Throwable $failure) {
-                    // A dead fiber cannot resume - the nested pipeline's state died with it. Drop the drive so a
-                    // batch offered after this one arrives at a fresh one, exactly as it would reach a fresh loader
-                    // call on an outer frame. Whether the run continues at all is Segment's ruling, via the
-                    // ErrorHandler; this loader only makes sure it is still usable if it does.
-                    $this->drive = null;
+                    $this->stream = null;
 
                     throw $failure;
                 }
@@ -116,8 +101,6 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
 
     public function replaySafe(): bool
     {
-        // Both branches: the Transformation branch owns a stream-spanning drive; the raw-Transformer branch holds a
-        // long-lived Transformer whose state cannot be rewound and whose statefulness is undetectable from outside.
         return false;
     }
 }

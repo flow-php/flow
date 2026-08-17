@@ -37,7 +37,7 @@ use function Flow\ETL\DSL\window;
  * it has outside a Transformation.
  *
  * The values below are the outer-frame ground truth: running the same operation on the outer frame produces them
- * byte for byte. If one of them starts failing, the nested drive regressed - do not "fix" the assertion.
+ * byte for byte. If one of them starts failing, the nested stream regressed - do not "fix" the assertion.
  *
  * See documentation/components/core/transformations.md.
  */
@@ -57,7 +57,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_batch_by_inside_a_transformation_batches_by_group_across_the_stream(): void
     {
-        // A7 - chunks are cut at the group boundaries now that the whole stream flows through one drive.
+        // A7 - chunks are cut at the group boundaries now that the whole stream flows through one stream.
         $spy = new SpyLoader();
         $batchByGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->batchBy(ref('g')));
 
@@ -114,7 +114,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_constrain_inside_a_transformation_accumulates_across_batches(): void
     {
-        // ConstrainedProcessor keeps its rowIndex and UniqueConstraint keeps its storage for the whole drive, so a
+        // ConstrainedProcessor keeps its rowIndex and UniqueConstraint keeps its storage for the whole stream, so a
         // stream-wide constraint sees the whole stream. Each batch here is internally unique on 'g' while the stream
         // is not, and the violation is reported at row index 2, the first row of batch TWO.
         $uniqueGroup =
@@ -167,7 +167,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
     public function test_join_inside_a_transformation_matches_every_row(): void
     {
         // REGRESSION GUARD - asserts CORRECT behaviour. HashJoinProcessor buffers the RIGHT side, which is a separate
-        // complete frame, and buckets the left side. Under one drive the buckets span the stream, so the output is
+        // complete frame, and buckets the left side. Under one stream the buckets span the stream, so the output is
         // grouped by join key in 2 chunks of 3 - byte for byte what the same join gives on the outer frame.
         $spy = new SpyLoader();
         $joinNames = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->join(

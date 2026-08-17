@@ -94,7 +94,7 @@ final class BranchingLoaderTest extends FlowTestCase
 
         static::assertSame(1, $sink->loadsCount);
 
-        // The throwing closure() must still have reset the drive - the next round on the same context starts fresh.
+        // The throwing closure() must still have reset the stream - the next round on the same context starts fresh.
         $loader->load(rows(row(int_entry('id', 2))), $context);
 
         $thrown = null;
@@ -285,7 +285,7 @@ final class BranchingLoaderTest extends FlowTestCase
             static fn(DataFrame $df): DataFrame => $df->collect(),
         ));
 
-        // Run 1 buffers a batch in the drive and dies without closure(); run 2 routes no batches to this loader.
+        // Run 1 buffers a batch in the stream and dies without closure(); run 2 routes no batches to this loader.
         $loader->load(rows(row(int_entry('id', 1))), $dead);
         $loader->closure($next);
 
