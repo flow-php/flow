@@ -1,0 +1,101 @@
+{% extends 'work-shop/_listing.html.twig' %}
+
+{#
+    Shared sponsoring page. Each period page extends this and provides:
+      sponsoring_cadence       (string) — how it renews, e.g. "monthly", "every 6 months"
+      sponsoring_other_periods (list)   — cross-links to the other periods: {label, href}
+    plus the usual listing_* metadata from _listing.html.twig.
+#}
+
+{% block listing_body %}
+    <p class="mb-4">
+        Flow PHP is MIT licensed and always will be. Nobody pays to use it, and nobody ever has to.
+        But keeping it that way is work that never shows up in a changelog: reviewing contributions,
+        patching security issues, cutting releases, keeping the documentation honest, and paying for
+        the infrastructure that builds and tests every commit.
+    </p>
+    <p class="mb-4">
+        Sponsoring is the simplest way to help carry that. It is not a product with a feature list,
+        it is a small recurring thank-you that buys maintainer time — and it comes with a place at
+        the table.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">The Sponsor role on Discord</h2>
+    <p class="mb-4">
+        Sponsors get the <strong class="font-semibold text-slate-900 dark:text-white">Sponsor</strong> role
+        on the Flow PHP Discord server. It shows: your username gets its own color, so sponsors stand out
+        in every conversation. And it opens the exclusive channels where the maintenance happens out loud:
+        what is being worked on, what is being postponed and why, roadmap discussions before they become
+        issues, and the honest trade-off conversations that never make it into release notes.
+    </p>
+    <ul class="space-y-2">
+        {% for feature in [
+            'The Sponsor role, visible on the server',
+            'A custom username color, so your name stands out',
+            'Access to the exclusive sponsor-only channels',
+            'Roadmap and design discussions before they land on GitHub',
+            'A direct line to the maintainer, in a channel small enough to be read',
+        ] %}
+            <li class="flex items-start gap-3">
+                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100">✓</span>
+                <span>{{ feature }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+    <p class="mt-4 mb-4">
+        This is the first sponsor benefit, not the last. As sponsoring grows, so will what it includes —
+        and existing sponsors get everything new at the price they signed up with.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">How the role reaches you</h2>
+    <p class="mb-4">
+        The role is not sent automatically — there is one step you have to take yourself. Checkout is
+        handled by Polar; afterwards you sign in to the
+        <a href="https://polar.sh/flow-php/portal" target="_blank" rel="noopener" class="underline underline-offset-2">Polar customer portal</a>
+        with the email you bought with (no password — Polar emails a one-time code), open your order
+        and connect your Discord account there. Nothing happens until you do. Once Discord is
+        connected, Polar takes over: the server invitation and the granting of the Sponsor role are
+        fully automated on their side — no screenshots to send, nobody to DM.
+    </p>
+    <p class="mb-4">
+        The role is tied to the sponsorship: it stays granted while your sponsorship is active. When
+        the sponsorship ends, the benefit expires with it and Polar's Discord integration takes the
+        role away.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Renewal and cancelling</h2>
+    <p class="mb-4">
+        This sponsorship renews automatically, {{ sponsoring_cadence }}. You can cancel anytime from
+        the same customer portal: cancelling stops the next renewal, your sponsorship and the Discord
+        role stay active until the end of the period you already paid for, and you can change your
+        mind and un-cancel any time before that date.
+    </p>
+
+    <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What it is not</h2>
+    <p class="mb-4">
+        It is not a support contract. There is no SLA, no guaranteed response time, and no queue-jumping
+        for issues — if you need the maintainer on your problem, that is what
+        <a href="{{ path('work_shop_consulting') }}" class="underline underline-offset-2">consulting</a> is for.
+        And it gates nothing: Flow PHP stays MIT and complete for everyone, sponsor or not.
+    </p>
+{% endblock %}
+
+{% block listing_aside %}
+    <p class="mt-5 text-xs font-semibold uppercase tracking-wide muted">Other periods</p>
+    {% for period in sponsoring_other_periods %}
+        <a href="{{ period.href }}"
+           class="group mt-2 flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-sm no-underline transition-colors hover:border-slate-300 hover:bg-slate-50 hover:no-underline dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.05]">
+            <span class="font-medium text-slate-900 transition-colors group-hover:text-orange-300 dark:text-white dark:group-hover:text-orange-100">{{ period.label }}</span>
+            <span aria-hidden="true" class="muted transition-transform group-hover:translate-x-0.5">→</span>
+        </a>
+    {% endfor %}
+    <p class="mt-4 text-xs muted leading-relaxed">
+        Renews automatically, {{ sponsoring_cadence }}. Cancel anytime from the Polar customer portal —
+        the role stays until the end of what you paid for.
+    </p>
+    <p class="mt-3 text-xs muted leading-relaxed">
+        The role is not sent automatically. Use an email you can actually read at checkout — it is how
+        you get into the customer portal, where you connect Discord yourself to claim the role. There
+        is no password, Polar sends a one-time code to that address.
+    </p>
+{% endblock %}

@@ -64,6 +64,36 @@ final class WorkShopController extends AbstractController
         return $this->render('work-shop/ai/how-it-works/index.html.twig');
     }
 
+    #[Route('/work-shop/sponsoring/1-month', name: 'work_shop_sponsoring_1m', options: [
+        'sitemap' => false,
+    ])]
+    public function sponsoring1Month(): Response
+    {
+        return $this->render('work-shop/sponsoring/1-month/index.html.twig', [
+            'listing_checkout_url' => $this->checkoutLinks['sponsoring_1m'] ?? null,
+        ]);
+    }
+
+    #[Route('/work-shop/sponsoring/6-months', name: 'work_shop_sponsoring_6m', options: [
+        'sitemap' => false,
+    ])]
+    public function sponsoring6Months(): Response
+    {
+        return $this->render('work-shop/sponsoring/6-months/index.html.twig', [
+            'listing_checkout_url' => $this->checkoutLinks['sponsoring_6m'] ?? null,
+        ]);
+    }
+
+    #[Route('/work-shop/sponsoring/12-months', name: 'work_shop_sponsoring_12m', options: [
+        'sitemap' => false,
+    ])]
+    public function sponsoring12Months(): Response
+    {
+        return $this->render('work-shop/sponsoring/12-months/index.html.twig', [
+            'listing_checkout_url' => $this->checkoutLinks['sponsoring_12m'] ?? null,
+        ]);
+    }
+
     #[Route('/work-shop/success', name: 'work_shop_success', options: ['sitemap' => false])]
     public function success(): Response
     {

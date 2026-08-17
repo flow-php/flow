@@ -28,20 +28,38 @@
             </p>
         </div>
 
-        <div class="mt-10 grid gap-5 md:grid-cols-2">
+        <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             <article class="card flex flex-col">
                 <div class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100/10 ring-1 ring-orange-200/30 dark:bg-orange-100/15 dark:ring-orange-100/30">
                     <img src="{{ asset('images/icons/heart.svg') }}" alt="" width="20" height="20">
                 </div>
-                <h2 class="mt-5 text-xl font-semibold tracking-tight">Sponsor on GitHub</h2>
+                <h2 class="mt-5 text-xl font-semibold tracking-tight">Become a sponsor</h2>
                 <p class="mt-2 muted text-sm leading-relaxed flex-1">
-                    Even a small one-time contribution makes a difference. Recurring
-                    sponsorship is the most impactful — it lets us plan ahead.
+                    Flow PHP is MIT licensed and it is going to stay MIT — sponsoring never buys
+                    features and never gates code. It buys maintainer time, and we appreciate even
+                    the smallest help: $5 a month makes a real difference, and comes with the
+                    Sponsor role on our Discord.
                 </p>
-                <a href="https://github.com/sponsors/norberttech?frequency=one-time" target="_blank" rel="noopener"
-                   class="btn btn-primary mt-5 self-start px-4 py-2">
-                    <img src="{{ asset('images/icons/github.svg') }}" alt="" width="16" height="16" class="dark:invert-0 invert-0">
-                    Sponsor on GitHub
+                <a href="{{ path('work_shop') }}#sponsoring"
+                   class="btn btn-primary mt-5 self-start px-4 py-2 no-underline">
+                    <img src="{{ asset('images/icons/heart.svg') }}" alt="" width="16" height="16">
+                    Become a sponsor
+                </a>
+            </article>
+
+            <article class="card flex flex-col">
+                <div class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-brown-100/10 ring-1 ring-brown-100/30 dark:bg-brown-100/15 dark:ring-brown-100/30">
+                    <img src="{{ asset('images/icons/code.svg') }}" alt="" width="20" height="20" class="dark:invert-0 invert">
+                </div>
+                <h2 class="mt-5 text-xl font-semibold tracking-tight">Support by learning</h2>
+                <p class="mt-2 muted text-sm leading-relaxed flex-1">
+                    Buy a blueprint and both sides win: you learn from a real, running codebase
+                    built to be read and pulled apart — a blueprint on purpose, not a finished
+                    product — and the purchase funds maintenance the same way a sponsorship does.
+                </p>
+                <a href="{{ path('work_shop') }}#blueprints"
+                   class="btn btn-secondary mt-5 self-start px-4 py-2 no-underline">
+                    Browse blueprints <span aria-hidden="true">→</span>
                 </a>
             </article>
 
@@ -70,7 +88,8 @@
             </span>
             <h2 class="mt-3 section-title">Backed by great companies.</h2>
             <p class="mt-3 muted">
-                The companies below support Flow with services free of charge or significantly discounted. Thank you.
+                The companies below support Flow with services free of charge or significantly discounted.<br/>
+                Thank you.
             </p>
         </div>
 

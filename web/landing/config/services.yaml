@@ -14,6 +14,9 @@ parameters:
     work_shop_checkout_links:
         symfony_backoffice: 'https://buy.polar.sh/polar_cl_KAb6EWLVtewQhsDZV2bGeqsxSxTWKOOvl1KAq4GbDlx'
         claude_skills: 'https://buy.polar.sh/polar_cl_QnjB4VMjBIO0C06yYv4YnwuAwD1a8jOkooeFN1TGWOn'
+        sponsoring_1m: 'https://buy.polar.sh/polar_cl_6mCYA1wtrsDoNEPWdGYYsywYsuqUKOQ0NPXyi3jvxqj'
+        sponsoring_6m: 'https://buy.polar.sh/polar_cl_mEofXJZ6Xk26CgU4rXKFfJgobacCTd5ePfSK919Uk1f'
+        sponsoring_12m: 'https://buy.polar.sh/polar_cl_uvW4nk5pNlWdA7qQidP2yWELnpcduMatH7yI11EgdbJ'
 
 services:
     _defaults:

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1b1925"/>
+            <stop offset="1" stop-color="#242031"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.05" r="0.9">
+            <stop offset="0" stop-color="#806dfe" stop-opacity="0.18"/>
+            <stop offset="0.55" stop-color="#ff5547" stop-opacity="0.06"/>
+            <stop offset="1" stop-color="#1b1925" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#bg)"/>
+    <rect width="1600" height="900" fill="url(#glow)"/>
+    <text x="120" y="96" font-size="26" letter-spacing="6" fill="#ff5547">FLOW PHP · SPONSORING · 6 MONTHS</text>
+    <text x="120" y="152" font-size="44" font-weight="bold" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif">Stand out where Flow PHP is built</text>
+    <rect x="120" y="200" width="1360" height="600" rx="18" fill="#151220" stroke="#3a3450" stroke-width="2"/>
+    <rect x="120" y="200" width="1360" height="58" rx="18" fill="#211d30"/>
+    <rect x="120" y="230" width="1360" height="28" fill="#211d30"/>
+    <circle cx="162" cy="229" r="9" fill="#ff5547"/>
+    <circle cx="194" cy="229" r="9" fill="#e1761a"/>
+    <circle cx="226" cy="229" r="9" fill="#806dfe"/>
+    <text x="770" y="238" font-size="22" fill="#8b86a0" text-anchor="middle">discord — Flow PHP</text>
+    <g font-size="28">
+        <text x="170" y="330" font-size="22" letter-spacing="3" fill="#5c5773">MEMBERS — ONLINE</text>
+        <circle cx="186" cy="392" r="14" fill="#3a3450"/>
+        <text x="220" y="402" fill="#8b86a0">dev_anna</text>
+        <circle cx="186" cy="452" r="14" fill="#3a3450"/>
+        <text x="220" y="462" fill="#8b86a0">marcin_k</text>
+        <circle cx="186" cy="512" r="14" fill="#ff5547"/>
+        <text x="220" y="522" fill="#ff5547" font-weight="bold">you</text>
+        <rect x="300" y="488" width="180" height="46" rx="23" fill="#ff5547" fill-opacity="0.14" stroke="#ff5547" stroke-width="2"/>
+        <text x="390" y="520" text-anchor="middle" font-size="24" fill="#ff5547">Sponsor</text>
+        <circle cx="186" cy="572" r="14" fill="#3a3450"/>
+        <text x="220" y="582" fill="#8b86a0">tomek</text>
+        <circle cx="186" cy="632" r="14" fill="#3a3450"/>
+        <text x="220" y="642" fill="#8b86a0">julia_dev</text>
+        <text x="170" y="732" font-size="24" fill="#8b86a0">Your name, in the Sponsor color.</text>
+    </g>
+    <line x1="760" y1="280" x2="760" y2="770" stroke="#3a3450" stroke-width="2"/>
+    <g>
+        <text x="820" y="400" font-size="76" font-weight="bold" fill="#e7e4f2">$29</text>
+        <text x="1010" y="400" font-size="28" fill="#8b86a0">every 6 months</text><rect x="820" y="440" width="200" height="52" rx="26" fill="#4ade80" fill-opacity="0.12" stroke="#4ade80" stroke-width="2"/><text x="920" y="475" text-anchor="middle" font-size="26" fill="#4ade80">SAVE 3%</text>
+        <text x="820" y="546" font-size="24" fill="#8b86a0">The Sponsor role: a custom username</text>
+        <text x="820" y="592" font-size="24" fill="#8b86a0">color and access to exclusive channels</text>
+        <text x="820" y="638" font-size="24" fill="#8b86a0">on the Flow PHP Discord server.</text>
+        <text x="820" y="712" font-size="24" fill="#8b86a0">Every sponsorship funds the</text>
+        <text x="820" y="758" font-size="24" fill="#8b86a0">maintenance of Flow PHP.</text>
+    </g>
+</svg>

@@ -1,0 +1,15 @@
+{% extends 'work-shop/sponsoring/_page.html.twig' %}
+
+{% set listing_name = 'Sponsoring — 12 Months' %}
+{% set listing_eyebrow = 'Sponsoring' %}
+{% set listing_price = '$55' %}
+{% set listing_price_cadence = 'every 12 months' %}
+{% set listing_available = true %}
+{% set listing_cta_label = 'Become a sponsor' %}
+{% set listing_image = asset('images/work-shop/sponsoring-12m.svg') %}
+{% set listing_tagline = 'A full year of sponsoring in one payment, 8% off the monthly price. In exchange: the Sponsor role on our Discord — a custom username color and access to exclusive channels.' %}
+{% set sponsoring_cadence = 'every 12 months' %}
+{% set sponsoring_other_periods = [
+    { label: '1 month — $5 per month', href: path('work_shop_sponsoring_1m') },
+    { label: '6 months — $29 (save 3%)', href: path('work_shop_sponsoring_6m') },
+] %}

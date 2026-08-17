@@ -18,12 +18,13 @@
                 {label: 'Docs',       href: path('documentation'),                                                                                       route: 'documentation'},
                 {label: 'Playground', href: path('playground'),                                                                                          route: 'playground'},
                 {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), route: 'example_option'},
+                {label: 'Work-Shop',  href: path('work_shop'),                                                                                           route: 'work_shop', glow: true},
                 {label: 'Blog',       href: path('blog'),                                                                                                route: 'blog'},
             ] %}
             {% for item in primary %}
                 {% set active = app.request.attributes.get('_route') starts with item.route %}
                 <a href="{{ item.href }}"
-                   class="rounded-md px-3 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/75 dark:hover:text-white dark:hover:bg-white/[0.06] transition-colors no-underline {{ active ? '!text-slate-900 bg-slate-100 dark:!text-white dark:bg-white/[0.08]' }}"
+                   class="rounded-md px-3 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/75 dark:hover:text-white dark:hover:bg-white/[0.06] transition-colors no-underline {{ active ? '!text-slate-900 bg-slate-100 dark:!text-white dark:bg-white/[0.08]' }} {{ item.glow|default(false) ? 'nav-glow' }}"
                    {% if active %}aria-current="page"{% endif %}>
                     {{ item.label }}
                 </a>
@@ -77,13 +78,14 @@
                         {label: 'Docs',       href: path('documentation'),    icon: 'checklist'},
                         {label: 'Playground', href: path('playground'),       icon: 'play'},
                         {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), icon: 'code'},
+                        {label: 'Work-Shop',  href: path('work_shop'),        icon: 'cart', glow: true},
                         {label: 'Blog',       href: path('blog'),             icon: 'pencil'},
                         {label: 'Sponsor',    href: path('sponsor'),          icon: 'heart'},
                     ] %}
                     {% for item in mobileNav %}
                         <li>
                             <a href="{{ item.href }}"
-                               class="flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-white/[0.06] no-underline">
+                               class="flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-white/[0.06] no-underline {{ item.glow|default(false) ? 'nav-glow' }}">
                                 <img src="{{ asset('images/icons/' ~ item.icon ~ '.svg') }}" alt="" width="20" height="20" class="opacity-75 {% if item.icon != 'heart' %}dark:invert-0 invert{% endif %}">
                                 {{ item.label }}
                             </a>

@@ -95,6 +95,28 @@ html {
     @apply inline-block;
 }
 
+/* Work-Shop nav item — a slow breathing glow so the shop stands out from any page.
+   Falls back to a steady glow when the visitor prefers reduced motion. */
+.nav-glow {
+    animation: nav-glow-breathe 3s ease-in-out infinite;
+}
+
+@keyframes nav-glow-breathe {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(128, 109, 254, 0);
+    }
+    50% {
+        box-shadow: 0 0 14px 2px rgba(128, 109, 254, 0.6);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-glow {
+        animation: none;
+        box-shadow: 0 0 10px 1px rgba(128, 109, 254, 0.4);
+    }
+}
+
 
 nav a {
     @apply font-medium text-slate-900 dark:text-white hover:underline;

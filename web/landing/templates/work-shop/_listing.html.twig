@@ -23,6 +23,9 @@
 
 {%- block hero -%}{%- endblock -%}
 
+{# The Work-Shop is a commercial offer by the maintainer, not a community effort. #}
+{%- block contributors -%}{%- endblock -%}
+
 {% block main %}
     {# `??` (not the `default` filter) so an explicit `false` is respected — `false|default(true)` returns true #}
     {% set listing_available = listing_available ?? true %}
@@ -101,14 +104,13 @@
                         {% if listing_price|default(false) %}
                             <span class="flex items-baseline gap-2">
                                 <span class="text-3xl font-bold tracking-tight">{{ listing_price }}</span>
+                                {% if listing_price_cadence|default(false) %}
+                                    <span class="muted text-xs">{{ listing_price_cadence }}</span>
+                                {% endif %}
                                 <span class="muted text-xs">excl. tax</span>
                             </span>
                         {% endif %}
-                        {% if listing_available %}
-                            <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-600/30 dark:text-emerald-300 dark:ring-emerald-400/30">
-                                Available
-                            </span>
-                        {% else %}
+                        {% if not listing_available %}
                             <span class="inline-flex items-center rounded-full bg-slate-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 ring-1 ring-slate-400/30 dark:text-white/55 dark:ring-white/15">
                                 Coming soon
                             </span>

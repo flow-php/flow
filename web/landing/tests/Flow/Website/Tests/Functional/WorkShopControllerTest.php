@@ -87,13 +87,45 @@ final class WorkShopControllerTest extends WebTestCase
         static::assertSame(1, $crawler->filter('main a[href="/work-shop/blueprints/how-it-works"]')->count());
     }
 
-    public function test_header_does_not_link_to_work_shop(): void
+    public function test_work_shop_pages_do_not_render_the_contributors_section(): void
     {
         $client = self::createClient();
-        $crawler = $client->request('GET', '/');
 
+        // The Work-Shop is a commercial offer by the maintainer, not a community effort.
+        foreach ([
+            '/work-shop',
+            '/work-shop/blueprints/symfony-backoffice',
+            '/work-shop/blueprints/how-it-works',
+            '/work-shop/ai/claude-skills',
+            '/work-shop/ai/how-it-works',
+            '/work-shop/sponsoring/1-month',
+            '/work-shop/consulting',
+            '/work-shop/success',
+            '/work-shop/terms-of-sales',
+            '/work-shop/privacy-policy',
+        ] as $path) {
+            $crawler = $client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+            static::assertStringNotContainsString('Built in the open', $crawler->filter('main')->text(), $path);
+        }
+
+        // Everywhere else the section stays.
+        $home = $client->request('GET', '/');
         self::assertResponseIsSuccessful();
-        static::assertSame(0, $crawler->filter('header a[href^="/work-shop"]')->count());
+        static::assertStringContainsString('Built in the open', $home->filter('main')->text());
+    }
+
+    public function test_header_links_to_the_work_shop_from_every_page(): void
+    {
+        $client = self::createClient();
+
+        foreach (['/', '/sponsor', '/work-shop'] as $path) {
+            $crawler = $client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+            static::assertGreaterThan(0, $crawler->filter('header a[href="/work-shop"]')->count(), $path);
+        }
     }
 
     public function test_work_shop_is_excluded_from_the_sitemap(): void
@@ -115,12 +147,16 @@ final class WorkShopControllerTest extends WebTestCase
         $text = $crawler->filter('main')->text();
         static::assertStringContainsString('Blueprints', $text);
         static::assertStringContainsString('AI', $text);
+        static::assertStringContainsString('Sponsoring', $text);
         static::assertStringContainsString('Consulting', $text);
         static::assertStringNotContainsString('Subscriptions', $text);
 
         foreach ([
             '/work-shop/blueprints/symfony-backoffice',
             '/work-shop/ai/claude-skills',
+            '/work-shop/sponsoring/1-month',
+            '/work-shop/sponsoring/6-months',
+            '/work-shop/sponsoring/12-months',
             '/work-shop/consulting',
         ] as $href) {
             static::assertGreaterThan(0, $crawler->filter('a[href="' . $href . '"]')->count(), $href);
@@ -129,6 +165,10 @@ final class WorkShopControllerTest extends WebTestCase
         static::assertStringContainsString('$59', $text);
         static::assertStringContainsString('$10', $text);
         static::assertStringContainsString('excl. tax', $text);
+        // The longer sponsoring periods advertise their discount, and 6 months is the pick.
+        static::assertStringContainsString('save 3%', $text);
+        static::assertStringContainsString('save 8%', $text);
+        static::assertStringContainsString('Best value', $text);
         // Placeholder listings render as plain cards, so they must not become links.
         static::assertStringContainsString('More Blueprints', $text);
         static::assertGreaterThan(0, $crawler->filter('main div.card:not([href])')->count());
@@ -273,6 +313,62 @@ final class WorkShopControllerTest extends WebTestCase
         // Something is sold here, so the Terms of Sale govern the purchase.
         static::assertSame(1, $crawler->filter('main a[href="/work-shop/terms-of-sales"]')->count());
         static::assertSame(1, $crawler->filter('main a[href="/work-shop/privacy-policy"]')->count());
+    }
+
+    public function test_sponsoring_pages_sell_each_period(): void
+    {
+        $client = self::createClient();
+
+        $pages = [
+            '/work-shop/sponsoring/1-month' => ['$5', 'per month'],
+            '/work-shop/sponsoring/6-months' => ['$29', 'every 6 months'],
+            '/work-shop/sponsoring/12-months' => ['$55', 'every 12 months'],
+        ];
+
+        foreach ($pages as $path => [$price, $cadence]) {
+            $crawler = $client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+
+            $text = $crawler->filter('main')->text();
+            static::assertStringContainsString($price, $text, $path);
+            static::assertStringContainsString($cadence, $text, $path);
+            static::assertStringContainsString('excl. tax', $text, $path);
+            static::assertStringContainsString('Sponsor role', $text, $path);
+            static::assertStringContainsString('custom username color', $text, $path);
+            // Claiming the role requires connecting Discord in the portal, so the page must say so.
+            static::assertStringContainsString('The role is not sent automatically', $text, $path);
+            // Cancellation must be described exactly as Polar implements it: at period end, reversible.
+            static::assertStringContainsString(
+                'stay active until the end of the period you already paid for',
+                $text,
+                $path,
+            );
+
+            $cta = $crawler->filter(
+                'main a[data-controller~="work-shop-checkout"][data-action~="work-shop-checkout#open"]',
+            );
+            static::assertSame(1, $cta->count(), $path);
+            static::assertNotEmpty($cta->attr('data-work-shop-checkout-url-value'), $path);
+
+            // Each period cross-links the other two.
+            foreach (array_keys($pages) as $other) {
+                if ($other === $path) {
+                    continue;
+                }
+                static::assertGreaterThan(
+                    0,
+                    $crawler->filter('main a[href="' . $other . '"]')->count(),
+                    $path . ' -> ' . $other,
+                );
+            }
+
+            // Something is sold here, so the Terms of Sale govern the purchase.
+            static::assertSame(1, $crawler->filter('main a[href="/work-shop/terms-of-sales"]')->count(), $path);
+            static::assertSame(1, $crawler->filter('main a[href="/work-shop/privacy-policy"]')->count(), $path);
+            // Sponsoring is not a support contract, so it has to point at consulting instead.
+            static::assertGreaterThan(0, $crawler->filter('main a[href="/work-shop/consulting"]')->count(), $path);
+        }
     }
 
     public function test_symfony_backoffice_has_carousel_and_covered_features(): void
