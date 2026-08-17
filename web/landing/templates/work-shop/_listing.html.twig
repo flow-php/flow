@@ -21,6 +21,19 @@
 
 {%- block description -%}{{ listing_tagline|default('The Flow PHP Work-Shop. Blueprints and consulting for teams building with Flow.') }}{%- endblock -%}
 
+{% block social_image %}
+    {% if social_image is defined %}
+        <meta property="og:image" content="{{ absolute_url(social_image) }}" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="{{ listing_name }}" />
+        <meta name="twitter:image" content="{{ absolute_url(social_image) }}">
+    {% else %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}
+
 {%- block hero -%}{%- endblock -%}
 
 {# The Work-Shop is a commercial offer by the maintainer, not a community effort. #}

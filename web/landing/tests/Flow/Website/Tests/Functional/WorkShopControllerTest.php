@@ -9,6 +9,7 @@ use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
+use function dirname;
 use function Flow\Types\DSL\type_instance_of;
 
 final class WorkShopControllerTest extends WebTestCase
@@ -382,6 +383,54 @@ final class WorkShopControllerTest extends WebTestCase
         static::assertStringContainsString('One schema, four jobs', $crawler->filter('main')->text());
         static::assertSame(1, $crawler->filter('[data-controller~="work-shop-carousel"]')->count());
         static::assertGreaterThan(1, $crawler->filter('[data-work-shop-carousel-target="slide"]')->count());
+    }
+
+    public function test_listing_pages_generate_social_cards_and_point_open_graph_image_to_them(): void
+    {
+        $client = self::createClient();
+
+        $pages = [
+            '/work-shop/blueprints/symfony-backoffice' => '/images/work-shop/social/symfony-backoffice.png',
+            '/work-shop/ai/claude-skills' => '/images/work-shop/social/claude-skills.png',
+            '/work-shop/sponsoring/1-month' => '/images/work-shop/social/sponsoring-1-month.png',
+            '/work-shop/sponsoring/6-months' => '/images/work-shop/social/sponsoring-6-months.png',
+            '/work-shop/sponsoring/12-months' => '/images/work-shop/social/sponsoring-12-months.png',
+            '/work-shop/consulting' => '/images/work-shop/social/consulting.png',
+        ];
+
+        foreach ($pages as $path => $socialCardPath) {
+            $crawler = $client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+            static::assertStringEndsWith(
+                $socialCardPath,
+                (string) $crawler->filter('meta[property="og:image"]')->attr('content'),
+                $path,
+            );
+            static::assertStringEndsWith(
+                $socialCardPath,
+                (string) $crawler->filter('meta[name="twitter:image"]')->attr('content'),
+                $path,
+            );
+            static::assertFileExists(dirname(__DIR__, levels: 5) . '/public' . $socialCardPath, $path);
+        }
+    }
+
+    public function test_non_listing_work_shop_pages_keep_the_default_social_image(): void
+    {
+        $client = self::createClient();
+
+        foreach (['/work-shop', '/work-shop/blueprints/how-it-works', '/work-shop/ai/how-it-works'] as $path) {
+            $crawler = $client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+            // The default banner is served through the asset mapper, so its filename carries a content hash.
+            static::assertMatchesRegularExpression(
+                '#/assets/images/banner-[0-9a-f]+\.png$#',
+                (string) $crawler->filter('meta[property="og:image"]')->attr('content'),
+                $path,
+            );
+        }
     }
 
     #[Override]

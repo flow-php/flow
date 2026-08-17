@@ -4,6 +4,8 @@ build/
 vendor/
 var/
 public/assets
+public/images/blog/social/
+public/images/work-shop/social/
 public/pagefind
 public/*.xml
 !public/BingSiteAuth.xml

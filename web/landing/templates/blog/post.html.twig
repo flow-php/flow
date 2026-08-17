@@ -8,6 +8,17 @@
     {{ post.description }}
 {%- endblock -%}
 
+{%- block og_type -%}article{%- endblock -%}
+
+{% block social_image %}
+    <meta property="og:image" content="{{ absolute_url(social_image) }}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="{{ post.title }}" />
+    <meta name="twitter:image" content="{{ absolute_url(social_image) }}">
+{% endblock %}
+
 {%- block hero -%}{%- endblock -%}
 
 {% block main %}
@@ -26,6 +37,18 @@
                 <span class="hidden sm:inline">Subscribe via RSS</span>
                 <span class="sm:hidden">RSS</span>
             </a>
+        </div>
+        <div class="flex items-center gap-3">
+            <a class="no-underline" href="{{ post.authorUrl }}" target="_blank" rel="noopener">
+                <img class="h-10 w-10 rounded-full" src="{{ post.authorAvatarUrl(96) }}" alt="{{ post.author }}" loading="lazy"/>
+            </a>
+            <div class="text-sm leading-tight">
+                <a class="font-semibold text-slate-700 hover:text-slate-900 no-underline dark:text-white/75 dark:hover:text-white"
+                   href="{{ post.authorUrl }}" target="_blank" rel="noopener">@{{ post.author }}</a>
+                <time datetime="{{ post.date | date('c') }}" class="block text-slate-500 dark:text-white/55">
+                    {{ post.date | date('M j, Y') }}
+                </time>
+            </div>
         </div>
     </section>
 

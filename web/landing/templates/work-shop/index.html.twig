@@ -14,100 +14,6 @@
 {%- block contributors -%}{%- endblock -%}
 
 {% block main %}
-    {% set categories = [
-        {
-            id: 'blueprints',
-            heading: 'Blueprints',
-            subtitle: 'Working applications you can clone, run and pull apart. Read how the pieces fit together, then build your own on top.',
-            listings: [
-                {
-                    name: 'Symfony Backoffice Blueprint',
-                    price: '$59',
-                    href: path('work_shop_blueprint_symfony'),
-                    image: asset('images/work-shop/symfony-backoffice-app.png'),
-                    blurb: 'A working Symfony back office built on Flow PHP. One schema per model drives the database, the API and the imports, and every request is traced from the browser down to the SQL query.',
-                    features: ['Schema drives the database, API and imports', 'Streaming CSV, JSON and XML exports', 'OpenTelemetry across browser and backend'],
-                    available: true
-                },
-                {
-                    name: 'More Blueprints',
-                    blurb: 'The Symfony back office is the first one. More are being built, same standards, different frameworks and different problems.',
-                    features: ['Fully tested and statically analysed', 'Something you want to see? Let us know'],
-                    available: false
-                }
-            ]
-        },
-        {
-            id: 'ai',
-            heading: 'AI',
-            subtitle: 'Claude Code plugins that make your agent work the way this codebase is built: planned tasks, gated reviews, and PHP quality rules that load themselves.',
-            listings: [
-                {
-                    name: 'Claude Code Skills',
-                    price: '$10',
-                    href: path('work_shop_ai_claude_skills'),
-                    image: asset('images/work-shop/claude-skills.svg'),
-                    blurb: 'Two Claude Code plugins from one private marketplace: a task-driven engineering workflow with eleven gated skills, and PHP code-quality skills that auto-load whenever Claude touches PHP.',
-                    features: ['Plan, implement, clean up and review through gated skills', 'Findings survive adversarial verification before you see them', 'Type narrowing and testing rules that load themselves'],
-                    available: true
-                }
-            ]
-        },
-        {
-            id: 'sponsoring',
-            heading: 'Sponsoring',
-            subtitle: 'Flow PHP is MIT and free. Sponsoring funds the work that keeps it that way, and gets you into the sponsor-only channels on our Discord.',
-            listings: [
-                {
-                    name: 'Sponsoring — 1 Month',
-                    price: '$5',
-                    href: path('work_shop_sponsoring_1m'),
-                    image: asset('images/work-shop/sponsoring-1m.svg'),
-                    blurb: 'A small monthly contribution towards maintenance, releases and infrastructure. In exchange: the Sponsor role on our Discord — a custom username color and the exclusive channels where the roadmap happens.',
-                    features: ['Sponsor role with a custom username color', 'Access to exclusive sponsor-only channels', 'Renews monthly, cancel anytime'],
-                    available: true
-                },
-                {
-                    name: 'Sponsoring — 6 Months',
-                    price: '$29',
-                    price_note: 'save 3%',
-                    badge: 'Best value',
-                    highlight: true,
-                    href: path('work_shop_sponsoring_6m'),
-                    image: asset('images/work-shop/sponsoring-6m.svg'),
-                    blurb: 'The same sponsorship in one payment every six months, 3% off the monthly price. The Sponsor role, a custom username color and the exclusive channels included.',
-                    features: ['Everything from the monthly sponsorship', 'Save 3% vs paying monthly', 'Renews every 6 months, cancel anytime'],
-                    available: true
-                },
-                {
-                    name: 'Sponsoring — 12 Months',
-                    price: '$55',
-                    price_note: 'save 8%',
-                    href: path('work_shop_sponsoring_12m'),
-                    image: asset('images/work-shop/sponsoring-12m.svg'),
-                    blurb: 'A full year of sponsoring in one payment, 8% off the monthly price. The Sponsor role, a custom username color and the exclusive channels included.',
-                    features: ['Everything from the monthly sponsorship', 'Save 8% vs paying monthly', 'Renews every 12 months, cancel anytime'],
-                    available: true
-                }
-            ]
-        },
-        {
-            id: 'consulting',
-            heading: 'Consulting',
-            subtitle: 'Data engineering, architecture and observability work, from a two day workshop to a fractional architect on your team.',
-            listings: [
-                {
-                    name: 'Consulting',
-                    href: path('work_shop_consulting'),
-                    image: asset('images/work-shop/consulting.jpg'),
-                    blurb: 'Sixteen years of data engineering, software architecture and observability work, from pipelines that hold up to APM bills that come down.',
-                    features: ['Data engineering, architecture, observability', 'Workshops, fractional architect, or hands-on build', 'Quoted per engagement, first call free'],
-                    available: true
-                }
-            ]
-        }
-    ] %}
-
     <section class="relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
         <div aria-hidden="true"
              class="pointer-events-none absolute -top-28 left-1/2 -z-10 h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-100/20 via-orange-100/15 to-blue-100/20 blur-3xl"></div>
@@ -154,17 +60,17 @@
 
                 <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {% for listing in category.listings %}
-                        {# Listings without a href are placeholders, so they render as plain cards. #}
-                        {% set tag = listing.href is defined ? 'a' : 'div' %}
-                        <{{ tag }} {% if listing.href is defined %}href="{{ listing.href }}"{% endif %}
+                        {# Listings without a route are placeholders, so they render as plain cards. #}
+                        {% set tag = listing.route ? 'a' : 'div' %}
+                        <{{ tag }} {% if listing.route %}href="{{ path(listing.route) }}"{% endif %}
                            class="card group flex flex-col no-underline hover:no-underline
-                                  {{ listing.href is defined
+                                  {{ listing.route
                                      ? 'card-hover transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/40'
                                      : 'border-dashed bg-transparent opacity-60 saturate-0 dark:bg-transparent' }}
-                                  {{ listing.highlight|default(false) ? 'ring-2 ring-emerald-600/40 dark:ring-emerald-400/40' }}">
+                                  {{ listing.highlight ? 'ring-2 ring-emerald-600/40 dark:ring-emerald-400/40' }}">
                             <div class="-mx-6 -mt-6 mb-5 overflow-hidden rounded-t-xl">
-                                {% if listing.image is defined %}
-                                    <img src="{{ listing.image }}" alt="{{ listing.name }}" loading="lazy"
+                                {% if listing.image %}
+                                    <img src="{{ asset(listing.image) }}" alt="{{ listing.name }}" loading="lazy"
                                          class="aspect-[16/9] w-full object-cover transition-transform duration-300 group-hover:scale-105">
                                 {% else %}
                                     <div class="flex aspect-[16/9] w-full items-center justify-center border-b border-dashed border-slate-300 bg-slate-100/60 dark:border-white/15 dark:bg-white/[0.02]">
@@ -174,7 +80,7 @@
                             </div>
                             <div class="flex items-start justify-between gap-3">
                                 <h3 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ listing.name }}</h3>
-                                {% if listing.badge is defined %}
+                                {% if listing.badge %}
                                     <span class="inline-flex shrink-0 items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-600/30 dark:text-emerald-300 dark:ring-emerald-400/30">
                                         {{ listing.badge }}
                                     </span>
@@ -197,18 +103,18 @@
                             </ul>
 
                             <div class="mt-6 flex items-center justify-between">
-                                {% if listing.price is defined %}
+                                {% if listing.price %}
                                     <span class="flex items-baseline gap-1.5">
                                         <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ listing.price }}</span>
                                         <span class="muted text-xs">excl. tax</span>
-                                        {% if listing.price_note is defined %}
+                                        {% if listing.priceNote %}
                                             <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/30 dark:text-emerald-300 dark:ring-emerald-400/30">
-                                                {{ listing.price_note }}
+                                                {{ listing.priceNote }}
                                             </span>
                                         {% endif %}
                                     </span>
                                 {% endif %}
-                                {% if listing.href is defined %}
+                                {% if listing.route %}
                                     <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-600 group-hover:text-slate-900 dark:text-white/70 dark:group-hover:text-white transition-colors">
                                         View details <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
                                     </span>

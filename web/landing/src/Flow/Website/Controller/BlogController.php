@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Controller;
 
 use Flow\Website\Blog\Posts;
+use Flow\Website\SocialCard\Blog\CardGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,13 +13,16 @@ use Symfony\Component\Routing\Attribute\Route;
 final class BlogController extends AbstractController
 {
     #[Route('/blog/{date}/{slug}', name: 'blog_post')]
-    public function post(string $date, string $slug): Response
+    public function post(string $date, string $slug, CardGenerator $socialCards): Response
     {
+        $post = (new Posts())->findByDateAndSlug($date, $slug);
+
         return $this->render('blog/posts/' . $date . '/' . $slug . '/post.html.twig', [
             'template_folder' => 'blog/posts/' . $date . '/' . $slug,
-            'post' => (new Posts())->findByDateAndSlug($date, $slug),
+            'post' => $post,
             'date' => $date,
             'slug' => $slug,
+            'social_image' => $socialCards->generate($post),
         ]);
     }
 
