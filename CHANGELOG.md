@@ -1,15 +1,32 @@
-## [Unreleased] - 2026-08-13
+## [Unreleased] - 2026-08-17
 
 ### Added
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - to_branch() accepts a Transformation as an optional third argument** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - retry_any_throwable_except() DSL and AnyThrowableExcept retry strategy** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl-adapter-doctrine - TransactionalDbalLoader::loaders() exposes wrapped loaders** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl-adapter-postgresql - TransactionalPostgreSqlLoader::loaders() exposes wrapped loaders** - [@norberttech](https://github.com/norberttech)
 - [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - MissingElementCastingException naming the failing structure element via getPrevious()** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array{} empty array type with type_empty_array() DSL function** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - write_with_retries() no longer retries InvalidLogicException by default** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - write_with_retries() refuses wrapping an armed Transformation** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - a Transformation triggering its own frame (fetch()/count()/schema()) throws InvalidLogicException** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - unpartitioned window functions no longer inject collect() and sortBy() stages** - [@norberttech](https://github.com/norberttech)
 - [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - JSON string payloads for structure/list/map decode and cast element-wise** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - transformation-wrapped loader is closed once per pipeline, not once per batch** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - loader wrappers forward closure() to the loaders they wrap** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - operations inside a Transformation answer for the whole stream, not per batch** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - to_branch()->withTransformation() spans the whole filtered stream** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - batch size optimization sees through loader wrappers** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - save mode no longer leaks between frames sharing one Config** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - no SplObjectStorage deprecations on PHP 8.5** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl-adapter-doctrine - to_dbal_transaction() runs closure() inside a transaction** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl-adapter-postgresql - to_pgsql_transaction() runs closure() inside a transaction** - [@norberttech](https://github.com/norberttech)
 - [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - structure cast no longer fabricates values for absent or null elements whose type rejects null** - [@norberttech](https://github.com/norberttech)
 - [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - list/map cast of null throws instead of returning an empty collection** - [@norberttech](https://github.com/norberttech)
 - [#2595](https://github.com/flow-php/flow/pull/2595) - **flow-php/types - structures with only optional elements accept an empty payload** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +35,10 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/arrow-ext - nested uuid values read as canonical strings, map writes throw exceptions instead of aborting the process** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - Floe inferred schema preserves first batch nullability instead of making every column nullable** - [@norberttech](https://github.com/norberttech)
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array type detection never returns a type that rejects its own input** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Extractor\SwappableRowsExtractor** - [@norberttech](https://github.com/norberttech)
+- [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Config::filesystemStreams() and the FilesystemStreams constructor parameter** - [@norberttech](https://github.com/norberttech)
 
 ## [0.43.0] - 2026-08-10
 
