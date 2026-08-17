@@ -30,7 +30,7 @@ html {
     @apply list-disc pl-6;
 }
 
-/* Surfaces — a single source of truth for card backgrounds, replacing the
+/* Surfaces - a single source of truth for card backgrounds, replacing the
    repeated `rounded ... shadow-2xl shadow-gray border-gray border-2` pattern. */
 .card {
     @apply relative rounded-xl border border-slate-200 bg-white p-6
@@ -95,7 +95,7 @@ html {
     @apply inline-block;
 }
 
-/* Work-Shop nav item — a slow breathing glow so the shop stands out from any page.
+/* Work-Shop nav item - a slow breathing glow so the shop stands out from any page.
    Falls back to a steady glow when the visitor prefers reduced motion. */
 .nav-glow {
     animation: nav-glow-breathe 3s ease-in-out infinite;
@@ -393,7 +393,7 @@ code {
 }
 
 /* Mobile docs popover lives inside #documentation-page so it inherits prose
-   list styling — reset it. */
+   list styling - reset it. */
 #docs-mobile-nav ul {
     @apply list-none pl-0;
 }
@@ -527,7 +527,7 @@ code {
     display: none;
 }
 
-/* Playground — unified with brand palette: orange-100 = primary accent
+/* Playground - unified with brand palette: orange-100 = primary accent
    (active states, CTAs), blue-100 = file-tree directories, white/* opacity =
    neutral surfaces. Output semantic colors (cyan/green/yellow/red) are
    intentionally kept for terminal-style readability. */

@@ -3,16 +3,16 @@
 {#
     Base listing template. Each product page extends this and provides metadata via
     `{% set %}` plus the `listing_body` block:
-      listing_name      (string)  — product title
-      listing_price     (string)  — formatted price, e.g. "$19.99"; omit to hide the price
-      listing_tagline   (string)  — short one-line summary under the title
-      listing_eyebrow   (string)  — small label above the title (default "Shop")
-      listing_available (bool)     — false renders a disabled "Coming soon" button
-      listing_cta_label (string)  — CTA button text (default "Buy now")
-      listing_cta_url   (string)  — CTA target (default "#", checkout is out of scope)
-      listing_checkout_url (string) — Polar checkout link; when set the CTA opens the
+      listing_name      (string)  - product title
+      listing_price     (string)  - formatted price, e.g. "$19.99"; omit to hide the price
+      listing_tagline   (string)  - short one-line summary under the title
+      listing_eyebrow   (string)  - small label above the title (default "Shop")
+      listing_available (bool)     - false renders a disabled "Coming soon" button
+      listing_cta_label (string)  - CTA button text (default "Buy now")
+      listing_cta_url   (string)  - CTA target (default "#", checkout is out of scope)
+      listing_checkout_url (string) - Polar checkout link; when set the CTA opens the
                                       embedded checkout and falls back to this URL without JS
-      listing_image_aspect (string) — aspect-ratio for the image/carousel frame (default "16 / 9").
+      listing_image_aspect (string) - aspect-ratio for the image/carousel frame (default "16 / 9").
                                       Inline style rather than a Tailwind class because the value is
                                       per-listing and Tailwind only emits classes it finds literally.
 #}
@@ -40,7 +40,7 @@
 {%- block contributors -%}{%- endblock -%}
 
 {% block main %}
-    {# `??` (not the `default` filter) so an explicit `false` is respected — `false|default(true)` returns true #}
+    {# `??` (not the `default` filter) so an explicit `false` is respected - `false|default(true)` returns true #}
     {% set listing_available = listing_available ?? true %}
     {% set listing_cta_url = listing_cta_url ?? '#' %}
     {% set listing_cta_label = listing_cta_label ?? 'Buy now' %}

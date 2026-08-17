@@ -27,14 +27,17 @@
 
     <g font-size="28">
         <text x="170" y="330" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin marketplace add flow-php-depot/claude-skills</tspan></text>
-        <text x="170" y="382" fill="#4ade80">✓ <tspan fill="#8b86a0">Marketplace</tspan> <tspan fill="#e7e4f2">flow-php-depot</tspan> <tspan fill="#8b86a0">added</tspan></text>
+        <path d="m172 370 8 9 15-17" fill="none" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="204" y="382"><tspan fill="#8b86a0">Marketplace</tspan> <tspan fill="#e7e4f2">flow-php-depot</tspan> <tspan fill="#8b86a0">added</tspan></text>
 
         <text x="170" y="466" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin install workflow</tspan></text>
-        <text x="170" y="518" fill="#4ade80">✓ <tspan fill="#8b86a0">11 skills installed</tspan></text>
-        <text x="200" y="570" fill="#ff5547">/plan-task <tspan fill="#5c5773">·</tspan> /work-on-task <tspan fill="#5c5773">·</tspan> /cleanup-task <tspan fill="#5c5773">·</tspan> /review-task <tspan fill="#5c5773">·</tspan> /catch-up <tspan fill="#5c5773">…</tspan></text>
+        <path d="m172 506 8 9 15-17" fill="none" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="204" y="518"><tspan fill="#8b86a0">11 skills installed</tspan></text>
+        <text x="200" y="570" fill="#ff5547">/plan-task <tspan fill="#5c5773">·</tspan> /work-on-task <tspan fill="#5c5773">·</tspan> /cleanup-task <tspan fill="#5c5773">·</tspan> /review-task <tspan fill="#5c5773">·</tspan> /catch-up <tspan fill="#5c5773">...</tspan></text>
 
         <text x="170" y="654" fill="#806dfe">&gt; <tspan fill="#e7e4f2">/plugin install php-code-quality</tspan></text>
-        <text x="170" y="706" fill="#4ade80">✓ <tspan fill="#8b86a0">2 skills installed</tspan> <tspan fill="#5c5773">—</tspan> <tspan fill="#8b86a0">auto-load whenever Claude touches PHP</tspan></text>
+        <path d="m172 694 8 9 15-17" fill="none" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="204" y="706"><tspan fill="#8b86a0">2 skills installed</tspan> <tspan fill="#5c5773">-</tspan> <tspan fill="#8b86a0">auto-load whenever Claude touches PHP</tspan></text>
 
         <text x="170" y="762" fill="#806dfe">&gt; <tspan fill="#e7e4f2">▮</tspan></text>
     </g>

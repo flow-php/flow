@@ -1,7 +1,7 @@
 {# Sticky glass header. `wide` removes the max-w container for full-width pages. #}
 <header class="sticky top-0 z-50 border-b border-slate-200 bg-[#e8eef7]/80 backdrop-blur-md supports-[backdrop-filter]:bg-[#e8eef7]/65 dark:border-white/10 dark:bg-black/70 dark:supports-[backdrop-filter]:bg-black/55">
     <div class="{{ wide|default(false) ? 'px-4 lg:px-8 xl:px-12' : 'mx-auto max-w-screen-2xl px-4 sm:px-6' }} flex h-16 items-center justify-between gap-4">
-        <a href="{{ path('home') }}" class="shrink-0 inline-flex items-center" aria-label="Flow PHP — home">
+        <a href="{{ path('home') }}" class="shrink-0 inline-flex items-center" aria-label="Flow PHP - home">
             <img src="{{ asset('images/logo.svg') }}" alt="" width="146" height="40" class="h-7 w-auto lg:h-9 dark:invert-0 invert">
         </a>
 
@@ -9,7 +9,7 @@
                 class="hidden lg:inline-flex items-center gap-3 rounded-lg border border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50 px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors lg:min-w-[12rem] xl:min-w-[18rem] dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.08] dark:text-white/60 dark:hover:text-white/85"
                 aria-label="Search documentation">
             <img src="{{ asset('images/icons/search.svg') }}" alt="" width="16" height="16" class="opacity-70 dark:invert-0 invert">
-            <span class="flex-1 text-left">Search docs…</span>
+            <span class="flex-1 text-left">Search docs...</span>
             <kbd class="hidden xl:inline-flex h-5 items-center rounded border border-slate-300 bg-white/60 px-1.5 text-[10px] font-mono text-slate-500 dark:border-white/15 dark:bg-black/40 dark:text-white/55">/</kbd>
         </button>
 
@@ -70,7 +70,7 @@
                 <button type="button" popovertarget="search-modal" popovertargetaction="show"
                         class="flex items-center gap-3 w-full rounded-lg border border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50 px-3 py-3 text-left text-slate-600 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.08] dark:text-white/75 dark:hover:text-white transition-colors">
                     <img src="{{ asset('images/icons/search.svg') }}" alt="" width="20" height="20" class="opacity-75 dark:invert-0 invert">
-                    <span class="flex-1">Search docs…</span>
+                    <span class="flex-1">Search docs...</span>
                 </button>
 
                 <ul class="space-y-1 text-base">

@@ -146,7 +146,7 @@ export const flowThemeExtension = [
     syntaxHighlighting(flowHighlightStyle)
 ]
 
-/* Light variant — stock prism-inspired palette on near-white background. */
+/* Light variant - stock prism-inspired palette on near-white background. */
 export const flowLightTheme = EditorView.theme({
     "&": {
         backgroundColor: "#ffffff",

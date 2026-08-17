@@ -43,11 +43,11 @@
     <p class="mb-4">
         Review skills never hand you raw output. Every finding must survive a refute-by-default verifier before it
         reaches you, and "clean" is always a valid result. Heavy reading and verification run in subagents, so your
-        conversation context stays small — and each skill asks whether to run multi-agent or single-agent, so you
+        conversation context stays small - and each skill asks whether to run multi-agent or single-agent, so you
         choose the cost per invocation.
     </p>
     <p class="mb-4">
-        Nothing happens without you. Architectural decisions, fixes and branch changes are always your call — the
+        Nothing happens without you. Architectural decisions, fixes and branch changes are always your call - the
         skills ask, with a recommendation and full context, and wait.
     </p>
 
@@ -60,14 +60,14 @@
         tests for edge cases and integration tests for happy paths.
     </p>
     <p class="mb-4">
-        On first use in a repository each skill detects the project's setup — the static analyzer and its
-        annotation dialect, how tests run — confirms it with you once, and never re-asks.
+        On first use in a repository each skill detects the project's setup - the static analyzer and its
+        annotation dialect, how tests run - confirms it with you once, and never re-asks.
     </p>
 
     <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Adapts to your project</h2>
     <p class="mb-4">
         The skills are project-agnostic and work out of the box. To teach them your conventions you add extension
-        files — per project and shared with the team, or personal and applied in every repo. Sections resolve
+        files - per project and shared with the team, or personal and applied in every repo. Sections resolve
         independently: project wins, undefined sections fall back to your personal file, then to the built-in
         defaults. A repo can override just its QA commands while inheriting your personal challenger lenses.
     </p>
@@ -75,15 +75,15 @@
     <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What's in the repository</h2>
     <ul class="space-y-2">
         {% for feature in [
-            'The workflow plugin: eleven skills covering plan, explain, implement, cleanup, review — per task and per epic',
+            'The workflow plugin: eleven skills covering plan, explain, implement, cleanup, review - per task and per epic',
             'Companions that plug GitHub into the chain: /explain-issue reproduces an issue, /explain-pr tours any pull request, /catch-up restores context after time away',
             'The php-code-quality plugin: type narrowing and testing rules that auto-load on PHP and test files',
-            'One marketplace repository — install only the plugins you want, they are independent',
+            'One marketplace repository - install only the plugins you want, they are independent',
             'Extension points for project and personal conventions, documented per skill',
             'Updates as the skills evolve, at no extra cost',
         ] %}
             <li class="flex items-start gap-3">
-                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100">✓</span>
+                <span class="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/15 text-orange-300 dark:text-orange-100"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 <span>{{ feature }}</span>
             </li>
         {% endfor %}
@@ -91,8 +91,8 @@
 
     <h2 class="mt-10 mb-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What it is not</h2>
     <p class="mb-4">
-        It is not a prompt pack. The skills are a process — gated steps, persisted artifacts, verification that
-        must come back clean — and they slow Claude down on purpose where being fast produces slop. You need
+        It is not a prompt pack. The skills are a process - gated steps, persisted artifacts, verification that
+        must come back clean - and they slow Claude down on purpose where being fast produces slop. You need
         Claude Code itself; the plugins add no API costs of their own, but the multi-agent modes spend more of
         your existing usage in exchange for thoroughness, and every skill offers the cheaper single-agent mode.
     </p>
@@ -118,7 +118,7 @@
     </p>
     <p class="mt-3 text-xs muted leading-relaxed">
         Checkout never asks for a GitHub account. You open the order in that portal, connect GitHub there and
-        grant access seat by seat. GitHub then emails each person an invitation to accept — Claude Code installs
+        grant access seat by seat. GitHub then emails each person an invitation to accept - Claude Code installs
         the marketplace over git, so the invitation is the access.
     </p>
 {% endblock %}

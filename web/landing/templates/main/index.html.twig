@@ -35,14 +35,14 @@
             <h2 class="mt-3 section-title">Less code. Less context-switching.</h2>
             <p class="mt-4 muted text-lg">
                 In pure PHP, every source and sink has its own functions, error model, and memory
-                tradeoffs. With Flow, the pipeline shape stays constant — swap the source or sink
+                tradeoffs. With Flow, the pipeline shape stays constant - swap the source or sink
                 and the rest of the code doesn't budge.
             </p>
         </div>
 
         {% set purePhpCode %}{% verbatim %}<?php
 
-// ⚠ not memory-safe: $rows accumulates every record
+// not memory-safe: $rows accumulates every record
 $rows = [];
 
 $file = fopen(__DIR__ . '/orders.csv', 'r');
@@ -68,7 +68,7 @@ while (($line = fgetcsv($file)) !== false) {
         continue;
     }
 
-    // CSV is all strings — cast every column by hand
+    // CSV is all strings - cast every column by hand
     $row['id'] = (int) $row['id'];
     $row['amount'] = (float) $row['amount'];
     $row['created_at'] = (new \DateTimeImmutable($row['created_at']))->format(DATE_ATOM);
@@ -78,10 +78,10 @@ while (($line = fgetcsv($file)) !== false) {
 
 fclose($file);
 
-// ⚠ not memory-safe: serialises the entire dataset at once
+// not memory-safe: serialises the entire dataset at once
 $json = json_encode($rows, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 
-// ⚠ not memory-safe: writes the whole payload in one call
+// not memory-safe: writes the whole payload in one call
 file_put_contents(__DIR__ . '/orders.json', $json);{% endverbatim %}{% endset %}
 
         {% set flowPhpCode %}{% verbatim %}<?php
@@ -127,7 +127,7 @@ data_frame()
             Swap <code class="font-mono text-violet-700 dark:text-[#d2a8ff]">to_json</code> for
             <code class="font-mono text-violet-700 dark:text-[#d2a8ff]">to_xlsx</code>,
             <code class="font-mono text-violet-700 dark:text-[#d2a8ff]">to_parquet</code>, or
-            <code class="font-mono text-violet-700 dark:text-[#d2a8ff]">to_postgres</code> — same shape, different destination.
+            <code class="font-mono text-violet-700 dark:text-[#d2a8ff]">to_postgres</code> - same shape, different destination.
         </p>
     </section>
 
@@ -142,7 +142,7 @@ data_frame()
             </h2>
             <p class="mt-4 muted text-lg">
                 Most pipelines die from inconsistent APIs, mistyped fields, and runaway memory.
-                Flow gives you one cohesive toolset to read, shape, and ship data — without surprises.
+                Flow gives you one cohesive toolset to read, shape, and ship data - without surprises.
             </p>
         </div>
 
@@ -154,7 +154,7 @@ data_frame()
                 <h3 class="mt-5 text-xl font-semibold tracking-tight">Unified, typed API</h3>
                 <p class="mt-2 muted text-sm leading-relaxed">
                     One DataFrame for CSV, JSON, XML, Parquet, Avro, REST, RDBMS, SEAL.
-                    Schemas inferred or declared — your call.
+                    Schemas inferred or declared - your call.
                 </p>
             </article>
 
@@ -175,7 +175,7 @@ data_frame()
                 </div>
                 <h3 class="mt-5 text-xl font-semibold tracking-tight">Batteries included</h3>
                 <p class="mt-2 muted text-sm leading-relaxed">
-                    Joins, windows, aggregations, partitioning, filesystem abstractions, telemetry —
+                    Joins, windows, aggregations, partitioning, filesystem abstractions, telemetry -
                     real tools for real pipelines.
                 </p>
             </article>
@@ -199,7 +199,7 @@ data_frame()
                 <div>
                     <h2 class="section-title">Ready to ship pipelines that don't fight you?</h2>
                     <p class="mt-3 muted text-lg">
-                        Open the playground in your browser — no install required — and try Flow on your data.
+                        Open the playground in your browser - no install required - and try Flow on your data.
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row lg:flex-col gap-3 lg:justify-self-end">

@@ -18,7 +18,7 @@
     <rect width="1600" height="900" fill="url(#glow)"/>
 
     <text x="120" y="96" font-size="26" letter-spacing="6" fill="#ff5547">PLUGIN · WORKFLOW</text>
-    <text x="120" y="152" font-size="44" font-weight="bold" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif">The task chain — every step gated by you</text>
+    <text x="120" y="152" font-size="44" font-weight="bold" fill="#ffffff" font-family="ui-sans-serif, system-ui, sans-serif">The task chain - every step gated by you</text>
 
     <g font-size="27">
         <rect x="120" y="230" width="256" height="76" rx="38" fill="#151220" stroke="#ff5547" stroke-width="2"/>

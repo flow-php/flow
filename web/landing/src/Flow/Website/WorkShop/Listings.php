@@ -85,9 +85,9 @@ final class Listings
             'subtitle' => 'Flow PHP is MIT and free. Sponsoring funds the work that keeps it that way, and gets you into the sponsor-only channels on our Discord.',
             'listings' => [
                 [
-                    'name' => 'Sponsoring — 1 Month',
+                    'name' => 'Sponsoring - 1 Month',
                     'slug' => 'sponsoring-1-month',
-                    'blurb' => 'A small monthly contribution towards maintenance, releases and infrastructure. In exchange: the Sponsor role on our Discord — a custom username color and the exclusive channels where the roadmap happens.',
+                    'blurb' => 'A small monthly contribution towards maintenance, releases and infrastructure. In exchange: the Sponsor role on our Discord - a custom username color and the exclusive channels where the roadmap happens.',
                     'features' => [
                         'Sponsor role with a custom username color',
                         'Access to exclusive sponsor-only channels',
@@ -102,7 +102,7 @@ final class Listings
                     'image' => 'images/work-shop/sponsoring-1m.svg',
                 ],
                 [
-                    'name' => 'Sponsoring — 6 Months',
+                    'name' => 'Sponsoring - 6 Months',
                     'slug' => 'sponsoring-6-months',
                     'blurb' => 'The same sponsorship in one payment every six months, 3% off the monthly price. The Sponsor role, a custom username color and the exclusive channels included.',
                     'features' => [
@@ -119,7 +119,7 @@ final class Listings
                     'image' => 'images/work-shop/sponsoring-6m.svg',
                 ],
                 [
-                    'name' => 'Sponsoring — 12 Months',
+                    'name' => 'Sponsoring - 12 Months',
                     'slug' => 'sponsoring-12-months',
                     'blurb' => 'A full year of sponsoring in one payment, 8% off the monthly price. The Sponsor role, a custom username color and the exclusive channels included.',
                     'features' => [

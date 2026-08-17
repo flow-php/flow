@@ -13,7 +13,7 @@ final class ListingTest extends TestCase
     public function test_from_array_maps_all_fields(): void
     {
         $listing = Listing::fromArray([
-            'name' => 'Sponsoring — 6 Months',
+            'name' => 'Sponsoring - 6 Months',
             'slug' => 'sponsoring-6-months',
             'blurb' => 'The same sponsorship in one payment every six months.',
             'features' => ['Everything from the monthly sponsorship', 'Save 3% vs paying monthly'],
@@ -26,7 +26,7 @@ final class ListingTest extends TestCase
             'image' => 'images/work-shop/sponsoring-6m.svg',
         ], 'Sponsoring');
 
-        static::assertSame('Sponsoring — 6 Months', $listing->name);
+        static::assertSame('Sponsoring - 6 Months', $listing->name);
         static::assertSame('sponsoring-6-months', $listing->slug);
         static::assertSame('Sponsoring', $listing->category);
         static::assertSame('The same sponsorship in one payment every six months.', $listing->blurb);

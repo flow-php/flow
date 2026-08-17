@@ -15,7 +15,7 @@
         The real challenge starts when we need to fully convert the input format to match our database. Let me give you an example.
     </p>
     <p>
-        Let’s imagine a system that allows users to upload user delivery addresses.<br/>
+        Let's imagine a system that allows users to upload user delivery addresses.<br/>
         Each user needs to have at least one address, and each address comes in the following format:
     </p>
     <pre><code class="language-json" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/address.json' %}{% endapply %}</code></pre>
@@ -45,10 +45,10 @@
     </ul>
 
     <p>
-        Doesn’t look like a complicated task, right?
+        Doesn't look like a complicated task, right?
     </p>
     <p>
-        Well, those are famous last words 😅
+        Well, those are famous last words.
     </p>
     <p>
         What if business users would like to upload files larger than our available amount of RAM?
@@ -81,7 +81,7 @@
 
     <p>
         Flow PHP aims to reduce data processing complexity and standardize the approach, considering resource consumption.<br/>
-        OK, but let’s get back to our example.<br/>
+        OK, but let's get back to our example.<br/>
         To make it easier to create those import files for the user, the file's expected data structure looks like this:
     </p>
     <ul>
@@ -103,7 +103,7 @@
         <li>1) Read a row from a file</li>
         <li>2) Validate it</li>
         <li>3) Find a user_id based on user_email from a file</li>
-        <li>4) Insert an address to a database or update it if it’s already there</li>
+        <li>4) Insert an address to a database or update it if it's already there</li>
     </ul>
     <p>
         OK, but what about invalid rows?<br/>
@@ -157,7 +157,7 @@
     </p>
 
     <p>
-        Now we need to check if this condition is true and when it’s true, just leave the value of the column "valid" as is, otherwise we need to set it to "false".
+        Now we need to check if this condition is true and when it's true, just leave the value of the column "valid" as is, otherwise we need to set it to "false".
     </p>
 
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/single-column-validation.php' %}{% endapply %}</code></pre>
@@ -169,7 +169,7 @@
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/full-validation.php' %}{% endapply %}</code></pre>
 
     <blockquote>
-        💡 It’s usually a good idea to extract such logic into a standalone transformation. This way our validation logic can be tested in isolation.
+        It's usually a good idea to extract such logic into a standalone transformation. This way our validation logic can be tested in isolation.
     </blockquote>
 
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/validation-transformation.php' %}{% endapply %}</code></pre>
@@ -179,13 +179,13 @@
         but before we do that, we should first write all invalid rows to a separate file.
     </p>
     <p>
-        Flow has a dedicated loader which can write only a subset of the dataset based on the provided condition. It’s called <code>to_branch()</code>.
+        Flow has a dedicated loader which can write only a subset of the dataset based on the provided condition. It's called <code>to_branch()</code>.
     </p>
 
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/write-to-branch.php' %}{% endapply %}</code></pre>
 
     <blockquote>
-        💡 Try clicking function names in the code examples!
+        Try clicking function names in the code examples!
     </blockquote>
 
     <p>
@@ -216,7 +216,7 @@
     </p>
     <p>
         In a typical scenario, we would try to collect emails from the import file into reasonable batches and query a database
-        to return us the user_id’s those emails belong to.
+        to return us the user_id's those emails belong to.
     </p>
     <blockquote>
         In order to not overcomplicate our example, we are going to assume that all emails exist in the database.
@@ -244,7 +244,7 @@
         to start over again until the whole import file is processed.
     </p>
     <p>
-        JoinEach is a very specific operation; it requires us to create a new DataFrame for each batch, that’s why we need to implement the <code>DataFrameFactory</code> interface.
+        JoinEach is a very specific operation; it requires us to create a new DataFrame for each batch, that's why we need to implement the <code>DataFrameFactory</code> interface.
     </p>
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/user-id-join-data-frame-factory.php' %}{% endapply %}</code></pre>
 
@@ -255,7 +255,7 @@
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/join-each.php' %}{% endapply %}</code></pre>
 
     <p>
-        That’s it, lets now use `to_output()` loader to display our dataset after join operation
+        That's it, lets now use `to_output()` loader to display our dataset after join operation
     </p>
 
     <pre><code class="language-txt" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/data.txt' %}{% endapply %}</code></pre>
@@ -265,10 +265,10 @@
         invalid rows to our broken rows file, but let's skip that part and move to loading data into the database.
     </p>
 
-    <h2>Step #4 - Insert an address to a database or update it, if it’s already there</h2>
+    <h2>Step #4 - Insert an address to a database or update it, if it's already there</h2>
 
     <p>
-        Now, when we know which address belongs to which user, it’s time to update (insert or update) those addresses into the user_addresses database table.<br/>
+        Now, when we know which address belongs to which user, it's time to update (insert or update) those addresses into the user_addresses database table.<br/>
         Oh wait, there is one more thing.
     </p>
     <p>
@@ -282,7 +282,7 @@
 
     <p>
         Now we are ready to update our addresses into a database!<br/>
-        Ready? Normally it’s not the easiest to perform bulk upsert through Doctrine DBAL.<br/>
+        Ready? Normally it's not the easiest to perform bulk upsert through Doctrine DBAL.<br/>
         Luckily, Flow comes with a <a href="/documentation/components/libs/doctrine-dbal-bulk/" target="_blank">doctrine-dbal-bulk</a> library so at the end of the day, here is how it looks:
     </p>
 

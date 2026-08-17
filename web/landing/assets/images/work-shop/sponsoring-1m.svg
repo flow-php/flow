@@ -20,9 +20,9 @@
     <circle cx="162" cy="229" r="9" fill="#ff5547"/>
     <circle cx="194" cy="229" r="9" fill="#e1761a"/>
     <circle cx="226" cy="229" r="9" fill="#806dfe"/>
-    <text x="770" y="238" font-size="22" fill="#8b86a0" text-anchor="middle">discord — Flow PHP</text>
+    <text x="770" y="238" font-size="22" fill="#8b86a0" text-anchor="middle">discord - Flow PHP</text>
     <g font-size="28">
-        <text x="170" y="330" font-size="22" letter-spacing="3" fill="#5c5773">MEMBERS — ONLINE</text>
+        <text x="170" y="330" font-size="22" letter-spacing="3" fill="#5c5773">MEMBERS - ONLINE</text>
         <circle cx="186" cy="392" r="14" fill="#3a3450"/>
         <text x="220" y="402" fill="#8b86a0">dev_anna</text>
         <circle cx="186" cy="452" r="14" fill="#3a3450"/>

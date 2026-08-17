@@ -1,6 +1,6 @@
 {# Theme switch (System / Light / Dark).
-   variant = 'dropdown' (default) — icon button with popover, used in desktop header.
-   variant = 'inline'             — segmented control with all 3 options visible, used in mobile nav. #}
+   variant = 'dropdown' (default) - icon button with popover, used in desktop header.
+   variant = 'inline'             - segmented control with all 3 options visible, used in mobile nav. #}
 {% set variant = variant|default('dropdown') %}
 {% set themeOptions = [
     { value: 'light',  label: 'Light',  iconPath: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>' },

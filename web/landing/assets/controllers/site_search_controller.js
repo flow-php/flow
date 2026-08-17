@@ -41,7 +41,7 @@ export default class extends Controller {
             pageSize: 6,
             excerptLength: 24,
             resetStyles: false,
-            translations: { placeholder: 'Search documentation…' },
+            translations: { placeholder: 'Search documentation...' },
         });
     }
 
