@@ -593,9 +593,9 @@ function to_transformation(Transformer|Transformation $transformer, Loader $load
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_branch(ScalarFunction $condition, Loader $loader): BranchingLoader
+function to_branch(ScalarFunction $condition, Loader $loader, ?Transformation $transformation = null): BranchingLoader
 {
-    return new BranchingLoader($condition, $loader);
+    return new BranchingLoader($condition, $loader, $transformation);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]

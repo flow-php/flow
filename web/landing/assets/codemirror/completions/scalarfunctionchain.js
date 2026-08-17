@@ -1,8 +1,8 @@
 /**
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
- * ScalarFunctionChain methods: 124
- * ScalarFunctionChain-returning functions: 53
+ * ScalarFunctionChain methods: 126
+ * ScalarFunctionChain-returning functions: 55
  *
  * This completer triggers after ScalarFunctionChain-returning DSL functions
  */
@@ -11,7 +11,7 @@ import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // DSL functions that return ScalarFunctionChain (have scalar_function_chain: true)
 const scalarFunctionChainFunctions = [
-    "col", "entry", "ref", "optional", "lit", "exists", "when", "array_get", "array_get_collection", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
+    "col", "entry", "ref", "optional", "lit", "exists", "when", "array_get", "array_get_collection", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "enum_name", "enum_value", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
 
 // ScalarFunctionChain methods
 const scalarFunctionChainMethods = [
@@ -656,6 +656,36 @@ const scalarFunctionChainMethods = [
             return div
         },
         apply: snippet("ensureStart(" + "$" + "{" + "1:prefix" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "enumName",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">enumName</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnumName</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("enumName()"),
+        boost: 10
+    },                {
+        label: "enumValue",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">enumValue</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnumValue</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("enumValue()"),
         boost: 10
     },                {
         label: "equals",

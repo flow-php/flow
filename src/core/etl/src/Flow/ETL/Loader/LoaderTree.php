@@ -9,6 +9,9 @@ use SplObjectStorage;
 
 use function array_shift;
 
+/**
+ * @internal
+ */
 final readonly class LoaderTree
 {
     /**

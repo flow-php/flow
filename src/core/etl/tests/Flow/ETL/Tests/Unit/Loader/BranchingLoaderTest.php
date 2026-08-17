@@ -52,6 +52,23 @@ final class BranchingLoaderTest extends FlowTestCase
         static::assertSame([$first, $second], $spy->contexts);
     }
 
+    public function test_a_constructor_transformation_spans_the_whole_stream(): void
+    {
+        $spy = new SpyLoader();
+        $context = flow_context(config());
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $loader = to_branch(lit(true), $spy, $sortById);
+
+        foreach (RowsMother::descendingIdBatches() as $batch) {
+            $loader->load($batch, $context);
+        }
+
+        $loader->closure($context);
+
+        static::assertSame([6], $spy->loadedRowCounts());
+        static::assertSame([0, 1, 2, 3, 4, 5], array_column($spy->loadedRowsToArray(), 'id'));
+    }
+
     public function test_a_drain_time_failure_rethrows_from_closure(): void
     {
         $failure = new RuntimeException('sink exploded');
@@ -351,6 +368,11 @@ final class BranchingLoaderTest extends FlowTestCase
         static::assertSame([0, 1, 2, 3, 4, 5], array_column($spy->loadedRowsToArray(), 'id'));
     }
 
+    public function test_replay_safe_is_false_with_a_constructor_transformation(): void
+    {
+        static::assertFalse(to_branch(lit(true), new SpyLoader(), select('id'))->replaySafe());
+    }
+
     public function test_replay_safe_only_without_a_transformation(): void
     {
         $loader = to_branch(lit(true), new SpyLoader());
@@ -412,5 +434,22 @@ final class BranchingLoaderTest extends FlowTestCase
         }
 
         static::assertSame(1, $transformCalls);
+    }
+
+    public function test_with_transformation_overrides_the_constructor_transformation(): void
+    {
+        $spy = new SpyLoader();
+        $context = flow_context(config());
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $loader = to_branch(lit(true), $spy, $sortById)->withTransformation(select('id'));
+
+        foreach (RowsMother::descendingIdBatches() as $batch) {
+            $loader->load($batch, $context);
+        }
+
+        $loader->closure($context);
+
+        static::assertSame([2, 2, 2], $spy->loadedRowCounts());
+        static::assertSame([5, 4, 3, 2, 1, 0], array_column($spy->loadedRowsToArray(), 'id'));
     }
 }

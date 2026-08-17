@@ -236,9 +236,10 @@ The `Transformation` is expanded **once per loader instance**, on the first batc
 driven a single time over the whole stream. Every operation inside it answers exactly as it does on the outer frame -
 `limit()` and `add_row_index()` apply across the stream, not per batch.
 
-`to_branch($condition, $loader)->withTransformation($transformation)` drives its `Transformation` the same way: the
-condition filters each batch first, and one nested pipeline then spans the whole filtered stream. The memory cost,
-chunk shape and failure behaviour below apply to it unchanged.
+`to_branch($condition, $loader, $transformation)` (or `->withTransformation($transformation)`, which replaces the one
+given to `to_branch()`) drives its `Transformation` the same way: the condition filters each batch first, and one
+nested pipeline then spans the whole filtered stream. The memory cost, chunk
+shape and failure behaviour below apply to it unchanged.
 
 ```php
 use Flow\ETL\{DataFrame, Transformation};
@@ -260,23 +261,23 @@ df()
 
 ### Memory Cost
 
-Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside
-the loader. Three groups:
+Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside the
+loader. Three groups:
 
-| Cost | Operations |
-|---|---|
-| Grows with the whole stream | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` |
-| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint` |
-| Constant | `select()`, `withEntry()`, `map()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()` |
+| Cost                                   | Operations                                                                                                                                                      |
+|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`                                                         |
+| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                                                     |
+| Constant                               | `select()`, `withEntry()`, `map()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()` |
 
 The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
-`offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes
-each batch as it passes. They need the whole stream to answer correctly, not to accumulate it.
+`offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
+batch as it passes. They need the whole stream to answer correctly, not to accumulate it.
 
 ### Chunk Shape and Order
 
-`batch_size()`, `batchBy()` and `partitionBy()` change only which rows are grouped into the `Rows` handed to the
-wrapped loader. No row is lost or mis-assigned.
+`batch_size()`, `batchBy()` and `partitionBy()` change only which rows are grouped into the `Rows` handed to the wrapped
+loader. No row is lost or mis-assigned.
 
 `partitionBy()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
 emitting it in input order. `batchBy()` preserves input order and only cuts the batches at the group boundaries.
@@ -285,13 +286,13 @@ To re-batch the pipeline itself rather than what reaches the wrapped loader, cal
 
 ### Failure Behaviour
 
-A failure inside a `Transformation` propagates out of the loader, and no loader in that segment is closed - exactly
-as a failing loader on an outer frame is never closed.
+A failure inside a `Transformation` propagates out of the loader, and no loader in that segment is closed - exactly as a
+failing loader on an outer frame is never closed.
 
-`->onError(...)` on the outer frame governs that propagation the same way it does for a plain loader. When the
-handler declines to propagate, the run continues, later batches are processed through a fresh nested pipeline, and
-the wrapped loader is closed. A rebuilt pipeline starts empty: anything the previous one had accumulated is gone, and
-stateful operations such as `add_row_index()` restart their counters.
+`->onError(...)` on the outer frame governs that propagation the same way it does for a plain loader. When the handler
+declines to propagate, the run continues, later batches are processed through a fresh nested pipeline, and the wrapped
+loader is closed. A rebuilt pipeline starts empty: anything the previous one had accumulated is gone, and stateful
+operations such as `add_row_index()` restart their counters.
 
 The handler is **not** inherited by the nested pipeline, which always propagates. To make a failure between the
 transformation's own steps recoverable, set the handler inside it:
@@ -300,8 +301,8 @@ transformation's own steps recoverable, set the handler inside it:
 $dataFrame->onError(ignore_error_handler())->map(/* ... */);
 ```
 
-None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the
-point of failure can be left behind.
+None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point
+of failure can be left behind.
 
 ## Creating Custom Transformations
 

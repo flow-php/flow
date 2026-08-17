@@ -23,11 +23,10 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
 
     private ?FlowContext $runContext = null;
 
-    private ?Transformation $transformation = null;
-
     public function __construct(
         private readonly ScalarFunction $condition,
         private readonly Loader $loader,
+        private ?Transformation $transformation = null,
     ) {}
 
     public function closure(FlowContext $context): void
