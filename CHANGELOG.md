@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-08-17
 
 ### Added
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - generated social cards (og:image) for blog posts** - [@norberttech](https://github.com/norberttech)
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - generated social cards (og:image) for work-shop listing pages** - [@norberttech](https://github.com/norberttech)
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - blog post author with avatar shown on post pages** - [@norberttech](https://github.com/norberttech)
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - WorkShop Listings/Category/Listing model** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - to_branch() accepts a Transformation as an optional third argument** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - retry_any_throwable_except() DSL and AnyThrowableExcept retry strategy** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl-adapter-doctrine - TransactionalDbalLoader::loaders() exposes wrapped loaders** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +14,7 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - work-shop index renders listings from the PHP model instead of an inline twig array** - [@norberttech](https://github.com/norberttech)
 - [0361ac](https://github.com/flow-php/flow/commit/0361ac262fc9c423827d9be36c3a4ee7cfc2d7c2) - **feat(flow-php/web): sell project sponsoring in the work-shop** - [@norberttech](https://github.com/norberttech)
 - [b6d875](https://github.com/flow-php/flow/commit/b6d875ab993c96d6020879d94c91b1dcf15b29f2) - **feat(flow-php/web): sell Claude Code Skills in the work-shop** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - write_with_retries() no longer retries InvalidLogicException by default** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +44,7 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array type detection never returns a type that rejects its own input** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - unpublished consuming-apis-without-sdks blog post** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Extractor\SwappableRowsExtractor** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Config::filesystemStreams() and the FilesystemStreams constructor parameter** - [@norberttech](https://github.com/norberttech)
 
