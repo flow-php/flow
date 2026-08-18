@@ -9,7 +9,6 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeMerger;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\Options;
@@ -57,7 +56,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('parity.floe');
 
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($this->fs(), $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -80,7 +79,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
             row(int_entry('id', 5), str_entry('email', 'x')),
             row(int_entry('id', 6)),
         );
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($this->fs(), $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -108,7 +107,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $codec = new PrefixingCodecStub();
         $path = $this->cacheDir->suffix('read-codec.floe');
 
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows), new Options(codec: $codec));
+        $writer = new FloeWriter($this->fs(), $rows->schema(), new Options(codec: $codec));
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -143,7 +142,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
                 $allRows = $allRows->merge($batch);
             }
 
-            $schema = FloeStreamWriter::unionSchema($allRows);
+            $schema = $allRows->schema();
 
             $purePath = $this->cacheDir->suffix("matrix-{$name}-pure.floe");
             $extPath = $this->cacheDir->suffix("matrix-{$name}-ext.floe");
@@ -184,13 +183,13 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $evolved = $this->cacheDir->suffix('parity-new.floe');
 
         $baseRows = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($baseRows));
+        $writer = new FloeWriter($this->fs(), $baseRows->schema());
         $writer->create($base);
         $writer->write($baseRows);
         $writer->close();
 
         $evolvedRows = rows(row(int_entry('id', 2), str_entry('email', null)));
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($evolvedRows));
+        $writer = new FloeWriter($this->fs(), $evolvedRows->schema());
         $writer->create($evolved);
         $writer->write($evolvedRows);
         $writer->close();

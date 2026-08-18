@@ -9,7 +9,6 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
 use Flow\Floe\Options;
@@ -38,7 +37,7 @@ final class FloeWriterTest extends TestCase
         $viaPath = path('memory://via-path.floe');
         $viaStream = path('memory://via-stream.floe');
         $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $byPath = new FloeWriter($filesystem, $schema);
         $byPath->create($viaPath);
@@ -63,7 +62,7 @@ final class FloeWriterTest extends TestCase
             row(int_entry('id', 2), str_entry('name', 'beta')),
         );
 
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $defaultWriter = new FloeWriter($filesystem, $schema);
         $defaultWriter->create($default);
@@ -603,7 +602,7 @@ final class FloeWriterTest extends TestCase
             row(int_entry('a', 3), str_entry('b', 'z')),
         );
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -629,7 +628,7 @@ final class FloeWriterTest extends TestCase
 
         $data = rows(row(int_entry('a', 1)), row(str_entry('b', 'x')));
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

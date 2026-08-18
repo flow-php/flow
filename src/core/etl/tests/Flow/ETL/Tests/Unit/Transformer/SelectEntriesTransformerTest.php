@@ -10,9 +10,12 @@ use Flow\ETL\Transformer\SelectEntriesTransformer;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
 
@@ -39,6 +42,28 @@ final class SelectEntriesTransformerTest extends FlowTestCase
         static::assertSame(
             [['not_existing' => null]],
             $transformer->transform($rows, flow_context(config()))->toArray(),
+        );
+    }
+
+    public function test_selecting_not_existing_entries_types_them_as_null_not_string(): void
+    {
+        $transformer = new SelectEntriesTransformer('not_existing');
+
+        static::assertEquals(
+            schema(null_schema('not_existing')),
+            $transformer->transform(rows(row(int_entry('id', 1))), flow_context(config()))->schema(),
+        );
+    }
+
+    public function test_selecting_an_entry_missing_from_some_rows_widens_to_a_nullable_real_type(): void
+    {
+        $transformer = new SelectEntriesTransformer('id');
+
+        static::assertEquals(
+            schema(int_schema('id', nullable: true)),
+            $transformer
+                ->transform(rows(row(int_entry('id', 1)), row(str_entry('name', 'no id here'))), flow_context(config()))
+                ->schema(),
         );
     }
 

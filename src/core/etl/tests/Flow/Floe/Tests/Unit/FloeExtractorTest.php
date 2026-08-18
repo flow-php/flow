@@ -10,7 +10,6 @@ use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use PHPUnit\Framework\TestCase;
 
@@ -145,7 +144,7 @@ final class FloeExtractorTest extends TestCase
             'country',
             'US',
         )]);
-        $writer = new FloeWriter($context->filesystem($path), FloeStreamWriter::unionSchema($batchPL->merge($batchUS)));
+        $writer = new FloeWriter($context->filesystem($path), $batchPL->merge($batchUS)->schema());
         $writer->create($path);
         $writer->write($batchPL);
         $writer->write($batchUS);

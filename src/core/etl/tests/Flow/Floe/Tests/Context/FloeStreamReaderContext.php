@@ -9,7 +9,6 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
 use Flow\Floe\Format;
@@ -55,7 +54,7 @@ final class FloeStreamReaderContext
         $filesystem = memory_filesystem();
         $path = path('memory://round-trip.floe');
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -121,7 +120,7 @@ final class FloeStreamReaderContext
      */
     public static function write(Filesystem $filesystem, Path $path, Rows $rows, array $metadata = []): void
     {
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path, Metadata::fromArray($metadata));
         $writer->write($rows);
         $writer->close();
@@ -134,7 +133,7 @@ final class FloeStreamReaderContext
      */
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void
     {
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();

@@ -33,7 +33,7 @@ final class FloeStreamWriterTest extends TestCase
         $viaCreate = path('memory://via-create.floe');
         $viaStream = path('memory://via-stream.floe');
         $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $create = new FloeWriter($filesystem, $schema);
         $create->create($viaCreate);
@@ -59,7 +59,7 @@ final class FloeStreamWriterTest extends TestCase
             row(int_entry('id', 3), str_entry('name', 'gamma')),
         );
 
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $defaultWriter = new FloeStreamWriter($schema);
         $defaultWriter->create($filesystem->writeTo($default));
@@ -81,7 +81,7 @@ final class FloeStreamWriterTest extends TestCase
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
-        $writer = new FloeStreamWriter(FloeStreamWriter::unionSchema($data));
+        $writer = new FloeStreamWriter($data->schema());
         $writer->create($filesystem->writeTo($path), Metadata::fromArray(['source' => 'stream']));
         $writer->write($data);
         $writer->close();
@@ -132,7 +132,7 @@ final class FloeStreamWriterTest extends TestCase
         $single = path('memory://single-batch.floe');
 
         $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $multiWriter = new FloeStreamWriter($schema);
         $multiWriter->create($filesystem->writeTo($multi));
@@ -159,7 +159,7 @@ final class FloeStreamWriterTest extends TestCase
 
         $first = rows(row(int_entry('id', 1), str_entry('name', 'a')));
 
-        $writer = new FloeStreamWriter(FloeStreamWriter::unionSchema($first));
+        $writer = new FloeStreamWriter($first->schema());
         $writer->create($filesystem->writeTo($path));
         $writer->write($first);
         $writer->write(rows(row(int_entry('id', 2))));
@@ -244,7 +244,7 @@ final class FloeStreamWriterTest extends TestCase
     {
         $badRows = rows(row(str_entry("bad\xFFname", 'x')));
 
-        $writer = new FloeStreamWriter(FloeStreamWriter::unionSchema($badRows));
+        $writer = new FloeStreamWriter($badRows->schema());
         $writer->create(memory_filesystem()->writeTo(path('memory://bad-name.floe')));
 
         $this->expectException(FloeException::class);
@@ -262,7 +262,7 @@ final class FloeStreamWriterTest extends TestCase
         $on = path('memory://validate-on.floe');
         $off = path('memory://validate-off.floe');
         $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $onWriter = new FloeStreamWriter($schema);
         $onWriter->create($filesystem->writeTo($on));
@@ -283,7 +283,7 @@ final class FloeStreamWriterTest extends TestCase
         $multi = path('memory://off-multi.floe');
         $single = path('memory://off-single.floe');
         $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
-        $schema = FloeStreamWriter::unionSchema($data);
+        $schema = $data->schema();
 
         $multiWriter = new FloeStreamWriter($schema, new Options(validateData: false));
         $multiWriter->create($filesystem->writeTo($multi));
@@ -305,7 +305,7 @@ final class FloeStreamWriterTest extends TestCase
         $path = path('memory://off-present-then-null.floe');
         $first = rows(row(int_entry('id', 1), str_entry('opt', 'present')));
 
-        $writer = new FloeStreamWriter(FloeStreamWriter::unionSchema($first), new Options(validateData: false));
+        $writer = new FloeStreamWriter($first->schema(), new Options(validateData: false));
         $writer->create($filesystem->writeTo($path));
         $writer->write($first);
         $writer->write(rows(row(int_entry('id', 2), str_entry('opt', null))));
@@ -321,7 +321,7 @@ final class FloeStreamWriterTest extends TestCase
     {
         $first = rows(row(int_entry('id', 1), str_entry('opt', 'present')));
 
-        $writer = new FloeStreamWriter(FloeStreamWriter::unionSchema($first));
+        $writer = new FloeStreamWriter($first->schema());
         $writer->create(memory_filesystem()->writeTo(path('memory://on-present-then-null.floe')));
         $writer->write($first);
 

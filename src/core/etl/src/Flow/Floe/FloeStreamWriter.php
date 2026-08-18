@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
-use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\Hydrator;
@@ -166,7 +165,7 @@ final class FloeStreamWriter
         $this->openSession();
 
         if ($this->options->validateData) {
-            $this->assertFitsSession(self::unionSchema($rows));
+            $this->assertFitsSession($rows->schema());
         }
 
         if (!$this->sectionOpen || $this->forcePartitionBreak) {
@@ -181,29 +180,6 @@ final class FloeStreamWriter
         return InstalledVersions::isInstalled('flow-php/etl')
             ? InstalledVersions::getPrettyVersion('flow-php/etl') ?? 'unknown'
             : 'unknown';
-    }
-
-    public static function unionSchema(Rows $rows): Schema
-    {
-        $schema = null;
-
-        foreach ($rows->all() as $row) {
-            $rowSchema = self::rowSchema($row);
-            $schema = $schema === null ? $rowSchema : $schema->merge($rowSchema);
-        }
-
-        return $schema ?? new Schema();
-    }
-
-    private static function rowSchema(Row $row): Schema
-    {
-        $definitions = [];
-
-        foreach ($row->entries()->all() as $entry) {
-            $definitions[] = $entry->definition();
-        }
-
-        return new Schema(...$definitions);
     }
 
     /**

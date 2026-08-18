@@ -11,7 +11,6 @@ use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
 use Flow\Floe\Options;
@@ -47,7 +46,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://all-types.floe');
         $rows = RowsMother::withAllEntryTypes();
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -74,7 +73,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 4)),
             row(int_entry('id', 5)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -109,7 +108,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3)),
             row(int_entry('id', 4)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -133,7 +132,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://limit-batch.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -195,7 +194,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3)),
             row(int_entry('id', 4)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -227,7 +226,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 6)),
             row(int_entry('id', 7)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -258,7 +257,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://offset-past-end.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -292,7 +291,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3)),
             row(int_entry('id', 4)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -321,7 +320,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 4)),
             row(int_entry('id', 5)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -353,7 +352,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 6)),
             row(int_entry('id', 7)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -386,11 +385,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://offset-codec.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
-        $writer = new FloeWriter(
-            $filesystem,
-            FloeStreamWriter::unionSchema($data),
-            new Options(codec: new CodecStub(0x00)),
-        );
+        $writer = new FloeWriter($filesystem, $data->schema(), new Options(codec: new CodecStub(0x00)));
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -418,7 +413,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 2), str_entry('country', 'PL')),
             row(int_entry('id', 3), str_entry('country', 'PL')),
         ], [new Partition('country', 'PL')]);
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -483,13 +478,13 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://appended.floe');
 
         $created = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($created));
+        $writer = new FloeWriter($filesystem, $created->schema());
         $writer->create($path);
         $writer->write($created);
         $writer->close();
 
         $appended = rows(row(int_entry('id', 2)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($appended));
+        $writer = new FloeWriter($filesystem, $appended->schema());
         $writer->append($path);
         $writer->write($appended);
         $writer->close();
@@ -530,7 +525,7 @@ final class FloeReaderTest extends TestCase
         $evolvedFile = path('memory://evolved-new.floe');
 
         $baseRows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($baseRows));
+        $writer = new FloeWriter($filesystem, $baseRows->schema());
         $writer->create($baseFile);
         $writer->write($baseRows);
         $writer->close();
@@ -539,7 +534,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3), str_entry('email', null)),
             row(int_entry('id', 4), str_entry('email', 'x@flow.php')),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($evolvedRows));
+        $writer = new FloeWriter($filesystem, $evolvedRows->schema());
         $writer->create($evolvedFile);
         $writer->write($evolvedRows);
         $writer->close();
@@ -620,7 +615,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://accessors.floe');
 
         $data = rows(row(int_entry('id', 1), str_entry('name', 'x')));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path, Metadata::fromArray(['source' => 'unit']));
         $writer->write($data);
         $writer->close();
@@ -657,7 +652,7 @@ final class FloeReaderTest extends TestCase
             'country',
             'PL',
         )]);
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -686,10 +681,7 @@ final class FloeReaderTest extends TestCase
             'US',
         )]);
         $batchPlain = rows(row(int_entry('id', 3)));
-        $writer = new FloeWriter(
-            $filesystem,
-            FloeStreamWriter::unionSchema($batchPL->merge($batchUS)->merge($batchPlain)),
-        );
+        $writer = new FloeWriter($filesystem, $batchPL->merge($batchUS)->merge($batchPlain)->schema());
         $writer->create($path);
         $writer->write($batchPL);
         $writer->write($batchUS);
@@ -723,7 +715,7 @@ final class FloeReaderTest extends TestCase
             'country',
             'US',
         )]);
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($batchPL->merge($batchUS)));
+        $writer = new FloeWriter($filesystem, $batchPL->merge($batchUS)->schema());
         $writer->create($path);
         $writer->write($batchPL);
         $writer->write($batchUS);
@@ -761,11 +753,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://custom-codec.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter(
-            $filesystem,
-            FloeStreamWriter::unionSchema($data),
-            new Options(codec: new CodecStub(0x00)),
-        );
+        $writer = new FloeWriter($filesystem, $data->schema(), new Options(codec: new CodecStub(0x00)));
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -905,7 +893,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 4)),
             row(int_entry('id', 5)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -929,7 +917,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://head-all.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -958,7 +946,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3)),
             row(int_entry('id', 4)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -1007,7 +995,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 6)),
             row(int_entry('id', 7)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -1034,7 +1022,7 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://tail-all.floe');
 
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -1063,7 +1051,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 3)),
             row(int_entry('id', 4)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -1094,7 +1082,7 @@ final class FloeReaderTest extends TestCase
             row(int_entry('id', 6)),
             row(int_entry('id', 7)),
         );
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

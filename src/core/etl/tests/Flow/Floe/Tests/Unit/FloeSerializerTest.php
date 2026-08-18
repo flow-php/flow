@@ -74,14 +74,14 @@ final class FloeSerializerTest extends TestCase
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
     }
 
-    public function test_streaming_serialization_is_byte_identical_to_bulk(): void
+    public function test_read_batch_smaller_than_a_partition_group_preserves_partitions(): void
     {
-        $value = RowsMother::heterogeneous();
+        $value = RowsMother::partitioned();
 
-        static::assertSame(
-            serialize_to_string(new FloeSerializer(1), $value),
+        static::assertEquals($value, unserialize_from_string(
+            new FloeSerializer(1),
             serialize_to_string(new FloeSerializer(), $value),
-        );
+        ));
     }
 
     public function test_heterogeneous_rows_round_trip_unpadded_but_union_widened(): void
@@ -104,11 +104,13 @@ final class FloeSerializerTest extends TestCase
     }
 
     #[DataProvider('values')]
-    public function test_batch_size_does_not_change_bytes(Rows $value): void
+    public function test_read_batch_size_does_not_change_decoded_rows(Rows $value): void
     {
-        static::assertSame(
-            serialize_to_string(new FloeSerializer(1), $value),
-            serialize_to_string(new FloeSerializer(), $value),
+        $bytes = serialize_to_string(new FloeSerializer(), $value);
+
+        static::assertEquals(
+            unserialize_from_string(new FloeSerializer(), $bytes),
+            unserialize_from_string(new FloeSerializer(1), $bytes),
         );
     }
 
@@ -127,8 +129,10 @@ final class FloeSerializerTest extends TestCase
         $serializer = new FloeSerializer(3);
         $value = rows(...array_map(static fn(int $id): Row => row(int_entry('id', $id)), range(1, 10)));
 
-        static::assertSame(serialize_to_string(new FloeSerializer(), $value), serialize_to_string($serializer, $value));
-        static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
+        static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string(
+            new FloeSerializer(),
+            $value,
+        )));
     }
 
     public function test_batch_size_larger_than_row_count(): void

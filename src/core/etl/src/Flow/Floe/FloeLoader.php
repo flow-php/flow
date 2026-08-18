@@ -66,7 +66,7 @@ final class FloeLoader implements Closure, FileLoader, Loader
 
         try {
             if ($this->schema === null && $this->inferredSchema === null) {
-                $this->inferredSchema = FloeStreamWriter::unionSchema($rows);
+                $this->inferredSchema = $rows->schema();
             }
 
             $stream = $rows->partitions()->count()

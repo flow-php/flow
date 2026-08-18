@@ -7,7 +7,6 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\FooterReader;
 use Flow\Floe\Format;
@@ -31,7 +30,7 @@ final class FooterReaderTest extends TestCase
         $fs = memory_filesystem();
         $path = path('memory://footer.floe');
         $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($fs, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -93,7 +92,7 @@ final class FooterReaderTest extends TestCase
         $fs = memory_filesystem();
         $path = path('memory://close-ok.floe');
         $data = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($fs, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

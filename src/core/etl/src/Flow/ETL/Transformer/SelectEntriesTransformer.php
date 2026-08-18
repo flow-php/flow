@@ -13,9 +13,9 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
 
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
 
 final readonly class SelectEntriesTransformer implements Transformer
 {
@@ -40,7 +40,7 @@ final readonly class SelectEntriesTransformer implements Transformer
                     try {
                         $newRowEntries[] = $row->get($ref);
                     } catch (Exception) {
-                        $newRowEntries[] = str_entry($ref->name(), null);
+                        $newRowEntries[] = null_entry($ref->name());
                     }
                 }
                 $newRows[] = row(...$newRowEntries);

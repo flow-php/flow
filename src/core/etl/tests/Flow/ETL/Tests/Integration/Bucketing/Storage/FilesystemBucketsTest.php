@@ -8,8 +8,10 @@ use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Row;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\Exception\IncompatibleSchemaException;
 
 use function array_map;
+use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -33,6 +35,36 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         static::assertCount(2, BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
+    }
+
+    public function test_append_with_a_column_absent_from_the_bucket_schema_fails(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_new_column');
+        $this->fs()->rm($cacheDir);
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->append('bucket', rows(row(int_entry('id', 1))));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessageMatches('/new column "name"/');
+
+        $storage->append('bucket', rows(row(int_entry('id', 2), str_entry('name', 'John'))));
+    }
+
+    public function test_append_widening_a_column_type_fails(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_widen');
+        $this->fs()->rm($cacheDir);
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->append('bucket', rows(row(int_entry('amount', 1))));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessageMatches(
+            '/column "amount" \(float\) is not compatible with the session type \(integer\)/',
+        );
+
+        $storage->append('bucket', rows(row(float_entry('amount', 1.5))));
     }
 
     public function test_appends_accumulate_into_one_bucket_in_order(): void
@@ -107,7 +139,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
     }
 
-    public function test_round_trips_rows_across_the_write_batch_boundary(): void
+    public function test_round_trips_rows_across_the_read_batch_boundary(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_batch');
         $this->fs()->rm($cacheDir);

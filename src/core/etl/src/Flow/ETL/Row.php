@@ -13,8 +13,6 @@ use Flow\ETL\Row\Reference;
 
 final class Row
 {
-    private ?Schema $schema = null;
-
     public function __construct(
         private readonly Entries $entries,
     ) {}
@@ -151,19 +149,13 @@ final class Row
      */
     public function schema(): Schema
     {
-        if ($this->schema !== null) {
-            return $this->schema;
-        }
-
         $definitions = [];
 
         foreach ($this->entries->all() as $entry) {
             $definitions[] = $entry->definition();
         }
 
-        $this->schema = new Schema(...$definitions);
-
-        return $this->schema;
+        return new Schema(...$definitions);
     }
 
     /**

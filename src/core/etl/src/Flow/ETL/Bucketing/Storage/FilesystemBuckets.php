@@ -8,11 +8,9 @@ use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Options;
 use Generator;
@@ -47,19 +45,13 @@ final class FilesystemBuckets implements BucketsStorage
 
     public function append(string $bucketId, Rows $rows): void
     {
-        foreach ($rows->chunks($this->batchSize) as $batch) {
-            if (!isset($this->writers[$bucketId])) {
-                $writer = new FloeWriter(
-                    $this->filesystem,
-                    FloeStreamWriter::unionSchema($batch),
-                    new Options(validateData: false),
-                );
-                $writer->append($this->keyPath($bucketId));
-                $this->writers[$bucketId] = $writer;
-            }
-
-            $this->writers[$bucketId]->write($batch);
+        if (!isset($this->writers[$bucketId])) {
+            $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: true));
+            $writer->append($this->keyPath($bucketId));
+            $this->writers[$bucketId] = $writer;
         }
+
+        $this->writers[$bucketId]->write($rows);
     }
 
     public function get(string $bucketId): Generator
@@ -97,26 +89,10 @@ final class FilesystemBuckets implements BucketsStorage
     {
         $this->closeWriter($bucketId);
 
-        $writer = null;
-
-        foreach ($rows->chunks($this->batchSize) as $batch) {
-            if ($writer === null) {
-                $writer = new FloeWriter(
-                    $this->filesystem,
-                    FloeStreamWriter::unionSchema($batch),
-                    new Options(validateData: false),
-                );
-                $writer->create($this->keyPath($bucketId));
-            }
-
-            $writer->write($batch);
-        }
-
-        if ($writer === null) {
-            $writer = new FloeWriter($this->filesystem, new Schema(), new Options(validateData: false));
-            $writer->create($this->keyPath($bucketId));
-        }
-
+        // the session schema is derived from these exact rows, so validation could only compare them to themselves
+        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: false));
+        $writer->create($this->keyPath($bucketId));
+        $writer->write($rows);
         $writer->close();
     }
 

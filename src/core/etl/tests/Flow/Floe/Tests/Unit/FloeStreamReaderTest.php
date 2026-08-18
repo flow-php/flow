@@ -6,7 +6,6 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeStreamReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +24,7 @@ final class FloeStreamReaderTest extends TestCase
         $path = path('memory://close.floe');
 
         $data = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
