@@ -373,12 +373,12 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         static::assertSame([3, 3], $spy->loadedRowCounts());
         static::assertSame(
             [
-                ['g' => 'a', 'v' => 1, 'avg' => 2],
-                ['g' => 'a', 'v' => 2, 'avg' => 2],
-                ['g' => 'a', 'v' => 3, 'avg' => 2],
-                ['g' => 'b', 'v' => 10, 'avg' => 20],
-                ['g' => 'b', 'v' => 20, 'avg' => 20],
-                ['g' => 'b', 'v' => 30, 'avg' => 20],
+                ['g' => 'a', 'v' => 1, 'avg' => 2.0],
+                ['g' => 'a', 'v' => 2, 'avg' => 2.0],
+                ['g' => 'a', 'v' => 3, 'avg' => 2.0],
+                ['g' => 'b', 'v' => 10, 'avg' => 20.0],
+                ['g' => 'b', 'v' => 20, 'avg' => 20.0],
+                ['g' => 'b', 'v' => 30, 'avg' => 20.0],
             ],
             $spy->loadedRowsToArray(),
         );

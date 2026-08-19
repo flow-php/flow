@@ -198,14 +198,14 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(str_entry('country', 'pl'), int_entry('age', 2)),
-                row(str_entry('country', 'pl'), int_entry('age', 2)),
+                row(str_entry('country', 'pl'), float_entry('age', 2.0)),
+                row(str_entry('country', 'pl'), float_entry('age', 2.0)),
                 row(str_entry('country', 'pl'), float_entry('age', 2.5)),
-                row(str_entry('country', 'pl'), int_entry('age', 3)),
-                row(str_entry('country', 'us'), int_entry('age', 4)),
-                row(str_entry('country', 'us'), int_entry('age', 4)),
+                row(str_entry('country', 'pl'), float_entry('age', 3.0)),
+                row(str_entry('country', 'us'), float_entry('age', 4.0)),
+                row(str_entry('country', 'us'), float_entry('age', 4.0)),
                 row(str_entry('country', 'us'), float_entry('age', 4.5)),
-                row(str_entry('country', 'us'), int_entry('age', 5)),
+                row(str_entry('country', 'us'), float_entry('age', 5.0)),
             ),
             $rows,
         );

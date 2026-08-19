@@ -26,7 +26,7 @@ final class MathTest extends FlowTestCase
     {
         $row = row(int_entry('a', 100), int_entry('b', 10));
 
-        static::assertSame(10, (new Divide(ref('a'), ref('b')))->eval($row, flow_context()));
+        static::assertSame(10.0, (new Divide(ref('a'), ref('b')))->eval($row, flow_context()));
     }
 
     public function test_minus(): void

@@ -11,7 +11,7 @@ data_frame()
         row(int_entry('a', 100), int_entry('b', 100)),
         row(int_entry('a', 100), int_entry('b', 200))
     )))
-    ->filter(ref('b')->divide(lit(2))->same(ref('a')))
+    ->filter(ref('b')->divide(lit(2))->equals(ref('a')))
     ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(to_output(truncate: false))
     ->run();

@@ -12,10 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class CalculatorTest extends TestCase
 {
-    #[TestWith(['1', '1', 2])]
+    #[TestWith(['1', '1', 2.0])]
     #[TestWith([1, 1, 2])]
-    #[TestWith([1.0, 1.0, 2])]
-    #[TestWith([1.1, 1.1, 2.2])]
+    #[TestWith([1.0, 1.0, 2.0])]
     #[TestWith([1.1, 1.1, 2.2])]
     #[TestWith([1.1, '1.1', 2.2])]
     #[TestWith([1.123456, 1.123456, 2.246912])]
@@ -40,16 +39,16 @@ final class CalculatorTest extends TestCase
         static::assertSame($output, (new Calculator())->add($a, $b));
     }
 
-    #[TestWith(['1', '1', 1])]
-    #[TestWith([1, 1, 1])]
-    #[TestWith([1.0, 1.0, 1])]
-    #[TestWith([1.1, 1.1, 1])]
+    #[TestWith(['1', '1', 1.0])]
+    #[TestWith([1, 1, 1.0])]
+    #[TestWith([1.0, 1.0, 1.0])]
+    #[TestWith([1.1, 1.1, 1.0])]
     #[TestWith([1.1, 5, 0.2])]
     #[TestWith([1.12, 1.0, 1.12])]
-    #[TestWith([1.123456, 1.123456, 1])]
-    #[TestWith(['3.23E-5', '3.23E-5', 1])]
-    #[TestWith(['3.23E-5', '3.23e-5', 1])]
-    #[TestWith([3.23E-5, '3.23e-5', 1])]
+    #[TestWith([1.123456, 1.123456, 1.0])]
+    #[TestWith(['3.23E-5', '3.23E-5', 1.0])]
+    #[TestWith(['3.23E-5', '3.23e-5', 1.0])]
+    #[TestWith([3.23E-5, '3.23e-5', 1.0])]
     /**
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
@@ -66,6 +65,13 @@ final class CalculatorTest extends TestCase
         }
 
         static::assertSame($output, (new Calculator())->divide($a, $b, rounding: Rounding::HALF_UP));
+    }
+
+    #[TestWith([4, 2, 2.0])]
+    #[TestWith([4.0, 2, 2.0])]
+    public function test_divide_always_yields_float(int|float $a, int|float $b, float $output): void
+    {
+        static::assertSame($output, (new Calculator())->divide($a, $b));
     }
 
     public function test_divide_by_zero(): void
@@ -92,6 +98,26 @@ final class CalculatorTest extends TestCase
         (new Calculator())->divide(1, '0');
     }
 
+    public function test_float_operand_always_yields_float(): void
+    {
+        $calculator = new Calculator();
+
+        static::assertSame(2.0, $calculator->add(1.0, 1));
+        static::assertSame(0.0, $calculator->subtract(1, 1.0));
+        static::assertSame(3.0, $calculator->multiply(1.5, 2));
+        static::assertSame(1.0, $calculator->power(1.0, 3));
+    }
+
+    public function test_int_operands_yield_int(): void
+    {
+        $calculator = new Calculator();
+
+        static::assertSame(3, $calculator->add(1, 2));
+        static::assertSame(2, $calculator->subtract(5, 3));
+        static::assertSame(12, $calculator->multiply(3, 4));
+        static::assertSame(8, $calculator->power(2, 3));
+    }
+
     #[TestWith(['1', '1', 0])]
     #[TestWith([17, 3, 2])]
     /**
@@ -112,9 +138,31 @@ final class CalculatorTest extends TestCase
         static::assertSame($output, (new Calculator())->modulus($a, $b));
     }
 
-    #[TestWith(['1', '1', 1])]
+    #[TestWith(['2', '3', 6.0])]
+    #[TestWith([2, 3, 6])]
+    #[TestWith([2.0, 3, 6.0])]
+    #[TestWith([1.1, 2, 2.2])]
+    #[TestWith([0.3, 1, 0.3])]
+    /**
+     * @param float|int|numeric-string $a
+     * @param float|int|numeric-string $b
+     */
+    public function test_multiply(string|int|float $a, string|int|float $b, int|float $output): void
+    {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
+        static::assertSame($output, (new Calculator())->multiply($a, $b));
+    }
+
+    #[TestWith(['1', '1', 1.0])]
     #[TestWith([1, 1, 1])]
-    #[TestWith([1.0, 1, 1])]
+    #[TestWith([1.0, 1, 1.0])]
     #[TestWith([1.1, 2, 1.21])]
     #[TestWith([1.1, 5, 1.61051])]
     #[TestWith([1.12, 1, 1.12])]
@@ -136,24 +184,22 @@ final class CalculatorTest extends TestCase
         static::assertSame($output, (new Calculator())->power($a, $b));
     }
 
-    #[TestWith(['1', '1', 0, 0])]
-    #[TestWith(['0.3', '0.1', 6, 0.2])]
-    #[TestWith([1, 1, 0, 0])]
-    #[TestWith([1.0, 1.0, 0, 0])]
-    #[TestWith([1.1, 1.1, 0, 0])]
-    #[TestWith([1.1, 1.1, 1, 0])]
-    #[TestWith([1.1, '1.1', 1, 0])]
-    #[TestWith([1.123456, 1.123456, 6, 0])]
-    #[TestWith(['3.23E-5', '3.23E-5', 12, 0])]
-    #[TestWith(['3.23E-5', '3.23e-5', 12, 0])]
-    #[TestWith([3.23E-5, '3.23e-5', 12, 0])]
+    #[TestWith(['1', '1', 0.0])]
+    #[TestWith(['0.3', '0.1', 0.2])]
+    #[TestWith([1, 1, 0])]
+    #[TestWith([1.0, 1.0, 0.0])]
+    #[TestWith([1.1, 1.1, 0.0])]
+    #[TestWith([1.1, '1.1', 0.0])]
+    #[TestWith([1.123456, 1.123456, 0.0])]
+    #[TestWith(['3.23E-5', '3.23E-5', 0.0])]
+    #[TestWith(['3.23E-5', '3.23e-5', 0.0])]
+    #[TestWith([3.23E-5, '3.23e-5', 0.0])]
     /**
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
-     * @param int $scale
      * @param float|int $output
      */
-    public function test_subtract(string|int|float $a, string|int|float $b, int $scale, int|float $output): void
+    public function test_subtract(string|int|float $a, string|int|float $b, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');

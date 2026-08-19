@@ -99,7 +99,7 @@ final class WindowFunctionsTest extends FlowTestCase
     public function test_centered_frame(): void
     {
         static::assertSame(
-            [150, 200, 300, 400, 450],
+            [150.0, 200.0, 300.0, 400.0, 450.0],
             WindowFrameContext::salaries(
                 average(ref('salary'))
                     ->over(
@@ -133,7 +133,7 @@ final class WindowFunctionsTest extends FlowTestCase
     public function test_moving_average_over_a_trailing_frame(): void
     {
         static::assertSame(
-            [100, 150, 200, 300, 400],
+            [100.0, 150.0, 200.0, 300.0, 400.0],
             WindowFrameContext::salaries(
                 average(ref('salary'))
                     ->over(

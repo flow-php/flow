@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\Calculator\RunningSum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -26,6 +27,8 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     private bool $floatColumn = false;
 
     private int $aggregated = 0;
+
+    private ?RunningSum $runningSum = null;
 
     private float|int $sum;
 
@@ -56,7 +59,8 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
             $value = $entry->value();
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = $this->add($this->sum, $value, $this->isExact($row, $context), $context);
+                $this->runningSum ??= new RunningSum($context->calculator());
+                $this->sum = $this->runningSum->add($this->sum, $value, $this->isExact($row, $context));
                 $this->aggregated++;
             }
         } catch (InvalidArgumentException $e) {
@@ -132,29 +136,6 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         }
 
         return $this->window;
-    }
-
-    /**
-     * @param float|int|numeric-string $value
-     */
-    private function add(float|int $sum, float|int|string $value, bool $exact, FlowContext $context): float|int
-    {
-        if ($exact) {
-            return $context->calculator()->add($sum, $value);
-        }
-
-        $result = $sum + $value;
-
-        if (
-            is_float($result)
-            && floor($result) === $result
-            && $result >= (float) PHP_INT_MIN
-            && $result < (float) PHP_INT_MAX
-        ) {
-            return (int) $result;
-        }
-
-        return $result;
     }
 
     private function isExact(Row $row, FlowContext $context): bool

@@ -45,7 +45,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
         $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
-        static::assertSame(110, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(110.0, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
     public function test_aggregation_sum_including_null_value(): void
@@ -101,7 +101,25 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
 
-        static::assertSame(5.0, $aggregator->result(flow_context(config())->entryFactory())->value());
+        $result = $aggregator->result(flow_context(config())->entryFactory());
+
+        static::assertSame(5.0, $result->value());
+        static::assertSame('float', $result->definition()->type()->toString());
+    }
+
+    public function test_sum_over_int_column_stays_int(): void
+    {
+        $aggregator = sum(ref('value'));
+
+        $aggregator->aggregate(row(int_entry('value', 1)), flow_context());
+        $aggregator->aggregate(row(int_entry('value', 2)), flow_context());
+        $aggregator->aggregate(row(int_entry('value', 3)), flow_context());
+        $aggregator->aggregate(row(int_entry('value', 4)), flow_context());
+
+        $result = $aggregator->result(flow_context(config())->entryFactory());
+
+        static::assertSame(10, $result->value());
+        static::assertSame('integer', $result->definition()->type()->toString());
     }
 
     public function test_exact_aggregation_sum_of_decimal_fractions(): void

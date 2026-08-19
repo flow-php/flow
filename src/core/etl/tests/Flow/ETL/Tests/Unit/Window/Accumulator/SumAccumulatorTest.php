@@ -121,13 +121,13 @@ final class SumAccumulatorTest extends FlowTestCase
         static::assertSame(15, $accumulator->value());
     }
 
-    public function test_whole_float_result_narrows_to_int(): void
+    public function test_whole_float_result_stays_float(): void
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
         $accumulator->accumulate(row(float_entry('value', 1.5)));
         $accumulator->accumulate(row(float_entry('value', 2.5)));
 
-        static::assertSame(4, $accumulator->value());
+        static::assertSame(4.0, $accumulator->value());
     }
 }

@@ -14,6 +14,8 @@ use Flow\Calculator\Exception\InvalidScaleException;
 use Flow\Calculator\Exception\NonNumericValueException;
 
 use function defined;
+use function is_float;
+use function is_string;
 use function method_exists;
 
 final class Calculator
@@ -29,11 +31,11 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->plus(BigDecimal::of((string) $b));
 
-        if (!self::hasNonZeroFractionalPart($result)) {
-            return $result->toInt();
+        if (self::eitherIsFloat($a, $b) || self::hasNonZeroFractionalPart($result)) {
+            return $result->toFloat();
         }
 
-        return $result->toFloat();
+        return $result->toInt();
     }
 
     /**
@@ -81,10 +83,6 @@ final class Calculator
             // @mago-ignore analysis:possibly-invalid-argument
             $result = $aDecimal->dividedBy(BigDecimal::of((string) $b), $effectiveScale, $brickMode);
 
-            if (!self::hasNonZeroFractionalPart($result)) {
-                return $result->toInt();
-            }
-
             return $result->toFloat();
         } catch (DivisionByZeroException $e) {
             throw new DivisionByZeroError('Division by zero.', (int) $e->getCode(), $e);
@@ -110,11 +108,11 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->multipliedBy(BigDecimal::of((string) $b));
 
-        if (!self::hasNonZeroFractionalPart($result)) {
-            return $result->toInt();
+        if (self::eitherIsFloat($a, $b) || self::hasNonZeroFractionalPart($result)) {
+            return $result->toFloat();
         }
 
-        return $result->toFloat();
+        return $result->toInt();
     }
 
     /**
@@ -126,11 +124,11 @@ final class Calculator
         // @mago-ignore analysis:possibly-invalid-argument
         $result = BigDecimal::of((string) $a)->power(BigInteger::of((string) $b)->toInt());
 
-        if (!self::hasNonZeroFractionalPart($result)) {
-            return $result->toInt();
+        if (self::eitherIsFloat($a, $b) || self::hasNonZeroFractionalPart($result)) {
+            return $result->toFloat();
         }
 
-        return $result->toFloat();
+        return $result->toInt();
     }
 
     /**
@@ -141,11 +139,16 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->minus(BigDecimal::of((string) $b));
 
-        if (!self::hasNonZeroFractionalPart($result)) {
-            return $result->toInt();
+        if (self::eitherIsFloat($a, $b) || self::hasNonZeroFractionalPart($result)) {
+            return $result->toFloat();
         }
 
-        return $result->toFloat();
+        return $result->toInt();
+    }
+
+    private static function eitherIsFloat(int|float|string $a, int|float|string $b): bool
+    {
+        return self::isFloatOperand($a) || self::isFloatOperand($b);
     }
 
     private static function hasNonZeroFractionalPart(BigDecimal $result): bool
@@ -156,5 +159,11 @@ final class Calculator
         }
 
         return !$result->getFractionalPart()->isZero();
+    }
+
+    private static function isFloatOperand(int|float|string $value): bool
+    {
+        // A numeric string carries no integer guarantee, so it counts as a float operand.
+        return is_float($value) || is_string($value);
     }
 }

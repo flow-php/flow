@@ -25,7 +25,7 @@ final class AverageAccumulatorTest extends FlowTestCase
         $accumulator->accumulate(row(int_entry('value', 10)));
         $accumulator->accumulate(row(int_entry('value', 20)));
 
-        static::assertSame(15, $accumulator->value());
+        static::assertSame(15.0, $accumulator->value());
     }
 
     public function test_empty_frame_averages_to_null(): void
@@ -42,7 +42,7 @@ final class AverageAccumulatorTest extends FlowTestCase
         $accumulator->accumulate(row(str_entry('other', 'x')));
         $accumulator->accumulate(row(int_entry('value', 4)));
 
-        static::assertSame(4, $accumulator->value());
+        static::assertSame(4.0, $accumulator->value());
     }
 
     public function test_missing_entry_throws_in_strict_mode(): void
@@ -68,7 +68,7 @@ final class AverageAccumulatorTest extends FlowTestCase
         $accumulator->accumulate(row(int_entry('value', null)));
         $accumulator->accumulate(row(int_entry('value', 20)));
 
-        static::assertSame(15, $accumulator->value());
+        static::assertSame(15.0, $accumulator->value());
     }
 
     public function test_only_null_values_still_average_to_null(): void
@@ -96,11 +96,11 @@ final class AverageAccumulatorTest extends FlowTestCase
         $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context());
         $accumulator->accumulate(row(int_entry('value', 10)));
 
-        static::assertSame(10, $accumulator->value());
-        static::assertSame(10, $accumulator->value());
+        static::assertSame(10.0, $accumulator->value());
+        static::assertSame(10.0, $accumulator->value());
 
         $accumulator->accumulate(row(int_entry('value', 20)));
 
-        static::assertSame(15, $accumulator->value());
+        static::assertSame(15.0, $accumulator->value());
     }
 }

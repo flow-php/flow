@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Window\Accumulator;
 
+use Flow\Calculator\RunningSum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Parameter;
@@ -21,6 +22,8 @@ final class SumAccumulator implements FrameAccumulator
      */
     private readonly ?bool $constantExact;
 
+    private readonly RunningSum $runningSum;
+
     private float|int|null $sum = null;
 
     public function __construct(
@@ -29,6 +32,7 @@ final class SumAccumulator implements FrameAccumulator
         private readonly FlowContext $context,
     ) {
         $this->constantExact = is_bool($exact) ? $exact : null;
+        $this->runningSum = new RunningSum($context->calculator());
     }
 
     public function accumulate(Row $row): void
@@ -37,7 +41,7 @@ final class SumAccumulator implements FrameAccumulator
             $value = $row->valueOf($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = $this->add(
+                $this->sum = $this->runningSum->add(
                     $this->sum ?? 0,
                     $value,
                     $this->constantExact ?? (new Parameter($this->exact))->asBoolean($row, $this->context),
@@ -53,28 +57,5 @@ final class SumAccumulator implements FrameAccumulator
     public function value(): mixed
     {
         return $this->sum;
-    }
-
-    /**
-     * @param float|int|numeric-string $value
-     */
-    private function add(float|int $sum, float|int|string $value, bool $exact): float|int
-    {
-        if ($exact) {
-            return $this->context->calculator()->add($sum, $value);
-        }
-
-        $result = $sum + $value;
-
-        if (
-            is_float($result)
-            && floor($result) === $result
-            && $result >= (float) PHP_INT_MIN
-            && $result < (float) PHP_INT_MAX
-        ) {
-            return (int) $result;
-        }
-
-        return $result;
     }
 }
