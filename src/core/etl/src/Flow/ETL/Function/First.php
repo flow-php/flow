@@ -28,6 +28,10 @@ final class First implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
         if ($this->first === null) {
             try {
                 $this->first = $row->get($this->ref);

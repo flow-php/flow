@@ -8,7 +8,7 @@ require __DIR__ . '/bootstrap.php';
 
 
 use function Flow\ETL\DSL\{row, rows, int_entry, list_entry, map_entry, structure_entry};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_float, type_string, type_optional, type_mixed};
+use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_float, type_string, type_optional};
 
 $rows = rows(
     row(
@@ -18,7 +18,6 @@ $rows = rows(
         list_entry('strings', ['a', '', "b\x00c"], type_list(type_string())),
         list_entry('empty', [], type_list(type_integer())),
         list_entry('nullable_ints', [1, null, 3], type_list(type_optional(type_integer()))),
-        list_entry('mixed', [1, 'two', 3.0, true, null], type_list(type_mixed())),
         map_entry('by_int', [10 => 'a', -5 => 'b'], type_map(type_integer(), type_string())),
         map_entry('by_string', ['cpu' => 1.5, 'mem' => 2.5], type_map(type_string(), type_float())),
         map_entry('empty_map', [], type_map(type_string(), type_integer())),
@@ -33,7 +32,6 @@ $rows = rows(
         ])),
         structure_entry('optional_absent', ['a' => 1], type_structure(['a' => type_integer()], ['b' => type_string()])),
         structure_entry('optional_typed_null', ['a' => 1, 'b' => null], type_structure(['a' => type_integer(), 'b' => type_optional(type_string())])),
-        structure_entry('with_extra', ['a' => 1, 'extra' => 'kept', 'more' => [1, 'x']], type_structure(['a' => type_integer()], [], true)),
     ),
 );
 
@@ -48,7 +46,6 @@ var_dump($actual[0]->get('by_int')->value());
 var_dump($actual[0]->get('address')->value()['geo']);
 var_dump($actual[0]->get('optional_absent')->value());
 var_dump($actual[0]->get('optional_typed_null')->value());
-var_dump($actual[0]->get('with_extra')->value());
 ?>
 --EXPECT--
 identical
@@ -89,17 +86,4 @@ array(2) {
   int(1)
   ["b"]=>
   NULL
-}
-array(3) {
-  ["a"]=>
-  int(1)
-  ["extra"]=>
-  string(4) "kept"
-  ["more"]=>
-  array(2) {
-    [0]=>
-    int(1)
-    [1]=>
-    string(1) "x"
-  }
 }

@@ -14,7 +14,7 @@ use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\PruneEntriesTransformer;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\config;
@@ -52,7 +52,7 @@ final class GroupByStepsTest extends FlowTestCase
         $steps = GroupBySteps::of($groupBy, config());
 
         static::assertCount(3, $steps);
-        static::assertInstanceOf(SelectEntriesTransformer::class, $steps[0]);
+        static::assertInstanceOf(PruneEntriesTransformer::class, $steps[0]);
         static::assertInstanceOf(BucketingProcessor::class, $steps[1]);
         static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[2]);
     }

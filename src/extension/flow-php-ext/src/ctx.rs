@@ -445,7 +445,6 @@ pub struct Ctx {
     timezone_ce: Option<&'static ClassEntry>,
     datetime_immutable: Option<DateTimeFns>,
     datetime_mutable: Option<DateTimeFns>,
-    datetime_interface_ce: Option<&'static ClassEntry>,
     timezones: HashMap<Vec<u8>, Zval>,
     enums: HashMap<Vec<u8>, Zval>,
     fn_defined: Option<Function>,
@@ -488,7 +487,6 @@ impl Ctx {
             timezone_ce: None,
             datetime_immutable: None,
             datetime_mutable: None,
-            datetime_interface_ce: None,
             timezones: HashMap::new(),
             enums: HashMap::new(),
             fn_defined: None,
@@ -540,14 +538,6 @@ impl Ctx {
         }
 
         Ok(self.timezone_get_name.expect("just initialized"))
-    }
-
-    pub fn datetime_interface(&mut self) -> Result<&'static ClassEntry, PhpException> {
-        if self.datetime_interface_ce.is_none() {
-            self.datetime_interface_ce = Some(find_class("DateTimeInterface")?);
-        }
-
-        Ok(self.datetime_interface_ce.expect("just initialized"))
     }
 
     /// Per-datetime-class encode handles (getTimestamp/format/getTimezone).

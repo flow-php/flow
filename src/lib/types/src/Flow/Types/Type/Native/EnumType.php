@@ -111,7 +111,7 @@ final readonly class EnumType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return (is_object($value) || is_string($value)) && is_a($value, $this->class, true);
+        return is_object($value) && is_a($value, $this->class);
     }
 
     public function normalize(): array

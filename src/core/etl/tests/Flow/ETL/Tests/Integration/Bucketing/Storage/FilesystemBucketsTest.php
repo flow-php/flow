@@ -61,7 +61,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessageMatches(
-            '/column "amount" \(float\) is not compatible with the session type \(integer\)/',
+            '/column "amount" \(row 0\): could not convert 1\.5 \(float\) to integer/',
         );
 
         $storage->append('bucket', rows(row(float_entry('amount', 1.5))));

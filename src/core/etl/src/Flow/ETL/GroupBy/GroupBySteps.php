@@ -14,7 +14,7 @@ use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\PruneEntriesTransformer;
 
 use function array_values;
 
@@ -42,7 +42,7 @@ final readonly class GroupBySteps
                 $pruned[$ref->base()] ??= $ref->base();
             }
 
-            $steps[] = new SelectEntriesTransformer(...array_values($pruned));
+            $steps[] = new PruneEntriesTransformer(...array_values($pruned));
         }
 
         $buckets = new Buckets($config->grouping->bucketing->storage);
@@ -53,7 +53,6 @@ final readonly class GroupBySteps
                 new NativeHasher(),
                 $config->randomValueGenerator(),
                 'group-by',
-                // matters only when pruning is disabled - pruned rows always carry every column
                 nullOnMissing: true,
             ),
             $buckets,

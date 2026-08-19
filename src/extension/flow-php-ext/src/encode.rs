@@ -9,16 +9,14 @@ use ext_php_rs::zend::ClassEntry;
 use crate::ctx::{call_handle, call_handle_on, read_property, zval_str, Ctx};
 use crate::exception::ext_exception;
 use crate::format::{
-    write_u32, DATETIME_IMMUTABLE, DATETIME_MUTABLE, KEY_INTEGER, KEY_STRING, TAG_ARRAY,
-    TAG_BOOLEAN, TAG_DATETIME, TAG_FLOAT, TAG_INTEGER, TAG_JSON, TAG_NULL, TAG_STRING, TAG_UUID,
-    VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
+    write_u32, DATETIME_IMMUTABLE, DATETIME_MUTABLE, VALUE_ABSENT, VALUE_NULL,
+    VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
 use crate::plan::{parse_schema_json, TypeJson};
 
 enum EncodeMapKey {
     Integer,
     String,
-    Dynamic,
 }
 
 /// Declared structure element key after PHP's array-key coercion, mirroring
@@ -35,7 +33,6 @@ enum Encoder {
     Boolean,
     String,
     Null,
-    Dynamic,
     DateTime,
     Interval,
     Uuid,
@@ -48,7 +45,7 @@ enum Encoder {
     HtmlElement,
     List(Box<Encoder>),
     Map(EncodeMapKey, Box<Encoder>),
-    Structure(Vec<(DeclaredKey, Vec<u8>, Encoder)>, bool),
+    Structure(Vec<(DeclaredKey, Vec<u8>, Encoder)>),
     Optional(Box<Encoder>),
 }
 
@@ -66,7 +63,6 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
         "boolean" => Encoder::Boolean,
         "string" | "non_empty_string" | "numeric-string" | "class_string" => Encoder::String,
         "null" => Encoder::Null,
-        "mixed" | "union" | "scalar" | "literal" | "array" => Encoder::Dynamic,
         "datetime" | "date" => Encoder::DateTime,
         "time" => Encoder::Interval,
         "uuid" => Encoder::Uuid,
@@ -89,7 +85,11 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
             {
                 "integer" => EncodeMapKey::Integer,
                 "string" => EncodeMapKey::String,
-                _ => EncodeMapKey::Dynamic,
+                other => {
+                    return Err(ext_exception(format!(
+                        "flow_php does not support map keys of type \"{other}\""
+                    )));
+                }
             };
 
             Encoder::Map(
@@ -111,7 +111,13 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
                 elements.push((declared, bytes, build_encoder(element)?));
             }
 
-            Encoder::Structure(elements, type_json.allow_extra())
+            if type_json.allow_extra() {
+                return Err(ext_exception(
+                    "flow_php does not support structures that allow extra values",
+                ));
+            }
+
+            Encoder::Structure(elements)
         }
         "optional" => Encoder::Optional(Box::new(build_encoder(
             type_json.base().ok_or_else(|| missing("base"))?,
@@ -394,16 +400,20 @@ fn encode_value(
                 .as_bytes(),
         ),
         Encoder::Null => {}
-        Encoder::Dynamic => encode_dynamic(value, out, ctx)?,
         Encoder::DateTime => encode_datetime(expect_object(value, "a datetime value")?, out, ctx)?,
         Encoder::Interval => encode_interval(expect_object(value, "a time value")?, out, ctx)?,
         Encoder::Uuid => {
             let uuid = expect_object(value, "a uuid value")?;
-            let (_, value_slot) = ctx.uuid()?;
+            let (uuid_ce, value_slot) = ctx.uuid()?;
+
+            if !std::ptr::eq(uuid.ce.cast_const(), std::ptr::from_ref(uuid_ce)) {
+                return Err(ext_exception("flow_php expected a uuid value to be an object"));
+            }
+
             let bytes = read_slot(uuid, value_slot)
                 .zend_str()
                 .ok_or_else(|| ext_exception("flow_php expected Uuid to hold a string"))?;
-            out.extend_from_slice(bytes.as_bytes());
+            write_len_prefixed(out, bytes.as_bytes());
         }
         Encoder::Json => encode_json(expect_object(value, "a json value")?, out, ctx)?,
         Encoder::TimeZone => {
@@ -483,22 +493,12 @@ fn encode_value(
                         None => write_len_prefixed(out, (index as i64).to_string().as_bytes()),
                         Some(key) => write_len_prefixed(out, key.as_bytes()),
                     },
-                    EncodeMapKey::Dynamic => match map_key {
-                        None => {
-                            out.push(TAG_INTEGER);
-                            out.extend_from_slice(&(index as i64).to_le_bytes());
-                        }
-                        Some(key) => {
-                            out.push(TAG_STRING);
-                            write_len_prefixed(out, key.as_bytes());
-                        }
-                    },
                 }
 
                 encode_value(element, item, out, ctx)
             })?;
         }
-        Encoder::Structure(elements, allow_extra) => {
+        Encoder::Structure(elements) => {
             let values = value
                 .array()
                 .ok_or_else(|| ext_exception("flow_php expected a structure value"))?;
@@ -517,45 +517,6 @@ fn encode_value(
                         encode_value(element, item, out, ctx)?;
                     }
                 }
-            }
-
-            if *allow_extra {
-                let is_declared = |key: Option<&ZendStr>, index: zend_ulong| {
-                    elements
-                        .iter()
-                        .any(|(declared, _, _)| match (declared, key) {
-                            (DeclaredKey::Index(declared_index), None) => {
-                                *declared_index == index as i64
-                            }
-                            (DeclaredKey::Str(declared_key), Some(key)) => {
-                                declared_key.as_slice() == key.as_bytes()
-                            }
-                            _ => false,
-                        })
-                };
-
-                let mut extra_count = 0u32;
-                ht_for_each(values, |key, index, _| {
-                    if !is_declared(key, index) {
-                        extra_count += 1;
-                    }
-
-                    Ok(())
-                })?;
-                write_u32(out, extra_count);
-
-                ht_for_each(values, |key, index, item| {
-                    if is_declared(key, index) {
-                        return Ok(());
-                    }
-
-                    match key {
-                        None => write_len_prefixed(out, (index as i64).to_string().as_bytes()),
-                        Some(key) => write_len_prefixed(out, key.as_bytes()),
-                    }
-
-                    encode_dynamic(item, out, ctx)
-                })?;
             }
         }
         Encoder::Optional(base) => {
@@ -588,109 +549,6 @@ fn ht_find<'a>(ht: &'a ZendHashTable, key: &[u8]) -> Option<&'a Zval> {
             .as_ref()
         },
     }
-}
-
-/// Mirrors `ValueEncoder::encodeDynamic`.
-fn encode_dynamic(value: &Zval, out: &mut Vec<u8>, ctx: &mut Ctx) -> Result<(), PhpException> {
-    if value.is_null() {
-        out.push(TAG_NULL);
-
-        return Ok(());
-    }
-
-    if let Some(long) = value.long() {
-        out.push(TAG_INTEGER);
-        out.extend_from_slice(&long.to_le_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(double) = value.double() {
-        out.push(TAG_FLOAT);
-        out.extend_from_slice(&double.to_le_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(boolean) = value.bool() {
-        out.push(TAG_BOOLEAN);
-        out.push(u8::from(boolean));
-
-        return Ok(());
-    }
-
-    if let Some(string) = value.zend_str() {
-        out.push(TAG_STRING);
-        write_len_prefixed(out, string.as_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(array) = value.array() {
-        out.push(TAG_ARRAY);
-        write_u32(out, array.len() as u32);
-
-        return ht_for_each(array, |key, index, item| {
-            match key {
-                None => {
-                    out.push(KEY_INTEGER);
-                    out.extend_from_slice(&(index as i64).to_le_bytes());
-                }
-                Some(key) => {
-                    out.push(KEY_STRING);
-                    write_len_prefixed(out, key.as_bytes());
-                }
-            }
-
-            encode_dynamic(item, out, ctx)
-        });
-    }
-
-    if let Some(object) = value.object() {
-        if object.instance_of(ctx.datetime_interface()?) {
-            out.push(TAG_DATETIME);
-
-            return encode_datetime(object, out, ctx);
-        }
-
-        let (uuid_ce, uuid_value_slot) = ctx.uuid()?;
-
-        if std::ptr::eq(object.ce.cast_const(), std::ptr::from_ref(uuid_ce)) {
-            out.push(TAG_UUID);
-            out.extend_from_slice(
-                read_slot(object, uuid_value_slot)
-                    .zend_str()
-                    .ok_or_else(|| ext_exception("flow_php expected Uuid to hold a string"))?
-                    .as_bytes(),
-            );
-
-            return Ok(());
-        }
-
-        let (json_ce, ..) = ctx.json()?;
-
-        if std::ptr::eq(object.ce.cast_const(), std::ptr::from_ref(json_ce)) {
-            out.push(TAG_JSON);
-
-            return encode_json(object, out, ctx);
-        }
-    }
-
-    Err(ext_exception(format!(
-        "flow_php does not support values of type \"{}\" in mixed/union context",
-        debug_type(value)
-    )))
-}
-
-fn debug_type(value: &Zval) -> String {
-    if let Some(object) = value.object() {
-        return unsafe { object.ce.as_ref() }
-            .and_then(ClassEntry::name)
-            .unwrap_or("object")
-            .to_string();
-    }
-
-    format!("{:?}", value.get_type())
 }
 
 /// Mirrors `ValueEncoder::encodeDateTime`.
@@ -785,7 +643,11 @@ fn encode_interval(
 }
 
 fn encode_json(value: &ZendObject, out: &mut Vec<u8>, ctx: &mut Ctx) -> Result<(), PhpException> {
-    let (_, value_slot, is_object_slot) = ctx.json()?;
+    let (json_ce, value_slot, is_object_slot) = ctx.json()?;
+
+    if !std::ptr::eq(value.ce.cast_const(), std::ptr::from_ref(json_ce)) {
+        return Err(ext_exception("flow_php expected a json value to be an object"));
+    }
 
     write_len_prefixed(
         out,

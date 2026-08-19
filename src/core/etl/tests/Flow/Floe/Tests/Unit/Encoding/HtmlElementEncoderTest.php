@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit\Encoding;
 
+use Dom\HTMLElement;
 use Flow\Floe\Encoding\HtmlElementEncoder;
 use Flow\Floe\ValueDecoder;
 use Flow\Floe\ValueEncoder;
@@ -22,6 +23,7 @@ final class HtmlElementEncoderTest extends TestCase
         }
 
         $element = ValueDecoder::htmlElementFromString('<p>x</p>');
+        static::assertInstanceOf(HTMLElement::class, $element);
         $html = ValueEncoder::htmlElementToString($element);
 
         static::assertSame(pack('V', strlen($html)) . $html, (new HtmlElementEncoder())->encode($element));

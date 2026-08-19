@@ -124,7 +124,7 @@ final class SchemaDecoder
             $plan[] = new ColumnBlueprint(
                 $normalized['ref'],
                 $definition,
-                $this->valueDecoder->decoderFor($definition->type()),
+                $this->valueDecoder->decoderFor($definition),
                 $this->instantiators->for($entryClass),
             );
         }

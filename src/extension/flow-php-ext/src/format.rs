@@ -18,19 +18,6 @@ pub const VALUE_PRESENT_WITH_META: u8 = 0x04;
 pub const DATETIME_IMMUTABLE: u8 = 0x00;
 pub const DATETIME_MUTABLE: u8 = 0x01;
 
-pub const TAG_NULL: u8 = 0x00;
-pub const TAG_INTEGER: u8 = 0x01;
-pub const TAG_FLOAT: u8 = 0x02;
-pub const TAG_BOOLEAN: u8 = 0x03;
-pub const TAG_STRING: u8 = 0x04;
-pub const TAG_ARRAY: u8 = 0x05;
-pub const TAG_DATETIME: u8 = 0x06;
-pub const TAG_UUID: u8 = 0x07;
-pub const TAG_JSON: u8 = 0x08;
-
-pub const KEY_INTEGER: u8 = 0x00;
-pub const KEY_STRING: u8 = 0x01;
-
 pub struct Reader<'a> {
     data: &'a [u8],
     pos: usize,

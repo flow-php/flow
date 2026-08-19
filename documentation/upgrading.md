@@ -127,6 +127,63 @@ proportional to the data, as on an outer frame.
 | -                                                                                                           | a failure during the final transaction rolls back the drained delivery and rethrows |
 | `withIsolationLevel()` applied to per-batch transactions                                                    | applies to every transaction the wrapper opens                                      |
 
+### 11) `flow-php/etl` - Floe on-disk format v2, existing `.floe` files must be rewritten
+
+| Before                            | After                                        |
+|-----------------------------------|----------------------------------------------|
+| header version byte `0x01`        | `0x02`                                       |
+| uuid payload - 36 raw bytes       | 4-byte little-endian length prefix + bytes   |
+| reading a v1 file                 | throws `Floe does not support format version 1` |
+
+Rewrite existing files with the new writer: `data_frame()->read(from_floe($old))->write(to_floe($new))->run()`.
+
+### 12) `flow-php/etl` - Floe rejects columns whose type is only known per value
+
+| Before                                          | After                                                     |
+|-------------------------------------------------|-----------------------------------------------------------|
+| `list<mixed>` element - written with a tag      | `Floe does not support values of type "mixed"`            |
+| `union_schema()` column - written               | `Floe does not support columns of type "integer\|string"`  |
+| `type_structure(..., allow_extra: true)`        | `Floe does not support structures that allow extra values` |
+| map key other than `integer`/`string`           | `Floe does not support map keys of type "..."`            |
+
+Thrown when the write session opens, before any bytes. Declare an element type, or use
+`json_entry()` when the shape is genuinely dynamic.
+
+### 13) `flow-php/etl` - Floe validates every value against its column type
+
+| Before                                        | After                                  |
+|-----------------------------------------------|----------------------------------------|
+| `'AB-1'` into an `integer` column - wrote `0` | throws `IncompatibleSchemaException`   |
+| `1.5` into an `integer` column - wrote `1`    | throws                                 |
+| `1000` into a `string` column - raw `TypeError` | throws `IncompatibleSchemaException` |
+| `int` into a `float` column - written         | throws                                 |
+| column absent from a row                      | unchanged, still written               |
+
+`floe_options(validate_data: false)` skips the per-value check only; a row carrying an undeclared
+column is always rejected.
+
+### 14) `flow-php/etl` - aggregate result type follows the column, not the value
+
+| Before                                          | After                          |
+|-------------------------------------------------|--------------------------------|
+| `sum()` over a `float` column, whole total - `int` | `float`                     |
+| `avg()`/`min()`/`max()` over a `float` column, whole result - `int` | `float`     |
+| `sum()` over an `integer` column                | unchanged, `int`               |
+
+### 15) `flow-php/etl` - aggregates ignore a row missing the aggregated column
+
+| Before                                                        | After                     |
+|---------------------------------------------------------------|---------------------------|
+| missing column in `ExecutionMode::STRICT` - `Sum error: Entry "amount" does not exist` | contributes nothing |
+| missing column in lenient mode - contributed nothing          | unchanged                 |
+
+### 16) `flow-php/types` - `EnumType::isValid()` requires an object
+
+| Before                                     | After                              |
+|--------------------------------------------|------------------------------------|
+| `type_enum(Suit::class)->isValid('Suit')`  | `false` (was `true`)               |
+| `type_enum(Suit::class)->assert('Suit')`   | throws `InvalidTypeException` (was raw `TypeError`) |
+| `type_enum(Suit::class)->cast('Suit')`     | throws `CastingException` (was raw `TypeError`)     |
 ---
 
 ## Upgrading from 0.42.x to 0.43.x

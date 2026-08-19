@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit\Encoding;
 
+use Dom\HTMLDocument;
 use Flow\Floe\Encoding\HtmlDocumentEncoder;
 use Flow\Floe\ValueDecoder;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +23,10 @@ final class HtmlDocumentEncoderTest extends TestCase
             static::markTestSkipped('\Dom\HTMLDocument requires PHP 8.4+');
         }
 
-        $encoded = (new HtmlDocumentEncoder())->encode(ValueDecoder::htmlDocumentFromString('<p>x</p>'));
+        $document = ValueDecoder::htmlDocumentFromString('<p>x</p>');
+        static::assertInstanceOf(HTMLDocument::class, $document);
+
+        $encoded = (new HtmlDocumentEncoder())->encode($document);
 
         static::assertSame(pack('V', strlen($encoded) - 4), substr($encoded, 0, 4));
         static::assertTrue(str_contains($encoded, '<p>x</p>'));

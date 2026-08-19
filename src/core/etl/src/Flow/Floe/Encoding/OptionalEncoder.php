@@ -6,6 +6,9 @@ namespace Flow\Floe\Encoding;
 
 use Flow\Floe\Format;
 
+/**
+ * @implements ValueEncoder<mixed>
+ */
 final class OptionalEncoder implements ValueEncoder
 {
     public function __construct(

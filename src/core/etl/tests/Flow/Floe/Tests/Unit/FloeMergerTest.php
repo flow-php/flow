@@ -11,11 +11,13 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeReader;
+use Flow\Floe\Format;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\UnsizedFilesystem;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function chr;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -431,7 +433,10 @@ final class FloeMergerTest extends TestCase
     public function test_source_smaller_than_header_and_trailer_throws(): void
     {
         $fs = memory_filesystem();
-        $fs->writeTo(path('memory://tiny.floe'))->append("FLOE\x01\x00")->close();
+        $fs
+            ->writeTo(path('memory://tiny.floe'))
+            ->append('FLOE' . chr(Format::VERSION) . "\x00")
+            ->close();
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('too small');
@@ -444,7 +449,7 @@ final class FloeMergerTest extends TestCase
         $fs = memory_filesystem();
         $fs
             ->writeTo(path('memory://codec.floe'))
-            ->append("FLOE\x01\x05" . str_repeat("\0", 10))
+            ->append('FLOE' . chr(Format::VERSION) . "\x05" . str_repeat("\0", 10))
             ->close();
 
         $this->expectException(FloeException::class);
@@ -458,7 +463,7 @@ final class FloeMergerTest extends TestCase
         $fs = memory_filesystem();
         $fs
             ->writeTo(path('memory://torn.floe'))
-            ->append("FLOE\x01\x00" . pack('V', 1_000_000) . 'FLOE')
+            ->append('FLOE' . chr(Format::VERSION) . "\x00" . pack('V', 1_000_000) . 'FLOE')
             ->close();
 
         $this->expectException(FloeException::class);

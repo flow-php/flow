@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit\Encoding;
 
 use DOMDocument;
+use DOMElement;
 use Flow\Floe\Encoding\XmlElementEncoder;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +19,7 @@ final class XmlElementEncoderTest extends TestCase
         $document = new DOMDocument();
         $document->loadXML('<item id="5">value</item>');
         $element = $document->documentElement;
+        static::assertInstanceOf(DOMElement::class, $element);
 
         static::assertSame(
             pack('V', strlen('<item id="5">value</item>')) . '<item id="5">value</item>',

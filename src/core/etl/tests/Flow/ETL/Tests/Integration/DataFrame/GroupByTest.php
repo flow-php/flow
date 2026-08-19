@@ -195,9 +195,9 @@ final class GroupByTest extends FlowIntegrationTestCase
         static::assertEquals(
             rows(
                 row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
-                row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
+                row(str_entry('country', 'PL'), str_entry('gender', 'female'), float_entry('age_avg', 30.0)),
                 row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 42.5)),
-                row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
+                row(str_entry('country', 'US'), str_entry('gender', 'male'), float_entry('age_avg', 45.0)),
             ),
             $rows,
         );
@@ -233,10 +233,10 @@ final class GroupByTest extends FlowIntegrationTestCase
         static::assertEquals(
             rows(
                 row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
-                row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
-                row(str_entry('country', 'US'), str_entry('gender', 'female'), int_entry('age_avg', 40)),
-                row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
-                row(str_entry('country', 'US'), null_entry('gender'), int_entry('age_avg', 45)),
+                row(str_entry('country', 'PL'), str_entry('gender', 'female'), float_entry('age_avg', 30.0)),
+                row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 40.0)),
+                row(str_entry('country', 'US'), str_entry('gender', 'male'), float_entry('age_avg', 45.0)),
+                row(str_entry('country', 'US'), null_entry('gender'), float_entry('age_avg', 45.0)),
             ),
             $rows,
         );

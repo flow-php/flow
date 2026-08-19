@@ -48,7 +48,7 @@ final class AverageTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
         $aggregator->aggregate(row(int_entry('int', null)), flow_context());
 
-        static::assertSame(20, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(20.0, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
     public function test_aggregation_average_with_float_result(): void
@@ -72,14 +72,14 @@ final class AverageTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
         $aggregator->aggregate(row(int_entry('int', 40)), flow_context());
 
-        static::assertSame(25, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(25.0, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
-    public function test_aggregation_average_with_zero_result(): void
+    public function test_aggregation_average_of_nothing_is_null(): void
     {
         $aggregator = average(ref('int'));
 
-        static::assertSame(0, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertNull($aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
     public function test_window_function_average_on_partitioned_rows(): void

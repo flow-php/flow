@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type\Native\FloatType;
 
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\float_entry;
@@ -20,6 +21,8 @@ use function max;
 
 final class Max implements AggregatingFunction
 {
+    private bool $floatColumn = false;
+
     private float|DateTimeInterface|null $max;
 
     public function __construct(
@@ -30,9 +33,19 @@ final class Max implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
+        $entry = $row->get($this->ref);
+
+        if (!$this->floatColumn && $entry->definition()->type() instanceof FloatType) {
+            $this->floatColumn = true;
+        }
+
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->ref);
+            $value = $entry->value();
 
             if ($this->max === null) {
                 if (is_numeric($value)) {
@@ -67,6 +80,10 @@ final class Max implements AggregatingFunction
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_max');
+        }
+
+        if ($this->floatColumn) {
+            return float_entry($this->ref->name(), $this->max instanceof DateTimeInterface ? null : $this->max);
         }
 
         if ($this->max === null) {

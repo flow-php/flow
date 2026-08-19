@@ -14,15 +14,28 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\DestinationStream;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
-use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\TypeDetector;
 
 use function count;
-use function Flow\Types\DSL\type_equals;
-use function implode;
+use function get_debug_type;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
 use function sprintf;
+use function strlen;
+use function substr;
 
 final class FloeStreamWriter
 {
+    /**
+     * SCHEMA EVOLUTION: the session schema is fixed for the writer's life, so any batch that adds
+     * a column - even an optional one - or turns a not-null column nullable is rejected rather
+     * than evolving the schema. Prior art (BigQuery ALLOW_FIELD_ADDITION / ALLOW_FIELD_RELAXATION,
+     * Iceberg, Delta mergeSchema) allows both of those, and safe type widening, on append.
+     */
+    private const string BATCH_MISMATCH = 'Floe write session schema is fixed and this batch does not fit it: %s.';
+
     private Metadata $metadata;
 
     private bool $open = false;
@@ -110,10 +123,7 @@ final class FloeStreamWriter
         $this->sections = $footer->sections;
 
         if ($footer->schema !== [] && $this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
-            throw new IncompatibleSchemaException(
-                'Floe append schema does not match the existing file schema. '
-                . 'Align the pipeline with DataFrame::match($schema) before appending.',
-            );
+            throw new IncompatibleSchemaException('Floe append schema does not match the existing file schema.');
         }
 
         $this->lastSectionPartitionsId = $lastSection?->partitionsId;
@@ -156,23 +166,25 @@ final class FloeStreamWriter
     public function write(Rows $rows): void
     {
         $this->guardOpen();
-        $this->trackPartitions($rows);
 
         if ($rows->count() === 0) {
+            $this->trackPartitions($rows);
+
             return;
         }
 
         $this->openSession();
+        $typed = $this->hydrator->dehydrate($rows);
+        $this->assertBatchFitsSession($typed);
 
-        if ($this->options->validateData) {
-            $this->assertFitsSession($rows->schema());
-        }
+        // nothing may mutate writer state before the batch is accepted
+        $this->trackPartitions($rows);
 
         if (!$this->sectionOpen || $this->forcePartitionBreak) {
             $this->startSection();
         }
 
-        $this->emitBatch($this->hydrator->dehydrate($rows));
+        $this->emitBatch($typed);
     }
 
     public static function writerVersion(): string
@@ -195,45 +207,67 @@ final class FloeStreamWriter
     }
 
     /**
+     * @param list<\Flow\ETL\Row\TypedRowValues> $typed
+     *
      * @throws IncompatibleSchemaException
      */
-    private function assertFitsSession(Schema $batchSchema): void
+    private function assertBatchFitsSession(array $typed): void
     {
-        $session = $this->sessionSchema;
+        $definitions = $this->sessionSchema->definitions();
 
-        $violations = [];
+        foreach ($typed as $index => $rowValues) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($rowValues->values as $name => $value) {
+                $definition = $definitions[$name] ?? null;
 
-        foreach ($batchSchema->definitions() as $batchDefinition) {
-            $name = $batchDefinition->entry()->name();
-            $sessionDefinition = $session->findDefinition($batchDefinition->entry());
+                if ($definition === null) {
+                    throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
+                        'new column "%s"',
+                        $name,
+                    )));
+                }
 
-            if ($sessionDefinition === null) {
-                $violations[] = sprintf('new column "%s"', $name);
+                if (!$this->options->validateData) {
+                    continue;
+                }
 
-                continue;
-            }
+                if ($value === null) {
+                    if (!$definition->isNullable()) {
+                        throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
+                            'column "%s" (row %d): could not convert null to %s, column is not nullable',
+                            $name,
+                            $index,
+                            $definition->type()->toString(),
+                        )));
+                    }
 
-            if ($batchDefinition->type() instanceof NullType) {
-                continue;
-            }
+                    continue;
+                }
 
-            if (
-                !$sessionDefinition->isNullable() && $batchDefinition->isNullable()
-                || !type_equals($sessionDefinition->type(), $batchDefinition->type())
-            ) {
-                $violations[] = sprintf(
-                    'column "%s" (%s) is not compatible with the session type (%s)',
-                    $name,
-                    $batchDefinition->type()->toString(),
-                    $sessionDefinition->type()->toString(),
-                );
+                if (!$definition->type()->isValid($value)) {
+                    throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
+                        'column "%s" (row %d): could not convert %s (%s) to %s',
+                        $name,
+                        $index,
+                        self::describeValue($value),
+                        (new TypeDetector())
+                            ->detectType($value)
+                            ->toString(),
+                        $definition->type()->toString(),
+                    )));
+                }
             }
         }
+    }
 
-        if ($violations !== []) {
-            throw new IncompatibleSchemaException(sprintf('Floe write session schema is fixed and this batch does not fit it: %s. '
-            . 'Align the pipeline with DataFrame::match($schema) before writing.', implode('; ', $violations)));
-        }
+    private static function describeValue(mixed $value): string
+    {
+        return match (true) {
+            is_string($value) => "'" . (strlen($value) > 32 ? substr($value, 0, 32) . '...' : $value) . "'",
+            is_bool($value) => $value ? 'true' : 'false',
+            is_int($value), is_float($value) => (string) $value,
+            default => get_debug_type($value),
+        };
     }
 
     /**

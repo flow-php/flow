@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
+use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeStreamWriter;
@@ -15,6 +17,7 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -195,14 +198,16 @@ final class FloeStreamWriterTest extends TestCase
         $writer->write(rows(row(str_entry('id', 'x'))));
     }
 
-    public function test_new_column_message_hints_at_data_frame_match(): void
+    public function test_new_column_message_names_the_session_schema_and_the_column(): void
     {
         $writer = new FloeStreamWriter(schema(int_schema('id')));
         $writer->create(memory_filesystem()->writeTo(path('memory://hint.floe')));
         $writer->write(rows(row(int_entry('id', 1))));
 
         $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessage('DataFrame::match');
+        $this->expectExceptionMessage(
+            'Floe write session schema is fixed and this batch does not fit it: new column "email".',
+        );
 
         $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
     }
@@ -328,5 +333,62 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
 
         $writer->write(rows(row(int_entry('id', 2), str_entry('opt', null))));
+    }
+
+    /**
+     * SCHEMA EVOLUTION: pins that an undeclared column is ALWAYS rejected. If adding an optional
+     * column becomes legal, this test states the rule that has to change - a mandatory column
+     * must still be rejected.
+     */
+    public function test_column_absent_from_the_session_schema_throws_even_with_validation_off(): void
+    {
+        $writer = new FloeStreamWriter(schema(int_schema('a')), new Options(validateData: false));
+        $writer->create(memory_filesystem()->writeTo(path('memory://off-new-column.floe')));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('new column "b"');
+
+        $writer->write(rows(row(int_entry('a', 1), int_entry('b', 2))));
+    }
+
+    public function test_rejected_batch_registers_no_partition_combination(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://rejected-partitions.floe');
+
+        $writer = new FloeStreamWriter(schema(int_schema('id')));
+        $writer->create($filesystem->writeTo($path));
+        $writer->write(rows(row(int_entry('id', 1))));
+
+        try {
+            $writer->write(Rows::partitioned([row(str_entry('id', 'AB-1'))], [new Partition('g', 'x')]));
+        } catch (IncompatibleSchemaException) {
+        }
+
+        $writer->close();
+
+        static::assertSame([[]], FloeStreamReaderContext::footer($filesystem, $path)->partitions);
+    }
+
+    public function test_long_string_value_is_truncated_in_the_error_message(): void
+    {
+        $writer = new FloeStreamWriter(schema(int_schema('id')));
+        $writer->create(memory_filesystem()->writeTo(path('memory://truncated.floe')));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage("could not convert '" . str_repeat('x', 32) . "...' (string) to integer");
+
+        $writer->write(rows(row(str_entry('id', str_repeat('x', 40)))));
+    }
+
+    public function test_boolean_value_is_rendered_unquoted_in_the_error_message(): void
+    {
+        $writer = new FloeStreamWriter(schema(int_schema('id')));
+        $writer->create(memory_filesystem()->writeTo(path('memory://bool-message.floe')));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('could not convert true (boolean) to integer');
+
+        $writer->write(rows(row(bool_entry('id', true))));
     }
 }

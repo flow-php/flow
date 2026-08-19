@@ -19,8 +19,6 @@ use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
 
 use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\integer_entry;
-use function is_int;
 use function is_numeric;
 
 final class Average implements AggregatingFunction, FrameAccumulating, WindowFunction
@@ -43,6 +41,10 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
         try {
             /** @var mixed $value */
             $value = $row->valueOf($this->ref);
@@ -94,17 +96,14 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
             $this->ref->as($this->ref->to() . '_avg');
         }
 
-        if (0 !== $this->count) {
-            $result = (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
-        } else {
-            $result = 0;
+        if (0 === $this->count) {
+            return float_entry($this->ref->name(), null);
         }
 
-        if (is_int($result)) {
-            return integer_entry($this->ref->name(), $result);
-        }
-
-        return float_entry($this->ref->name(), $result);
+        return float_entry(
+            $this->ref->name(),
+            (float) (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding),
+        );
     }
 
     public function toString(): string

@@ -142,7 +142,7 @@ final class PhpFloeEncoder implements Encoder
         $encoders = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
-            $encoders[$name] = $valueEncoder->encoderFor($definition->type());
+            $encoders[$name] = $valueEncoder->encoderFor($definition);
         }
 
         return $encoders;

@@ -15,6 +15,7 @@ use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\SumAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
+use Flow\Types\Type\Native\FloatType;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
@@ -22,6 +23,10 @@ use function is_numeric;
 
 final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
+    private bool $floatColumn = false;
+
+    private int $aggregated = 0;
+
     private float|int $sum;
 
     private ?Window $window;
@@ -36,11 +41,23 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
+        $entry = $row->get($this->ref);
+
+        if (!$this->floatColumn && $entry->definition()->type() instanceof FloatType) {
+            $this->floatColumn = true;
+        }
+
         try {
-            $value = $row->valueOf($this->ref);
+            // @mago-ignore analysis:mixed-assignment
+            $value = $entry->value();
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->sum = $this->add($this->sum, $value, $this->isExact($row, $context), $context);
+                $this->aggregated++;
             }
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
@@ -86,6 +103,14 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_sum');
+        }
+
+        if ($this->floatColumn) {
+            return float_entry($this->ref->name(), (float) $this->sum);
+        }
+
+        if ($this->aggregated === 0) {
+            return int_entry($this->ref->name(), null);
         }
 
         if (!is_float($this->sum)) {

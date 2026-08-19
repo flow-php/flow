@@ -33,6 +33,10 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if ($this->ref !== null && !$row->has($this->ref)) {
+            return;
+        }
+
         try {
             if ($this->ref) {
                 $row->valueOf($this->ref);

@@ -14,11 +14,13 @@ use function pack;
 use function sprintf;
 use function strlen;
 
+/**
+ * @implements ValueEncoder<\DateTimeInterface>
+ */
 final class DateTimeEncoder implements ValueEncoder
 {
     public function encode(mixed $value): string
     {
-        /** @var \DateTimeInterface $value */
         $head = match ($value::class) {
             DateTimeImmutable::class => chr(Format::DATETIME_IMMUTABLE),
             DateTime::class => chr(Format::DATETIME_MUTABLE),

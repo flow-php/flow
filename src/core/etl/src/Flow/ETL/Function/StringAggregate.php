@@ -33,6 +33,10 @@ final class StringAggregate implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref->to())) {
+            return;
+        }
+
         $stringValue = $row->valueOf($this->ref->to());
 
         if (is_string($stringValue)) {

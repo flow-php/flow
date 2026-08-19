@@ -7,9 +7,27 @@ namespace Flow\Floe;
 use Dom\HTMLDocument;
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\DateDefinition;
+use Flow\ETL\Schema\Definition\DateTimeDefinition;
+use Flow\ETL\Schema\Definition\EnumDefinition;
+use Flow\ETL\Schema\Definition\FloatDefinition;
+use Flow\ETL\Schema\Definition\HTMLDefinition;
+use Flow\ETL\Schema\Definition\HTMLElementDefinition;
+use Flow\ETL\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Schema\Definition\JsonDefinition;
+use Flow\ETL\Schema\Definition\ListDefinition;
+use Flow\ETL\Schema\Definition\MapDefinition;
+use Flow\ETL\Schema\Definition\NullDefinition;
+use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Schema\Definition\StructureDefinition;
+use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\UuidDefinition;
+use Flow\ETL\Schema\Definition\XMLDefinition;
+use Flow\ETL\Schema\Definition\XMLElementDefinition;
 use Flow\Floe\Decoding\BooleanDecoder;
 use Flow\Floe\Decoding\DateTimeDecoder;
-use Flow\Floe\Decoding\DynamicDecoder;
 use Flow\Floe\Decoding\EnumDecoder;
 use Flow\Floe\Decoding\Float64Decoder;
 use Flow\Floe\Decoding\HtmlDocumentDecoder;
@@ -38,28 +56,23 @@ use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\Logical\LiteralType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\NonEmptyStringType;
 use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\PositiveIntegerType;
-use Flow\Types\Type\Logical\ScalarType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
-use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
-use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
-use Flow\Types\Type\Native\UnionType;
 
 use function class_exists;
 use function sprintf;
@@ -85,11 +98,46 @@ final class ValueDecoder
     }
 
     /**
+     * @throws FloeException
+     */
+    public function decoderFor(Definition $definition): Decoding\ValueDecoder
+    {
+        return match ($definition::class) {
+            IntegerDefinition::class,
+            FloatDefinition::class,
+            BooleanDefinition::class,
+            StringDefinition::class,
+            DateTimeDefinition::class,
+            DateDefinition::class,
+            TimeDefinition::class,
+            UuidDefinition::class,
+            JsonDefinition::class,
+            EnumDefinition::class,
+            XMLDefinition::class,
+            XMLElementDefinition::class,
+            HTMLDefinition::class,
+            HTMLElementDefinition::class,
+            ListDefinition::class,
+            MapDefinition::class,
+            StructureDefinition::class,
+            NullDefinition::class,
+                => $this->elementDecoderFor($definition->type()),
+            default => throw new FloeException(sprintf(
+                'Floe does not support columns of type "%s"',
+                $definition->type()->toString(),
+            )),
+        };
+    }
+
+    /**
+     * Types reachable only inside containers - list elements, map keys and values,
+     * structure elements - where no Definition exists.
+     *
      * @param Type<mixed> $type
      *
      * @throws FloeException
      */
-    public function decoderFor(Type $type): Decoding\ValueDecoder
+    private function elementDecoderFor(Type $type): Decoding\ValueDecoder
     {
         return match ($type::class) {
             IntegerType::class, PositiveIntegerType::class => new Int64Decoder(),
@@ -115,12 +163,6 @@ final class ValueDecoder
             StructureType::class => $this->structureDecoder($type),
             OptionalType::class => $this->optionalDecoder($type),
             NullType::class => new NullDecoder(),
-            MixedType::class,
-            UnionType::class,
-            ScalarType::class,
-            LiteralType::class,
-            ArrayType::class,
-                => $this->dynamicDecoder(),
             default => throw new FloeException(sprintf('Floe does not support values of type "%s"', $type->toString())),
         };
     }
@@ -176,11 +218,6 @@ final class ValueDecoder
         return $element;
     }
 
-    private function dynamicDecoder(): DynamicDecoder
-    {
-        return new DynamicDecoder($this->dateTimeDecoder, $this->uuidDecoder, $this->jsonDecoder);
-    }
-
     /**
      * @param Type<mixed> $type
      */
@@ -197,7 +234,7 @@ final class ValueDecoder
             return new PackedListDecoder('e');
         }
 
-        return new ListDecoder($this->decoderFor($element));
+        return new ListDecoder($this->elementDecoderFor($element));
     }
 
     /**
@@ -211,10 +248,13 @@ final class ValueDecoder
         $keyDecoder = match (true) {
             $key instanceof IntegerType => new Int64Decoder(),
             $key instanceof StringType => new StringDecoder(),
-            default => $this->dynamicDecoder(),
+            default => throw new FloeException(sprintf(
+                'Floe does not support map keys of type "%s"',
+                $key->toString(),
+            )),
         };
 
-        return new MapDecoder($keyDecoder, $this->decoderFor($type->value()));
+        return new MapDecoder($keyDecoder, $this->elementDecoderFor($type->value()));
     }
 
     /**
@@ -223,7 +263,7 @@ final class ValueDecoder
     private function optionalDecoder(Type $type): Decoding\ValueDecoder
     {
         /** @var OptionalType<mixed> $type */
-        return new OptionalDecoder($this->decoderFor($type->base()));
+        return new OptionalDecoder($this->elementDecoderFor($type->base()));
     }
 
     /**
@@ -232,16 +272,20 @@ final class ValueDecoder
     private function structureDecoder(Type $type): Decoding\ValueDecoder
     {
         /** @var StructureType<array<array-key, mixed>> $type */
+        if ($type->allowsExtra()) {
+            throw new FloeException('Floe does not support structures that allow extra values');
+        }
+
         $elements = [];
 
         foreach ($type->elements() as $name => $elementType) {
-            $elements[$name] = $this->decoderFor($elementType);
+            $elements[$name] = $this->elementDecoderFor($elementType);
         }
 
         foreach ($type->optionalElements() as $name => $elementType) {
-            $elements[$name] = $this->decoderFor($elementType);
+            $elements[$name] = $this->elementDecoderFor($elementType);
         }
 
-        return new StructureDecoder($elements, $type->allowsExtra(), $this->dynamicDecoder());
+        return new StructureDecoder($elements);
     }
 }

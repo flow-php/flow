@@ -197,6 +197,68 @@ never changes the produced bytes - only the memory bound. String payloads round-
 `unserialize()` verifies the decoded row count against the footer and rejects torn payloads. Numbers and
 guidance live in the [caching documentation](/documentation/components/core/caching.md).
 
+## Validation
+
+Floe asserts, it never casts. A value that does not match its column type is rejected - it is never
+converted to fit.
+
+Two checks run when a batch is written:
+
+- **Column set** - a row carrying a column the file's schema does not declare is rejected. Always on.
+- **Per value** - every value must satisfy its column type. Gated by `validateData`, on by default.
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\Floe\DSL\to_floe;
+
+data_frame()
+    ->read(from_array([['id' => 1], ['id' => 'AB-1']]))
+    ->write(to_floe(__DIR__ . '/orders.floe'))
+    ->run();
+```
+
+The first batch fixes the file's schema to `integer`, so the second one throws:
+
+```
+Floe write session schema is fixed and this batch does not fit it: column "id" (row 0):
+could not convert 'AB-1' (string) to integer.
+```
+
+Both checks throw `IncompatibleSchemaException` before any bytes reach the destination, so a rejected
+batch leaves the file readable. Other messages take the same shape:
+
+```
+column "amount" (row 0): could not convert null to string, column is not nullable
+new column "email"
+```
+
+`validate_data: false` skips the per-value check only. The column-set check still runs, so silent
+column loss cannot be unlocked. This mirrors parquet-java's `ParquetWriter::withValidation()`.
+
+Two behaviours differ from other columnar formats on purpose:
+
+- **Absent is not null.** A row that omits a column writes an absent flag and reads back as null;
+  a row that carries an explicit `null` in a non-nullable column is rejected. Parquet turns a missing
+  optional field into a null and rejects a missing required one; Arrow cannot omit a column at all.
+- **An int is not a float.** An integer value in a `float` column is rejected. pyarrow, parquet-java
+  and Avro all widen it silently.
+
+## Unsupported column types
+
+Floe stores one type per column, so a column whose type is only known per value cannot be written.
+These throw `FloeException` when the write session opens:
+
+```
+Floe does not support values of type "mixed"
+Floe does not support map keys of type "uuid"
+Floe does not support structures that allow extra values
+```
+
+That covers `mixed`, union columns built with `union_schema()`, and `type_structure(..., allow_extra: true)`.
+Use a declared element type, or `json_entry()` when the shape is genuinely dynamic.
+
 ## On-Disk Layout
 
 A `.floe` file is a fixed 6-byte header, a stream of length-prefixed frames, and a JSON footer that a
@@ -225,7 +287,7 @@ footer** - there is no inline schema frame. All multi-byte integers are **little
       ┌────┬────┬────┬────┬────────┬────────┐
       │ 'F'│ 'L'│ 'O'│ 'E'│ version│ flags  │
       └────┴────┴────┴────┴────────┴────────┘
-        magic "FLOE"        0x01     codec id
+        magic "FLOE"        0x02     codec id
                                      (0x00 = no compression)
 ```
 
@@ -258,11 +320,9 @@ type throws `IncompatibleSchemaException` - schema evolution lives only in `merg
     the encoded value.
 
   The two metadata flags (`0x02`, `0x04`) appear only when a row's per-value metadata differs from the
-  column's schema metadata; otherwise every value uses `0x00`/`0x01`. Only dynamically typed values
-  (mixed/union columns, dynamic map keys) carry a one-byte type tag (`NULL`, `INTEGER`, `FLOAT`,
-  `BOOLEAN`, `STRING`, `ARRAY`, `DATETIME`, `UUID`, `JSON`). A row whose columns exactly match the
-  section, with no divergent metadata, produces the same bytes as a plain positional encode. One frame
-  per row.
+  column's schema metadata; otherwise every value uses `0x00`/`0x01`. Every value is encoded positionally
+  against its column type, so no value carries a type tag. A row whose columns exactly match the section,
+  with no divergent metadata, produces the same bytes as a plain positional encode. One frame per row.
 - **PARTITIONS (`0x03`)** - the partition key/value pairs for the section that follows: a 4-byte count
   followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
   whose combination differs from the previous one; the reader starts at the empty combination, so an
@@ -277,7 +337,7 @@ scanning rows**:
 
 ```json
 {
-  "version":    1,
+  "version":    2,
   "writer":     "1.x-dev",
   "schema":     { /* the file's single schema */ },
   "sections":   [ { "offset": 6, "partitionsId": 0, "rowCount": 2 } ],

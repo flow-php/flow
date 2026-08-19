@@ -127,8 +127,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
         static::assertSame(10.5, $bySeller['a']);
         static::assertSame(2.5, $bySeller['b']);
-        // Sum narrows whole-number float sums to int
-        static::assertSame(7, $bySeller['__null__']);
+        // the aggregate's type follows the column, so a float column stays float
+        static::assertSame(7.0, $bySeller['__null__']);
     }
 
     public function test_chained_filesystem_group_by_stages_do_not_corrupt_each_other(): void
@@ -258,7 +258,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
             $byKey[$row['k']] = $row['v_avg'];
         }
 
-        static::assertSame(['a' => 3, 'b' => 20, 'c' => 7], $byKey);
+        static::assertSame(['a' => 3.0, 'b' => 20.0, 'c' => 7.0], $byKey);
     }
 
     public function test_partition_count_does_not_affect_a_realistic_dataset(): void

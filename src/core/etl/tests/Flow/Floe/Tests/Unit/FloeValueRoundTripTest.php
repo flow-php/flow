@@ -11,9 +11,8 @@ use DateTimeZone;
 use Flow\ETL\Row;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
-use Flow\Types\Value\Json;
-use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
@@ -42,7 +41,6 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -165,7 +163,6 @@ final class FloeValueRoundTripTest extends TestCase
                 list_entry('string', ['a', 'b', ''], type_list(type_string())),
                 list_entry('bool', [true, false], type_list(type_boolean())),
                 list_entry('nullable_int', [1, null, 3], type_list(type_optional(type_integer()))),
-                list_entry('mixed', [1, 'two', 3.5, null, true, ['nested' => 'array']], type_list(type_mixed())),
                 list_entry('list_of_lists', [[1, 2], [3]], type_list(type_list(type_integer()))),
             )),
             FloeStreamReaderContext::roundTrip($rows),
@@ -178,29 +175,20 @@ final class FloeValueRoundTripTest extends TestCase
             $rows = rows(row(
                 map_entry('string_keys', ['a' => 1, 'b' => 2], type_map(type_string(), type_integer())),
                 map_entry('int_keys', [10 => 'x', 20 => 'y'], type_map(type_integer(), type_string())),
-                map_entry(
-                    'mixed_values',
-                    ['a' => 1, 'b' => [1, 2, ['deep' => true]]],
-                    type_map(type_string(), type_mixed()),
-                ),
                 map_entry('empty', [], type_map(type_string(), type_integer())),
             )),
             FloeStreamReaderContext::roundTrip($rows),
         );
     }
 
-    public function test_mixed_values_with_uuid_json_and_datetime(): void
+    public function test_uuid_entries_round_trip_under_format_v2(): void
     {
         static::assertEquals(
-            $rows = rows(row(list_entry(
-                'mixed_objects',
-                [
-                    new Uuid('0196aecb-b568-7e57-a381-8ec8d3e4a531'),
-                    new Json('[1,2]'),
-                    new DateTimeImmutable('2025-01-01 00:00:00 UTC'),
-                ],
-                type_list(type_mixed()),
-            ))),
+            $rows = rows(row(
+                uuid_entry('uuid', '0196aecb-b568-7e57-a381-8ec8d3e4a531'),
+                uuid_entry('uuid_max', 'ffffffff-ffff-ffff-ffff-ffffffffffff'),
+                str_entry('after', 'not desynchronised'),
+            )),
             FloeStreamReaderContext::roundTrip($rows),
         );
     }
@@ -253,11 +241,6 @@ final class FloeValueRoundTripTest extends TestCase
                         'nested' => type_structure(['count' => type_integer(), 'tags' => type_list(type_string())]),
                     ]),
                 ),
-                structure_entry(
-                    'with_extra',
-                    ['id' => 1, 'custom' => 'x', 'more' => [1, 2]],
-                    type_structure(['id' => type_integer()], [], true),
-                ),
                 structure_entry('with_timezone', ['tz' => new DateTimeZone('Europe/Warsaw')], type_structure([
                     'tz' => type_time_zone(),
                 ])),
@@ -265,6 +248,18 @@ final class FloeValueRoundTripTest extends TestCase
             )),
             FloeStreamReaderContext::roundTrip($rows),
         );
+    }
+
+    public function test_structure_allowing_extra_values_is_rejected(): void
+    {
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('does not support structures that allow extra values');
+
+        FloeStreamReaderContext::roundTrip(rows(row(structure_entry(
+            'with_extra',
+            ['id' => 1, 'custom' => 'x'],
+            type_structure(['id' => type_integer()], [], true),
+        ))));
     }
 
     public function test_uuid_entries(): void

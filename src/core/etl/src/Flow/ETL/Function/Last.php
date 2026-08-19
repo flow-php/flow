@@ -28,6 +28,10 @@ final class Last implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
         try {
             $this->last = $row->get($this->ref);
         } catch (InvalidArgumentException $e) {

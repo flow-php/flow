@@ -28,6 +28,10 @@ final class Collect implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
         try {
             /** @var array<string, mixed> $values */
             $values = [];

@@ -25,7 +25,7 @@ final class Format
 {
     public const string MAGIC = 'FLOE';
 
-    public const int VERSION = 0x01;
+    public const int VERSION = 0x02;
 
     public const int HEADER_LENGTH = 6;
 
@@ -62,28 +62,6 @@ final class Format
     public const int DATETIME_IMMUTABLE = 0x00;
 
     public const int DATETIME_MUTABLE = 0x01;
-
-    public const int TAG_NULL = 0x00;
-
-    public const int TAG_INTEGER = 0x01;
-
-    public const int TAG_FLOAT = 0x02;
-
-    public const int TAG_BOOLEAN = 0x03;
-
-    public const int TAG_STRING = 0x04;
-
-    public const int TAG_ARRAY = 0x05;
-
-    public const int TAG_DATETIME = 0x06;
-
-    public const int TAG_UUID = 0x07;
-
-    public const int TAG_JSON = 0x08;
-
-    public const int KEY_INTEGER = 0x00;
-
-    public const int KEY_STRING = 0x01;
 
     public static function frame(int $type, string $body): string
     {
@@ -185,10 +163,7 @@ final class Format
     public static function validateCodecId(int $codecId): void
     {
         if ($codecId !== 0x00) {
-            throw new FloeException(sprintf(
-                'Floe format v1 supports only the no-op codec, got codec 0x%02X',
-                $codecId,
-            ));
+            throw new FloeException(sprintf('Floe supports only the no-op codec, got codec 0x%02X', $codecId));
         }
     }
 }

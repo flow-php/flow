@@ -13,7 +13,6 @@ use crate::exception::ext_exception;
 pub enum MapKey {
     Integer,
     String,
-    Dynamic,
 }
 
 /// Recursive value decoder mirroring `ValueDecoder::decoderFor` dispatch.
@@ -23,7 +22,6 @@ pub enum Decoder {
     Boolean,
     String,
     Null,
-    Dynamic,
     DateTime,
     Interval,
     Uuid,
@@ -36,7 +34,7 @@ pub enum Decoder {
     HtmlElement,
     List(Box<Decoder>),
     Map(MapKey, Box<Decoder>),
-    Structure(Vec<(Vec<u8>, Decoder)>, bool),
+    Structure(Vec<(Vec<u8>, Decoder)>),
     Optional(Box<Decoder>),
 }
 
@@ -173,7 +171,6 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
         "boolean" => Decoder::Boolean,
         "string" | "non_empty_string" | "numeric-string" | "class_string" => Decoder::String,
         "null" => Decoder::Null,
-        "mixed" | "union" | "scalar" | "literal" | "array" => Decoder::Dynamic,
         "datetime" | "date" => Decoder::DateTime,
         "time" => Decoder::Interval,
         "uuid" => Decoder::Uuid,
@@ -200,7 +197,11 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
             {
                 "integer" => MapKey::Integer,
                 "string" => MapKey::String,
-                _ => MapKey::Dynamic,
+                other => {
+                    return Err(ext_exception(format!(
+                        "flow_php does not support map keys of type \"{other}\""
+                    )));
+                }
             };
 
             Decoder::Map(
@@ -224,7 +225,13 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
                 elements.push((name.clone().into_bytes(), build_decoder(element)?));
             }
 
-            Decoder::Structure(elements, type_json.allow_extra)
+            if type_json.allow_extra {
+                return Err(ext_exception(
+                    "flow_php does not support structures that allow extra values",
+                ));
+            }
+
+            Decoder::Structure(elements)
         }
         "optional" => Decoder::Optional(Box::new(build_decoder(
             type_json.base.as_ref().ok_or_else(|| missing("base"))?,

@@ -11,7 +11,7 @@ use Flow\ETL\Rows;
 use Flow\Floe\RustFloeEncoderNative;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, schema_from_json};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float, type_mixed};
+use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float};
 
 $build = static function (int $i): Flow\ETL\Row {
     return row(
@@ -22,7 +22,6 @@ $build = static function (int $i): Flow\ETL\Row {
         datetime_entry('created_at', new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw'))),
         time_entry('duration', new DateInterval('PT1H2M3S')),
         uuid_entry('uuid', '01234567-89ab-4def-8123-456789abcdef'),
-        list_entry('mixed', [$i, 'x', null, ['k' => 1.5]], type_list(type_mixed())),
         map_entry('metrics', ['cpu' => 0.5, 'mem' => 0.25], type_map(type_string(), type_float())),
         structure_entry('nested', ['a' => $i, 'tags' => ['x']], type_structure(['a' => type_integer(), 'tags' => type_list(type_string())])),
         xml_entry('doc', '<root><item>' . $i . '</item></root>'),

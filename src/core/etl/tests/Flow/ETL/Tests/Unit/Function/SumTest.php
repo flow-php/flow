@@ -94,14 +94,14 @@ final class SumTest extends FlowTestCase
         static::assertSame(0.1 + 0.2, $sum->apply(WindowContextMother::forRow($row1, $rows)));
     }
 
-    public function test_aggregation_sum_of_floats_returns_int_when_sum_is_whole(): void
+    public function test_aggregation_sum_of_floats_stays_float_when_sum_is_whole(): void
     {
         $aggregator = sum(ref('value'));
 
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
 
-        static::assertSame(5, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(5.0, $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
     public function test_exact_aggregation_sum_of_decimal_fractions(): void

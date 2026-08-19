@@ -38,11 +38,8 @@ final class FloeSerializer implements Serializer
     public function serialize(Rows $rows, DestinationStream $destination): void
     {
         try {
-            $writer = new FloeStreamWriter(
-                $rows->schema(),
-                new Options(validateData: false),
-                hydrator: $this->hydrator,
-            );
+            // validation stays on until an upstream mechanism guarantees Rows match their schema
+            $writer = new FloeStreamWriter($rows->schema(), new Options(validateData: true), hydrator: $this->hydrator);
             $writer->create($destination);
             $writer->write($rows);
             $writer->close();

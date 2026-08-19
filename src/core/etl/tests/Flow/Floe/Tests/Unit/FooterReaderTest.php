@@ -14,6 +14,7 @@ use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Flow\Floe\Tests\Double\UnsizedSourceStream;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -69,7 +70,10 @@ final class FooterReaderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('written with codec 0x05, expected 0x00');
 
-        (new FooterReader())->read(new MemorySourceStream("FLOE\x01\x05" . str_repeat("\0", 10)), new NoopCodec());
+        (new FooterReader())->read(
+            new MemorySourceStream('FLOE' . chr(Format::VERSION) . "\x05" . str_repeat("\0", 10)),
+            new NoopCodec(),
+        );
     }
 
     public function test_footer_that_does_not_fit_throws(): void

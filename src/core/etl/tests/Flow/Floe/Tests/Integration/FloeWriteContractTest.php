@@ -1,0 +1,168 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Floe\Tests\Integration;
+
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\FloeEngine;
+use Flow\Floe\FloeWriter;
+use Flow\Floe\NativeFloeEncoder;
+use Flow\Floe\Options;
+use Flow\Floe\Tests\Context\FloeStreamReaderContext;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Throwable;
+
+use function array_key_exists;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
+
+final class FloeWriteContractTest extends FlowIntegrationTestCase
+{
+    public static function engines(): array
+    {
+        return ['php' => [FloeEngine::php], 'native' => [FloeEngine::native]];
+    }
+
+    public static function rejected_values(): array
+    {
+        return [
+            'string into int' => [
+                schema(int_schema('id')),
+                rows(row(str_entry('id', 'AB-1'))),
+                "could not convert 'AB-1' (string) to integer",
+            ],
+            'float into int' => [
+                schema(int_schema('id')),
+                rows(row(float_entry('id', 1.5))),
+                'could not convert 1.5 (float) to integer',
+            ],
+            'int into string' => [
+                schema(str_schema('name')),
+                rows(row(int_entry('name', 1000))),
+                'could not convert 1000 (integer) to string',
+            ],
+            'null into non nullable' => [
+                schema(str_schema('name')),
+                rows(row(str_entry('name', null))),
+                'could not convert null to string, column is not nullable',
+            ],
+            'undeclared column' => [
+                schema(int_schema('id')),
+                rows(row(int_entry('id', 1), int_entry('extra', 2))),
+                'new column "extra"',
+            ],
+        ];
+    }
+
+    #[DataProvider('rejected_values')]
+    public function test_both_engines_reject_the_same_value_with_the_same_message(
+        Schema $schema,
+        Rows $batch,
+        string $expectedMessage,
+    ): void {
+        $messages = [];
+
+        foreach ([FloeEngine::php, FloeEngine::native] as $engine) {
+            if ($engine === FloeEngine::native && !NativeFloeEncoder::isSupported()) {
+                continue;
+            }
+
+            $name = $engine->value;
+            $path = $this->cacheDir->suffix('contract-' . $name . '-' . md5($expectedMessage) . '.floe');
+            $writer = new FloeWriter($this->fs(), $schema, new Options(validateData: true), null, $engine);
+            $writer->create($path);
+
+            try {
+                $writer->write($batch);
+                static::fail($name . ' engine accepted a value it must reject');
+            } catch (Throwable $e) {
+                $messages[$name] = $e::class . ': ' . $e->getMessage();
+            }
+
+            $writer->close();
+
+            static::assertSame(
+                [],
+                FloeStreamReaderContext::readAll($this->fs(), $path)->toArray(),
+                $name . ' engine emitted bytes for a rejected batch',
+            );
+        }
+
+        foreach ($messages as $name => $message) {
+            static::assertStringContainsString($expectedMessage, $message, $name . ' engine message');
+            static::assertStringContainsString(
+                IncompatibleSchemaException::class,
+                $message,
+                $name . ' exception class',
+            );
+        }
+
+        if (array_key_exists('php', $messages) && array_key_exists('native', $messages)) {
+            static::assertSame($messages['php'], $messages['native'], 'engines disagree on the rejection');
+        }
+    }
+
+    #[DataProvider('engines')]
+    public function test_a_rejected_batch_leaves_previously_written_rows_readable(FloeEngine $engine): void
+    {
+        if ($engine === FloeEngine::native && !NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension is not loaded.');
+        }
+
+        $path = $this->cacheDir->suffix('contract-survivor-' . $engine->value . '.floe');
+        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options(validateData: true), null, $engine);
+        $writer->create($path);
+        $writer->write(rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+
+        try {
+            $writer->write(rows(row(str_entry('id', 'AB-1'))));
+            static::fail('rejected batch was accepted');
+        } catch (IncompatibleSchemaException) {
+        }
+
+        $writer->close();
+
+        static::assertSame([['id' => 1], ['id' => 2]], FloeStreamReaderContext::readAll($this->fs(), $path)->toArray());
+    }
+
+    #[DataProvider('engines')]
+    /**
+     * SCHEMA EVOLUTION: the reverse - a first batch WITHOUT the column and a later one WITH it -
+     * is rejected as a new column. Once append supports adding an optional column, that case
+     * belongs here too.
+     */
+    public function test_absent_column_is_not_null_and_still_writes(FloeEngine $engine): void
+    {
+        if ($engine === FloeEngine::native && !NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension is not loaded.');
+        }
+
+        $path = $this->cacheDir->suffix('contract-absent-' . $engine->value . '.floe');
+        $writer = new FloeWriter(
+            $this->fs(),
+            schema(int_schema('id'), str_schema('name')),
+            new Options(validateData: true),
+            null,
+            $engine,
+        );
+        $writer->create($path);
+        $writer->write(rows(row(int_entry('id', 1), str_entry('name', 'a'))));
+        $writer->write(rows(row(int_entry('id', 2))));
+        $writer->close();
+
+        static::assertSame(
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
+            FloeStreamReaderContext::readAll($this->fs(), $path)->toArray(),
+        );
+    }
+}

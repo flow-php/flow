@@ -43,6 +43,12 @@ final class FilesystemBuckets implements BucketsStorage
         $this->reader = new FloeReader($this->filesystem);
     }
 
+    /**
+     * SCHEMA EVOLUTION: the bucket's schema is fixed by the first batch, so a later batch carrying
+     * a column the first one lacked is rejected. Reachable from group-by and join whenever rows
+     * with different column sets hash into one bucket. Proper evolution - adding an optional
+     * column, relaxing not-null - would remove this limitation.
+     */
     public function append(string $bucketId, Rows $rows): void
     {
         if (!isset($this->writers[$bucketId])) {
@@ -89,8 +95,8 @@ final class FilesystemBuckets implements BucketsStorage
     {
         $this->closeWriter($bucketId);
 
-        // the session schema is derived from these exact rows, so validation could only compare them to themselves
-        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: false));
+        // validation stays on until an upstream mechanism guarantees Rows match their schema
+        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: true));
         $writer->create($this->keyPath($bucketId));
         $writer->write($rows);
         $writer->close();

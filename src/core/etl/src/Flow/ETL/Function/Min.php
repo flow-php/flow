@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type\Native\FloatType;
 
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\float_entry;
@@ -20,6 +21,8 @@ use function min;
 
 final class Min implements AggregatingFunction
 {
+    private bool $floatColumn = false;
+
     private float|DateTimeInterface|null $min;
 
     public function __construct(
@@ -30,9 +33,19 @@ final class Min implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        if (!$row->has($this->ref)) {
+            return;
+        }
+
+        $entry = $row->get($this->ref);
+
+        if (!$this->floatColumn && $entry->definition()->type() instanceof FloatType) {
+            $this->floatColumn = true;
+        }
+
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->ref);
+            $value = $entry->value();
 
             if ($this->min === null) {
                 if (is_numeric($value)) {
@@ -67,6 +80,10 @@ final class Min implements AggregatingFunction
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_min');
+        }
+
+        if ($this->floatColumn) {
+            return float_entry($this->ref->name(), $this->min instanceof DateTimeInterface ? null : $this->min);
         }
 
         if ($this->min === null) {

@@ -16,6 +16,7 @@ use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
+use Flow\ETL\Transformer\PruneEntriesTransformer;
 use Flow\ETL\Transformer\RenameEachEntryTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
@@ -44,6 +45,7 @@ final class LimitOptimization implements Optimization
         CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,
         SelectEntriesTransformer::class,
+        PruneEntriesTransformer::class,
         DropEntriesTransformer::class,
         RenameEachEntryTransformer::class,
         RenameEntryTransformer::class,
