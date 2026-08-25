@@ -8,7 +8,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
-use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Serializer\Serializer;
 
@@ -24,10 +24,7 @@ final class CacheConfigBuilder
 
     private ?Path $cacheDir = null;
 
-    private string $filesystemMount = 'file';
-
     public function build(
-        FilesystemTable $fstab,
         Serializer $serializer,
         ?TelemetryConfig $telemetryConfig = null,
         string $dataframeName = 'flow_dataframe',
@@ -40,7 +37,7 @@ final class CacheConfigBuilder
         }
 
         $cache = $this->cache ?? new FilesystemCache(
-            $fstab->for($this->filesystemMount),
+            new NativeLocalFilesystem(),
             cacheDir: $cachePath,
             serializer: $serializer,
         );
@@ -49,11 +46,7 @@ final class CacheConfigBuilder
             $cache = new TraceableCache($cache, $telemetryConfig->telemetry, $dataframeName);
         }
 
-        return new CacheConfig(
-            cache: $cache,
-            localFilesystemCacheDir: $cachePath,
-            filesystemMount: $this->filesystemMount,
-        );
+        return new CacheConfig(cache: $cache, localFilesystemCacheDir: $cachePath);
     }
 
     public function cache(Cache $cache): self
@@ -70,13 +63,6 @@ final class CacheConfigBuilder
     public function cacheDir(string|Path $dir): self
     {
         $this->cacheDir = is_string($dir) ? path($dir) : $dir;
-
-        return $this;
-    }
-
-    public function filesystemMount(string $mount): self
-    {
-        $this->filesystemMount = $mount;
 
         return $this;
     }

@@ -13,12 +13,17 @@ use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Schema;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
 use function Flow\ETL\DSL\str_entry;
+use function sprintf;
 
 final class FloeExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -27,12 +32,26 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
 
     private ?int $offset = null;
 
+    private readonly Filesystem $filesystem;
+
     public function __construct(
         private readonly Path $path,
         private readonly Codec $codec = new NoopCodec(),
         private readonly int $chunkSize = 65536,
         private readonly FloeEngine $engine = FloeEngine::adaptive,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_floe($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
         $this->resetLimit();
     }
 
@@ -44,7 +63,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
         $putInputIntoRows = $context->config->shouldPutInputIntoRows();
         $fileOffset = $this->offset ?? 0;
 
-        foreach ($this->readers($context) as [$reader, $uri]) {
+        foreach ($this->readers($context->hydrator()) as [$reader, $uri]) {
             $fileRows = $reader->totalRows();
 
             if ($fileOffset >= $fileRows) {
@@ -79,11 +98,11 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     /**
      * Footer-only source schema (two ranged reads per file, no row scan).
      */
-    public function schema(FlowContext $context): Schema
+    public function schema(): Schema
     {
         $schema = new Schema();
 
-        foreach ($this->readers($context) as [$reader]) {
+        foreach ($this->readers() as [$reader]) {
             $schema = $schema->merge($reader->schema());
         }
 
@@ -109,21 +128,18 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     /**
      * @return \Generator<int, array{FloeStreamReader, string}>
      */
-    private function readers(FlowContext $context): Generator
+    private function readers(?Hydrator $hydrator = null): Generator
     {
-        foreach ($context->streams()->list($this->path, $this->filter()) as $listed) {
-            $filePath = $listed->path();
-            $listed->close();
-
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             yield [
                 (new FloeReader(
-                    $context->filesystem($this->path),
+                    $this->filesystem,
                     $this->codec,
                     $this->chunkSize,
-                    hydrator: $context->hydrator(),
+                    hydrator: $hydrator,
                     engine: $this->engine,
-                ))->read($filePath),
-                $filePath->uri(),
+                ))->read($listedFile->path),
+                $listedFile->path->uri(),
             ];
         }
     }

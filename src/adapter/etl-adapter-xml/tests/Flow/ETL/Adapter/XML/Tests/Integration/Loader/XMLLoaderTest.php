@@ -41,10 +41,9 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
                     ['id' => 12, 'color' => 'white', 'size' => 'large'],
                 ],
             ))
-            ->saveMode(overwrite())
             ->batchSize(1)
             ->partitionBy('size', 'color')
-            ->write(to_xml(__DIR__ . '/var/test_partitioning_xml_file/products.xml'))
+            ->write(to_xml(__DIR__ . '/var/test_partitioning_xml_file/products.xml')->saveMode(overwrite()))
             ->run();
 
         static::assertEquals(
@@ -55,7 +54,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
                 ->withEntry('color', ref('node')->xpath('color')->domElementValue())
                 ->withEntry('size', ref('node')->xpath('size')->domElementValue())
                 ->drop('node')
-                ->sortBy(ref('id')->asc())
+                ->sortBy([ref('id')->asc()])
                 ->fetch()
                 ->toArray(),
         );
@@ -67,8 +66,10 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_xml($path = $this->cacheDir->suffix('transformation.xml'))))
+            ->write(to_transformation(
+                select('id'),
+                to_xml($path = $this->cacheDir->suffix('transformation.xml'))->saveMode(overwrite()),
+            ))
             ->run();
 
         $content = file_get_contents($path->path());
@@ -95,8 +96,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
     {
         df()
             ->read(new FakeExtractor(100))
-            ->saveMode(overwrite())
-            ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml')))
+            ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml'))->saveMode(overwrite()))
             ->run();
 
         static::assertEquals(100, df()->read(from_xml($path, 'rows/row'))->count());

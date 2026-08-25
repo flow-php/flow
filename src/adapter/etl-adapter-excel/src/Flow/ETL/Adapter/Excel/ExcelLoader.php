@@ -7,13 +7,18 @@ namespace Flow\ETL\Adapter\Excel;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
@@ -22,9 +27,18 @@ use Throwable;
 
 use function array_keys;
 use function is_string;
+use function sprintf;
 
-final class ExcelLoader implements Closure, FileLoader, Loader
+final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
 {
+    private readonly Filesystem $filesystem;
+
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
+
+    private ?FilesSink $files = null;
+
+    private ?WorkbookManager $workbook = null;
+
     private ?CellStyler $cellStyler = null;
 
     private string $dateFormat = 'Y-m-d';
@@ -45,14 +59,24 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     private bool $withHeader = true;
 
-    private ?WorkbookManager $workbookManager = null;
-
     private OdsOptions|XlsxOptions|null $writerOptions = null;
 
     private ?ExcelWriter $writerType = null;
 
-    public function __construct(Path $path)
+    public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. to_excel($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+
         if (!$path->isLocal()) {
             throw new InvalidArgumentException(
                 'Only local filesystem paths are supported by ExcelLoader due to OpenSpout limitations.',
@@ -64,12 +88,20 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     public function closure(FlowContext $context): void
     {
-        if ($this->workbookManager !== null) {
-            $this->workbookManager->close();
-            $this->workbookManager = null;
-        }
+        $this->workbook?->close();
+        $this->workbook = null;
 
-        $context->streams()->closeStreams($this->path);
+        $this->files?->publish();
+        $this->files = null;
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        $this->workbook?->close();
+        $this->workbook = null;
+
+        $this->files?->abandon();
+        $this->files = null;
     }
 
     public function destination(): Path
@@ -91,9 +123,15 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             $dehydrated = $context->hydrator()->dehydrate($rows);
             $encoder = $this->encoder();
 
-            $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
+            $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                $rows->partitions()->toArray(),
+            );
 
-            $manager = $this->getWorkbookManager();
+            $manager =
+                $this->workbook ??= new WorkbookManager(
+                    writerType: $this->resolveWriterType(),
+                    options: $this->writerOptions,
+                );
             $manager->open($stream->path()->path());
 
             foreach ($rows as $rowIndex => $row) {
@@ -132,6 +170,13 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
             throw $e;
         }
+    }
+
+    public function saveMode(SaveMode $mode): static
+    {
+        $this->saveMode = $mode;
+
+        return $this;
     }
 
     public function withCellStyler(CellStyler $styler): self
@@ -227,18 +272,6 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             dateFormat: $this->dateFormat,
             timeFormat: $this->timeFormat,
         );
-    }
-
-    private function getWorkbookManager(): WorkbookManager
-    {
-        if ($this->workbookManager === null) {
-            $this->workbookManager = new WorkbookManager(
-                writerType: $this->resolveWriterType(),
-                options: $this->writerOptions,
-            );
-        }
-
-        return $this->workbookManager;
     }
 
     /**

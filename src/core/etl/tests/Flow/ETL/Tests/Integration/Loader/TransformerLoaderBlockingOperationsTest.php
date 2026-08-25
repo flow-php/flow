@@ -47,7 +47,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
     {
         // A2 - one result row for the stream, not one per batch.
         $spy = new SpyLoader();
-        $sumV = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->aggregate(sum(ref('v'))));
+        $sumV = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->aggregate([sum(ref('v'))]));
 
         df()->read(from_rows(...RowsMother::interleavedGroupBatches()))->write(to_transformation($sumV, $spy))->run();
 
@@ -152,7 +152,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         // A3 - groups are merged across batches, giving the 2 rows the outer frame gives.
         $spy = new SpyLoader();
         $sumVByGroup = new CallbackTransformation(static function (DataFrame $df): DataFrame {
-            return $df->groupBy(ref('g'))->aggregate(sum(ref('v')));
+            return $df->groupBy([ref('g')])->aggregate(sum(ref('v')));
         });
 
         df()
@@ -264,7 +264,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         // filled first and the missing one is appended as null.
         $spy = new SpyLoader();
         $pivotGroupSums = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df
-            ->groupBy(ref('g'))
+            ->groupBy([ref('g')])
             ->pivot(ref('g'))
             ->aggregate(sum(ref('v'))));
 
@@ -312,7 +312,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
     {
         // A1 - the stream is sorted, not each batch on its own.
         $spy = new SpyLoader();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
 
         df()->read(from_rows(...RowsMother::descendingIdBatches()))->write(to_transformation($sortById, $spy))->run();
 

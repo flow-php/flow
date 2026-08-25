@@ -16,6 +16,5 @@ data_frame()
         ['id' => 5],
     ]))
     ->collect()
-    ->saveMode(overwrite())
-    ->write(to_parquet(__DIR__ . '/output.parquet'))
+    ->write(to_parquet(__DIR__ . '/output.parquet')->saveMode(overwrite()))
     ->run();

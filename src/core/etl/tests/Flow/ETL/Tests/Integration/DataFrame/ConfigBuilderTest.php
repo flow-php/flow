@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
@@ -13,11 +15,6 @@ use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Filesystem;
-use Flow\Filesystem\Mount;
-use Flow\Filesystem\Telemetry\TraceableFilesystem;
-use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Telemetry;
 use Override;
 
 use function Flow\ETL\DSL\analyze;
@@ -27,19 +24,6 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\telemetry_options;
-use function Flow\Filesystem\DSL\filesystem_telemetry_options;
-use function Flow\Filesystem\DSL\native_local_filesystem;
-use function Flow\Telemetry\DSL\logger_provider;
-use function Flow\Telemetry\DSL\memory_context_storage;
-use function Flow\Telemetry\DSL\memory_log_processor;
-use function Flow\Telemetry\DSL\memory_metric_processor;
-use function Flow\Telemetry\DSL\memory_span_processor;
-use function Flow\Telemetry\DSL\meter_provider;
-use function Flow\Telemetry\DSL\resource;
-use function Flow\Telemetry\DSL\telemetry;
-use function Flow\Telemetry\DSL\tracer_provider;
-use function Flow\Telemetry\DSL\void_exporter;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -52,14 +36,11 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_cache_filesystem_protocol_override(): void
+    public function test_cache_override_takes_a_cache_object(): void
     {
-        $config = config_builder()
-            ->mount(native_local_filesystem('custom-cache'))
-            ->cacheFilesystem('custom-cache')
-            ->build();
+        $cache = new InMemoryCache();
 
-        static::assertSame('custom-cache', $config->cache->filesystemMount);
+        static::assertSame($cache, config_builder()->cache($cache)->build()->cache->cache);
     }
 
     public function test_config_serializer_reaches_the_default_cache(): void
@@ -147,11 +128,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_default_cache_filesystem_protocol_is_file(): void
+    public function test_default_cache_is_a_filesystem_cache_under_the_spill_root(): void
     {
         $config = config_builder()->build();
 
-        static::assertSame('file', $config->cache->filesystemMount);
+        static::assertInstanceOf(FilesystemCache::class, $config->cache->cache);
+        static::assertSame($this->cacheDir->path(), $config->cache->localFilesystemCacheDir->path());
     }
 
     public function test_default_external_sort_builds_filesystem_storage(): void
@@ -184,88 +166,13 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame($hydrator, config_builder()->hydrator($hydrator)->build()->hydrator());
     }
 
-    public function test_external_sort_filesystem_protocol_override(): void
+    public function test_external_sort_storage_override(): void
     {
-        $config = config_builder()
-            ->mount(native_local_filesystem('custom-sort'))
-            ->sort(external_sort()->filesystemProtocol('custom-sort'))
-            ->build();
+        $storage = new MemoryBuckets();
+
+        $config = config_builder()->sort(external_sort()->storage($storage))->build();
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
-        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
-    }
-
-    public function test_filesystems_mounted_after_telemetry_are_wrapped(): void
-    {
-        $telemetry = $this->createTelemetry();
-
-        $mockFilesystem = $this->createStub(Filesystem::class);
-        $mockFilesystem->method('mount')->willReturn(new Mount('gcs'));
-
-        $config = config_builder()
-            ->withTelemetry(
-                $telemetry,
-                telemetry_options(filesystem: filesystem_telemetry_options(trace_streams: true)),
-            )
-            ->mount($mockFilesystem)
-            ->build();
-
-        $filesystem = $config->fstab()->for('gcs');
-
-        static::assertInstanceOf(TraceableFilesystem::class, $filesystem);
-    }
-
-    public function test_with_telemetry_does_not_propagate_when_filesystem_telemetry_disabled(): void
-    {
-        $telemetry = $this->createTelemetry();
-
-        $config = config_builder()
-            ->withTelemetry(
-                $telemetry,
-                telemetry_options(filesystem: filesystem_telemetry_options(
-                    trace_streams: false,
-                    collect_metrics: false,
-                )),
-            )
-            ->build();
-
-        $filesystems = $config->fstab()->filesystems();
-
-        foreach ($filesystems as $filesystem) {
-            static::assertNotInstanceOf(TraceableFilesystem::class, $filesystem);
-        }
-    }
-
-    public function test_with_telemetry_propagates_to_filesystem_when_filesystem_telemetry_enabled(): void
-    {
-        $telemetry = $this->createTelemetry();
-
-        $config = config_builder()
-            ->withTelemetry(
-                $telemetry,
-                telemetry_options(filesystem: filesystem_telemetry_options(trace_streams: true)),
-            )
-            ->build();
-
-        $filesystems = $config->fstab()->filesystems();
-
-        static::assertNotEmpty($filesystems);
-
-        foreach ($filesystems as $filesystem) {
-            static::assertInstanceOf(TraceableFilesystem::class, $filesystem);
-        }
-    }
-
-    private function createTelemetry(): Telemetry
-    {
-        $clock = new SystemClock();
-        $contextStorage = memory_context_storage();
-
-        return telemetry(
-            resource(),
-            tracer_provider(memory_span_processor(void_exporter()), $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_exporter()), $clock),
-            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
-        );
+        static::assertSame($storage, $config->sort->bucketing->storage);
     }
 }

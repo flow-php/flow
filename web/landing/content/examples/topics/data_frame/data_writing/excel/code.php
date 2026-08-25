@@ -18,6 +18,5 @@ data_frame()
         ])
     )
     ->collect()
-    ->mode(overwrite())
-    ->write(to_excel(__DIR__ . '/output.xlsx'))
+    ->write(to_excel(__DIR__ . '/output.xlsx')->saveMode(overwrite()))
     ->run();

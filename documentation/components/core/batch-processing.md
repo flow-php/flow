@@ -64,7 +64,7 @@ $dataFrame = data_frame()
     ->read($extractor)
     ->filter($condition)
     ->collect() // Collect all filtered data into single batch
-    ->sortBy(col('name')) // Now can sort the collected data
+    ->sortBy([col('name')]) // Now can sort the collected data
     ->write($loader)
     ->run();
 ```

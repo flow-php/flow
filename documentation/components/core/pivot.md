@@ -28,7 +28,7 @@ $salesData = data_frame()
         ['region' => 'South', 'product' => 'Phone', 'month' => 'Jan', 'sales' => 700],
         ['region' => 'South', 'product' => 'Phone', 'month' => 'Feb', 'sales' => 850],
     ]))
-    ->groupBy('region', 'product')
+    ->groupBy(['region', 'product'])
     ->pivot(col('product')) // Pivot by product - creates 'Laptop' and 'Phone' columns
     ->aggregate(sum(col('sales'))->as('total_sales'))
     ->write(to_output())
@@ -62,7 +62,7 @@ $monthlySales = data_frame()
         ['region' => 'South', 'month' => 'Feb', 'sales' => 4800],
         ['region' => 'South', 'month' => 'Mar', 'sales' => 5200],
     ]))
-    ->groupBy('region')
+    ->groupBy(['region'])
     ->pivot(col('month')) // Pivot by month
     ->aggregate(avg(col('sales'))->as('avg_sales'))
     ->write(to_output())

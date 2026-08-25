@@ -10,6 +10,7 @@ use Flow\CLI\Options\ConfigOption;
 use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -53,7 +54,9 @@ final class SchemaFormatCommand extends Command
         $style = new SymfonyStyle($input, $output);
 
         $schema = schema_from_json(
-            $this->flowConfig->fstab()->for($this->schemaPath)->readFrom($this->schemaPath)->content(),
+            (new NativeLocalFilesystem())
+                ->readFrom($this->schemaPath)
+                ->content(),
         );
 
         if (option_bool('output-ascii', $input)) {
@@ -82,6 +85,6 @@ final class SchemaFormatCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->schemaPath = (new FilePathArgument('input-schema-file'))->getExisting($input, $this->flowConfig);
+        $this->schemaPath = (new FilePathArgument('input-schema-file'))->getExisting($input);
     }
 }

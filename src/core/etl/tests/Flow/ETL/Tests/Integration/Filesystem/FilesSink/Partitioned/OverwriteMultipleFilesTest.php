@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
+namespace Flow\ETL\Tests\Integration\Filesystem\FilesSink\Partitioned;
 
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Tests\Integration\Filesystem\FilesSink\FilesSinkTestCase;
 use Flow\Filesystem\Partition;
 use Override;
 
@@ -16,7 +16,7 @@ use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function sort;
 
-final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
+final class OverwriteMultipleFilesTest extends FilesSinkTestCase
 {
     #[Override]
     protected function tearDown(): void
@@ -31,17 +31,13 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
             __FUNCTION__ => [],
         ]);
 
-        $salesStreams = $this->streams();
-        $salesFile = $this->getPath(__FUNCTION__ . '/sales.csv');
-        $salesStream = $salesStreams->writeTo($salesFile, partitions: [new Partition('partition', 'value')]);
-        $salesStream->append('sales data');
-        $salesStreams->closeStreams($salesFile);
+        $sales = $this->files($this->getPath(__FUNCTION__ . '/sales.csv'));
+        $sales->writeTo([new Partition('partition', 'value')])->append('sales data');
+        $sales->publish();
 
-        $ordersStreams = $this->streams();
-        $ordersFile = $this->getPath(__FUNCTION__ . '/orders.csv');
-        $ordersStream = $ordersStreams->writeTo($ordersFile, partitions: [new Partition('partition', 'value')]);
-        $ordersStream->append('orders data');
-        $ordersStreams->closeStreams($ordersFile);
+        $orders = $this->files($this->getPath(__FUNCTION__ . '/orders.csv'));
+        $orders->writeTo([new Partition('partition', 'value')])->append('orders data');
+        $orders->publish();
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -66,8 +62,6 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
 
     public function test_overwrite_cleans_up_randomized_files_with_same_basename(): void
     {
-        $streams = $this->streams();
-
         $this->setupFiles([
             __FUNCTION__ => [
                 'partition=value' => [
@@ -77,10 +71,9 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $file = $this->getPath(__FUNCTION__ . '/file.csv');
-        $fileStream = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
-        $fileStream->append('overwritten content');
-        $streams->closeStreams($file);
+        $files = $this->files($this->getPath(__FUNCTION__ . '/file.csv'));
+        $files->writeTo([new Partition('partition', 'value')])->append('overwritten content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -93,8 +86,6 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
 
     public function test_overwrite_does_not_delete_files_with_different_basename(): void
     {
-        $streams = $this->streams();
-
         $this->setupFiles([
             __FUNCTION__ => [
                 'partition=value' => [
@@ -103,10 +94,9 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $ordersFile = $this->getPath(__FUNCTION__ . '/orders.csv');
-        $ordersStream = $streams->writeTo($ordersFile, partitions: [new Partition('partition', 'value')]);
-        $ordersStream->append('orders data');
-        $streams->closeStreams($ordersFile);
+        $files = $this->files($this->getPath(__FUNCTION__ . '/orders.csv'));
+        $files->writeTo([new Partition('partition', 'value')])->append('orders data');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -122,8 +112,6 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
 
     public function test_overwrite_replaces_file_with_same_basename(): void
     {
-        $streams = $this->streams();
-
         $this->setupFiles([
             __FUNCTION__ => [
                 'partition=value' => [
@@ -132,10 +120,9 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $file = $this->getPath(__FUNCTION__ . '/file.csv');
-        $fileStream = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
-        $fileStream->append('new content');
-        $streams->closeStreams($file);
+        $files = $this->files($this->getPath(__FUNCTION__ . '/file.csv'));
+        $files->writeTo([new Partition('partition', 'value')])->append('new content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -146,11 +133,8 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
         static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
-    protected function streams(): FilesystemStreams
+    protected function saveMode(): SaveMode
     {
-        $streams = new FilesystemStreams($this->fstab());
-        $streams->setMode(overwrite());
-
-        return $streams;
+        return overwrite();
     }
 }

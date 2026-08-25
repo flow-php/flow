@@ -57,17 +57,42 @@ Columns that may only become null in later batches, declare the schema explicitl
 | `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` → throws                                                                | `['id' => 1]`             |
 | `type_list(type_integer())->cast('["1","2"]')` → throws                                                                                | `[1, 2]`                  |
 
-### 6) `flow-php/etl` - `FilesystemStreams` is owned per `FlowContext`, not per `Config`
+### 6) `flow-php/etl` - `FilesystemStreams` replaced by `FilesSink`, and a failed run discards its sink
 
-| Before                                                                                  | After                                            |
-|-----------------------------------------------------------------------------------------|--------------------------------------------------|
-| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | applies only to the `DataFrame` it is called on  |
-| a failed run left its `DestinationStream` registered; the retry appended to it          | each run has its own registry; the retry refuses |
-| `Config::filesystemStreams()`                                                           | removed                                          |
-| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                          |
+| Before                                                                                  | After                                                                        |
+|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| `Flow\ETL\Filesystem\FilesystemStreams`                                                 | `Flow\ETL\Filesystem\FilesSink`                                              |
+| `FilesystemStreams::FLOW_TMP_FILE_PREFIX`                                               | `FilesSink::FLOW_TMP_FILE_PREFIX`                                            |
+| `new FilesystemStreams()` + `->setMode($mode)`                                          | `new FilesSink($filesystem, $destination, $mode)`                            |
+| `$streams->writeTo($filesystem, $path, $partitions)`                                    | `$files->writeTo($partitions)`                                               |
+| `$streams->isOpen($path, $partitions)`                                                  | `$files->touched($partitions)`                                               |
+| `$streams->listOpenStreams($path)`                                                      | `$files->openStreams()`                                                      |
+| `$streams->closeStreams($filesystem, $path)`                                            | `$files->publish()` / `$files->abandon()`                                    |
+| `$streams->read()` / `->rm()` / `->exists()` / `count()` / `getIterator()`              | removed - use the `Filesystem` directly                                      |
+| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | `saveMode()` is set on the sink and belongs to that sink alone               |
+| a failed run left its `DestinationStream` registered; the retry appended to it          | the failed run's sink is discarded, the retry starts clean                   |
+| an abandoned run left its `._flow_php_tmp.` file behind under `Overwrite`               | the abandoned run removes it and never renames it over the destination       |
+| a failed run left its partial file at the destination under the other save modes        | it removes any file it created; a destination it did not create is untouched |
+| `Config::filesystemStreams()`                                                           | removed                                                                      |
+| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                                                      |
 
-Pipelines that relied on a save mode set on an earlier frame sharing the same `Config` must call
-`saveMode()` on each frame. Build `Config` through `Config::builder()` / `Config::default()`.
+Build `Config` through `Config::builder()` / `Config::default()`.
+
+`Closure::closure()` is unchanged and still marks a run that reached its last batch. A run that threw or was abandoned
+now ends through the new `Flow\ETL\Loader\Discardable`:
+
+```php
+interface Discardable
+{
+    public function discard(FlowContext $context): void;
+}
+```
+
+A `Loader` holding anything per run - an open stream, a format writer, a row counter - should implement it and drop that
+state there, exactly as `closure()` does on the success path. A `Loader` that wraps another (`OverridingLoader`)
+does **not** forward `discard()`: the pipeline walks the whole loader tree through `OverridingLoader::loaders()`, so a
+wrapped sink is discarded whether or not its wrapper knows about `Discardable`. A wrapper implements it only to drop
+state of its own.
 
 ### 7) `flow-php/etl` - `RetryLoader` no longer retries `InvalidLogicException` by default
 
@@ -118,6 +143,7 @@ proportional to the data, as on an outer frame.
 | telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows               | counts the rows offered to the branch                                                         |
 
 ### 10) `flow-php/etl-adapter-doctrine` / `flow-php/etl-adapter-postgresql` - transactional loaders run
+
 `closure()` inside a transaction
 
 | Before                                                                                                      | After                                                                               |
@@ -129,61 +155,177 @@ proportional to the data, as on an outer frame.
 
 ### 11) `flow-php/etl` - Floe on-disk format v2, existing `.floe` files must be rewritten
 
-| Before                            | After                                        |
-|-----------------------------------|----------------------------------------------|
-| header version byte `0x01`        | `0x02`                                       |
-| uuid payload - 36 raw bytes       | 4-byte little-endian length prefix + bytes   |
-| reading a v1 file                 | throws `Floe does not support format version 1` |
+| Before                      | After                                           |
+|-----------------------------|-------------------------------------------------|
+| header version byte `0x01`  | `0x02`                                          |
+| uuid payload - 36 raw bytes | 4-byte little-endian length prefix + bytes      |
+| reading a v1 file           | throws `Floe does not support format version 1` |
 
 Rewrite existing files with the new writer: `data_frame()->read(from_floe($old))->write(to_floe($new))->run()`.
 
 ### 12) `flow-php/etl` - Floe rejects columns whose type is only known per value
 
-| Before                                          | After                                                     |
-|-------------------------------------------------|-----------------------------------------------------------|
-| `list<mixed>` element - written with a tag      | `Floe does not support values of type "mixed"`            |
-| `union_schema()` column - written               | `Floe does not support columns of type "integer\|string"`  |
-| `type_structure(..., allow_extra: true)`        | `Floe does not support structures that allow extra values` |
-| map key other than `integer`/`string`           | `Floe does not support map keys of type "..."`            |
+| Before                                     | After                                                      |
+|--------------------------------------------|------------------------------------------------------------|
+| `list<mixed>` element - written with a tag | `Floe does not support values of type "mixed"`             |
+| `union_schema()` column - written          | `Floe does not support columns of type "integer\|string"`  |
+| `type_structure(..., allow_extra: true)`   | `Floe does not support structures that allow extra values` |
+| map key other than `integer`/`string`      | `Floe does not support map keys of type "..."`             |
 
 Thrown when the write session opens, before any bytes. Declare an element type, or use
 `json_entry()` when the shape is genuinely dynamic.
 
 ### 13) `flow-php/etl` - Floe validates every value against its column type
 
-| Before                                        | After                                  |
-|-----------------------------------------------|----------------------------------------|
-| `'AB-1'` into an `integer` column - wrote `0` | throws `IncompatibleSchemaException`   |
-| `1.5` into an `integer` column - wrote `1`    | throws                                 |
+| Before                                          | After                                |
+|-------------------------------------------------|--------------------------------------|
+| `'AB-1'` into an `integer` column - wrote `0`   | throws `IncompatibleSchemaException` |
+| `1.5` into an `integer` column - wrote `1`      | throws                               |
 | `1000` into a `string` column - raw `TypeError` | throws `IncompatibleSchemaException` |
-| `int` into a `float` column - written         | throws                                 |
-| column absent from a row                      | unchanged, still written               |
+| `int` into a `float` column - written           | throws                               |
+| column absent from a row                        | unchanged, still written             |
 
-`floe_options(validate_data: false)` skips the per-value check only; a row carrying an undeclared
-column is always rejected.
+`floe_options(validate_data: false)` skips the per-value check only; a row carrying an undeclared column is always
+rejected.
 
 ### 14) `flow-php/etl` - aggregate result type follows the column, not the value
 
-| Before                                          | After                          |
-|-------------------------------------------------|--------------------------------|
-| `sum()` over a `float` column, whole total - `int` | `float`                     |
-| `avg()`/`min()`/`max()` over a `float` column, whole result - `int` | `float`     |
-| `sum()` over an `integer` column                | unchanged, `int`               |
+| Before                                                              | After            |
+|---------------------------------------------------------------------|------------------|
+| `sum()` over a `float` column, whole total - `int`                  | `float`          |
+| `avg()`/`min()`/`max()` over a `float` column, whole result - `int` | `float`          |
+| `sum()` over an `integer` column                                    | unchanged, `int` |
 
 ### 15) `flow-php/etl` - aggregates ignore a row missing the aggregated column
 
-| Before                                                        | After                     |
-|---------------------------------------------------------------|---------------------------|
+| Before                                                                                 | After               |
+|----------------------------------------------------------------------------------------|---------------------|
 | missing column in `ExecutionMode::STRICT` - `Sum error: Entry "amount" does not exist` | contributes nothing |
-| missing column in lenient mode - contributed nothing          | unchanged                 |
+| missing column in lenient mode - contributed nothing                                   | unchanged           |
 
 ### 16) `flow-php/types` - `EnumType::isValid()` requires an object
 
-| Before                                     | After                              |
-|--------------------------------------------|------------------------------------|
-| `type_enum(Suit::class)->isValid('Suit')`  | `false` (was `true`)               |
-| `type_enum(Suit::class)->assert('Suit')`   | throws `InvalidTypeException` (was raw `TypeError`) |
-| `type_enum(Suit::class)->cast('Suit')`     | throws `CastingException` (was raw `TypeError`)     |
+| Before                                    | After                                               |
+|-------------------------------------------|-----------------------------------------------------|
+| `type_enum(Suit::class)->isValid('Suit')` | `false` (was `true`)                                |
+| `type_enum(Suit::class)->assert('Suit')`  | throws `InvalidTypeException` (was raw `TypeError`) |
+| `type_enum(Suit::class)->cast('Suit')`    | throws `CastingException` (was raw `TypeError`)     |
+
+### 17)
+
+`flow-php/etl` - filesystems are passed in, engine algorithms take a storage, and every operation can override its
+algorithm
+
+`Config` no longer carries a `FilesystemTable`. Every file source and sink takes a `Filesystem`
+argument that defaults to the native local filesystem. Every engine algorithm - cache, sort, group by, join - takes a
+**storage object**, never a filesystem and never a path. Reading or writing a non-`file://` path now requires passing
+the filesystem.
+
+#### Filesystems
+
+| Before                                                                                 | After                                                                                        |
+|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| `config_builder()->mount(aws_s3_filesystem(...))` + `from_csv(path('aws-s3://x.csv'))` | `from_csv(path('aws-s3://x.csv'), filesystem: aws_s3_filesystem(...))`                       |
+| `config_builder()->unmount($fs)`                                                       | removed - it had no callers                                                                  |
+| `$config->fstab()`                                                                     | removed - use `Flow\Filesystem\DSL\fstab()` for `file_copy()` / `file_move()`                |
+| `new Config(..., FilesystemTable $filesystemTable, ...)`                               | parameter removed                                                                            |
+| `$context->filesystem($path)`                                                          | the source/sink owns its filesystem; pass `filesystem:` to change it                         |
+| `$context->streams()->list($path, $filter)` -> `SourceStream`                          | `(new FileListing($filesystem))->list($path, $filter)` -> `FileStatus`                       |
+| `$context->streams()->writeTo($path, $partitions)`                                     | `$this->files->writeTo($partitions)` on a sink-held `FilesSink` - see 6)                     |
+| `$context->streams()->closeStreams($path)` in an extractor                             | removed - the read path never registered a stream                                            |
+| `new FilesystemStreams($filesystemTable)`                                              | `new FilesSink($filesystem, $destination, $saveMode)` - see 6)                               |
+| a custom file source reading through `FlowContext`                                     | take `Filesystem $filesystem = new NativeLocalFilesystem()` last                             |
+| `schema_from_json_schema($s)` resolved local `$ref`s through `fstab()`                 | takes a trailing `Filesystem $filesystem = new NativeLocalFilesystem()`                      |
+| a `$ref` on `memory://` or `stdout://`                                                 | throws - pass the filesystem that serves it                                                  |
+| `ChartJSLoader::withOutputPath($path)` / `::withTemplate($path)`                       | both gain a trailing `Filesystem $filesystem = new NativeLocalFilesystem()`; `withOutputPath()` now throws on a path with no extension |
+| `FilePathArgument::getExisting($input, $config)` / `::getNotExisting(...)` (CLI)        | the `Config` parameter is gone; the constructor takes `Filesystem` instead |
+| a custom `FileLoader`                                                                  | implement `saveMode()` yourself, and implement `Discardable` - see 6)                        |
+| a custom `Flow\Filesystem\Filesystem` implementation                                   | add `public function supports(Path $path): bool` - `return $this->mount()->supports($path);`. It is abstract on the interface, so without it the class is a **fatal at load**, not an error on first use |
+
+`to_x(path('memory://...'), filesystem: memory_filesystem())` followed by
+`from_x(path('memory://...'), filesystem: memory_filesystem())` now reads **no rows**: two
+`memory_filesystem()` calls are two separate stores. Hold one `$fs = memory_filesystem()` and pass the same instance to
+both.
+
+#### Filesystem telemetry is switched off
+
+`withTelemetry()` no longer traces filesystems. Reading a file, writing a file and engine spill emit **no**
+`filesystem.read` / `filesystem.write` spans and no filesystem metrics. Cache tracing (`trace_cache`), loading tracing
+(`trace_loading`), transformation tracing and DataFrame metrics are unaffected.
+
+`TraceableFilesystem` and `traceable_filesystem()` still work - wrap the filesystem you pass in:
+
+```php
+$fs = traceable_filesystem(
+    aws_s3_filesystem($bucket, $client),
+    filesystem_telemetry_config($telemetry, $clock, filesystem_telemetry_options(traceStreams: true)),
+);
+
+data_frame()->read(from_csv(path('aws-s3://x.csv'), filesystem: $fs))->…
+```
+
+| Before                                                             | After                                           |
+|--------------------------------------------------------------------|-------------------------------------------------|
+| `telemetry_options(filesystem: filesystem_telemetry_options(...))` | removed - wrap the filesystem by hand           |
+| `TelemetryOptions::filesystem()` / `->filesystem`                  | removed                                         |
+| the pipeline-start debug log's `fstab` field                       | a `spill` field naming the three spill storages |
+
+#### Engine algorithms
+
+| Before                                                                              | After                                                         |
+|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| `config_builder()->cacheFilesystem('s3')`                                           | `config_builder()->cache($cache)`                             |
+| `external_sort()->filesystemProtocol('file')`                                       | `external_sort()->storage(new FilesystemBuckets($fs, $path))` |
+| `hash_join()->filesystemProtocol(...)` / `hash_group_by()->filesystemProtocol(...)` | `->storage(BucketsStorage)`                                   |
+| `CacheConfig::$filesystemMount`                                                     | removed                                                       |
+| `SortAlgorithmBuilder::build(FilesystemTable, Path)`                                | `build(Path $spillRoot)`                                      |
+| -                                                                                   | `external_sort()->mergeStorage($s)` - merged runs only        |
+
+`filesystemProtocol()` and `cacheFilesystem()` never worked for any value but `'file'` - the spill root is always a
+`file://` path, so anything else threw `InvalidSchemeException` at the first spill.
+
+External sort now keeps **spill runs** and **merged runs** in two `Buckets`, each read back only through the storage
+that wrote it. `external_sort()->storage($s)` still covers **both** phases - the merge storage defaults to the spill
+storage - so nothing changes unless you call `mergeStorage()`.
+`ExternalSortConfig::__construct` gained `?BucketsStorage $merge` as its **second** parameter, so positional
+construction shifts; use named arguments.
+
+#### Per-operation overrides, and the broken variadic
+
+`sortBy()`, `groupBy()` and `aggregate()` take an **array** now, so that they can carry a per-operation algorithm.
+`join()` and `cache()` gained a trailing optional argument. `Rows::sortBy()` is a different method and is unchanged.
+
+| Before                                        | After                                                                               |
+|-----------------------------------------------|-------------------------------------------------------------------------------------|
+| `$df->sortBy(ref('a'), ref('b'))`             | `$df->sortBy([ref('a'), ref('b')])`                                                 |
+| `$df->groupBy('a', 'b')`                      | `$df->groupBy(['a', 'b'])`                                                          |
+| `$df->aggregate(sum(ref('a')))`               | `$df->aggregate([sum(ref('a'))])`                                                   |
+| `$df->groupBy('a')->aggregate(sum(ref('b')))` | `$df->groupBy(['a'])->aggregate(sum(ref('b')))` - `aggregate()` here is unchanged   |
+| -                                             | `$df->sortBy([ref('a')], external_sort()->storage(new MemoryBuckets()))`            |
+| -                                             | `$df->groupBy(['a'], hash_group_by()->storage($s))`                                 |
+| -                                             | `$df->join($right, $on, Join::left, hash_join()->storage($s))`                      |
+| -                                             | `$df->cache('report', cache: $psrCache)` + `from_cache('report', cache: $psrCache)` |
+
+`joinEach()` is **not** overridable: it joins in memory per batch and never touches a bucket storage.
+
+#### Save mode, the CLI and the HTTP bridge
+
+| Before                                                              | After                                                                       |
+|---------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `$df->saveMode(overwrite())` / `$df->mode(overwrite())`             | `to_csv($path)->saveMode(overwrite())` - per sink                           |
+| `$df->saveMode(overwrite())->write(write_with_retries(to_csv($p)))` | `$df->write(write_with_retries(to_csv($p)->saveMode(overwrite())))`         |
+| `$df->mode(SaveMode::Overwrite)`                                    | `DataFrame::mode()` takes `ExecutionMode` only                              |
+| `to_text($path)` returned `Loader`                                  | returns `TextLoader`                                                        |
+| `LoaderFactory::get()` returned `Loader`                            | returns `Loader&FileLoader`                                                 |
+| `flow read --config .flow.php aws-s3://bucket/x.csv`                | `flow run pipeline.php`, with the filesystem built inside the pipeline file |
+| `new FlowBufferedResponse(..., filesystem: 'memory')`               | `new FlowBufferedResponse(..., filesystem: new MemoryFilesystem())`         |
+| `new FlowStreamedResponse(..., filesystem: 'stdout')`               | `new FlowStreamedResponse(..., filesystem: new StdOutFilesystem())`         |
+| `Output::loader(Path $path)`                                        | `Output::loader(Path $path, Filesystem $filesystem)`                        |
+
+The `flow:filesystem:*` commands, the Symfony filesystem bundle, `file_copy()` / `file_move()` and
+`Flow\Filesystem\FilesystemTable` itself are unchanged - and `#[AsFilesystem('warehouse')]` now injects exactly what
+`from_csv($path, filesystem: ...)` wants.
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x
@@ -2597,7 +2739,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _         (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _           (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

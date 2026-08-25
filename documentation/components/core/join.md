@@ -55,6 +55,15 @@ external sort - and the configured implementation decides how the join executes:
 | `MemoryBuckets`                   | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                                                                     |
 | `PSRCacheBuckets`                 | Buckets are spilled into any PSR-16 cache. Executes like `FilesystemBuckets` (left row order is not preserved).                                                                                                                                     |
 
+`join()` takes an optional trailing `JoinAlgorithmBuilder`, so one join can override the configured algorithm:
+
+```php
+->join($right, on(['id' => 'id']), Join::left, hash_join()->storage(new MemoryBuckets()))
+```
+
+`joinEach()` deliberately does not take one - it builds a DataFrame per row, so a per-call algorithm would be
+rebuilt per row too.
+
 The join algorithm is configured through `config_builder()->join(hash_join())` - all its options live on the
 `hash_join()` builder; any storage implementing `ResidentBucketsStorage` (like `MemoryBuckets`)
 enables the streaming, order-preserving execution:

@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Throwable;
 
@@ -16,11 +20,14 @@ use function Flow\Filesystem\DSL\path;
 use function implode;
 use function iterator_to_array;
 use function json_encode;
+use function sprintf;
 use function str_replace;
 
 final class ChartJSLoader implements Closure, Loader
 {
     private ?Path $output = null;
+
+    private ?Filesystem $outputFilesystem = null;
 
     /**
      * @var null|array<array-key, mixed>
@@ -29,10 +36,13 @@ final class ChartJSLoader implements Closure, Loader
 
     private Path $template;
 
+    private Filesystem $templateFilesystem;
+
     public function __construct(
         private readonly Chart $type,
     ) {
         $this->template = path(__DIR__ . '/Resources/template/full_page.html');
+        $this->templateFilesystem = new NativeLocalFilesystem();
     }
 
     public function closure(FlowContext $context): void
@@ -41,14 +51,14 @@ final class ChartJSLoader implements Closure, Loader
             return;
         }
 
-        if ($this->output !== null) {
-            if ($context->streams()->exists($this->output)) {
-                $context->streams()->rm($this->output);
+        if ($this->output !== null && $this->outputFilesystem !== null) {
+            if ($this->outputFilesystem->status($this->output) !== null) {
+                $this->outputFilesystem->rm($this->output);
             }
 
-            $output = $context->streams()->writeTo($this->output);
+            $output = $this->outputFilesystem->writeTo($this->output);
 
-            $templateStream = $context->streams()->read($this->template);
+            $templateStream = $this->templateFilesystem->readFrom($this->template);
 
             $template = implode('', iterator_to_array($templateStream->readLines()));
             $templateStream->close();
@@ -57,7 +67,7 @@ final class ChartJSLoader implements Closure, Loader
 
             $output->append($content);
 
-            $context->streams()->closeStreams($this->output);
+            $output->close();
         }
 
         if ($this->outputVar !== null) {
@@ -84,8 +94,24 @@ final class ChartJSLoader implements Closure, Loader
         }
     }
 
-    public function withOutputPath(Path $output): self
+    public function withOutputPath(Path $output, Filesystem $filesystem = new NativeLocalFilesystem()): self
     {
+        // ChartJSLoader writes through the filesystem directly, so it guards the extension itself
+        if (!$output->extension()) {
+            throw new RuntimeException('Stream path must have an extension, given: ' . $output->uri());
+        }
+
+        if (!$filesystem->supports($output)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. withOutputPath($path, aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $output->uri(),
+            ));
+        }
+
+        $this->outputFilesystem = $filesystem;
         $this->output = $output;
 
         return $this;
@@ -101,8 +127,19 @@ final class ChartJSLoader implements Closure, Loader
         return $this;
     }
 
-    public function withTemplate(Path $template): self
+    public function withTemplate(Path $template, Filesystem $filesystem = new NativeLocalFilesystem()): self
     {
+        if (!$filesystem->supports($template)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. withTemplate($path, aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $template->uri(),
+            ));
+        }
+
+        $this->templateFilesystem = $filesystem;
         $this->template = $template;
 
         return $this;

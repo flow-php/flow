@@ -38,12 +38,7 @@ final readonly class FlowConfigFactory
             ->name($name)
             ->withTelemetry(
                 $this->telemetry,
-                telemetry_options()
-                    ->collectMetrics()
-                    ->traceLoading()
-                    ->traceCache()
-                    ->traceTransformations()
-                    ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams()),
+                telemetry_options()->collectMetrics()->traceLoading()->traceCache()->traceTransformations(),
             );
     }
 

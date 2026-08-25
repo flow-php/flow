@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Loader\RetryLoader;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\FlowTestCase;
@@ -24,6 +25,7 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 
 use function array_filter;
+use function array_keys;
 use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
@@ -35,6 +37,8 @@ use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\with_entry;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 use function str_contains;
 use function str_ends_with;
 use function str_starts_with;
@@ -149,6 +153,27 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
         // OTEL spec: instrumentation leaves the status Unset on success.
         static::assertNull($dataFrameSpan->status());
+    }
+
+    public function test_pipeline_start_log_reports_spill_storages(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        df($context->config)->read(from_array([['id' => 1]]))->run();
+
+        $started = $context->logs->entriesContaining('Data frame processing started');
+
+        static::assertCount(1, $started);
+
+        $attributes = $started[0]->record->attributes;
+
+        static::assertFalse($attributes->has('fstab'));
+        static::assertTrue($attributes->has('spill'));
+
+        $spill = type_map(type_string(), type_string())->assert($attributes->get('spill'));
+
+        static::assertSame(['sort', 'group_by', 'join'], array_keys($spill));
+        static::assertSame(FilesystemBuckets::class, $spill['sort']);
     }
 
     public function test_dataframe_run_logs_start_and_completion(): void

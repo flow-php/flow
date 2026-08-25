@@ -18,6 +18,5 @@ data_frame()
         ])
     )
     ->collect()
-    ->mode(overwrite())
-    ->write(to_json_lines(__DIR__ . '/output.json'))
+    ->write(to_json_lines(__DIR__ . '/output.json')->saveMode(overwrite()))
     ->run();

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
+use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
+use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Execution\StatisticsCollector;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
@@ -71,6 +73,11 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\to_output;
 use function is_string;
 
+/**
+ * @type Aggregations      = list<AggregatingFunction>
+ * @type GroupByReferences = list<string|Reference>
+ * @type SortReferences    = list<Reference>
+ */
 final class DataFrame
 {
     private readonly FlowContext $context;
@@ -85,13 +92,17 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param Aggregations $aggregations
+     * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+     *                                               algorithm for this operation and skips any automatic choice
      */
-    public function aggregate(AggregatingFunction ...$aggregations): self
+    public function aggregate(array $aggregations, ?GroupByAlgorithmBuilder $algorithm = null): self
     {
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        foreach (GroupBySteps::of($groupBy, $this->context->config) as $step) {
+        foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 
@@ -168,10 +179,11 @@ final class DataFrame
      * @lazy
      *
      * @param null|string $id
+     * @param null|Cache $cache reads of this cache must pass the same instance to from_cache()
      *
      * @throws InvalidArgumentException
      */
-    public function cache(?string $id = null, ?int $cacheBatchSize = null): self
+    public function cache(?string $id = null, ?int $cacheBatchSize = null, ?Cache $cache = null): self
     {
         if ($cacheBatchSize !== null && $cacheBatchSize < 1) {
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
@@ -181,7 +193,7 @@ final class DataFrame
             $this->pipeline->add(new BatchingProcessor($cacheBatchSize));
         }
 
-        $this->pipeline->add(new CachingProcessor($id));
+        $this->pipeline->add(new CachingProcessor($id, $cache));
 
         return $this;
     }
@@ -531,22 +543,33 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param GroupByReferences $entries
+     * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+     *                                               algorithm for this operation and skips any automatic choice
      */
-    public function groupBy(string|Reference ...$entries): GroupedDataFrame
+    public function groupBy(array $entries, ?GroupByAlgorithmBuilder $algorithm = null): GroupedDataFrame
     {
-        return new GroupedDataFrame($this, new GroupBy(...$entries));
+        return new GroupedDataFrame($this, new GroupBy(...$entries), $algorithm);
     }
 
     /**
      * @lazy
+     *
+     * @param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+     *                                            for this operation and skips any automatic choice
      */
-    public function join(self $dataFrame, Expression $on, string|Join $type = Join::left): self
-    {
+    public function join(
+        self $dataFrame,
+        Expression $on,
+        string|Join $type = Join::left,
+        ?JoinAlgorithmBuilder $algorithm = null,
+    ): self {
         if (is_string($type)) {
             $type = Join::from($type);
         }
 
-        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config) as $step) {
+        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 
@@ -554,6 +577,8 @@ final class DataFrame
     }
 
     /**
+     * Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.
+     *
      * @lazy
      *
      * @psalm-param string|Join $type
@@ -627,23 +652,13 @@ final class DataFrame
     }
 
     /**
-     * This method is used to set the behavior of the DataFrame.
-     *
-     * Available modes:
-     * - SaveMode defines how Flow should behave when writing to a file/files that already exists.
-     * - ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).
-     *
      * @lazy
      *
      * @return $this
      */
-    public function mode(SaveMode|ExecutionMode $mode): self
+    public function mode(ExecutionMode $mode): self
     {
-        if ($mode instanceof ExecutionMode) {
-            $this->context->functions()->setMode($mode);
-        } else {
-            $this->context->streams()->setMode($mode);
-        }
+        $this->context->functions()->setMode($mode);
 
         return $this;
     }
@@ -799,16 +814,6 @@ final class DataFrame
     }
 
     /**
-     * Alias for DataFrame::mode.
-     *
-     * @lazy
-     */
-    public function saveMode(SaveMode $mode): self
-    {
-        return $this->mode($mode);
-    }
-
-    /**
      * @trigger
      *
      * @return Schema
@@ -844,10 +849,14 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param SortReferences $entries
+     * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+     *                                            for this operation and skips any automatic choice
      */
-    public function sortBy(Reference ...$entries): self
+    public function sortBy(array $entries, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        foreach (SortSteps::of(refs(...$entries), $this->context->config) as $step) {
+        foreach (SortSteps::of(refs(...$entries), $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 

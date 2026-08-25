@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
@@ -15,6 +16,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 use XMLParser;
@@ -24,6 +28,7 @@ use function count;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function sprintf;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -60,6 +65,8 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     private string $xmlNodePath = '';
 
+    private readonly Filesystem $filesystem;
+
     /**
      * To iterate only over <element> nodes, use `$loader->withXMLNodePath('root/elements/element')`.
      *
@@ -77,7 +84,19 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      */
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_xml($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
         $this->resetLimit();
     }
 
@@ -122,7 +141,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $stream = $this->filesystem->readFrom($listedFile->path);
+
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
@@ -173,7 +194,6 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                             $this->incrementReturnedRows();
 
                             if ($signal === Signal::STOP || $this->reachedLimit()) {
-                                $context->streams()->closeStreams($this->path);
                                 $this->freeParser();
 
                                 return;
@@ -207,7 +227,6 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
                     $this->freeParser();
 
                     return;

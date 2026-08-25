@@ -23,7 +23,7 @@ final readonly class GroupByScenario
         data_frame(BenchmarkConfig::builder())
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->groupBy(ref('seller_id'))
+            ->groupBy([ref('seller_id')])
             ->aggregate(count(ref('order_id')))
             ->run();
     }

@@ -10,17 +10,15 @@ require __DIR__ . '/vendor/autoload.php';
 data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))
     ->limit(20)
-    ->saveMode(overwrite())
-    ->write(to_csv(__DIR__ . '/output/file.csv'))
+    ->write(to_csv(__DIR__ . '/output/file.csv')->saveMode(overwrite()))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();
 
 data_frame()
     ->read(from_csv(__DIR__ . '/output/file.csv'))
-    ->saveMode(overwrite())
     ->drop('notes')
-    ->write(to_csv(__DIR__ . '/output/file.csv'))
+    ->write(to_csv(__DIR__ . '/output/file.csv')->saveMode(overwrite()))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

@@ -20,6 +20,5 @@ data_frame()
     ->withEntry('line', concat_ws('_', ref('id'), ref('name'), ref('age')))
     ->select('line')
     ->collect()
-    ->mode(overwrite())
-    ->write(to_text(__DIR__ . '/output.txt'))
+    ->write(to_text(__DIR__ . '/output.txt')->saveMode(overwrite()))
     ->run();

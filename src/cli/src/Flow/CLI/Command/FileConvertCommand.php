@@ -175,15 +175,13 @@ final class FileConvertCommand extends Command
             $df->offset($offset);
         }
 
-        $overwrite = option_bool('output-overwrite', $input);
+        $loader = (new LoaderFactory($this->outputFile, $this->outputFileFormat))->get($input);
 
-        if ($overwrite) {
-            $df->saveMode(overwrite());
+        if (option_bool('output-overwrite', $input)) {
+            $loader->saveMode(overwrite());
         }
 
-        $report = $df->write((new LoaderFactory($this->outputFile, $this->outputFileFormat))->get(
-            $input,
-        ))->run(analyze: option_bool('analyze', $input));
+        $report = $df->write($loader)->run(analyze: option_bool('analyze', $input));
 
         $style->success('File has been converted.');
         $style->note('File has been saved to: ' . $this->outputFile->uri());
@@ -200,7 +198,7 @@ final class FileConvertCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->inputFile = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->inputFile = (new FilePathArgument('input-file'))->getExisting($input);
         $this->outputFile = (new FilePathArgument('output-file'))->get($input);
         $this->inputFileFormat = (new FileFormatOption($this->inputFile, 'input-file-format'))->get($input);
         $this->outputFileFormat = (new FileFormatOption($this->outputFile, 'output-file-format'))->get($input);

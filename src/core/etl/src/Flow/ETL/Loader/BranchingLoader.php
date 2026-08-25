@@ -15,7 +15,7 @@ use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Throwable;
 
-final class BranchingLoader implements Closure, Loader, OverridingLoader, ReplayAware
+final class BranchingLoader implements Closure, Discardable, Loader, OverridingLoader, ReplayAware
 {
     private ?TransformationStream $stream = null;
 
@@ -54,6 +54,15 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
             $this->limitReached = false;
             $this->runContext = null;
         }
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        // The stream is never drained here - draining would commit the dead run's buffered rows. The wrapped loader
+        // is discarded by the pipeline, which walks the whole loader tree.
+        $this->stream = null;
+        $this->limitReached = false;
+        $this->runContext = null;
     }
 
     public function load(Rows $rows, FlowContext $context): void

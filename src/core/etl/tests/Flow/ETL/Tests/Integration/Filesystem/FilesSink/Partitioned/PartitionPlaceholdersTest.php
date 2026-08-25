@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
+namespace Flow\ETL\Tests\Integration\Filesystem\FilesSink\Partitioned;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Tests\Integration\Filesystem\FilesSink\FilesSinkTestCase;
+use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Override;
 
 use function file_get_contents;
 use function Flow\ETL\DSL\append;
+use function Flow\ETL\DSL\exception_if_exists;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 
-final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
+final class PartitionPlaceholdersTest extends FilesSinkTestCase
 {
     #[Override]
     protected function tearDown(): void
@@ -28,9 +31,6 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
 
     public function test_append_mode_randomizes_existing_placeholder_file(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-        $streams->setMode(append());
-
         $this->setupFiles([
             __FUNCTION__ => [
                 '123456-PL.csv' => 'existing content',
@@ -38,9 +38,9 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
         ]);
         $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
 
-        $fileStream = $streams->writeTo($file, partitions: [new Partition('order-name', '123456-PL')]);
-        $fileStream->append('new content');
-        $streams->closeStreams($file);
+        $files = new FilesSink($this->fs, $file, append());
+        $files->writeTo([new Partition('order-name', '123456-PL')])->append('new content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path($this->getPath(__FUNCTION__)->path() . '/*.csv')));
 
@@ -54,8 +54,6 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
 
     public function test_list_attaches_partitions_from_placeholders(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-
         $this->setupFiles([
             __FUNCTION__ => [
                 'order-year=2024' => [
@@ -64,25 +62,47 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $streamsList = iterator_to_array($streams->list(
-            $this->getPath(__FUNCTION__ . '/order-year=*/{order-name}.csv'),
-            new OnlyFiles(),
-        ));
+        $listed = iterator_to_array(
+            (new FileListing($this->fs))->list(
+                $this->getPath(__FUNCTION__ . '/order-year=*/{order-name}.csv'),
+                new OnlyFiles(),
+            ),
+            false,
+        );
 
-        static::assertCount(1, $streamsList);
+        static::assertCount(1, $listed);
 
-        $partitions = $streamsList[0]->path()->partitions();
+        $partitions = $listed[0]->path->partitions();
 
         static::assertCount(2, $partitions);
         static::assertSame('2024', $partitions->get('order-year')->value);
         static::assertSame('123456-PL', $partitions->get('order-name')->value);
     }
 
+    public function test_overwrite_mode_sweeps_randomized_siblings_of_a_placeholder_file(): void
+    {
+        // an earlier Append run leaves 123456-PL_abc123.csv next to 123456-PL.csv; Overwrite must clear both
+        $this->setupFiles([
+            __FUNCTION__ => [
+                '123456-PL.csv' => 'existing content',
+                '123456-PL_abc123.csv' => 'randomized content',
+            ],
+        ]);
+        $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
+
+        $files = new FilesSink($this->fs, $file, overwrite());
+        $files->writeTo([new Partition('order-name', '123456-PL')])->append('new content');
+        $files->publish();
+
+        $files = iterator_to_array($this->fs()->list(path($this->getPath(__FUNCTION__)->path() . '/*.csv')));
+
+        static::assertCount(1, $files);
+        static::assertSame('123456-PL.csv', $files[0]->path->basename());
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
+    }
+
     public function test_overwrite_mode_replaces_existing_placeholder_file(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-        $streams->setMode(overwrite());
-
         $this->setupFiles([
             __FUNCTION__ => [
                 '123456-PL.csv' => 'existing content',
@@ -90,9 +110,9 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
         ]);
         $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
 
-        $fileStream = $streams->writeTo($file, partitions: [new Partition('order-name', '123456-PL')]);
-        $fileStream->append('new content');
-        $streams->closeStreams($file);
+        $files = new FilesSink($this->fs, $file, overwrite());
+        $files->writeTo([new Partition('order-name', '123456-PL')])->append('new content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path($this->getPath(__FUNCTION__)->path() . '/*.csv')));
 
@@ -103,14 +123,12 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
 
     public function test_write_to_placeholder_path_consuming_all_partitions(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-
         $this->setupFiles([__FUNCTION__ => []]);
         $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
 
-        $fileStream = $streams->writeTo($file, partitions: [new Partition('order-name', '123456-PL')]);
-        $fileStream->append('file content');
-        $streams->closeStreams($file);
+        $files = $this->files($file);
+        $files->writeTo([new Partition('order-name', '123456-PL')])->append('file content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path($this->getPath(__FUNCTION__)->path() . '/*.csv')));
 
@@ -121,17 +139,15 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
 
     public function test_write_to_placeholder_path_with_remaining_partitions(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-
         $this->setupFiles([__FUNCTION__ => []]);
         $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
 
-        $fileStream = $streams->writeTo($file, partitions: [
+        $files = $this->files($file);
+        $files->writeTo([
             new Partition('order-year', '2024'),
             new Partition('order-name', '123456-PL'),
-        ]);
-        $fileStream->append('file content');
-        $streams->closeStreams($file);
+        ])->append('file content');
+        $files->publish();
 
         $files = iterator_to_array($this->fs()->list(path($this->getPath(__FUNCTION__)->path() . '/**/*.csv')));
 
@@ -142,19 +158,17 @@ final class PartitionPlaceholdersTest extends FilesystemStreamsTestCase
 
     public function test_write_to_placeholder_path_without_partitions(): void
     {
-        $streams = new FilesystemStreams($this->fstab());
-
         $this->setupFiles([__FUNCTION__ => []]);
         $file = $this->getPath(__FUNCTION__ . '/{order-name}.csv');
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('contains partition placeholders but rows are not partitioned');
 
-        $streams->writeTo($file);
+        $this->files($file)->writeTo();
     }
 
-    protected function streams(): FilesystemStreams
+    protected function saveMode(): SaveMode
     {
-        return new FilesystemStreams($this->fstab());
+        return exception_if_exists();
     }
 }

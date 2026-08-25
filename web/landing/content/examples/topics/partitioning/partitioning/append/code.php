@@ -21,6 +21,5 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'), ref('sku'))
-    ->mode(append())
-    ->write(to_csv(__DIR__ . '/output/products.csv'))
+    ->write(to_csv(__DIR__ . '/output/products.csv')->saveMode(append()))
     ->run();

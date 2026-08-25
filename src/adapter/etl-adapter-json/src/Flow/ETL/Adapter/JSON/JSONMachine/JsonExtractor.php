@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Adapter\JSON\JSONEncoder;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
@@ -14,6 +15,9 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 use JsonMachine\Items;
@@ -21,6 +25,7 @@ use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
 use function count;
 use function Flow\ETL\DSL\str_schema;
+use function sprintf;
 
 final class JsonExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -33,9 +38,23 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
 
     private ?Schema $schema = null;
 
+    private readonly Filesystem $filesystem;
+
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_json($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
         $this->resetLimit();
     }
 
@@ -58,7 +77,9 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $stream = $this->filesystem->readFrom($listedFile->path);
+
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
@@ -105,8 +126,6 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                         $this->incrementReturnedRows();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-
                             return;
                         }
                     }
@@ -121,8 +140,6 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
-
                     return;
                 }
             }

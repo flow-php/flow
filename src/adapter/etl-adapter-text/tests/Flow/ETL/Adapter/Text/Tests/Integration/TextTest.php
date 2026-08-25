@@ -63,8 +63,10 @@ final class TextTest extends FlowTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_text($path = __DIR__ . '/var/test_transformation_loader.txt')))
+            ->write(to_transformation(
+                select('id'),
+                to_text($path = __DIR__ . '/var/test_transformation_loader.txt')->saveMode(overwrite()),
+            ))
             ->run();
 
         $content = file_get_contents($path);

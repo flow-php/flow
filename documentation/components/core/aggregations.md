@@ -32,7 +32,7 @@ data_frame()
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))
     ->withEntry('date', ref('Zaktualizowany czas')->toDate('Y/m/d')->dateFormat('Y/m'))
     ->select('date', 'production_kwh', 'consumption_kwh')
-    ->groupBy(ref('date'))
+    ->groupBy([ref('date')])
     ->aggregate(
         average(ref('production_kwh')),
         average(ref('consumption_kwh')),

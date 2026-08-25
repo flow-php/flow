@@ -9,6 +9,8 @@ use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
@@ -37,8 +39,9 @@ function from_parquet(
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
     ?ParquetEngine $engine = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): ParquetExtractor {
-    $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path))
+    $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withOptions($options)
         ->withByteOrder($byte_order)
         ->withEngine($engine);
@@ -68,8 +71,9 @@ function to_parquet(
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
     ?ParquetEngine $engine = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): ParquetLoader {
-    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path))
+    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withCompressions($compressions)
         ->withEngine($engine);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileConvertCommand;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -59,6 +60,32 @@ final class FileConvertCommandTest extends TestCase
 
         static::assertFileExists($output);
         unlink($output);
+    }
+
+    public function test_cli_rejects_a_remote_input_path(): void
+    {
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The Flow CLI reads and writes "file://" paths only');
+
+        $tester->execute([
+            'input-file' => 'aws-s3://bucket/orders.csv',
+            'output-file' => __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json',
+        ]);
+    }
+
+    public function test_cli_rejects_a_remote_output_path(): void
+    {
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The Flow CLI reads and writes "file://" paths only');
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            'output-file' => 'aws-s3://bucket/orders.parquet',
+        ]);
     }
 
     public function test_convert_with_offset(): void

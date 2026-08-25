@@ -222,6 +222,11 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return null;
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {

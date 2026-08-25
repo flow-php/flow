@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
+namespace Flow\ETL\Tests\Integration\Filesystem\FilesSink\NotPartitioned;
 
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Tests\Integration\Filesystem\FilesSink\FilesSinkTestCase;
 use Override;
 
 use function file_get_contents;
 use function Flow\ETL\DSL\ignore;
 
-final class IgnoreModeTest extends FilesystemStreamsTestCase
+final class IgnoreModeTest extends FilesSinkTestCase
 {
     #[Override]
     protected function tearDown(): void
@@ -22,7 +22,6 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
     public function test_open_stream_for_existing_file(): void
     {
-        $streams = $this->streams();
         $this->setupFiles([
             __FUNCTION__ => [
                 'existing-file.txt' => 'some content',
@@ -30,9 +29,9 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         ]);
         $path = $this->getPath(__FUNCTION__ . '/existing-file.txt');
 
-        $fileStream = $streams->writeTo($path);
-        $fileStream->append('different content');
-        $streams->closeStreams($path);
+        $files = $this->files($path);
+        $files->writeTo()->append('different content');
+        $files->publish();
 
         static::assertFileExists($path->path());
         static::assertSame('some content', file_get_contents($path->path()));
@@ -40,25 +39,21 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
     public function test_open_stream_for_non_existing_file(): void
     {
-        $streams = $this->streams();
         $this->setupFiles([
             __FUNCTION__ => [],
         ]);
         $path = $this->getPath(__FUNCTION__ . '/non-existing-file.txt');
 
-        $fileStream = $streams->writeTo($path);
-        $fileStream->append('some content');
-        $streams->closeStreams($path);
+        $files = $this->files($path);
+        $files->writeTo()->append('some content');
+        $files->publish();
 
         static::assertFileExists($path->path());
         static::assertSame('some content', file_get_contents($path->path()));
     }
 
-    protected function streams(): FilesystemStreams
+    protected function saveMode(): SaveMode
     {
-        $streams = new FilesystemStreams($this->fstab());
-        $streams->setMode(ignore());
-
-        return $streams;
+        return ignore();
     }
 }

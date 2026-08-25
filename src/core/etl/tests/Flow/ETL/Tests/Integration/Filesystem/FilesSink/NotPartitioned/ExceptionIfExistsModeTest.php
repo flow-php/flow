@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
+namespace Flow\ETL\Tests\Integration\Filesystem\FilesSink\NotPartitioned;
 
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Tests\Integration\Filesystem\FilesSink\FilesSinkTestCase;
 use Override;
 
 use function file_get_contents;
 use function Flow\ETL\DSL\exception_if_exists;
 
-final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
+final class ExceptionIfExistsModeTest extends FilesSinkTestCase
 {
     #[Override]
     protected function tearDown(): void
@@ -25,7 +25,6 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $this->expectExceptionMessageMatches(
             '/Destination path (.*) already exists, please change path to different or set different SaveMode/',
         );
-        $streams = $this->streams();
 
         $this->setupFiles([
             __FUNCTION__ => [
@@ -33,32 +32,26 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $file = $this->getPath(__FUNCTION__ . '/existing-file.txt');
-
-        $streams->writeTo($file);
+        $this->files($this->getPath(__FUNCTION__ . '/existing-file.txt'))->writeTo();
     }
 
     public function test_open_stream_for_non_existing_file(): void
     {
-        $streams = $this->streams();
         $this->setupFiles([
             __FUNCTION__ => [],
         ]);
         $file = $this->getPath(__FUNCTION__ . '/non-existing-file.txt');
 
-        $fileStream = $streams->writeTo($file);
-        $fileStream->append('some content');
-        $streams->closeStreams($file);
+        $files = $this->files($file);
+        $files->writeTo()->append('some content');
+        $files->publish();
 
         static::assertFileExists($file->path());
         static::assertSame('some content', file_get_contents($file->path()));
     }
 
-    protected function streams(): FilesystemStreams
+    protected function saveMode(): SaveMode
     {
-        $streams = new FilesystemStreams($this->fstab());
-        $streams->setMode(exception_if_exists());
-
-        return $streams;
+        return exception_if_exists();
     }
 }

@@ -82,7 +82,7 @@ final class XMLTest extends FlowIntegrationTestCase
             )
             ->withEntry('value', ref('item')->cast(type_integer()))
             ->withEntry('date', ref('date')->cast('date'))
-            ->sortBy(ref('date')->asc())
+            ->sortBy([ref('date')->asc()])
             ->drop('node', 'items', 'item')
             ->fetch();
 

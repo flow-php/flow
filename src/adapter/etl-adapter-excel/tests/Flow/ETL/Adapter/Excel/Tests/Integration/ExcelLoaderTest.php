@@ -54,8 +54,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -74,8 +73,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -99,8 +97,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 3), string_entry('name', 'Third')),
             )))
             ->batchSize(2)
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -126,8 +123,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 2), string_entry('name', 'Bob'), string_entry('email', 'bob@example.com')),
                 row(int_entry('id', 3), string_entry('name', 'Charlie'), string_entry('email', 'charlie@example.com')),
             )))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriter($writer))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -155,8 +151,9 @@ final class ExcelLoaderTest extends FlowTestCase
                 datetime_entry('datetime_val', $datetime),
                 time_entry('time_val', $time),
             ))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withDateTimeFormat('d/m/Y H:i')->withTimeFormat('%H:%I'))
+            ->write(
+                to_excel($outputPath)->saveMode(overwrite())->withDateTimeFormat('d/m/Y H:i')->withTimeFormat('%H:%I'),
+            )
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -176,8 +173,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withSheetName('MySheet')->withWriter($writer))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withSheetName('MySheet')->withWriter($writer))
             ->run();
 
         $rows = df()->read(from_excel($outputPath)->withSheetName('MySheet'))->fetch()->toArray();
@@ -198,8 +194,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(date_entry('date_val', $date), datetime_entry('datetime_val', $datetime)))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriter(ExcelWriter::XLSX))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -225,8 +220,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 2), string_entry('name', 'Bob'), string_entry('category', 'Users')),
                 row(int_entry('id', 3), string_entry('name', 'Product A'), string_entry('category', 'Products')),
             )))
-            ->saveMode(overwrite())
-            ->write($loader)
+            ->write($loader->saveMode(overwrite()))
             ->run();
 
         $usersRows = df()->read(from_excel($outputPath)->withSheetName('Users'))->fetch()->toArray();
@@ -259,8 +253,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 1), string_entry('name', 'Alice'), string_entry('email', null)),
                 row(int_entry('id', 2), string_entry('name', null), string_entry('email', 'bob@example.com')),
             )))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriter($writer))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -289,8 +282,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 uuid_entry('uuid_val', $uuidString),
                 json_entry('json_val', ['key' => 'value']),
             ))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriter($writer))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -320,8 +312,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 1), string_entry('name', 'Alice')),
                 row(int_entry('id', 2), string_entry('name', 'Bob')),
             )))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withHeader(false)->withWriter($writer))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withHeader(false)->withWriter($writer))
             ->run();
 
         $rows = df()->read(from_excel($outputPath)->withHeader(false))->fetch()->toArray();
@@ -359,8 +350,7 @@ final class ExcelLoaderTest extends FlowTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_excel($outputPath)))
+            ->write(to_transformation(select('id'), to_excel($outputPath)->saveMode(overwrite())))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch();
@@ -392,8 +382,7 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(int_entry('id', 1), string_entry('name', 'Alice')),
                 row(int_entry('id', 2), string_entry('name', 'Bob')),
             )))
-            ->saveMode(overwrite())
-            ->write($loader)
+            ->write($loader->saveMode(overwrite()))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -418,8 +407,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write($loader)
+            ->write($loader->saveMode(overwrite()))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -440,8 +428,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriterOptions($options))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriterOptions($options))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
@@ -462,8 +449,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_rows(rows(row(int_entry('id', 1), string_entry('name', 'Test')))))
-            ->saveMode(overwrite())
-            ->write(to_excel($outputPath)->withWriterOptions($options))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriterOptions($options))
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();

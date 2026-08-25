@@ -24,7 +24,7 @@ final class CountTest extends FlowTestCase
                     ['a' => 2],
                     ['a' => 3],
                 ]))
-                ->aggregate(count())
+                ->aggregate([count()])
                 ->fetch()
                 ->toArray(),
         );
@@ -45,7 +45,7 @@ final class CountTest extends FlowTestCase
                     ['id' => 4, 'group' => 'b'],
                     ['id' => 5, 'group' => 'b'],
                 ]))
-                ->groupBy('group')
+                ->groupBy(['group'])
                 ->aggregate(count())
                 ->fetch()
                 ->toArray(),
@@ -69,7 +69,7 @@ final class CountTest extends FlowTestCase
                     ['id' => 4, 'group' => 'b', 'subgroup' => 'x'],
                     ['id' => 5, 'group' => 'b', 'subgroup' => 'y'],
                 ]))
-                ->groupBy('group', 'subgroup')
+                ->groupBy(['group', 'subgroup'])
                 ->aggregate(count())
                 ->fetch()
                 ->toArray(),

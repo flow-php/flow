@@ -110,7 +110,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             )
             ->filter(ref('returns_dataframe')->equals(lit(true)))
             ->select('class_slug', 'name')
-            ->groupBy(ref('class_slug'))
+            ->groupBy([ref('class_slug')])
             ->aggregate(collect('name'))
             ->fetch()
             ->toArray();

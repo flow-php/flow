@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_limit_offset, to_dbal_table_insert};
-use function Flow\ETL\DSL\{data_frame, overwrite, to_output};
+use function Flow\ETL\DSL\{data_frame, to_output};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
@@ -43,7 +43,6 @@ data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))
     ->select('order_id', 'created_at', 'email', 'customer')
     ->limit(10)
-    ->saveMode(overwrite())
     ->write(to_dbal_table_insert($connection, 'orders'))
     ->run();
 

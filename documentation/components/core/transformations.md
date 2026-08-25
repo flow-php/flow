@@ -249,7 +249,7 @@ use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
 $sortById = new class implements Transformation {
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->sortBy(ref('id'));
+        return $dataFrame->sortBy([ref('id')]);
     }
 };
 

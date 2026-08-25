@@ -169,6 +169,12 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         iterator_to_array(memory_filesystem()->list(path('file:///var/foo.txt')));
     }
 
+    public function test_memory_filesystem_does_not_support_a_local_path(): void
+    {
+        static::assertFalse(memory_filesystem()->supports(path('/tmp/orders.csv')));
+        static::assertTrue(memory_filesystem()->supports(path('memory://orders.csv')));
+    }
+
     public function test_move_blob(): void
     {
         $fs = memory_filesystem();

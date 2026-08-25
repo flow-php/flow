@@ -7,7 +7,8 @@ namespace Flow\ETL\Adapter\Text;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type;
-use Flow\ETL\Loader;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
@@ -17,19 +18,22 @@ use function is_string;
  * @param Path|string $path
  */
 #[DocumentationDSL(module: Module::TEXT, type: Type::EXTRACTOR)]
-function from_text(string|Path $path): TextExtractor
+function from_text(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): TextExtractor
 {
-    return new TextExtractor(is_string($path) ? path_real($path) : $path);
+    return new TextExtractor(is_string($path) ? path_real($path) : $path, $filesystem);
 }
 
 /**
  * @param Path|string $path
  * @param string $new_line_separator - default PHP_EOL - @deprecated use withNewLineSeparator method instead
- *
- * @return Loader
  */
 #[DocumentationDSL(module: Module::TEXT, type: Type::LOADER)]
-function to_text(string|Path $path, string $new_line_separator = PHP_EOL): Loader
-{
-    return (new TextLoader(is_string($path) ? path_real($path) : $path))->withNewLineSeparator($new_line_separator);
+function to_text(
+    string|Path $path,
+    string $new_line_separator = PHP_EOL,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+): TextLoader {
+    return (new TextLoader(is_string($path) ? path_real($path) : $path, $filesystem))->withNewLineSeparator(
+        $new_line_separator,
+    );
 }

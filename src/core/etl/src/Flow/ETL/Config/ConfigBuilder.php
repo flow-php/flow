@@ -24,17 +24,12 @@ use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
-use Flow\Filesystem\Filesystem;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
-
-use function Flow\Filesystem\DSL\filesystem_telemetry_config;
-use function Flow\Filesystem\DSL\fstab;
 
 final class ConfigBuilder
 {
@@ -48,8 +43,6 @@ final class ConfigBuilder
      * @var int<1, max>
      */
     private int $extractorBatchSize;
-
-    private ?FilesystemTable $fstab;
 
     private ?GroupByAlgorithmBuilder $groupBy;
 
@@ -83,7 +76,6 @@ final class ConfigBuilder
         $this->id = null;
         $this->name = null;
         $this->serializer = null;
-        $this->fstab = null;
         $this->hydrator = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
@@ -121,7 +113,7 @@ final class ConfigBuilder
         $hydrator = $this->hydrator;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
-        $cacheConfig = $this->cache->build($this->fstab(), $serializer, $this->telemetryConfig, $dataframeName);
+        $cacheConfig = $this->cache->build($serializer, $this->telemetryConfig, $dataframeName);
 
         return new Config(
             $id,
@@ -129,16 +121,15 @@ final class ConfigBuilder
             $this->version,
             $serializer,
             $this->getClock(),
-            $this->fstab(),
             $optimizer,
             $this->putInputIntoRows,
             $hydrator,
             $cacheConfig,
-            ($this->sort ?? new ExternalSortBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
-            ($this->groupBy ?? new HashGroupByBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
-            ($this->join ?? new HashJoinBuilder())->build($this->fstab(), $cacheConfig->localFilesystemCacheDir),
+            ($this->groupBy ?? new HashGroupByBuilder())->build($cacheConfig->localFilesystemCacheDir),
+            ($this->join ?? new HashJoinBuilder())->build($cacheConfig->localFilesystemCacheDir),
             $this->extractorBatchSize,
             randomValueGenerator: $this->randomValueGenerator,
         );
@@ -154,13 +145,6 @@ final class ConfigBuilder
     public function cacheDir(string|Path $dir): self
     {
         $this->cache->cacheDir($dir);
-
-        return $this;
-    }
-
-    public function cacheFilesystem(string $protocol): self
-    {
-        $this->cache->filesystemMount($protocol);
 
         return $this;
     }
@@ -222,13 +206,6 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function mount(Filesystem $filesystem): self
-    {
-        $this->fstab()->mount($filesystem);
-
-        return $this;
-    }
-
     public function name(string $name): self
     {
         $this->name = $name;
@@ -273,48 +250,11 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function unmount(Filesystem $filesystem): self
-    {
-        $this->fstab()->unmount($filesystem);
-
-        return $this;
-    }
-
     public function withTelemetry(Telemetry $telemetry, TelemetryOptions $options = new TelemetryOptions()): self
     {
         $this->telemetryConfig = new TelemetryConfig($telemetry, $options);
 
-        if ($this->fstab !== null) {
-            $this->fstab->withTelemetry(filesystem_telemetry_config(
-                $telemetry,
-                $this->getClock(),
-                $options->filesystem,
-            ));
-        }
-
         return $this;
-    }
-
-    private function fstab(): FilesystemTable
-    {
-        if ($this->fstab === null) {
-            $this->fstab = fstab();
-
-            $filesystemOptions = $this->telemetryConfig?->options->filesystem;
-
-            if (
-                $filesystemOptions !== null
-                && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)
-            ) {
-                $this->fstab->withTelemetry(filesystem_telemetry_config(
-                    $this->telemetry()->telemetry,
-                    $this->getClock(),
-                    $filesystemOptions,
-                ));
-            }
-        }
-
-        return $this->fstab;
     }
 
     private function getClock(): ClockInterface
@@ -324,14 +264,5 @@ final class ConfigBuilder
         }
 
         return $this->clock;
-    }
-
-    private function telemetry(): TelemetryConfig
-    {
-        if ($this->telemetryConfig === null) {
-            $this->telemetryConfig = TelemetryConfig::default($this->getClock());
-        }
-
-        return $this->telemetryConfig;
     }
 }

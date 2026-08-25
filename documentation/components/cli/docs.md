@@ -31,7 +31,23 @@ return config_builder()
 
 `flow read --config .flow.php orders.csv`
 
-One of the most common use cases is to mount a custom filesystem into Flow fstab to access remote files through CLI.
+### Reading remote files
+
+The CLI reads and writes `file://` paths only. To work with a remote filesystem, build it in a pipeline
+file and run that with `flow run`:
+
+```php
+# pipeline.php
+$s3 = aws_s3_filesystem($bucket, aws_s3_client([...]));
+
+return data_frame()
+    ->read(from_csv(path('aws-s3://orders.csv'), filesystem: $s3))
+    ->write(to_output());
+```
+
+```shell
+flow run pipeline.php
+```
 
 ```shell
 $ flow

@@ -177,7 +177,7 @@ final class FileAnalyzeCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

@@ -19,7 +19,7 @@ data_frame()
         ['id' => 9, 'group' => 'A'],
         ['id' => 10, 'group' => 'B'],
     ]))
-    ->groupBy(ref('group'))
+    ->groupBy([ref('group')])
     ->aggregate(count(ref('group')))
     ->write(to_output(truncate: false))
     ->run();

@@ -25,6 +25,7 @@ use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
@@ -266,7 +267,6 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
-use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Types\Type;
@@ -343,15 +343,8 @@ function telemetry_options(
     bool $trace_transformations = false,
     bool $trace_cache = false,
     bool $collect_metrics = false,
-    ?FilesystemTelemetryOptions $filesystem = null,
 ): TelemetryOptions {
-    return new TelemetryOptions(
-        $trace_loading,
-        $trace_transformations,
-        $trace_cache,
-        $collect_metrics,
-        $filesystem ?? new FilesystemTelemetryOptions(),
-    );
+    return new TelemetryOptions($trace_loading, $trace_transformations, $trace_cache, $collect_metrics);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -364,9 +357,11 @@ function from_rows(Rows ...$rows): RowsExtractor
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'partitioning', example: 'path_partitions')]
-function from_path_partitions(Path|string $path): PathPartitionsExtractor
-{
-    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path);
+function from_path_partitions(
+    Path|string $path,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+): PathPartitionsExtractor {
+    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path, $filesystem);
 }
 
 /**
@@ -393,9 +388,13 @@ function from_array(iterable $array, ?Schema $schema = null): ArrayExtractor
  * @param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false): CacheExtractor
-{
-    $extractor = new CacheExtractor($id);
+function from_cache(
+    string $id,
+    ?Extractor $fallback_extractor = null,
+    bool $clear = false,
+    ?Cache $cache = null,
+): CacheExtractor {
+    $extractor = new CacheExtractor($id, $cache);
 
     if ($fallback_extractor !== null) {
         $extractor->withFallbackExtractor($fallback_extractor);
@@ -421,9 +420,9 @@ function from_memory(Memory $memory): MemoryExtractor
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function files(string|Path $directory): FilesExtractor
+function files(string|Path $directory, Filesystem $filesystem = new NativeLocalFilesystem()): FilesExtractor
 {
-    return new FilesExtractor(is_string($directory) ? path($directory) : $directory);
+    return new FilesExtractor(is_string($directory) ? path($directory) : $directory, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]

@@ -13,6 +13,9 @@ use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
@@ -25,6 +28,7 @@ use Generator;
 use function count;
 use function Flow\ETL\DSL\str_schema;
 use function max;
+use function sprintf;
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -46,12 +50,26 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
     private SchemaConverter $schemaConverter;
 
+    private readonly Filesystem $filesystem;
+
     /**
      * @param Path $path
      */
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_parquet($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
         $this->options = Options::default();
@@ -106,8 +124,6 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                         $signal = yield new Rows($hydratedRow);
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-
                             return;
                         }
                     }
@@ -121,8 +137,6 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 $signal = yield new Rows($hydratedRow);
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
-
                     return;
                 }
             }
@@ -184,7 +198,9 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
      */
     private function readers(FlowContext $context): Generator
     {
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $stream = $this->filesystem->readFrom($listedFile->path);
+
             yield [
                 'file' => (new Reader(
                     byteOrder: $this->byteOrder,

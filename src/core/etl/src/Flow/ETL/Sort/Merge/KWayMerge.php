@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\Merge;
 
-use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\RowsBuffer;
@@ -17,7 +17,6 @@ final readonly class KWayMerge
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private BucketsStorage $storage,
         private References $refs,
         private int $batchSize = 1000,
     ) {
@@ -29,24 +28,24 @@ final readonly class KWayMerge
     }
 
     /**
-     * @param list<string> $bucketIds
+     * @param list<BucketRun> $runs
      *
      * @return Generator<Rows>
      */
-    public function merge(array $bucketIds): Generator
+    public function merge(array $runs): Generator
     {
         $heap = new RowsMinHeap(...$this->refs->all());
 
         /** @var array<string, BucketCursor> $cursors */
         $cursors = [];
 
-        foreach ($bucketIds as $id) {
-            $cursor = new BucketCursor($this->storage->get($id));
+        foreach ($runs as $run) {
+            $cursor = new BucketCursor($run->rows());
 
             if ($cursor->valid()) {
-                $heap->push($cursor->current(), $id);
+                $heap->push($cursor->current(), $run->id);
                 $cursor->next();
-                $cursors[$id] = $cursor;
+                $cursors[$run->id] = $cursor;
             }
         }
 

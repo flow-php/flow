@@ -176,8 +176,7 @@ data_frame()
         ['date' => '2024-01-02', 'amount' => 200],
     ]))
     ->partitionBy(ref('date'))
-    ->mode(overwrite())
-    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')->saveMode(overwrite()))
     ->run();
 ```
 
@@ -195,16 +194,14 @@ data_frame()
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->partitionBy(ref('date'))
-    ->mode(overwrite())
-    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')->saveMode(overwrite()))
     ->run();
 
 // Second write - DELETES the 100 and writes 200
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 200]]))
     ->partitionBy(ref('date'))
-    ->mode(overwrite())
-    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')->saveMode(overwrite()))
     ->run();
 
 // Result: date=2024-01-01/sales.csv contains ONLY amount=200
@@ -220,8 +217,7 @@ To combine data from multiple sources into the same partition, use `append()` mo
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->partitionBy(ref('date'))
-    ->mode(append())
-    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')->saveMode(append()))
     ->run();
 ```
 
@@ -238,8 +234,7 @@ data_frame()
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->partitionBy(ref('date'))
-    ->mode(ignore())
-    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')->saveMode(ignore()))
     ->run();
 ```
 

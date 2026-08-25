@@ -11,21 +11,23 @@ use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
 use function is_string;
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::EXTRACTOR)]
-function from_excel(string|Path $path): ExcelExtractor
+function from_excel(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): ExcelExtractor
 {
-    return new ExcelExtractor(is_string($path) ? path_real($path) : $path);
+    return new ExcelExtractor(is_string($path) ? path_real($path) : $path, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::LOADER)]
-function to_excel(string|Path $path): ExcelLoader
+function to_excel(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): ExcelLoader
 {
-    return new ExcelLoader(is_string($path) ? path_real($path) : $path);
+    return new ExcelLoader(is_string($path) ? path_real($path) : $path, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::HELPER)]

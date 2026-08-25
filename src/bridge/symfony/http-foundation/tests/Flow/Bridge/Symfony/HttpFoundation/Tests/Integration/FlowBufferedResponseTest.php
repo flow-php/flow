@@ -13,6 +13,16 @@ use function Flow\ETL\DSL\from_array;
 
 final class FlowBufferedResponseTest extends TestCase
 {
+    public function test_buffered_response_reads_back_what_it_wrote(): void
+    {
+        // identity, not protocol, makes a MemoryFilesystem a buffer: reading back through a different
+        // instance returns nothing and the response silently degrades to HTTP 204
+        $response = http_stream_open(from_array([['id' => 1], ['id' => 2]]))->response(http_csv_output());
+
+        static::assertSame(200, $response->getStatusCode());
+        static::assertSame("id\n1\n2\n", $response->getContent());
+    }
+
     public function test_buffering_array_response_to_csv(): void
     {
         $response = http_stream_open(from_array([

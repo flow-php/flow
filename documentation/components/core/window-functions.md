@@ -39,7 +39,7 @@ data_frame()
         ])
     )
     ->withEntry('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
-    ->sortBy(ref('department'), ref('rank'))
+    ->sortBy([ref('department'), ref('rank')])
     ->write(to_output(false))
     ->run();
 ```

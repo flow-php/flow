@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
 use Flow\ETL\Loader;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
 
@@ -29,9 +30,9 @@ final readonly class XMLOutput implements Output
         private XMLWriter $xmlWriter = new DOMDocumentWriter(),
     ) {}
 
-    public function loader(Path $path): Loader
+    public function loader(Path $path, Filesystem $filesystem): Loader
     {
-        return to_xml($path, xml_writer: $this->xmlWriter)
+        return to_xml($path, xml_writer: $this->xmlWriter, filesystem: $filesystem)
             ->withRootElementName($this->rootElementName)
             ->withRowElementName($this->rowElementName)
             ->withAttributePrefix($this->attributePrefix)

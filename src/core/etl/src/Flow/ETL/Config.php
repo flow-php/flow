@@ -15,7 +15,6 @@ use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
 
@@ -35,7 +34,6 @@ final readonly class Config
         private string $version,
         private Serializer $serializer,
         private ClockInterface $clock,
-        private FilesystemTable $filesystemTable,
         private Optimizer $optimizer,
         private bool $putInputIntoRows,
         private Hydrator $hydrator,
@@ -74,11 +72,6 @@ final readonly class Config
     public function clock(): ClockInterface
     {
         return $this->clock;
-    }
-
-    public function fstab(): FilesystemTable
-    {
-        return $this->filesystemTable;
     }
 
     public function entryFactory(): EntryFactory

@@ -11,6 +11,7 @@ use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Types\Type\AutoCaster;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
 use function file_exists;
@@ -581,6 +582,25 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $this->expectException(InvalidSchemeException::class);
 
         native_local_filesystem()->status(path('memory:///var/foo.txt'));
+    }
+
+    #[TestWith(['aws-s3://bucket/orders.csv'])]
+    #[TestWith(['memory://orders.csv'])]
+    #[TestWith(['stdout://orders.csv'])]
+    public function test_local_filesystem_does_not_support_remote_paths(string $uri): void
+    {
+        static::assertFalse(native_local_filesystem()->supports(path($uri)));
+    }
+
+    #[TestWith(['/tmp/orders.csv'])]
+    #[TestWith(['file:///tmp/orders.csv'])]
+    #[TestWith(['orders.csv'])]
+    #[TestWith(['./orders.csv'])]
+    #[TestWith(['/tmp/date={date}/orders.csv'])]
+    #[TestWith(['/tmp/**/*.csv'])]
+    public function test_local_filesystem_supports_local_paths(string $uri): void
+    {
+        static::assertTrue(native_local_filesystem()->supports(path($uri)));
     }
 
     public function test_tmp_dir_status(): void

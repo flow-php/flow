@@ -159,6 +159,12 @@ final class StdOutFilesystemTest extends TestCase
         static::assertNull($filesystem->status(path('stdout://x.stdout')));
     }
 
+    public function test_stdout_filesystem_supports_only_stdout_paths(): void
+    {
+        static::assertTrue((new StdOutFilesystem())->supports(path('stdout://output.csv')));
+        static::assertFalse((new StdOutFilesystem())->supports(path('/tmp/output.csv')));
+    }
+
     public function test_write_to_different_targets_concurrently_succeeds(): void
     {
         $filesystem = new StdOutFilesystem();

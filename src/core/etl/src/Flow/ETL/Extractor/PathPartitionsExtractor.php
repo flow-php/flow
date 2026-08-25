@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter\PlaceholderPartitions;
 use Generator;
 
 use function array_map;
@@ -20,31 +23,39 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
 
+    private readonly Filesystem $filesystem;
+
     public function __construct(
         private readonly Path $path,
-    ) {}
+        Filesystem $filesystem = new NativeLocalFilesystem(),
+    ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_path_partitions($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+    }
 
     /**
      * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
-        $hasPlaceholders = [] !== $this->path->partitionPlaceholders();
-        $filter = $hasPlaceholders ? new PlaceholderPartitions($this->path, $this->filter()) : $this->filter();
-
-        foreach ($context->filesystem($this->path)->list($this->path, $filter) as $fileStatus) {
-            $partitions = $hasPlaceholders
-                ? $fileStatus
-                    ->path
-                    ->withPartitions($this->path->extractPlaceholderPartitions($fileStatus->path))
-                    ->partitions()
-                : $fileStatus->path->partitions();
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
+            $partitions = $fileStatus->path->partitions();
 
             $row = row(
                 string_entry('path', $fileStatus->path->uri()),
@@ -62,8 +73,6 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
             $this->incrementReturnedRows();
 
             if ($signal === Signal::STOP || $this->reachedLimit()) {
-                $context->streams()->closeStreams($this->path);
-
                 return;
             }
         }

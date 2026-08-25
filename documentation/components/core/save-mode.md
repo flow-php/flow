@@ -4,7 +4,7 @@
 
 [TOC]
 
-Flow DataFrame provides four save modes that control how data is written when the destination file or path already exists:
+Flow provides four save modes that control how a file sink writes when the destination file or path already exists:
 
 - **ExceptionIfExists** (default): Throws an exception if the destination already exists
 - **Append**: Appends data to existing files (may cause duplicates)
@@ -13,41 +13,35 @@ Flow DataFrame provides four save modes that control how data is written when th
 
 ## Changing Save Mode
 
-Save mode is set using the same `DataFrame::mode()` method as ExecutionMode:
+Save mode belongs to the sink, not to the DataFrame - set it with `FileLoader::saveMode()`:
 
 ```php
-use Flow\ETL\Filesystem\SaveMode;
-
 (data_frame())
     ->read(from_array([
         ['id' => 1, 'name' => 'John'],
         ['id' => 2, 'name' => 'Jane'],
     ]))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/output.csv'))
+    ->write(to_csv(__DIR__ . '/output.csv')->saveMode(overwrite()))
     ->run();
 ```
 
-The save mode applies only to the DataFrame it is called on. DataFrames built from the same `Config` do not share it, so every DataFrame that needs a non-default mode must set its own:
+Each sink carries its own mode, so two sinks in one DataFrame can differ and a mode never leaks from one
+destination to another:
 
 ```php
-$config = config();
-
-(data_frame($config))
+(data_frame())
     ->read(from_array([['id' => 1]]))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/first.csv'))
-    ->run();
-
-(data_frame($config))
-    ->read(from_array([['id' => 2]]))
+    ->write(to_csv(__DIR__ . '/first.csv')->saveMode(overwrite()))
     ->write(to_csv(__DIR__ . '/second.csv'))
     ->run();
 
-// The second DataFrame runs with ExceptionIfExists, not Overwrite.
+// The second sink runs with ExceptionIfExists, not Overwrite.
 // Running it again throws:
 // RuntimeException: Destination path "/path/to/second.csv" already exists
 ```
+
+The registry a sink uses to track its open streams is scoped to one run, so a run that fails part-way does
+not leave a stream registered for the next run to append into.
 
 ## Save Mode Behavior
 
@@ -74,8 +68,7 @@ Creates additional files in the same directory when destination already exists:
 ```php
 (data_frame())
     ->read(from_array([['id' => 3]]))
-    ->mode(SaveMode::Append)
-    ->write(to_csv(__DIR__ . '/data.csv'))
+    ->write(to_csv(__DIR__ . '/data.csv')->saveMode(append()))
     ->run();
 
 // First run creates: data.csv
@@ -113,8 +106,7 @@ Removes all existing files at the destination and writes fresh data:
 ```php
 (data_frame())
     ->read(from_array([['id' => 100]]))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/data.csv'))
+    ->write(to_csv(__DIR__ . '/data.csv')->saveMode(overwrite()))
     ->run();
 
 // File now contains only: id 100
@@ -138,8 +130,7 @@ Silently skips writing if the destination already exists:
 ```php
 (data_frame())
     ->read(from_array([['id' => 999]]))
-    ->mode(SaveMode::Ignore)
-    ->write(to_csv(__DIR__ . '/data.csv'))
+    ->write(to_csv(__DIR__ . '/data.csv')->saveMode(ignore()))
     ->run();
 
 // If file exists: nothing happens, no error thrown
@@ -161,9 +152,8 @@ Save modes work with partitioned data:
         ['date' => '2024-01-01', 'value' => 100],
         ['date' => '2024-01-02', 'value' => 200],
     ]))
-    ->mode(SaveMode::Overwrite)
     ->partitionBy('date')
-    ->write(to_parquet(__DIR__ . '/data'))
+    ->write(to_parquet(__DIR__ . '/data')->saveMode(overwrite()))
     ->run();
 
 // Structure:

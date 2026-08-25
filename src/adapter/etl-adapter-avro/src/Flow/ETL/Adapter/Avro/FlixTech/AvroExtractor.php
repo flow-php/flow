@@ -11,6 +11,8 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\FlowContext;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 
@@ -21,6 +23,7 @@ final class AvroExtractor implements Extractor, FileExtractor, LimitableExtracto
 
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
         throw new RuntimeException(
             'Avro integration was abandoned due to lack of availability of good Avro libraries.',

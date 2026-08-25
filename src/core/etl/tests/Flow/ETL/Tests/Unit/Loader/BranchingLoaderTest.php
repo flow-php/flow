@@ -56,7 +56,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy, $sortById);
 
         foreach (RowsMother::descendingIdBatches() as $batch) {
@@ -211,7 +211,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy)->withTransformation($sortById);
 
         foreach (RowsMother::descendingIdBatches() as $batch) {
@@ -248,7 +248,7 @@ final class BranchingLoaderTest extends FlowTestCase
         $context = flow_context(config());
         $loader = to_branch(lit(true), $spy);
         $batches = RowsMother::descendingIdBatches();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
 
         $loader->load($batches[0], $context);
         $loader->withTransformation($sortById);
@@ -355,7 +355,7 @@ final class BranchingLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $context = flow_context(config());
         $batches = RowsMother::descendingIdBatches();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy)->withTransformation($sortById);
 
         $loader->load($batches[0], $context);
@@ -440,7 +440,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy, $sortById)->withTransformation(select('id'));
 
         foreach (RowsMother::descendingIdBatches() as $batch) {

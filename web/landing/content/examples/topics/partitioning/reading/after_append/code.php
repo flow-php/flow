@@ -17,8 +17,7 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'))
-    ->mode(append())
-    ->write(to_csv($outputPath . '/products.csv'))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(append()))
     ->run();
 
 data_frame()
@@ -29,8 +28,7 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'))
-    ->mode(append())
-    ->write(to_csv($outputPath . '/products.csv'))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(append()))
     ->run();
 
 data_frame()

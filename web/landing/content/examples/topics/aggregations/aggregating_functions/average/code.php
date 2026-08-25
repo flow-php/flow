@@ -14,6 +14,6 @@ data_frame()
         row(int_entry('a', 400)),
         row(int_entry('a', 400))
     )))
-    ->aggregate(average(ref('a')))
+    ->aggregate([average(ref('a'))])
     ->write(to_output(truncate: false))
     ->run();

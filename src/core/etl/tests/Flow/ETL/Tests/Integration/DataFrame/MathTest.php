@@ -85,7 +85,7 @@ final class MathTest extends FlowTestCase
                     float_entry('weight', 3.0),
                 ),
             )))
-            ->aggregate(sum(ref('price')), sum(ref('weight')))
+            ->aggregate([sum(ref('price')), sum(ref('weight'))])
             ->run(static function (Rows $r) use (&$rows): void {
                 $rows = $rows->merge($r);
             }, analyze: analyze()->withSchema());

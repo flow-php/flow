@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\ChartJS\bar_chart;
@@ -23,6 +25,23 @@ use function Flow\Filesystem\DSL\path;
 
 final class ChartJSLoaderTest extends FlowTestCase
 {
+    public function test_chartjs_output_path_on_a_mismatched_filesystem_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Filesystem Flow\\Filesystem\\Local\\NativeLocalFilesystem serves "file://" paths, '
+        . 'given: "memory://chart.html".');
+
+        to_chartjs(bar_chart(ref('Date'), refs(ref('Revenue'))))->withOutputPath(path('memory://chart.html'));
+    }
+
+    public function test_chartjs_output_path_without_an_extension_throws_at_build(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Stream path must have an extension, given: ');
+
+        to_chartjs(bar_chart(ref('Date'), refs(ref('Revenue'))))->withOutputPath(path(__DIR__ . '/var/no-extension'));
+    }
+
     public function test_loading_data_to_bar_chart(): void
     {
         $data = [
@@ -480,7 +499,7 @@ final class ChartJSLoaderTest extends FlowTestCase
                     ->minus(ref('Shipping Costs'))
                     ->round(lit(2)),
             )
-            ->aggregate(
+            ->aggregate([
                 first(ref('Date')->as('Date')),
                 sum(ref('Revenue')->as('Revenue')),
                 sum(ref('CM')->as('CM')),
@@ -488,7 +507,7 @@ final class ChartJSLoaderTest extends FlowTestCase
                 sum(ref('Storage Costs')->as('Storage Costs')),
                 sum(ref('Shipping Costs')->as('Shipping Costs')),
                 sum(ref('Profit')->as('Profit')),
-            )
+            ])
             ->write(to_chartjs_file($chart, $output = __DIR__ . '/Output/pie_chart.html'))
             ->run();
 

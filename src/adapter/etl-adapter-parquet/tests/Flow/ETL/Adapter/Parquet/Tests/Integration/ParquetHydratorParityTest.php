@@ -45,8 +45,7 @@ final class ParquetHydratorParityTest extends FlowTestCase
         data_frame(config())
             ->read(new FakeExtractor(50))
             ->drop('null', 'enum')
-            ->mode(overwrite())
-            ->write(to_parquet(path($this->path)))
+            ->write(to_parquet(path($this->path))->saveMode(overwrite()))
             ->run();
 
         $file = (new Reader())->read($this->path);

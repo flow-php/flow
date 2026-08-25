@@ -76,8 +76,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['date' => '2024-04-04'],
             ]))
             ->partitionBy('date')
-            ->saveMode(overwrite())
-            ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt'))
+            ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt')->saveMode(overwrite()))
             ->run();
 
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
@@ -228,8 +227,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ]))
             ->partitionBy('order-year', 'order-month', 'order-name')
             ->drop('order-year', 'order-month', 'order-name')
-            ->saveMode(overwrite())
-            ->write(to_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
+            ->write(to_text($output . '/{order-year}/{order-month}/{order-name}.txt')->saveMode(overwrite()))
             ->run();
 
         static::assertFileExists($output . '/2024/03/123456-PL.txt');
@@ -296,7 +294,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->collect()
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))
-            ->groupBy(ref('year'))
+            ->groupBy([ref('year')])
             ->aggregate(collect(ref('year')))
             ->fetch();
 

@@ -93,6 +93,11 @@ final readonly class TraceableFilesystem implements Filesystem
         return $this->filesystem->status($path);
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->filesystem->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         $stream = $this->filesystem->writeTo($path);

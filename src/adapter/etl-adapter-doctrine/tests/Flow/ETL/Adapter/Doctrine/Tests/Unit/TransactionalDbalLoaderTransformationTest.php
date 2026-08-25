@@ -52,7 +52,7 @@ final class TransactionalDbalLoaderTransformationTest extends FlowTestCase
             ->onError(ignore_error_handler())
             ->batchSize(2)
             ->write(to_dbal_transaction($connection, to_transformation(
-                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                 $sink,
             )))
             ->run();
@@ -81,7 +81,7 @@ final class TransactionalDbalLoaderTransformationTest extends FlowTestCase
                 ->write(to_dbal_transaction(
                     $connection,
                     to_transformation(
-                        new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                        new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                         to_dbal_table_insert($connection, 'tx_drain'),
                     ),
                     $closureThrowingLoader,
@@ -107,7 +107,7 @@ final class TransactionalDbalLoaderTransformationTest extends FlowTestCase
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 4], ['id' => 2]]))
             ->batchSize(2)
             ->write(to_dbal_transaction($connection, to_transformation(
-                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                 $spy,
             )))
             ->run();
@@ -127,9 +127,9 @@ final class TransactionalDbalLoaderTransformationTest extends FlowTestCase
             ->write(to_dbal_transaction($connection, to_branch(
                 lit(true),
                 $spy,
-            )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref(
+            )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref(
                 'id',
-            ))))))
+            )])))))
             ->run();
 
         static::assertSame([['rows' => 4, 'inTransaction' => true]], $spy->deliveries);
@@ -146,7 +146,7 @@ final class TransactionalDbalLoaderTransformationTest extends FlowTestCase
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 4], ['id' => 2]]))
             ->batchSize(2)
             ->write(to_dbal_transaction($connection, to_transformation(
-                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                 $spy,
             ))->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE))
             ->run();

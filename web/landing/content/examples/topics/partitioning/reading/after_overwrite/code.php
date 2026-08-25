@@ -17,8 +17,7 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'))
-    ->mode(overwrite())
-    ->write(to_csv($outputPath . '/products.csv'))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(overwrite()))
     ->run();
 
 data_frame()

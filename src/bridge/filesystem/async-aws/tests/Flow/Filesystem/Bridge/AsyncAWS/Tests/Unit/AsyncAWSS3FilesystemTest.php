@@ -74,6 +74,14 @@ final class AsyncAWSS3FilesystemTest extends TestCase
         aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->status(path('file:///var/foo.txt'));
     }
 
+    public function test_supports_only_its_own_scheme(): void
+    {
+        $filesystem = aws_s3_filesystem('bucket', $this->createStub(S3Client::class));
+
+        static::assertTrue($filesystem->supports(path('aws-s3://bucket/orders.csv')));
+        static::assertFalse($filesystem->supports(path('file:///var/foo.txt')));
+    }
+
     public function test_write_to_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);

@@ -463,7 +463,7 @@ final class CSVExtractorTest extends FlowTestCase
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
-                ->sortBy(ref('id'))
+                ->sortBy([ref('id')])
                 ->fetch()
                 ->toArray(),
         );

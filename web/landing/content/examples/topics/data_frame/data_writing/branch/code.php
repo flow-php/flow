@@ -10,8 +10,7 @@ require __DIR__ . '/vendor/autoload.php';
 data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))
     ->select('order_id', 'created_at', 'cancelled_at', 'discount', 'email')
-    ->saveMode(overwrite())
-    ->write(to_branch(ref('cancelled_at')->isNotNull(), to_csv(__DIR__ . '/output/cancelled.csv')))
+    ->write(to_branch(ref('cancelled_at')->isNotNull(), to_csv(__DIR__ . '/output/cancelled.csv')->saveMode(overwrite())))
     ->write(to_branch(ref('cancelled_at')->isNull(), to_csv(__DIR__ . '/output/active.csv')))
     ->run();
 

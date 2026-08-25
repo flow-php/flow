@@ -36,14 +36,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite()))
             ->run();
 
         data_frame()
             ->read(from_array([['id' => 2]]))
-            ->saveMode(append())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(append()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
@@ -59,8 +57,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path, engine: FloeEngine::native))
+            ->write(to_floe($path, engine: FloeEngine::native)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($path, engine: FloeEngine::native))->count());
@@ -72,8 +69,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame(config_builder()->hydrator(new PhpRowHydrator()))
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path, engine: FloeEngine::php))
+            ->write(to_floe($path, engine: FloeEngine::php)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(
@@ -94,8 +90,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['body' => ['data' => [], 'id' => 2]],
             ]))
             ->collect()
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
@@ -124,8 +119,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])],
                 type_list(type_json()),
             )))))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
@@ -146,8 +140,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $rows = data_frame(config_builder()->putInputIntoRows())->read(from_floe($path))->fetch();
@@ -161,8 +154,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($path))->limit(2)->fetch()->count());
@@ -175,14 +167,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         data_frame()
             ->read(from_array([['id' => 9]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(1, data_frame()->read(from_floe($path))->count());
@@ -196,8 +186,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_floe($path)))
+            ->write(to_transformation(select('id'), to_floe($path)->saveMode(overwrite())))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
@@ -217,8 +206,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['id' => 3, 'country' => 'PL'],
             ]))
             ->partitionBy('country')
-            ->saveMode(overwrite())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite()))
             ->run();
 
         static::assertFileExists($dir . '/country=PL/data.floe');
@@ -234,8 +222,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $result = data_frame()->read(from_floe($path))->fetch();

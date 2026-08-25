@@ -15,6 +15,9 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 use XMLReader;
@@ -25,6 +28,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function implode;
+use function sprintf;
 
 /**
  * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
@@ -33,6 +37,8 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 {
     use Limitable;
     use PathFiltering;
+
+    private readonly Filesystem $filesystem;
 
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -52,7 +58,20 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     public function __construct(
         private readonly Path $path,
         private readonly string $xmlNodePath = '',
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_xml($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+
         if (!$this->path->isLocal()) {
             throw new InvalidArgumentException(
                 'XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.',
@@ -77,9 +96,9 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $streamUri = $shouldPutInputIntoRows ? $listedFile->path->uri() : null;
+            $partitions = $listedFile->path->partitions();
 
             $schema = $baseSchema;
 
@@ -90,7 +109,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             }
 
             $xmlReader = new XMLReader();
-            $xmlReader->open($stream->path()->path());
+            $xmlReader->open($listedFile->path->path());
 
             $previousDepth = 0;
             $currentPathBreadCrumbs = [];
@@ -146,7 +165,6 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                                     $xmlReader->close();
-                                    $context->streams()->closeStreams($this->path);
 
                                     return;
                                 }
@@ -181,7 +199,6 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     $xmlReader->close();
-                    $context->streams()->closeStreams($this->path);
 
                     return;
                 }

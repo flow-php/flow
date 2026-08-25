@@ -63,8 +63,7 @@ use function Flow\Floe\DSL\{from_floe, to_floe};
 
 data_frame()
     ->read(from_array([['id' => 3]]))
-    ->mode(SaveMode::Append)
-    ->write(to_floe(__DIR__ . '/data/dataset.floe'))
+    ->write(to_floe(__DIR__ . '/data/dataset.floe')->saveMode(append()))
     ->run();
 
 // reads dataset.floe plus every appended sibling

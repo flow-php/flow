@@ -12,6 +12,8 @@ use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 
@@ -39,8 +41,9 @@ function from_csv(
     ?string $escape = null,
     int $characters_read_in_line = 10 * 1024 * 1024,
     ?Schema $schema = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): CSVExtractor {
-    $loader = (new CSVExtractor(is_string($path) ? path_real($path) : $path))
+    $loader = (new CSVExtractor(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withHeader($with_header)
         ->withEmptyToNull($empty_to_null)
         ->withCharactersReadInLine($characters_read_in_line);
@@ -82,8 +85,9 @@ function to_csv(
     string $escape = '\\',
     string $new_line_separator = PHP_EOL,
     string $datetime_format = DateTimeInterface::ATOM,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): CSVLoader {
-    return (new CSVLoader(is_string($uri) ? path_real($uri) : $uri))
+    return (new CSVLoader(is_string($uri) ? path_real($uri) : $uri, $filesystem))
         ->withHeader($with_header)
         ->withSeparator($separator)
         ->withEnclosure($enclosure)

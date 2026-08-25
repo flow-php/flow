@@ -55,7 +55,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), int_entry('score', 45), json_entry('array', ['a', 'b'])),
                 row(int_entry('id', 9), int_entry('score', 50), json_entry('array', ['a'])),
             )))
-            ->groupBy('array')
+            ->groupBy(['array'])
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
@@ -87,7 +87,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), int_entry('score', 45), datetime_entry('date', '2024-01-03 10:00:00')),
                 row(int_entry('id', 9), int_entry('score', 50), datetime_entry('date', '2024-01-04 10:00:00')),
             )))
-            ->groupBy('date')
+            ->groupBy(['date'])
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
@@ -142,7 +142,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )))
-            ->groupBy('country', 'gender')
+            ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
             ->withEntry('age_avg', ref('age_avg')->round(lit(2)))
             ->batchSize(1)
@@ -188,7 +188,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )))
-            ->groupBy('country', 'gender')
+            ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
             ->fetch();
 
@@ -226,7 +226,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', null)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )))
-            ->groupBy('country', 'gender')
+            ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
             ->fetch();
 
@@ -255,7 +255,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )))
-            ->groupBy('country')
+            ->groupBy(['country'])
             ->aggregate(sum(ref('age')))
             ->fetch();
 
@@ -281,7 +281,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )))
-            ->groupBy('country')
+            ->groupBy(['country'])
             ->aggregate(sum(ref('age')->as('total_age')))
             ->fetch();
 
@@ -307,7 +307,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )))
-            ->groupBy('country')
+            ->groupBy(['country'])
             ->aggregate(average(ref('age')))
             ->fetch();
 
@@ -339,11 +339,11 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         $rows = df()
             ->read(from_array($dataset))
-            ->groupBy(ref('date'), ref('user'))
+            ->groupBy([ref('date'), ref('user')])
             ->aggregate(count(ref('user')))
             ->rename('user_count', 'contributions')
             ->drop('date')
-            ->groupBy(ref('user'))
+            ->groupBy([ref('user')])
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
@@ -403,7 +403,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                     uuid_entry('uuid', 'c7c22b40-45ad-46d1-a47b-0d1dd389ae41'),
                 ),
             )))
-            ->groupBy('uuid')
+            ->groupBy(['uuid'])
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
@@ -458,7 +458,7 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         $rows = df()
             ->read(from_all(from_array($dataset1), from_array($dataset2)))
-            ->groupBy(ref('date'))
+            ->groupBy([ref('date')])
             ->pivot(ref('user'))
             ->aggregate(sum(ref('contributions')))
             ->fetch();
@@ -515,7 +515,7 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         $rows = df()
             ->read(from_all(from_array($dataset1), from_array($dataset2)))
-            ->groupBy(ref('date'), ref('type'))
+            ->groupBy([ref('date'), ref('type')])
             ->pivot(ref('user'))
             ->aggregate(sum(ref('contributions')))
             ->fetch();
@@ -600,7 +600,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )))
-            ->aggregate(average(ref('age')))
+            ->aggregate([average(ref('age'))])
             ->rename('age_avg', 'average_age')
             ->fetch();
 
@@ -620,7 +620,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                 row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )))
-            ->aggregate(average(ref('age')), max(ref('age')))
+            ->aggregate([average(ref('age')), max(ref('age'))])
             ->run(function (Rows $rows): void {
                 $this->assertEquals(rows(row(float_entry('age_avg', 33.75), int_entry('age_max', 50))), $rows);
             });

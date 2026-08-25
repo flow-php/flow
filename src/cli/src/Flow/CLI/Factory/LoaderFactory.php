@@ -7,6 +7,7 @@ namespace Flow\CLI\Factory;
 use Flow\CLI\Options\FileFormat;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\FileLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -19,7 +20,7 @@ final readonly class LoaderFactory
         private FileFormat $format,
     ) {}
 
-    public function get(InputInterface $input): Loader
+    public function get(InputInterface $input): Loader&FileLoader
     {
         return match ($this->format) {
             FileFormat::CSV => (new CSVLoaderFactory($this->path))->get($input),

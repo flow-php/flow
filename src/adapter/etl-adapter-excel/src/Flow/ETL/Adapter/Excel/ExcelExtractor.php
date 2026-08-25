@@ -17,6 +17,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
@@ -30,6 +33,7 @@ use ZipArchive;
 use function array_map;
 use function count;
 use function Flow\ETL\DSL\str_schema;
+use function sprintf;
 use function str_starts_with;
 
 final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
@@ -49,9 +53,24 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     private bool $withHeader = true;
 
+    private readonly Filesystem $filesystem;
+
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_excel($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+
         if (!$this->path->isLocal()) {
             // We can't use resources (returned by \fopen) since they are not supported by the OpenSpout library.
             // They are not supported because OpenSpout library uses php built in ZipArchive library, which doesn't support resources, only local paths.
@@ -85,7 +104,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $stream = $this->filesystem->readFrom($listedFile->path);
+
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 

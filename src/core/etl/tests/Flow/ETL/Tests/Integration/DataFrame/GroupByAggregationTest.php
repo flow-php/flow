@@ -43,9 +43,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('seller'))
+                ->groupBy([ref('seller')])
                 ->aggregate(count(ref('seller')), sum(ref('amount')))
-                ->sortBy(ref('seller')->asc())
+                ->sortBy([ref('seller')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -82,9 +82,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('a'), ref('b'))
+                ->groupBy([ref('a'), ref('b')])
                 ->aggregate(sum(ref('v')))
-                ->sortBy(ref('a')->asc())
+                ->sortBy([ref('a')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -112,7 +112,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('seller'))
+                ->groupBy([ref('seller')])
                 ->aggregate(sum(ref('amount')))
                 ->getEachAsArray(),
         );
@@ -145,11 +145,11 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('seller'), ref('region'))
+                ->groupBy([ref('seller'), ref('region')])
                 ->aggregate(count(ref('seller')))
-                ->groupBy(ref('region'))
+                ->groupBy([ref('region')])
                 ->aggregate(count(ref('region')))
-                ->sortBy(ref('region')->asc())
+                ->sortBy([ref('region')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -173,9 +173,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(first(ref('v')), last(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -197,9 +197,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(collect(ref('v')), collect_unique(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -241,9 +241,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(average(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -278,9 +278,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($data, $schema))
-                ->groupBy(ref('email'))
+                ->groupBy([ref('email')])
                 ->aggregate(count(ref('email')), sum(ref('discount')))
-                ->sortBy(ref('email')->asc())
+                ->sortBy([ref('email')->asc()])
                 ->getEachAsArray(),
         );
 

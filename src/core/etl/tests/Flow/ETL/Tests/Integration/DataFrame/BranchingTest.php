@@ -70,7 +70,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             )->withTransformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->aggregate(sum(ref('id')));
+                    return $dataFrame->aggregate([sum(ref('id'))]);
                 }
             }))
             ->run();
@@ -96,7 +96,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             )->withTransformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->sortBy(ref('id'));
+                    return $dataFrame->sortBy([ref('id')]);
                 }
             }))
             ->run();

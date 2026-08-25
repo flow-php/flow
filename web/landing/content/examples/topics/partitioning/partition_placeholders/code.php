@@ -17,8 +17,7 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'), ref('sku'))
-    ->mode(overwrite())
-    ->write(to_csv(__DIR__ . '/output/{color}/{sku}.csv'))
+    ->write(to_csv(__DIR__ . '/output/{color}/{sku}.csv')->saveMode(overwrite()))
     ->run();
 
 data_frame()

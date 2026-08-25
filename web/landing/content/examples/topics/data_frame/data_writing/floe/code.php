@@ -12,6 +12,5 @@ data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))
     ->limit(10)
     ->collect()
-    ->saveMode(overwrite())
-    ->write(to_floe(__DIR__ . '/output.floe'))
+    ->write(to_floe(__DIR__ . '/output.floe')->saveMode(overwrite()))
     ->run();

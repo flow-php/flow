@@ -47,7 +47,6 @@ data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))
     ->select('order_id', 'created_at', 'updated_at', 'discount', 'email', 'customer', 'address', 'notes', 'items')
     ->limit(10)
-    ->saveMode(overwrite())
     ->write(
         to_dbal_table_insert(
             DriverManager::getConnection([

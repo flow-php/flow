@@ -19,7 +19,7 @@ data_frame()
         ['id' => 9, 'group' => 'A', 'value' => 800],
         ['id' => 10, 'group' => 'B', 'value' => 40],
     ]))
-    ->groupBy(ref('group'))
+    ->groupBy([ref('group')])
     ->aggregate(sum(ref('value')))
     ->write(to_output(truncate: false))
     ->run();

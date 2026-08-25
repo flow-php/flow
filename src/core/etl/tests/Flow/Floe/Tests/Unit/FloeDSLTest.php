@@ -9,6 +9,7 @@ use Flow\Floe\FloeLoader;
 use Flow\Floe\Tests\Double\CodecStub;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\floe_options;
 use function Flow\Floe\DSL\from_floe;
@@ -18,7 +19,7 @@ final class FloeDSLTest extends TestCase
 {
     public function test_from_floe_builds_extractor_from_path(): void
     {
-        $extractor = from_floe(path('memory://a.floe'));
+        $extractor = from_floe(path('memory://a.floe'), filesystem: memory_filesystem());
 
         static::assertInstanceOf(FloeExtractor::class, $extractor);
         static::assertSame('memory://a.floe', $extractor->source()->uri());
@@ -34,7 +35,8 @@ final class FloeDSLTest extends TestCase
 
     public function test_to_floe_builds_loader_from_path(): void
     {
-        $loader = to_floe(path('memory://b.floe'));
+        $memory = memory_filesystem();
+        $loader = to_floe(path('memory://b.floe'), filesystem: $memory);
 
         static::assertInstanceOf(FloeLoader::class, $loader);
         static::assertSame('memory://b.floe', $loader->destination()->uri());
@@ -50,7 +52,8 @@ final class FloeDSLTest extends TestCase
 
     public function test_to_floe_accepts_options(): void
     {
-        $loader = to_floe(path('memory://opts.floe'), options: floe_options(validate_data: false));
+        $memory = memory_filesystem();
+        $loader = to_floe(path('memory://opts.floe'), options: floe_options(validate_data: false), filesystem: $memory);
 
         static::assertInstanceOf(FloeLoader::class, $loader);
         static::assertSame('memory://opts.floe', $loader->destination()->uri());

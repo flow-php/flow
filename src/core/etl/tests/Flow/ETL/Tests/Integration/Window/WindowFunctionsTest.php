@@ -47,7 +47,7 @@ final class WindowFunctionsTest extends FlowTestCase
                 'rank',
                 dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())),
             )
-            ->sortBy(ref('department'), ref('rank'))
+            ->sortBy([ref('department'), ref('rank')])
             ->get();
 
         static::assertEquals(

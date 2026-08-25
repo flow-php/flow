@@ -10,6 +10,8 @@ use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformations;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\MemoryFilesystem;
 use Override;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -34,7 +36,7 @@ final class FlowBufferedResponse extends Response
         int $status = 200,
         array $headers = [],
         Config|ConfigBuilder|null $config = null,
-        private readonly string $filesystem = 'memory',
+        private readonly Filesystem $filesystem = new MemoryFilesystem(),
     ) {
         $this->config = $config ?? Config::default();
 
@@ -68,18 +70,16 @@ final class FlowBufferedResponse extends Response
         $config = $this->config instanceof ConfigBuilder ? $this->config->build() : $this->config;
 
         $id = bin2hex(random_bytes(16)) . '.memory';
-        $bufferPath = path($this->filesystem . '://' . $id, ['stream' => 'temp']);
+        $bufferPath = path($this->filesystem->mount()->protocol . '://' . $id, ['stream' => 'temp']);
 
         df($config)
             ->read($this->extractor)
             ->with($this->transformations)
             ->dropPartitions()
-            ->write($this->output->loader($bufferPath))
+            ->write($this->output->loader($bufferPath, $this->filesystem))
             ->run();
 
-        $fs = $config->fstab()->for($this->filesystem);
-
-        if ($fs->status($bufferPath) === null) {
+        if ($this->filesystem->status($bufferPath) === null) {
             $this->buffered = true;
             $this->content = '';
             $this->statusCode = self::HTTP_NO_CONTENT;
@@ -87,7 +87,7 @@ final class FlowBufferedResponse extends Response
             return;
         }
 
-        $this->content = $fs->readFrom($bufferPath)->content();
+        $this->content = $this->filesystem->readFrom($bufferPath)->content();
         $this->buffered = true;
     }
 }

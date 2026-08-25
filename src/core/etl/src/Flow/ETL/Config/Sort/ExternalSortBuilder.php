@@ -7,12 +7,13 @@ namespace Flow\ETL\Config\Sort;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
 final class ExternalSortBuilder implements SortAlgorithmBuilder
 {
     private readonly BucketingConfigBuilder $bucketing;
+
+    private ?BucketsStorage $mergeStorage = null;
 
     /**
      * @var int<1, max>
@@ -34,12 +35,9 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): ExternalSortConfig
+    public function build(Path $spillRoot): ExternalSortConfig
     {
-        return new ExternalSortConfig(
-            $this->bucketing->build($filesystemTable, $localFilesystemCacheDir),
-            $this->runSize,
-        );
+        return new ExternalSortConfig($this->bucketing->build($spillRoot), $this->mergeStorage, $this->runSize);
     }
 
     /**
@@ -52,9 +50,12 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
         return $this;
     }
 
-    public function filesystemProtocol(string $protocol): self
+    /**
+     * Storage for merged runs only. Defaults to the spill storage, so storage() keeps covering both phases.
+     */
+    public function mergeStorage(BucketsStorage $storage): self
     {
-        $this->bucketing->filesystemProtocol($protocol);
+        $this->mergeStorage = $storage;
 
         return $this;
     }

@@ -4078,12 +4078,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">files</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$directory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesExtractor</span>
+                    <span class=\"fn-name\">files</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$directory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\files(" + "$" + "{" + "1:directory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\files(" + "$" + "{" + "1:directory" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "filesystem_cache",
@@ -4229,6 +4229,9 @@ const dslFunctions = [
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
                     <span class=\"fn-name\">floe_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$validate_data</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$buffer_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param bool $validate_data gates the per-value type check on write. The column-set check -<br>                           a row carrying a column the session schema does not declare -<br>                           always runs. Mirrors parquet-java\'s ParquetWriter::withValidation().
                 </div>
                             `
             return div
@@ -4465,12 +4468,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_avro</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AvroExtractor</span>
+                    <span class=\"fn-name\">from_avro</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AvroExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\from_avro(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\from_avro(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_cache",
@@ -4480,7 +4483,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$fallback_extractor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$clear</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CacheExtractor</span>
+                    <span class=\"fn-name\">from_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$fallback_extractor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$clear</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Cache</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CacheExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param string $id - cache id from which data will be extracted<br>@param null|Extractor $fallback_extractor - extractor that will be used when cache is empty - @deprecated use withFallbackExtractor() method instead<br>@param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
@@ -4488,7 +4491,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:fallback_extractor" + "}" + ", " + "$" + "{" + "3:clear" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:fallback_extractor" + "}" + ", " + "$" + "{" + "3:clear" + "}" + ", " + "$" + "{" + "4:cache" + "}" + ")"),
         boost: 10
     },                {
         label: "from_csv",
@@ -4498,7 +4501,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$empty_to_null</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$characters_read_in_line</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10485760</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVExtractor</span>
+                    <span class=\"fn-name\">from_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$empty_to_null</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$characters_read_in_line</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10485760</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param bool $empty_to_null - @deprecated use $loader->withEmptyToNull() instead<br>@param bool $with_header - @deprecated use $loader->withHeader() instead<br>@param null|string $separator - @deprecated use $loader->withSeparator() instead<br>@param null|string $enclosure - @deprecated use $loader->withEnclosure() instead<br>@param null|string $escape - @deprecated use $loader->withEscape() instead<br>@param int<1, max> $characters_read_in_line - @deprecated use $loader->withCharactersReadInLine() instead<br>@param null|Schema $schema - @deprecated use $loader->withSchema() instead
@@ -4506,7 +4509,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\from_csv(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:empty_to_null" + "}" + ", " + "$" + "{" + "4:separator" + "}" + ", " + "$" + "{" + "5:enclosure" + "}" + ", " + "$" + "{" + "6:escape" + "}" + ", " + "$" + "{" + "7:characters_read_in_line" + "}" + ", " + "$" + "{" + "8:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\from_csv(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:empty_to_null" + "}" + ", " + "$" + "{" + "4:separator" + "}" + ", " + "$" + "{" + "5:enclosure" + "}" + ", " + "$" + "{" + "6:escape" + "}" + ", " + "$" + "{" + "7:characters_read_in_line" + "}" + ", " + "$" + "{" + "8:schema" + "}" + ", " + "$" + "{" + "9:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_data_frame",
@@ -4633,12 +4636,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_excel</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExcelExtractor</span>
+                    <span class=\"fn-name\">from_excel</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExcelExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\from_excel(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\from_excel(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_floe",
@@ -4648,7 +4651,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
+                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -4656,7 +4659,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\from_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ", " + "$" + "{" + "3:chunk_size" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\from_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ", " + "$" + "{" + "3:chunk_size" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_google_sheet",
@@ -4717,7 +4720,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_json</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$pointer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonExtractor</span>
+                    <span class=\"fn-name\">from_json</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$pointer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path - string is internally turned into stream<br>@param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree - @deprecate use withPointer method instead<br>@param null|Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
@@ -4725,7 +4728,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:pointer" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:pointer" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_json_lines",
@@ -4735,7 +4738,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_json_lines</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLinesExtractor</span>
+                    <span class=\"fn-name\">from_json_lines</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLinesExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Used to read from a JSON lines https://jsonlines.org/ formatted file.<br>@param Path|string $path - string is internally turned into stream
@@ -4743,7 +4746,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json_lines(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_memory",
@@ -4768,7 +4771,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ByteOrder</span> <span class=\"fn-param\">$byte_order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Binary\\ByteOrder::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetExtractor</span>
+                    <span class=\"fn-name\">from_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ByteOrder</span> <span class=\"fn-param\">$byte_order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Binary\\ByteOrder::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param array<string> $columns - list of columns to read from parquet file - @deprecated use \`withColumns\` method instead<br>@param Options $options - @deprecated use \`withOptions\` method instead<br>@param ByteOrder $byte_order - @deprecated use \`withByteOrder\` method instead<br>@param null|int $offset - @deprecated use \`withOffset\` method instead
@@ -4776,7 +4779,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ", " + "$" + "{" + "6:engine" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ", " + "$" + "{" + "6:engine" + "}" + ", " + "$" + "{" + "7:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_path_partitions",
@@ -4786,12 +4789,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_path_partitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PathPartitionsExtractor</span>
+                    <span class=\"fn-name\">from_path_partitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PathPartitionsExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_path_partitions(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_path_partitions(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_pgsql_cursor",
@@ -4948,7 +4951,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TextExtractor</span>
+                    <span class=\"fn-name\">from_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TextExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -4956,7 +4959,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\from_text(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\from_text(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_xml",
@@ -4966,7 +4969,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$xml_node_path</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLParserExtractor</span>
+                    <span class=\"fn-name\">from_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$xml_node_path</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLParserExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                      In order to iterate only over <element> nodes use \`from_xml($file)->withXMLNodePath(\'root/elements/element\')\`.<br> <root><br>   <elements><br>     <element></element><br>     <element></element><br>   <elements><br> </root><br> XML Node Path does not support attributes and it\'s not xpath, it is just a sequence<br> of node names separated with slash.<br>@param Path|string $path<br>@param string $xml_node_path - @deprecated use \`from_xml($file)->withXMLNodePath($xmlNodePath)\` method instead
@@ -4974,7 +4977,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\from_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:xml_node_path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\from_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:xml_node_path" + "}" + ", " + "$" + "{" + "3:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "fstab",
@@ -6856,15 +6859,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">merge_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$sources</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$dest</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$compact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                    <span class=\"fn-name\">merge_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$sources</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$dest</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$compact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Merges several Floe files (same or append-compatible evolving schema) into one, on the local<br>filesystem. Byte-splices frame regions by default (O(bytes), no re-encode); compact re-encodes<br>all rows into fewer sections. For non-local filesystems use FloeMerger directly.<br>@param array<int, Path|string> $sources
+                    Merges several Floe files (same or append-compatible evolving schema) into one. Byte-splices frame<br>regions by default (O(bytes), no re-encode); compact re-encodes all rows into fewer sections.<br>@param array<int, Path|string> $sources
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\merge_floe(" + "$" + "{" + "1:sources" + "}" + ", " + "$" + "{" + "2:dest" + "}" + ", " + "$" + "{" + "3:compact" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\merge_floe(" + "$" + "{" + "1:sources" + "}" + ", " + "$" + "{" + "2:dest" + "}" + ", " + "$" + "{" + "3:compact" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "meter_provider",
@@ -11338,12 +11341,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_loading</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_transformations</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FilesystemTelemetryOptions</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryOptions</span>
+                    <span class=\"fn-name\">telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_loading</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_transformations</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryOptions</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\telemetry_options(" + "$" + "{" + "1:trace_loading" + "}" + ", " + "$" + "{" + "2:trace_transformations" + "}" + ", " + "$" + "{" + "3:trace_cache" + "}" + ", " + "$" + "{" + "4:collect_metrics" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\telemetry_options(" + "$" + "{" + "1:trace_loading" + "}" + ", " + "$" + "{" + "2:trace_transformations" + "}" + ", " + "$" + "{" + "3:trace_cache" + "}" + ", " + "$" + "{" + "4:collect_metrics" + "}" + ")"),
         boost: 10
     },                {
         label: "text_search_match",
@@ -11437,12 +11440,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_avro</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AvroLoader</span>
+                    <span class=\"fn-name\">to_avro</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AvroLoader</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\to_avro(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\to_avro(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_branch",
@@ -11497,7 +11500,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_chartjs_file</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Chart</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$template</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ChartJSLoader</span>
+                    <span class=\"fn-name\">to_chartjs_file</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Chart</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$template</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ChartJSLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Chart $type<br>@param null|Path|string $output - @deprecated use $loader->withOutputPath() instead<br>@param null|Path|string $template - @deprecated use $loader->withTemplate() instead
@@ -11505,7 +11508,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\to_chartjs_file(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:template" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\to_chartjs_file(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:template" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_chartjs_var",
@@ -11533,7 +11536,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$uri</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;,&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\&quot;&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\\\&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$new_line_separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\n&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$datetime_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:sP&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVLoader</span>
+                    <span class=\"fn-name\">to_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$uri</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;,&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\&quot;&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\\\&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$new_line_separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\n&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$datetime_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:sP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $uri<br>@param bool $with_header - @deprecated use $loader->withHeader() instead<br>@param string $separator - @deprecated use $loader->withSeparator() instead<br>@param string $enclosure - @deprecated use $loader->withEnclosure() instead<br>@param string $escape - @deprecated use $loader->withEscape() instead<br>@param string $new_line_separator - @deprecated use $loader->withNewLineSeparator() instead<br>@param string $datetime_format - @deprecated use $loader->withDateTimeFormat() instead
@@ -11541,7 +11544,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\to_csv(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:separator" + "}" + ", " + "$" + "{" + "4:enclosure" + "}" + ", " + "$" + "{" + "5:escape" + "}" + ", " + "$" + "{" + "6:new_line_separator" + "}" + ", " + "$" + "{" + "7:datetime_format" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\to_csv(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:separator" + "}" + ", " + "$" + "{" + "4:enclosure" + "}" + ", " + "$" + "{" + "5:escape" + "}" + ", " + "$" + "{" + "6:new_line_separator" + "}" + ", " + "$" + "{" + "7:datetime_format" + "}" + ", " + "$" + "{" + "8:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_date",
@@ -11689,12 +11692,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_excel</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExcelLoader</span>
+                    <span class=\"fn-name\">to_excel</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExcelLoader</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\to_excel(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\to_excel(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_floe",
@@ -11704,15 +11707,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
+                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Path|string $path
+                    @param Path|string $path<br>@param Options $options see floe_options() - validateData gates the per-value type check
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\to_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\to_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_json",
@@ -11722,7 +11725,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_json</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$flags</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">4194304</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:sP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$put_rows_in_new_lines</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLoader</span>
+                    <span class=\"fn-name\">to_json</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$flags</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">4194304</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:sP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$put_rows_in_new_lines</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param int $flags - PHP JSON Flags - @deprecate use withFlags method instead<br>@param string $date_time_format - format for DateTimeInterface::format() - @deprecate use withDateTimeFormat method instead<br>@param bool $put_rows_in_new_lines - if you want to put each row in a new line - @deprecate use withRowsInNewLines method instead<br>@return JsonLoader
@@ -11730,7 +11733,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:flags" + "}" + ", " + "$" + "{" + "3:date_time_format" + "}" + ", " + "$" + "{" + "4:put_rows_in_new_lines" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:flags" + "}" + ", " + "$" + "{" + "3:date_time_format" + "}" + ", " + "$" + "{" + "4:put_rows_in_new_lines" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_json_lines",
@@ -11740,7 +11743,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_json_lines</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLinesLoader</span>
+                    <span class=\"fn-name\">to_json_lines</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonLinesLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Used to write to a JSON lines https://jsonlines.org/ formatted file.<br>@param Path|string $path<br>@return JsonLinesLoader
@@ -11748,7 +11751,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json_lines(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_memory",
@@ -11788,7 +11791,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Compressions</span> <span class=\"fn-param\">$compressions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\ParquetFile\\Compressions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetLoader</span>
+                    <span class=\"fn-name\">to_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Compressions</span> <span class=\"fn-param\">$compressions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\ParquetFile\\Compressions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param null|Options $options - @deprecated use \`withOptions\` method instead<br>@param Compressions $compressions - @deprecated use \`withCompressions\` method instead<br>@param null|Schema $schema - @deprecated use \`withSchema\` method instead
@@ -11796,7 +11799,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ", " + "$" + "{" + "5:engine" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ", " + "$" + "{" + "5:engine" + "}" + ", " + "$" + "{" + "6:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_pgsql_schema_table",
@@ -11947,15 +11950,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$new_line_separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\n&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Loader</span>
+                    <span class=\"fn-name\">to_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$new_line_separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;\\n&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TextLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Path|string $path<br>@param string $new_line_separator - default PHP_EOL - @deprecated use withNewLineSeparator method instead<br>@return Loader
+                    @param Path|string $path<br>@param string $new_line_separator - default PHP_EOL - @deprecated use withNewLineSeparator method instead
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\to_text(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:new_line_separator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\to_text(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:new_line_separator" + "}" + ", " + "$" + "{" + "3:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_timezone",
@@ -11995,7 +11998,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$root_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;rows&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$row_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;row&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$attribute_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;_&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:s.uP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">XMLWriter</span> <span class=\"fn-param\">$xml_writer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\XML\\XMLWriter\\DOMDocumentWriter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLLoader</span>
+                    <span class=\"fn-name\">to_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$root_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;rows&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$row_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;row&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$attribute_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;_&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:s.uP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">XMLWriter</span> <span class=\"fn-param\">$xml_writer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\XML\\XMLWriter\\DOMDocumentWriter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param string $root_element_name - @deprecated use \`withRootElementName()\` method instead<br>@param string $row_element_name - @deprecated use \`withRowElementName()\` method instead<br>@param string $attribute_prefix - @deprecated use \`withAttributePrefix()\` method instead<br>@param string $date_time_format - @deprecated use \`withDateTimeFormat()\` method instead<br>@param XMLWriter $xml_writer
@@ -12003,7 +12006,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\to_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:root_element_name" + "}" + ", " + "$" + "{" + "3:row_element_name" + "}" + ", " + "$" + "{" + "4:attribute_prefix" + "}" + ", " + "$" + "{" + "5:date_time_format" + "}" + ", " + "$" + "{" + "6:xml_writer" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\to_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:root_element_name" + "}" + ", " + "$" + "{" + "3:row_element_name" + "}" + ", " + "$" + "{" + "4:attribute_prefix" + "}" + ", " + "$" + "{" + "5:date_time_format" + "}" + ", " + "$" + "{" + "6:xml_writer" + "}" + ", " + "$" + "{" + "7:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "traceable_filesystem",

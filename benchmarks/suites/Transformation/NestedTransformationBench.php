@@ -27,7 +27,7 @@ final class NestedTransformationBench
             new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->sortBy(ref('created_at'));
+                    return $dataFrame->sortBy([ref('created_at')]);
                 }
             },
             to_callable(static function (Rows $rows, FlowContext $context): void {}),
@@ -46,7 +46,7 @@ final class NestedTransformationBench
         )->withTransformation(new class implements Transformation {
             public function transform(DataFrame $dataFrame): DataFrame
             {
-                return $dataFrame->sortBy(ref('created_at'));
+                return $dataFrame->sortBy([ref('created_at')]);
             }
         });
 

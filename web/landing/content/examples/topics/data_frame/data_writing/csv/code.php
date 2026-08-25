@@ -18,6 +18,5 @@ data_frame()
         ])
     )
     ->collect()
-    ->mode(overwrite())
-    ->write(to_csv(__DIR__ . '/output.csv'))
+    ->write(to_csv(__DIR__ . '/output.csv')->saveMode(overwrite()))
     ->run();

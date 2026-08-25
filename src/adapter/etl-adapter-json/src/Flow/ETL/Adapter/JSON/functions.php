@@ -13,6 +13,8 @@ use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -27,9 +29,13 @@ use function is_string;
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'json')]
-function from_json(string|Path $path, ?string $pointer = null, ?Schema $schema = null): JsonExtractor
-{
-    $loader = new JsonExtractor(is_string($path) ? path_real($path) : $path);
+function from_json(
+    string|Path $path,
+    ?string $pointer = null,
+    ?Schema $schema = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+): JsonExtractor {
+    $loader = new JsonExtractor(is_string($path) ? path_real($path) : $path, $filesystem);
 
     if ($pointer !== null) {
         $loader->withPointer($pointer);
@@ -49,9 +55,9 @@ function from_json(string|Path $path, ?string $pointer = null, ?Schema $schema =
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'jsonl')]
-function from_json_lines(string|Path $path): JsonLinesExtractor
+function from_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLinesExtractor
 {
-    return new JsonLinesExtractor(is_string($path) ? path_real($path) : $path);
+    return new JsonLinesExtractor(is_string($path) ? path_real($path) : $path, $filesystem);
 }
 
 /**
@@ -68,8 +74,9 @@ function to_json(
     int $flags = JSON_THROW_ON_ERROR,
     string $date_time_format = DateTimeInterface::ATOM,
     bool $put_rows_in_new_lines = false,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): JsonLoader {
-    return (new JsonLoader(is_string($path) ? path_real($path) : $path))
+    return (new JsonLoader(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withFlags($flags)
         ->withDateTimeFormat($date_time_format)
         ->withRowsInNewLines($put_rows_in_new_lines);
@@ -83,9 +90,9 @@ function to_json(
  * @return JsonLinesLoader
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
-function to_json_lines(string|Path $path): JsonLinesLoader
+function to_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLinesLoader
 {
-    return new JsonLinesLoader(is_string($path) ? path_real($path) : $path);
+    return new JsonLinesLoader(is_string($path) ? path_real($path) : $path, $filesystem);
 }
 
 /**
@@ -94,14 +101,16 @@ function to_json_lines(string|Path $path): JsonLinesLoader
  * @param array<string, mixed>|Path|string $json_schema - decoded document, raw JSON document or a path to a schema file
  * @param null|ClientInterface $client - PSR-18 http client, required to resolve remote http(s) references
  * @param null|RequestFactoryInterface $request_factory - PSR-17 request factory, required to resolve remote http(s) references
+ * @param Filesystem $filesystem - filesystem used to read local schema references
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::HELPER)]
 function schema_from_json_schema(
     string|array|Path $json_schema,
     ?ClientInterface $client = null,
     ?RequestFactoryInterface $request_factory = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): Schema {
-    return (new SchemaConverter(new ReferenceResolver($client, $request_factory)))->toFlow($json_schema);
+    return (new SchemaConverter(new ReferenceResolver($client, $request_factory, $filesystem)))->toFlow($json_schema);
 }
 
 /**

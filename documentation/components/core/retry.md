@@ -27,6 +27,11 @@ destination as they normally would.
 Only `load()` is retried. A failure while closing is not retried, because closing publishes the destination and cannot
 be resumed from a partial state.
 
+A run that never reaches its last batch - it threw, or the caller walked away from the generator - ends through
+`Loader\Discardable::discard()` instead of `closure()`, so a half-written destination is removed rather than
+published. The pipeline walks the whole loader tree to do it, so a wrapped file loader is discarded whether or not
+`RetryLoader` forwards anything.
+
 ```php
 <?php
 
@@ -199,9 +204,8 @@ roll back, so a batch that fails after part of it reached the stream is written 
 data_frame()
     ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
     ->batchSize(2)
-    ->saveMode(overwrite())
     // a transient failure in the first batch leaves ids 1 and 2 in the file twice
-    ->write(write_with_retries(to_csv($path)))
+    ->write(write_with_retries(to_csv($path)->saveMode(overwrite())))
     ->run();
 ```
 

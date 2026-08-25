@@ -8,9 +8,7 @@ use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Formatter\PipelineReportFormatter;
-use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\PipelineFactory;
-use Flow\ETL\Config;
 use Flow\ETL\Exception\Exception;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
@@ -30,8 +28,6 @@ final class PipelineRunCommand extends Command
 {
     use ConfigOptions;
     use StatisticsOptions;
-
-    private ?Config $flowConfig = null;
 
     private ?Path $pipelinePath = null;
 
@@ -113,7 +109,6 @@ final class PipelineRunCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->pipelinePath = (new FilePathArgument('pipeline-file'))->getExisting($input, $this->flowConfig);
+        $this->pipelinePath = (new FilePathArgument('pipeline-file'))->getExisting($input);
     }
 }

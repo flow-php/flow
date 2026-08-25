@@ -11,6 +11,7 @@ use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
 use Flow\ETL\Config;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Local\StdOutFilesystem;
 
 use function Flow\Bridge\Symfony\HttpFoundation\http_csv_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_on_complete;
@@ -86,6 +87,19 @@ final class FlowStreamedResponseTest extends FlowTestCase
         $schema = $receivedReport->schema();
         static::assertNotNull($schema);
         static::assertCount(2, $schema->references()->all());
+    }
+
+    public function test_streamed_response_writes_through_the_stdout_filesystem(): void
+    {
+        // the response holds a StdOutFilesystem instance; the URI it builds must still resolve to it,
+        // otherwise every streamed row throws on the first write
+        $response = new FlowStreamedResponse(
+            from_array([['id' => 1], ['id' => 2]]),
+            new CSVOutput(),
+            filesystem: new StdOutFilesystem(),
+        );
+
+        static::assertSame("id\n1\n2\n", $this->sendResponse($response));
     }
 
     public function test_streaming_array_response_to_csv(): void

@@ -23,7 +23,11 @@ final class SortTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->sort(external_sort()->runSize(100));
 
-        $rows = df($config->build())->read(new FakeExtractor(2500))->batchSize(50)->sortBy(ref('int'))->fetch();
+        $rows = df($config->build())
+            ->read(new FakeExtractor(2500))
+            ->batchSize(50)
+            ->sortBy([ref('int')])
+            ->fetch();
 
         static::assertSame(range(0, 2499), $rows->reduceToArray('int'));
     }
@@ -32,7 +36,11 @@ final class SortTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->sort(memory_sort());
 
-        $rows = df($config->build())->read(new FakeExtractor(40))->batchSize(2)->sortBy(ref('int'))->fetch();
+        $rows = df($config->build())
+            ->read(new FakeExtractor(40))
+            ->batchSize(2)
+            ->sortBy([ref('int')])
+            ->fetch();
 
         static::assertSame(range(0, 39), $rows->reduceToArray('int'));
     }
@@ -47,7 +55,7 @@ final class SortTest extends FlowIntegrationTestCase
                 ['id' => 3, 'price' => 2.2],
             ]))
             ->withEntry('total', ref('price')->multiply(lit(2)))
-            ->sortBy(ref('total'))
+            ->sortBy([ref('total')])
             ->fetch();
 
         static::assertSame('float', $rows->schema()->get('total')->type()->toString());

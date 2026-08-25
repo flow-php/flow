@@ -18,6 +18,5 @@ data_frame()
         ])
     )
     ->collect()
-    ->mode(overwrite())
-    ->write(to_xml(__DIR__ . '/output.xml'))
+    ->write(to_xml(__DIR__ . '/output.xml')->saveMode(overwrite()))
     ->run();

@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
@@ -27,15 +28,16 @@ final class FloeLoaderTest extends TestCase
     public function test_closure_writes_a_readable_non_torn_file(): void
     {
         $context = flow_context(config());
+        $memory = memory_filesystem();
         $path = path('memory://closed.floe');
 
-        $loader = to_floe($path);
+        $loader = to_floe($path, filesystem: $memory);
         $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
         $loader->closure($context);
 
         $ids = [];
 
-        foreach (from_floe($path)->extract($context) as $batch) {
+        foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
                 $ids[] = $extractedRow->valueOf('id');
             }
@@ -48,9 +50,10 @@ final class FloeLoaderTest extends TestCase
     {
         $hydrator = new SpyHydrator();
         $context = flow_context(config_builder()->hydrator($hydrator)->build());
+        $memory = memory_filesystem();
         $path = path('memory://hydrator.floe');
 
-        $loader = to_floe($path);
+        $loader = to_floe($path, filesystem: $memory);
         $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
         $loader->closure($context);
 
@@ -59,22 +62,27 @@ final class FloeLoaderTest extends TestCase
 
     public function test_destination_returns_path(): void
     {
-        static::assertSame('memory://out.floe', to_floe(path('memory://out.floe'))->destination()->uri());
+        $memory = memory_filesystem();
+        static::assertSame(
+            'memory://out.floe',
+            to_floe(path('memory://out.floe'), filesystem: $memory)->destination()->uri(),
+        );
     }
 
     public function test_inferred_schema_preserves_nullability(): void
     {
         $context = flow_context(config());
+        $memory = memory_filesystem();
         $path = path('memory://nullability.floe');
 
-        $loader = to_floe($path);
+        $loader = to_floe($path, filesystem: $memory);
         $loader->load(
             rows(row(int_entry('id', 1), str_entry('note', 'a')), row(int_entry('id', 2), str_entry('note', null))),
             $context,
         );
         $loader->closure($context);
 
-        $schema = from_floe($path)->schema($context);
+        $schema = from_floe($path, filesystem: $memory)->schema();
 
         static::assertFalse($schema->get('id')->isNullable());
         static::assertTrue($schema->get('note')->isNullable());
@@ -84,15 +92,19 @@ final class FloeLoaderTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
 
-        to_floe(path('memory://no-extension'))->load(rows(row(int_entry('id', 1))), flow_context(config()));
+        to_floe(path('memory://no-extension'), filesystem: memory_filesystem())->load(
+            rows(row(int_entry('id', 1))),
+            flow_context(config()),
+        );
     }
 
     public function test_partitioned_batches_write_one_file_per_partition(): void
     {
         $context = flow_context(config());
+        $memory = memory_filesystem();
         $base = path('memory://parts/data.floe');
 
-        $loader = to_floe($base);
+        $loader = to_floe($base, filesystem: $memory);
         $loader->load(
             Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition('country', 'PL')]),
             $context,
@@ -103,14 +115,12 @@ final class FloeLoaderTest extends TestCase
         );
         $loader->closure($context);
 
-        $fs = $context->filesystem($base);
-
-        static::assertNotNull($fs->status(path('memory://parts/country=PL/data.floe')));
-        static::assertNotNull($fs->status(path('memory://parts/country=US/data.floe')));
+        static::assertNotNull($memory->status(path('memory://parts/country=PL/data.floe')));
+        static::assertNotNull($memory->status(path('memory://parts/country=US/data.floe')));
 
         $ids = [];
 
-        foreach (from_floe(path('memory://parts/**/*.floe'))->extract($context) as $batch) {
+        foreach (from_floe(path('memory://parts/**/*.floe'), filesystem: $memory)->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
                 $ids[] = $extractedRow->valueOf('id');
             }
@@ -124,9 +134,10 @@ final class FloeLoaderTest extends TestCase
     public function test_repeated_loads_write_a_single_file(): void
     {
         $context = flow_context(config());
+        $memory = memory_filesystem();
         $path = path('memory://repeated.floe');
 
-        $loader = to_floe($path);
+        $loader = to_floe($path, filesystem: $memory);
         $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
         $loader->load(rows(row(int_entry('id', 3))), $context);
         $loader->closure($context);
@@ -134,7 +145,7 @@ final class FloeLoaderTest extends TestCase
         $ids = [];
 
         // reading the concrete (non-pattern) path proves all rows landed in one file
-        foreach (from_floe($path)->extract($context) as $batch) {
+        foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
                 $ids[] = $extractedRow->valueOf('id');
             }

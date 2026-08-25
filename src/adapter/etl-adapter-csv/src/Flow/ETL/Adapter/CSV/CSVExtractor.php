@@ -15,11 +15,15 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\FileListing;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 
 use function count;
 use function Flow\ETL\DSL\str_schema;
+use function sprintf;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -45,9 +49,23 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     private bool $withHeader = true;
 
+    private readonly Filesystem $filesystem;
+
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_csv($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
         $this->resetLimit();
     }
 
@@ -69,7 +87,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
+            $stream = $this->filesystem->readFrom($listedFile->path);
+
             $option = csv_detect_separator($stream);
 
             $separator = $this->separator ?? $option->separator;
@@ -134,8 +154,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                         $this->incrementReturnedRows();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-
                             return;
                         }
                     }
@@ -166,8 +184,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
-
                     return;
                 }
             }

@@ -606,7 +606,7 @@ final class DataFrameTest extends FlowTestCase
             ))
             ->rename('country', 'country_code')
             ->void()
-            ->aggregate(average(ref('age')))
+            ->aggregate([average(ref('age'))])
             ->rename('age_avg', 'average_age')
             ->fetch();
 

@@ -12,6 +12,8 @@ use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\References;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
@@ -47,8 +49,12 @@ function to_chartjs(Chart $type): ChartJSLoader
  * @param null|Path|string $template - @deprecated use $loader->withTemplate() instead
  */
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
-function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null): ChartJSLoader
-{
+function to_chartjs_file(
+    Chart $type,
+    Path|string|null $output = null,
+    Path|string|null $template = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+): ChartJSLoader {
     if (is_string($output)) {
         $output = path_real($output);
     }
@@ -60,11 +66,11 @@ function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|stri
     $loader = new ChartJSLoader($type);
 
     if ($template) {
-        $loader->withTemplate($template);
+        $loader->withTemplate($template, $filesystem);
     }
 
     if ($output !== null) {
-        $loader->withOutputPath($output);
+        $loader->withOutputPath($output, $filesystem);
     }
 
     return $loader;

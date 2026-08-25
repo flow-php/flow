@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 use DateTimeInterface;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
 
@@ -29,9 +30,9 @@ final readonly class CSVOutput implements Output
         private string $datetimeFormat = DateTimeInterface::ATOM,
     ) {}
 
-    public function loader(Path $path): Loader
+    public function loader(Path $path, Filesystem $filesystem): Loader
     {
-        return to_csv($path)
+        return to_csv($path, filesystem: $filesystem)
             ->withHeader($this->withHeader)
             ->withSeparator($this->separator)
             ->withEnclosure($this->enclosure)

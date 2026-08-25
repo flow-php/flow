@@ -14,6 +14,6 @@ data_frame()
         row(int_entry('a', 400)),
         row(int_entry('a', 400))
     )))
-    ->aggregate(sum(ref('a')))
+    ->aggregate([sum(ref('a'))])
     ->write(to_output(truncate: false))
     ->run();
