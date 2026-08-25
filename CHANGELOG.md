@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-08-17
+## [Unreleased] - 2026-08-25
 
 ### Added
 - [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - generated social cards (og:image) for blog posts** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +25,7 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [ad4426](https://github.com/flow-php/flow/commit/ad442645b427937c25554c31b08cccfc5865b029) - **cleanup website** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - transformation-wrapped loader is closed once per pipeline, not once per batch** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - loader wrappers forward closure() to the loaders they wrap** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - operations inside a Transformation answer for the whole stream, not per batch** - [@norberttech](https://github.com/norberttech)
