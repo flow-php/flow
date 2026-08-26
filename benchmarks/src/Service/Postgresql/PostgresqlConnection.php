@@ -42,7 +42,7 @@ final class PostgresqlConnection
 
     public static function createTable(Client $client, string $table): void
     {
-        foreach (to_pgsql_schema_table(FakeRandomOrdersExtractor::schema(), $table)->toSql() as $sql) {
+        foreach (to_pgsql_schema_table((new FakeRandomOrdersExtractor())->schema(), $table)->toSql() as $sql) {
             $client->execute($sql);
         }
     }

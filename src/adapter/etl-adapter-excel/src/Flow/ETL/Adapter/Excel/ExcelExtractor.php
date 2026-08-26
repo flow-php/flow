@@ -7,10 +7,13 @@ namespace Flow\ETL\Adapter\Excel;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -36,8 +39,10 @@ use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 use function str_starts_with;
 
-final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -89,25 +94,15 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     {
         // Offset must be a positive number
         $offset = $this->offset ?? 1;
-
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
 
-        $baseSchema = $this->schema;
-
-        if (
-            $baseSchema !== null
-            && $shouldPutInputIntoRows
-            && $baseSchema->findDefinition('_input_file_uri') === null
-        ) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+        $baseSchema = $this->schema === null ? null : $this->schema();
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
             $schema = $baseSchema;
@@ -191,6 +186,19 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        if ($this->addMetadataColumns) {
+            return $this->schema->add(str_schema('_input_file_uri'));
+        }
+
+        return $this->schema;
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -231,7 +239,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

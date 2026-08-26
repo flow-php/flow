@@ -27,9 +27,14 @@ use function Flow\ETL\Adapter\Http\http_request_option_query;
 use function Flow\ETL\Adapter\Http\http_stop_when_max_pages;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function iterator_to_array;
@@ -322,6 +327,42 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             ),
         );
         static::assertCount(3, $rows);
+    }
+
+    public function test_schema_is_the_fixed_http_exchange_shape(): void
+    {
+        static::assertEquals(
+            schema(
+                str_schema('response_body', nullable: true),
+                map_schema('response_headers', type_map(type_string(), type_list(type_string()))),
+                int_schema('response_status_code'),
+                str_schema('response_protocol_version'),
+                str_schema('response_reason_phrase'),
+                str_schema('request_body', nullable: true),
+                str_schema('request_uri'),
+                map_schema('request_headers', type_map(type_string(), type_list(type_string()))),
+                str_schema('request_protocol_version'),
+                str_schema('request_method'),
+            ),
+            from_http_paginated(
+                new Client(new Psr17Factory()),
+                PaginationMother::request(),
+                http_pagination_link_header(),
+            )->schema(),
+        );
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('response_body')),
+            from_http_paginated(
+                new Client(new Psr17Factory()),
+                PaginationMother::request(),
+                http_pagination_link_header(),
+                schema(str_schema('response_body')),
+            )->schema(),
+        );
     }
 
     public function test_schema_typed_response_body(): void

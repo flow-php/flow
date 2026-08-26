@@ -7,16 +7,23 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
-final readonly class CollectingExtractor implements Extractor, OverridingExtractor
+final class CollectingExtractor implements Extractor, OverridingExtractor
 {
+    private ?Schema $schema = null;
+
     public function __construct(
         private Extractor $extractor,
     ) {}
 
     public function extract(FlowContext $context): Generator
     {
+        if ($this->schema !== null) {
+            $this->extractor->withSchema($this->schema);
+        }
+
         $collectedRows = new Rows();
 
         foreach ($this->extractor->extract($context) as $rows) {
@@ -29,5 +36,21 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
     public function extractors(): array
     {
         return [$this->extractor];
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        return $this->extractor->schema();
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

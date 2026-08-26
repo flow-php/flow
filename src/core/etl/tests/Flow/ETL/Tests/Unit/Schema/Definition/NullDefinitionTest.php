@@ -6,24 +6,38 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\NullType;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\union_schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 
 final class NullDefinitionTest extends FlowTestCase
 {
+    public static function provide_lattice_cases(): Generator
+    {
+        yield 'string' => [str_schema('id'), 'string'];
+        yield 'nullable string' => [str_schema('id', nullable: true), 'string'];
+        yield 'null' => [null_schema('id'), 'null'];
+        yield 'nullable integer' => [int_schema('id', nullable: true), 'integer'];
+        yield 'list of strings' => [list_schema('id', type_list(type_string())), 'list<string>'];
+    }
+
     public function test_add_metadata(): void
     {
         $def = null_schema('id');
@@ -64,6 +78,37 @@ final class NullDefinitionTest extends FlowTestCase
     public function test_is_not_compatible_with_a_different_type(): void
     {
         static::assertFalse(null_schema('id')->isCompatible(int_schema('id')));
+    }
+
+    public function test_bottom_is_compatible_with_any_nullable_column(): void
+    {
+        static::assertTrue(null_schema('id')->isCompatible(str_schema('id', nullable: true)));
+        static::assertFalse(null_schema('id')->isCompatible(str_schema('id')));
+        static::assertFalse(null_schema('id')->isCompatible(str_schema('other', nullable: true)));
+    }
+
+    /**
+     * @param Definition<mixed> $other
+     */
+    #[DataProvider('provide_lattice_cases')]
+    public function test_the_bottom_is_absorbed_by_merge(Definition $other, string $expected): void
+    {
+        $merged = null_schema('id')->merge($other);
+
+        static::assertSame($expected, $merged->type()->toString());
+        static::assertTrue($merged->isNullable());
+    }
+
+    /**
+     * @param Definition<mixed> $other
+     */
+    #[DataProvider('provide_lattice_cases')]
+    public function test_the_bottom_is_absorbed_from_the_other_side(Definition $other, string $expected): void
+    {
+        $merged = $other->merge(null_schema('id'));
+
+        static::assertSame($expected, $merged->type()->toString());
+        static::assertTrue($merged->isNullable());
     }
 
     public function test_is_not_same_when_metadata_differs(): void
@@ -200,7 +245,7 @@ final class NullDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_returns_nullable_union(): void
     {
-        $merged = null_schema('col')->merge(union_schema('col', type_union(type_integer(), type_string())));
+        $merged = null_schema('col')->merge(new UnionDefinition('col', type_union(type_integer(), type_string())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('integer|string', $merged->type()->toString());

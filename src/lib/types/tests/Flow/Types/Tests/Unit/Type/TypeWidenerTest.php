@@ -2,19 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Schema\Definition;
+namespace Flow\Types\Tests\Unit\Type;
 
-use Flow\ETL\Schema\Definition\TypeMerge;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\TypeWidener;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
@@ -25,11 +28,43 @@ use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
-final class TypeMergeTest extends FlowTestCase
+final class TypeWidenerTest extends TestCase
 {
-    public static function provideMergeCases(): Generator
+    public static function provideWidenCases(): Generator
     {
         yield 'equal types' => [type_string(), type_string(), type_string()];
+
+        // array{} is a container, so it widens with another container to json rather than
+        // falling through to the string floor and disagreeing with CommonType one layer up.
+        yield 'empty array with a list widens to json' => [
+            type_empty_array(),
+            type_list(type_string()),
+            type_json(),
+        ];
+
+        yield 'list with an empty array widens to json' => [
+            type_list(type_string()),
+            type_empty_array(),
+            type_json(),
+        ];
+
+        yield 'bottom list with a typed list makes the element optional' => [
+            type_list(type_null()),
+            type_list(type_string()),
+            type_list(type_optional(type_string())),
+        ];
+
+        yield 'bottom list with a typed list at depth two' => [
+            type_list(type_list(type_null())),
+            type_list(type_list(type_string())),
+            type_list(type_list(type_optional(type_string()))),
+        ];
+
+        yield 'bottom list with a structure widens to json' => [
+            type_list(type_null()),
+            type_structure(['a' => type_string()]),
+            type_json(),
+        ];
 
         yield 'equal null types' => [type_null(), type_null(), type_null()];
 
@@ -270,10 +305,10 @@ final class TypeMergeTest extends FlowTestCase
      * @param Type<mixed> $right
      * @param Type<mixed> $expected
      */
-    #[DataProvider('provideMergeCases')]
-    public function test_merging_types(Type $left, Type $right, Type $expected): void
+    #[DataProvider('provideWidenCases')]
+    public function test_widening_types(Type $left, Type $right, Type $expected): void
     {
-        static::assertEquals($expected, (new TypeMerge())->merge($left, $right));
+        static::assertEquals($expected, (new TypeWidener())->widen($left, $right));
     }
 
     /**
@@ -282,36 +317,45 @@ final class TypeMergeTest extends FlowTestCase
      * @param StructureType<array<array-key, mixed>> $expected
      */
     #[DataProvider('provideStructureCases')]
-    public function test_merging_structures(StructureType $left, StructureType $right, StructureType $expected): void
+    public function test_widening_structures(StructureType $left, StructureType $right, StructureType $expected): void
     {
-        static::assertEquals($expected, (new TypeMerge())->mergeStructures($left, $right));
+        static::assertEquals($expected, (new TypeWidener())->widenStructures($left, $right));
     }
 
-    public function test_merging_lists_directly(): void
+    public function test_widening_lists_directly(): void
     {
         static::assertEquals(
             type_list(type_float()),
-            (new TypeMerge())->mergeLists(type_list(type_integer()), type_list(type_float())),
+            (new TypeWidener())->widenLists(type_list(type_integer()), type_list(type_float())),
         );
     }
 
-    public function test_merging_maps_directly(): void
+    public function test_widening_maps_directly(): void
     {
         static::assertEquals(
             type_map(type_string(), type_float()),
-            (new TypeMerge())->mergeMaps(
+            (new TypeWidener())->widenMaps(
                 type_map(type_string(), type_integer()),
                 type_map(type_string(), type_float()),
             ),
         );
     }
 
+    #[TestWith(['widen'])]
+    #[TestWith(['widenLists'])]
+    #[TestWith(['widenMaps'])]
+    #[TestWith(['widenStructures'])]
+    public function test_widening_takes_only_the_two_operands(string $method): void
+    {
+        static::assertSame(2, (new ReflectionMethod(TypeWidener::class, $method))->getNumberOfParameters());
+    }
+
     public function test_structure_key_order_follows_left_then_right(): void
     {
         static::assertSame(
             'structure{b: string, a?: string, c?: string}',
-            (new TypeMerge())
-                ->merge(
+            (new TypeWidener())
+                ->widen(
                     type_structure(['b' => type_string(), 'a' => type_string()]),
                     type_structure(['c' => type_string(), 'b' => type_string()]),
                 )

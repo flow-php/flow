@@ -7,6 +7,7 @@ namespace Flow\Floe\Tests\Unit;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Tests\Mother\DateTimeDecoderMother;
@@ -22,7 +23,6 @@ use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_integer;
@@ -135,7 +135,7 @@ final class ValueDecoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe does not support columns of type "integer|string"');
 
-        (new ValueDecoder())->decoderFor(union_schema('c', type_union(type_integer(), type_string())));
+        (new ValueDecoder())->decoderFor(new UnionDefinition('c', type_union(type_integer(), type_string())));
     }
 
     public function test_round_trip_of_datetime_preserves_timezone_and_microseconds(): void

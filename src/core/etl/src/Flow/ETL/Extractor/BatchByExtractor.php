@@ -9,12 +9,15 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function count;
 
-final readonly class BatchByExtractor implements Extractor, OverridingExtractor
+final class BatchByExtractor implements Extractor, OverridingExtractor
 {
+    private ?Schema $schema = null;
+
     /**
      * @param null|int<1, max> $minSize
      *
@@ -36,6 +39,10 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context): Generator
     {
+        if ($this->schema !== null) {
+            $this->extractor->withSchema($this->schema);
+        }
+
         $buffer = [];
         $currentGroupValue = null;
 
@@ -71,5 +78,21 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
     public function extractors(): array
     {
         return [$this->extractor];
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        return $this->extractor->schema();
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

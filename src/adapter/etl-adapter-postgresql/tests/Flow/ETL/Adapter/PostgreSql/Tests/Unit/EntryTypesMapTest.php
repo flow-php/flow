@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
 use Flow\PostgreSql\Client\TypedValue;
@@ -24,6 +25,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 
@@ -137,6 +139,14 @@ final class EntryTypesMapTest extends TestCase
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::UUID, $result->targetType);
+    }
+
+    public function test_maps_time_zone_type_to_text(): void
+    {
+        $result = (new EntryTypesMap())->map('tz', type_time_zone(), new DateTimeZone('Europe/Warsaw'));
+
+        static::assertInstanceOf(TypedValue::class, $result);
+        static::assertSame(ValueType::TEXT, $result->targetType);
     }
 
     public function test_to_column_type_allows_override(): void

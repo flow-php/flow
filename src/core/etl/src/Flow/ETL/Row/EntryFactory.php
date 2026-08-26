@@ -15,7 +15,6 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\InstanceOfType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\OptionalType;
-use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeDetector;
@@ -24,7 +23,6 @@ use TypeError;
 use function array_values;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_string;
 
 final class EntryFactory
 {
@@ -127,10 +125,6 @@ final class EntryFactory
                 throw new InvalidArgumentException(
                     "{$name}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.",
                 );
-            }
-
-            if ($type instanceof TimeZoneType) {
-                $type = type_string();
             }
 
             $definition = definition_from_type($name, $type, $value === null, $metadata);

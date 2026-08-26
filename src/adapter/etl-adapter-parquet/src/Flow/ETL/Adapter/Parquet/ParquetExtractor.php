@@ -9,10 +9,13 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -30,8 +33,12 @@ use function Flow\ETL\DSL\str_schema;
 use function max;
 use function sprintf;
 
-final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    private ?Schema $schema = null;
+
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -80,13 +87,12 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
 
         $fileOffset = $this->offset ?? 0;
 
-        foreach ($this->readers($context) as $fileData) {
+        foreach ($this->readers() as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
 
             if ($fileOffset > $fileRows) {
@@ -97,13 +103,13 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
             }
 
             $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
-            $streamUri = $shouldPutInputIntoRows ? $fileData['stream']->path()->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $fileData['stream']->path()->uri() : null;
 
             if (count($this->columns)) {
                 $flowSchema = $flowSchema->keep(...$this->columns);
             }
 
-            if ($streamUri !== null && $flowSchema->findDefinition('_input_file_uri') === null) {
+            if ($streamUri !== null) {
                 $flowSchema = $flowSchema->add(str_schema('_input_file_uri'));
             }
 
@@ -119,7 +125,10 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 $rawBatch[] = $row;
 
                 if (count($rawBatch) >= $batchSize) {
-                    foreach ($hydrator->hydrate($encoder->decode($rawBatch), $flowSchema) as $hydratedRow) {
+                    foreach ($hydrator->hydrate(
+                        $encoder->decode($rawBatch),
+                        $this->schema ?? $flowSchema,
+                    ) as $hydratedRow) {
                         $this->incrementReturnedRows();
                         $signal = yield new Rows($hydratedRow);
 
@@ -132,7 +141,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 }
             }
 
-            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $flowSchema) as $hydratedRow) {
+            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $this->schema ?? $flowSchema) as $hydratedRow) {
                 $this->incrementReturnedRows();
                 $signal = yield new Rows($hydratedRow);
 
@@ -144,6 +153,32 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
             $fileOffset = max($fileOffset - $fileRows, 0);
             $fileData['stream']->close();
         }
+    }
+
+    public function schema(): Schema
+    {
+        $schema = $this->schema;
+
+        if ($schema === null) {
+            $schema = new Schema();
+
+            foreach ($this->readers() as $fileData) {
+                $fileSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
+
+                if (count($this->columns)) {
+                    $fileSchema = $fileSchema->keep(...$this->columns);
+                }
+
+                $schema = $schema->merge($fileSchema);
+                $fileData['stream']->close();
+            }
+        }
+
+        if ($this->addMetadataColumns) {
+            $schema = $schema->add(str_schema('_input_file_uri'));
+        }
+
+        return $this->schema = $schema;
     }
 
     public function source(): Path
@@ -196,7 +231,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     /**
      * @return \Generator<int, array{file: ParquetFile, stream: SourceStream}>
      */
-    private function readers(FlowContext $context): Generator
+    private function readers(): Generator
     {
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
@@ -210,5 +245,12 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 'stream' => $stream,
             ];
         }
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

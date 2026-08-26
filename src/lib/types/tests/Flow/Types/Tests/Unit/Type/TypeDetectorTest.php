@@ -25,7 +25,6 @@ use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
-use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
@@ -45,6 +44,37 @@ use function Flow\Types\DSL\type_string;
 
 final class TypeDetectorTest extends TestCase
 {
+    public static function provide_detected_type_law_data(): Generator
+    {
+        yield 'empty array' => [[]];
+
+        yield 'homogeneous list' => [[1, 2, 3]];
+
+        yield 'list of int and float' => [[1, 1.5]];
+
+        yield 'list of int and string' => [[1, 'a']];
+
+        yield 'list of nulls and integers' => [[null, 1]];
+
+        yield 'lists of int and float' => [[[1], [1.5]]];
+
+        yield 'structures with conflicting element types' => [[['a' => 1], ['a' => 'x']]];
+
+        yield 'depth three with a conflicting leaf' => [[[['a' => 1], ['a' => 1.5]]]];
+
+        yield 'depth three homogeneous' => [[[['a' => 1], ['a' => 2]]]];
+
+        yield 'map of int to conflicting values' => [[1 => 'a', 2 => 3]];
+
+        yield 'structure holding an empty array' => [['a' => [], 'b' => [1]]];
+
+        yield 'list mixing scalars and arrays' => [[1, [2]]];
+
+        yield 'nested empty arrays' => [[[], []]];
+
+        yield 'string keyed map with mixed nesting' => [['a' => ['b' => 1], 'c' => ['b' => 'x']]];
+    }
+
     public static function provide_logical_types_data(): Generator
     {
         yield 'null' => [
@@ -241,8 +271,8 @@ final class TypeDetectorTest extends TestCase
 
         yield 'empty array' => [
             [],
-            EmptyArrayType::class,
-            'array{}',
+            ListType::class,
+            'list<null>',
         ];
 
         yield 'list with null' => [
@@ -329,8 +359,8 @@ final class TypeDetectorTest extends TestCase
                     'name' => 'Test 2',
                 ],
             ],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<structure{id: integer, name: string, active?: boolean}>',
         ];
 
         yield 'list of lists' => [
@@ -364,7 +394,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            // [4.0, 5, 6] detects as array<mixed> (float + integer), which fits no narrower element type.
+            // [4.0, 5, 6] mixes float and integer, and the float floor rejects 5, so it stays untyped.
             'list<array<mixed>>',
         ];
 
@@ -401,7 +431,8 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            // The empty element observes no value, so the element type is not known to be present.
+            'list<list<?integer>>',
         ];
 
         yield 'list of lists with array of nulls' => [
@@ -481,62 +512,62 @@ final class TypeDetectorTest extends TestCase
 
         yield 'list with only an empty array' => [
             [[]],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<list<null>>',
         ];
 
         yield 'list with only empty arrays' => [
             [[], []],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<list<null>>',
         ];
 
         yield 'empty array before a list' => [
             [[], [1, 2]],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<?integer>>',
         ];
 
         yield 'empty array after a list' => [
             [[1, 2], []],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<?integer>>',
         ];
 
         yield 'empty array before a structure' => [
             [[], ['id' => '1']],
-            ListType::class,
-            'list<array<mixed>>',
+            ArrayType::class,
+            'array<mixed>',
         ];
 
         yield 'empty array after a structure' => [
             [['id' => '1'], []],
-            ListType::class,
-            'list<array<mixed>>',
+            ArrayType::class,
+            'array<mixed>',
         ];
 
         yield 'structure with an empty array element' => [
             ['data' => []],
             StructureType::class,
-            'structure{data: array{}}',
+            'structure{data: list<null>}',
         ];
 
         yield 'structure with an empty array element and a scalar' => [
             ['data' => [], 'x' => 1],
             StructureType::class,
-            'structure{data: array{}, x: integer}',
+            'structure{data: list<null>, x: integer}',
         ];
 
         yield 'non-list integer keys with empty array values' => [
             [1 => [], 2 => []],
-            ArrayType::class,
-            'array<mixed>',
+            MapType::class,
+            'map<integer, list<null>>',
         ];
 
         yield 'null before an empty array' => [
             [null, []],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<?list<null>>',
         ];
 
         yield 'string with an empty array' => [
@@ -571,8 +602,8 @@ final class TypeDetectorTest extends TestCase
 
         yield 'null after an empty array' => [
             [[], null],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<?list<null>>',
         ];
     }
 
@@ -608,6 +639,14 @@ final class TypeDetectorTest extends TestCase
             'integer',
             type_integer(),
         ];
+    }
+
+    #[DataProvider('provide_detected_type_law_data')]
+    public function test_detected_type_accepts_the_value_it_was_detected_from(mixed $data): void
+    {
+        $type = (new TypeDetector())->detectType($data);
+
+        static::assertTrue($type->isValid($data), $type->toString() . ' rejects the value it describes');
     }
 
     public function test_enum_type(): void

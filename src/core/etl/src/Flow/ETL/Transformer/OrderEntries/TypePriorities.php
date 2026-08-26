@@ -15,6 +15,7 @@ use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -40,6 +41,7 @@ final readonly class TypePriorities
         StructureEntry::class => 11,
         XMLEntry::class => 12,
         XMLElementEntry::class => 13,
+        TimeZoneEntry::class => 14,
     ];
 
     /**

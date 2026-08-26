@@ -18,7 +18,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
@@ -83,7 +82,9 @@ final class TypeDetector
 
         if (is_array($value)) {
             if ([] === $value) {
-                return type_empty_array();
+                // The bottom element type, not a distinct array shape: DuckDB says LIST(SQLNULL),
+                // Spark says ArrayType(NullType). It unifies with any list, where array{} does not.
+                return type_list(type_null());
             }
 
             $detector = new ArrayContentDetector(
@@ -93,11 +94,18 @@ final class TypeDetector
             );
 
             if ($detector->isList()) {
-                return type_list($detector->valueType());
+                $candidate = type_list($detector->valueType());
+
+                return $candidate->isValid($value) ? $candidate : type_array();
             }
 
             if ($detector->isMap()) {
-                return type_map($detector->firstKeyType(), $detector->valueType());
+                $candidate = type_map($detector->firstKeyType(), $detector->valueType());
+
+                // T resolves to array<array-key, mixed> here, so isValid()'s @assert-if-true narrows
+                // nothing, but the runtime check still rejects values the key or value type refuses.
+                // @mago-ignore analysis:redundant-type-comparison
+                return $candidate->isValid($value) ? $candidate : type_array();
             }
 
             if ($detector->isStructure()) {
@@ -108,7 +116,12 @@ final class TypeDetector
                     $elements[type_string()->assert($key)] = $this->detectType($item);
                 }
 
-                return type_structure($elements);
+                $candidate = type_structure($elements);
+
+                // T resolves to array<array-key, mixed> here, so isValid()'s @assert-if-true narrows
+                // nothing, but the runtime check still rejects values an element type refuses.
+                // @mago-ignore analysis:redundant-type-comparison
+                return $candidate->isValid($value) ? $candidate : type_array();
             }
 
             return type_array();

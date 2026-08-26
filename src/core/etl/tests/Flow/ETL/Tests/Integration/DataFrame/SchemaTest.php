@@ -5,36 +5,38 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Pipeline;
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_structure;
 use function range;
 
@@ -98,7 +100,11 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema_of_a_structure_with_a_nested_empty_array(): void
     {
         static::assertEquals(
-            schema(structure_schema('body', type_structure(['data' => type_json(), 'id' => type_integer()]))),
+            // [] detects as list<null>: an empty array is a container with no observed element
+            schema(structure_schema('body', type_structure([
+                'data' => type_list(type_null()),
+                'id' => type_integer(),
+            ]))),
             df()->read(from_array([['body' => ['data' => [], 'id' => 1]]]))->schema(),
         );
     }
@@ -210,17 +216,20 @@ final class SchemaTest extends FlowIntegrationTestCase
             Schema::fromPipeline($pipeline, $context = flow_context()),
         );
 
-        static::assertEquals(
+        // The extractor derives one schema before it yields, so row 1's nulls are TYPED nulls in
+        // known columns rather than untyped NullEntries a later row contradicts.
+        $batches = iterator_to_array($extractor->extract($context));
+
+        static::assertSame(
             [
-                rows(row(null_entry('string'), null_entry('bool'), null_entry('int'), null_entry('float'))),
-                rows(row(
-                    string_entry('string', 'a'),
-                    bool_entry('bool', true),
-                    int_entry('int', 1),
-                    float_entry('float', 1.24),
-                )),
+                [['string' => null, 'bool' => null, 'int' => null, 'float' => null]],
+                [['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24]],
             ],
-            iterator_to_array($extractor->extract($context)),
+            array_map(static fn(Rows $rows): array => $rows->toArray(), $batches),
         );
+        static::assertInstanceOf(StringEntry::class, $batches[0]->first()->get('string'));
+        static::assertInstanceOf(BooleanEntry::class, $batches[0]->first()->get('bool'));
+        static::assertInstanceOf(IntegerEntry::class, $batches[0]->first()->get('int'));
+        static::assertInstanceOf(FloatEntry::class, $batches[0]->first()->get('float'));
     }
 }

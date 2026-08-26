@@ -9,6 +9,8 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -22,11 +24,17 @@ use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class FloeExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class FloeExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    private ?Schema $schema = null;
+
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -60,7 +68,6 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function extract(FlowContext $context): Generator
     {
-        $putInputIntoRows = $context->config->shouldPutInputIntoRows();
         $fileOffset = $this->offset ?? 0;
 
         foreach ($this->readers($context->hydrator()) as [$reader, $uri]) {
@@ -76,8 +83,12 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
             $remaining = $limit === null ? null : $limit - $this->yieldedRows;
 
             foreach ($reader->rows(1000, $fileOffset, $remaining) as $rows) {
-                if ($putInputIntoRows) {
+                if ($this->addMetadataColumns) {
                     $rows = $rows->map(static fn(Row $row): Row => $row->add(str_entry('_input_file_uri', $uri)));
+                }
+
+                if ($this->schema !== null) {
+                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
                 }
 
                 $signal = yield $rows;
@@ -100,10 +111,19 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function schema(): Schema
     {
-        $schema = new Schema();
+        $schema = $this->schema;
 
-        foreach ($this->readers() as [$reader]) {
-            $schema = $schema->merge($reader->schema());
+        if ($schema === null) {
+            $schema = new Schema();
+
+            foreach ($this->readers() as [$reader]) {
+                $schema = $schema->merge($reader->schema());
+            }
+        }
+
+        // extract() adds this column, so schema() must declare it or the two disagree.
+        if ($this->addMetadataColumns) {
+            $schema = $schema->add(str_schema('_input_file_uri'));
         }
 
         return $schema;
@@ -142,5 +162,12 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
                 $listedFile->path->uri(),
             ];
         }
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

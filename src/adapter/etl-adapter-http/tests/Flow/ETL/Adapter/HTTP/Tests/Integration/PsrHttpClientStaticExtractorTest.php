@@ -18,10 +18,15 @@ use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_static_http_requests;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function is_scalar;
@@ -92,6 +97,37 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
 
         static::assertSame('norberttech', $norbertResponseBody['login']);
         static::assertSame('tomaszhanc', $tomekResponseBody['login']);
+    }
+
+    public function test_schema_is_the_fixed_http_exchange_shape(): void
+    {
+        static::assertEquals(
+            schema(
+                str_schema('response_body', nullable: true),
+                map_schema('response_headers', type_map(type_string(), type_list(type_string()))),
+                int_schema('response_status_code'),
+                str_schema('response_protocol_version'),
+                str_schema('response_reason_phrase'),
+                str_schema('request_body', nullable: true),
+                str_schema('request_uri'),
+                map_schema('request_headers', type_map(type_string(), type_list(type_string()))),
+                str_schema('request_protocol_version'),
+                str_schema('request_method'),
+            ),
+            from_static_http_requests(new Client(new Psr17Factory()), [])->schema(),
+        );
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('response_body')),
+            from_static_http_requests(
+                new Client(new Psr17Factory()),
+                [],
+                schema(str_schema('response_body')),
+            )->schema(),
+        );
     }
 
     public function test_schema_typed_response_body_with_empty_body(): void

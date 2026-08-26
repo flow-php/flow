@@ -9,6 +9,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Processor\OffsetProcessor;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Generator;
@@ -79,6 +80,16 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_skips_entire_batches(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -95,6 +106,16 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_spanning_batches(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
@@ -112,6 +133,16 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_within_first_batch(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
@@ -148,6 +179,16 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_offset_resulting_in_empty_batch(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));

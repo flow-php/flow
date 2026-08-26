@@ -18,7 +18,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Types\DSL\type_boolean;
@@ -287,7 +286,7 @@ final class UuidDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = uuid_schema('col')->merge(union_schema('col', type_union(type_uuid(), type_boolean())));
+        $merged = uuid_schema('col')->merge(new UnionDefinition('col', type_union(type_uuid(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|uuid', $merged->type()->toString());
@@ -298,7 +297,7 @@ final class UuidDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             uuid_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

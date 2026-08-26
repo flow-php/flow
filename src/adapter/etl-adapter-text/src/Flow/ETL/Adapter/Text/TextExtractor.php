@@ -9,6 +9,8 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -26,8 +28,12 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    private ?Schema $schema = null;
+
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -56,17 +62,16 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new TextEncoder();
 
-        $baseSchema = $this->schema($shouldPutInputIntoRows);
+        $baseSchema = $this->schema();
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
             $schema = $baseSchema;
@@ -143,17 +148,22 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         }
     }
 
+    public function schema(): Schema
+    {
+        $schema = $this->schema ?? schema(str_schema('text'));
+
+        return $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema;
+    }
+
     public function source(): Path
     {
         return $this->path;
     }
 
-    private function schema(bool $shouldPutInputIntoRows): Schema
+    public function withSchema(Schema $schema): static
     {
-        if ($shouldPutInputIntoRows) {
-            return schema(str_schema('text'), str_schema('_input_file_uri'));
-        }
+        $this->schema = $schema;
 
-        return schema(str_schema('text'));
+        return $this;
     }
 }

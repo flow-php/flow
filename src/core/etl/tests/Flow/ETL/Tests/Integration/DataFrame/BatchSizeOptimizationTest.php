@@ -67,7 +67,7 @@ final class BatchSizeOptimizationTest extends FlowTestCase
         $df = df($config)->from(new FakeExtractor(100));
 
         $df
-            ->match(FakeExtractor::schema())
+            ->match((new FakeExtractor(1))->schema())
             ->limit(null)
             ->batchSize(10)
             ->constrain(constraint_unique('int'))

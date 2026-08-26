@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
@@ -116,6 +117,16 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -149,6 +160,16 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -179,6 +200,16 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -242,6 +273,16 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *

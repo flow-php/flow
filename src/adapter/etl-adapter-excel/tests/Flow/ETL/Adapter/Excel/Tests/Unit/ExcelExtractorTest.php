@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 
@@ -43,5 +46,32 @@ final class ExcelExtractorTest extends FlowTestCase
         );
 
         from_excel(path('remote://unknown_file.xlsx'), native_local_filesystem('remote'));
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), str_schema('_input_file_uri')),
+            from_excel(__DIR__ . '/../Fixtures/unknown')
+                ->withSchema(schema(str_schema('name')))
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
+
+        from_excel(__DIR__ . '/../Fixtures/unknown')->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name')),
+            from_excel(__DIR__ . '/../Fixtures/unknown')->withSchema(schema(str_schema('name')))->schema(),
+        );
     }
 }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Google\Service\Sheets;
@@ -66,10 +67,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $extractor = from_google_sheet_columns($service, 'spread-id', $sheetName, 'A', 'B')
             ->withHeader(true)
             ->withRowsPerPage(2)
-            ->withSchema($schema);
+            ->withSchema($schema)
+            ->withMetadataColumns(true);
 
-        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
-        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
+        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
+        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
 
         static::assertNull($schema->findDefinition('_spread_sheet_id'));
         static::assertNull($schema->findDefinition('_sheet_name'));
@@ -92,12 +94,13 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         $extractor = from_google_sheet_columns($service, 'spread-id', 'sheet', 'A', 'B')
             ->withHeader(true)
-            ->withRowsPerPage(2);
+            ->withRowsPerPage(2)
+            ->withMetadataColumns(true);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Max rows "0" must be greater than 0');
 
-        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
+        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
     }
 
     public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row(): void
@@ -108,7 +111,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         $extractor = from_google_sheet_columns($service, $spreadSheetId = 'spread-id', $sheetName, 'A', 'B')
             ->withHeader(true)
-            ->withRowsPerPage(2);
+            ->withRowsPerPage(2)
+            ->withMetadataColumns(true);
 
         $firstValueRangeMock = new ValueRange();
         $firstValueRangeMock->setValues([['header'], ['row1']]);
@@ -127,9 +131,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array($extractor->extract(
-            flow_context((new ConfigBuilder())->putInputIntoRows()->build()),
-        ));
+        $rowsArray = iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
         static::assertCount(2, $rowsArray);
         static::assertSame(1, $rowsArray[0]->count());
         static::assertEquals(
@@ -149,6 +151,35 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectExceptionMessage('Rows per page must be greater than 0');
 
         from_google_sheet_columns($this->createStub(Sheets::class), 'spread-id', 'sheet', 'A', 'B')->withRowsPerPage(0);
+    }
+
+    public function test_schema_appends_the_metadata_columns(): void
+    {
+        static::assertEquals(
+            schema(str_schema('header'), str_schema('_spread_sheet_id'), str_schema('_sheet_name')),
+            from_google_sheet_columns(new Sheets(), 'spread-id', 'sheet', 'A', 'B')
+                ->withSchema(schema(str_schema('header')))
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
+
+        from_google_sheet_columns(new Sheets(), 'spread-id', 'sheet', 'A', 'B')->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('header')),
+            from_google_sheet_columns(new Sheets(), 'spread-id', 'sheet', 'A', 'B')
+                ->withSchema(schema(str_schema('header')))
+                ->schema(),
+        );
     }
 
     public function test_works_for_no_data(): void

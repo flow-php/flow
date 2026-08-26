@@ -35,7 +35,6 @@ final readonly class Config
         private Serializer $serializer,
         private ClockInterface $clock,
         private Optimizer $optimizer,
-        private bool $putInputIntoRows,
         private Hydrator $hydrator,
         public CacheConfig $cache,
         public MemorySortConfig|ExternalSortConfig $sort,
@@ -118,11 +117,6 @@ final readonly class Config
     public function serializer(): Serializer
     {
         return $this->serializer;
-    }
-
-    public function shouldPutInputIntoRows(): bool
-    {
-        return $this->putInputIntoRows;
     }
 
     public function version(): string

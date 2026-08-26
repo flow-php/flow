@@ -49,6 +49,6 @@ final readonly class SealWriteScenario
 
     private function schema(): SealSchema
     {
-        return to_seal_schema(FakeRandomOrdersExtractor::schema(), $this->index(), 'order_id');
+        return to_seal_schema((new FakeRandomOrdersExtractor())->schema(), $this->index(), 'order_id');
     }
 }

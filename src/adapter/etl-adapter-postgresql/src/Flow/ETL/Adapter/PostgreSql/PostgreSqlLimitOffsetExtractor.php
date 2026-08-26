@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -91,6 +92,15 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         }
     }
 
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        return $this->schema;
+    }
+
     public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
@@ -113,7 +123,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

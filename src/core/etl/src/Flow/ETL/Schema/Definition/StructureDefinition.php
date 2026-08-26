@@ -11,6 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\TypeWidener;
 
 use function array_key_exists;
 use function array_keys;
@@ -172,7 +173,7 @@ final readonly class StructureDefinition implements Definition
         if ($definition instanceof self) {
             return new self(
                 $this->ref,
-                (new TypeMerge())->mergeStructures($this->type, $definition->type),
+                (new TypeWidener())->widenStructures($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );

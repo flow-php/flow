@@ -24,18 +24,24 @@ stored as a `Flow\Types\Value\Json`, which preserves whether it was an object or
 
 ```php
 definition_from_type('tags', type_array())->type()->toString();   // "json"
-union_schema('tags', type_union(type_string(), type_array()))->type()->toString();   // "json|string"
 ```
 
-The projection applies at every depth, not only to whole columns. A structure field, list element, map value or union
-member declared as an array - `array<mixed>` or the empty `array{}` - is rewritten to `json` when the definition is
-built:
+The projection applies at every depth, not only to whole columns. A structure field, list element or map value declared
+as `array<mixed>` is rewritten to `json` when the definition is built:
 
 ```php
-definition_from_type('tags', type_empty_array())->type()->toString();   // "json"
 structure_schema('user', type_structure(['tags' => type_array()]))->type()->toString();   // "structure{tags: json}"
 list_schema('batches', type_list(type_array()))->type()->toString();   // "list<json>"
 map_schema('translations', type_map(type_string(), type_array()))->type()->toString();   // "map<string, json>"
+```
+
+The empty array `array{}` is **not** a column type - it is a value whose element type was never observed. Declaring one
+is refused, because a column typed `array{}` could never hold anything:
+
+```php
+definition_from_type('tags', type_empty_array());
+// RuntimeException: Column "tags" cannot be typed as array{} - an empty array is a value, not a
+// column type. Declare the element type, e.g. type_list(type_string()).
 ```
 
 Declare the concrete shape whenever it is known - `type_list()`, `type_map()` or `type_structure()` keep element typing
@@ -58,20 +64,54 @@ data_frame()
     ]))
     ->schema();
 
-// id: integer
-// tags: json
+// id: ?integer
+// tags: ?list<?string>
 ```
 
 Inference sees only the values in front of it:
 
-- `[]` detects as `array{}` - the element type of an empty collection is unknowable - and lands in the schema as
-  `json`, like every array type (see "Arrays in a Schema" above). In the example, the first row alone would infer
-  `tags: list<string>`; merged with the second row's empty array it becomes `json`.
-- An array with mixed value types detects as `array<mixed>` - also `json` in the schema.
+- `[]` detects as `list<null>` - a collection whose element type was never observed. It is the bottom of the type
+  lattice, so it unifies with any other list rather than destroying its element type. In the example the first row
+  infers `tags: list<string>`, and merging it with the second row's empty array yields `list<?string>`: the element
+  is still a string, but it is no longer known to be present in every row.
+- An array with mixed value types detects as `array<mixed>` - `json` in the schema, because no narrower type fits.
 - Sources that transport everything as text (CSV) infer every column as `string`.
 
 Inference is a fallback. When the source schema is known, declare it on the extractor ("Declaring the Source Schema"
 below); when it is not, `autoCast()` can narrow the obvious cases ("Automatic Casting" below).
+
+## When Two Types Disagree
+
+A column holds exactly one type. When two rows disagree, the schema merge widens them to the narrowest type that can
+hold both, and the result is fixed:
+
+| both sides are | result |
+|---|---|
+| containers (`json`, `list`, `map`, `structure`) | `json` |
+| anything else | `string` |
+
+```php
+data_frame()
+    ->read(from_array([['a' => 1], ['a' => true]]))
+    ->schema();
+
+// a: ?string
+```
+
+**A union is not a column type.** `null|T` is the single exception, and it does not mean "either" - it means a nullable
+column of `T`. Any other union is refused when the definition is built:
+
+```php
+definition_from_type('value', type_union(type_string(), type_null()));
+// StringDefinition, nullable
+
+definition_from_type('value', type_union(type_string(), type_integer()));
+// UnsupportedUnionTypeException: Column "value" cannot be typed as "integer|string": a column holds
+// exactly one type. Only "null|T" is a valid union - that is a nullable column.
+// Possible fixes:
+// * Declare the widest common type: str_schema('value')
+// * Declare json_schema('value') when the shape is genuinely dynamic
+```
 
 ## Declaring the Source Schema
 

@@ -544,13 +544,17 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param GroupByReferences $entries
+     * @param GroupByReferences|Reference|string $entries a single column is grouped by on its own
      * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
      *                                               algorithm for this operation and skips any automatic choice
      */
-    public function groupBy(array $entries, ?GroupByAlgorithmBuilder $algorithm = null): GroupedDataFrame
-    {
-        return new GroupedDataFrame($this, new GroupBy(...$entries), $algorithm);
+    public function groupBy(
+        array|Reference|string $entries,
+        ?GroupByAlgorithmBuilder $algorithm = null,
+    ): GroupedDataFrame {
+        $references = is_array($entries) ? $entries : [$entries];
+
+        return new GroupedDataFrame($this, new GroupBy(...$references), $algorithm);
     }
 
     /**
@@ -850,13 +854,15 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param SortReferences $entries
+     * @param Reference|SortReferences $entries a single reference is sorted by on its own
      * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
      *                                            for this operation and skips any automatic choice
      */
-    public function sortBy(array $entries, ?SortAlgorithmBuilder $algorithm = null): self
+    public function sortBy(array|Reference $entries, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        foreach (SortSteps::of(refs(...$entries), $this->context->config, $algorithm) as $step) {
+        $references = $entries instanceof Reference ? [$entries] : $entries;
+
+        foreach (SortSteps::of(refs(...$references), $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 

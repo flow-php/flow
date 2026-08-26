@@ -59,8 +59,6 @@ final class ConfigBuilder
 
     private ?Optimizer $optimizer;
 
-    private bool $putInputIntoRows;
-
     private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
@@ -77,7 +75,6 @@ final class ConfigBuilder
         $this->name = null;
         $this->serializer = null;
         $this->hydrator = null;
-        $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->clock = null;
         $this->extractorBatchSize = 1000;
@@ -122,7 +119,6 @@ final class ConfigBuilder
             $serializer,
             $this->getClock(),
             $optimizer,
-            $this->putInputIntoRows,
             $hydrator,
             $cacheConfig,
             ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir),
@@ -168,13 +164,6 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function dontPutInputIntoRows(): self
-    {
-        $this->putInputIntoRows = false;
-
-        return $this;
-    }
-
     public function groupBy(GroupByAlgorithmBuilder $algorithm): self
     {
         $this->groupBy = $algorithm;
@@ -216,17 +205,6 @@ final class ConfigBuilder
     public function optimizer(Optimizer $optimizer): self
     {
         $this->optimizer = $optimizer;
-
-        return $this;
-    }
-
-    /**
-     * When set, each extractor will try to put additional rows with input parameters, like for example uri to the source file from which
-     * data is extracted.
-     */
-    public function putInputIntoRows(): self
-    {
-        $this->putInputIntoRows = true;
 
         return $this;
     }

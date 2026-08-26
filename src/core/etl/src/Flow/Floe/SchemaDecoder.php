@@ -21,6 +21,7 @@ use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -39,6 +40,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -72,6 +74,7 @@ final class SchemaDecoder
         StructureDefinition::class => StructureEntry::class,
         TimeDefinition::class => TimeEntry::class,
         UuidDefinition::class => UuidEntry::class,
+        TimeZoneDefinition::class => TimeZoneEntry::class,
         XMLDefinition::class => XMLEntry::class,
         XMLElementDefinition::class => XMLElementEntry::class,
         NullDefinition::class => NullEntry::class,

@@ -24,6 +24,7 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use RuntimeException;
 
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 
@@ -172,6 +173,43 @@ final class TraceableCacheTest extends FlowTestCase
         static::assertCount(1, $missMetrics);
         static::assertSame(1, $missMetrics[0]->value);
         static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('flow.etl.dataframe.name'));
+    }
+
+    public function test_schema_increments_hit_counter_on_existing_key(): void
+    {
+        $innerCache = new InMemoryCache();
+        $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
+
+        $innerCache->set('existing-key', $rows = rows(row(int_entry('id', 1))));
+
+        static::assertEquals($rows->schema(), $cache->schema('existing-key'));
+
+        $this->telemetry->flush();
+        $hitMetrics = $this->metricProcessor->metricsWithName('flow.cache.hits');
+
+        static::assertCount(1, $hitMetrics);
+        static::assertCount(0, $this->metricProcessor->metricsWithName('flow.cache.misses'));
+        static::assertSame(1, $hitMetrics[0]->value);
+        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('flow.etl.dataframe.name'));
+    }
+
+    public function test_schema_increments_miss_counter_and_throws_on_non_existing_key(): void
+    {
+        $cache = new TraceableCache(new InMemoryCache(), $this->telemetry, 'test_dataframe');
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        try {
+            $cache->schema('non-existing-key');
+        } finally {
+            $this->telemetry->flush();
+            $missMetrics = $this->metricProcessor->metricsWithName('flow.cache.misses');
+
+            static::assertCount(0, $this->metricProcessor->metricsWithName('flow.cache.hits'));
+            static::assertCount(1, $missMetrics);
+            static::assertSame(1, $missMetrics[0]->value);
+            static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('flow.etl.dataframe.name'));
+        }
     }
 
     public function test_set_creates_span_with_rows_value_type(): void

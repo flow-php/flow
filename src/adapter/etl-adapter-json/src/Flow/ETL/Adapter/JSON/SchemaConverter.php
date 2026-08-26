@@ -26,6 +26,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -1000,6 +1001,7 @@ final class SchemaConverter
             $type instanceof DateTimeType => ['type' => 'string', 'format' => 'date-time'],
             $type instanceof TimeType => ['type' => 'string', 'format' => 'time'],
             $type instanceof UuidType => ['type' => 'string', 'format' => 'uuid'],
+            $type instanceof TimeZoneType => ['type' => 'string'],
             $type instanceof HTMLType, $type instanceof HTMLElementType => ['type' => 'string', 'format' => 'html'],
             $type instanceof XMLType, $type instanceof XMLElementType => ['type' => 'string', 'format' => 'xml'],
             $type instanceof EnumType => $this->enumToJsonSchema($type),

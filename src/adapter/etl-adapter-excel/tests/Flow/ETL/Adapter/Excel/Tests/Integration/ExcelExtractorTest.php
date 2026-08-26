@@ -255,10 +255,12 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $schema = schema(string_schema('group'), int_schema('id'), string_schema('value'));
 
-        $extractor = from_excel(__DIR__ . '/../Fixtures/cross_stream/*/*.xlsx')->withSchema($schema);
+        $extractor = from_excel(__DIR__ . '/../Fixtures/cross_stream/*/*.xlsx')
+            ->withSchema($schema)
+            ->withMetadataColumns(true);
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertNull($schema->findDefinition('date'));
         static::assertNull($schema->findDefinition('_input_file_uri'));

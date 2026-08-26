@@ -31,12 +31,13 @@ final class XMLHydratorParityTest extends FlowTestCase
         static::assertCount(5, $rows);
     }
 
-    public function test_appends_input_file_uri_when_put_input_into_rows_is_enabled(): void
+    public function test_appends_input_file_uri_when_metadata_columns_are_enabled(): void
     {
         $extractor = from_xml($path = path_real(__DIR__ . '/../Fixtures/simple_items.xml'))
-            ->withXMLNodePath('root/items/item');
+            ->withXMLNodePath('root/items/item')
+            ->withMetadataColumns(true);
 
-        foreach ($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())) as $batch) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
             foreach ($batch as $row) {
                 static::assertTrue($row->has('_input_file_uri'));
                 static::assertSame($path->uri(), $row->valueOf('_input_file_uri'));

@@ -23,11 +23,11 @@ final class JsonHydratorParityTest extends FlowTestCase
         $extractor = from_json(
             $path = path_real(__DIR__ . '/../../Fixtures/parity_people.json'),
             schema: schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
-        );
+        )->withMetadataColumns(true);
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())) as $rows) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
             foreach ($rows as $row) {
                 $actual[] = $row->toArray();
             }

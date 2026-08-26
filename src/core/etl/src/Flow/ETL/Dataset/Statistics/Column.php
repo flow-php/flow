@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Dataset\Statistics;
 
 use DateTimeInterface;
+use DateTimeZone;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateEntry;
@@ -15,6 +16,7 @@ use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Reference;
 use Flow\Types\Value\Uuid;
@@ -83,6 +85,12 @@ final class Column
 
         if ($entry instanceof UuidEntry) {
             $this->distinctCounter->add(type_instance_of(Uuid::class)->assert($value)->toString());
+
+            return;
+        }
+
+        if ($entry instanceof TimeZoneEntry) {
+            $this->distinctCounter->add(type_instance_of(DateTimeZone::class)->assert($value)->getName());
 
             return;
         }

@@ -179,7 +179,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_integer(),
             ],
             false,
-            false,
+            true,
         ];
 
         yield 'string string' => [
@@ -494,6 +494,35 @@ final class ArrayContentDetectorTest extends TestCase
             $expected,
             (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isStructure(),
         );
+    }
+
+    public function test_nested_empty_array_unifies_element_wise(): void
+    {
+        static::assertSame(
+            'list<?string>',
+            (new ArrayContentDetector(
+                new Types(type_integer()),
+                new Types(type_list(type_string()), type_list(type_null())),
+                true,
+            ))
+                ->valueType()
+                ->toString(),
+        );
+
+        static::assertSame(
+            'list<null>',
+            (new ArrayContentDetector(new Types(type_integer()), new Types(type_list(type_null())), true))
+                ->valueType()
+                ->toString(),
+        );
+    }
+
+    public function test_value_types_without_a_common_type_widen_to_the_floor_element(): void
+    {
+        $detector = new ArrayContentDetector(new Types(type_integer()), new Types(type_integer(), type_string()), true);
+
+        static::assertTrue($detector->isList());
+        static::assertSame('string', $detector->valueType()->toString());
     }
 
     /**

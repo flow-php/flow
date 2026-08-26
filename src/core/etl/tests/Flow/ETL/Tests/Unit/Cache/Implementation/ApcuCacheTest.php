@@ -6,12 +6,14 @@ namespace Flow\ETL\Tests\Unit\Cache\Implementation;
 
 use Flow\ETL\Cache\Implementation\ApcuCache;
 use Flow\ETL\Exception\KeyNotInCacheException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
 use function apcu_enabled;
+use function apcu_store;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -66,6 +68,13 @@ final class ApcuCacheTest extends FlowTestCase
         static::assertEquals($rows, $this->cache->get('rows'));
     }
 
+    public function test_caching_schema(): void
+    {
+        $this->cache->set('rows', $rows = rows(row(int_entry('id', 1), str_entry('name', 'John'))));
+
+        static::assertEquals($rows->schema(), $this->cache->schema('rows'));
+    }
+
     public function test_checking_on_non_existing_cache_key(): void
     {
         static::assertFalse($this->cache->has('non-existing'));
@@ -82,11 +91,39 @@ final class ApcuCacheTest extends FlowTestCase
         static::assertTrue($this->otherCache->has('rows'));
     }
 
+    public function test_clearing_cache_removes_schemas(): void
+    {
+        $this->cache->set('rows', rows(row(int_entry('id', 1))));
+
+        $this->cache->clear();
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $this->cache->schema('rows');
+    }
+
+    public function test_getting_corrupted_schema_entry(): void
+    {
+        apcu_store('flow_php_cache_test:rows:schema', 'not a schema');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cached schema for key "rows" is corrupted or was not written by ApcuCache.');
+
+        $this->cache->schema('rows');
+    }
+
     public function test_getting_non_existing_cache_key(): void
     {
         $this->expectException(KeyNotInCacheException::class);
 
         $this->cache->get('non-existing');
+    }
+
+    public function test_getting_schema_of_non_existing_cache_key(): void
+    {
+        $this->expectException(KeyNotInCacheException::class);
+
+        $this->cache->schema('non-existing');
     }
 
     public function test_removing_from_cache(): void
@@ -100,10 +137,35 @@ final class ApcuCacheTest extends FlowTestCase
         static::assertFalse($this->cache->has('second'));
     }
 
+    public function test_removing_from_cache_removes_its_schema(): void
+    {
+        $this->cache->set('first', $rows = rows(row(int_entry('id', 1))));
+        $this->cache->set('second', rows(row(int_entry('id', 2))));
+
+        $this->cache->delete('second');
+
+        static::assertEquals($rows->schema(), $this->cache->schema('first'));
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $this->cache->schema('second');
+    }
+
     public function test_removing_non_existing_cache_key(): void
     {
         $this->cache->delete('non-existing');
 
         static::assertFalse($this->cache->has('non-existing'));
+    }
+
+    public function test_schema_of_an_entry_without_a_stored_schema_is_a_cache_miss(): void
+    {
+        apcu_store('flow_php_cache_test:orphan', rows(row(int_entry('id', 1))));
+
+        static::assertTrue($this->cache->has('orphan'));
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $this->cache->schema('orphan');
     }
 }

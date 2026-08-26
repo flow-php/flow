@@ -40,7 +40,7 @@ final class DoctrineConnection
     {
         $connection
             ->createSchemaManager()
-            ->createTable(to_dbal_schema_table(FakeRandomOrdersExtractor::schema(), $table));
+            ->createTable(to_dbal_schema_table((new FakeRandomOrdersExtractor())->schema(), $table));
     }
 
     public static function dropTable(Connection $connection, string $table): void

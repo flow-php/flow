@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Seal;
 
 use DateInterval;
 use DateTimeInterface;
+use DateTimeZone;
 use Dom\Element;
 use Dom\XMLDocument;
 use DOMDocument;
@@ -21,6 +22,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -88,6 +90,7 @@ final class SealEncoder implements Encoder
             DateTimeType::class => $value instanceof DateTimeInterface ? $value->format($this->dateTimeFormat) : null,
             TimeType::class => $value instanceof DateInterval ? date_interval_to_microseconds($value) : null,
             UuidType::class => $value instanceof Uuid ? $value->toString() : null,
+            TimeZoneType::class => $value instanceof DateTimeZone ? $value->getName() : null,
             EnumType::class => $value instanceof UnitEnum ? $value->name : null,
             XMLType::class, XMLElementType::class => $this->xmlToString($value),
             JsonType::class => $value instanceof Json ? $this->normalizeArray($value->toArray()) : null,

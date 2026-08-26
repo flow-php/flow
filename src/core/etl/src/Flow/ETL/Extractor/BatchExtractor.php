@@ -7,10 +7,13 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
-final readonly class BatchExtractor implements Extractor, OverridingExtractor
+final class BatchExtractor implements Extractor, OverridingExtractor
 {
+    private ?Schema $schema = null;
+
     /**
      * @param int<1, max> $chunkSize
      */
@@ -24,6 +27,10 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context): Generator
     {
+        if ($this->schema !== null) {
+            $this->extractor->withSchema($this->schema);
+        }
+
         $chunk = new Rows();
         $chunkSize = 0;
 
@@ -62,5 +69,21 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
     public function extractors(): array
     {
         return [$this->extractor];
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        return $this->extractor->schema();
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

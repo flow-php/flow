@@ -42,6 +42,39 @@ use function Flow\ETL\DSL\window;
 
 final class GroupByTest extends FlowIntegrationTestCase
 {
+    public function test_a_bare_column_groups_like_a_one_element_array(): void
+    {
+        $dataset = [
+            ['country' => 'PL', 'score' => 10],
+            ['country' => 'US', 'score' => 20],
+            ['country' => 'PL', 'score' => 30],
+        ];
+
+        static::assertSame(
+            df()->read(from_array($dataset))->groupBy(['country'])->aggregate(sum('score'))->fetch()->toArray(),
+            df()->read(from_array($dataset))->groupBy('country')->aggregate(sum('score'))->fetch()->toArray(),
+        );
+    }
+
+    public function test_a_bare_reference_groups_like_a_one_element_array(): void
+    {
+        $dataset = [
+            ['country' => 'PL', 'score' => 10],
+            ['country' => 'US', 'score' => 20],
+            ['country' => 'PL', 'score' => 30],
+        ];
+
+        static::assertSame(
+            df()
+                ->read(from_array($dataset))
+                ->groupBy([ref('country')])
+                ->aggregate(sum('score'))
+                ->fetch()
+                ->toArray(),
+            df()->read(from_array($dataset))->groupBy(ref('country'))->aggregate(sum('score'))->fetch()->toArray(),
+        );
+    }
+
     public function test_group_by_array(): void
     {
         $rows = df()

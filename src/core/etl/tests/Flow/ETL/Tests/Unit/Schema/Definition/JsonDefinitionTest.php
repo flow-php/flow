@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
@@ -111,9 +110,12 @@ final class JsonDefinitionTest extends FlowTestCase
         static::assertFalse($def->matches(int_entry('col', 1)));
     }
 
-    public function test_empty_array_type_produces_json_definition(): void
+    public function test_empty_array_type_is_refused_rather_than_typed_as_json(): void
     {
-        static::assertInstanceOf(JsonDefinition::class, definition_from_type('data', type_empty_array()));
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Column "data" cannot be typed as array{}');
+
+        definition_from_type('data', type_empty_array());
     }
 
     public function test_entry_class(): void
@@ -294,7 +296,7 @@ final class JsonDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = json_schema('col')->merge(union_schema('col', type_union(type_json(), type_boolean())));
+        $merged = json_schema('col')->merge(new UnionDefinition('col', type_union(type_json(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|json', $merged->type()->toString());
@@ -305,7 +307,7 @@ final class JsonDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             json_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

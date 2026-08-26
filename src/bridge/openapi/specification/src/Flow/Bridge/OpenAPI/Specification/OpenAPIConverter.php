@@ -20,6 +20,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -472,6 +473,7 @@ final class OpenAPIConverter
             DateTimeType::class => ['type' => 'string', 'format' => 'date-time'],
             TimeType::class => ['type' => 'string', 'format' => 'time'],
             UuidType::class => ['type' => 'string', 'format' => 'uuid'],
+            TimeZoneType::class => ['type' => 'string'],
             JsonType::class => ['type' => 'string', 'format' => 'json'],
             XMLType::class, XMLElementType::class => ['type' => 'string', 'format' => 'xml'],
             EnumType::class => $this->convertEnumToOpenAPI($type),

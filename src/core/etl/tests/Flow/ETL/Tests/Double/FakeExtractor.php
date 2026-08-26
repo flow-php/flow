@@ -60,7 +60,7 @@ final readonly class FakeExtractor implements Extractor
     /**
      * @return Schema
      */
-    public static function schema(): Schema
+    public function schema(): Schema
     {
         return schema(
             int_schema('int'),
@@ -137,5 +137,10 @@ final readonly class FakeExtractor implements Extractor
                 xml_entry('xml', '<xml><node id="' . $id . '">node-' . $id . '</node></xml>'),
             ));
         }
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        return $this;
     }
 }

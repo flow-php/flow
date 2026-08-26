@@ -46,7 +46,7 @@ final class FloeExtractorTest extends TestCase
 
     public function test_extract_adds_input_file_uri_when_configured(): void
     {
-        $context = flow_context(config_builder()->putInputIntoRows()->build());
+        $context = flow_context(config_builder()->build());
         $memory = memory_filesystem();
         $path = path('memory://input-uri.floe');
 
@@ -54,7 +54,8 @@ final class FloeExtractorTest extends TestCase
         $loader->load(rows(row(int_entry('id', 1))), $context);
         $loader->closure($context);
 
-        $batches = iterator_to_array(from_floe($path, filesystem: $memory)->extract($context));
+        $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
+        $batches = iterator_to_array($extractor->extract($context));
 
         static::assertSame($path->uri(), $batches[0]->first()->valueOf('_input_file_uri'));
     }

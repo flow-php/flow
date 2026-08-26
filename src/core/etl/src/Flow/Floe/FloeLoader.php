@@ -67,7 +67,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

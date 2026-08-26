@@ -34,7 +34,10 @@ final readonly class UnionDefinition implements Definition
     private UnionType $type;
 
     /**
-     * @param UnionType<mixed, mixed> $type
+     * @template TLeft
+     * @template TRight
+     *
+     * @param UnionType<TLeft, TRight> $type
      */
     public function __construct(
         string|Reference $ref,

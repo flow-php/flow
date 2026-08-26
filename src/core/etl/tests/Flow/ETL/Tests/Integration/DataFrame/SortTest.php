@@ -19,6 +19,32 @@ use function range;
 
 final class SortTest extends FlowIntegrationTestCase
 {
+    public function test_a_bare_reference_sorts_like_a_one_element_array(): void
+    {
+        $dataset = [['id' => 3], ['id' => 1], ['id' => 2]];
+
+        static::assertSame(
+            df()
+                ->read(from_array($dataset))
+                ->sortBy([ref('id')])
+                ->fetch()
+                ->reduceToArray('id'),
+            df()->read(from_array($dataset))->sortBy(ref('id'))->fetch()->reduceToArray('id'),
+        );
+    }
+
+    public function test_a_bare_reference_honours_its_sort_order(): void
+    {
+        static::assertSame(
+            [3, 2, 1],
+            df()
+                ->read(from_array([['id' => 1], ['id' => 3], ['id' => 2]]))
+                ->sortBy(ref('id')->desc())
+                ->fetch()
+                ->reduceToArray('id'),
+        );
+    }
+
     public function test_etl_sort_by_external_sort(): void
     {
         $config = config_builder()->sort(external_sort()->runSize(100));

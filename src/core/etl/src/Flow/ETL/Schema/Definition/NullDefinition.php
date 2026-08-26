@@ -17,6 +17,12 @@ use function Flow\Types\DSL\type_null;
 use function sprintf;
 
 /**
+ * The bottom of the type lattice: the column's type is not known. Absorbed by merge() in both
+ * directions - null ⊔ T = ?T, T ⊔ null = ?T, null ⊔ null = null. Reaches a materialized Schema
+ * only when a column is null in every observed row and no type was declared; that is Parquet's
+ * UNKNOWN and Iceberg's unknown. A column that holds strings and sometimes null is
+ * StringDefinition(nullable: true), never this.
+ *
  * @implements Definition<null>
  */
 final readonly class NullDefinition implements Definition
@@ -56,7 +62,7 @@ final readonly class NullDefinition implements Definition
             return false;
         }
 
-        return type_equals($this->type, $definition->type());
+        return $definition->isNullable() || type_equals($this->type, $definition->type());
     }
 
     public function isNullable(): bool

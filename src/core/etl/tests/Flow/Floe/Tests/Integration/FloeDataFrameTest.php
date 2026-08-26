@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use DateTimeZone;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeEngine;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Types\Value\Json;
 
+use function array_keys;
 use function Flow\ETL\DSL\append;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
@@ -22,9 +24,11 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 
@@ -80,6 +84,28 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_a_timezone_column_round_trips_through_floe(): void
+    {
+        $path = $this->cacheDir->suffix('timezones.floe');
+
+        data_frame()
+            ->read(from_rows(rows(row(time_zone_entry('tz', 'Europe/Warsaw')), row(time_zone_entry('tz', 'UTC')))))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $read = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('timezone', $read->schema()->get('tz')->type()->toString());
+
+        $names = [];
+
+        foreach ($read as $row) {
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row->valueOf('tz'))->getName();
+        }
+
+        static::assertSame(['Europe/Warsaw', 'UTC'], $names);
+    }
+
     public function test_inferred_nested_arrays_are_projected_to_json_and_round_trip(): void
     {
         $path = $this->cacheDir->suffix('nested-arrays.floe');
@@ -96,6 +122,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $rows = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
+        // NOT NULL declaration.
         static::assertFalse($rows->schema()->get('body')->isNullable());
 
         $first = $rows[0]->valueOf('body');
@@ -134,6 +161,28 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         static::assertSame([1, 'b'], $list[1]->toArray());
     }
 
+    /**
+     * schema() used to never declare the column extract() adds, so the two disagreed.
+     */
+    public function test_schema_and_extract_agree_in_both_metadata_states(): void
+    {
+        $path = $this->cacheDir->suffix('metadata-agreement.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        foreach ([false, true] as $enabled) {
+            $extractor = from_floe($path)->withMetadataColumns($enabled);
+
+            static::assertSame(
+                array_keys($extractor->schema()->definitions()),
+                array_keys(data_frame()->read($extractor)->fetch()->first()->toArray()),
+            );
+        }
+    }
+
     public function test_input_file_uri_is_added_when_configured(): void
     {
         $path = $this->cacheDir->suffix('input-uri.floe');
@@ -143,7 +192,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
             ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
-        $rows = data_frame(config_builder()->putInputIntoRows())->read(from_floe($path))->fetch();
+        $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
 
         static::assertTrue($rows->first()->entries()->has('_input_file_uri'));
     }

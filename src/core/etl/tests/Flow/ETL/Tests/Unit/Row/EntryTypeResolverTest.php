@@ -6,10 +6,10 @@ namespace Flow\ETL\Tests\Unit\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryTypeResolver;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -30,11 +30,9 @@ final class EntryTypeResolverTest extends FlowTestCase
     {
         static::assertEquals(
             type_union(type_integer(), type_string()),
-            (new EntryTypeResolver())->fromDefinition(union_schema(
-                'e',
-                type_union(type_integer(), type_string()),
-                true,
-            )),
+            (new EntryTypeResolver())->fromDefinition(
+                new UnionDefinition('e', type_union(type_integer(), type_string()), true),
+            ),
         );
     }
 

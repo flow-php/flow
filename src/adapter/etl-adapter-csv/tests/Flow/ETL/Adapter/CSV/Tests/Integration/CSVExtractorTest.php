@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Config;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -25,15 +27,78 @@ use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class CSVExtractorTest extends FlowTestCase
 {
     use OperatingSystem;
 
+    public function test_a_source_column_named_input_file_uri_throws_instead_of_being_overwritten(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        df()
+            ->read(from_csv(__DIR__ . '/../Fixtures/metadata_column_collision.csv', schema: schema(
+                str_schema('_input_file_uri'),
+                str_schema('name'),
+            ))->withMetadataColumns(true))
+            ->fetch();
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), str_schema('_input_file_uri')),
+            from_csv(
+                __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+                schema: schema(str_schema('name')),
+            )
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
+
+        from_csv(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name')),
+            from_csv(
+                __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+                schema: schema(str_schema('name')),
+            )->schema(),
+        );
+    }
+
+    /**
+     * Pins the half that is NOT closed: with no declared schema there is no Schema::add() to
+     * refuse, and the row-value write still clobbers the source column. The value-write sites are
+     * deliberately untouched in this phase.
+     */
+    public function test_without_a_declared_schema_the_metadata_column_still_overwrites_silently(): void
+    {
+        $rows = df()
+            ->read(from_csv(__DIR__ . '/../Fixtures/metadata_column_collision.csv')->withMetadataColumns(true))
+            ->fetch();
+
+        static::assertStringEndsWith(
+            'metadata_column_collision.csv',
+            type_string()->assert($rows->first()->valueOf('_input_file_uri')),
+        );
+    }
+
     public function test_bom_removal_utf16_be(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'))
+            ->withMetadataColumns(true);
         static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16be_bom.csv', "\xFE\xFF"));
 
         static::assertSame(
@@ -49,14 +114,15 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
 
     public function test_bom_removal_utf16_le(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'))
+            ->withMetadataColumns(true);
         static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16le_bom.csv', "\xFF\xFE"));
 
         static::assertSame(
@@ -72,14 +138,15 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
 
     public function test_bom_removal_utf32_be(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'))
+            ->withMetadataColumns(true);
 
         static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32be_bom.csv', "\x00\x00\xFE\xFF"));
 
@@ -96,14 +163,15 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
 
     public function test_bom_removal_utf32_le(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'))
+            ->withMetadataColumns(true);
 
         static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32le_bom.csv', "\xFF\xFE\x00\x00"));
 
@@ -120,14 +188,14 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
 
     public function test_bom_removal_utf8(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'))->withMetadataColumns(true);
 
         static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
 
@@ -144,7 +212,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
@@ -155,10 +223,12 @@ final class CSVExtractorTest extends FlowTestCase
 
         $before = $schema->normalize();
 
-        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema);
+        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema)->withMetadataColumns(
+            true,
+        );
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertSame($before, $schema->normalize());
     }
@@ -167,10 +237,12 @@ final class CSVExtractorTest extends FlowTestCase
     {
         $schema = schema(int_schema('id'), str_schema('value'));
 
-        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema);
+        $extractor = from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: $schema)->withMetadataColumns(
+            true,
+        );
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertNull($schema->findDefinition('date'));
         static::assertNull($schema->findDefinition('_input_file_uri'));
@@ -181,7 +253,7 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor = from_csv(
             $path = path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
             empty_to_null: false,
-        );
+        )->withMetadataColumns(true);
 
         static::assertSame(
             [
@@ -204,7 +276,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }
@@ -503,7 +575,7 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_without_bom_removal_utf8(): void
     {
-        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'))->withMetadataColumns(true);
 
         $extractor = $extractor->withBOMRemoval(false);
 
@@ -522,7 +594,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }

@@ -16,7 +16,11 @@ final class SealAllEntryTypesTest extends IntegrationTestCase
 {
     public function test_indexing_pipeline_loads_all_flow_entry_types(): void
     {
-        $engine = $this->sealContext()->engine(to_seal_schema(FakeStaticOrdersExtractor::schema(), 'orders', 'index'));
+        $engine = $this->sealContext()->engine(to_seal_schema(
+            (new FakeStaticOrdersExtractor())->schema(),
+            'orders',
+            'index',
+        ));
 
         $report = data_frame()
             ->read(new FakeStaticOrdersExtractor(100))

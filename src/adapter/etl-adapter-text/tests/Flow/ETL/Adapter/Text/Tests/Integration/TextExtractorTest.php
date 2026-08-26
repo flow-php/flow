@@ -12,6 +12,8 @@ use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function iterator_to_array;
 
@@ -52,6 +54,19 @@ final class TextExtractorTest extends FlowTestCase
         );
     }
 
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('text'), str_schema('_input_file_uri')),
+            from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->withMetadataColumns(true)->schema(),
+        );
+    }
+
+    public function test_schema_describes_a_single_text_column(): void
+    {
+        static::assertEquals(schema(str_schema('text')), from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->schema());
+    }
+
     public function test_signal_stop(): void
     {
         $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
@@ -65,5 +80,16 @@ final class TextExtractorTest extends FlowTestCase
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
+    }
+
+    public function test_metadata_columns_extend_a_declared_schema(): void
+    {
+        static::assertEquals(
+            schema(str_schema('line'), str_schema('_input_file_uri')),
+            from_text(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')
+                ->withSchema(schema(str_schema('line')))
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
     }
 }

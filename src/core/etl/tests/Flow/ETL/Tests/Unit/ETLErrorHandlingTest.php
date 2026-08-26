@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 use Generator;
@@ -31,6 +32,16 @@ final class ETLErrorHandlingTest extends FlowTestCase
     public function test_default_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
@@ -85,6 +96,16 @@ final class ETLErrorHandlingTest extends FlowTestCase
     public function test_ignore_error_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
@@ -154,6 +175,16 @@ final class ETLErrorHandlingTest extends FlowTestCase
     public function test_skip_rows_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *

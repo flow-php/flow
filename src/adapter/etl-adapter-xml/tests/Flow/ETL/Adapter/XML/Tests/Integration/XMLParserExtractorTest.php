@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
@@ -25,10 +26,12 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $schema = schema(xml_schema('node'));
 
-        $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')->withSchema($schema);
+        $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')
+            ->withSchema($schema)
+            ->withMetadataColumns(true);
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertNull($schema->findDefinition('date'));
         static::assertNull($schema->findDefinition('_input_file_uri'));
@@ -233,6 +236,27 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             XML, type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
             ->fetch()[0]->valueOf('node')));
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(xml_schema('node'), str_schema('_input_file_uri')),
+            from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->withMetadataColumns(true)->schema(),
+        );
+    }
+
+    public function test_schema_defaults_to_a_single_node_column(): void
+    {
+        static::assertEquals(schema(xml_schema('node')), from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->schema());
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name')),
+            from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->withSchema(schema(str_schema('name')))->schema(),
+        );
     }
 
     public function test_signal_stop(): void

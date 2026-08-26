@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\Filesystem\DSL\path;
 use function glob;
+use function unlink;
 
 final class FilesystemCacheTest extends CacheTestCase
 {
@@ -66,6 +67,34 @@ final class FilesystemCacheTest extends CacheTestCase
         static::assertCount(1, $spy->unserialized);
 
         $cache->clear();
+    }
+
+    public function test_schema_of_an_entry_without_a_stored_schema_is_a_cache_miss(): void
+    {
+        $cache = $this->cache();
+        $cache->set('orphan', rows(row(int_entry('id', 1))));
+
+        $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/orphan.schema') ?: [];
+        static::assertNotEmpty($files);
+        unlink($files[0]);
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('orphan');
+    }
+
+    public function test_torn_schema_is_treated_as_a_cache_miss(): void
+    {
+        $cache = $this->cache();
+        $cache->set('torn-schema', rows(row(int_entry('id', 1))));
+
+        $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/torn-schema.schema') ?: [];
+        static::assertNotEmpty($files);
+        file_put_contents($files[0], 'not a valid schema payload');
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('torn-schema');
     }
 
     protected function cache(): Cache

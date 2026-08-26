@@ -84,6 +84,15 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         static::assertEquals($rows, $cache->get('partitioned'));
     }
 
+    public function test_caching_schema(): void
+    {
+        $cache = $this->cache();
+
+        $cache->set('rows', $rows = rows(row(int_entry('id', 1), str_entry('name', 'John'))));
+
+        static::assertEquals($rows->schema(), $cache->schema('rows'));
+    }
+
     public function test_checking_on_non_existing_cache_key(): void
     {
         $cache = $this->cache();
@@ -106,6 +115,19 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         static::assertFalse($cache->has('rows'));
     }
 
+    public function test_clearing_cache_removes_schemas(): void
+    {
+        $cache = $this->cache();
+
+        $cache->set('rows', rows(row(str_entry('name', 'John'))));
+
+        $cache->clear();
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('rows');
+    }
+
     public function test_getting_non_existing_cache_key(): void
     {
         $cache = $this->cache();
@@ -113,6 +135,15 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         $this->expectException(KeyNotInCacheException::class);
 
         $cache->get('non-existing');
+    }
+
+    public function test_getting_schema_of_non_existing_cache_key(): void
+    {
+        $cache = $this->cache();
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('non-existing');
     }
 
     public function test_removing_from_cache(): void
@@ -128,6 +159,22 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         static::assertTrue($cache->has('index'));
         static::assertFalse($cache->has('row'));
         static::assertTrue($cache->has('rows'));
+    }
+
+    public function test_removing_from_cache_removes_its_schema(): void
+    {
+        $cache = $this->cache();
+
+        $cache->set('row', rows(row(str_entry('name', 'John'))));
+        $cache->set('rows', $rows = rows(row(int_entry('id', 1))));
+
+        $cache->delete('row');
+
+        static::assertEquals($rows->schema(), $cache->schema('rows'));
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('row');
     }
 
     public function test_removing_non_existing_cache_key(): void

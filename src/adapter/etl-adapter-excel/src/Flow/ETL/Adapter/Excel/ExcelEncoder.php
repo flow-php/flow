@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Excel;
 use BackedEnum;
 use DateInterval;
 use DateTimeInterface;
+use DateTimeZone;
 use Dom\XMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\RuntimeException;
@@ -20,6 +21,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
@@ -157,6 +159,7 @@ final class ExcelEncoder implements Encoder
             },
             JsonType::class => $value instanceof Json ? $value->toString() : null,
             UuidType::class => $value instanceof Uuid ? $value->toString() : null,
+            TimeZoneType::class => $value instanceof DateTimeZone ? $value->getName() : null,
             XMLType::class => $value instanceof XMLDocument || $value instanceof DOMDocument
                 ? $this->xmlToString($value)
                 : null,

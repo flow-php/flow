@@ -11,6 +11,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\date_entry;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\time_zone_entry;
 
 final class ColumnTest extends FlowTestCase
 {
@@ -35,6 +36,22 @@ final class ColumnTest extends FlowTestCase
         static::assertEquals(1, $statistics->nullCount());
         static::assertEquals(2, $statistics->max());
         static::assertEquals(1, $statistics->min());
+    }
+
+    public function test_collecting_column_statistics_for_time_zone_entries(): void
+    {
+        $statistics = new Column(time_zone_entry('tz', 'UTC'));
+        static::assertEquals(1, $statistics->distinctCount());
+
+        $statistics->calculate(time_zone_entry('tz', 'Europe/Warsaw'));
+        static::assertEquals(2, $statistics->distinctCount());
+
+        $statistics->calculate(time_zone_entry('tz', 'UTC'));
+        static::assertEquals(2, $statistics->distinctCount());
+
+        $statistics->calculate(time_zone_entry('tz', null));
+        static::assertEquals(2, $statistics->distinctCount());
+        static::assertEquals(1, $statistics->nullCount());
     }
 
     public function test_collecting_column_statistics_for_date_entries(): void

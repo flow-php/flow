@@ -13,6 +13,9 @@ use function array_keys;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
@@ -122,6 +125,25 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
                 ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
                 ->fetch()[0]->valueOf('node')),
         );
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+
+        static::assertEquals(
+            schema(xml_schema('node'), str_schema('_input_file_uri')),
+            $extractor->withMetadataColumns(true)->schema(),
+        );
+    }
+
+    public function test_schema_describes_a_single_node_column(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+
+        static::assertEquals(schema(xml_schema('node')), $extractor->schema());
     }
 
     public function test_signal_stop(): void

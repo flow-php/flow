@@ -26,7 +26,7 @@ final class AllTest extends FlowTestCase
                 ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
             ->withEntry('result', when(
-                ref('id')->isEven()->and(ref('array')->exists()),
+                ref('id')->isEven()->and(ref('array')->isNotNull()),
                 lit('found'),
                 lit('not found'),
             ))
@@ -35,6 +35,8 @@ final class AllTest extends FlowTestCase
             ->run();
 
         static::assertSame(
+            // A ragged source now yields one column set, so `array` EXISTS on every row -
+            // null where the record omitted it. That is what makes sortBy() work on ragged data.
             [
                 ['id' => 1, 'result' => 'not found'],
                 ['id' => 2, 'result' => 'not found'],

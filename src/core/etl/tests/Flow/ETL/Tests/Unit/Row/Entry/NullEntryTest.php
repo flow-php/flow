@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -13,6 +14,7 @@ use Flow\Types\Type\Native\NullType;
 
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\str_entry;
 
 final class NullEntryTest extends FlowTestCase
 {
@@ -82,5 +84,11 @@ final class NullEntryTest extends FlowTestCase
     public function test_value_is_null(): void
     {
         static::assertNull(null_entry('e')->value());
+    }
+
+    public function test_null_entry_and_a_null_valued_string_entry_are_different_things(): void
+    {
+        static::assertInstanceOf(StringEntry::class, str_entry('id', null));
+        static::assertInstanceOf(NullEntry::class, null_entry('id'));
     }
 }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -17,9 +18,13 @@ use Generator;
 use function array_map;
 use function array_merge;
 use function array_values;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
@@ -27,6 +32,8 @@ use function sprintf;
 
 final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
+    private ?Schema $schema = null;
+
     use Limitable;
     use PathFiltering;
 
@@ -68,7 +75,13 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
                 ),
             );
 
-            $signal = yield rows($row);
+            $batch = rows($row);
+
+            if ($this->schema !== null) {
+                $batch = array_to_rows($batch->toArray(), $context->hydrator(), $batch->partitions(), $this->schema);
+            }
+
+            $signal = yield $batch;
 
             $this->incrementReturnedRows();
 
@@ -81,5 +94,21 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
     public function source(): Path
     {
         return $this->path;
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        return schema(str_schema('path'), map_schema('partitions', type_map(type_string(), type_string())));
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

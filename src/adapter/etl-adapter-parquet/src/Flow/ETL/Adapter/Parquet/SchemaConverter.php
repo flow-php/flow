@@ -23,6 +23,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -120,6 +121,9 @@ final class SchemaConverter
             DateType::class => FlatColumn::date($name, $repetition),
             DateTimeType::class => FlatColumn::datetime($name, $repetition),
             UuidType::class => FlatColumn::uuid($name, $repetition),
+            // Parquet has no TIMEZONE logical type, so there is no marker to read back:
+            // a timezone column written to parquet returns as a plain string.
+            TimeZoneType::class => FlatColumn::string($name, $repetition),
             JsonType::class => FlatColumn::json($name, $repetition),
             ListType::class => NestedColumn::list(
                 $name,

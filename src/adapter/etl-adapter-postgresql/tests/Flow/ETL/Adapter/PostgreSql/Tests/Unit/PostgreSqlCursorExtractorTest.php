@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlCursorExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
@@ -14,6 +15,9 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Cursor;
 use Generator;
 use PHPUnit\Framework\MockObject\MockObject;
+
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 
 final class PostgreSqlCursorExtractorTest extends FlowTestCase
 {
@@ -134,6 +138,24 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
         }
 
         static::assertCount(4, $rows);
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
+
+        (new PostgreSqlCursorExtractor($this->createClientStub(), 'SELECT * FROM users'))->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            (new PostgreSqlCursorExtractor($this->createClientStub(), 'SELECT * FROM users'))
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
+        );
     }
 
     public function test_with_fetch_size_returns_self(): void

@@ -36,7 +36,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         private int $count = 1_000,
     ) {}
 
-    public static function schema(): Schema
+    public function schema(): Schema
     {
         return schema(
             uuid_schema('order_id'),
@@ -142,5 +142,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                 return;
             }
         }
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        return $this;
     }
 }

@@ -6,10 +6,13 @@ namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Adapter\JSON\JSONEncoder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -28,8 +31,10 @@ use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 use function sprintf;
 
-final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -64,19 +69,10 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new JSONEncoder();
-        $baseSchema = $this->schema;
-
-        if (
-            $baseSchema !== null
-            && $shouldPutInputIntoRows
-            && $baseSchema->findDefinition('_input_file_uri') === null
-        ) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+        $baseSchema = $this->schema === null ? null : $this->schema();
 
         // JSONL iterator modes
         $lineIterator = match ($this->pointer) {
@@ -94,7 +90,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
             $schema = $baseSchema;
@@ -164,6 +160,19 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        if ($this->addMetadataColumns) {
+            return $this->schema->add(str_schema('_input_file_uri'));
+        }
+
+        return $this->schema;
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -181,7 +190,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

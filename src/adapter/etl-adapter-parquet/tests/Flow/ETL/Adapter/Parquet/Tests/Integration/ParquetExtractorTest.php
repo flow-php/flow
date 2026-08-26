@@ -8,6 +8,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\Reader;
 
+use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -46,6 +47,39 @@ final class ParquetExtractorTest extends FlowTestCase
         }
 
         static::assertSame(100, $extractedRows);
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertSame(
+            ['order_id', 'email', '_input_file_uri'],
+            array_keys(
+                from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), columns: ['order_id', 'email'])
+                    ->withMetadataColumns(true)
+                    ->schema()
+                    ->definitions(),
+            ),
+        );
+    }
+
+    public function test_schema_comes_from_the_file_footer(): void
+    {
+        static::assertSame(
+            ['order_id', 'created_at', 'updated_at', 'discount', 'email', 'customer', 'address', 'notes', 'items'],
+            array_keys(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->schema()->definitions()),
+        );
+    }
+
+    public function test_schema_is_narrowed_down_to_selected_columns(): void
+    {
+        static::assertSame(
+            ['order_id', 'email'],
+            array_keys(
+                from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), columns: ['order_id', 'email'])
+                    ->schema()
+                    ->definitions(),
+            ),
+        );
     }
 
     public function test_signal_stop(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use Flow\ETL\Config;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
@@ -28,8 +29,8 @@ final class JsonLinesExtractorTest extends FlowTestCase
 {
     public function test_broken(): void
     {
-        $rows = data_frame(Config::builder()->putInputIntoRows())
-            ->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl'))
+        $rows = data_frame(Config::builder())
+            ->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->withMetadataColumns(true))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -53,10 +54,12 @@ final class JsonLinesExtractorTest extends FlowTestCase
     {
         $schema = schema(int_schema('id'), str_schema('value'));
 
-        $extractor = from_json_lines(__DIR__ . '/../../Fixtures/cross_stream/*/data.jsonl')->withSchema($schema);
+        $extractor = from_json_lines(__DIR__ . '/../../Fixtures/cross_stream/*/data.jsonl')
+            ->withSchema($schema)
+            ->withMetadataColumns(true);
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertNull($schema->findDefinition('date'));
         static::assertNull($schema->findDefinition('_input_file_uri'));
@@ -167,6 +170,34 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $extractor->changeLimit(2);
 
         static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), str_schema('_input_file_uri')),
+            from_json_lines(__DIR__ . '/../../Fixtures/parity_people.jsonl')
+                ->withSchema(schema(str_schema('name')))
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+
+        from_json_lines(__DIR__ . '/../../Fixtures/parity_people.jsonl')->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name')),
+            from_json_lines(__DIR__ . '/../../Fixtures/parity_people.jsonl')
+                ->withSchema(schema(str_schema('name')))
+                ->schema(),
+        );
     }
 
     public function test_signal_stop(): void

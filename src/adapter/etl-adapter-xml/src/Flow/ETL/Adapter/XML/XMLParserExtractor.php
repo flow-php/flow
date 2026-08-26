@@ -10,6 +10,8 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -30,8 +32,10 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function sprintf;
 
-final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -130,21 +134,16 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new XMLEncoder();
 
-        $baseSchema = $this->schema ?? schema(xml_schema('node'));
-
-        if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+        $baseSchema = $this->schema();
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
             $schema = $baseSchema;
@@ -239,6 +238,17 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
+    public function schema(): Schema
+    {
+        $schema = $this->schema ?? schema(xml_schema('node'));
+
+        if ($this->addMetadataColumns) {
+            return $schema->add(str_schema('_input_file_uri'));
+        }
+
+        return $schema;
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -298,7 +308,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

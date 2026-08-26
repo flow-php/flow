@@ -20,7 +20,6 @@ use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
@@ -286,7 +285,7 @@ final class BooleanDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = bool_schema('col')->merge(union_schema('col', type_union(type_boolean(), type_integer())));
+        $merged = bool_schema('col')->merge(new UnionDefinition('col', type_union(type_boolean(), type_integer())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|integer', $merged->type()->toString());
@@ -297,7 +296,7 @@ final class BooleanDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             bool_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

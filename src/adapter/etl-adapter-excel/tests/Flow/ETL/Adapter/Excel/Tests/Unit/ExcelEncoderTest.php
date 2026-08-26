@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\Excel\ExcelEncoder;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
@@ -21,6 +22,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 
 final class ExcelEncoderTest extends FlowTestCase
@@ -121,6 +123,16 @@ final class ExcelEncoderTest extends FlowTestCase
                 'm' => ['x' => 1],
                 'addr' => ['city' => 'Krakow'],
             ], ['tags' => type_array(), 'm' => type_array(), 'addr' => type_array()])]),
+        );
+    }
+
+    public function test_encodes_a_timezone_as_its_iana_name(): void
+    {
+        static::assertSame(
+            [['Europe/Warsaw']],
+            (new ExcelEncoder())->encode([new TypedRowValues([
+                'tz' => new DateTimeZone('Europe/Warsaw'),
+            ], ['tz' => type_time_zone()])]),
         );
     }
 

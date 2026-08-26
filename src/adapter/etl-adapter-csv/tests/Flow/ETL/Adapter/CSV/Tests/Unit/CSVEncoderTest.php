@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\CSV\CSVEncoder;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\FlowTestCase;
@@ -18,6 +19,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 
 final class CSVEncoderTest extends FlowTestCase
@@ -134,6 +136,16 @@ final class CSVEncoderTest extends FlowTestCase
             ["3600000000\n"],
             (new CSVEncoder(newLineSeparator: "\n"))->encode([
                 new TypedRowValues(['duration' => new DateInterval('PT1H')], ['duration' => type_time()]),
+            ]),
+        );
+    }
+
+    public function test_encode_renders_a_timezone_as_its_iana_name(): void
+    {
+        static::assertSame(
+            ["Europe/Warsaw\n"],
+            (new CSVEncoder(newLineSeparator: "\n"))->encode([
+                new TypedRowValues(['tz' => new DateTimeZone('Europe/Warsaw')], ['tz' => type_time_zone()]),
             ]),
         );
     }

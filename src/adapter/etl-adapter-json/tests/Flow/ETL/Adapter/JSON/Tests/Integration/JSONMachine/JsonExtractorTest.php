@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use Flow\ETL\Config;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
@@ -30,10 +31,13 @@ final class JsonExtractorTest extends FlowTestCase
     {
         $schema = schema(int_schema('id'), str_schema('value'));
 
-        $extractor = from_json(__DIR__ . '/../../Fixtures/cross_stream/*/data.json', schema: $schema);
+        $extractor = from_json(
+            __DIR__ . '/../../Fixtures/cross_stream/*/data.json',
+            schema: $schema,
+        )->withMetadataColumns(true);
 
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
-        df(Config::builder()->putInputIntoRows())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
+        df(Config::builder())->read($extractor)->run();
 
         static::assertNull($schema->findDefinition('date'));
         static::assertNull($schema->findDefinition('_input_file_uri'));
@@ -41,8 +45,8 @@ final class JsonExtractorTest extends FlowTestCase
 
     public function test_extracting_json_from_local_file_stream(): void
     {
-        $rows = data_frame(Config::builder()->putInputIntoRows())
-            ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
+        $rows = data_frame(Config::builder())
+            ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json')->withMetadataColumns(true))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -170,6 +174,31 @@ final class JsonExtractorTest extends FlowTestCase
         $extractor->changeLimit(2);
 
         static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('order_id'), str_schema('_input_file_uri')),
+            from_json(__DIR__ . '/../../Fixtures/orders_flow.json', schema: schema(str_schema('order_id')))
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+
+        from_json(__DIR__ . '/../../Fixtures/orders_flow.json')->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('order_id')),
+            from_json(__DIR__ . '/../../Fixtures/orders_flow.json', schema: schema(str_schema('order_id')))->schema(),
+        );
     }
 
     public function test_signal_stop(): void

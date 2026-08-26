@@ -86,7 +86,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
             ),
         );
     }

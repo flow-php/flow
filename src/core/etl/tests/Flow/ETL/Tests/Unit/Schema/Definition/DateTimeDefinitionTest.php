@@ -22,7 +22,6 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
@@ -318,7 +317,9 @@ final class DateTimeDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = datetime_schema('col')->merge(union_schema('col', type_union(type_datetime(), type_boolean())));
+        $merged = datetime_schema('col')->merge(
+            new UnionDefinition('col', type_union(type_datetime(), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|datetime', $merged->type()->toString());
@@ -329,7 +330,7 @@ final class DateTimeDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             datetime_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

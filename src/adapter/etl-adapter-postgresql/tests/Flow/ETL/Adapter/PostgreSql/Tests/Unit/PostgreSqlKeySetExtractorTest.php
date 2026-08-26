@@ -9,13 +9,42 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlKeySetExtractor;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
 use PHPUnit\Framework\MockObject\Stub;
 
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+
 final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 {
+    public function test_schema_is_refused_when_it_was_not_declared(): void
+    {
+        $extractor = new PostgreSqlKeySetExtractor(
+            $this->createClientMock(),
+            'SELECT * FROM users ORDER BY id',
+            new KeySet(new Key('id', Order::ASC)),
+        );
+
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
+
+        $extractor->schema();
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        $extractor = new PostgreSqlKeySetExtractor(
+            $this->createClientMock(),
+            'SELECT * FROM users ORDER BY id',
+            new KeySet(new Key('id', Order::ASC)),
+        );
+
+        static::assertEquals(schema(int_schema('id')), $extractor->withSchema(schema(int_schema('id')))->schema());
+    }
+
     public function test_with_maximum_validates_positive_value(): void
     {
         $client = $this->createClientMock();

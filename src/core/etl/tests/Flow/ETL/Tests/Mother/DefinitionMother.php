@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 
 use function Flow\ETL\DSL\bool_schema;
@@ -22,7 +23,6 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
@@ -57,7 +57,7 @@ final class DefinitionMother
             'struct' => structure_schema($ref, type_structure(['x' => type_integer()])),
             'list' => list_schema($ref, type_list(type_integer())),
             'map' => map_schema($ref, type_map(type_string(), type_integer())),
-            'union' => union_schema($ref, type_union(type_string(), type_integer())),
+            'union' => new UnionDefinition($ref, type_union(type_string(), type_integer())),
             'html' => html_schema($ref),
             'htmlel' => html_element_schema($ref),
             'xml' => xml_schema($ref),

@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -166,6 +167,15 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        return $this->schema;
+    }
+
     public function withKeyAliasSuffix(string $keyAliasSuffix): self
     {
         $this->keyAliasSuffix = $keyAliasSuffix;
@@ -220,7 +230,7 @@ final class DbalKeySetExtractor implements Extractor
      *
      * @return $this
      */
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

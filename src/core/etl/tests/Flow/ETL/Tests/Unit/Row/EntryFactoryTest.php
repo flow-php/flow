@@ -11,10 +11,12 @@ use DateTimeZone;
 use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
@@ -58,7 +60,7 @@ use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
+use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
@@ -68,9 +70,9 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time_zone;
@@ -217,27 +219,30 @@ final class EntryFactoryTest extends FlowTestCase
         static::assertEquals(json_entry('e', [1, 2]), (new EntryFactory())->create('e', [1, 2], type_array()));
     }
 
-    public function test_create_with_empty_array_type_normalizes_value_to_json(): void
+    public function test_create_with_an_explicitly_declared_empty_array_type_is_refused(): void
     {
-        static::assertEquals(json_entry('e', []), (new EntryFactory())->create('e', [], type_empty_array()));
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Column "e" cannot be typed as array{}');
+
+        (new EntryFactory())->create('e', [], type_empty_array());
     }
 
-    public function test_empty_array_infers_a_json_entry(): void
+    public function test_empty_array_infers_a_bottom_list_entry(): void
     {
-        static::assertEquals(json_entry('e', []), (new EntryFactory())->create('e', []));
+        static::assertEquals(list_entry('e', [], type_list(type_null())), (new EntryFactory())->create('e', []));
     }
 
-    public function test_structure_with_empty_array_element_infers_a_json_element(): void
+    public function test_structure_with_empty_array_element_infers_a_bottom_list_element(): void
     {
-        static::assertEquals(structure_entry('e', ['data' => Json::fromArray([])], type_structure([
-            'data' => type_json(),
+        static::assertEquals(structure_entry('e', ['data' => []], type_structure([
+            'data' => type_list(type_null()),
         ])), (new EntryFactory())->create('e', ['data' => []]));
     }
 
-    public function test_create_with_time_zone_type_normalizes_value_to_string(): void
+    public function test_create_with_time_zone_type_builds_a_time_zone_entry(): void
     {
         static::assertEquals(
-            str_entry('e', 'UTC'),
+            time_zone_entry('e', 'UTC'),
             (new EntryFactory())->create('e', new DateTimeZone('UTC'), type_time_zone()),
         );
     }
@@ -268,7 +273,10 @@ final class EntryFactoryTest extends FlowTestCase
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_string(), type_integer());
 
-        static::assertEquals(int_entry('e', 42), (new EntryFactory())->fromDefinition(union_schema('e', $type), 42));
+        static::assertEquals(
+            int_entry('e', 42),
+            (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type), 42),
+        );
     }
 
     public function test_from_definition_with_union_resolves_the_first_member_for_a_matching_value(): void
@@ -276,7 +284,10 @@ final class EntryFactoryTest extends FlowTestCase
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_string(), type_integer());
 
-        static::assertEquals(str_entry('e', 'x'), (new EntryFactory())->fromDefinition(union_schema('e', $type), 'x'));
+        static::assertEquals(
+            str_entry('e', 'x'),
+            (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type), 'x'),
+        );
     }
 
     public function test_from_definition_with_union_carries_metadata_onto_the_resolved_entry(): void
@@ -286,7 +297,7 @@ final class EntryFactoryTest extends FlowTestCase
 
         static::assertEquals(
             int_entry('e', 42, metadata: Metadata::with('k', 1)),
-            (new EntryFactory())->fromDefinition(union_schema('e', $type, metadata: Metadata::with('k', 1)), 42),
+            (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type, metadata: Metadata::with('k', 1)), 42),
         );
     }
 
@@ -295,7 +306,7 @@ final class EntryFactoryTest extends FlowTestCase
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_string(), type_integer());
 
-        $entry = (new EntryFactory())->fromDefinition(union_schema('e', $type, true), null);
+        $entry = (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type, true), null);
 
         static::assertEquals(str_entry('e', null), $entry);
         static::assertTrue($entry->definition()->isNullable());
@@ -306,7 +317,7 @@ final class EntryFactoryTest extends FlowTestCase
         /** @var UnionType<mixed, mixed> $type */
         $type = type_union(type_string(), type_integer());
 
-        $entry = (new EntryFactory())->fromDefinition(union_schema('e', $type), null);
+        $entry = (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type), null);
 
         static::assertNull($entry->value());
         static::assertTrue($entry->definition()->isNullable());
@@ -320,7 +331,7 @@ final class EntryFactoryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "e": array value does not match any member of union type');
 
-        (new EntryFactory())->fromDefinition(union_schema('e', $type), [1, 2]);
+        (new EntryFactory())->fromDefinition(new UnionDefinition('e', $type), [1, 2]);
     }
 
     public function test_date(): void
@@ -734,14 +745,14 @@ final class EntryFactoryTest extends FlowTestCase
         );
     }
 
-    public function test_timezone_creates_string_entry(): void
+    public function test_a_date_time_zone_value_yields_a_time_zone_entry(): void
     {
-        static::assertEquals(str_entry('e', 'UTC'), (new EntryFactory())->create('e', new DateTimeZone('UTC')));
+        static::assertEquals(time_zone_entry('e', 'UTC'), (new EntryFactory())->create('e', new DateTimeZone('UTC')));
     }
 
     public function test_union_with_definition_falls_back_to_first_castable_member(): void
     {
-        $definition = union_schema('e', type_union(type_integer(), type_string()));
+        $definition = new UnionDefinition('e', type_union(type_integer(), type_string()));
         static::assertEquals(
             int_entry('e', 1),
             (new EntryFactory())->cast('e', true, $definition->type(), $definition->metadata()),
@@ -750,7 +761,7 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_union_with_definition_keeps_numeric_string_as_string(): void
     {
-        $definition = union_schema('e', type_union(type_integer(), type_string()));
+        $definition = new UnionDefinition('e', type_union(type_integer(), type_string()));
         static::assertEquals(
             str_entry('e', '123'),
             (new EntryFactory())->cast('e', '123', $definition->type(), $definition->metadata()),
@@ -759,7 +770,7 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_union_with_definition_resolves_to_complex_member(): void
     {
-        $definition = union_schema('e', type_union(type_list(type_integer()), type_string()));
+        $definition = new UnionDefinition('e', type_union(type_list(type_integer()), type_string()));
         static::assertEquals(
             list_entry('e', [1, 2, 3], type_list(type_integer())),
             (new EntryFactory())->cast('e', [1, 2, 3], $definition->type(), $definition->metadata()),
@@ -768,7 +779,7 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_union_with_definition_resolves_to_integer(): void
     {
-        $definition = union_schema('e', type_union(type_integer(), type_string()));
+        $definition = new UnionDefinition('e', type_union(type_integer(), type_string()));
         static::assertEquals(
             int_entry('e', 1),
             (new EntryFactory())->cast('e', 1, $definition->type(), $definition->metadata()),
@@ -777,7 +788,7 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_union_with_definition_resolves_to_string(): void
     {
-        $definition = union_schema('e', type_union(type_integer(), type_string()));
+        $definition = new UnionDefinition('e', type_union(type_integer(), type_string()));
         static::assertEquals(
             str_entry('e', 'flow'),
             (new EntryFactory())->cast('e', 'flow', $definition->type(), $definition->metadata()),
@@ -786,7 +797,7 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_union_with_definition_with_null_value_creates_first_member_entry(): void
     {
-        $definition = union_schema('e', type_union(type_integer(), type_string()), true);
+        $definition = new UnionDefinition('e', type_union(type_integer(), type_string()), true);
         static::assertEquals(
             int_entry('e', null),
             (new EntryFactory())->cast('e', null, $definition->type(), $definition->metadata()),

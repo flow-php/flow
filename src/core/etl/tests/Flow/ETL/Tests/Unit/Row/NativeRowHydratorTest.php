@@ -13,6 +13,7 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\StructureType;
@@ -41,7 +42,6 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
@@ -70,7 +70,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         $union = type_union(type_string(), type_integer());
 
         yield 'union column across members, null and absent' => [
-            schema(int_schema('id'), union_schema('a', $union, true)),
+            schema(int_schema('id'), new UnionDefinition('a', $union, true)),
             [
                 new RawRowValues(['id' => 1, 'a' => 42]),
                 new RawRowValues(['id' => 2, 'a' => 'x']),
@@ -173,7 +173,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         $union = type_union(type_string(), type_integer());
 
         yield 'union column across members, null and absent' => [
-            schema(int_schema('id'), union_schema('a', $union, true)),
+            schema(int_schema('id'), new UnionDefinition('a', $union, true)),
             [
                 new RawRowValues(['id' => 1, 'a' => 42]),
                 new RawRowValues(['id' => 2, 'a' => 'x']),
@@ -185,7 +185,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'union column with per-value metadata' => [
-            schema(union_schema('a', $union, true)),
+            schema(new UnionDefinition('a', $union, true)),
             [
                 new RawRowValues(['a' => 42], ['a' => Metadata::fromArray(['k' => 'v'])]),
                 new RawRowValues(['a' => 'x'], ['a' => Metadata::fromArray(['k' => 'v'])]),
@@ -335,7 +335,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         $unmatchable = type_union(type_uuid(), type_datetime());
 
         yield 'union column with a value outside every member' => [
-            schema(union_schema('a', $unmatchable)),
+            schema(new UnionDefinition('a', $unmatchable)),
             [new RawRowValues(['a' => [1, 2]])],
         ];
 

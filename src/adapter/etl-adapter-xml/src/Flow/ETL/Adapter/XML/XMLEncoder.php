@@ -9,6 +9,7 @@ use BackedEnum;
 use Countable;
 use DateInterval;
 use DateTimeInterface;
+use DateTimeZone;
 use Dom\XMLDocument;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
@@ -26,6 +27,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -213,6 +215,7 @@ final class XMLEncoder implements Encoder
                 $name,
                 is_scalar($value) || $value instanceof Stringable ? (string) $value : '',
             ),
+            TimeZoneType::class => XMLNode::flatNode($name, $value instanceof DateTimeZone ? $value->getName() : ''),
             XMLType::class, XMLElementType::class => XMLNode::flatNode($name, $this->xmlToString($value)),
             default => throw new InvalidArgumentException(
                 "Given type can't be converted to node, given type: {$type->toString()}",

@@ -12,6 +12,7 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\TypeWidener;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
@@ -152,7 +153,7 @@ final readonly class ListDefinition implements Definition
         if ($definition instanceof self) {
             return new self(
                 $this->ref,
-                (new TypeMerge())->mergeLists($this->type, $definition->type),
+                (new TypeWidener())->widenLists($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -19,9 +21,11 @@ use Google\Service\Sheets;
 use function count;
 use function Flow\ETL\DSL\str_schema;
 
-final class GoogleSheetExtractor implements Extractor, LimitableExtractor
+final class GoogleSheetExtractor implements Extractor, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
+
+    private bool $addMetadataColumns = false;
 
     private bool $dropExtraColumns = true;
 
@@ -78,22 +82,10 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
             $cellsRange = $cellsRange->nextRows($this->rowsPerPage);
         }
-
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
 
-        $schema = $this->schema;
-
-        if ($schema !== null && $shouldPutInputIntoRows) {
-            if ($schema->findDefinition('_spread_sheet_id') === null) {
-                $schema = $schema->add(str_schema('_spread_sheet_id'));
-            }
-
-            if ($schema->findDefinition('_sheet_name') === null) {
-                $schema = $schema->add(str_schema('_sheet_name'));
-            }
-        }
+        $schema = $this->schema === null ? null : $this->schema();
 
         /** @var Sheets\Resource\SpreadsheetsValues $valuesResource */
         $valuesResource = $this->service->spreadsheets_values;
@@ -116,7 +108,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                     foreach ($encoder->decode($rawRows) as $rowValues) {
                         $row = $rowValues->values;
 
-                        if ($shouldPutInputIntoRows) {
+                        if ($this->addMetadataColumns) {
                             $row['_spread_sheet_id'] = $this->spreadsheetId;
                             $row['_sheet_name'] = $this->columnRange->sheetName;
                         }
@@ -144,7 +136,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         foreach ($encoder->decode($rawRows) as $rowValues) {
             $row = $rowValues->values;
 
-            if ($shouldPutInputIntoRows) {
+            if ($this->addMetadataColumns) {
                 $row['_spread_sheet_id'] = $this->spreadsheetId;
                 $row['_sheet_name'] = $this->columnRange->sheetName;
             }
@@ -161,6 +153,30 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                 return;
             }
         }
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        if ($this->addMetadataColumns) {
+            return $this->schema->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'));
+        }
+
+        return $this->schema;
+    }
+
+    /**
+     * Sheets describes its source with _spread_sheet_id and _sheet_name, not _input_file_uri,
+     * so it writes its own setter instead of sharing the file sources' trait.
+     */
+    public function withMetadataColumns(bool $addMetadataColumns): static
+    {
+        $this->addMetadataColumns = $addMetadataColumns;
+
+        return $this;
     }
 
     public function withDropExtraColumns(bool $dropExtraColumns): self
@@ -198,7 +214,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

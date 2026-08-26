@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Fiber;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -22,6 +24,8 @@ use Generator;
  */
 final class FeedExtractor implements Extractor
 {
+    private ?Schema $schema = null;
+
     private ?Rows $batch = null;
 
     private bool $finished = false;
@@ -72,5 +76,21 @@ final class FeedExtractor implements Extractor
     public function finish(): void
     {
         $this->finished = true;
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        throw SchemaNotDerivableException::pipeline(self::class);
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

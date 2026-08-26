@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
@@ -595,7 +594,7 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $merged = structure_schema('col', type_structure([
             'a' => type_integer(),
-        ]))->merge(union_schema('col', type_union(type_structure(['a' => type_integer()]), type_boolean())));
+        ]))->merge(new UnionDefinition('col', type_union(type_structure(['a' => type_integer()]), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|structure{a: integer}', $merged->type()->toString());
@@ -606,7 +605,7 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             structure_schema('col', type_structure(['a' => type_integer()]))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

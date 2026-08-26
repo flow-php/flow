@@ -13,6 +13,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Tests\FlowTestCase;
@@ -215,6 +216,16 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->extract(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -349,6 +360,16 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = data_frame()
             ->extract(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -402,6 +423,16 @@ final class DataFrameTest extends FlowTestCase
     public function test_pipeline(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
@@ -617,6 +648,16 @@ final class DataFrameTest extends FlowTestCase
     {
         data_frame()
             ->extract(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *
@@ -658,6 +699,16 @@ final class DataFrameTest extends FlowTestCase
     {
         data_frame()
             ->extract(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @param FlowContext $context
                  *

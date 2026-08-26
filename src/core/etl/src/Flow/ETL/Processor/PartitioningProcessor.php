@@ -87,7 +87,11 @@ final readonly class PartitioningProcessor implements Processor
         }
 
         yield from from_all(...array_map(
-            static fn(string $id): Extractor => new CollectingExtractor(from_cache($id, clear: true)),
+            static fn(string $id): Extractor => new CollectingExtractor(from_cache(
+                $id,
+                cache: $context->cache(),
+                clear: true,
+            )),
             array_keys($partitionIndexes),
         ))
             ->extract($context);

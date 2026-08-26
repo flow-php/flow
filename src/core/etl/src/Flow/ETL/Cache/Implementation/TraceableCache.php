@@ -9,6 +9,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Telemetry\CacheAttributes;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\PackageVersion;
@@ -105,6 +106,22 @@ final readonly class TraceableCache implements Cache
         }
 
         return $exists;
+    }
+
+    public function schema(string $key): Schema
+    {
+        $attributes = [TelemetryAttributes::ATTR_DATAFRAME_NAME => $this->dataframeName];
+
+        try {
+            $schema = $this->cache->schema($key);
+            $this->hitCounter->add(1, $attributes);
+
+            return $schema;
+        } catch (KeyNotInCacheException $exception) {
+            $this->missCounter->add(1, $attributes);
+
+            throw $exception;
+        }
     }
 
     public function set(string $key, Rows $value): void

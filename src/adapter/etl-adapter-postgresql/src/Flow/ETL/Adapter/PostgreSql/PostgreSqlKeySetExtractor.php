@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -97,6 +98,15 @@ final class PostgreSqlKeySetExtractor implements Extractor
         }
     }
 
+    public function schema(): Schema
+    {
+        if ($this->schema === null) {
+            throw SchemaNotDerivableException::extractor(self::class);
+        }
+
+        return $this->schema;
+    }
+
     public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
@@ -119,7 +129,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

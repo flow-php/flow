@@ -29,6 +29,32 @@ final class PSRSimpleFilesystemCacheTest extends CacheTestCase
         $cache->get('torn');
     }
 
+    public function test_schema_of_an_entry_without_a_stored_schema_is_a_cache_miss(): void
+    {
+        $psr = new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache'));
+        $cache = new PSRSimpleCache($psr);
+        $cache->set('orphan', rows(row(int_entry('id', 1))));
+
+        $psr->delete('orphan.schema');
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('orphan');
+    }
+
+    public function test_torn_schema_is_treated_as_a_cache_miss(): void
+    {
+        $psr = new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache'));
+        $cache = new PSRSimpleCache($psr);
+        $cache->set('torn-schema', rows(row(int_entry('id', 1))));
+
+        $psr->set('torn-schema.schema', 'not a valid schema payload');
+
+        $this->expectException(KeyNotInCacheException::class);
+
+        $cache->schema('torn-schema');
+    }
+
     protected function cache(): Cache
     {
         return new PSRSimpleCache(new Psr16Cache(

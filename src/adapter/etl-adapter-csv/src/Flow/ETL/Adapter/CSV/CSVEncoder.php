@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV;
 
 use DateInterval;
 use DateTimeInterface;
+use DateTimeZone;
 use Dom\Element;
 use Dom\XMLDocument;
 use DOMDocument;
@@ -21,6 +22,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -214,6 +216,7 @@ final class CSVEncoder implements Encoder
             EnumType::class => $value instanceof UnitEnum ? $value->name : '',
             JsonType::class => $value instanceof Json ? $value->toString() : '',
             UuidType::class => $value instanceof Uuid ? $value->toString() : '',
+            TimeZoneType::class => $value instanceof DateTimeZone ? $value->getName() : '',
             XMLType::class, XMLElementType::class => $this->xmlToString($value),
             ListType::class, MapType::class, StructureType::class, ArrayType::class => is_array($value)
                 ? json_encode($value, JSON_THROW_ON_ERROR)

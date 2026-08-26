@@ -84,7 +84,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
     /**
      * @param Schema $schema
      */
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

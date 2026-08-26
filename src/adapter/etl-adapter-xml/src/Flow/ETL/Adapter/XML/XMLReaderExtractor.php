@@ -10,11 +10,14 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -33,8 +36,12 @@ use function sprintf;
 /**
  * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
  */
-final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
+    private ?Schema $schema = null;
+
+    use MetadataColumns;
+
     use Limitable;
     use PathFiltering;
 
@@ -85,19 +92,14 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new XMLEncoder();
 
-        $baseSchema = schema(xml_schema('node'));
-
-        if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+        $baseSchema = $this->schema();
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            $streamUri = $shouldPutInputIntoRows ? $listedFile->path->uri() : null;
+            $streamUri = $this->addMetadataColumns ? $listedFile->path->uri() : null;
             $partitions = $listedFile->path->partitions();
 
             $schema = $baseSchema;
@@ -208,8 +210,22 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
+    public function schema(): Schema
+    {
+        $schema = $this->schema ?? schema(xml_schema('node'));
+
+        return $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema;
+    }
+
     public function source(): Path
     {
         return $this->path;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

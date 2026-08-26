@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\XML\XMLEncoder;
 use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
 use Flow\ETL\Exception\RuntimeException;
@@ -23,6 +24,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 
 final class XMLEncoderTest extends FlowTestCase
@@ -106,6 +108,16 @@ final class XMLEncoderTest extends FlowTestCase
             $encoder->encode([new TypedRowValues(['e' => BackedIntEnum::one], [
                 'e' => type_enum(BackedIntEnum::class),
             ])])[0],
+        );
+    }
+
+    public function test_encodes_a_timezone_as_its_iana_name(): void
+    {
+        static::assertXmlStringEqualsXmlString(
+            '<row><tz>Europe/Warsaw</tz></row>',
+            (new XMLEncoder(new DOMDocumentWriter()))->encode([new TypedRowValues([
+                'tz' => new DateTimeZone('Europe/Warsaw'),
+            ], ['tz' => type_time_zone()])])[0],
         );
     }
 

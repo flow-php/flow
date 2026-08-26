@@ -22,6 +22,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -110,6 +111,7 @@ final class ValueEncoder
             DateDefinition::class,
             TimeDefinition::class,
             UuidDefinition::class,
+            TimeZoneDefinition::class,
             JsonDefinition::class,
             EnumDefinition::class,
             XMLDefinition::class,

@@ -43,6 +43,7 @@ use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\BatchByExtractor;
@@ -168,6 +169,7 @@ use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -185,6 +187,7 @@ use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -214,7 +217,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -279,6 +282,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -307,6 +311,7 @@ use function enum_exists;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_null;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -315,7 +320,6 @@ use function is_object;
 use function is_string;
 use function json_decode;
 use function json_encode;
-use function str_pad;
 use function strtolower;
 
 /**
@@ -846,9 +850,12 @@ function str_entry(string $name, ?string $value, ?Metadata $metadata = null): En
 }
 
 /**
- * Creates an entry of the null type. Used when a column value is null and its final type is not yet known.
- * When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals a real type,
- * at which point the schema merge turns it into that type made nullable.
+ * An entry whose column type is not known. Use only when nothing about the column's type is
+ * available - a column that is null in every row. For a nullable column of a known type, use the
+ * typed entry with a null value: str_entry('id', null).
+ *
+ * When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals
+ * a real type, at which point the schema merge turns it into that type made nullable.
  *
  * @return Entry<null>
  */
@@ -882,6 +889,23 @@ function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metada
     }
 
     return new UuidEntry($name, FlowUuid::fromString($value), $metadata);
+}
+
+/**
+ * @return ($value is null ? Entry<null> : Entry<\DateTimeZone>)
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function time_zone_entry(string $name, DateTimeZone|string|null $value, ?Metadata $metadata = null): Entry
+{
+    if ($value === null) {
+        return new TimeZoneEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DateTimeZone) {
+        return new TimeZoneEntry($name, $value, $metadata);
+    }
+
+    return new TimeZoneEntry($name, new DateTimeZone($value), $metadata);
 }
 
 /**
@@ -1678,8 +1702,7 @@ function array_to_row(
 
     // @mago-ignore analysis:mixed-assignment
     foreach ($data as $key => $value) {
-        $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-        $map[$name] = $value;
+        $map[(new ColumnName())->of($key)] = $value;
     }
 
     foreach ($partitions as $partition) {
@@ -1726,8 +1749,11 @@ function array_to_rows(
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($row as $key => $value) {
-            $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-            $map[$name] = $value;
+            // PHP gives back a numeric-string column name as an int key, which the positional rule
+            // would rename to eNN. A declared schema naming that column settles which one it is.
+            $declared = $schema?->findDefinition((string) $key);
+
+            $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
         }
 
         foreach ($partitions as $partition) {
@@ -2124,6 +2150,10 @@ function structure_schema(
 
 /**
  * @param Type<mixed>|UnionType<mixed, mixed> $type
+ *
+ * @deprecated a column holds exactly one type - use definition_from_type() instead
+ *
+ * @return Definition<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function union_schema(
@@ -2131,15 +2161,20 @@ function union_schema(
     UnionType|Type $type,
     bool $nullable = false,
     ?Metadata $metadata = null,
-): UnionDefinition {
-    /** @var UnionType<mixed, mixed> $type */
-    return new UnionDefinition($name, $type, $nullable, $metadata);
+): Definition {
+    return definition_from_type($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): UuidDefinition
 {
     return new UuidDefinition($name, $nullable, $metadata);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function time_zone_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): TimeZoneDefinition
+{
+    return new TimeZoneDefinition($name, $nullable, $metadata);
 }
 
 /**
@@ -2199,12 +2234,29 @@ function definition_from_type(
         $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
         $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
         $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),
-        $type instanceof EmptyArrayType => new JsonDefinition($ref, $nullable, $metadata),
+        // @mago-expect linter:no-fully-qualified-global-function
+        $type instanceof EmptyArrayType => throw new RuntimeException(\sprintf(
+            'Column "%s" cannot be typed as array{} - an empty array is a value, not a column type. '
+            . 'Declare the element type, e.g. type_list(type_string()).',
+            EntryReference::init($ref)->name(),
+        )),
         $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
+        $type instanceof TimeZoneType => new TimeZoneDefinition($ref, $nullable, $metadata),
         $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
         $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
         $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
-        $type instanceof UnionType => new UnionDefinition($ref, $type, $nullable, $metadata),
+        // Iceberg's rule: ["null", T] is the one legal union and it means ?T, not a sum type.
+        $type instanceof UnionType => $type->isOptionalType()
+            ? definition_from_type(
+                $ref,
+                $type->types()->without(type_null())->first() ?? throw UnsupportedUnionTypeException::forColumn(
+                    EntryReference::init($ref),
+                    $type,
+                ),
+                nullable: true,
+                metadata: $metadata,
+            )
+            : throw UnsupportedUnionTypeException::forColumn(EntryReference::init($ref), $type),
         $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
         $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),

@@ -9,6 +9,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 
 use function apcu_delete;
 use function apcu_enabled;
@@ -41,7 +42,7 @@ final readonly class ApcuCache implements Cache
 
     public function delete(string $key): void
     {
-        apcu_delete($this->namespacedKey($key));
+        apcu_delete([$this->namespacedKey($key), $this->schemaKey($key)]);
     }
 
     public function get(string $key): Rows
@@ -70,11 +71,33 @@ final readonly class ApcuCache implements Cache
         return (bool) apcu_exists($this->namespacedKey($key));
     }
 
+    public function schema(string $key): Schema
+    {
+        $success = false;
+
+        // @mago-ignore analysis:mixed-assignment
+        $value = apcu_fetch($this->schemaKey($key), $success);
+
+        if (!$success) {
+            throw new KeyNotInCacheException($key);
+        }
+
+        if (!$value instanceof Schema) {
+            throw new RuntimeException(sprintf(
+                'Cached schema for key "%s" is corrupted or was not written by ApcuCache.',
+                $key,
+            ));
+        }
+
+        return $value;
+    }
+
     public function set(string $key, Rows $value): void
     {
-        $result = apcu_store($this->namespacedKey($key), $value);
-
-        if ($result === false) {
+        if (
+            apcu_store($this->namespacedKey($key), $value) === false
+            || apcu_store($this->schemaKey($key), $value->schema()) === false
+        ) {
             throw new RuntimeException(sprintf(
                 'Failed to store cache entry for key "%s" in APCu, the cache segment might be full.',
                 $key,
@@ -85,5 +108,10 @@ final readonly class ApcuCache implements Cache
     private function namespacedKey(string $key): string
     {
         return $this->namespace . ':' . $key;
+    }
+
+    private function schemaKey(string $key): string
+    {
+        return $this->namespacedKey($key) . ':schema';
     }
 }

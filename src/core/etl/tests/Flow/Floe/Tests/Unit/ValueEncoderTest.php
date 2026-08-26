@@ -7,6 +7,7 @@ namespace Flow\Floe\Tests\Unit;
 use DateTime;
 use DateTimeImmutable;
 use DOMElement;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\CustomDateTime;
 use Flow\Floe\Encoding\DateTimeEncoder;
 use Flow\Floe\Exception\FloeException;
@@ -21,7 +22,6 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -64,7 +64,7 @@ final class ValueEncoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe does not support columns of type "integer|string"');
 
-        (new ValueEncoder())->encoderFor(union_schema('c', type_union(type_integer(), type_string())));
+        (new ValueEncoder())->encoderFor(new UnionDefinition('c', type_union(type_integer(), type_string())));
     }
 
     public function test_encoding_list_of_mixed_elements_throws(): void

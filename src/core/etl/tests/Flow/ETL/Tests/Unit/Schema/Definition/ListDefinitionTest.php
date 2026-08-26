@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
@@ -356,10 +355,9 @@ final class ListDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = list_schema('col', type_list(type_integer()))->merge(union_schema('col', type_union(
-            type_list(type_integer()),
-            type_boolean(),
-        )));
+        $merged = list_schema('col', type_list(type_integer()))->merge(
+            new UnionDefinition('col', type_union(type_list(type_integer()), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|list<integer>', $merged->type()->toString());
@@ -370,7 +368,7 @@ final class ListDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             list_schema('col', type_list(type_integer()))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

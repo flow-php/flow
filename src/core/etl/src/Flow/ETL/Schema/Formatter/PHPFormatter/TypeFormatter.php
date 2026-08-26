@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -106,6 +107,7 @@ final class TypeFormatter
             ResourceType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_resource'),
             NullType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_null'),
             UuidType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
+            TimeZoneType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_time_zone'),
             CallableType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
             JsonType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
             HTMLType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_html'),

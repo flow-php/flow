@@ -22,6 +22,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -114,6 +115,7 @@ final class SchemaConverter
             HTMLElementType::class,
             HTMLType::class,
             StringType::class,
+            TimeZoneType::class,
             UuidType::class,
             XMLElementType::class,
             XMLType::class,

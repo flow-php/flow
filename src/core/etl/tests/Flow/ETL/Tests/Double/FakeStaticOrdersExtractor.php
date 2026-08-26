@@ -37,7 +37,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         private int $count = 1_000,
     ) {}
 
-    public static function schema(): Schema
+    public function schema(): Schema
     {
         return schema(
             integer_schema('index'),
@@ -138,5 +138,10 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         }
 
         return $rows;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        return $this;
     }
 }

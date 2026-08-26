@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Schema\Definition;
+namespace Flow\Types\Type;
 
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -13,8 +13,10 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 
 use function array_key_exists;
@@ -30,10 +32,11 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function in_array;
 
-final readonly class TypeMerge
+final readonly class TypeWidener
 {
     private const CONTAINERS = [
         ArrayType::class,
+        EmptyArrayType::class,
         JsonType::class,
         ListType::class,
         MapType::class,
@@ -46,22 +49,22 @@ final readonly class TypeMerge
      *
      * @return Type<mixed>
      */
-    public function merge(Type $left, Type $right): Type
+    public function widen(Type $left, Type $right): Type
     {
         if (type_equals($left, $right)) {
             return $left;
         }
 
         if ($left instanceof NullType) {
-            return $right instanceof OptionalType ? $right : type_optional($right);
+            return $this->nullable($right);
         }
 
         if ($right instanceof NullType) {
-            return $left instanceof OptionalType ? $left : type_optional($left);
+            return $this->nullable($left);
         }
 
         if ($left instanceof OptionalType || $right instanceof OptionalType) {
-            $base = $this->merge(
+            $base = $this->widen(
                 $left instanceof OptionalType ? $left->base() : $left,
                 $right instanceof OptionalType ? $right->base() : $right,
             );
@@ -84,15 +87,15 @@ final readonly class TypeMerge
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            return $this->mergeStructures($left, $right);
+            return $this->widenStructures($left, $right);
         }
 
         if ($left instanceof ListType && $right instanceof ListType) {
-            return $this->mergeLists($left, $right);
+            return $this->widenLists($left, $right);
         }
 
         if ($left instanceof MapType && $right instanceof MapType) {
-            return $this->mergeMaps($left, $right);
+            return $this->widenMaps($left, $right);
         }
 
         // json holds any container shape without flattening it to text, so it beats the string fallback below.
@@ -105,6 +108,23 @@ final readonly class TypeMerge
     }
 
     /**
+     * `mixed` has no optional form - it already admits null - so wrapping it would throw from a
+     * method that must always answer.
+     *
+     * @param Type<mixed> $type
+     *
+     * @return Type<mixed>
+     */
+    public function nullable(Type $type): Type
+    {
+        if ($type instanceof OptionalType || $type instanceof MixedType) {
+            return $type;
+        }
+
+        return type_optional($type);
+    }
+
+    /**
      * @template TLeft
      * @template TRight
      *
@@ -113,9 +133,9 @@ final readonly class TypeMerge
      *
      * @return ListType<list<mixed>>
      */
-    public function mergeLists(ListType $left, ListType $right): ListType
+    public function widenLists(ListType $left, ListType $right): ListType
     {
-        return type_list($this->merge($left->element(), $right->element()));
+        return type_list($this->widen($left->element(), $right->element()));
     }
 
     /**
@@ -129,11 +149,11 @@ final readonly class TypeMerge
      *
      * @return MapType<array<array-key, mixed>>
      */
-    public function mergeMaps(MapType $left, MapType $right): MapType
+    public function widenMaps(MapType $left, MapType $right): MapType
     {
         return type_map(
             type_equals($left->key(), $right->key()) ? $left->key() : type_string(),
-            $this->merge($left->value(), $right->value()),
+            $this->widen($left->value(), $right->value()),
         );
     }
 
@@ -146,7 +166,7 @@ final readonly class TypeMerge
      *
      * @return StructureType<array<array-key, mixed>>
      */
-    public function mergeStructures(StructureType $left, StructureType $right): StructureType
+    public function widenStructures(StructureType $left, StructureType $right): StructureType
     {
         $leftOptional = $left->optionalElements();
         $rightOptional = $right->optionalElements();
@@ -165,7 +185,7 @@ final readonly class TypeMerge
             $inRight = array_key_exists($name, $rightElements);
 
             if ($inLeft && $inRight) {
-                $element = $this->merge($leftElements[$name], $rightElements[$name]);
+                $element = $this->widen($leftElements[$name], $rightElements[$name]);
                 $isOptional = array_key_exists($name, $leftOptional) || array_key_exists($name, $rightOptional);
             } else {
                 $element = $inLeft ? $leftElements[$name] : $rightElements[$name];

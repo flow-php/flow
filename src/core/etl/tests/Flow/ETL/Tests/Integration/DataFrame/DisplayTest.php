@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -46,6 +47,16 @@ final class DisplayTest extends FlowIntegrationTestCase
     public function test_display(): void
     {
         $etl = df()->read(new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @return \Generator<int, Rows, mixed, void>
              */
@@ -95,6 +106,16 @@ final class DisplayTest extends FlowIntegrationTestCase
     {
         $etl = df()
             ->read(new class implements Extractor {
+                public function withSchema(Schema $schema): static
+                {
+                    return $this;
+                }
+
+                public function schema(): Schema
+                {
+                    return new Schema();
+                }
+
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */

@@ -12,6 +12,7 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\TypeWidener;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
@@ -159,7 +160,7 @@ final readonly class MapDefinition implements Definition
         if ($definition instanceof self) {
             return new self(
                 $this->ref,
-                (new TypeMerge())->mergeMaps($this->type, $definition->type),
+                (new TypeWidener())->widenMaps($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );

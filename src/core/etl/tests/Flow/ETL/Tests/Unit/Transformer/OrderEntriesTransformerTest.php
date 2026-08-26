@@ -32,6 +32,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -108,6 +109,22 @@ final class OrderEntriesTransformerTest extends FlowTestCase
             array_keys(
                 (new OrderEntriesTransformer(compare_entries_by_type_and_name()))
                     ->transform($rows, flow_context(config()))
+                    ->toArray()[0],
+            ),
+        );
+    }
+
+    /**
+     * TimeZoneEntry was APPENDED at the end of the priority table. Inserting it would have
+     * renumbered thirteen shipped rows and silently changed existing sort output.
+     */
+    public function test_a_time_zone_entry_sorts_after_every_previously_known_type(): void
+    {
+        static::assertSame(
+            ['int', 'tz'],
+            array_keys(
+                (new OrderEntriesTransformer(compare_entries_by_type_and_name()))
+                    ->transform(rows(row(time_zone_entry('tz', 'UTC'), int_entry('int', 1))), flow_context(config()))
                     ->toArray()[0],
             ),
         );

@@ -21,6 +21,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -119,6 +120,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
                 TimeType::class,
                 JsonType::class,
                 UuidType::class,
+                TimeZoneType::class,
                 HTMLType::class,
                 HTMLElementType::class,
                 XMLType::class,
@@ -190,6 +192,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
             TimeType::class => new ReflectionFunction('\Flow\ETL\DSL\time_schema'),
             JsonType::class => new ReflectionFunction('\Flow\ETL\DSL\json_schema'),
             UuidType::class => new ReflectionFunction('\Flow\ETL\DSL\uuid_schema'),
+            TimeZoneType::class => new ReflectionFunction('\Flow\ETL\DSL\time_zone_schema'),
             XMLType::class => new ReflectionFunction('\Flow\ETL\DSL\xml_schema'),
             XMLElementType::class => new ReflectionFunction('\Flow\ETL\DSL\xml_element_schema'),
             HTMLType::class => new ReflectionFunction('\Flow\ETL\DSL\html_schema'),

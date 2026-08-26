@@ -18,6 +18,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType as LogicalXMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -59,6 +60,7 @@ final readonly class EntryTypesMap
         DateTimeType::class => ValueType::TIMESTAMP,
         TimeType::class => ValueType::TIME,
         UuidType::class => ValueType::UUID,
+        TimeZoneType::class => ValueType::TEXT,
         JsonType::class => ValueType::JSONB,
         XMLType::class => ValueType::XML,
         LogicalXMLElementType::class => ValueType::XML,
@@ -168,6 +170,7 @@ final readonly class EntryTypesMap
             TimeType::class => ColumnType::time(),
             DateTimeType::class => ColumnType::timestamp(),
             UuidType::class => ColumnType::uuid(),
+            TimeZoneType::class => ColumnType::text(),
             JsonType::class => ColumnType::jsonb(),
             ListType::class => ColumnType::jsonb(),
             MapType::class => ColumnType::jsonb(),

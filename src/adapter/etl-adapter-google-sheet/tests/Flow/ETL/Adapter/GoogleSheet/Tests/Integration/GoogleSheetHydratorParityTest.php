@@ -16,17 +16,19 @@ use function Flow\ETL\DSL\string_schema;
 
 final class GoogleSheetHydratorParityTest extends FlowTestCase
 {
-    public function test_appends_spread_sheet_id_and_sheet_name_to_the_schema_when_put_input_into_rows(): void
+    public function test_appends_spread_sheet_id_and_sheet_name_to_the_schema_when_metadata_columns_are_enabled(): void
     {
         $extractor = from_google_sheet(
             (new GoogleSheetsContext())->sheets(__DIR__ . '/../Fixtures/batch.json'),
             '1234567890',
             'Sheet',
-        )->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), string_schema('Header 3')));
+        )
+            ->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), string_schema('Header 3')))
+            ->withMetadataColumns(true);
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())) as $batch) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
             foreach ($batch as $row) {
                 $rows[] = $row->toArray();
             }

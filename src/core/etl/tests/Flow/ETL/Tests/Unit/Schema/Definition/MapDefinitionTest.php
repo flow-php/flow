@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
@@ -371,10 +370,9 @@ final class MapDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = map_schema('col', type_map(type_string(), type_integer()))->merge(union_schema('col', type_union(
-            type_map(type_string(), type_integer()),
-            type_boolean(),
-        )));
+        $merged = map_schema('col', type_map(type_string(), type_integer()))->merge(
+            new UnionDefinition('col', type_union(type_map(type_string(), type_integer()), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|map<string, integer>', $merged->type()->toString());
@@ -385,7 +383,7 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             map_schema('col', type_map(type_string(), type_integer()))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

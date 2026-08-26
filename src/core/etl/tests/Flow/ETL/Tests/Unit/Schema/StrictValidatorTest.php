@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Validator\MismatchedDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,7 +20,6 @@ use function Flow\ETL\DSL\schema_strict_validator;
 use function Flow\ETL\DSL\schema_validate;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -108,9 +108,12 @@ final class StrictValidatorTest extends FlowTestCase
             schema_validate(
                 expected: schema(
                     integer_schema('id'),
-                    union_schema('value', type_union(type_string(), type_integer())),
+                    new UnionDefinition('value', type_union(type_string(), type_integer())),
                 ),
-                given: schema(integer_schema('id'), union_schema('value', type_union(type_string(), type_integer()))),
+                given: schema(
+                    integer_schema('id'),
+                    new UnionDefinition('value', type_union(type_string(), type_integer())),
+                ),
                 validator: schema_strict_validator(),
             )->isValid(),
         );
@@ -119,7 +122,7 @@ final class StrictValidatorTest extends FlowTestCase
     public function test_given_schema_with_mismatched_union_definition(): void
     {
         $context = schema_validate(
-            expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
+            expected: schema(new UnionDefinition('value', type_union(type_string(), type_integer()))),
             given: schema(bool_schema('value')),
             validator: schema_strict_validator(),
         );
@@ -127,7 +130,7 @@ final class StrictValidatorTest extends FlowTestCase
         static::assertFalse($context->isValid());
         static::assertEquals(
             [new MismatchedDefinition(
-                union_schema('value', type_union(type_string(), type_integer())),
+                new UnionDefinition('value', type_union(type_string(), type_integer())),
                 bool_schema('value'),
             )],
             $context->mismatchedDefinitions(),
@@ -138,16 +141,34 @@ final class StrictValidatorTest extends FlowTestCase
     {
         static::assertTrue(
             schema_validate(
-                expected: schema(union_schema('value', type_union(type_string(), type_integer()))),
+                expected: schema(new UnionDefinition('value', type_union(type_string(), type_integer()))),
                 given: schema(string_schema('value')),
                 validator: schema_strict_validator(),
             )->isValid(),
         );
     }
 
-    public function test_given_schema_inferred_from_empty_arrays_against_declared_array_type(): void
+    public function test_given_schema_inferred_from_untyped_arrays_against_declared_array_type(): void
     {
         static::assertTrue(
+            schema_validate(
+                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                given: data_frame()
+                    ->read(from_array([['id' => 1, 'a' => [1, 'x']], ['id' => 2, 'a' => [2, 'y']]]))
+                    ->schema(),
+                validator: schema_strict_validator(),
+            )->isValid(),
+        );
+    }
+
+    /**
+     * Pins current behaviour, it does not assert it is desirable: a column of nothing but empty
+     * arrays now infers as list<null>, the bottom, which does not satisfy a declared json column
+     * the way NullDefinition satisfies a declared scalar one.
+     */
+    public function test_given_schema_inferred_from_empty_arrays_does_not_satisfy_a_declared_array_type(): void
+    {
+        static::assertFalse(
             schema_validate(
                 expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
                 given: data_frame()->read(from_array([['id' => 1, 'a' => []], ['id' => 2, 'a' => []]]))->schema(),

@@ -16,7 +16,13 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-use function is_array;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 
 final class PsrHttpClientPaginatedExtractor implements Extractor
 {
@@ -61,7 +67,7 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
 
             $raw = $encoder->decode([new HttpExchange($request, $response)]);
 
-            foreach ($hydrator->cast($raw, $this->schema) as $row) {
+            foreach ($hydrator->cast($raw, $this->schema()) as $row) {
                 $signal = yield new Rows($row);
 
                 if ($signal === Signal::STOP) {
@@ -69,14 +75,33 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
                 }
             }
 
-            /** @var array<mixed>|string|null $body */
-            $body = $raw[0]->values['response_body'];
-
             $request = $this->paginator->nextRequest(
                 $this->request,
-                new DecodedResponse(is_array($body) ? $body : [], $response),
+                new DecodedResponse($encoder->structuredBody($response), $response),
             );
         }
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        $headers = type_map(type_string(), type_list(type_string()));
+
+        return schema(
+            str_schema('response_body', nullable: true),
+            map_schema('response_headers', $headers),
+            int_schema('response_status_code'),
+            str_schema('response_protocol_version'),
+            str_schema('response_reason_phrase'),
+            str_schema('request_body', nullable: true),
+            str_schema('request_uri'),
+            map_schema('request_headers', $headers),
+            str_schema('request_protocol_version'),
+            str_schema('request_method'),
+        );
     }
 
     /**
@@ -99,7 +124,7 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

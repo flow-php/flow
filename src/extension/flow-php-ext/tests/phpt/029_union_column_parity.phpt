@@ -11,7 +11,9 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Metadata;
 
-use function Flow\ETL\DSL\{schema, int_schema, union_schema};
+use Flow\ETL\Schema\Definition\UnionDefinition;
+
+use function Flow\ETL\DSL\{schema, int_schema};
 use function Flow\Types\DSL\{type_datetime, type_integer, type_string, type_union, type_uuid};
 
 $union = type_union(type_string(), type_integer());
@@ -20,7 +22,7 @@ $unmatchable = type_union(type_uuid(), type_datetime());
 // hydrate() trusts the caller and never casts, so only member-conforming values belong here.
 $conforming = [
     'members' => [
-        schema(int_schema('id'), union_schema('a', $union, true)),
+        schema(int_schema('id'), new UnionDefinition('a', $union, true)),
         [
             new RawRowValues(['id' => 1, 'a' => 42]),
             new RawRowValues(['id' => 2, 'a' => 'x']),
@@ -29,7 +31,7 @@ $conforming = [
         ],
     ],
     'metadata' => [
-        schema(union_schema('a', $union, true)),
+        schema(new UnionDefinition('a', $union, true)),
         [
             new RawRowValues(['a' => 42], ['a' => Metadata::fromArray(['k' => 'v'])]),
             new RawRowValues(['a' => 'x'], ['a' => Metadata::fromArray(['k' => 'v'])]),
@@ -39,7 +41,7 @@ $conforming = [
 
 $castOnly = [
     'castable' => [
-        schema(union_schema('a', $union, true)),
+        schema(new UnionDefinition('a', $union, true)),
         [
             new RawRowValues(['a' => '42']),
             new RawRowValues(['a' => 1.5]),
@@ -68,18 +70,18 @@ foreach ($castOnly as $label => [$s, $batch]) {
     );
 }
 
-$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 42])], schema(int_schema('id'), union_schema('a', $union, true)))
+$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 42])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
     ->first()
     ->get('a');
 printf("int value entry:%s\n", (new ReflectionClass($entry))->getShortName());
 
-$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 'x'])], schema(int_schema('id'), union_schema('a', $union, true)))
+$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 'x'])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
     ->first()
     ->get('a');
 printf("string value entry:%s\n", (new ReflectionClass($entry))->getShortName());
 
 $outside = [new RawRowValues(['a' => [1, 2]])];
-$outsideSchema = schema(union_schema('a', $unmatchable));
+$outsideSchema = schema(new UnionDefinition('a', $unmatchable));
 
 $phpError = null;
 
