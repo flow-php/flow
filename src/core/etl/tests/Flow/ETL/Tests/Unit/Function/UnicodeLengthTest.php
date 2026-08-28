@@ -24,7 +24,7 @@ final class UnicodeLengthTest extends FlowTestCase
         static::assertSame(0, ref('str')->unicodeLength()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_unicode_length_returns_null_for_null_input(): void
+    public function test_unicode_length_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('UnicodeLength function requires non-null value');

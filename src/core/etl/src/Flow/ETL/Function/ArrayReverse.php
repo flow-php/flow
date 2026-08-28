@@ -17,11 +17,11 @@ final class ArrayReverse implements ScalarFunction
 {
     use ScalarFunctionChain;
 
+    private readonly ScalarFunction $array;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $array
      */
-    private readonly ScalarFunction $array;
-
     public function __construct(
         ScalarFunction|array $array,
         private readonly bool $preserveKeys,

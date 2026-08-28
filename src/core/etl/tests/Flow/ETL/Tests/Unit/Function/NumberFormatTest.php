@@ -49,7 +49,7 @@ final class NumberFormatTest extends FlowTestCase
     public function test_number_format_on_decimals_that_are_not_integer(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('NumberFormat function requires non-null values');
+        $this->expectExceptionMessage('Expected type "integer", got "float".');
 
         $expression = new NumberFormat(
             ref('value'),
@@ -72,7 +72,7 @@ final class NumberFormatTest extends FlowTestCase
     public function test_number_format_on_non_int_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('NumberFormat function requires non-null values');
+        $this->expectExceptionMessage('Expected type "numeric", got "string".');
 
         $expression = new NumberFormat(
             ref('value'),

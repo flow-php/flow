@@ -54,7 +54,7 @@ final class StringTitle implements ScalarFunction
     public function eval(Row $row, FlowContext $context): ?string
     {
         $string = (new Parameter($this->string))->asString($row, $context);
-        $allWords = (new Parameter($this->allWords))->asBoolean($row, $context);
+        $allWords = (new Parameter($this->allWords))->asBoolean($row, $context) ?? false;
 
         if ($string === null) {
             throw new InvalidArgumentException('StringTitle function requires non-null value');

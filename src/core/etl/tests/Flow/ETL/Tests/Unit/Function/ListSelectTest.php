@@ -5,19 +5,46 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Function\ListSelect;
+use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
 final class ListSelectTest extends FlowTestCase
 {
+    public function test_selecting_from_a_list_of_maps_declares_optional_map_value_types(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            new ListSelect(ref('list'), 'field'),
+            schema(list_schema('list', type_list(type_map(type_string(), type_integer())))),
+        );
+
+        static::assertSame('?list<structure{field: ?integer}>', $resolved->returns()->toString());
+    }
+
+    public function test_selecting_from_a_list_of_scalars_declares_null_element_types(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            new ListSelect(ref('list'), 'field'),
+            schema(list_schema('list', type_list(type_string()))),
+        );
+
+        static::assertSame('?list<structure{field: null}>', $resolved->returns()->toString());
+    }
+
     public function test_selecting_non_existing_value_from_list_using_alias(): void
     {
         $list = row(list_entry(

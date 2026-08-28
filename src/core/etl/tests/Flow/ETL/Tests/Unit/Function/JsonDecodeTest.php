@@ -38,4 +38,14 @@ final class JsonDecodeTest extends FlowTestCase
 
         ref('value')->jsonDecode()->eval(row(int_entry('value', 125)), flow_context());
     }
+
+    public function test_json_decode_on_scalar_json_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'JsonDecode function requires JSON that decodes to an array, cast scalar JSON instead',
+        );
+
+        ref('value')->jsonDecode()->eval(row(str_entry('value', '5')), flow_context());
+    }
 }

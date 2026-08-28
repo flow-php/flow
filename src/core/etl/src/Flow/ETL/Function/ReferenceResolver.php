@@ -18,7 +18,6 @@ final readonly class ReferenceResolver
      * One pass, not a fixpoint - this resolver inserts nothing, so a post-order pass over a finite
      * tree converges in one traversal by construction. The day a coercion pass inserts Cast nodes
      * into this tree, the pass count must be re-decided.
-     *
      */
     public function resolve(FunctionTree $function, Schema $schema): FunctionTree
     {

@@ -26,7 +26,7 @@ final class AverageAccumulator implements FrameAccumulator
         private readonly Reference $ref,
         private readonly int $scale,
         private readonly Rounding $rounding,
-        private readonly FlowContext $context,
+        FlowContext $context,
     ) {
         $this->calculator = $context->calculator();
     }

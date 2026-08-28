@@ -65,15 +65,25 @@ final readonly class All implements ScalarFunction
         ));
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
+        $sawNull = false;
+
         foreach ($this->functions as $ref) {
-            if (!(new Parameter($ref))->eval($row, $context)) {
+            $value = (new Parameter($ref))->eval($row, $context);
+
+            if ($value === null) {
+                $sawNull = true;
+
+                continue;
+            }
+
+            if (!$value) {
                 return false;
             }
         }
 
-        return true;
+        return $sawNull ? null : true;
     }
 
     public function or(ScalarFunction $scalarFunction): Any

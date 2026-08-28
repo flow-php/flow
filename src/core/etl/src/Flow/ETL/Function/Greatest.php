@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Unifier\NullabilityRule;
 use Flow\Types\Type\Unifier\StrictUnifier;
-use Flow\Types\Type\ValueComparator;
 
 use function array_map;
 use function array_values;
-use function count;
 use function Flow\ETL\DSL\lit;
+use function max;
 
 final class Greatest implements ScalarFunction
 {
@@ -28,7 +26,7 @@ final class Greatest implements ScalarFunction
     private readonly array $values;
 
     /**
-     * @param array<mixed|ScalarFunction> $values
+     * @param array<array-key, mixed> $values
      */
     public function __construct(array $values)
     {
@@ -73,21 +71,21 @@ final class Greatest implements ScalarFunction
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        $extractedValues = [];
-        $extractedTypes = [];
+        // NULL iff every argument is NULL - nulls are skipped, never compared (Spark Greatest).
+        $values = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($this->values as $value) {
-            $extractedValues[] = (new Parameter($value))->eval($row, $context);
-            $extractedTypes[] = (new Parameter($value))->asType($row, $context);
+            $evaluated = (new Parameter($value))->eval($row, $context);
+
+            if ($evaluated !== null) {
+                $values[] = $evaluated;
+            }
         }
 
-        if (!count($extractedValues)) {
-            throw new InvalidArgumentException('Greatest requires at least one value');
+        if ($values === []) {
+            return null;
         }
 
-        (new ValueComparator())->assertAllTypesComparable($extractedTypes, '>');
-
-        return max($extractedValues);
+        return max($values);
     }
 }

@@ -31,7 +31,7 @@ final class BinaryLengthTest extends FlowTestCase
         static::assertSame(0, ref('str')->binaryLength()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_binary_length_returns_null_for_null_input(): void
+    public function test_binary_length_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('BinaryLength function requires non-null value');

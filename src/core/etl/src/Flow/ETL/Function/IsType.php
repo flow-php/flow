@@ -61,9 +61,14 @@ final class IsType implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $value = (new Parameter($this->value))->eval($row, $context);
+
+        // A NULL operand is unknowable, even against type_null() - ->isNull() is the null test.
+        if ($value === null) {
+            return null;
+        }
 
         foreach ($this->types as $type) {
             // @mago-ignore analysis:redundant-type-comparison

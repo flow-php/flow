@@ -103,6 +103,7 @@ final class DefinitionFromTypeTest extends FlowTestCase
     {
         $this->expectException(UnsupportedUnionTypeException::class);
 
+        // @mago-expect analysis:deprecated-function
         union_schema('value', type_union(type_string(), type_integer()));
     }
 
@@ -138,6 +139,7 @@ final class DefinitionFromTypeTest extends FlowTestCase
 
     public function test_union_schema_delegates_an_optional_union_to_a_nullable_column(): void
     {
+        // @mago-expect analysis:deprecated-function
         $definition = union_schema('value', type_union(type_string(), type_null()));
 
         static::assertInstanceOf(StringDefinition::class, $definition);

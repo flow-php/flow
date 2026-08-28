@@ -8,7 +8,6 @@ use BackedEnum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\EnumType;
@@ -18,7 +17,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
-use function is_int;
 
 final class EnumValue implements ScalarFunction
 {
@@ -67,7 +65,7 @@ final class EnumValue implements ScalarFunction
         return $backingType !== null && $backingType->getName() === 'int' ? type_integer() : type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?ScalarResult
+    public function eval(Row $row, FlowContext $context): int|string
     {
         $enum = (new Parameter($this->value))->eval($row, $context);
 
@@ -75,6 +73,6 @@ final class EnumValue implements ScalarFunction
             throw new InvalidArgumentException('EnumValue function requires a BackedEnum value');
         }
 
-        return new ScalarResult($enum->value, is_int($enum->value) ? type_integer() : type_string());
+        return $enum->value;
     }
 }

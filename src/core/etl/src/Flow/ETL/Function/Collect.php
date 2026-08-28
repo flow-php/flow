@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -32,21 +31,14 @@ final class Collect implements AggregatingFunction
             return;
         }
 
-        try {
-            /** @var array<string, mixed> $values */
-            $values = [];
+        /** @var array<string, mixed> $values */
+        $values = [];
 
-            $values[$this->ref->name()] = $row->valueOf($this->ref);
+        $values[$this->ref->name()] = $row->valueOf($this->ref);
 
-            $this->collection[] = current($values);
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('Collect error: ' . $e->getMessage(), 0, $e);
-        }
+        $this->collection[] = current($values);
     }
 
-    /**
-     * @return Entry<mixed>
-     */
     /**
      * @return list<Reference>
      */
@@ -55,6 +47,9 @@ final class Collect implements AggregatingFunction
         return [$this->ref];
     }
 
+    /**
+     * @return Entry<mixed>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->name() . '_collection');

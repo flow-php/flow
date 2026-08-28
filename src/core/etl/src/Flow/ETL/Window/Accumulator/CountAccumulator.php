@@ -16,7 +16,7 @@ final class CountAccumulator implements FrameAccumulator
 
     public function __construct(
         private readonly ?Reference $ref,
-        private readonly FlowContext $context,
+        FlowContext $context,
     ) {}
 
     public function accumulate(Row $row): void

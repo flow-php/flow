@@ -84,7 +84,6 @@ final class OnEach implements ScalarFunction
     public function eval(Row $row, FlowContext $context): mixed
     {
         $value = (new Parameter($this->array))->asArray($row, $context);
-        $preserveKeys = $this->preserveKeys;
 
         if ($value === null) {
             throw new InvalidArgumentException('OnEach requires non-null array');
@@ -96,7 +95,7 @@ final class OnEach implements ScalarFunction
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
-            if ($preserveKeys) {
+            if ($this->preserveKeys) {
                 $output[$key] = (new Parameter($this->function))->eval(array_to_row([
                     'element' => $item,
                 ], $hydrator), $context);

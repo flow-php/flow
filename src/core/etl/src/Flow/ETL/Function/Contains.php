@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
@@ -56,13 +55,13 @@ final class Contains implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->haystack->returns(), $this->needle->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $haystack = (new Parameter($this->haystack))->as($row, $context, type_string(), type_array());
         $needle = (new Parameter($this->needle))->asString($row, $context);
 
         if ($haystack === null || $needle === null) {
-            throw new InvalidArgumentException('Contains function requires non-null haystack and needle');
+            return null;
         }
 
         if (is_string($haystack)) {

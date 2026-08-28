@@ -66,7 +66,7 @@ final class Between implements ScalarFunction
         );
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $boundary = (new Parameter($this->boundary))->asEnum($row, $context, Boundary::class);
 

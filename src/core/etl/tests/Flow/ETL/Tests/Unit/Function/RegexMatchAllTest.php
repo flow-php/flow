@@ -17,7 +17,7 @@ final class RegexMatchAllTest extends FlowTestCase
     public function test_regex_match_all_expression_on_invalid_flags(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexMatchAll requires non-null flags');
+        $this->expectExceptionMessage('Expected type "integer", got "string".');
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'), lit('invalid'));
 
@@ -27,7 +27,7 @@ final class RegexMatchAllTest extends FlowTestCase
     public function test_regex_match_all_expression_on_invalid_pattern(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexMatchAll requires non-null pattern');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatchAll = regex_match_all(lit(1), lit('12 apples and 45 oranges'));
 
@@ -37,7 +37,7 @@ final class RegexMatchAllTest extends FlowTestCase
     public function test_regex_match_all_expression_on_invalid_subject(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexMatchAll requires non-null subject');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit(2));
 

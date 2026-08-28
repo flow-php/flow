@@ -6,7 +6,6 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use UnitEnum;
@@ -50,7 +49,7 @@ final class EnumName implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?ScalarResult
+    public function eval(Row $row, FlowContext $context): string
     {
         $enum = (new Parameter($this->value))->eval($row, $context);
 
@@ -58,6 +57,6 @@ final class EnumName implements ScalarFunction
             throw new InvalidArgumentException('EnumName function requires a UnitEnum value');
         }
 
-        return new ScalarResult($enum->name, type_string());
+        return $enum->name;
     }
 }

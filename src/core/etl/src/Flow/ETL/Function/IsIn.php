@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
@@ -18,13 +17,12 @@ final class IsIn implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param array<array-key, mixed>|ScalarFunction $haystack
-     * @param mixed $needle
-     */
     private readonly ScalarFunction $haystack;
     private readonly ScalarFunction $needle;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $haystack
+     */
     public function __construct(ScalarFunction|array $haystack, mixed $needle)
     {
         $this->haystack = $haystack instanceof ScalarFunction ? $haystack : lit($haystack);
@@ -56,14 +54,20 @@ final class IsIn implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->haystack->returns(), $this->needle->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $haystack = (new Parameter($this->haystack))->asArray($row, $context);
+        $needle = (new Parameter($this->needle))->eval($row, $context);
 
-        if ($haystack === null) {
-            throw new InvalidArgumentException('IsIn function requires non-null array');
+        if ($haystack === null || $needle === null) {
+            return null;
         }
 
-        return in_array((new Parameter($this->needle))->eval($row, $context), $haystack, true);
+        // A match beats a NULL element; no match with a NULL element is unknowable (Spark's In).
+        if (in_array($needle, $haystack, true)) {
+            return true;
+        }
+
+        return in_array(null, $haystack, true) ? null : false;
     }
 }

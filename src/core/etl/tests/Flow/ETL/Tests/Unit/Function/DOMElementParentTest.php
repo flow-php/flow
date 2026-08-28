@@ -100,20 +100,24 @@ final class DOMElementParentTest extends TestCase
     {
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
-        static::assertEquals($xml, ref('value')
-            ->domElementParent()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement)),
-                flow_context(),
-            ));
+        static::assertNull(
+            ref('value')
+                ->domElementParent()
+                ->eval(
+                    row(flow_context(config())->entryFactory()->create('value', $xml->documentElement)),
+                    flow_context(),
+                ),
+        );
     }
 
     public function test_xml_getting_parent_element_when_passing_document(): void
     {
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
-        static::assertEquals($xml, ref('value')
-            ->domElementParent()
-            ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()));
+        static::assertNull(
+            ref('value')
+                ->domElementParent()
+                ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()),
+        );
     }
 }

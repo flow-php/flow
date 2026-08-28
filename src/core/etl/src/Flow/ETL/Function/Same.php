@@ -47,20 +47,16 @@ final class Same implements ScalarFunction
      */
     public function returns(): Type
     {
+        (new ValueComparator())->assertComparableTypes($this->left->returns(), $this->right->returns(), '===');
+
         return type_boolean();
     }
 
     public function eval(Row $row, FlowContext $context): bool
     {
-        $left = new Parameter($this->left);
-        $right = new Parameter($this->right);
-
-        (new ValueComparator())->assertComparableTypes(
-            $left->asType($row, $context),
-            $right->asType($row, $context),
-            '===',
+        // PHP identity, not SQL equality: null === null is a defined, useful answer (Spark's <=>).
+        return (
+            (new Parameter($this->left))->eval($row, $context) === (new Parameter($this->right))->eval($row, $context)
         );
-
-        return $left->eval($row, $context) === $right->eval($row, $context);
     }
 }

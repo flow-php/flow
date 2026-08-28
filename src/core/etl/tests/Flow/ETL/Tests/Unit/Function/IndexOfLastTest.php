@@ -25,7 +25,7 @@ final class IndexOfLastTest extends FlowTestCase
         static::assertNull(ref('str')->indexOfLast('x')->eval(row(str_entry('str', 'hello world')), flow_context()));
     }
 
-    public function test_index_of_last_null_needle_returns_false(): void
+    public function test_index_of_last_throws_on_null_needle(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('IndexOfLast function requires non-null string and needle');
@@ -35,7 +35,7 @@ final class IndexOfLastTest extends FlowTestCase
             ->eval(row(str_entry('str', 'hello'), str_entry('needle', null)), flow_context());
     }
 
-    public function test_index_of_last_null_string_returns_false(): void
+    public function test_index_of_last_throws_on_null_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('IndexOfLast function requires non-null string and needle');

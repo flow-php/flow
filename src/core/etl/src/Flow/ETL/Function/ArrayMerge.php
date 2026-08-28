@@ -25,13 +25,13 @@ final class ArrayMerge implements ScalarFunction
 {
     use ScalarFunctionChain;
 
+    private readonly ScalarFunction $left;
+    private readonly ScalarFunction $right;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $left
      * @param array<array-key, mixed>|ScalarFunction $right
      */
-    private readonly ScalarFunction $left;
-    private readonly ScalarFunction $right;
-
     public function __construct(ScalarFunction|array $left, ScalarFunction|array $right)
     {
         $this->left = $left instanceof ScalarFunction ? $left : lit($left);

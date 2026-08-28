@@ -7,7 +7,10 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ArrayGet;
+use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_exists;
@@ -15,8 +18,15 @@ use function Flow\ETL\DSL\array_get;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ArrayGetTest extends FlowTestCase
 {
@@ -95,5 +105,46 @@ final class ArrayGetTest extends FlowTestCase
             ])),
             flow_context(),
         );
+    }
+
+    public function test_returns_rejects_a_non_structure_input(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            array_get(ref('list'), 'field'),
+            schema(list_schema('list', type_list(type_string()))),
+        );
+
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage(
+            'array_get() cannot describe the column it produces: the array operand declares "list<string>", which is not a structure.',
+        );
+
+        $resolved->returns();
+    }
+
+    public function test_returns_rejects_an_undeclared_path_segment(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            array_get(ref('data'), 'missing'),
+            schema(structure_schema('data', type_structure(['field' => type_integer()]))),
+        );
+
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('path segment "missing" is not declared by');
+
+        $resolved->returns();
+    }
+
+    public function test_returns_resolves_the_element_type_for_a_declared_path(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            array_get(ref('data'), 'field'),
+            schema(structure_schema('data', type_structure(['field' => type_integer()]))),
+        );
+
+        static::assertSame('integer', $resolved->returns()->toString());
     }
 }

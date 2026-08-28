@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -119,6 +120,19 @@ final class SumTest extends FlowTestCase
 
         static::assertSame(10, $result->value());
         static::assertSame('integer', $result->definition()->type()->toString());
+    }
+
+    public function test_a_malformed_exact_operand_throws_wrapped_as_a_sum_error(): void
+    {
+        $aggregator = sum(ref('value'), exact: ref('exact'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sum error:');
+
+        $aggregator->aggregate(
+            row(float_entry('value', 0.1), json_entry('exact', ['not' => 'a boolean'])),
+            flow_context(),
+        );
     }
 
     public function test_exact_aggregation_sum_of_decimal_fractions(): void

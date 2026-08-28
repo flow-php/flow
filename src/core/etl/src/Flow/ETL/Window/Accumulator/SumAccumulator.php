@@ -44,7 +44,7 @@ final class SumAccumulator implements FrameAccumulator
                 $this->sum = $this->runningSum->add(
                     $this->sum ?? 0,
                     $value,
-                    $this->constantExact ?? (new Parameter($this->exact))->asBoolean($row, $this->context),
+                    $this->constantExact ?? (new Parameter($this->exact))->asBoolean($row, $this->context) ?? false,
                 );
             }
         } catch (InvalidArgumentException $e) {

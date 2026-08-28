@@ -17,7 +17,7 @@ final class SprintfTest extends FlowTestCase
     public function test_sprintf_expression_on_invalid_format(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sprintf requires non-null format and values');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $sprintf = sprintf(lit(1), lit('John'), lit(25));
 

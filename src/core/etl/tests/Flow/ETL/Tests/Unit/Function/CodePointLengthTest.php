@@ -24,7 +24,7 @@ final class CodePointLengthTest extends FlowTestCase
         static::assertSame(0, ref('str')->codePointLength()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_code_point_length_returns_null_for_null_input(): void
+    public function test_code_point_length_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('CodePointLength function requires non-null value');

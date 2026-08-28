@@ -60,6 +60,6 @@ final readonly class MatchCondition implements ScalarFunction
 
     public function valid(Row $row, FlowContext $context): bool
     {
-        return (new Parameter($this->condition))->asBoolean($row, $context);
+        return (new Parameter($this->condition))->asBoolean($row, $context) ?? false;
     }
 }

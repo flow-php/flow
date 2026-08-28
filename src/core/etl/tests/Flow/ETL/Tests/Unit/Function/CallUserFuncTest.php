@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Function\CallUserFunc;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Function\Fixtures\CallUserFunc\StaticCalculator;
 
@@ -24,28 +23,27 @@ final class CallUserFuncTest extends FlowTestCase
 {
     public function test_named_parameters_survive_a_rebuild(): void
     {
-        $function = new CallUserFunc(
-            lit('explode'),
-            ['separator' => lit(','), 'string' => lit('1,2,3')],
-            type_list(type_string()),
-        );
+        $function = new CallUserFunc(lit('explode'), type_list(type_string()), [
+            'separator' => lit(','),
+            'string' => lit('1,2,3'),
+        ]);
         $rebuilt = $function->withChildren($function->children());
 
         static::assertEquals($function->eval(row(), flow_context()), $rebuilt->eval(row(), flow_context()));
-        static::assertEquals(['1', '2', '3'], $rebuilt->eval(row(), flow_context())->value);
+        static::assertEquals(['1', '2', '3'], $rebuilt->eval(row(), flow_context()));
     }
 
     public function test_call_user_func_as_dsl(): void
     {
         // @mago-ignore analysis:possibly-invalid-argument
-        static::assertIsInt(call('time', type_integer())->eval(row(), flow_context())->value);
+        static::assertIsInt(call('time', type_integer())->eval(row(), flow_context()));
     }
 
     public function test_call_user_func_with_native_function(): void
     {
         $row = row(list_entry('list', [1, 2, 3], type_list(type_integer())));
 
-        static::assertSame(3, ref('list')->call(lit('count'), type_integer())->eval($row, flow_context())->value);
+        static::assertSame(3, ref('list')->call(lit('count'), type_integer())->eval($row, flow_context()));
     }
 
     public function test_call_user_func_with_object_method(): void
@@ -54,10 +52,9 @@ final class CallUserFuncTest extends FlowTestCase
 
         $calculator = new StaticCalculator();
 
-        static::assertSame(
-            3,
-            ref('list')->call(lit($calculator->count(...)), type_integer())->eval($row, flow_context())->value,
-        );
+        static::assertSame(3, ref('list')
+            ->call(lit($calculator->count(...)), type_integer())
+            ->eval($row, flow_context()));
     }
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments(): void
@@ -65,7 +62,7 @@ final class CallUserFuncTest extends FlowTestCase
         $row = row(string_entry('item_ids', '1,2,3'));
 
         static::assertEquals(
-            new ScalarResult(['1', '2', '3'], type_list(type_string())),
+            ['1', '2', '3'],
             ref('item_ids')
                 ->call(lit('explode'), type_list(type_string()), ['separator' => ','], refAlias: 'string')
                 ->eval($row, flow_context()),
@@ -77,7 +74,7 @@ final class CallUserFuncTest extends FlowTestCase
         $row = row(string_entry('item_ids', '1,2,3'));
 
         static::assertEquals(
-            new ScalarResult([1, 2, 3], type_list(type_integer())),
+            [1, 2, 3],
             ref('item_ids')
                 ->call(lit('explode'), type_list(type_integer()), ['separator' => ','], refAlias: 'string')
                 ->eval($row, flow_context()),
@@ -88,12 +85,8 @@ final class CallUserFuncTest extends FlowTestCase
     {
         $row = row(list_entry('list', [1, 2, 3], type_list(type_integer())));
 
-        static::assertSame(
-            3,
-            ref('list')
-                ->call(lit(StaticCalculator::class . '::count'), type_integer())
-                ->eval($row, flow_context())
-                ->value,
-        );
+        static::assertSame(3, ref('list')
+            ->call(lit(StaticCalculator::class . '::count'), type_integer())
+            ->eval($row, flow_context()));
     }
 }

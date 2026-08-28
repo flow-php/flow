@@ -20,12 +20,12 @@ final class ArrayFilter implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|array<array-key, mixed> $array
-     */
     private readonly ScalarFunction $array;
     private readonly ScalarFunction $value;
 
+    /**
+     * @param ScalarFunction|array<array-key, mixed> $array
+     */
     public function __construct(ScalarFunction|array $array, mixed $value = null)
     {
         $this->array = $array instanceof ScalarFunction ? $array : lit($array);

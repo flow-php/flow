@@ -21,7 +21,7 @@ final class ArrayMergeTest extends FlowTestCase
     public function test_array_merge_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
         ref('a')->arrayMerge(ref('b'))->eval(row(int_entry('a', 1), json_entry('b', ['b' => 2])), $context);
@@ -47,7 +47,7 @@ final class ArrayMergeTest extends FlowTestCase
     public function test_array_merge_when_left_side_is_not_an_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         ref('a')->arrayMerge(ref('b'))->eval(row(int_entry('a', 1), json_entry('b', ['b' => 2])), flow_context());
     }
@@ -55,7 +55,7 @@ final class ArrayMergeTest extends FlowTestCase
     public function test_array_merge_when_right_side_is_not_an_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         ref('a')->arrayMerge(ref('b'))->eval(row(json_entry('a', ['a' => 1]), int_entry('b', 2)), flow_context());
     }

@@ -43,7 +43,7 @@ final class ArrayKeepTest extends FlowTestCase
     public function test_array_keep_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeep function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
         ref('map')->arrayKeep(lit(1))->eval(row(string_entry('map', 'test')), $context);
@@ -62,7 +62,7 @@ final class ArrayKeepTest extends FlowTestCase
     public function test_array_keep_on_non_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeep function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         ref('map')->arrayKeep(lit(1))->eval(row(string_entry('map', 'test')), flow_context());
     }

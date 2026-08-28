@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
@@ -57,12 +56,8 @@ final class StringEqualsTo implements ScalarFunction
         $value = (new Parameter($this->value))->asString($row, $context);
         $string = (new Parameter($this->string))->asString($row, $context);
 
-        if ($value === null) {
-            throw new InvalidArgumentException('StringEqualsTo function requires non-null value');
-        }
-
-        if ($string === null) {
-            throw new InvalidArgumentException('StringEqualsTo function requires non-null string');
+        if ($value === null || $string === null) {
+            return null;
         }
 
         return s($value)->equalsTo($string);

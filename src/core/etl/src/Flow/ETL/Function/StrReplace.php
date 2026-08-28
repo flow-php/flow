@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
@@ -19,15 +20,14 @@ final class StrReplace implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|string $value
-     * @param array<array-key, mixed>|ScalarFunction|string $search
-     * @param array<array-key, mixed>|ScalarFunction|string $replace
-     */
     private readonly ScalarFunction $value;
     private readonly ScalarFunction $search;
     private readonly ScalarFunction $replace;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction|string $search
+     * @param array<array-key, mixed>|ScalarFunction|string $replace
+     */
     public function __construct(
         ScalarFunction|string $value,
         ScalarFunction|string|array $search,
@@ -66,14 +66,8 @@ final class StrReplace implements ScalarFunction
     public function eval(Row $row, FlowContext $context): ?string
     {
         $value = (new Parameter($this->value))->asString($row, $context);
-        $search = (new Parameter($this->search))->asString($row, $context) ?? (new Parameter($this->search))->asArray(
-            $row,
-            $context,
-        );
-        $replace = (new Parameter($this->replace))->asString(
-            $row,
-            $context,
-        ) ?? (new Parameter($this->replace))->asArray($row, $context);
+        $search = (new Parameter($this->search))->as($row, $context, type_string(), type_array());
+        $replace = (new Parameter($this->replace))->as($row, $context, type_string(), type_array());
 
         if ($value === null) {
             throw new InvalidArgumentException('StrReplace function requires non-null value');

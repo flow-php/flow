@@ -38,7 +38,7 @@ final class ModifyDateTimeTest extends FlowTestCase
     public function test_modify_using_invalid_modifier(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ModifyDateTime function requires non-null values');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         ref('datetime')
             ->modifyDateTime(lit(1))

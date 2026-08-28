@@ -17,7 +17,7 @@ final class SplitTest extends FlowTestCase
     public function test_split_not_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Split function requires non-null value');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         split(lit(123), ',')->eval(row(), flow_context());
     }

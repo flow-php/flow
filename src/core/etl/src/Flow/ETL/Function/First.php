@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -33,17 +32,10 @@ final class First implements AggregatingFunction
         }
 
         if ($this->first === null) {
-            try {
-                $this->first = $row->get($this->ref);
-            } catch (InvalidArgumentException $e) {
-                throw new InvalidArgumentException('First error: ' . $e->getMessage(), 0, $e);
-            }
+            $this->first = $row->get($this->ref);
         }
     }
 
-    /**
-     * @return Entry<mixed>
-     */
     /**
      * @return list<Reference>
      */
@@ -52,6 +44,9 @@ final class First implements AggregatingFunction
         return [$this->ref];
     }
 
+    /**
+     * @return Entry<mixed>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';

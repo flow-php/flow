@@ -27,7 +27,7 @@ final class ArrayReverseTest extends FlowTestCase
     public function test_array_reverse_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayReverse function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
         ref('a')->arrayReverse()->eval(row(int_entry('a', 123)), $context);
@@ -36,7 +36,7 @@ final class ArrayReverseTest extends FlowTestCase
     public function test_array_reverse_non_array_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayReverse function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         ref('a')->arrayReverse()->eval(row(int_entry('a', 123)), flow_context());
     }

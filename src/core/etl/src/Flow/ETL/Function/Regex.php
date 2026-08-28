@@ -18,16 +18,13 @@ final class Regex implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|string $pattern
-     * @param array<array-key, mixed>|ScalarFunction|string $subject
-     * @param int $flags
-     * @param int|ScalarFunction $offset
-     */
     private readonly ScalarFunction $pattern;
     private readonly ScalarFunction $subject;
     private readonly ScalarFunction $offset;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction|string $subject
+     */
     public function __construct(
         ScalarFunction|string $pattern,
         ScalarFunction|string|array $subject,
@@ -79,7 +76,6 @@ final class Regex implements ScalarFunction
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
         $subject = (new Parameter($this->subject))->asString($row, $context);
-        $flags = $this->flags;
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null) {
@@ -97,7 +93,7 @@ final class Regex implements ScalarFunction
         $matches = [];
 
         // preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or false on failure.
-        if (preg_match($pattern, $subject, $matches, $flags, $offset) === 1) {
+        if (preg_match($pattern, $subject, $matches, $this->flags, $offset) === 1) {
             return $matches;
         }
 

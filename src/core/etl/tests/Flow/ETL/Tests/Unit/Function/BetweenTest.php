@@ -17,6 +17,20 @@ use function Flow\ETL\DSL\row;
 
 final class BetweenTest extends FlowTestCase
 {
+    public function test_a_definite_false_short_circuits_past_a_null(): void
+    {
+        static::assertFalse(
+            ref('value')->between(lit(10), lit(null))->eval(row(int_entry('value', 5)), flow_context()),
+        );
+    }
+
+    public function test_a_null_bound_that_could_change_the_answer_is_null(): void
+    {
+        static::assertNull(
+            ref('value')->between(lit(10), lit(null))->eval(row(int_entry('value', 50)), flow_context()),
+        );
+    }
+
     public function test_between_exclusive(): void
     {
         static::assertTrue(between(ref('value'), lit(10), lit(50), Boundary::EXCLUSIVE)->eval(
@@ -78,7 +92,7 @@ final class BetweenTest extends FlowTestCase
     public function test_between_with_invalid_boundary_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Between function requires valid boundary');
+        $this->expectExceptionMessage('Expected type "object<Flow\ETL\Function\Between\Boundary>", got "string".');
 
         $context = flow_context();
         between(ref('value'), lit(10), lit(50), lit('invalid'))->eval(row(int_entry('value', 20)), $context);

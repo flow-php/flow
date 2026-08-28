@@ -32,7 +32,7 @@ final class TruncateTest extends FlowTestCase
         static::assertSame('hello', ref('str')->truncate(5)->eval(row(str_entry('str', 'hello')), flow_context()));
     }
 
-    public function test_truncate_returns_null_for_null_input(): void
+    public function test_truncate_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Truncate function requires non-null value');

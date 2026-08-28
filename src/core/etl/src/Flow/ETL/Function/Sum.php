@@ -92,9 +92,6 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     }
 
     /**
-     * @return Entry<?float>|Entry<?int>
-     */
-    /**
      * @return null|list<Reference> null when $exact is a ScalarFunction - its entries cannot be
      *                              statically enumerated, so spill column pruning must be disabled
      */
@@ -103,6 +100,9 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         return $this->exact instanceof ScalarFunction ? null : [$this->ref];
     }
 
+    /**
+     * @return Entry<?float>|Entry<?int>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_sum');
@@ -142,6 +142,6 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
             return $this->exact;
         }
 
-        return (new Parameter($this->exact))->asBoolean($row, $context);
+        return (new Parameter($this->exact))->asBoolean($row, $context) ?? false;
     }
 }

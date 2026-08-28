@@ -69,4 +69,21 @@ final class XPathTest extends FlowTestCase
                 ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()),
         );
     }
+
+    public function test_xpath_selecting_non_element_nodes_returns_null(): void
+    {
+        $xml = new DOMDocument();
+        $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
+
+        static::assertNull(
+            ref('value')
+                ->xpath('/root/foo/text()')
+                ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()),
+        );
+        static::assertNull(
+            ref('value')
+                ->xpath('/root/foo/@baz')
+                ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()),
+        );
+    }
 }

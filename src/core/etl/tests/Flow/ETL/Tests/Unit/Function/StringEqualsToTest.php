@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -31,20 +30,16 @@ final class StringEqualsToTest extends FlowTestCase
 
     public function test_equals_to_null_comparison_string_returns_null(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('StringEqualsTo function requires non-null string');
-
-        ref('str')
-            ->stringEqualsTo(ref('compare'))
-            ->eval(row(str_entry('str', 'hello'), str_entry('compare', null)), flow_context());
+        static::assertNull(
+            ref('str')
+                ->stringEqualsTo(ref('compare'))
+                ->eval(row(str_entry('str', 'hello'), str_entry('compare', null)), flow_context()),
+        );
     }
 
     public function test_equals_to_null_string_returns_null(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('StringEqualsTo function requires non-null value');
-
-        ref('str')->stringEqualsTo('hello')->eval(row(str_entry('str', null)), flow_context());
+        static::assertNull(ref('str')->stringEqualsTo('hello')->eval(row(str_entry('str', null)), flow_context()));
     }
 
     public function test_equals_to_with_scalar_function_parameter(): void

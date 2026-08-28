@@ -17,17 +17,14 @@ final class Slug implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|string $string
-     * @param ScalarFunction|string $separator
-     * @param null|ScalarFunction|string $locale
-     * @param null|array<array-key, mixed>|ScalarFunction $symbolsMap
-     */
     private readonly ScalarFunction $string;
     private readonly ScalarFunction $separator;
     private readonly ScalarFunction $locale;
     private readonly ScalarFunction $symbolsMap;
 
+    /**
+     * @param null|array<array-key, mixed>|ScalarFunction $symbolsMap
+     */
     public function __construct(
         ScalarFunction|string $string,
         ScalarFunction|string $separator = '-',

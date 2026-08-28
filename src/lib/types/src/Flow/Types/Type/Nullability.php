@@ -73,7 +73,7 @@ final readonly class Nullability
     }
 
     /**
-     * $result, made nullable iff ANY operand is - Spark children.exists(_.nullable).
+     * $result, made nullable iff ANY operand is
      *
      * @param Type<mixed> $result
      * @param Type<mixed> ...$operands
@@ -92,7 +92,7 @@ final readonly class Nullability
     }
 
     /**
-     * $result, made nullable iff EVERY operand is AND there is at least one - Spark children.forall.
+     * $result, made nullable iff EVERY operand is AND there is at least one
      *
      * @param Type<mixed> $result
      * @param Type<mixed> ...$operands

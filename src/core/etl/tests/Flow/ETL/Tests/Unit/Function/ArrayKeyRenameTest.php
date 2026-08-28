@@ -21,7 +21,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
     public function test_array_key_rename_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
         $row = row(int_entry('integer_entry', 1));
@@ -32,7 +32,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
     public function test_for_not_array_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $row = row(int_entry('integer_entry', 1));
 

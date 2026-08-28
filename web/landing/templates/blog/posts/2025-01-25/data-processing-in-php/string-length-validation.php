@@ -12,9 +12,9 @@ final readonly class StringLengthValidation implements Transformation
 {
     public function __construct(
         private UnresolvedReference $reference,
-        private int                 $min,
-        private int                 $max,
-        private string              $outputEntry = 'valid'
+        private int $min,
+        private int $max,
+        private string $outputEntry = 'valid'
     ) {
     }
 

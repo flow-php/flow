@@ -6,18 +6,9 @@ namespace Flow\ETL\Function;
 
 use DateInterval;
 use DateTimeImmutable;
-use DateTimeInterface;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\DateTimeType;
-use Flow\Types\Type\Logical\DateType;
-use Flow\Types\Type\Logical\JsonType;
-use Flow\Types\Type\Logical\TimeType;
-use Flow\Types\Type\Native\FloatType;
-use Flow\Types\Type\Native\IntegerType;
-use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Nullability;
 use Flow\Types\Type\ValueComparator;
 
@@ -59,75 +50,26 @@ final class GreaterThanEqual implements ScalarFunction
      */
     public function returns(): Type
     {
+        (new ValueComparator())->assertComparableTypes($this->left->returns(), $this->right->returns(), '>=');
+
         return (new Nullability())->any(type_boolean(), $this->left->returns(), $this->right->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
-        $leftParam = new Parameter($this->left);
-        $rightParam = new Parameter($this->right);
+        $left = (new Parameter($this->left))->eval($row, $context);
+        $right = (new Parameter($this->right))->eval($row, $context);
 
-        $leftType = $leftParam->asType($row, $context);
-        $rightType = $rightParam->asType($row, $context);
-
-        (new ValueComparator())->assertComparableTypes($leftType, $rightType, '>=');
-
-        if (
-            $leftType instanceof IntegerType
-            || $leftType instanceof FloatType
-            || $rightType instanceof IntegerType
-            || $rightType instanceof FloatType
-        ) {
-            $left = $leftParam->asNumber($row, $context);
-            $right = $rightParam->asNumber($row, $context);
-
-            if ($left === null || $right === null) {
-                throw new InvalidArgumentException('GreaterThanEqual function requires non-null values');
-            }
-
-            return $left >= $right;
+        if ($left === null || $right === null) {
+            return null;
         }
 
-        if ($leftType instanceof StringType || $leftType instanceof JsonType) {
-            $left = $leftParam->asString($row, $context);
-            $right = $rightParam->asString($row, $context);
-
-            if ($left === null || $right === null) {
-                throw new InvalidArgumentException('GreaterThanEqual function requires non-null values');
-            }
-
-            return $left >= $right;
-        }
-
-        if ($leftType instanceof DateTimeType || $leftType instanceof DateType) {
-            $left = $leftParam->asInstanceOf($row, $context, DateTimeInterface::class);
-            $right = $rightParam->asInstanceOf($row, $context, DateTimeInterface::class);
-
-            if ($left === null || $right === null) {
-                throw new InvalidArgumentException('GreaterThanEqual function requires non-null values');
-            }
-
-            return $left >= $right;
-        }
-
-        if ($leftType instanceof TimeType) {
-            $left = $leftParam->asInstanceOf($row, $context, DateInterval::class);
-            $right = $rightParam->asInstanceOf($row, $context, DateInterval::class);
-
-            if ($left === null || $right === null) {
-                throw new InvalidArgumentException('GreaterThanEqual function requires non-null values');
-            }
-
+        // The dispatch picks a comparison strategy from the values, never a column type - bind has
+        // already proved the pair comparable in returns().
+        if ($left instanceof DateInterval && $right instanceof DateInterval) {
             $reference = new DateTimeImmutable('@0');
 
             return $reference->add($left) >= $reference->add($right);
-        }
-
-        $left = $leftParam->asArray($row, $context);
-        $right = $rightParam->asArray($row, $context);
-
-        if ($left === null || $right === null) {
-            throw new InvalidArgumentException('GreaterThanEqual function requires non-null values');
         }
 
         return $left >= $right;

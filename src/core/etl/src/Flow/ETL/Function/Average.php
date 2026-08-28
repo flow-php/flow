@@ -6,7 +6,6 @@ namespace Flow\ETL\Function;
 
 use Flow\Calculator\Calculator;
 use Flow\Calculator\Rounding;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -45,17 +44,13 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
             return;
         }
 
-        try {
-            /** @var mixed $value */
-            $value = $row->valueOf($this->ref);
+        /** @var mixed $value */
+        $value = $row->valueOf($this->ref);
 
-            if (is_numeric($value)) {
-                // @mago-ignore analysis:possibly-invalid-argument
-                $this->sum = $context->calculator()->add($this->sum, $value);
-                $this->count++;
-            }
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('Average error: ' . $e->getMessage(), 0, $e);
+        if (is_numeric($value)) {
+            // @mago-ignore analysis:possibly-invalid-argument
+            $this->sum = $context->calculator()->add($this->sum, $value);
+            $this->count++;
         }
     }
 

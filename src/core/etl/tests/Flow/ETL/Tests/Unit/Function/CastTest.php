@@ -41,11 +41,8 @@ final class CastTest extends FlowTestCase
 
     public function test_double_and_real_resolve_to_float(): void
     {
-        static::assertSame(
-            1.0,
-            cast(ref('value'), 'double')->eval(row(str_entry('value', '1')), flow_context())->value,
-        );
-        static::assertSame(1.0, cast(ref('value'), 'real')->eval(row(str_entry('value', '1')), flow_context())->value);
+        static::assertSame(1.0, cast(ref('value'), 'double')->eval(row(str_entry('value', '1')), flow_context()));
+        static::assertSame(1.0, cast(ref('value'), 'real')->eval(row(str_entry('value', '1')), flow_context()));
     }
 
     public function test_constructor_rejects_json_pretty(): void
@@ -117,15 +114,9 @@ final class CastTest extends FlowTestCase
         $entryFactory = flow_context(config())->entryFactory();
 
         // @mago-ignore analysis:mixed-assignment
-        $resultRefCast = ref('value')
-            ->cast($to)
-            ->eval(row($entryFactory->create('value', $from)), flow_context())
-            ?->value;
+        $resultRefCast = ref('value')->cast($to)->eval(row($entryFactory->create('value', $from)), flow_context());
         // @mago-ignore analysis:mixed-assignment
-        $resultCastRef = cast(ref('value'), $to)->eval(
-            row($entryFactory->create('value', $from)),
-            flow_context(),
-        )?->value;
+        $resultCastRef = cast(ref('value'), $to)->eval(row($entryFactory->create('value', $from)), flow_context());
 
         if (is_object($expected) || is_object($from)) {
             static::assertEquals($expected, $resultRefCast);

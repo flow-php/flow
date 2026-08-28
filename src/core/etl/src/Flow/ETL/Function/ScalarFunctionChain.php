@@ -176,7 +176,7 @@ trait ScalarFunctionChain
         array $arguments = [],
         string|int $refAlias = 0,
     ): CallUserFunc {
-        return new CallUserFunc($callable, array_merge($arguments, [$refAlias => $this]), $returnType);
+        return new CallUserFunc($callable, $returnType, array_merge($arguments, [$refAlias => $this]));
     }
 
     public function capitalize(): Capitalize

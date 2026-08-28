@@ -6,7 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\lit;
@@ -18,6 +20,34 @@ use function Flow\Types\DSL\type_integer;
 
 final class NotTest extends FlowTestCase
 {
+    public function test_not_over_a_null_predicate_drops_the_row(): void
+    {
+        $kept = df()
+            ->read(from_array([
+                ['id' => 1, 'score' => 50],
+                ['id' => 2, 'score' => null],
+                ['id' => 3, 'score' => 5],
+            ]))
+            ->filter(ref('score')->greaterThan(lit(10)))
+            ->fetch()
+            ->toArray();
+
+        static::assertSame([['id' => 1, 'score' => 50]], $kept);
+
+        $keptNot = df()
+            ->read(from_array([
+                ['id' => 1, 'score' => 50],
+                ['id' => 2, 'score' => null],
+                ['id' => 3, 'score' => 5],
+            ]))
+            ->filter(not(ref('score')->greaterThan(lit(10))))
+            ->fetch()
+            ->toArray();
+
+        // SQL: NOT NULL is NULL, so the null row drops on both sides of the predicate.
+        static::assertSame([['id' => 3, 'score' => 5]], $keptNot);
+    }
+
     public function test_not_expression_on_array_true_value(): void
     {
         static::assertFalse(not(lit([1, 2, 3]))->eval(row(), flow_context()));

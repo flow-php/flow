@@ -25,23 +25,17 @@ final class EnumNameTest extends FlowTestCase
 {
     public function test_enum_name_accepts_literal_enum(): void
     {
-        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(row(), flow_context())?->value);
+        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(row(), flow_context()));
     }
 
     public function test_enum_name_carries_string_type(): void
     {
-        $result = enum_name(ref('e'))->eval(row(enum_entry('e', BackedIntEnum::one)), flow_context());
-
-        static::assertNotNull($result);
-        static::assertTrue(type_equals(type_string(), $result->type));
+        static::assertTrue(type_equals(type_string(), enum_name(ref('e'))->returns()));
     }
 
     public function test_enum_name_from_scalar_function_chain(): void
     {
-        static::assertSame(
-            'one',
-            ref('e')->enumName()->eval(row(enum_entry('e', BackedIntEnum::one)), flow_context())?->value,
-        );
+        static::assertSame('one', ref('e')->enumName()->eval(row(enum_entry('e', BackedIntEnum::one)), flow_context()));
     }
 
     #[TestWith([BackedStringEnum::one])]
@@ -49,7 +43,7 @@ final class EnumNameTest extends FlowTestCase
     #[TestWith([BasicEnum::one])]
     public function test_enum_name_returns_case_name(UnitEnum $enum): void
     {
-        static::assertSame('one', enum_name(ref('e'))->eval(row(enum_entry('e', $enum)), flow_context())?->value);
+        static::assertSame('one', enum_name(ref('e'))->eval(row(enum_entry('e', $enum)), flow_context()));
     }
 
     #[TestWith([null])]

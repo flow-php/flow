@@ -24,7 +24,7 @@ final class ReverseTest extends FlowTestCase
         static::assertSame('', ref('str')->reverse()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_reverse_returns_null_for_null_input(): void
+    public function test_reverse_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Reverse function requires non-null value');

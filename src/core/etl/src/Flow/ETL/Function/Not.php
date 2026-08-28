@@ -44,8 +44,11 @@ final class Not implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
-        return !(new Parameter($this->value))->eval($row, $context);
+        $value = (new Parameter($this->value))->eval($row, $context);
+
+        // SQL NOT NULL is NULL - the row must drop, not flip to true.
+        return $value === null ? null : !$value;
     }
 }

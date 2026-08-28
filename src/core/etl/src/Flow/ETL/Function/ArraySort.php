@@ -63,7 +63,7 @@ final class ArraySort implements ScalarFunction
     {
         $array = (new Parameter($this->ref))->asArray($row, $context);
         $flags = (new Parameter($this->flags))->asInt($row, $context);
-        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context);
+        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context) ?? false;
 
         if ($array === null) {
             throw new InvalidArgumentException('ArraySort function requires non-null array');

@@ -35,7 +35,7 @@ final class ArrayValuesTest extends FlowTestCase
     public function test_array_values_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayValues function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
         ref('map')->arrayValues()->eval(row(string_entry('map', 'test')), $context);
@@ -44,7 +44,7 @@ final class ArrayValuesTest extends FlowTestCase
     public function test_array_values_on_non_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayValues function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         ref('map')->arrayValues()->eval(row(string_entry('map', 'test')), flow_context());
     }

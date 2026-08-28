@@ -57,7 +57,6 @@ final class MatchCases implements ScalarFunction
      */
     public function withChildren(array $children): static
     {
-        /** @var list<ScalarFunction> $children */
         $default = count($children) > count($this->cases) ? array_pop($children) : null;
 
         $cases = [];

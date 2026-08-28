@@ -18,16 +18,13 @@ final class RegexAll implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|string $pattern
-     * @param array<array-key, mixed>|ScalarFunction|string $subject
-     * @param int $flags
-     * @param int|ScalarFunction $offset
-     */
     private readonly ScalarFunction $pattern;
     private readonly ScalarFunction $subject;
     private readonly ScalarFunction $offset;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction|string $subject
+     */
     public function __construct(
         ScalarFunction|string $pattern,
         ScalarFunction|string|array $subject,
@@ -83,7 +80,6 @@ final class RegexAll implements ScalarFunction
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
         $subject = (new Parameter($this->subject))->asString($row, $context);
-        $flags = $this->flags;
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null) {
@@ -101,7 +97,7 @@ final class RegexAll implements ScalarFunction
         $matches = [];
 
         // Returns the number of full pattern matches (which might be zero), or false on failure.
-        if (preg_match_all($pattern, $subject, $matches, $flags, $offset) !== false) {
+        if (preg_match_all($pattern, $subject, $matches, $this->flags, $offset) !== false) {
             if ($matches === [[]]) {
                 return null;
             }

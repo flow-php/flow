@@ -39,7 +39,7 @@ final class StringBeforeTest extends FlowTestCase
             ->eval(row(str_entry('str', ''), str_entry('needle', 'o')), flow_context()));
     }
 
-    public function test_string_before_returns_null(): void
+    public function test_string_before_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringBefore function requires non-null value');

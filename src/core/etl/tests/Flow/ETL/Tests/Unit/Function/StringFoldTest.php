@@ -21,7 +21,7 @@ final class StringFoldTest extends FlowTestCase
             ->eval(row(str_entry('str', "Die O'Brian Straße")), flow_context()));
     }
 
-    public function test_string_folded_returns_null(): void
+    public function test_string_fold_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringFold function requires non-null value');

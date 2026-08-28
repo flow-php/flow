@@ -21,13 +21,12 @@ final class StringContainsAny implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|string $value
-     * @param array<string>|ScalarFunction $needles
-     */
     private readonly ScalarFunction $value;
     private readonly ScalarFunction $needles;
 
+    /**
+     * @param array<string>|ScalarFunction $needles
+     */
     public function __construct(ScalarFunction|string $value, ScalarFunction|array $needles)
     {
         $this->value = $value instanceof ScalarFunction ? $value : lit($value);
@@ -59,17 +58,17 @@ final class StringContainsAny implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns(), $this->needles->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $value = (new Parameter($this->value))->asString($row, $context);
         $needles = (new Parameter($this->needles))->asArray($row, $context);
 
-        if ($value === null) {
-            throw new InvalidArgumentException('StringContainsAny function requires non-null string');
+        if ($value === null || $needles === null) {
+            return null;
         }
 
-        if ($needles === null || count($needles) === 0) {
-            throw new InvalidArgumentException('StringContainsAny function requires non-null, non-empty needles array');
+        if (count($needles) === 0) {
+            throw new InvalidArgumentException('StringContainsAny function requires a non-empty needles array');
         }
 
         $typedNeedles = type_list(type_string())->assert($needles);

@@ -82,8 +82,6 @@ final class TypeDetector
 
         if (is_array($value)) {
             if ([] === $value) {
-                // The bottom element type, not a distinct array shape: DuckDB says LIST(SQLNULL),
-                // Spark says ArrayType(NullType). It unifies with any list, where array{} does not.
                 return type_list(type_null());
             }
 

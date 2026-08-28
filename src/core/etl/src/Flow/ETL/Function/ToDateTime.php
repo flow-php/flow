@@ -63,7 +63,7 @@ final class ToDateTime implements ScalarFunction
         return type_optional(type_datetime());
     }
 
-    public function eval(Row $row, FlowContext $context): DateTimeImmutable|false|null
+    public function eval(Row $row, FlowContext $context): ?DateTimeImmutable
     {
         $value = (new Parameter($this->value))->eval($row, $context);
         $format = (new Parameter($this->format))->asString($row, $context);
@@ -86,11 +86,15 @@ final class ToDateTime implements ScalarFunction
         }
 
         if (is_int($value)) {
-            return DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone);
+            $dateTime = DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone);
+
+            return $dateTime === false ? null : $dateTime;
         }
 
         if (is_string($value)) {
-            return DateTimeImmutable::createFromFormat($format, $value, $timeZone);
+            $dateTime = DateTimeImmutable::createFromFormat($format, $value, $timeZone);
+
+            return $dateTime === false ? null : $dateTime;
         }
 
         throw new InvalidArgumentException('ToDateTime function requires int or string value');

@@ -17,7 +17,7 @@ final class RegexAllTest extends FlowTestCase
     public function test_regex_all_expression_on_invalid_subject(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexAll requires non-null subject');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatch = regex_all(lit('/\d+/'), lit(2));
 
@@ -48,7 +48,7 @@ final class RegexAllTest extends FlowTestCase
     public function test_regex_expression_on_invalid_pattern(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexAll requires non-null pattern');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatch = regex_all(lit(1), lit('12 apples and 45 oranges'));
 

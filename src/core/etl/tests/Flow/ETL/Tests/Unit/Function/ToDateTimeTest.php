@@ -58,4 +58,12 @@ final class ToDateTimeTest extends FlowTestCase
             ),
         );
     }
+
+    public function test_unparseable_string_to_date_time_is_null(): void
+    {
+        static::assertNull(to_date_time(ref('string'), 'Y-m-d H:i:s')->eval(
+            row(str_entry('string', 'not a datetime')),
+            flow_context(),
+        ));
+    }
 }

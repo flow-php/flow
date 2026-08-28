@@ -8,7 +8,6 @@ use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid as FlowUuid;
@@ -81,10 +80,10 @@ final class Uuid implements ScalarFunction
         return new self('uuid7', $value);
     }
 
-    public function eval(Row $row, FlowContext $context): ScalarResult
+    public function eval(Row $row, FlowContext $context): FlowUuid
     {
         if ($this->uuidVersion === 'uuid4') {
-            return new ScalarResult(new FlowUuid($this->generateV4()), type_uuid());
+            return new FlowUuid($this->generateV4());
         }
 
         $param = (new Parameter($this->value))->as(
@@ -98,7 +97,7 @@ final class Uuid implements ScalarFunction
             throw new InvalidArgumentException('Uuid uuid7 function requires a DateTimeInterface value');
         }
 
-        return new ScalarResult(new FlowUuid($this->generateV7($param)), type_uuid());
+        return new FlowUuid($this->generateV7($param));
     }
 
     private function generateV4(): UuidV4|UuidInterface

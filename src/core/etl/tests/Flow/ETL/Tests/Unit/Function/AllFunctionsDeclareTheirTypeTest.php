@@ -155,11 +155,16 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         $resolved = (new ReferenceResolver())->resolve($function, ScalarFunctionFixtures::schema());
 
         if ($class === Function\ArrayUnpack::class) {
-            // The one designed refusal: N columns whose names come from runtime values.
             $this->expectException(SchemaNotDerivableException::class);
         }
 
-        static::assertNotNull(definition_from_type('c', $resolved->returns()));
+        $returns = $resolved->returns();
+
+        $expected = ScalarFunctionFixtures::expectedReturns($class);
+
+        static::assertNotNull($expected);
+        static::assertSame($expected->toString(), $returns->toString());
+        static::assertNotNull(definition_from_type('c', $returns));
     }
 
     /**
@@ -226,7 +231,10 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         /** @var ScalarFunction $resolved */
         $resolved = (new ReferenceResolver())->resolve($function, ScalarFunctionFixtures::schema());
 
-        static::assertTrue(type_is_nullable($resolved->returns()));
+        $returns = $resolved->returns();
+
+        static::assertTrue(type_is_nullable($returns));
+        static::assertSame(ScalarFunctionFixtures::expectedReturns($class)?->toString(), $returns->toString());
     }
 
     public function test_the_not_null_set_is_the_complement(): void

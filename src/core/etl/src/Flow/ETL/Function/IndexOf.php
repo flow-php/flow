@@ -65,7 +65,7 @@ final class IndexOf implements ScalarFunction
         $string = (new Parameter($this->string))->asString($row, $context);
         $needle = (new Parameter($this->needle))->asString($row, $context);
         $offset = type_integer()->assert((new Parameter($this->offset))->as($row, $context, type_integer()));
-        $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row, $context);
+        $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row, $context) ?? false;
 
         if ($string === null || $needle === null) {
             throw new InvalidArgumentException('IndexOf function requires non-null string and needle');

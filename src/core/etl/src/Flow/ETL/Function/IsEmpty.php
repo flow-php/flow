@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
@@ -55,7 +54,7 @@ final class IsEmpty implements ScalarFunction
         $value = (new Parameter($this->value))->asString($row, $context);
 
         if ($value === null) {
-            throw new InvalidArgumentException('IsEmpty requires non-null string');
+            return null;
         }
 
         return s($value)->isEmpty();

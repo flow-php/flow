@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use Dom\HTMLElement;
 use DOMDocument;
+use DOMElement;
 use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
@@ -79,6 +80,7 @@ final class DOMElementParent implements ScalarFunction
             return $node->parentElement;
         }
 
-        return $node->parentNode;
+        // parentNode of a root element is the DOMDocument, which is not an xml_element.
+        return $node->parentNode instanceof DOMElement ? $node->parentNode : null;
     }
 }

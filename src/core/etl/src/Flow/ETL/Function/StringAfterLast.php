@@ -71,7 +71,7 @@ final class StringAfterLast implements ScalarFunction
             $context,
         );
         $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needle);
-        $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row, $context);
+        $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row, $context) ?? false;
 
         return u($string)->afterLast($typedNeedle, $includeNeedle)->toString();
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DOMDocument;
+use DOMElement;
 use DOMNameSpaceNode;
 use DOMNode;
 use DOMNodeList;
@@ -58,7 +59,7 @@ final class XPath implements ScalarFunction
     }
 
     /**
-     * @return null|array<\DOMNode>
+     * @return null|list<DOMElement>
      */
     public function eval(Row $row, FlowContext $context): ?array
     {
@@ -95,13 +96,14 @@ final class XPath implements ScalarFunction
         $nodes = [];
 
         foreach ($result as $node) {
-            if ($node instanceof DOMNameSpaceNode) {
+            // text(), attribute and comment queries yield nodes the declared list<xml_element> cannot hold.
+            if (!$node instanceof DOMElement) {
                 continue;
             }
 
             $nodes[] = $node;
         }
 
-        return $nodes;
+        return $nodes === [] ? null : $nodes;
     }
 }

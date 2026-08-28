@@ -9,10 +9,8 @@ use Flow\Types\Type\Nullability;
 
 enum NullabilityRule
 {
-    case ANY; // Spark: children.exists(_.nullable) - every operation except Coalesce/Greatest/Least
-    case ALL; // Spark: children.forall(_.nullable) - Coalesce (nullExpressions.scala:57),
-
-    //          Greatest (arithmetic.scala:1282), Least (:1191-1194)
+    case ANY;
+    case ALL;
 
     /**
      * @param Type<mixed> $result

@@ -10,12 +10,20 @@ use Normalizer;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 
 final class StringNormalizeTest extends FlowTestCase
 {
+    public function test_a_malformed_form_operand_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        ref('value')->stringNormalize(lit('not-a-form'))->eval(row(str_entry('value', 'abc')), flow_context());
+    }
+
     public function test_normalize_already_normalized(): void
     {
         static::assertSame('hello', ref('str')
@@ -49,7 +57,7 @@ final class StringNormalizeTest extends FlowTestCase
             ->eval(row(str_entry('str', 'é')), flow_context()));
     }
 
-    public function test_normalize_returns_null_for_null_input(): void
+    public function test_normalize_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringNormalize function requires non-null value');

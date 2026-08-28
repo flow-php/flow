@@ -42,7 +42,7 @@ final readonly class DuplicateRowTransformer implements Transformer
             $duplicatedRows = rows();
 
             foreach ($rows->all() as $row) {
-                $condition = (new Parameter($this->condition))->asBoolean($row, $context);
+                $condition = (new Parameter($this->condition))->asBoolean($row, $context) ?? false;
 
                 if ($condition) {
                     $duplicatedRow = rows($row);

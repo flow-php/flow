@@ -65,7 +65,7 @@ final class Wordwrap implements ScalarFunction
         $value = (new Parameter($this->value))->asString($row, $context);
         $width = type_integer()->assert((new Parameter($this->width))->as($row, $context, type_integer()));
         $break = (new Parameter($this->break))->asString($row, $context);
-        $cut = (new Parameter($this->cut))->asBoolean($row, $context);
+        $cut = (new Parameter($this->cut))->asBoolean($row, $context) ?? false;
 
         if ($value === null) {
             throw new InvalidArgumentException('Wordwrap function requires non-null value');

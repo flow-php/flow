@@ -24,13 +24,13 @@ final class Combine implements ScalarFunction
 {
     use ScalarFunctionChain;
 
+    private readonly ScalarFunction $keys;
+    private readonly ScalarFunction $values;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $keys
      * @param array<array-key, mixed>|ScalarFunction $values
      */
-    private readonly ScalarFunction $keys;
-    private readonly ScalarFunction $values;
-
     public function __construct(ScalarFunction|array $keys, ScalarFunction|array $values)
     {
         $this->keys = $keys instanceof ScalarFunction ? $keys : lit($keys);

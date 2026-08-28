@@ -19,13 +19,13 @@ final class Coalesce implements ScalarFunction
     use ScalarFunctionChain;
 
     /**
-     * @var array<ScalarFunction>
+     * @var list<ScalarFunction>
      */
     private readonly array $values;
 
     public function __construct(ScalarFunction ...$values)
     {
-        $this->values = $values;
+        $this->values = array_values($values);
     }
 
     /**
@@ -33,7 +33,7 @@ final class Coalesce implements ScalarFunction
      */
     public function children(): array
     {
-        return array_values($this->values);
+        return $this->values;
     }
 
     /**
@@ -50,7 +50,7 @@ final class Coalesce implements ScalarFunction
      */
     public function returns(): Type
     {
-        $branches = array_map(static fn(ScalarFunction $value): Type => $value->returns(), array_values($this->values));
+        $branches = array_map(static fn(ScalarFunction $value): Type => $value->returns(), $this->values);
 
         // SQL COALESCE is nullable only when every branch is - a null in one branch falls through.
         return (

@@ -49,7 +49,7 @@ final class ArrayExpandTest extends FlowTestCase
     public function test_for_not_array_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayExpand requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         array_expand(ref('integer_entry'))->eval(row(int_entry('integer_entry', 1)), flow_context());
     }
@@ -57,7 +57,7 @@ final class ArrayExpandTest extends FlowTestCase
     public function test_for_not_array_entry_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayExpand requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
         array_expand(ref('integer_entry'))->eval(row(int_entry('integer_entry', 1)), $context);

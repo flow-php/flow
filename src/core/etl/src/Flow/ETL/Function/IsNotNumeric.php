@@ -11,6 +11,7 @@ use Flow\Types\Type\Nullability;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_boolean;
+use function is_numeric;
 
 final class IsNotNumeric implements ScalarFunction
 {
@@ -48,8 +49,14 @@ final class IsNotNumeric implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
-        return (new Parameter($this->value))->asNumber($row, $context) === null;
+        $value = (new Parameter($this->value))->eval($row, $context);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return !is_numeric($value);
     }
 }

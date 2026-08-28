@@ -1439,7 +1439,7 @@ function count(?Reference $function = null): Count
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function call(ScalarFunction|callable $callable, Type $return_type, array $parameters = []): CallUserFunc
 {
-    return new CallUserFunc($callable, $parameters, $return_type);
+    return new CallUserFunc($callable, $return_type, $parameters);
 }
 
 /**

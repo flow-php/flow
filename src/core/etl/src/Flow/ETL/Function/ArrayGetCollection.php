@@ -26,12 +26,12 @@ final class ArrayGetCollection implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param ScalarFunction|array<array-key, mixed> $keys
-     */
     private readonly ScalarFunction $keys;
     private readonly ScalarFunction $index;
 
+    /**
+     * @param ScalarFunction|array<array-key, mixed> $keys
+     */
     public function __construct(
         private readonly ScalarFunction $ref,
         ScalarFunction|array $keys,

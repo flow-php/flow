@@ -21,15 +21,6 @@ use function Flow\Types\DSL\type_structure;
 final readonly class ContainerUnification
 {
     /**
-     * Spark TypeCoercionHelper.scala findTypeForComplex. Open recursion: the policy passes its
-     * own pairwise step back in. Taking a Closure rather than the TypeUnifier interface is
-     * deliberate - it structurally prevents the n-ary hoist from re-entering inside a list element.
-     *
-     * A map key is an identity, not a value: it recurses under $strictPairwise in every policy,
-     * and a key that unifies to a nullable type is refused (Spark's .filter). Structures unify as
-     * a name-keyed intersection: a name present on only one side means no common type, a name
-     * optional on either side is optional on the result, allowsExtra() is OR-ed.
-     *
      * @param Type<mixed> $left
      * @param Type<mixed> $right
      * @param Closure(Type<mixed>, Type<mixed>): ?Type<mixed> $pairwise

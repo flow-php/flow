@@ -31,7 +31,7 @@ final class IndexOfTest extends FlowTestCase
         static::assertNull(ref('str')->indexOf('x', offset: 2)->eval(row(str_entry('str', 'Abba')), flow_context()));
     }
 
-    public function test_needle_null_index_of_returns_false(): void
+    public function test_index_of_throws_on_null_needle(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('IndexOf function requires non-null string and needle');
@@ -39,7 +39,7 @@ final class IndexOfTest extends FlowTestCase
         ref('str')->indexOf(ref('needle'))->eval(row(str_entry('str', 'x'), str_entry('needle', null)), flow_context());
     }
 
-    public function test_string_null_index_of_returns_false(): void
+    public function test_index_of_throws_on_null_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('IndexOf function requires non-null string and needle');

@@ -28,7 +28,7 @@ final class StringAfterLastTest extends FlowTestCase
             ->eval(row(str_entry('str', 'hello world'), str_entry('needle', 'o')), flow_context()));
     }
 
-    public function test_string_after_last_returns_null(): void
+    public function test_string_after_last_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringAfterLast function requires non-null value');

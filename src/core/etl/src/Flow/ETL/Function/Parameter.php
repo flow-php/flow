@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
@@ -15,14 +16,20 @@ use Flow\Types\Value\Json;
 use UnitEnum;
 
 use function Flow\ETL\DSL\lit;
-use function Flow\Types\DSL\get_type;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_object;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function sprintf;
 
+/**
+ * Every as*() arm separates the two axes: a genuine NULL flowing through is not an error and
+ * propagates (or takes the arm's null-input default), while a non-null value that cannot coerce
+ * throws - optional() is the door for pipelines that want the old silent tolerance.
+ */
 final readonly class Parameter
 {
     private ScalarFunction $function;
@@ -43,13 +50,21 @@ final readonly class Parameter
     {
         $value = $this->eval($row, $context);
 
+        if ($value === null) {
+            return null;
+        }
+
         foreach ($types as $nextType) {
             if ($nextType->isValid($value)) {
                 return $value;
             }
         }
 
-        return null;
+        throw new InvalidArgumentException(sprintf(
+            'Expected one of "%s", got "%s".',
+            implode('", "', array_map(static fn(Type $type): string => $type->toString(), $types)),
+            get_debug_type($value),
+        ));
     }
 
     /**
@@ -59,22 +74,36 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
+        if ($result === null) {
+            return null;
+        }
+
         if ($result instanceof Json) {
             return $result->toArray();
         }
 
-        try {
-            return type_array()->assert($result);
-        } catch (InvalidTypeException) {
-            return null;
+        $type = type_array();
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
         }
+
+        return $result;
     }
 
-    public function asBoolean(Row $row, FlowContext $context): bool
+    public function asBoolean(Row $row, FlowContext $context): ?bool
     {
         $result = $this->eval($row, $context);
 
-        return is_scalar($result) && (bool) $result;
+        if ($result === null) {
+            return null;
+        }
+
+        if (!is_scalar($result)) {
+            throw new InvalidArgumentException(sprintf('Expected type "boolean", got "%s".', get_debug_type($result)));
+        }
+
+        return (bool) $result;
     }
 
     /**
@@ -98,20 +127,36 @@ final readonly class Parameter
      */
     public function asEnum(Row $row, FlowContext $context, string $enumClass): ?UnitEnum
     {
-        try {
-            return type_instance_of($enumClass)->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return null;
         }
+
+        $type = type_instance_of($enumClass);
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
+        }
+
+        return $result;
     }
 
     public function asFloat(Row $row, FlowContext $context): ?float
     {
-        try {
-            return type_float()->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return null;
         }
+
+        $type = type_float();
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
+        }
+
+        return $result;
     }
 
     /**
@@ -123,23 +168,41 @@ final readonly class Parameter
      */
     public function asInstanceOf(Row $row, FlowContext $context, string $class): ?object
     {
-        try {
-            return type_instance_of($class)->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return null;
         }
+
+        $type = type_instance_of($class);
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
+        }
+
+        return $result;
     }
 
     /**
-     * @phpstan-return ($default is null ? int|null : int)
+     * $default applies to a NULL input only - a malformed value always throws.
+     *
+     * @return ($default is null ? int|null : int)
      */
     public function asInt(Row $row, FlowContext $context, ?int $default = null): ?int
     {
-        try {
-            return type_integer()->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return $default;
         }
+
+        $type = type_integer();
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
+        }
+
+        return $result;
     }
 
     /**
@@ -160,25 +223,31 @@ final readonly class Parameter
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($result as $item) {
-            try {
-                $objects[] = $objectType->assert($item);
-            } catch (InvalidTypeException) {
-                return null;
+            if (!$objectType->isValid($item)) {
+                throw new InvalidArgumentException(InvalidTypeException::value($item, $objectType)->getMessage());
             }
+
+            $objects[] = $item;
         }
 
         return $objects;
     }
 
     /**
-     * @phpstan-return ($default is null ? int|float|null : int|float)
+     * $default applies to a NULL input only - a malformed value always throws.
+     *
+     * @return ($default is null ? int|float|null : int|float)
      */
     public function asNumber(Row $row, FlowContext $context, int|float|null $default = null): int|float|null
     {
         $result = $this->eval($row, $context);
 
-        if (!is_numeric($result)) {
+        if ($result === null) {
             return $default;
+        }
+
+        if (!is_numeric($result)) {
+            throw new InvalidArgumentException(sprintf('Expected type "numeric", got "%s".', get_debug_type($result)));
         }
 
         if (is_int($result) || is_float($result)) {
@@ -195,35 +264,41 @@ final readonly class Parameter
 
     public function asObject(Row $row, FlowContext $context): ?object
     {
-        try {
-            return type_object()->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return null;
         }
+
+        $type = type_object();
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
+        }
+
+        return $result;
     }
 
     /**
-     * @phpstan-return ($default is null ? string|null : string)
+     * $default applies to a NULL input only - a malformed value always throws.
+     *
+     * @return ($default is null ? string|null : string)
      */
     public function asString(Row $row, FlowContext $context, ?string $default = null): ?string
     {
-        try {
-            return type_string()->assert($this->eval($row, $context));
-        } catch (InvalidTypeException) {
+        $result = $this->eval($row, $context);
+
+        if ($result === null) {
             return $default;
         }
-    }
 
-    /**
-     * @return Type<mixed>
-     */
-    public function asType(Row $row, FlowContext $context): Type
-    {
-        if ($this->function instanceof Reference) {
-            return $row->get($this->function)->type();
+        $type = type_string();
+
+        if (!$type->isValid($result)) {
+            throw new InvalidArgumentException(InvalidTypeException::value($result, $type)->getMessage());
         }
 
-        return get_type($this->eval($row, $context));
+        return $result;
     }
 
     /**
@@ -235,6 +310,7 @@ final readonly class Parameter
         $result = $this->function->eval($row, $context);
 
         // @mago-ignore analysis:mixed-return-statement
+        // No in-repo producer returns ScalarResult any more - the unwrap stays for 04b to delete with the class.
         return $result instanceof ScalarResult ? $result->value : $result;
     }
 }

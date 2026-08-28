@@ -18,13 +18,12 @@ final class ArrayPathExists implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param array<array-key, mixed>|ScalarFunction $array
-     * @param ScalarFunction|string $path
-     */
     private readonly ScalarFunction $array;
     private readonly ScalarFunction $path;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     */
     public function __construct(ScalarFunction|array $array, ScalarFunction|string $path)
     {
         $this->array = $array instanceof ScalarFunction ? $array : lit($array);
@@ -56,14 +55,14 @@ final class ArrayPathExists implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->array->returns(), $this->path->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         try {
             $array = (new Parameter($this->array))->asArray($row, $context);
             $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($array === null || $path === null) {
-                throw new InvalidArgumentException('ArrayPathExists function requires non-null array and path');
+                return null;
             }
 
             return array_dot_exists($array, $path);

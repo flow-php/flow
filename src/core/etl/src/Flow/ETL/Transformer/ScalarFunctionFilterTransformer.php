@@ -28,6 +28,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
                 // @mago-ignore analysis:mixed-assignment
                 $value = $this->function->eval($r, $context);
 
+                // No in-repo producer returns ScalarResult any more - the unwrap stays for 04b to delete with the class.
                 if ($value instanceof ScalarResult) {
                     // @mago-ignore analysis:mixed-assignment
                     $value = $value->value;

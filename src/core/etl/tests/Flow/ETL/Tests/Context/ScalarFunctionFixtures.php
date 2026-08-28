@@ -18,6 +18,7 @@ use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\Types\Type;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -35,18 +36,31 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_is_nullable;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml_element;
 
 /**
- * One constructable instance per ScalarFunction class, built against schema() below. The map is
- * explicit rather than reflected: derived declarations need type-correct operands (Plus needs
- * numeric columns, OnEach a list), which no placeholder heuristic can supply.
+ * One constructable instance per ScalarFunction class, built against schema() below, paired with
+ * the exact Type that class declares over that schema. The map is explicit rather than reflected:
+ * derived declarations need type-correct operands (Plus needs numeric columns, OnEach a list),
+ * which no placeholder heuristic can supply.
+ *
+ * @type Fixture = array{factory: callable(): ScalarFunction, returns: null|Type<mixed>}
  */
 final class ScalarFunctionFixtures
 {
@@ -126,335 +140,612 @@ final class ScalarFunctionFixtures
      */
     public static function instance(string $class): ScalarFunction
     {
-        return self::all()[$class]();
+        return self::all()[$class]['factory']();
     }
 
     /**
-     * @return array<class-string<ScalarFunction>, callable(): ScalarFunction>
+     * The exact Type the class declares once resolved against schema(); null for the two classes
+     * without a declaration - ArrayUnpack (the designed SchemaNotDerivableException refusal) and
+     * UnresolvedReference (resolves into ResolvedReference instead of declaring anything).
+     *
+     * @param class-string<ScalarFunction> $class
+     *
+     * @return null|Type<mixed>
+     */
+    public static function expectedReturns(string $class): ?Type
+    {
+        return self::all()[$class]['returns'];
+    }
+
+    /**
+     * @return array<class-string<ScalarFunction>, Fixture>
      */
     public static function all(): array
     {
         return [
-            Function\All::class => static fn(): ScalarFunction => new Function\All(
-                ref('boolean'),
-                ref('integer')->isNull(),
-            ),
-            Function\Any::class => static fn(): ScalarFunction => new Function\Any(
-                ref('boolean'),
-                ref('integer')->isNull(),
-            ),
-            Function\Append::class => static fn(): ScalarFunction => new Function\Append(ref('string'), lit('x')),
-            Function\ArrayExpand::class => static fn(): ScalarFunction => new Function\ArrayExpand(
-                ref('list'),
-                ArrayExpand::VALUES,
-            ),
-            Function\ArrayFilter::class => static fn(): ScalarFunction => new Function\ArrayFilter(
-                ref('list'),
-                lit(null),
-            ),
-            Function\ArrayGet::class => static fn(): ScalarFunction => new Function\ArrayGet(ref('structure'), 'field'),
-            Function\ArrayGetCollection::class => static fn(): ScalarFunction => new Function\ArrayGetCollection(
-                ref('list'),
-                lit(['field']),
-            ),
-            Function\ArrayKeep::class => static fn(): ScalarFunction => new Function\ArrayKeep(ref('list'), lit(null)),
-            Function\ArrayKeyRename::class => static fn(): ScalarFunction => new Function\ArrayKeyRename(
-                ref('json'),
-                'a',
-                'b',
-            ),
-            Function\ArrayKeys::class => static fn(): ScalarFunction => new Function\ArrayKeys(ref('map')),
-            Function\ArrayKeysStyleConvert::class => static fn(): ScalarFunction => new Function\ArrayKeysStyleConvert(
-                ref('structure'),
-                StringStyles::SNAKE,
-            ),
-            Function\ArrayMerge::class => static fn(): ScalarFunction => new Function\ArrayMerge(
-                ref('list'),
-                ref('list'),
-            ),
-            Function\ArrayMergeCollection::class =>
-                static fn(): ScalarFunction => new Function\ArrayMergeCollection(ref('list_of_lists')),
-            Function\ArrayPathExists::class => static fn(): ScalarFunction => new Function\ArrayPathExists(
-                ref('json'),
-                lit('a'),
-            ),
-            Function\ArrayReverse::class => static fn(): ScalarFunction => new Function\ArrayReverse(
-                ref('list'),
-                false,
-            ),
-            Function\ArraySort::class => static fn(): ScalarFunction => new Function\ArraySort(
-                ref('list'),
-                Sort::sort,
-                null,
-                false,
-            ),
-            Function\ArrayUnpack::class => static fn(): ScalarFunction => new Function\ArrayUnpack(ref('json')),
-            Function\ArrayValues::class => static fn(): ScalarFunction => new Function\ArrayValues(ref('list')),
-            Function\Ascii::class => static fn(): ScalarFunction => new Function\Ascii(ref('string')),
-            Function\Between::class => static fn(): ScalarFunction => new Function\Between(
-                ref('integer'),
-                lit(1),
-                lit(5),
-            ),
-            Function\BinaryLength::class => static fn(): ScalarFunction => new Function\BinaryLength(ref('string')),
-            Function\CallUserFunc::class => static fn(): ScalarFunction => new Function\CallUserFunc(
-                lit('strtoupper'),
-                [ref('string')],
-                type_string(),
-            ),
-            Function\Capitalize::class => static fn(): ScalarFunction => new Function\Capitalize(ref('string')),
-            Function\Cast::class => static fn(): ScalarFunction => new Function\Cast(ref('string'), 'int'),
-            Function\Chunk::class => static fn(): ScalarFunction => new Function\Chunk(ref('string'), lit(2)),
-            Function\Coalesce::class => static fn(): ScalarFunction => new Function\Coalesce(
-                ref('string'),
-                ref('string'),
-            ),
-            Function\CodePointLength::class => static fn(): ScalarFunction => new Function\CodePointLength(ref(
-                'string',
-            )),
-            Function\CollapseWhitespace::class => static fn(): ScalarFunction => new Function\CollapseWhitespace(ref(
-                'string',
-            )),
-            Function\Combine::class => static fn(): ScalarFunction => new Function\Combine(ref('list'), ref('list')),
-            Function\Concat::class => static fn(): ScalarFunction => new Function\Concat(ref('string'), lit('x')),
-            Function\ConcatWithSeparator::class => static fn(): ScalarFunction => new Function\ConcatWithSeparator(
-                lit(','),
-                ref('string'),
-            ),
-            Function\Contains::class => static fn(): ScalarFunction => new Function\Contains(ref('string'), lit('a')),
-            Function\DateTimeFormat::class => static fn(): ScalarFunction => new Function\DateTimeFormat(
-                ref('datetime'),
-                lit('Y-m-d'),
-            ),
-            Function\DOMElementAttributesCount::class =>
-                static fn(): ScalarFunction => new Function\DOMElementAttributesCount(ref('xml_element')),
-            Function\DOMElementAttributeValue::class =>
-                static fn(): ScalarFunction => new Function\DOMElementAttributeValue(ref('xml_element'), lit('attr')),
-            Function\DOMElementNamespaceValue::class =>
-                static fn(): ScalarFunction => new Function\DOMElementNamespaceValue(ref('xml_element'), lit(null)),
-            Function\DOMElementNextSibling::class =>
-                static fn(): ScalarFunction => new Function\DOMElementNextSibling(ref('xml_element')),
-            Function\DOMElementParent::class => static fn(): ScalarFunction => new Function\DOMElementParent(ref(
-                'xml_element',
-            )),
-            Function\DOMElementPreviousSibling::class =>
-                static fn(): ScalarFunction => new Function\DOMElementPreviousSibling(ref('xml_element')),
-            Function\DOMElementValue::class => static fn(): ScalarFunction => new Function\DOMElementValue(ref(
-                'xml_element',
-            )),
-            Function\Divide::class => static fn(): ScalarFunction => new Function\Divide(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\EndsWith::class => static fn(): ScalarFunction => new Function\EndsWith(ref('string'), lit('a')),
-            Function\EnsureEnd::class => static fn(): ScalarFunction => new Function\EnsureEnd(ref('string'), lit('x')),
-            Function\EnsureStart::class => static fn(): ScalarFunction => new Function\EnsureStart(
-                ref('string'),
-                lit('x'),
-            ),
-            Function\EnumName::class => static fn(): ScalarFunction => new Function\EnumName(ref('enum')),
-            Function\EnumValue::class => static fn(): ScalarFunction => new Function\EnumValue(ref('enum')),
-            Function\Equals::class => static fn(): ScalarFunction => new Function\Equals(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\Exists::class => static fn(): ScalarFunction => new Function\Exists(ref('string')),
-            Function\GreaterThan::class => static fn(): ScalarFunction => new Function\GreaterThan(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\GreaterThanEqual::class => static fn(): ScalarFunction => new Function\GreaterThanEqual(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\Greatest::class => static fn(): ScalarFunction => new Function\Greatest([
-                ref('integer'),
-                ref('integer'),
-            ]),
-            Function\Hash::class => static fn(): ScalarFunction => new Function\Hash(ref('string')),
-            Function\HTMLQuerySelector::class => static fn(): ScalarFunction => new Function\HTMLQuerySelector(
-                ref('html'),
-                lit('div'),
-            ),
-            Function\HTMLQuerySelectorAll::class => static fn(): ScalarFunction => new Function\HTMLQuerySelectorAll(
-                ref('html'),
-                lit('div'),
-            ),
-            Function\IndexOf::class => static fn(): ScalarFunction => new Function\IndexOf(ref('string'), lit('a')),
-            Function\IndexOfLast::class => static fn(): ScalarFunction => new Function\IndexOfLast(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\IsEmpty::class => static fn(): ScalarFunction => new Function\IsEmpty(ref('string')),
-            Function\IsIn::class => static fn(): ScalarFunction => new Function\IsIn(ref('list'), lit('a')),
-            Function\IsNotNull::class => static fn(): ScalarFunction => new Function\IsNotNull(ref('string')),
-            Function\IsNotNumeric::class => static fn(): ScalarFunction => new Function\IsNotNumeric(ref('string')),
-            Function\IsNull::class => static fn(): ScalarFunction => new Function\IsNull(ref('string')),
-            Function\IsNumeric::class => static fn(): ScalarFunction => new Function\IsNumeric(ref('string')),
-            Function\IsType::class => static fn(): ScalarFunction => new Function\IsType(ref('string'), type_string()),
-            Function\IsUtf8::class => static fn(): ScalarFunction => new Function\IsUtf8(ref('string')),
-            IsValidExcelSheetName::class => static fn(): ScalarFunction => new IsValidExcelSheetName(ref('string')),
-            Function\JsonDecode::class => static fn(): ScalarFunction => new Function\JsonDecode(ref('string')),
-            Function\JsonEncode::class => static fn(): ScalarFunction => new Function\JsonEncode(ref('json')),
-            Function\Least::class => static fn(): ScalarFunction => new Function\Least([
-                ref('integer'),
-                ref('integer'),
-            ]),
-            Function\LessThan::class => static fn(): ScalarFunction => new Function\LessThan(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\LessThanEqual::class => static fn(): ScalarFunction => new Function\LessThanEqual(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\ListSelect::class => static fn(): ScalarFunction => new Function\ListSelect(
-                ref('list_of_structs'),
-                'field',
-            ),
-            Function\Literal::class => static fn(): ScalarFunction => new Function\Literal(null),
-            Function\MatchCases::class => static fn(): ScalarFunction => new Function\MatchCases([new MatchCondition(
-                ref('boolean'),
-                ref('string'),
-            )]),
-            MatchCondition::class => static fn(): ScalarFunction => new MatchCondition(ref('boolean'), lit('x')),
-            Function\Minus::class => static fn(): ScalarFunction => new Function\Minus(ref('integer'), ref('integer')),
-            Function\Mod::class => static fn(): ScalarFunction => new Function\Mod(ref('integer'), ref('integer')),
-            Function\ModifyDateTime::class => static fn(): ScalarFunction => new Function\ModifyDateTime(
-                ref('datetime'),
-                lit('+1 day'),
-            ),
-            Function\Multiply::class => static fn(): ScalarFunction => new Function\Multiply(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\Not::class => static fn(): ScalarFunction => new Function\Not(ref('boolean')),
-            Function\NotEquals::class => static fn(): ScalarFunction => new Function\NotEquals(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\NotSame::class => static fn(): ScalarFunction => new Function\NotSame(
-                ref('integer'),
-                ref('integer'),
-            ),
-            Function\Now::class => static fn(): ScalarFunction => new Function\Now(),
-            Function\NumberFormat::class => static fn(): ScalarFunction => new Function\NumberFormat(
-                ref('float'),
-                lit(2),
-            ),
-            Function\OnEach::class => static fn(): ScalarFunction => new Function\OnEach(
-                ref('list'),
-                ref('element')->upper(),
-            ),
-            Function\Optional::class => static fn(): ScalarFunction => new Function\Optional(ref('string')->upper()),
-            Function\Plus::class => static fn(): ScalarFunction => new Function\Plus(ref('integer'), ref('integer')),
-            Function\Power::class => static fn(): ScalarFunction => new Function\Power(ref('integer'), ref('integer')),
-            Function\Prepend::class => static fn(): ScalarFunction => new Function\Prepend(ref('string'), lit('x')),
-            Function\RandomString::class => static fn(): ScalarFunction => new Function\RandomString(lit(5)),
-            Function\Regex::class => static fn(): ScalarFunction => new Function\Regex(lit('/a/'), ref('string')),
-            Function\RegexAll::class => static fn(): ScalarFunction => new Function\RegexAll(lit('/a/'), ref('string')),
-            Function\RegexMatch::class => static fn(): ScalarFunction => new Function\RegexMatch(
-                lit('/a/'),
-                ref('string'),
-            ),
-            Function\RegexMatchAll::class => static fn(): ScalarFunction => new Function\RegexMatchAll(
-                lit('/a/'),
-                ref('string'),
-            ),
-            Function\RegexReplace::class => static fn(): ScalarFunction => new Function\RegexReplace(
-                lit('/a/'),
-                lit('b'),
-                ref('string'),
-            ),
-            Function\Repeat::class => static fn(): ScalarFunction => new Function\Repeat(ref('string'), lit(2)),
-            ResolvedReference::class => static fn(): ScalarFunction => new ResolvedReference(
-                'string',
-                type_optional(type_string()),
-            ),
-            Function\Reverse::class => static fn(): ScalarFunction => new Function\Reverse(ref('string')),
-            Function\Round::class => static fn(): ScalarFunction => new Function\Round(ref('float')),
-            Function\Same::class => static fn(): ScalarFunction => new Function\Same(ref('integer'), ref('integer')),
-            Function\Sanitize::class => static fn(): ScalarFunction => new Function\Sanitize(ref('string'), lit('*')),
-            Function\Size::class => static fn(): ScalarFunction => new Function\Size(ref('list')),
-            Function\Slug::class => static fn(): ScalarFunction => new Function\Slug(ref('string')),
-            Function\Split::class => static fn(): ScalarFunction => new Function\Split(ref('string'), lit(',')),
-            Function\Sprintf::class => static fn(): ScalarFunction => new Function\Sprintf(lit('%s'), ref('string')),
-            Function\StartsWith::class => static fn(): ScalarFunction => new Function\StartsWith(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\StringAfter::class => static fn(): ScalarFunction => new Function\StringAfter(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\StringAfterLast::class => static fn(): ScalarFunction => new Function\StringAfterLast(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\StringBefore::class => static fn(): ScalarFunction => new Function\StringBefore(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\StringBeforeLast::class => static fn(): ScalarFunction => new Function\StringBeforeLast(
-                ref('string'),
-                lit('a'),
-            ),
-            Function\StringContainsAny::class => static fn(): ScalarFunction => new Function\StringContainsAny(
-                ref('string'),
-                lit(['a']),
-            ),
-            Function\StringEqualsTo::class => static fn(): ScalarFunction => new Function\StringEqualsTo(
-                ref('string'),
-                lit('x'),
-            ),
-            Function\StringFold::class => static fn(): ScalarFunction => new Function\StringFold(ref('string')),
-            Function\StringMatch::class => static fn(): ScalarFunction => new Function\StringMatch(
-                ref('string'),
-                lit('/a/'),
-            ),
-            Function\StringMatchAll::class => static fn(): ScalarFunction => new Function\StringMatchAll(
-                ref('string'),
-                lit('/a/'),
-            ),
-            Function\StringNormalize::class => static fn(): ScalarFunction => new Function\StringNormalize(ref(
-                'string',
-            )),
-            Function\StringStyle::class => static fn(): ScalarFunction => new Function\StringStyle(
-                ref('string'),
-                StringStyles::SNAKE,
-            ),
-            Function\StringTitle::class => static fn(): ScalarFunction => new Function\StringTitle(ref('string')),
-            Function\StringWidth::class => static fn(): ScalarFunction => new Function\StringWidth(ref('string')),
-            Function\StrPad::class => static fn(): ScalarFunction => new Function\StrPad(ref('string'), lit(5)),
-            Function\StrReplace::class => static fn(): ScalarFunction => new Function\StrReplace(
-                ref('string'),
-                lit('a'),
-                lit('b'),
-            ),
-            Function\StructureSelect::class => static fn(): ScalarFunction => new Function\StructureSelect(
-                ref('structure'),
-                'field',
-            ),
-            Function\ToDate::class => static fn(): ScalarFunction => new Function\ToDate(ref('string'), lit('Y-m-d')),
-            Function\ToDateTime::class => static fn(): ScalarFunction => new Function\ToDateTime(
-                ref('string'),
-                lit('Y-m-d'),
-            ),
-            Function\ToLower::class => static fn(): ScalarFunction => new Function\ToLower(ref('string')),
-            Function\ToTimeZone::class => static fn(): ScalarFunction => new Function\ToTimeZone(
-                ref('datetime'),
-                lit('UTC'),
-            ),
-            Function\ToUpper::class => static fn(): ScalarFunction => new Function\ToUpper(ref('string')),
-            Function\Trim::class => static fn(): ScalarFunction => new Function\Trim(ref('string')),
-            Function\Truncate::class => static fn(): ScalarFunction => new Function\Truncate(ref('string'), lit(2)),
-            Function\Ulid::class => static fn(): ScalarFunction => new Function\Ulid(),
-            Function\UnicodeLength::class => static fn(): ScalarFunction => new Function\UnicodeLength(ref('string')),
-            UnresolvedReference::class => static fn(): ScalarFunction => new UnresolvedReference('string'),
-            Function\Uuid::class => static fn(): ScalarFunction => Function\Uuid::uuid4(),
-            Function\When::class => static fn(): ScalarFunction => new Function\When(ref('boolean'), lit(1)),
-            Function\Wordwrap::class => static fn(): ScalarFunction => new Function\Wordwrap(ref('string'), lit(5)),
-            Function\XPath::class => static fn(): ScalarFunction => new Function\XPath(ref('xml'), lit('//a')),
+            Function\All::class => [
+                'factory' => static fn(): ScalarFunction => new Function\All(ref('boolean'), ref('integer')->isNull()),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\Any::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Any(ref('boolean'), ref('integer')->isNull()),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\Append::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Append(ref('string'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\ArrayExpand::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayExpand(ref('list'), ArrayExpand::VALUES),
+                'returns' => type_string(),
+            ],
+            Function\ArrayFilter::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayFilter(ref('list'), lit(null)),
+                'returns' => type_map(type_integer(), type_string()),
+            ],
+            Function\ArrayGet::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayGet(ref('structure'), 'field'),
+                'returns' => type_integer(),
+            ],
+            Function\ArrayGetCollection::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayGetCollection(
+                    ref('list'),
+                    lit(['field']),
+                ),
+                'returns' => type_optional(type_array()),
+            ],
+            Function\ArrayKeep::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayKeep(ref('list'), lit(null)),
+                'returns' => type_map(type_integer(), type_string()),
+            ],
+            Function\ArrayKeyRename::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayKeyRename(ref('json'), 'a', 'b'),
+                'returns' => type_array(),
+            ],
+            Function\ArrayKeys::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayKeys(ref('map')),
+                'returns' => type_list(type_string()),
+            ],
+            Function\ArrayKeysStyleConvert::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayKeysStyleConvert(
+                    ref('structure'),
+                    StringStyles::SNAKE,
+                ),
+                'returns' => type_structure(['field' => type_integer()]),
+            ],
+            Function\ArrayMerge::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayMerge(ref('list'), ref('list')),
+                'returns' => type_list(type_string()),
+            ],
+            Function\ArrayMergeCollection::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayMergeCollection(ref('list_of_lists')),
+                'returns' => type_list(type_string()),
+            ],
+            Function\ArrayPathExists::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayPathExists(ref('json'), lit('a')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\ArrayReverse::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayReverse(ref('list'), false),
+                'returns' => type_list(type_string()),
+            ],
+            Function\ArraySort::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArraySort(
+                    ref('list'),
+                    Sort::sort,
+                    null,
+                    false,
+                ),
+                'returns' => type_list(type_string()),
+            ],
+            Function\ArrayUnpack::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayUnpack(ref('json')),
+                'returns' => null,
+            ],
+            Function\ArrayValues::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ArrayValues(ref('list')),
+                'returns' => type_list(type_string()),
+            ],
+            Function\Ascii::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Ascii(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Between::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Between(ref('integer'), lit(1), lit(5)),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\BinaryLength::class => [
+                'factory' => static fn(): ScalarFunction => new Function\BinaryLength(ref('string')),
+                'returns' => type_integer(),
+            ],
+            Function\CallUserFunc::class => [
+                'factory' => static fn(): ScalarFunction => new Function\CallUserFunc(
+                    lit('strtoupper'),
+                    type_string(),
+                    [ref('string')],
+                ),
+                'returns' => type_string(),
+            ],
+            Function\Capitalize::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Capitalize(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Cast::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Cast(ref('string'), 'int'),
+                'returns' => type_integer(),
+            ],
+            Function\Chunk::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Chunk(ref('string'), lit(2)),
+                'returns' => type_list(type_string()),
+            ],
+            Function\Coalesce::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Coalesce(ref('string'), ref('string')),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\CodePointLength::class => [
+                'factory' => static fn(): ScalarFunction => new Function\CodePointLength(ref('string')),
+                'returns' => type_integer(),
+            ],
+            Function\CollapseWhitespace::class => [
+                'factory' => static fn(): ScalarFunction => new Function\CollapseWhitespace(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Combine::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Combine(ref('list'), ref('list')),
+                'returns' => type_map(type_string(), type_string()),
+            ],
+            Function\Concat::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Concat(ref('string'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\ConcatWithSeparator::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ConcatWithSeparator(lit(','), ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Contains::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Contains(ref('string'), lit('a')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\DateTimeFormat::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DateTimeFormat(ref('datetime'), lit('Y-m-d')),
+                'returns' => type_string(),
+            ],
+            Function\DOMElementAttributesCount::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementAttributesCount(ref('xml_element')),
+                'returns' => type_integer(),
+            ],
+            Function\DOMElementAttributeValue::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementAttributeValue(
+                    ref('xml_element'),
+                    lit('attr'),
+                ),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\DOMElementNamespaceValue::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementNamespaceValue(
+                    ref('xml_element'),
+                    lit(null),
+                ),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\DOMElementNextSibling::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementNextSibling(ref('xml_element')),
+                'returns' => type_optional(type_xml_element()),
+            ],
+            Function\DOMElementParent::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementParent(ref('xml_element')),
+                'returns' => type_optional(type_xml_element()),
+            ],
+            Function\DOMElementPreviousSibling::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementPreviousSibling(ref('xml_element')),
+                'returns' => type_optional(type_xml_element()),
+            ],
+            Function\DOMElementValue::class => [
+                'factory' => static fn(): ScalarFunction => new Function\DOMElementValue(ref('xml_element')),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\Divide::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Divide(ref('integer'), ref('integer')),
+                'returns' => type_float(),
+            ],
+            Function\EndsWith::class => [
+                'factory' => static fn(): ScalarFunction => new Function\EndsWith(ref('string'), lit('a')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\EnsureEnd::class => [
+                'factory' => static fn(): ScalarFunction => new Function\EnsureEnd(ref('string'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\EnsureStart::class => [
+                'factory' => static fn(): ScalarFunction => new Function\EnsureStart(ref('string'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\EnumName::class => [
+                'factory' => static fn(): ScalarFunction => new Function\EnumName(ref('enum')),
+                'returns' => type_string(),
+            ],
+            Function\EnumValue::class => [
+                'factory' => static fn(): ScalarFunction => new Function\EnumValue(ref('enum')),
+                'returns' => type_string(),
+            ],
+            Function\Equals::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Equals(ref('integer'), ref('integer')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\Exists::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Exists(ref('string')),
+                'returns' => type_boolean(),
+            ],
+            Function\GreaterThan::class => [
+                'factory' => static fn(): ScalarFunction => new Function\GreaterThan(ref('integer'), ref('integer')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\GreaterThanEqual::class => [
+                'factory' => static fn(): ScalarFunction => new Function\GreaterThanEqual(
+                    ref('integer'),
+                    ref('integer'),
+                ),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\Greatest::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Greatest([
+                    ref('integer'),
+                    ref('integer'),
+                ]),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\Hash::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Hash(ref('string')),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\HTMLQuerySelector::class => [
+                'factory' => static fn(): ScalarFunction => new Function\HTMLQuerySelector(ref('html'), lit('div')),
+                'returns' => type_optional(type_html_element()),
+            ],
+            Function\HTMLQuerySelectorAll::class => [
+                'factory' => static fn(): ScalarFunction => new Function\HTMLQuerySelectorAll(ref('html'), lit('div')),
+                'returns' => type_optional(type_list(type_html_element())),
+            ],
+            Function\IndexOf::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IndexOf(ref('string'), lit('a')),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\IndexOfLast::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IndexOfLast(ref('string'), lit('a')),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\IsEmpty::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsEmpty(ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\IsIn::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsIn(ref('list'), lit('a')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\IsNotNull::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsNotNull(ref('string')),
+                'returns' => type_boolean(),
+            ],
+            Function\IsNotNumeric::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsNotNumeric(ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\IsNull::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsNull(ref('string')),
+                'returns' => type_boolean(),
+            ],
+            Function\IsNumeric::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsNumeric(ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\IsType::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsType(ref('string'), type_string()),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\IsUtf8::class => [
+                'factory' => static fn(): ScalarFunction => new Function\IsUtf8(ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            IsValidExcelSheetName::class => [
+                'factory' => static fn(): ScalarFunction => new IsValidExcelSheetName(ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\JsonDecode::class => [
+                'factory' => static fn(): ScalarFunction => new Function\JsonDecode(ref('string')),
+                'returns' => type_array(),
+            ],
+            Function\JsonEncode::class => [
+                'factory' => static fn(): ScalarFunction => new Function\JsonEncode(ref('json')),
+                'returns' => type_optional(type_json()),
+            ],
+            Function\Least::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Least([
+                    ref('integer'),
+                    ref('integer'),
+                ]),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\LessThan::class => [
+                'factory' => static fn(): ScalarFunction => new Function\LessThan(ref('integer'), ref('integer')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\LessThanEqual::class => [
+                'factory' => static fn(): ScalarFunction => new Function\LessThanEqual(ref('integer'), ref('integer')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\ListSelect::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ListSelect(ref('list_of_structs'), 'field'),
+                'returns' => type_optional(type_list(type_structure(['field' => type_string()]))),
+            ],
+            Function\Literal::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Literal(null),
+                'returns' => type_optional(type_null()),
+            ],
+            Function\MatchCases::class => [
+                'factory' => static fn(): ScalarFunction => new Function\MatchCases([new MatchCondition(
+                    ref('boolean'),
+                    ref('string'),
+                )]),
+                'returns' => type_optional(type_string()),
+            ],
+            MatchCondition::class => [
+                'factory' => static fn(): ScalarFunction => new MatchCondition(ref('boolean'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\Minus::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Minus(ref('integer'), ref('integer')),
+                'returns' => type_integer(),
+            ],
+            Function\Mod::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Mod(ref('integer'), ref('integer')),
+                'returns' => type_integer(),
+            ],
+            Function\ModifyDateTime::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ModifyDateTime(ref('datetime'), lit('+1 day')),
+                'returns' => type_datetime(),
+            ],
+            Function\Multiply::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Multiply(ref('integer'), ref('integer')),
+                'returns' => type_integer(),
+            ],
+            Function\Not::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Not(ref('boolean')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\NotEquals::class => [
+                'factory' => static fn(): ScalarFunction => new Function\NotEquals(ref('integer'), ref('integer')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\NotSame::class => [
+                'factory' => static fn(): ScalarFunction => new Function\NotSame(ref('integer'), ref('integer')),
+                'returns' => type_boolean(),
+            ],
+            Function\Now::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Now(),
+                'returns' => type_datetime(),
+            ],
+            Function\NumberFormat::class => [
+                'factory' => static fn(): ScalarFunction => new Function\NumberFormat(ref('float'), lit(2)),
+                'returns' => type_string(),
+            ],
+            Function\OnEach::class => [
+                'factory' => static fn(): ScalarFunction => new Function\OnEach(ref('list'), ref('element')->upper()),
+                'returns' => type_list(type_string()),
+            ],
+            Function\Optional::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Optional(ref('string')->upper()),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\Plus::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Plus(ref('integer'), ref('integer')),
+                'returns' => type_integer(),
+            ],
+            Function\Power::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Power(ref('integer'), ref('integer')),
+                'returns' => type_integer(),
+            ],
+            Function\Prepend::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Prepend(ref('string'), lit('x')),
+                'returns' => type_string(),
+            ],
+            Function\RandomString::class => [
+                'factory' => static fn(): ScalarFunction => new Function\RandomString(lit(5)),
+                'returns' => type_string(),
+            ],
+            Function\Regex::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Regex(lit('/a/'), ref('string')),
+                'returns' => type_optional(type_array()),
+            ],
+            Function\RegexAll::class => [
+                'factory' => static fn(): ScalarFunction => new Function\RegexAll(lit('/a/'), ref('string')),
+                'returns' => type_optional(type_array()),
+            ],
+            Function\RegexMatch::class => [
+                'factory' => static fn(): ScalarFunction => new Function\RegexMatch(lit('/a/'), ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\RegexMatchAll::class => [
+                'factory' => static fn(): ScalarFunction => new Function\RegexMatchAll(lit('/a/'), ref('string')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\RegexReplace::class => [
+                'factory' => static fn(): ScalarFunction => new Function\RegexReplace(
+                    lit('/a/'),
+                    lit('b'),
+                    ref('string'),
+                ),
+                'returns' => type_string(),
+            ],
+            Function\Repeat::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Repeat(ref('string'), lit(2)),
+                'returns' => type_string(),
+            ],
+            ResolvedReference::class => [
+                'factory' => static fn(): ScalarFunction => new ResolvedReference(
+                    'string',
+                    type_optional(type_string()),
+                ),
+                'returns' => type_optional(type_string()),
+            ],
+            Function\Reverse::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Reverse(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Round::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Round(ref('float')),
+                'returns' => type_float(),
+            ],
+            Function\Same::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Same(ref('integer'), ref('integer')),
+                'returns' => type_boolean(),
+            ],
+            Function\Sanitize::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Sanitize(ref('string'), lit('*')),
+                'returns' => type_string(),
+            ],
+            Function\Size::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Size(ref('list')),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\Slug::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Slug(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Split::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Split(ref('string'), lit(',')),
+                'returns' => type_list(type_string()),
+            ],
+            Function\Sprintf::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Sprintf(lit('%s'), ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\StartsWith::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StartsWith(ref('string'), lit('a')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\StringAfter::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringAfter(ref('string'), lit('a')),
+                'returns' => type_string(),
+            ],
+            Function\StringAfterLast::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringAfterLast(ref('string'), lit('a')),
+                'returns' => type_string(),
+            ],
+            Function\StringBefore::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringBefore(ref('string'), lit('a')),
+                'returns' => type_string(),
+            ],
+            Function\StringBeforeLast::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringBeforeLast(ref('string'), lit('a')),
+                'returns' => type_string(),
+            ],
+            Function\StringContainsAny::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringContainsAny(ref('string'), lit(['a'])),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\StringEqualsTo::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringEqualsTo(ref('string'), lit('x')),
+                'returns' => type_optional(type_boolean()),
+            ],
+            Function\StringFold::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringFold(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\StringMatch::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringMatch(ref('string'), lit('/a/')),
+                'returns' => type_optional(type_array()),
+            ],
+            Function\StringMatchAll::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringMatchAll(ref('string'), lit('/a/')),
+                'returns' => type_array(),
+            ],
+            Function\StringNormalize::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringNormalize(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\StringStyle::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringStyle(
+                    ref('string'),
+                    StringStyles::SNAKE,
+                ),
+                'returns' => type_string(),
+            ],
+            Function\StringTitle::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringTitle(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\StringWidth::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StringWidth(ref('string')),
+                'returns' => type_integer(),
+            ],
+            Function\StrPad::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StrPad(ref('string'), lit(5)),
+                'returns' => type_string(),
+            ],
+            Function\StrReplace::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StrReplace(ref('string'), lit('a'), lit('b')),
+                'returns' => type_string(),
+            ],
+            Function\StructureSelect::class => [
+                'factory' => static fn(): ScalarFunction => new Function\StructureSelect(ref('structure'), 'field'),
+                'returns' => type_optional(type_structure(['field' => type_integer()])),
+            ],
+            Function\ToDate::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ToDate(ref('string'), lit('Y-m-d')),
+                'returns' => type_date(),
+            ],
+            Function\ToDateTime::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ToDateTime(ref('string'), lit('Y-m-d')),
+                'returns' => type_optional(type_datetime()),
+            ],
+            Function\ToLower::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ToLower(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\ToTimeZone::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ToTimeZone(ref('datetime'), lit('UTC')),
+                'returns' => type_datetime(),
+            ],
+            Function\ToUpper::class => [
+                'factory' => static fn(): ScalarFunction => new Function\ToUpper(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Trim::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Trim(ref('string')),
+                'returns' => type_string(),
+            ],
+            Function\Truncate::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Truncate(ref('string'), lit(2)),
+                'returns' => type_string(),
+            ],
+            Function\Ulid::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Ulid(),
+                'returns' => type_string(),
+            ],
+            Function\UnicodeLength::class => [
+                'factory' => static fn(): ScalarFunction => new Function\UnicodeLength(ref('string')),
+                'returns' => type_integer(),
+            ],
+            UnresolvedReference::class => [
+                'factory' => static fn(): ScalarFunction => new UnresolvedReference('string'),
+                'returns' => null,
+            ],
+            Function\Uuid::class => [
+                'factory' => static fn(): ScalarFunction => Function\Uuid::uuid4(),
+                'returns' => type_uuid(),
+            ],
+            Function\When::class => [
+                'factory' => static fn(): ScalarFunction => new Function\When(ref('boolean'), lit(1)),
+                'returns' => type_optional(type_integer()),
+            ],
+            Function\Wordwrap::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Wordwrap(ref('string'), lit(5)),
+                'returns' => type_string(),
+            ],
+            Function\XPath::class => [
+                'factory' => static fn(): ScalarFunction => new Function\XPath(ref('xml'), lit('//a')),
+                'returns' => type_optional(type_list(type_xml_element())),
+            ],
         ];
     }
 }

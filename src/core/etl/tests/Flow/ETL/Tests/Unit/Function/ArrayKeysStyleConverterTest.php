@@ -29,7 +29,7 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
     public function test_for_not_array_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeysStyleConvert function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $row = row(int_entry('invalid_entry', 1));
 

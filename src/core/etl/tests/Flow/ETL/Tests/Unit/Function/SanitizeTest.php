@@ -19,7 +19,7 @@ final class SanitizeTest extends FlowTestCase
     public function test_sanitize_on_non_string_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitize function requires non-null value');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         ref('value')->sanitize()->eval(row(int_entry('value', 1000)), flow_context());
     }

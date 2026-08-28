@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -33,26 +32,19 @@ final class CollectUnique implements AggregatingFunction
             return;
         }
 
-        try {
-            /** @var array<string, mixed> $values */
-            $values = [];
+        /** @var array<string, mixed> $values */
+        $values = [];
 
-            $values[$this->ref->name()] = $row->valueOf($this->ref);
+        $values[$this->ref->name()] = $row->valueOf($this->ref);
 
-            /** @var mixed $value */
-            $value = current($values);
+        /** @var mixed $value */
+        $value = current($values);
 
-            if (!in_array($value, $this->collection, true)) {
-                $this->collection[] = $value;
-            }
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('CollectUnique error: ' . $e->getMessage(), 0, $e);
+        if (!in_array($value, $this->collection, true)) {
+            $this->collection[] = $value;
         }
     }
 
-    /**
-     * @return Entry<mixed>
-     */
     /**
      * @return list<Reference>
      */
@@ -61,6 +53,9 @@ final class CollectUnique implements AggregatingFunction
         return [$this->ref];
     }
 
+    /**
+     * @return Entry<mixed>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->name() . '_collection_unique');

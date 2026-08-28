@@ -11,6 +11,7 @@ use Flow\ETL\Row\ResolvedReference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
@@ -91,6 +92,18 @@ final class ReferenceResolverTest extends FlowTestCase
         static::assertSame($tree, $resolved);
         static::assertTrue($resolved->resolved());
         static::assertSame('boolean', $resolved->returns()->toString());
+    }
+
+    public function test_an_impossible_comparison_fails_at_bind(): void
+    {
+        // Until 04b wires the DataFrame bind, the bind moment is resolve() + returns().
+        $this->expectExceptionMessage("Can't compare");
+
+        $schema = schema(int_schema('id'), datetime_schema('created_at'));
+
+        /** @var ScalarFunction $predicate */
+        $predicate = (new ReferenceResolver())->resolve(ref('id')->greaterThan(ref('created_at')), $schema);
+        $predicate->returns();
     }
 
     public function test_assert_resolved_names_the_column_and_the_available_ones(): void

@@ -41,7 +41,7 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
     public function test_array_keys_style_convert_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeysStyleConvert function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
         array_keys_style_convert(ref('string'), 'camel')->eval(row(string_entry('string', 'test')), $context);

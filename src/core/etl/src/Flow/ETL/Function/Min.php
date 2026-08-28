@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateTimeInterface;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -43,31 +42,24 @@ final class Min implements AggregatingFunction
             $this->floatColumn = true;
         }
 
-        try {
-            /** @var mixed $value */
-            $value = $entry->value();
+        /** @var mixed $value */
+        $value = $entry->value();
 
-            if ($this->min === null) {
-                if (is_numeric($value)) {
-                    $this->min = (float) $value;
-                } elseif ($value instanceof DateTimeInterface) {
-                    $this->min = $value;
-                }
-            } else {
-                if (is_numeric($value)) {
-                    $this->min = min($this->min, (float) $value);
-                } elseif ($value instanceof DateTimeInterface) {
-                    $this->min = min($this->min, $value);
-                }
+        if ($this->min === null) {
+            if (is_numeric($value)) {
+                $this->min = (float) $value;
+            } elseif ($value instanceof DateTimeInterface) {
+                $this->min = $value;
             }
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('Min error: ' . $e->getMessage(), 0, $e);
+        } else {
+            if (is_numeric($value)) {
+                $this->min = min($this->min, (float) $value);
+            } elseif ($value instanceof DateTimeInterface) {
+                $this->min = min($this->min, $value);
+            }
         }
     }
 
-    /**
-     * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
-     */
     /**
      * @return list<Reference>
      */
@@ -76,6 +68,9 @@ final class Min implements AggregatingFunction
         return [$this->ref];
     }
 
+    /**
+     * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_min');

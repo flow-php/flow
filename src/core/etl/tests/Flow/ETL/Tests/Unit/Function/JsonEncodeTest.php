@@ -20,7 +20,6 @@ final class JsonEncodeTest extends FlowTestCase
 {
     public function test_json_encode_on_datetime(): void
     {
-        // @mago-ignore analysis:mixed-assignment
         $result = ref('value')
             ->jsonEncode()
             ->eval(row(datetime_entry('value', new DateTimeImmutable('2021-01-01'))), flow_context());
@@ -44,7 +43,6 @@ final class JsonEncodeTest extends FlowTestCase
 
     public function test_json_encode_on_valid_associative_array(): void
     {
-        // @mago-ignore analysis:mixed-assignment
         $result = ref('value')->jsonEncode()->eval(row(json_entry('value', ['value' => 1])), flow_context());
 
         static::assertInstanceOf(Json::class, $result);

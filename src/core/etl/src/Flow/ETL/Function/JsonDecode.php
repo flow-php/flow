@@ -77,9 +77,18 @@ final class JsonDecode implements ScalarFunction
         }
 
         try {
-            return json_decode($value, true, 512, $flags);
+            // @mago-ignore analysis:mixed-assignment
+            $decoded = json_decode($value, true, 512, $flags);
         } catch (JsonException $e) {
             throw new InvalidArgumentException('JsonDecode error: ' . $e->getMessage());
         }
+
+        if (!is_array($decoded)) {
+            throw new InvalidArgumentException(
+                'JsonDecode function requires JSON that decodes to an array, cast scalar JSON instead',
+            );
+        }
+
+        return $decoded;
     }
 }

@@ -8,6 +8,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
+use Flow\Types\Type\ValueComparator;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_boolean;
@@ -47,11 +48,15 @@ final class NotEquals implements ScalarFunction
      */
     public function returns(): Type
     {
+        (new ValueComparator())->assertComparableTypes($this->left->returns(), $this->right->returns(), '!=');
+
         return (new Nullability())->any(type_boolean(), $this->left->returns(), $this->right->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
-        return !(new Equals($this->left, $this->right))->eval($row, $context);
+        $equals = (new Equals($this->left, $this->right))->eval($row, $context);
+
+        return $equals === null ? null : !$equals;
     }
 }

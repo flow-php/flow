@@ -19,7 +19,7 @@ final class PowerTest extends FlowTestCase
     public function test_power_non_numeric_values(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Power function requires non-null values');
+        $this->expectExceptionMessage('Expected type "integer", got "string".');
 
         ref('int')->power(lit('non numeric'))->eval(row(int_entry('int', 10)), flow_context());
         ref('str')->power(lit(2))->eval(row(str_entry('str', 'abc')), flow_context());

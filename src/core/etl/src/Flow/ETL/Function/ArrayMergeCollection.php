@@ -21,11 +21,11 @@ final class ArrayMergeCollection implements ScalarFunction
 {
     use ScalarFunctionChain;
 
+    private readonly ScalarFunction $array;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $array
      */
-    private readonly ScalarFunction $array;
-
     public function __construct(ScalarFunction|array $array)
     {
         $this->array = $array instanceof ScalarFunction ? $array : lit($array);

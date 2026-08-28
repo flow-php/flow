@@ -28,7 +28,7 @@ final class StringTitleTest extends FlowTestCase
             ->eval(row(str_entry('str', 'foo ijssel')), flow_context()));
     }
 
-    public function test_string_title_returns_null(): void
+    public function test_string_title_throws_on_null_input(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringTitle function requires non-null value');

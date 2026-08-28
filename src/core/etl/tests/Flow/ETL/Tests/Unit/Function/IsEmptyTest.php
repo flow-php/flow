@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -26,10 +25,7 @@ final class IsEmptyTest extends FlowTestCase
 
     public function test_is_empty_returns_null_for_null_input(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('IsEmpty requires non-null string');
-
-        ref('str')->isEmpty()->eval(row(str_entry('str', null)), flow_context());
+        static::assertNull(ref('str')->isEmpty()->eval(row(str_entry('str', null)), flow_context()));
     }
 
     public function test_is_empty_single_character_string(): void

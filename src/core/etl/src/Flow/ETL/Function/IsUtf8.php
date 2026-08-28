@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
@@ -50,12 +49,12 @@ final class IsUtf8 implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->string->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $string = (new Parameter($this->string))->asString($row, $context);
 
         if ($string === null) {
-            throw new InvalidArgumentException('IsUtf8 function requires non-null string');
+            return null;
         }
 
         return b($string)->isUtf8();

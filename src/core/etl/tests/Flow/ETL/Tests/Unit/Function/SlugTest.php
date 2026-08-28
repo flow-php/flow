@@ -8,12 +8,20 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 
 final class SlugTest extends FlowTestCase
 {
+    public function test_a_malformed_separator_operand_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        ref('value')->slug(lit(123))->eval(row(str_entry('value', 'hello world')), flow_context());
+    }
+
     public function test_ascii_on_null(): void
     {
         $this->expectException(InvalidArgumentException::class);

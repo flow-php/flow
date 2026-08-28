@@ -32,7 +32,7 @@ final class UlidTest extends FlowTestCase
         static::assertNotEquals($expression->eval(row(), flow_context()), $expression->eval(row(), flow_context()));
     }
 
-    public function test_ulid_with_invalid_value_returns_null(): void
+    public function test_ulid_with_invalid_value_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Ulid requires valid ULID string: Invalid ULID.');

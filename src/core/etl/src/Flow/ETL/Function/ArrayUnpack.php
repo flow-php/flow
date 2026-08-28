@@ -18,15 +18,14 @@ final class ArrayUnpack implements ScalarFunction, UnpackResults
 {
     use ScalarFunctionChain;
 
-    /**
-     * @param array<array-key, mixed>|ScalarFunction $array
-     * @param array<array-key, mixed>|ScalarFunction $skipKeys
-     * @param null|ScalarFunction|string $entryPrefix
-     */
     private readonly ScalarFunction $array;
     private readonly ScalarFunction $skipKeys;
     private readonly ScalarFunction $entryPrefix;
 
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     * @param array<array-key, mixed>|ScalarFunction $skipKeys
+     */
     public function __construct(
         ScalarFunction|array $array,
         ScalarFunction|array $skipKeys = [],

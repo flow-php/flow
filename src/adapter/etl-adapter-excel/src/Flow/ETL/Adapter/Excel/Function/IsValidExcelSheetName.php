@@ -53,12 +53,12 @@ final readonly class IsValidExcelSheetName implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->sheetName->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $sheetName = (new Parameter($this->sheetName))->asString($row, $context);
 
         if ($sheetName === null) {
-            return false;
+            return null;
         }
 
         return SheetNameAssertion::isValid($sheetName);

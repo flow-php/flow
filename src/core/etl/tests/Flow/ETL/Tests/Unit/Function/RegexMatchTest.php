@@ -17,7 +17,7 @@ final class RegexMatchTest extends FlowTestCase
     public function test_regex_match_expression_on_invalid_pattern(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexMatch requires non-null pattern');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatch = regex_match(lit(1), lit('12 apples and 45 oranges'));
 
@@ -27,7 +27,7 @@ final class RegexMatchTest extends FlowTestCase
     public function test_regex_match_expression_on_invalid_subject(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexMatch requires non-null subject');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregMatch = regex_match(lit('/\d+/'), lit(2));
 

@@ -17,7 +17,7 @@ final class PregReplaceTest extends FlowTestCase
     public function test_preg_replace_expression_on_invalid_pattern(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexReplace requires non-null pattern');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregReplace = regex_replace(lit(1), lit('bar'), lit('foo is awesome'));
 
@@ -27,7 +27,7 @@ final class PregReplaceTest extends FlowTestCase
     public function test_preg_replace_expression_on_invalid_replacement(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexReplace requires non-null replacement');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit(2), lit('foo is awesome'));
 
@@ -37,7 +37,7 @@ final class PregReplaceTest extends FlowTestCase
     public function test_preg_replace_expression_on_invalid_subject(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('RegexReplace requires non-null subject');
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit(3));
 

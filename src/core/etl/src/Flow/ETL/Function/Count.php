@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -37,14 +36,10 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
             return;
         }
 
-        try {
-            if ($this->ref) {
-                $row->valueOf($this->ref);
-            }
-            $this->count++;
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('Count error: ' . $e->getMessage(), 0, $e);
+        if ($this->ref) {
+            $row->valueOf($this->ref);
         }
+        $this->count++;
     }
 
     public function accumulator(FlowContext $context): FrameAccumulator
@@ -75,9 +70,6 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
     }
 
     /**
-     * @return Entry<?int>
-     */
-    /**
      * @return list<Reference>
      */
     public function references(): array
@@ -85,6 +77,9 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
         return $this->ref === null ? [] : [$this->ref];
     }
 
+    /**
+     * @return Entry<?int>
+     */
     public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref) {

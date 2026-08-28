@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
@@ -28,14 +27,14 @@ final class Cast implements ScalarFunction
      */
     private readonly Type $type;
 
+    private readonly ScalarFunction $value;
+
     /**
      * The target is resolved and checked here: a string alias becomes a Type, and a type with no
      * Definition arm - not a column - is refused before any row is read.
      *
      * @param string|Type<mixed> $type
      */
-    private readonly ScalarFunction $value;
-
     public function __construct(mixed $value, Type|string $type)
     {
         $this->value = $value instanceof ScalarFunction ? $value : lit($value);
@@ -79,7 +78,7 @@ final class Cast implements ScalarFunction
         return $this->type;
     }
 
-    public function eval(Row $row, FlowContext $context): ScalarResult
+    public function eval(Row $row, FlowContext $context): mixed
     {
         $value = (new Parameter($this->value))->eval($row, $context);
 
@@ -88,7 +87,7 @@ final class Cast implements ScalarFunction
         }
 
         try {
-            return new ScalarResult($this->type->cast($value), $this->type);
+            return $this->type->cast($value);
         } catch (CastingException $e) {
             throw new InvalidArgumentException('Cast function failed: ' . $e->getMessage());
         }

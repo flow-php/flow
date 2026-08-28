@@ -80,7 +80,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
             // @mago-ignore analysis:mixed-assignment
             $value = $this->function->eval($r, $context);
 
-            // ScalarResult already carries a native, typed value - trust it, no re-cast.
+            // No in-repo producer returns ScalarResult any more - the unwrap stays for 04b to delete with the class.
             if ($value instanceof ScalarResult) {
                 return $r->set($context->entryFactory()->create($this->entryName(), $value->value, $value->type));
             }

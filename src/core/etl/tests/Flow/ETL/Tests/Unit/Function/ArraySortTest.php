@@ -22,7 +22,7 @@ final class ArraySortTest extends FlowTestCase
     public function test_array_sort_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArraySort function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
         ref('array')->arraySort()->eval(row(str_entry('array', 'string')), $context);
@@ -113,7 +113,7 @@ final class ArraySortTest extends FlowTestCase
     public function test_sorting_non_array_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArraySort function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context());
     }

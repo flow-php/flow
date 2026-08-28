@@ -51,6 +51,7 @@ final class SequenceExtractor implements Extractor
 
         $schema = new Schema();
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->generator->generate() as $row) {
             $definitions = [];
 
