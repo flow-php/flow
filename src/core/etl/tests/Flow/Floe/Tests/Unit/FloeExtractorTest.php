@@ -18,8 +18,10 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -213,6 +215,26 @@ final class FloeExtractorTest extends TestCase
         }
 
         static::assertSame(1, $batches);
+    }
+
+    public function test_extract_yields_the_metadata_column_schema_promises(): void
+    {
+        $context = flow_context(config());
+        $memory = memory_filesystem();
+        $path = path('memory://declared-with-metadata.floe');
+
+        $loader = to_floe($path, filesystem: $memory);
+        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->closure($context);
+
+        $extractor = from_floe($path, filesystem: $memory)
+            ->withMetadataColumns(true)
+            ->withSchema(schema(int_schema('id')));
+
+        $batches = iterator_to_array($extractor->extract($context));
+
+        static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->entries()->names());
+        static::assertSame($path->uri(), $batches[0]->first()->valueOf('_input_file_uri'));
     }
 
     public function test_is_limited_reflects_change_limit(): void

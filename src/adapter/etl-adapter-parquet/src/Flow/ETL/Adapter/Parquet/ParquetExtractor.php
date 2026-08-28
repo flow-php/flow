@@ -91,6 +91,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $batchSize = $context->config->extractorBatchSize();
 
         $fileOffset = $this->offset ?? 0;
+        $promisedSchema = $this->schema === null ? null : $this->schema();
 
         foreach ($this->readers() as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
@@ -127,7 +128,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 if (count($rawBatch) >= $batchSize) {
                     foreach ($hydrator->hydrate(
                         $encoder->decode($rawBatch),
-                        $this->schema ?? $flowSchema,
+                        $promisedSchema ?? $flowSchema,
                     ) as $hydratedRow) {
                         $this->incrementReturnedRows();
                         $signal = yield new Rows($hydratedRow);
@@ -141,7 +142,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 }
             }
 
-            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $this->schema ?? $flowSchema) as $hydratedRow) {
+            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema) as $hydratedRow) {
                 $this->incrementReturnedRows();
                 $signal = yield new Rows($hydratedRow);
 
@@ -178,7 +179,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
             $schema = $schema->add(str_schema('_input_file_uri'));
         }
 
-        return $this->schema = $schema;
+        return $schema;
     }
 
     public function source(): Path

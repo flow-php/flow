@@ -12,8 +12,11 @@ use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
@@ -49,6 +52,33 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertSame(100, $extractedRows);
     }
 
+    public function test_calling_schema_does_not_change_extraction(): void
+    {
+        $cold = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->withMetadataColumns(true);
+
+        $warm = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
+        $warm->schema();
+        $warm->withMetadataColumns(true);
+
+        static::assertEquals(
+            iterator_to_array($cold->extract(flow_context(config()))),
+            iterator_to_array($warm->extract(flow_context(config()))),
+        );
+    }
+
+    public function test_extract_yields_the_metadata_column_schema_promises(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), columns: ['email'])
+            ->withMetadataColumns(true)
+            ->withSchema(schema(str_schema('email')));
+
+        foreach ($extractor->extract(flow_context(config())) as $batch) {
+            static::assertSame($extractor->schema()->references()->names(), $batch->first()->entries()->names());
+
+            break;
+        }
+    }
+
     public function test_schema_appends_the_metadata_column(): void
     {
         static::assertSame(
@@ -68,6 +98,13 @@ final class ParquetExtractorTest extends FlowTestCase
             ['order_id', 'created_at', 'updated_at', 'discount', 'email', 'customer', 'address', 'notes', 'items'],
             array_keys(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->schema()->definitions()),
         );
+    }
+
+    public function test_schema_is_idempotent(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->withMetadataColumns(true);
+
+        static::assertEquals($extractor->schema(), $extractor->schema());
     }
 
     public function test_schema_is_narrowed_down_to_selected_columns(): void

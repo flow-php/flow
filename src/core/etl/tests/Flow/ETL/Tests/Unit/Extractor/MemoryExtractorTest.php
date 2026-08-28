@@ -77,6 +77,19 @@ final class MemoryExtractorTest extends FlowTestCase
         );
     }
 
+    public function test_schema_before_save_does_not_freeze_empty(): void
+    {
+        $memory = new ArrayMemory();
+        $extractor = from_memory($memory);
+
+        static::assertSame([], $extractor->schema()->references()->names());
+
+        $memory->save([['number' => 1, 'name' => 'one']]);
+
+        static::assertSame(['number', 'name'], $extractor->schema()->references()->names());
+        self::assertExtractedRowsAsArrayEquals([['number' => 1, 'name' => 'one']], $extractor);
+    }
+
     public function test_extract_does_not_depend_on_schema_having_been_called_first(): void
     {
         $dataset = [['code' => 1000], ['code' => 'AB-01']];

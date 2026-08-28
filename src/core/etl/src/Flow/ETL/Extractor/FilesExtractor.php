@@ -52,6 +52,8 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
     public function extract(FlowContext $context): Generator
     {
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
+            $extension = $fileStatus->path->extension();
+
             $signal = yield array_to_rows(
                 [
                     'path' => $fileStatus->path->path(),
@@ -62,7 +64,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
                     'is_dir' => $fileStatus->isDirectory(),
                     // Path::extension() answers false for an extensionless file; the column is one
                     // type, so the absence is spelled null rather than a boolean in a string column.
-                    'extension' => $fileStatus->path->extension() ?: null,
+                    'extension' => $extension === false ? null : $extension,
                 ],
                 $context->hydrator(),
                 [],

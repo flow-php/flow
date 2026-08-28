@@ -22,7 +22,8 @@ of the Flow PHP ecosystem.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-http.md).
+For detailed installation instructions, see
+the [installation page](/documentation/installation/packages/etl-adapter-http.md).
 
 ## Which extractor to use
 
@@ -34,37 +35,34 @@ For detailed installation instructions, see the [installation page](/documentati
 
 Every extractor in this adapter emits the same columns, so the sections below apply to all three.
 
-| Column                      | Type                        | Description                                                 |
-|-----------------------------|-----------------------------|-------------------------------------------------------------|
-| `response_body`             | see *Body decoding* below   | Decoded response body                                        |
-| `response_headers`          | `map<string, list<string>>` | Response headers, one list of values per header name         |
-| `response_status_code`      | `integer`                   | HTTP status code, e.g. `200`                                 |
-| `response_protocol_version` | `string`                    | e.g. `1.1`                                                   |
-| `response_reason_phrase`    | `string`                    | e.g. `OK`                                                    |
-| `request_body`              | see *Body decoding* below   | Decoded body of the request that produced this response      |
-| `request_uri`               | `string`                    | Full URI the request was sent to, query string included      |
-| `request_headers`           | `map<string, list<string>>` | Request headers, one list of values per header name          |
-| `request_protocol_version`  | `string`                    | e.g. `1.1`                                                   |
-| `request_method`            | `string`                    | e.g. `GET`                                                   |
+| Column                      | Type                        | Description                                             |
+|-----------------------------|-----------------------------|---------------------------------------------------------|
+| `response_body`             | `?string`                   | Raw response body text                                  |
+| `response_headers`          | `map<string, list<string>>` | Response headers, one list of values per header name    |
+| `response_status_code`      | `integer`                   | HTTP status code, e.g. `200`                            |
+| `response_protocol_version` | `string`                    | e.g. `1.1`                                              |
+| `response_reason_phrase`    | `string`                    | e.g. `OK`                                               |
+| `request_body`              | `?string`                   | Raw body of the request that produced this response     |
+| `request_uri`               | `string`                    | Full URI the request was sent to, query string included |
+| `request_headers`           | `map<string, list<string>>` | Request headers, one list of values per header name     |
+| `request_protocol_version`  | `string`                    | e.g. `1.1`                                              |
+| `request_method`            | `string`                    | e.g. `GET`                                              |
 
-### Body decoding
+### Body handling
 
-The body is decoded once, content-type aware - JSON via `json_decode`, XML via the types library's `XMLConverter` -
-into a **navigable structure** that the DataFrame Hydrator types. The resulting column type depends on the payload:
+`response_body` and `request_body` hold the raw body text, whatever the content type is. An empty or unreadable body
+becomes `null`. The adapter never decodes the body into the row - to type it as a structure, declare a schema (see
+*Typing the row with a schema* below).
 
-| Content type            | Column type                                     |
-|-------------------------|-------------------------------------------------|
-| JSON / XML object       | `structure` or `map`, depending on the payload  |
-| anything else           | `string`                                        |
-| empty or unreadable     | `null`                                          |
-
-Because the body is a navigable structure regardless of format, JSON and XML paginate through the identical DSL.
+Paginators decode the body internally, content-type aware, to navigate into `records_path` and cursor fields, so JSON
+and XML paginate through the identical DSL. That decoding never reaches the row columns.
 
 ## Extractor - PsrHttpClientPaginatedExtractor
 
 `from_http_paginated($client, $baseRequest, $paginator, ?$schema)` paginates declaratively - no hand-written
 `NextRequestFactory`. A paginator is a **strategy** (how the next page is derived) + a **stop condition**; strategies
-that inject a token also take an **injection** (where it goes). It stops on the strategy's safe default, on HTTP `>= 400`
+that inject a token also take an **injection** (where it goes). It stops on the strategy's safe default, on HTTP
+`>= 400`
 (the row is still emitted), and on a repeated request (loop guard). Every `http_*` helper below lives in
 `Flow\ETL\Adapter\Http`.
 
@@ -245,5 +243,5 @@ $extractor = from_http_paginated(
 ```
 
 The `response_body` structure can be derived from an OpenAPI specification with the OpenAPI specification bridge
-(`schema_from_openapi_specification($spec)` returns the body's field definitions), so the HTTP adapter takes on no
-extra dependency.
+(`schema_from_openapi_specification($spec)` returns the body's field definitions), so the HTTP adapter takes on no extra
+dependency.

@@ -76,7 +76,7 @@ use function is_string;
 /**
  * @type Aggregations      = list<AggregatingFunction>
  * @type GroupByReferences = list<string|Reference>
- * @type SortReferences    = list<Reference>
+ * @type SortReferences    = list<string|Reference>
  */
 final class DataFrame
 {
@@ -854,13 +854,13 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param Reference|SortReferences $entries a single reference is sorted by on its own
+     * @param Reference|SortReferences|string $entries a single column is sorted by on its own
      * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
      *                                            for this operation and skips any automatic choice
      */
-    public function sortBy(array|Reference $entries, ?SortAlgorithmBuilder $algorithm = null): self
+    public function sortBy(array|Reference|string $entries, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        $references = $entries instanceof Reference ? [$entries] : $entries;
+        $references = is_array($entries) ? $entries : [$entries];
 
         foreach (SortSteps::of(refs(...$references), $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);

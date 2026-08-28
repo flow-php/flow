@@ -568,6 +568,34 @@ final class DataFrameTest extends FlowTestCase
         );
     }
 
+    public function test_sort_by_accepts_a_column_name_string(): void
+    {
+        static::assertSame(
+            [1, 2, 3],
+            df()
+                ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
+                ->sortBy('id')
+                ->fetch()
+                ->reduceToArray('id'),
+        );
+    }
+
+    public function test_sort_by_accepts_column_name_strings_inside_the_array_form(): void
+    {
+        static::assertSame(
+            [['name' => 'a', 'id' => 1], ['name' => 'a', 'id' => 2], ['name' => 'b', 'id' => 1]],
+            df()
+                ->read(from_array([
+                    ['name' => 'b', 'id' => 1],
+                    ['name' => 'a', 'id' => 2],
+                    ['name' => 'a', 'id' => 1],
+                ]))
+                ->sortBy(['name', ref('id')])
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_strict_validation_against_schema(): void
     {
         $rows = data_frame()

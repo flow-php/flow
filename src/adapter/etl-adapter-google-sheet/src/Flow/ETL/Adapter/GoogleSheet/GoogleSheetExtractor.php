@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -24,8 +25,7 @@ use function Flow\ETL\DSL\str_schema;
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
-
-    private bool $addMetadataColumns = false;
+    use MetadataColumns;
 
     private bool $dropExtraColumns = true;
 
@@ -166,17 +166,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor, Metad
         }
 
         return $this->schema;
-    }
-
-    /**
-     * Sheets describes its source with _spread_sheet_id and _sheet_name, not _input_file_uri,
-     * so it writes its own setter instead of sharing the file sources' trait.
-     */
-    public function withMetadataColumns(bool $addMetadataColumns): static
-    {
-        $this->addMetadataColumns = $addMetadataColumns;
-
-        return $this;
     }
 
     public function withDropExtraColumns(bool $dropExtraColumns): self

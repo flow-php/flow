@@ -62,7 +62,7 @@ final class MemoryExtractor implements Extractor
             $schema = $schema->merge(schema(...$definitions));
         }
 
-        return $this->schema = $schema;
+        return $schema;
     }
 
     public function withSchema(Schema $schema): static

@@ -69,6 +69,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function extract(FlowContext $context): Generator
     {
         $fileOffset = $this->offset ?? 0;
+        $promisedSchema = $this->schema === null ? null : $this->schema();
 
         foreach ($this->readers($context->hydrator()) as [$reader, $uri]) {
             $fileRows = $reader->totalRows();
@@ -87,8 +88,8 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $rows = $rows->map(static fn(Row $row): Row => $row->add(str_entry('_input_file_uri', $uri)));
                 }
 
-                if ($this->schema !== null) {
-                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
+                if ($promisedSchema !== null) {
+                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $promisedSchema);
                 }
 
                 $signal = yield $rows;
