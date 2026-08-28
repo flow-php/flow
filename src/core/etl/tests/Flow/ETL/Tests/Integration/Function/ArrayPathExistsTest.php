@@ -10,6 +10,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\array_exists;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -22,7 +23,7 @@ final class ArrayPathExistsTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('has_array', ref('array')->arrayPathExists('a'))
+            ->withEntry('has_array', optional(ref('array')->arrayPathExists('a')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -30,7 +31,7 @@ final class ArrayPathExistsTest extends FlowTestCase
         static::assertSame(
             [
                 ['id' => 1, 'has_array' => true],
-                ['id' => 2, 'has_array' => false],
+                ['id' => 2, 'has_array' => null],
             ],
             $memory->dump(),
         );
@@ -43,7 +44,7 @@ final class ArrayPathExistsTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('has_array', array_exists(ref('array'), 'a'))
+            ->withEntry('has_array', optional(array_exists(ref('array'), 'a')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -51,7 +52,7 @@ final class ArrayPathExistsTest extends FlowTestCase
         static::assertSame(
             [
                 ['id' => 1, 'has_array' => true],
-                ['id' => 2, 'has_array' => false],
+                ['id' => 2, 'has_array' => null],
             ],
             $memory->dump(),
         );

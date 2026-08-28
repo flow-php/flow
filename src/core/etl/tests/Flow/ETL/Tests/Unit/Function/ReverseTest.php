@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -25,6 +26,9 @@ final class ReverseTest extends FlowTestCase
 
     public function test_reverse_returns_null_for_null_input(): void
     {
-        static::assertNull(ref('str')->reverse()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Reverse function requires non-null value');
+
+        ref('str')->reverse()->eval(row(str_entry('str', null)), flow_context());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -24,11 +25,17 @@ final class JsonDecodeTest extends FlowTestCase
 
     public function test_json_decode_expression_with_invalid_json(): void
     {
-        static::assertNull(ref('value')->jsonDecode()->eval(row(str_entry('value', '{"value": 1')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('JsonDecode error: Syntax error');
+
+        ref('value')->jsonDecode()->eval(row(str_entry('value', '{"value": 1')), flow_context());
     }
 
     public function test_json_decode_on_non_json_value(): void
     {
-        static::assertNull(ref('value')->jsonDecode()->eval(row(int_entry('value', 125)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('JsonDecode function requires string, array, or Json value');
+
+        ref('value')->jsonDecode()->eval(row(int_entry('value', 125)), flow_context());
     }
 }

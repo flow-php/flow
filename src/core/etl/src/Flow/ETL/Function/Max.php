@@ -61,7 +61,7 @@ final class Max implements AggregatingFunction
                 }
             }
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Max error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Max error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -78,28 +78,26 @@ final class Max implements AggregatingFunction
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_max');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_max');
 
         if ($this->floatColumn) {
-            return float_entry($this->ref->name(), $this->max instanceof DateTimeInterface ? null : $this->max);
+            return float_entry($ref->name(), $this->max instanceof DateTimeInterface ? null : $this->max);
         }
 
         if ($this->max === null) {
-            return int_entry($this->ref->name(), null);
+            return int_entry($ref->name(), null);
         }
 
         if ($this->max instanceof DateTimeInterface) {
-            return datetime_entry($this->ref->name(), $this->max);
+            return datetime_entry($ref->name(), $this->max);
         }
 
         $resultInt = (int) $this->max;
 
         if (($this->max - $resultInt) === 0.0) {
-            return int_entry($this->ref->name(), (int) $this->max);
+            return int_entry($ref->name(), (int) $this->max);
         }
 
-        return float_entry($this->ref->name(), $this->max);
+        return float_entry($ref->name(), $this->max);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use Flow\ETL\DataFrame;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Transformation;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
@@ -11,10 +11,10 @@ use function Flow\ETL\DSL\when;
 final readonly class StringLengthValidation implements Transformation
 {
     public function __construct(
-        private EntryReference $reference,
-        private int $min,
-        private int $max,
-        private string $outputEntry = 'valid'
+        private UnresolvedReference $reference,
+        private int                 $min,
+        private int                 $max,
+        private string              $outputEntry = 'valid'
     ) {
     }
 

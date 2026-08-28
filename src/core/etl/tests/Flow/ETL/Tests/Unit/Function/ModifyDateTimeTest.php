@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\date_entry;
@@ -36,10 +37,11 @@ final class ModifyDateTimeTest extends FlowTestCase
 
     public function test_modify_using_invalid_modifier(): void
     {
-        static::assertNull(
-            ref('datetime')
-                ->modifyDateTime(lit(1))
-                ->eval(row(datetime_entry('datetime', '2025-01-01 10:00:23 +00:00')), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ModifyDateTime function requires non-null values');
+
+        ref('datetime')
+            ->modifyDateTime(lit(1))
+            ->eval(row(datetime_entry('datetime', '2025-01-01 10:00:23 +00:00')), flow_context());
     }
 }

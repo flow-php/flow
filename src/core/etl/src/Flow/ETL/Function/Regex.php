@@ -7,23 +7,70 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_optional;
 use function preg_match;
 
-final class Regex extends ScalarFunctionChain
+final class Regex implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
     /**
      * @param ScalarFunction|string $pattern
      * @param array<array-key, mixed>|ScalarFunction|string $subject
-     * @param int|ScalarFunction $flags
+     * @param int $flags
      * @param int|ScalarFunction $offset
      */
+    private readonly ScalarFunction $pattern;
+    private readonly ScalarFunction $subject;
+    private readonly ScalarFunction $offset;
+
     public function __construct(
-        private readonly ScalarFunction|string $pattern,
-        private readonly ScalarFunction|string|array $subject,
-        private readonly ScalarFunction|int $flags = 0,
-        private readonly ScalarFunction|int $offset = 0,
-    ) {}
+        ScalarFunction|string $pattern,
+        ScalarFunction|string|array $subject,
+        private readonly int $flags = 0,
+        ScalarFunction|int $offset = 0,
+    ) {
+        // PREG_OFFSET_CAPTURE changes each match from string to [string, int]; PREG_UNMATCHED_AS_NULL
+        // makes elements nullable - both change the column's shape per flag value.
+        if (($flags & PREG_OFFSET_CAPTURE) !== 0 || ($flags & PREG_UNMATCHED_AS_NULL) !== 0) {
+            throw new InvalidArgumentException(
+                'Regex does not support PREG_OFFSET_CAPTURE or PREG_UNMATCHED_AS_NULL flags',
+            );
+        }
+
+        $this->pattern = $pattern instanceof ScalarFunction ? $pattern : lit($pattern);
+        $this->subject = $subject instanceof ScalarFunction ? $subject : lit($subject);
+        $this->offset = $offset instanceof ScalarFunction ? $offset : lit($offset);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->pattern, $this->subject, $this->offset];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $this->flags, $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_array());
+    }
 
     /**
      * @return null|array<array-key, mixed>
@@ -32,27 +79,19 @@ final class Regex extends ScalarFunctionChain
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
         $subject = (new Parameter($this->subject))->asString($row, $context);
-        $flags = (new Parameter($this->flags))->asInt($row, $context);
+        $flags = $this->flags;
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Regex requires non-null pattern'));
+            throw new InvalidArgumentException('Regex requires non-null pattern');
         }
 
         if ($subject === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Regex requires non-null subject'));
-        }
-
-        if ($flags === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Regex requires non-null flags'));
+            throw new InvalidArgumentException('Regex requires non-null subject');
         }
 
         if ($offset === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Regex requires non-null offset'));
+            throw new InvalidArgumentException('Regex requires non-null offset');
         }
 
         $matches = [];

@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -29,7 +30,7 @@ final class StringContainsAnyTest extends FlowTestCase
                 ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar']],
                 ['text' => 'testing', 'needles' => ['test', 'ing']],
             ]))
-            ->withEntry('contains_any', ref('text')->stringContainsAny(ref('needles')))
+            ->withEntry('contains_any', optional(ref('text')->stringContainsAny(ref('needles'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -38,10 +39,10 @@ final class StringContainsAnyTest extends FlowTestCase
                 ['text' => 'hello world', 'needles' => ['hello', 'foo'], 'contains_any' => true],
                 ['text' => 'hello world', 'needles' => ['foo', 'bar'], 'contains_any' => false],
                 ['text' => 'hello world', 'needles' => ['world', 'test'], 'contains_any' => true],
-                ['text' => 'hello world', 'needles' => [], 'contains_any' => false],
+                ['text' => 'hello world', 'needles' => [], 'contains_any' => null],
                 ['text' => '', 'needles' => ['hello'], 'contains_any' => false],
-                ['text' => null, 'needles' => ['hello'], 'contains_any' => false],
-                ['text' => 'hello world', 'needles' => null, 'contains_any' => false],
+                ['text' => null, 'needles' => ['hello'], 'contains_any' => null],
+                ['text' => 'hello world', 'needles' => null, 'contains_any' => null],
                 ['text' => 'नमस्ते', 'needles' => ['स्ते', 'foo'], 'contains_any' => true],
                 ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar'], 'contains_any' => true],
                 ['text' => 'testing', 'needles' => ['test', 'ing'], 'contains_any' => true],

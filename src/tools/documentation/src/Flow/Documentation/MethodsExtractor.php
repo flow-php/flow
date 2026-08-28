@@ -14,7 +14,7 @@ use function str_replace;
 final readonly class MethodsExtractor
 {
     /**
-     * @param class-string $className
+     * @param class-string|trait-string $className
      */
     public function __construct(
         private string $repositoryRootPath,

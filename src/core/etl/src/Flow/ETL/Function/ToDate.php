@@ -11,19 +11,57 @@ use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_date;
 use function is_a;
 use function is_int;
 use function is_object;
 use function is_string;
 
-final class ToDate extends ScalarFunctionChain
+final class ToDate implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $format;
+    private readonly ScalarFunction $timeZone;
+
     public function __construct(
-        private readonly mixed $value,
-        private readonly ScalarFunction|string $format,
-        private readonly ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
-    ) {}
+        mixed $value,
+        ScalarFunction|string $format,
+        ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
+    ) {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->format = $format instanceof ScalarFunction ? $format : lit($format);
+        $this->timeZone = $timeZone instanceof ScalarFunction ? $timeZone : lit($timeZone);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->format, $this->timeZone];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_date();
+    }
 
     public function eval(Row $row, FlowContext $context): ?DateTimeInterface
     {
@@ -32,9 +70,7 @@ final class ToDate extends ScalarFunctionChain
         $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, DateTimeZone::class);
 
         if ($value === null || $format === null || $timeZone === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ToDate function requires non-null values'));
+            throw new InvalidArgumentException('ToDate function requires non-null values');
         }
 
         if (is_object($value)) {
@@ -42,9 +78,7 @@ final class ToDate extends ScalarFunctionChain
                 return $value->setTimezone($timeZone)->setTime(0, 0, 0, 0);
             }
 
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ToDate function requires DateTimeInterface object'));
+            throw new InvalidArgumentException('ToDate function requires DateTimeInterface object');
         }
 
         if (is_int($value)) {
@@ -59,8 +93,6 @@ final class ToDate extends ScalarFunctionChain
             return $date === false ? null : $date->setTime(0, 0, 0, 0);
         }
 
-        return $context
-            ->functions()
-            ->invalidResult(new InvalidArgumentException('ToDate function requires int or string value'));
+        throw new InvalidArgumentException('ToDate function requires int or string value');
     }
 }

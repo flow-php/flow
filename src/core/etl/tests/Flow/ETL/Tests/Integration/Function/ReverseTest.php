@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -24,7 +25,7 @@ final class ReverseTest extends FlowTestCase
                 ['text' => ''],
                 ['text' => null],
             ]))
-            ->withEntry('reversed', ref('text')->reverse())
+            ->withEntry('reversed', optional(ref('text')->reverse()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

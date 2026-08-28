@@ -92,7 +92,6 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Rename](/documentation/components/core/rename.md)** - Column renaming strategies
 - **[Map](/documentation/components/core/map.md)** - Row transformations and data mapping
 - **[Filter](/documentation/components/core/filter.md)** - Row filtering and conditions
-- **[Execution Mode](/documentation/components/core/execution-mode.md)** - configure how strict DataFrame is during execution
 - **[Save Mode](/documentation/components/core/save-mode.md)** - configure how flow is saving files
 
 ### Data Processing

@@ -43,11 +43,7 @@ final class AverageAccumulator implements FrameAccumulator
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
-            $this->context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e),
-                );
+            throw new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e);
         }
     }
 

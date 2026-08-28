@@ -15,13 +15,14 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 use function base64_encode;
 use function class_exists;
+use function class_uses;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function is_a;
+use function in_array;
 
 final readonly class FunctionModel
 {
@@ -132,7 +133,7 @@ final readonly class FunctionModel
                 return false;
             }
 
-            return is_a($typeName, ScalarFunctionChain::class, true);
+            return in_array(ScalarFunctionChain::class, class_uses($typeName) ?: [], true);
         }
 
         if ($reflectionType instanceof ReflectionUnionType || $reflectionType instanceof ReflectionIntersectionType) {

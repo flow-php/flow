@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -19,9 +18,10 @@ final class StringContainsAnyTest extends FlowTestCase
 {
     public function test_contains_any_empty_needles_array(): void
     {
-        static::assertFalse(
-            ref('str')->stringContainsAny([])->eval(row(str_entry('str', 'hello world')), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringContainsAny function requires non-null, non-empty needles array');
+
+        ref('str')->stringContainsAny([])->eval(row(str_entry('str', 'hello world')), flow_context());
     }
 
     public function test_contains_any_multiple_needles_one_found(): void
@@ -44,18 +44,20 @@ final class StringContainsAnyTest extends FlowTestCase
 
     public function test_contains_any_null_needles(): void
     {
-        static::assertFalse(
-            ref('str')
-                ->stringContainsAny(ref('needles'))
-                ->eval(row(str_entry('str', 'hello world'), json_entry('needles', null)), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringContainsAny function requires non-null, non-empty needles array');
+
+        ref('str')
+            ->stringContainsAny(ref('needles'))
+            ->eval(row(str_entry('str', 'hello world'), json_entry('needles', null)), flow_context());
     }
 
     public function test_contains_any_null_string(): void
     {
-        static::assertFalse(
-            ref('str')->stringContainsAny(['hello', 'world'])->eval(row(str_entry('str', null)), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringContainsAny function requires non-null string');
+
+        ref('str')->stringContainsAny(['hello', 'world'])->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_contains_any_null_string_in_strict_mode(): void
@@ -64,8 +66,6 @@ final class StringContainsAnyTest extends FlowTestCase
         $this->expectExceptionMessage('StringContainsAny function requires non-null string');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('str')->stringContainsAny(['hello', 'world'])->eval(row(str_entry('str', null)), $context);
     }
 

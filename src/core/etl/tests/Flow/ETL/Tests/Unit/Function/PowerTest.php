@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -17,8 +18,11 @@ final class PowerTest extends FlowTestCase
 {
     public function test_power_non_numeric_values(): void
     {
-        static::assertNull(ref('int')->power(lit('non numeric'))->eval(row(int_entry('int', 10)), flow_context()));
-        static::assertNull(ref('str')->power(lit(2))->eval(row(str_entry('str', 'abc')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Power function requires non-null values');
+
+        ref('int')->power(lit('non numeric'))->eval(row(int_entry('int', 10)), flow_context());
+        ref('str')->power(lit(2))->eval(row(str_entry('str', 'abc')), flow_context());
     }
 
     public function test_power_two_numeric_values(): void

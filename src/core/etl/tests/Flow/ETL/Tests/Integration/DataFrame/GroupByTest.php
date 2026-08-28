@@ -681,9 +681,9 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [
-                ['department' => 'Sales', 'avg_salary' => 3917],
-                ['department' => 'Marketing', 'avg_salary' => 2940],
-                ['department' => 'Finance', 'avg_salary' => 3550],
+                ['department' => 'Sales', 'avg_salary' => 3917.0],
+                ['department' => 'Marketing', 'avg_salary' => 2940.0],
+                ['department' => 'Finance', 'avg_salary' => 3550.0],
             ],
             df()
                 ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))

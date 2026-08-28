@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -14,6 +15,15 @@ use function Flow\Types\DSL\type_string;
 
 final class OnEachTest extends FlowTestCase
 {
+    public function test_a_throwing_element_is_not_swallowed(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        ref('array')
+            ->onEach(ref('element')->upper())
+            ->eval(row(json_entry('array', ['a', 'b', ['nested' => 1], 'd'])), flow_context());
+    }
+
     public function test_executing_function_on_each_value_from_array(): void
     {
         static::assertSame(

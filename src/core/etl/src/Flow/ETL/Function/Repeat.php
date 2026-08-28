@@ -7,33 +7,61 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
 use function Symfony\Component\String\s;
 
-final class Repeat extends ScalarFunctionChain
+final class Repeat implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|string $value,
-        private readonly ScalarFunction|int $times,
-    ) {}
+    use ScalarFunctionChain;
 
-    public function eval(Row $row, FlowContext $context): ?string
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $times;
+
+    public function __construct(ScalarFunction|string $value, ScalarFunction|int $times)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->times = $times instanceof ScalarFunction ? $times : lit($times);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->times];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
+
+    public function eval(Row $row, FlowContext $context): string
     {
         $value = (new Parameter($this->value))->asString($row, $context);
         $times = (new Parameter($this->times))->asInt($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Repeat function requires non-null value'));
+            throw new InvalidArgumentException('Repeat function requires non-null value');
         }
 
         if ($times === null || $times <= 0) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Repeat function requires non-null, positive times'));
-
-            return '';
+            throw new InvalidArgumentException('Repeat function requires non-null, positive times');
         }
 
         return s($value)->repeat($times)->toString();

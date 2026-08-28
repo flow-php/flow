@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\concat_ws;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -61,15 +62,15 @@ final class ConcatWithSeparatorTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat_ws(lit(null), lit(null)))
+            ->withEntry('concat', optional(concat_ws(lit(null), lit(null))))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
             [
-                ['id' => 1, 'concat' => ''],
-                ['id' => 2, 'concat' => ''],
+                ['id' => 1, 'concat' => null],
+                ['id' => 2, 'concat' => null],
             ],
             $memory->dump(),
         );

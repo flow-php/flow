@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
@@ -68,8 +69,11 @@ final class UuidTest extends FlowTestCase
         );
     }
 
-    public function test_uuid7_return_null_for_non_datetime_interface(): void
+    public function test_uuid_v7_requires_a_date_time(): void
     {
-        static::assertNull(uuid_v7(lit(''))->eval(row(), flow_context())->value);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Uuid uuid7 function requires a DateTimeInterface value');
+
+        uuid_v7(lit(''))->eval(row(), flow_context());
     }
 }

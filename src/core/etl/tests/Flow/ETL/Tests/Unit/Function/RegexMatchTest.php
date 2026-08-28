@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,16 +16,22 @@ final class RegexMatchTest extends FlowTestCase
 {
     public function test_regex_match_expression_on_invalid_pattern(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('RegexMatch requires non-null pattern');
+
         $pregMatch = regex_match(lit(1), lit('12 apples and 45 oranges'));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        $pregMatch->eval(row(), flow_context());
     }
 
     public function test_regex_match_expression_on_invalid_subject(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('RegexMatch requires non-null subject');
+
         $pregMatch = regex_match(lit('/\d+/'), lit(2));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        $pregMatch->eval(row(), flow_context());
     }
 
     public function test_regex_match_expression_on_no_match(): void

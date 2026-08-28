@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -47,8 +46,6 @@ final class ArrayKeepTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayKeep function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('map')->arrayKeep(lit(1))->eval(row(string_entry('map', 'test')), $context);
     }
 
@@ -64,6 +61,9 @@ final class ArrayKeepTest extends FlowTestCase
 
     public function test_array_keep_on_non_array(): void
     {
-        static::assertNull(ref('map')->arrayKeep(lit(1))->eval(row(string_entry('map', 'test')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayKeep function requires non-null array');
+
+        ref('map')->arrayKeep(lit(1))->eval(row(string_entry('map', 'test')), flow_context());
     }
 }

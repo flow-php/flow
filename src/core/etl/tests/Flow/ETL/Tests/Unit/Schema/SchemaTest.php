@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -355,7 +355,10 @@ final class SchemaTest extends FlowTestCase
     {
         $schema = schema(integer_schema('id'), integer_schema('Id'));
 
-        static::assertEquals(refs(EntryReference::init('id'), EntryReference::init('Id')), $schema->references());
+        static::assertEquals(
+            refs(UnresolvedReference::init('id'), UnresolvedReference::init('Id')),
+            $schema->references(),
+        );
     }
 
     public function test_creating_schema_from_corrupted_json(): void

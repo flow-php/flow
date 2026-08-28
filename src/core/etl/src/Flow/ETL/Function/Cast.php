@@ -4,102 +4,93 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use DateTime;
-use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
 use Flow\Types\Type;
-use stdClass;
+use Flow\Types\Type\TypeFactory;
 
-use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_date;
-use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_json;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_time_zone;
-use function Flow\Types\DSL\type_xml;
-use function is_int;
-use function is_string;
-use function json_encode;
-use function mb_strtolower;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\lit;
+use function sprintf;
 
-final class Cast extends ScalarFunctionChain
+final class Cast implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
     /**
-     * @param mixed $value
+     * @var Type<mixed>
+     */
+    private readonly Type $type;
+
+    /**
+     * The target is resolved and checked here: a string alias becomes a Type, and a type with no
+     * Definition arm - not a column - is refused before any row is read.
+     *
      * @param string|Type<mixed> $type
      */
-    public function __construct(
-        private readonly mixed $value,
-        private readonly Type|string $type,
-    ) {}
+    private readonly ScalarFunction $value;
+
+    public function __construct(mixed $value, Type|string $type)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+
+        try {
+            $resolved = $type instanceof Type ? $type : TypeFactory::fromString($type);
+            definition_from_type('cast', $resolved);
+        } catch (RuntimeException|TypesInvalidArgumentException|UnsupportedUnionTypeException $e) {
+            throw new InvalidArgumentException(
+                sprintf('Cast function does not support type: %s', $type instanceof Type ? $type->toString() : $type),
+                0,
+                $e,
+            );
+        }
+
+        $this->type = $resolved;
+    }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @return list<ScalarFunction>
      */
-    public function eval(Row $row, FlowContext $context): ?ScalarResult
+    public function children(): array
+    {
+        return [$this->value];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $this->type);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return $this->type;
+    }
+
+    public function eval(Row $row, FlowContext $context): ScalarResult
     {
         $value = (new Parameter($this->value))->eval($row, $context);
 
-        $type = $this->type;
-
         if (null === $value) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Cast function requires non-null value'));
-        }
-
-        if ($type instanceof Type) {
-            return new ScalarResult($type->cast($value), $type);
+            throw new InvalidArgumentException('Cast function requires non-null value');
         }
 
         try {
-            $result = match (mb_strtolower($type)) {
-                'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
-                'date' => new ScalarResult(match (true) {
-                    is_string($value) => (new DateTimeImmutable($value))->setTime(0, 0, 0, 0),
-                    is_int($value) => DateTimeImmutable::createFromFormat('U', (string) $value),
-                    $value instanceof DateTime, $value instanceof DateTimeImmutable => $value->setTime(0, 0, 0, 0),
-                    default => null,
-                }, type_date()),
-                'timezone' => new ScalarResult(type_time_zone()->cast($value), type_time_zone()),
-                'int', 'integer' => new ScalarResult(type_integer()->cast($value), type_integer()),
-                'float', 'double', 'real' => new ScalarResult(type_float()->cast($value), type_float()),
-                'string' => new ScalarResult(type_string()->cast($value), type_string()),
-                'bool', 'boolean' => new ScalarResult(type_boolean()->cast($value), type_boolean()),
-                'array' => new ScalarResult(type_array()->cast($value), type_array()),
-                'object' => new ScalarResult(
-                    type_instance_of(stdClass::class)->cast($value),
-                    type_instance_of(stdClass::class),
-                ),
-                'json' => new ScalarResult(type_json()->cast($value), type_json()),
-                'json_pretty' => new ScalarResult(
-                    json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
-                    type_json(),
-                ),
-                'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),
-                default => null,
-            };
-
-            if ($result === null) {
-                return $context
-                    ->functions()
-                    ->invalidResult(new InvalidArgumentException('Cast function does not support type: ' . $type));
-            }
-
-            return $result;
+            return new ScalarResult($this->type->cast($value), $this->type);
         } catch (CastingException $e) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Cast function failed: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Cast function failed: ' . $e->getMessage());
         }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,23 +16,32 @@ final class RegexMatchAllTest extends FlowTestCase
 {
     public function test_regex_match_all_expression_on_invalid_flags(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('RegexMatchAll requires non-null flags');
+
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'), lit('invalid'));
 
-        static::assertNull($pregMatchAll->eval(row(), flow_context()));
+        $pregMatchAll->eval(row(), flow_context());
     }
 
     public function test_regex_match_all_expression_on_invalid_pattern(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('RegexMatchAll requires non-null pattern');
+
         $pregMatchAll = regex_match_all(lit(1), lit('12 apples and 45 oranges'));
 
-        static::assertNull($pregMatchAll->eval(row(), flow_context()));
+        $pregMatchAll->eval(row(), flow_context());
     }
 
     public function test_regex_match_all_expression_on_invalid_subject(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('RegexMatchAll requires non-null subject');
+
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit(2));
 
-        static::assertNull($pregMatchAll->eval(row(), flow_context()));
+        $pregMatchAll->eval(row(), flow_context());
     }
 
     public function test_regex_match_all_expression_on_valid_strings(): void

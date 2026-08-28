@@ -8,9 +8,9 @@ use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
@@ -477,7 +477,7 @@ final readonly class Schema implements Countable
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
                 $definitions[] = $nextDefinition->rename($newName);
             } else {
                 $definitions[] = $nextDefinition;
@@ -535,7 +535,7 @@ final readonly class Schema implements Countable
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
                 $definitions[] = $definition;
             } else {
                 $definitions[] = $nextDefinition;
@@ -571,7 +571,7 @@ final readonly class Schema implements Countable
 
     private function indexOf(string|Reference $reference): int
     {
-        $index = array_search(EntryReference::init($reference)->name(), array_keys($this->definitions), true);
+        $index = array_search(UnresolvedReference::init($reference)->name(), array_keys($this->definitions), true);
 
         if ($index === false) {
             throw new SchemaDefinitionNotFoundException((string) $reference);
@@ -583,13 +583,13 @@ final readonly class Schema implements Countable
     private function moveRelative(string|Reference $name, string|Reference $reference, int $offset): self
     {
         $from = $this->indexOf($name);
-        $referenceName = EntryReference::init($reference)->name();
+        $referenceName = UnresolvedReference::init($reference)->name();
 
         if (!$this->findDefinition($reference)) {
             throw new SchemaDefinitionNotFoundException((string) $reference);
         }
 
-        if (EntryReference::init($name)->name() === $referenceName) {
+        if (UnresolvedReference::init($name)->name() === $referenceName) {
             throw new InvalidArgumentException(sprintf('Cannot move entry "%s" relative to itself', (string) $name));
         }
 

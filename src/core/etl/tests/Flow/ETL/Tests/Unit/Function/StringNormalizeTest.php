@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Normalizer;
 
@@ -50,7 +51,10 @@ final class StringNormalizeTest extends FlowTestCase
 
     public function test_normalize_returns_null_for_null_input(): void
     {
-        static::assertNull(ref('str')->stringNormalize()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringNormalize function requires non-null value');
+
+        ref('str')->stringNormalize()->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_normalize_with_scalar_function_form(): void

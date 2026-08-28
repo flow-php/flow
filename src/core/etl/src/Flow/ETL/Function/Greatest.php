@@ -7,18 +7,69 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type;
+use Flow\Types\Type\Unifier\NullabilityRule;
+use Flow\Types\Type\Unifier\StrictUnifier;
 use Flow\Types\Type\ValueComparator;
 
+use function array_map;
+use function array_values;
 use function count;
+use function Flow\ETL\DSL\lit;
 
-final class Greatest extends ScalarFunctionChain
+final class Greatest implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    /**
+     * @var list<ScalarFunction>
+     */
+    private readonly array $values;
+
     /**
      * @param array<mixed|ScalarFunction> $values
      */
-    public function __construct(
-        private readonly array $values,
-    ) {}
+    public function __construct(array $values)
+    {
+        $this->values = array_values(array_map(static fn(mixed $value): ScalarFunction => $value
+            instanceof ScalarFunction
+                ? $value
+                : lit($value), $values));
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return $this->values;
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        $operands = array_map(static fn(ScalarFunction $value): Type => $value->returns(), $this->values);
+
+        // NULL only when every argument is NULL - nulls are skipped otherwise.
+        return (
+            (new StrictUnifier())->unifyAll(
+                NullabilityRule::ALL,
+                ...$operands,
+            ) ?? throw InvalidTypeException::noCommonType(...$operands)
+        );
+    }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
@@ -32,9 +83,7 @@ final class Greatest extends ScalarFunctionChain
         }
 
         if (!count($extractedValues)) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Greatest requires at least one value'));
+            throw new InvalidArgumentException('Greatest requires at least one value');
         }
 
         (new ValueComparator())->assertAllTypesComparable($extractedTypes, '>');

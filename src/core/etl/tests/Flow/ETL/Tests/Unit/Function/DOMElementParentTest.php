@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +26,6 @@ final class DOMElementParentTest extends TestCase
         // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
         ref('value')
@@ -75,7 +73,6 @@ final class DOMElementParentTest extends TestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
         static::assertEquals($xml, ref('value')

@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 844
+ * Total functions: 845
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -895,7 +895,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">average</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Rounding</span> <span class=\"fn-param\">$rounding</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Calculator\\Rounding::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Average</span>
+                    <span class=\"fn-name\">average</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Rounding</span> <span class=\"fn-param\">$rounding</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Calculator\\Rounding::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Average</span>
                 </div>
                             `
             return div
@@ -1081,7 +1081,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">bar_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BarChart</span>
+                    <span class=\"fn-name\">bar_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BarChart</span>
                 </div>
                             `
             return div
@@ -1654,7 +1654,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EntryReference</span>
+                    <span class=\"fn-name\">col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     An alias for \`ref\`.
@@ -1690,7 +1690,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">collect</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Collect</span>
+                    <span class=\"fn-name\">collect</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Collect</span>
                 </div>
                             `
             return div
@@ -1705,7 +1705,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">collect_unique</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CollectUnique</span>
+                    <span class=\"fn-name\">collect_unique</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CollectUnique</span>
                 </div>
                             `
             return div
@@ -2866,7 +2866,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">count</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference</span> <span class=\"fn-param\">$function</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Count</span>
+                    <span class=\"fn-name\">count</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$function</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Count</span>
                 </div>
                             `
             return div
@@ -3667,7 +3667,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EntryReference</span>
+                    <span class=\"fn-name\">entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     An alias for \`ref\`.
@@ -3951,42 +3951,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\execution_context(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },                {
-        label: "execution_lenient",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">execution_lenient</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExecutionMode</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    In this mode, functions returns nulls instead of throwing exceptions.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\execution_lenient()"),
-        boost: 10
-    },                {
-        label: "execution_strict",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">execution_strict</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExecutionMode</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    In this mode, functions throws exceptions if the given entry is not found<br>or passed parameters are invalid.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\execution_strict()"),
-        boost: 10
-    },                {
         label: "exists",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -4180,7 +4144,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">first</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">First</span>
+                    <span class=\"fn-name\">first</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">First</span>
                 </div>
                             `
             return div
@@ -6211,7 +6175,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">last</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Last</span>
+                    <span class=\"fn-name\">last</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Last</span>
                 </div>
                             `
             return div
@@ -6328,7 +6292,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">line_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LineChart</span>
+                    <span class=\"fn-name\">line_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LineChart</span>
                 </div>
                             `
             return div
@@ -6703,7 +6667,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">max</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Max</span>
+                    <span class=\"fn-name\">max</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Max</span>
                 </div>
                             `
             return div
@@ -6913,7 +6877,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">min</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Min</span>
+                    <span class=\"fn-name\">min</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Min</span>
                 </div>
                             `
             return div
@@ -7186,7 +7150,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">null_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Creates an entry of the null type. Used when a column value is null and its final type is not yet known.<br>When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals a real type,<br>at which point the schema merge turns it into that type made nullable.<br>@return Entry<null>
+                    An entry whose column type is not known. Use only when nothing about the column\'s type is<br>available - a column that is null in every row. For a nullable column of a known type, use the<br>typed entry with a null value: str_entry(\'id\', null).<br>When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals<br>a real type, at which point the schema merge turns it into that type made nullable.<br>@return Entry<null>
                 </div>
                             `
             return div
@@ -8047,7 +8011,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pie_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PieChart</span>
+                    <span class=\"fn-name\">pie_chart</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$label</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">References</span> <span class=\"fn-param\">$datasets</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PieChart</span>
                 </div>
                             `
             return div
@@ -8365,7 +8329,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EntryReference</span>
+                    <span class=\"fn-name\">ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
                 </div>
                             `
             return div
@@ -9700,15 +9664,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_from_json_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|array|string</span> <span class=\"fn-param\">$json_schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestFactoryInterface</span> <span class=\"fn-param\">$request_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                    <span class=\"fn-name\">schema_from_json_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|array|string</span> <span class=\"fn-param\">$json_schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestFactoryInterface</span> <span class=\"fn-param\">$request_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Convert a JSON Schema (https://json-schema.org) document into a Flow Schema.<br>@param array<string, mixed>|Path|string $json_schema - decoded document, raw JSON document or a path to a schema file<br>@param null|ClientInterface $client - PSR-18 http client, required to resolve remote http(s) references<br>@param null|RequestFactoryInterface $request_factory - PSR-17 request factory, required to resolve remote http(s) references
+                    Convert a JSON Schema (https://json-schema.org) document into a Flow Schema.<br>@param array<string, mixed>|Path|string $json_schema - decoded document, raw JSON document or a path to a schema file<br>@param null|ClientInterface $client - PSR-18 http client, required to resolve remote http(s) references<br>@param null|RequestFactoryInterface $request_factory - PSR-17 request factory, required to resolve remote http(s) references<br>@param Filesystem $filesystem - filesystem used to read local schema references
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\schema_from_json_schema(" + "$" + "{" + "1:json_schema" + "}" + ", " + "$" + "{" + "2:client" + "}" + ", " + "$" + "{" + "3:request_factory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\schema_from_json_schema(" + "$" + "{" + "1:json_schema" + "}" + ", " + "$" + "{" + "2:client" + "}" + ", " + "$" + "{" + "3:request_factory" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "schema_from_parquet",
@@ -10999,7 +10963,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">string_agg</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;, &#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$sort</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringAggregate</span>
+                    <span class=\"fn-name\">string_agg</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;, &#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$sort</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringAggregate</span>
                 </div>
                             `
             return div
@@ -11170,7 +11134,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">sum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryReference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sum</span>
+                    <span class=\"fn-name\">sum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sum</span>
                 </div>
                             `
             return div
@@ -11413,6 +11377,39 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\time_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "time_zone_entry",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dentries",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">time_zone_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeZone|string|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @return ($value is null ? Entry<null> : Entry<\\DateTimeZone>)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\time_zone_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "time_zone_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">time_zone_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TimeZoneDefinition</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\time_zone_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },                {
         label: "to_array",
@@ -12225,6 +12222,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\type_attr(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },                {
+        label: "type_bare",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">type_bare</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Strip exactly one level of nullability, whichever of the two spellings carries it<br>(OptionalType, or a UnionType containing NullType). Total: a NOT NULL type is returned unchanged.<br>@template T<br>@param Type<T> $type<br>@return Type<mixed>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Types\\DSL\\type_bare(" + "$" + "{" + "1:type" + "}" + ")"),
+        boost: 10
+    },                {
         label: "type_boolean",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtype",
@@ -13015,10 +13030,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">union_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">UnionType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnionDefinition</span>
+                    <span class=\"fn-name\">union_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">UnionType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Definition</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Type<mixed>|UnionType<mixed, mixed> $type
+                    @param Type<mixed>|UnionType<mixed, mixed> $type<br>@deprecated a column holds exactly one type - use definition_from_type() instead<br>@return Definition<mixed>
                 </div>
                             `
             return div

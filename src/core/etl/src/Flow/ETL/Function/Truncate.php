@@ -7,16 +7,54 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
 use function Symfony\Component\String\s;
 
-final class Truncate extends ScalarFunctionChain
+final class Truncate implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $length;
+    private readonly ScalarFunction $ellipsis;
+
     public function __construct(
-        private readonly ScalarFunction|string $value,
-        private readonly ScalarFunction|int $length,
-        private readonly ScalarFunction|string $ellipsis = '...',
-    ) {}
+        ScalarFunction|string $value,
+        ScalarFunction|int $length,
+        ScalarFunction|string $ellipsis = '...',
+    ) {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->length = $length instanceof ScalarFunction ? $length : lit($length);
+        $this->ellipsis = $ellipsis instanceof ScalarFunction ? $ellipsis : lit($ellipsis);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->length, $this->ellipsis];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -25,9 +63,7 @@ final class Truncate extends ScalarFunctionChain
         $ellipsis = (new Parameter($this->ellipsis))->asString($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Truncate function requires non-null value'));
+            throw new InvalidArgumentException('Truncate function requires non-null value');
         }
 
         if ($length === null) {

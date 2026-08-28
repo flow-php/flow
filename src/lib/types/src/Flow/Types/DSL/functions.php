@@ -50,6 +50,7 @@ use Flow\Types\Type\Native\ObjectType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
+use Flow\Types\Type\Nullability;
 use Flow\Types\Type\TypeDetector;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Type\Types;
@@ -154,19 +155,23 @@ function type_from_array(array $data): Type
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is_nullable(Type $type): bool
 {
-    if ($type instanceof OptionalType) {
-        return true;
-    }
+    return (new Nullability())->is($type);
+}
 
-    if ($type instanceof UnionType) {
-        foreach ($type->types()->all() as $nextType) {
-            if ($nextType instanceof NullType) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+/**
+ * Strip exactly one level of nullability, whichever of the two spellings carries it
+ * (OptionalType, or a UnionType containing NullType). Total: a NOT NULL type is returned unchanged.
+ *
+ * @template T
+ *
+ * @param Type<T> $type
+ *
+ * @return Type<mixed>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function type_bare(Type $type): Type
+{
+    return (new Nullability())->bare($type);
 }
 
 /**

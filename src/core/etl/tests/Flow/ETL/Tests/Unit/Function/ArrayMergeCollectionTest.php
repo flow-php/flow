@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_merge_collection;
@@ -24,8 +23,6 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayMergeCollection function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('invalid_entry', 1));
 
         array_merge_collection(ref('invalid_entry'))->eval($row, $context);
@@ -37,8 +34,6 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(json_entry('array_entry', [
             ['foo' => 'bar'],
             1,
@@ -49,19 +44,25 @@ final class ArrayMergeCollectionTest extends FlowTestCase
 
     public function test_attempt_of_merging_collection_where_not_every_element_is_array(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
+
         $row = row(json_entry('array_entry', [
             ['foo' => 'bar'],
             1,
         ]));
 
-        static::assertNull(array_merge_collection(ref('array_entry'))->eval($row, flow_context()));
+        array_merge_collection(ref('array_entry'))->eval($row, flow_context());
     }
 
     public function test_for_not_array_entry(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayMergeCollection function requires non-null array');
+
         $row = row(int_entry('invalid_entry', 1));
 
-        static::assertNull(array_merge_collection(ref('invalid_entry'))->eval($row, flow_context()));
+        array_merge_collection(ref('invalid_entry'))->eval($row, flow_context());
     }
 
     public function test_merging_collection_of_arrays(): void

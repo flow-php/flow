@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\between;
@@ -82,8 +81,6 @@ final class BetweenTest extends FlowTestCase
         $this->expectExceptionMessage('Between function requires valid boundary');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         between(ref('value'), lit(10), lit(50), lit('invalid'))->eval(row(int_entry('value', 20)), $context);
     }
 }

@@ -37,7 +37,7 @@ final class FlowContextTest extends FlowTestCase
 
     public function test_flow_context_exposes_no_filesystem_and_no_streams(): void
     {
-        // a 10th name would mean a replacement member was added back
+        // a new name here would mean a replacement member was added back
         static::assertSame(
             [
                 '__construct',
@@ -45,7 +45,6 @@ final class FlowContextTest extends FlowTestCase
                 'calculator',
                 'entryFactory',
                 'errorHandler',
-                'functions',
                 'hydrator',
                 'setErrorHandler',
                 'telemetry',

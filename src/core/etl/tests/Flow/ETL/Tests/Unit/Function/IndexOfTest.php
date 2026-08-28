@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -32,15 +33,17 @@ final class IndexOfTest extends FlowTestCase
 
     public function test_needle_null_index_of_returns_false(): void
     {
-        static::assertFalse(
-            ref('str')
-                ->indexOf(ref('needle'))
-                ->eval(row(str_entry('str', 'x'), str_entry('needle', null)), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('IndexOf function requires non-null string and needle');
+
+        ref('str')->indexOf(ref('needle'))->eval(row(str_entry('str', 'x'), str_entry('needle', null)), flow_context());
     }
 
     public function test_string_null_index_of_returns_false(): void
     {
-        static::assertFalse(ref('str')->indexOf('x')->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('IndexOf function requires non-null string and needle');
+
+        ref('str')->indexOf('x')->eval(row(str_entry('str', null)), flow_context());
     }
 }

@@ -12,13 +12,50 @@ use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
-final class XPath extends ScalarFunctionChain
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_xml_element;
+
+final class XPath implements ScalarFunction
 {
-    public function __construct(
-        private readonly mixed $value,
-        private readonly ScalarFunction|string $path,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $path;
+
+    public function __construct(mixed $value, ScalarFunction|string $path)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->path = $path instanceof ScalarFunction ? $path : lit($path);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->path];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_list(type_xml_element()));
+    }
 
     /**
      * @return null|array<\DOMNode>
@@ -29,13 +66,11 @@ final class XPath extends ScalarFunctionChain
         $path = (new Parameter($this->path))->asString($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('XPath requires non-null DOMNode value'));
+            throw new InvalidArgumentException('XPath requires non-null DOMNode value');
         }
 
         if ($path === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null path'));
+            throw new InvalidArgumentException('XPath requires non-null path');
         }
 
         if (!$value instanceof DOMDocument) {

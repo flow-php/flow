@@ -55,7 +55,7 @@ DSL `from_*()` functions stay pure delegation.
 
 ### Out of scope
 
-`EntryReference` remains mutable - `as()`, `asc()` and `desc()` write `$alias` / `$sort` on `$this`. It is shared
+`UnresolvedReference` remains mutable - `as()`, `asc()` and `desc()` write `$alias` / `$sort` on `$this`. It is shared
 with the entire expression DSL, so making it immutable is a separate project and is not attempted here.
 
 ### Breaking change

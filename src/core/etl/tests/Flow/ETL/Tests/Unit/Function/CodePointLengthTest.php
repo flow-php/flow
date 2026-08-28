@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -25,6 +26,9 @@ final class CodePointLengthTest extends FlowTestCase
 
     public function test_code_point_length_returns_null_for_null_input(): void
     {
-        static::assertNull(ref('str')->codePointLength()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('CodePointLength function requires non-null value');
+
+        ref('str')->codePointLength()->eval(row(str_entry('str', null)), flow_context());
     }
 }

@@ -28,9 +28,12 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
 
     public function test_for_not_array_entry(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayKeysStyleConvert function requires non-null array');
+
         $row = row(int_entry('invalid_entry', 1));
 
-        static::assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row, flow_context()));
+        array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row, flow_context());
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry(): void

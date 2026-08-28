@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArrayUnpack;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -45,8 +44,6 @@ final class ArrayUnpackTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayUnpack requires non-null array and skipKeys');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         (new ArrayUnpack(ref('array_entry')))->eval(row(int_entry('id', 1), json_entry('array_entry', null)), $context);
     }
 }

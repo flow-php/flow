@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,7 +16,10 @@ final class IsUtf8Test extends FlowTestCase
 {
     public function test_is_utf8_returns_null(): void
     {
-        static::assertFalse(ref('str')->isUtf8()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('IsUtf8 function requires non-null string');
+
+        ref('str')->isUtf8()->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_is_utf_8(): void

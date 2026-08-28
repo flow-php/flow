@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\NumberFormat;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -47,6 +48,9 @@ final class NumberFormatTest extends FlowTestCase
 
     public function test_number_format_on_decimals_that_are_not_integer(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('NumberFormat function requires non-null values');
+
         $expression = new NumberFormat(
             ref('value'),
             ref('decimals'),
@@ -54,7 +58,7 @@ final class NumberFormatTest extends FlowTestCase
             ref('thousands_separator'),
         );
 
-        static::assertNull($expression->eval(
+        $expression->eval(
             row(
                 float_entry('value', 1234.5678),
                 float_entry('decimals', 2.5),
@@ -62,11 +66,14 @@ final class NumberFormatTest extends FlowTestCase
                 str_entry('thousands_separator', ','),
             ),
             flow_context(),
-        ));
+        );
     }
 
     public function test_number_format_on_non_int_entry(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('NumberFormat function requires non-null values');
+
         $expression = new NumberFormat(
             ref('value'),
             ref('decimals'),
@@ -74,7 +81,7 @@ final class NumberFormatTest extends FlowTestCase
             ref('thousands_separator'),
         );
 
-        static::assertNull($expression->eval(
+        $expression->eval(
             row(
                 str_entry('value', 'test'),
                 int_entry('decimals', 2),
@@ -82,6 +89,6 @@ final class NumberFormatTest extends FlowTestCase
                 str_entry('thousands_separator', ','),
             ),
             flow_context(),
-        ));
+        );
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -48,6 +47,9 @@ final class AppendTest extends FlowTestCase
 
     public function test_append_with_null_value(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Append function requires non-null value');
+
         $result = ref('str')->append(' world')->eval(row(str_entry('str', null)), flow_context());
 
         static::assertNull($result);
@@ -59,8 +61,6 @@ final class AppendTest extends FlowTestCase
         $this->expectExceptionMessage('Append function requires non-null value');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('str')->append(' world')->eval(row(str_entry('str', null)), $context);
     }
 

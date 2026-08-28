@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
 interface Chart
@@ -19,7 +19,7 @@ interface Chart
     /**
      * @param array<array-key, mixed> $options
      */
-    public function setDatasetOptions(EntryReference $dataset, array $options): self;
+    public function setDatasetOptions(Reference $dataset, array $options): self;
 
     /**
      * @param array<array-key, mixed> $options

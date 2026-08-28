@@ -7,19 +7,54 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
+use Flow\Types\Type\Nullability;
 
 use function Flow\ArrayDot\array_dot_exists;
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_boolean;
 
-final class ArrayPathExists extends ScalarFunctionChain
+final class ArrayPathExists implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $array
      * @param ScalarFunction|string $path
      */
-    public function __construct(
-        private readonly ScalarFunction|array $array,
-        private readonly ScalarFunction|string $path,
-    ) {}
+    private readonly ScalarFunction $array;
+    private readonly ScalarFunction $path;
+
+    public function __construct(ScalarFunction|array $array, ScalarFunction|string $path)
+    {
+        $this->array = $array instanceof ScalarFunction ? $array : lit($array);
+        $this->path = $path instanceof ScalarFunction ? $path : lit($path);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->array, $this->path];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return (new Nullability())->any(type_boolean(), $this->array->returns(), $this->path->returns());
+    }
 
     public function eval(Row $row, FlowContext $context): bool
     {
@@ -28,22 +63,12 @@ final class ArrayPathExists extends ScalarFunctionChain
             $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($array === null || $path === null) {
-                $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException('ArrayPathExists function requires non-null array and path'),
-                    );
-
-                return false;
+                throw new InvalidArgumentException('ArrayPathExists function requires non-null array and path');
             }
 
             return array_dot_exists($array, $path);
         } catch (InvalidArgumentException $e) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ArrayPathExists error: ' . $e->getMessage()));
-
-            return false;
+            throw new InvalidArgumentException('ArrayPathExists error: ' . $e->getMessage());
         }
     }
 }

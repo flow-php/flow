@@ -36,7 +36,7 @@ final class First implements AggregatingFunction
             try {
                 $this->first = $row->get($this->ref);
             } catch (InvalidArgumentException $e) {
-                $context->functions()->invalidResult(new InvalidArgumentException('First error: ' . $e->getMessage()));
+                throw new InvalidArgumentException('First error: ' . $e->getMessage(), 0, $e);
             }
         }
     }

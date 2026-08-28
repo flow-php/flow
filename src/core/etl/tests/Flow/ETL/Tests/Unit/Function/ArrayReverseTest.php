@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -31,13 +30,14 @@ final class ArrayReverseTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayReverse function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('a')->arrayReverse()->eval(row(int_entry('a', 123)), $context);
     }
 
     public function test_array_reverse_non_array_entry(): void
     {
-        static::assertNull(ref('a')->arrayReverse()->eval(row(int_entry('a', 123)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayReverse function requires non-null array');
+
+        ref('a')->arrayReverse()->eval(row(int_entry('a', 123)), flow_context());
     }
 }

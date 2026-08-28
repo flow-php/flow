@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_entry;
@@ -26,16 +27,20 @@ final class IndexOfLastTest extends FlowTestCase
 
     public function test_index_of_last_null_needle_returns_false(): void
     {
-        static::assertFalse(
-            ref('str')
-                ->indexOfLast(ref('needle'))
-                ->eval(row(str_entry('str', 'hello'), str_entry('needle', null)), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('IndexOfLast function requires non-null string and needle');
+
+        ref('str')
+            ->indexOfLast(ref('needle'))
+            ->eval(row(str_entry('str', 'hello'), str_entry('needle', null)), flow_context());
     }
 
     public function test_index_of_last_null_string_returns_false(): void
     {
-        static::assertFalse(ref('str')->indexOfLast('l')->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('IndexOfLast function requires non-null string and needle');
+
+        ref('str')->indexOfLast('l')->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_index_of_last_with_scalar_function_parameters(): void

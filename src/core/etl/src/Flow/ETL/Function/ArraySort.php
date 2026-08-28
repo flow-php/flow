@@ -8,17 +8,53 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function is_array;
 
-final class ArraySort extends ScalarFunctionChain
+final class ArraySort implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $flags;
+    private readonly ScalarFunction $recursive;
+
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly ScalarFunction|Sort $sortFunction,
-        private readonly ScalarFunction|int|null $flags,
-        private readonly ScalarFunction|bool $recursive,
-    ) {}
+        private readonly Sort $sortFunction,
+        ScalarFunction|int|null $flags,
+        ScalarFunction|bool $recursive,
+    ) {
+        $this->flags = $flags instanceof ScalarFunction ? $flags : lit($flags);
+        $this->recursive = $recursive instanceof ScalarFunction ? $recursive : lit($recursive);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->ref, $this->flags, $this->recursive];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $this->sortFunction, $children[1], $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_bare($this->ref->returns());
+    }
 
     /**
      * @return null|array<mixed>
@@ -28,17 +64,12 @@ final class ArraySort extends ScalarFunctionChain
         $array = (new Parameter($this->ref))->asArray($row, $context);
         $flags = (new Parameter($this->flags))->asInt($row, $context);
         $recursive = (new Parameter($this->recursive))->asBoolean($row, $context);
-        $sortFunction = (new Parameter($this->sortFunction))->asEnum($row, $context, Sort::class);
 
-        if ($array === null || $sortFunction === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('ArraySort function requires non-null array and sort function'),
-                );
+        if ($array === null) {
+            throw new InvalidArgumentException('ArraySort function requires non-null array');
         }
 
-        $this->recursiveSort($array, $sortFunction->value, $flags, $recursive);
+        $this->recursiveSort($array, $this->sortFunction->value, $flags, $recursive);
 
         return $array;
     }

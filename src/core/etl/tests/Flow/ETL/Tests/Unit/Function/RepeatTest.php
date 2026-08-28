@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -21,12 +22,18 @@ final class RepeatTest extends FlowTestCase
 
     public function test_repeat_negative_times(): void
     {
-        static::assertSame('', ref('str')->repeat(-1)->eval(row(str_entry('str', 'hello')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Repeat function requires non-null, positive times');
+
+        ref('str')->repeat(-1)->eval(row(str_entry('str', 'hello')), flow_context());
     }
 
     public function test_repeat_null_input(): void
     {
-        static::assertNull(ref('str')->repeat(3)->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Repeat function requires non-null value');
+
+        ref('str')->repeat(3)->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_repeat_string_multiple_times(): void
@@ -38,9 +45,12 @@ final class RepeatTest extends FlowTestCase
 
     public function test_repeat_with_null_times(): void
     {
-        static::assertSame('', ref('str')
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Repeat function requires non-null, positive times');
+
+        ref('str')
             ->repeat(ref('times'))
-            ->eval(row(str_entry('str', 'hello'), str_entry('times', null)), flow_context()));
+            ->eval(row(str_entry('str', 'hello'), str_entry('times', null)), flow_context());
     }
 
     public function test_repeat_with_scalar_function_times(): void
@@ -52,6 +62,9 @@ final class RepeatTest extends FlowTestCase
 
     public function test_repeat_zero_times(): void
     {
-        static::assertSame('', ref('str')->repeat(0)->eval(row(str_entry('str', 'hello')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Repeat function requires non-null, positive times');
+
+        ref('str')->repeat(0)->eval(row(str_entry('str', 'hello')), flow_context());
     }
 }

@@ -7,8 +7,6 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Function\ExecutionMode;
-use Flow\ETL\Function\Functions;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
 
@@ -20,15 +18,12 @@ final class FlowContext
 {
     private ErrorHandler $errorHandler;
 
-    private readonly Functions $functions;
-
     private ?TelemetryContext $telemetryContext = null;
 
     public function __construct(
         public readonly Config $config,
     ) {
         $this->errorHandler = new ThrowError();
-        $this->functions = new Functions(ExecutionMode::LENIENT);
     }
 
     public function cache(): Cache
@@ -49,11 +44,6 @@ final class FlowContext
     public function errorHandler(): ErrorHandler
     {
         return $this->errorHandler;
-    }
-
-    public function functions(): Functions
-    {
-        return $this->functions;
     }
 
     /**

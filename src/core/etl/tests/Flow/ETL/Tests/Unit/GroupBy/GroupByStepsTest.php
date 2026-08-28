@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\GroupBy;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Processor\BucketingProcessor;
@@ -269,8 +268,6 @@ final class GroupByStepsTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('amount')));
 
         $context = flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $result = GroupByContext::aggregate(
             $groupBy,
             $context,

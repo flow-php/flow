@@ -40,7 +40,7 @@ final class Collect implements AggregatingFunction
 
             $this->collection[] = current($values);
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Collect error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Collect error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -57,10 +57,8 @@ final class Collect implements AggregatingFunction
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->name() . '_collection');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->name() . '_collection');
 
-        return $entryFactory->create($this->ref->name(), $this->collection);
+        return $entryFactory->create($ref->name(), $this->collection);
     }
 }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateInterval;
 use DateTimeImmutable;
+use Flow\ETL\Exception\InvalidArgumentException as ETLInvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
 
@@ -76,46 +77,54 @@ final class LessThanEqualTest extends FlowTestCase
 
     public function test_less_than_equal_returns_null_for_null_array(): void
     {
-        static::assertNull(
-            ref('v')
-                ->lessThanEqual(lit([1, 0]))
-                ->eval(row(list_entry('v', null, type_list(type_integer()))), flow_context()),
-        );
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')
+            ->lessThanEqual(lit([1, 0]))
+            ->eval(row(list_entry('v', null, type_list(type_integer()))), flow_context());
     }
 
     public function test_less_than_equal_returns_null_for_null_datetime(): void
     {
-        static::assertNull(
-            ref('v')
-                ->lessThanEqual(lit(new DateTimeImmutable('2024-01-01')))
-                ->eval(row(datetime_entry('v', null)), flow_context()),
-        );
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')
+            ->lessThanEqual(lit(new DateTimeImmutable('2024-01-01')))
+            ->eval(row(datetime_entry('v', null)), flow_context());
     }
 
     public function test_less_than_equal_returns_null_for_null_left(): void
     {
-        static::assertNull(ref('v')->lessThanEqual(lit(10))->eval(row(int_entry('v', null)), flow_context()));
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')->lessThanEqual(lit(10))->eval(row(int_entry('v', null)), flow_context());
     }
 
     public function test_less_than_equal_returns_null_for_null_right(): void
     {
-        static::assertNull(
-            ref('v')
-                ->lessThanEqual(ref('other'))
-                ->eval(row(int_entry('v', 10), int_entry('other', null)), flow_context()),
-        );
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')->lessThanEqual(ref('other'))->eval(row(int_entry('v', 10), int_entry('other', null)), flow_context());
     }
 
     public function test_less_than_equal_returns_null_for_null_string(): void
     {
-        static::assertNull(ref('v')->lessThanEqual(lit('a'))->eval(row(str_entry('v', null)), flow_context()));
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')->lessThanEqual(lit('a'))->eval(row(str_entry('v', null)), flow_context());
     }
 
     public function test_less_than_equal_returns_null_for_null_time_interval(): void
     {
-        static::assertNull(
-            ref('v')->lessThanEqual(lit(new DateInterval('PT1H')))->eval(row(time_entry('v', null)), flow_context()),
-        );
+        $this->expectException(ETLInvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThanEqual function requires non-null values');
+
+        ref('v')->lessThanEqual(lit(new DateInterval('PT1H')))->eval(row(time_entry('v', null)), flow_context());
     }
 
     public function test_less_than_equal_strings(): void

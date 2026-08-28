@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Window\Accumulator;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\SumAccumulator;
 
@@ -54,23 +53,9 @@ final class SumAccumulatorTest extends FlowTestCase
         static::assertSame(0.1 + 0.2, $accumulator->value());
     }
 
-    public function test_missing_entry_is_reported_in_lenient_mode(): void
-    {
-        $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::LENIENT);
-
-        $accumulator = new SumAccumulator(ref('value'), false, $context);
-        $accumulator->accumulate(row(str_entry('other', 'x')));
-        $accumulator->accumulate(row(int_entry('value', 5)));
-
-        static::assertSame(5, $accumulator->value());
-    }
-
     public function test_missing_entry_throws_in_strict_mode(): void
     {
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Sum window function error: /');
 

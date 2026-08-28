@@ -7,17 +7,57 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
 use function str_pad;
 
-final class StrPad extends ScalarFunctionChain
+final class StrPad implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $length;
+    private readonly ScalarFunction $padString;
+    private readonly ScalarFunction $type;
+
     public function __construct(
-        private readonly ScalarFunction|string $value,
-        private readonly ScalarFunction|int $length,
-        private readonly ScalarFunction|string $padString = ' ',
-        private readonly ScalarFunction|int $type = STR_PAD_RIGHT,
-    ) {}
+        ScalarFunction|string $value,
+        ScalarFunction|int $length,
+        ScalarFunction|string $padString = ' ',
+        ScalarFunction|int $type = STR_PAD_RIGHT,
+    ) {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->length = $length instanceof ScalarFunction ? $length : lit($length);
+        $this->padString = $padString instanceof ScalarFunction ? $padString : lit($padString);
+        $this->type = $type instanceof ScalarFunction ? $type : lit($type);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->length, $this->padString, $this->type];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2], $children[3]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
@@ -27,17 +67,11 @@ final class StrPad extends ScalarFunctionChain
         $type = (new Parameter($this->type))->asInt($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('StrPad function requires non-null value'));
+            throw new InvalidArgumentException('StrPad function requires non-null value');
         }
 
         if ($length === null || $padString === null || $type === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('StrPad function requires non-null length, padString and type'),
-                );
+            throw new InvalidArgumentException('StrPad function requires non-null length, padString and type');
         }
 
         return str_pad($value, $length, $padString, $type);

@@ -7,24 +7,61 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 use function str_replace;
 
-final class StrReplace extends ScalarFunctionChain
+final class StrReplace implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
     /**
      * @param ScalarFunction|string $value
      * @param array<array-key, mixed>|ScalarFunction|string $search
      * @param array<array-key, mixed>|ScalarFunction|string $replace
      */
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $search;
+    private readonly ScalarFunction $replace;
+
     public function __construct(
-        private readonly ScalarFunction|string $value,
-        private readonly ScalarFunction|string|array $search,
-        private readonly ScalarFunction|string|array $replace,
-    ) {}
+        ScalarFunction|string $value,
+        ScalarFunction|string|array $search,
+        ScalarFunction|string|array $replace,
+    ) {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->search = $search instanceof ScalarFunction ? $search : lit($search);
+        $this->replace = $replace instanceof ScalarFunction ? $replace : lit($replace);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->search, $this->replace];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -39,17 +76,11 @@ final class StrReplace extends ScalarFunctionChain
         ) ?? (new Parameter($this->replace))->asArray($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('StrReplace function requires non-null value'));
+            throw new InvalidArgumentException('StrReplace function requires non-null value');
         }
 
         if ($search === null || $replace === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('StrReplace function requires non-null search and replace'),
-                );
+            throw new InvalidArgumentException('StrReplace function requires non-null search and replace');
         }
 
         $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);

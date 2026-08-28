@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Window\Accumulator;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\CountAccumulator;
 
@@ -48,22 +47,9 @@ final class CountAccumulatorTest extends FlowTestCase
         static::assertSame(0, (new CountAccumulator(null, flow_context()))->value());
     }
 
-    public function test_missing_entry_is_reported_in_lenient_mode(): void
-    {
-        $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::LENIENT);
-
-        $accumulator = new CountAccumulator(ref('value'), $context);
-        $accumulator->accumulate(row(str_entry('other', 'x')));
-
-        static::assertSame(0, $accumulator->value());
-    }
-
     public function test_missing_entry_throws_in_strict_mode(): void
     {
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Count window function error: /');
 

@@ -7,17 +7,61 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
 use function number_format;
 
-final class NumberFormat extends ScalarFunctionChain
+final class NumberFormat implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $decimals;
+    private readonly ScalarFunction $decimalSeparator;
+    private readonly ScalarFunction $thousandsSeparator;
+
     public function __construct(
-        private readonly ScalarFunction|int|float $value,
-        private readonly ScalarFunction|int $decimals,
-        private readonly ScalarFunction|string $decimalSeparator = '.',
-        private readonly ScalarFunction|string $thousandsSeparator = ',',
-    ) {}
+        ScalarFunction|int|float $value,
+        ScalarFunction|int $decimals,
+        ScalarFunction|string $decimalSeparator = '.',
+        ScalarFunction|string $thousandsSeparator = ',',
+    ) {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->decimals = $decimals instanceof ScalarFunction ? $decimals : lit($decimals);
+        $this->decimalSeparator = $decimalSeparator instanceof ScalarFunction
+            ? $decimalSeparator
+            : lit($decimalSeparator);
+        $this->thousandsSeparator = $thousandsSeparator instanceof ScalarFunction
+            ? $thousandsSeparator
+            : lit($thousandsSeparator);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->decimals, $this->decimalSeparator, $this->thousandsSeparator];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2], $children[3]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -27,9 +71,7 @@ final class NumberFormat extends ScalarFunctionChain
         $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row, $context);
 
         if ($value === null || $decimals === null || $decimalSeparator === null || $thousandsSeparator === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('NumberFormat function requires non-null values'));
+            throw new InvalidArgumentException('NumberFormat function requires non-null values');
         }
 
         return number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);

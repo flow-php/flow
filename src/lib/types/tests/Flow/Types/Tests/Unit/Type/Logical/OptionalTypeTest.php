@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -80,11 +83,6 @@ final class OptionalTypeTest extends TestCase
 
     public static function invalid_creation_data_provider(): Generator
     {
-        yield 'optional type from another optional type' => [
-            'type' => type_optional(type_float()),
-            'exceptionMessage' => 'Optional type cannot be created from an optional type',
-        ];
-
         yield 'optional type from mixed type' => [
             'type' => type_mixed(),
             'exceptionMessage' => 'Optional type cannot be created from MixedType, mixed is a standalone type',
@@ -167,6 +165,40 @@ final class OptionalTypeTest extends TestCase
     public function test_is_valid(OptionalType $type, mixed $value, bool $expected): void
     {
         static::assertSame($expected, $type->isValid($value));
+    }
+
+    public function test_double_wrapping_collapses(): void
+    {
+        static::assertSame('?string', type_optional(type_optional(type_string()))->toString());
+        static::assertTrue(type_equals(type_optional(type_optional(type_string())), type_optional(type_string())));
+    }
+
+    public function test_collapsing_is_idempotent_at_any_depth(): void
+    {
+        static::assertSame(
+            '?list<?integer>',
+            type_optional(type_optional(type_optional(type_list(type_optional(type_integer())))))->toString(),
+        );
+    }
+
+    public function test_mixed_and_union_are_still_refused(): void
+    {
+        try {
+            type_optional(type_mixed());
+            static::fail('MixedType must be refused');
+        } catch (InvalidTypeException $e) {
+            static::assertSame(
+                'Optional type cannot be created from MixedType, mixed is a standalone type',
+                $e->getMessage(),
+            );
+        }
+
+        try {
+            type_optional(type_union(type_float(), type_string()));
+            static::fail('UnionType must be refused');
+        } catch (InvalidTypeException $e) {
+            static::assertSame('Optional type cannot be created from a union type', $e->getMessage());
+        }
     }
 
     public function test_normalization(): void

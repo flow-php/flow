@@ -7,8 +7,8 @@ namespace Flow\ETL\Schema\Definition;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Native\EnumType;
@@ -48,7 +48,7 @@ final readonly class EnumDefinition implements Definition
             throw new InvalidArgumentException(sprintf('Enum of type "%s" not found', $enumClass));
         }
 
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = type_enum($enumClass);
     }

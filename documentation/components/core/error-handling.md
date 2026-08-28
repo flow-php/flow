@@ -32,6 +32,30 @@ data_frame()
     ->run();
 ```
 
+## Tolerating invalid values per function
+
+Scalar functions throw `InvalidArgumentException` when they receive a value they cannot
+process, for example `ref('text')->upper()` over a null column. To tolerate the failure for
+one function instead of the whole pipeline, wrap it in `optional()` - it evaluates the
+wrapped function and returns null when it throws:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array, optional, ref, to_stream};
+
+data_frame()
+    ->read(from_array([
+        ['text' => 'hello'],
+        ['text' => null],
+    ]))
+    ->withEntry('upper', optional(ref('text')->upper()))
+    ->write(to_stream(__DIR__ . '/output.csv', truncate: false))
+    ->run();
+
+// Rows with a null 'text' get a null 'upper' column instead of stopping the pipeline.
+```
+
 ## Row-level Error Handling
 
 For fine-grained error handling during row processing operations:

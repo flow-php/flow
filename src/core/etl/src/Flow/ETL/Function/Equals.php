@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeInterface;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\JsonType;
@@ -17,15 +18,50 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Nullability;
 use Flow\Types\Type\ValueComparator;
 use UnitEnum;
 
-final class Equals extends ScalarFunctionChain
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_boolean;
+
+final class Equals implements ScalarFunction
 {
-    public function __construct(
-        private readonly mixed $left,
-        private readonly mixed $right,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $left;
+    private readonly ScalarFunction $right;
+
+    public function __construct(mixed $left, mixed $right)
+    {
+        $this->left = $left instanceof ScalarFunction ? $left : lit($left);
+        $this->right = $right instanceof ScalarFunction ? $right : lit($right);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->left, $this->right];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return (new Nullability())->any(type_boolean(), $this->left->returns(), $this->right->returns());
+    }
 
     public function eval(Row $row, FlowContext $context): bool
     {

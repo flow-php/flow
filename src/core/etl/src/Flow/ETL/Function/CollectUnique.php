@@ -46,9 +46,7 @@ final class CollectUnique implements AggregatingFunction
                 $this->collection[] = $value;
             }
         } catch (InvalidArgumentException $e) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('CollectUnique error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('CollectUnique error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -65,10 +63,8 @@ final class CollectUnique implements AggregatingFunction
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->name() . '_collection_unique');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->name() . '_collection_unique');
 
-        return $entryFactory->create($this->ref->name(), $this->collection);
+        return $entryFactory->create($ref->name(), $this->collection);
     }
 }

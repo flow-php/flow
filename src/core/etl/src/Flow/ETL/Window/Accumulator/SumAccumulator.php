@@ -48,9 +48,7 @@ final class SumAccumulator implements FrameAccumulator
                 );
             }
         } catch (InvalidArgumentException $e) {
-            $this->context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e));
+            throw new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e);
         }
     }
 

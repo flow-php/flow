@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\date_time_format;
@@ -36,9 +37,12 @@ final class DateTimeFormatTest extends FlowTestCase
 
     public function test_invalid_date_time_format(): void
     {
-        static::assertNull(date_time_format(ref('date_time'), 'Y-m-d H:i:s')->eval(
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('DateTimeFormat function requires non-null values');
+
+        date_time_format(ref('date_time'), 'Y-m-d H:i:s')->eval(
             row(str_entry('date_time', '2020-01-01 00:00:00')),
             flow_context(),
-        ));
+        );
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\combine;
@@ -28,7 +29,10 @@ final class CombineTest extends FlowTestCase
 
     public function test_array_combine_when_keys_are_not_array(): void
     {
-        static::assertNull(combine(lit('a'), lit([1, 2, 3]))->eval(row(), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Combine function requires non-null arrays');
+
+        combine(lit('a'), lit([1, 2, 3]))->eval(row(), flow_context());
     }
 
     public function test_array_combine_when_keys_are_not_unique(): void
@@ -41,6 +45,9 @@ final class CombineTest extends FlowTestCase
 
     public function test_array_combine_when_one_of_arrays_is_empty(): void
     {
-        static::assertNull(combine(lit(['a', 'b', 'c']), lit([]))->eval(row(), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Combine function requires keys and values arrays to have the same length');
+
+        combine(lit(['a', 'b', 'c']), lit([]))->eval(row(), flow_context());
     }
 }

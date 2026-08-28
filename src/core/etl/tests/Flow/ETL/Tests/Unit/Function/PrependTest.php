@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -45,6 +46,9 @@ final class PrependTest extends FlowTestCase
 
     public function test_prepend_with_null_value(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Prepend function requires non-null value');
+
         $result = ref('str')->prepend('Hello ')->eval(row(str_entry('str', null)), flow_context());
 
         static::assertNull($result);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -36,10 +37,11 @@ final class StringBeforeLastTest extends FlowTestCase
 
     public function test_string_before_last_returns_null(): void
     {
-        static::assertNull(
-            ref('str')
-                ->stringBeforeLast(ref('needle'))
-                ->eval(row(str_entry('str', null), str_entry('needle', 'o')), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringBeforeLast function requires non-null value');
+
+        ref('str')
+            ->stringBeforeLast(ref('needle'))
+            ->eval(row(str_entry('str', null), str_entry('needle', 'o')), flow_context());
     }
 }

@@ -24,13 +24,20 @@ use function Flow\Types\DSL\type_structure;
 final readonly class OptionalType implements Type
 {
     /**
+     * @var Type<T>
+     */
+    private Type $base;
+
+    /**
+     * Nullability is idempotent, so wrapping an already-optional type collapses to one level
+     * instead of throwing - callers forcing nullability never need a guard.
+     *
      * @param Type<T> $base
      *
      * @throws InvalidTypeException
      */
-    public function __construct(
-        private Type $base,
-    ) {
+    public function __construct(Type $base)
+    {
         if ($base instanceof MixedType) {
             throw new InvalidTypeException(
                 'Optional type cannot be created from MixedType, mixed is a standalone type',
@@ -41,9 +48,7 @@ final readonly class OptionalType implements Type
             throw new InvalidTypeException('Optional type cannot be created from a union type');
         }
 
-        if ($base instanceof self) {
-            throw new InvalidTypeException('Optional type cannot be created from an optional type');
-        }
+        $this->base = $base instanceof self ? $base->base() : $base;
     }
 
     /**

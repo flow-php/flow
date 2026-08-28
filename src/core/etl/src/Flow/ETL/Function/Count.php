@@ -43,7 +43,7 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
             }
             $this->count++;
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Count error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Count error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -91,11 +91,9 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
             return int_entry('_count', $this->count);
         }
 
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_count');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_count');
 
-        return int_entry($this->ref->name(), $this->count);
+        return int_entry($ref->name(), $this->count);
     }
 
     public function toString(): string

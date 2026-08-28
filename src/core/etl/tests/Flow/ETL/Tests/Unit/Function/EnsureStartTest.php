@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -31,6 +32,9 @@ final class EnsureStartTest extends FlowTestCase
 
     public function test_null_value(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('EnsureStart function requires non-null value');
+
         $result = ref('str')->ensureStart('prefix_')->eval(row(str_entry('str', null)), flow_context());
 
         static::assertNull($result);

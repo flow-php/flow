@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\RequiresPhp;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\html_element_entry;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -28,7 +29,7 @@ final class DOMElementNextSiblingTest extends FlowTestCase
             )))))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', ref('user_details')->domElementNextSibling()->domElementValue())
+            ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -36,7 +37,7 @@ final class DOMElementNextSiblingTest extends FlowTestCase
             [
                 [
                     'user_name' => 'User Name',
-                    'user_id' => '01',
+                    'user_id' => null,
                 ],
             ],
             $rows->toArray(),
@@ -53,7 +54,7 @@ final class DOMElementNextSiblingTest extends FlowTestCase
             )))))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', ref('user_details')->domElementNextSibling(true)->domElementValue())
+            ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 

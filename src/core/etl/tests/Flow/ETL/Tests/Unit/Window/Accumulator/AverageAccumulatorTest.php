@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Window\Accumulator;
 
 use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\AverageAccumulator;
 
@@ -33,23 +32,9 @@ final class AverageAccumulatorTest extends FlowTestCase
         static::assertNull((new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context()))->value());
     }
 
-    public function test_missing_entry_is_reported_in_lenient_mode(): void
-    {
-        $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::LENIENT);
-
-        $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, $context);
-        $accumulator->accumulate(row(str_entry('other', 'x')));
-        $accumulator->accumulate(row(int_entry('value', 4)));
-
-        static::assertSame(4.0, $accumulator->value());
-    }
-
     public function test_missing_entry_throws_in_strict_mode(): void
     {
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Average window function error: /');
 

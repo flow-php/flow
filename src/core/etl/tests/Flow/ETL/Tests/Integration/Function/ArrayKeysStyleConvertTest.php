@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -45,8 +44,6 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayKeysStyleConvert function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         array_keys_style_convert(ref('string'), 'camel')->eval(row(string_entry('string', 'test')), $context);
     }
 }

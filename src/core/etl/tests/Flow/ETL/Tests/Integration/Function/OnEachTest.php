@@ -8,6 +8,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\Types\DSL\type_string;
 
@@ -20,7 +21,7 @@ final class OnEachTest extends FlowTestCase
                 ['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]],
                 ['array' => ['f' => 1, 'g' => 2.3, 'h' => 3, 'i' => 4, 'j' => null]],
             ]))
-            ->withEntry('array', ref('array')->onEach(ref('element')->cast(type_string())))
+            ->withEntry('array', ref('array')->onEach(optional(ref('element')->cast(type_string()))))
             ->fetch()
             ->toArray();
 

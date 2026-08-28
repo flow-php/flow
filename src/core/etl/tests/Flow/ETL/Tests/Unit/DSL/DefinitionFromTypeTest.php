@@ -8,6 +8,9 @@ use DateTimeZone;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Row\Entry\TimeZoneEntry;
+use Flow\ETL\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Schema\Definition\ListDefinition;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Tests\FlowTestCase;
@@ -19,14 +22,39 @@ use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_empty_array;
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_union;
 
 final class DefinitionFromTypeTest extends FlowTestCase
 {
+    public function test_an_optional_type_yields_a_nullable_definition(): void
+    {
+        $definition = definition_from_type('c', type_optional(type_integer()));
+
+        static::assertInstanceOf(IntegerDefinition::class, $definition);
+        static::assertTrue($definition->isNullable());
+    }
+
+    public function test_a_nested_optional_list_keeps_its_element_optionality(): void
+    {
+        $definition = definition_from_type('c', type_optional(type_list(type_optional(type_integer()))));
+
+        static::assertInstanceOf(ListDefinition::class, $definition);
+        static::assertTrue($definition->isNullable());
+        static::assertTrue(type_equals(type_list(type_optional(type_integer())), $definition->type()));
+    }
+
+    public function test_an_optional_null_type_yields_a_null_definition(): void
+    {
+        static::assertInstanceOf(NullDefinition::class, definition_from_type('c', type_optional(type_null())));
+    }
+
     public function test_definition_from_type_refuses_an_empty_array_type(): void
     {
         $this->expectException(RuntimeException::class);

@@ -14,8 +14,8 @@ use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 
 use function array_filter;
 use function explode;
@@ -119,6 +119,6 @@ final class Partition
 
     public function reference(): Reference
     {
-        return new EntryReference($this->name);
+        return new UnresolvedReference($this->name);
     }
 }

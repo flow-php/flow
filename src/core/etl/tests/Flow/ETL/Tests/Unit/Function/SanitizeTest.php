@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -17,7 +18,10 @@ final class SanitizeTest extends FlowTestCase
 {
     public function test_sanitize_on_non_string_value(): void
     {
-        static::assertNull(ref('value')->sanitize()->eval(row(int_entry('value', 1000)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sanitize function requires non-null value');
+
+        ref('value')->sanitize()->eval(row(int_entry('value', 1000)), flow_context());
     }
 
     public function test_sanitize_on_valid_string(): void

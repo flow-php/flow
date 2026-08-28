@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_key_rename;
@@ -22,11 +21,9 @@ final class ArrayKeyRenameTest extends FlowTestCase
     public function test_array_key_rename_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array, path, and new name');
+        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('integer_entry', 1));
 
         array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, $context);
@@ -34,12 +31,12 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_for_not_array_entry(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array');
+
         $row = row(int_entry('integer_entry', 1));
 
-        static::assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval(
-            $row,
-            flow_context(),
-        ));
+        array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, flow_context());
     }
 
     public function test_renames_array_entry_keys_in_multiple_array_entry(): void

@@ -17,6 +17,11 @@ final class SchemaNotDerivableException extends InvalidArgumentException
         ));
     }
 
+    public static function function(string $function, string $reason): self
+    {
+        return new self(sprintf('%s() cannot describe the column it produces: %s.', $function, $reason));
+    }
+
     public static function nonRewindable(string $extractor): self
     {
         return new self(sprintf(

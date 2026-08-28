@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Dataset\Statistics;
 
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use InvalidArgumentException;
 
 use function array_key_exists;
@@ -43,9 +43,9 @@ final class Columns
         return array_values($this->columns);
     }
 
-    public function get(string|EntryReference $ref): Column
+    public function get(string|Reference $ref): Column
     {
-        if ($ref instanceof EntryReference) {
+        if ($ref instanceof Reference) {
             $ref = $ref->name();
         }
 

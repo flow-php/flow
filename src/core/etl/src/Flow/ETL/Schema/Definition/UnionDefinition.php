@@ -7,9 +7,9 @@ namespace Flow\ETL\Schema\Definition;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\EntryTypeResolver;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\OptionalType;
@@ -45,7 +45,7 @@ final readonly class UnionDefinition implements Definition
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = (new UnionTypeNormalizer())->normalize($type);
     }

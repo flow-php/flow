@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -33,7 +34,10 @@ final class TruncateTest extends FlowTestCase
 
     public function test_truncate_returns_null_for_null_input(): void
     {
-        static::assertNull(ref('str')->truncate(10)->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Truncate function requires non-null value');
+
+        ref('str')->truncate(10)->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_truncate_string_longer_than_limit(): void

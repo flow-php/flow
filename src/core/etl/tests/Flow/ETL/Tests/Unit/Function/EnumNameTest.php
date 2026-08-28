@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -56,22 +55,12 @@ final class EnumNameTest extends FlowTestCase
     #[TestWith([null])]
     #[TestWith(['foo'])]
     #[TestWith([42])]
-    public function test_enum_name_returns_null_in_permissive_mode(mixed $input): void
-    {
-        static::assertNull(enum_name($input)->eval(row(), flow_context()));
-    }
-
-    #[TestWith([null])]
-    #[TestWith(['foo'])]
-    #[TestWith([42])]
     public function test_enum_name_throws_in_strict_mode(mixed $input): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('EnumName function requires a UnitEnum value');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         enum_name($input)->eval(row(), $context);
     }
 }

@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_name;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -38,7 +39,7 @@ final class EnumNameTest extends FlowTestCase
     {
         data_frame()
             ->read(from_rows(rows(row(enum_entry('e', BackedIntEnum::one)), row(enum_entry('e', null)))))
-            ->withEntry('code', enum_name(ref('e')))
+            ->withEntry('code', optional(enum_name(ref('e'))))
             ->select('code')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

@@ -8,24 +8,54 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 use UnitEnum;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_string;
 
-final class EnumName extends ScalarFunctionChain
+final class EnumName implements ScalarFunction
 {
-    public function __construct(
-        private readonly mixed $value,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+
+    public function __construct(mixed $value)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): ?ScalarResult
     {
         $enum = (new Parameter($this->value))->eval($row, $context);
 
         if (!$enum instanceof UnitEnum) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('EnumName function requires a UnitEnum value'));
+            throw new InvalidArgumentException('EnumName function requires a UnitEnum value');
         }
 
         return new ScalarResult($enum->name, type_string());

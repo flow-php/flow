@@ -6,8 +6,8 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\Types\Value\Uuid;
 
 use function is_array;
@@ -65,7 +65,7 @@ final readonly class Equal implements Comparison
      */
     public function left(): array
     {
-        return [is_string($this->entryLeft) ? EntryReference::init($this->entryLeft) : $this->entryLeft];
+        return [is_string($this->entryLeft) ? UnresolvedReference::init($this->entryLeft) : $this->entryLeft];
     }
 
     /**
@@ -73,6 +73,6 @@ final readonly class Equal implements Comparison
      */
     public function right(): array
     {
-        return [is_string($this->entryRight) ? EntryReference::init($this->entryRight) : $this->entryRight];
+        return [is_string($this->entryRight) ? UnresolvedReference::init($this->entryRight) : $this->entryRight];
     }
 }

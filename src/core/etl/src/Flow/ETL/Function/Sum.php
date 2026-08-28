@@ -64,7 +64,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
                 $this->aggregated++;
             }
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Sum error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -105,23 +105,21 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_sum');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_sum');
 
         if ($this->floatColumn) {
-            return float_entry($this->ref->name(), (float) $this->sum);
+            return float_entry($ref->name(), (float) $this->sum);
         }
 
         if ($this->aggregated === 0) {
-            return int_entry($this->ref->name(), null);
+            return int_entry($ref->name(), null);
         }
 
         if (!is_float($this->sum)) {
-            return int_entry($this->ref->name(), (int) $this->sum);
+            return int_entry($ref->name(), (int) $this->sum);
         }
 
-        return float_entry($this->ref->name(), $this->sum);
+        return float_entry($ref->name(), $this->sum);
     }
 
     public function toString(): string

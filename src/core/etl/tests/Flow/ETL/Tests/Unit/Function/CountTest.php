@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\WindowContextMother;
 
@@ -119,8 +118,6 @@ final class CountTest extends FlowTestCase
         $count = count(ref('missing_column'))->over(window()->orderBy(ref('id')));
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $count->apply(WindowContextMother::forRow($row1, $rows, context: $context));
     }
 }

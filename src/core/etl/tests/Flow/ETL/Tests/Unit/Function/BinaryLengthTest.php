@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -32,7 +33,10 @@ final class BinaryLengthTest extends FlowTestCase
 
     public function test_binary_length_returns_null_for_null_input(): void
     {
-        static::assertNull(ref('str')->binaryLength()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('BinaryLength function requires non-null value');
+
+        ref('str')->binaryLength()->eval(row(str_entry('str', null)), flow_context());
     }
 
     public function test_binary_length_string_with_newlines_and_tabs(): void

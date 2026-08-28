@@ -5,31 +5,31 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ListFunctions;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
-use function is_string;
-
-final class EntryReference extends ScalarFunctionChain implements Reference
+final class ResolvedReference implements ScalarFunction, Reference
 {
-    private ?string $alias = null;
+    use ScalarFunctionChain;
 
-    private SortOrder $sort = SortOrder::ASC;
-
+    /**
+     * The Type is a constructor parameter so an untyped resolved node is unconstructable -
+     * Spark's AttributeReference. Nullability arrives fused into the Type as a top-level
+     * OptionalType, wrapped by UnresolvedReference::resolve().
+     *
+     * @param Type<mixed> $type
+     */
     public function __construct(
         private readonly string $entry,
+        private readonly Type $type,
+        private readonly ?string $alias = null,
+        private readonly SortOrder $sort = SortOrder::ASC,
     ) {}
-
-    public static function init(string|Reference $ref): Reference
-    {
-        if (is_string($ref)) {
-            return new self($ref);
-        }
-
-        return $ref;
-    }
 
     public function __toString(): string
     {
@@ -38,16 +38,12 @@ final class EntryReference extends ScalarFunctionChain implements Reference
 
     public function as(string $alias): self
     {
-        $this->alias = $alias;
-
-        return $this;
+        return new self($this->entry, $this->type, $alias, $this->sort);
     }
 
     public function asc(): self
     {
-        $this->sort = SortOrder::ASC;
-
-        return $this;
+        return new self($this->entry, $this->type, $this->alias, SortOrder::ASC);
     }
 
     public function base(): string
@@ -55,11 +51,25 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $this->entry;
     }
 
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        return $this;
+    }
+
     public function desc(): self
     {
-        $this->sort = SortOrder::DESC;
-
-        return $this;
+        return new self($this->entry, $this->type, $this->alias, SortOrder::DESC);
     }
 
     public function eval(Row $row, FlowContext $context): mixed
@@ -85,6 +95,14 @@ final class EntryReference extends ScalarFunctionChain implements Reference
     public function name(): string
     {
         return $this->alias ?? $this->entry;
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return $this->type;
     }
 
     public function sort(): SortOrder

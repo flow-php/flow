@@ -24,6 +24,15 @@ final class MinTest extends FlowTestCase
         static::assertEquals([ref('int')], min(ref('int'))->references());
     }
 
+    public function test_the_output_suffix_survives_an_immutable_reference(): void
+    {
+        $aggregator = min(ref('int'));
+
+        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
+
+        static::assertSame('int_min', $aggregator->result(flow_context(config())->entryFactory())->name());
+    }
+
     public function test_aggregation_min_from_numeric_values(): void
     {
         $aggregator = min(ref('int'));

@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
+use Flow\ETL\Function\ArrayGet;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_exists;
@@ -20,23 +20,34 @@ use function Flow\ETL\DSL\row;
 
 final class ArrayGetTest extends FlowTestCase
 {
+    public function test_constructor_rejects_a_wildcard_path(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('contains a wildcard');
+
+        new ArrayGet(ref('array'), '*.id');
+    }
+
+    public function test_constructor_rejects_a_branch_path(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('contains a wildcard');
+
+        new ArrayGet(ref('array'), '{a,b}');
+    }
+
     public function test_array_access_for_not_array_entry(): void
     {
-        static::assertNull(array_get(ref('integer_entry'), 'invalid_path')->eval(
-            row(int_entry('integer_entry', 1)),
-            flow_context(),
-        ));
-        static::assertFalse(array_exists(ref('integer_entry'), 'invalid_path')->eval(
-            row(int_entry('integer_entry', 1)),
-            flow_context(),
-        ));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayGet function failed to get value from array.');
+
+        array_get(ref('integer_entry'), 'invalid_path')->eval(row(int_entry('integer_entry', 1)), flow_context());
+        array_exists(ref('integer_entry'), 'invalid_path')->eval(row(int_entry('integer_entry', 1)), flow_context());
     }
 
     public function test_array_access_for_not_array_entry_strict_mode(): void
     {
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGet function failed to get value from array');
 

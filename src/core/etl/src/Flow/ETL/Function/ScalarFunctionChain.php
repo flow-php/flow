@@ -20,8 +20,13 @@ use Normalizer;
 
 use function Flow\ETL\DSL\lit;
 
-abstract class ScalarFunctionChain implements ScalarFunction
+/**
+ * @require-implements ScalarFunction
+ */
+trait ScalarFunctionChain
 {
+    use ResolvesFromChildren;
+
     public function and(ScalarFunction $function): All
     {
         return new All($this, $function);
@@ -50,7 +55,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ArrayFilter($this, $value);
     }
 
-    public function arrayGet(ScalarFunction|string $path): ArrayGet
+    public function arrayGet(string $path): ArrayGet
     {
         return new ArrayGet($this, $path);
     }
@@ -112,13 +117,13 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ArrayPathExists($this, $path);
     }
 
-    public function arrayReverse(ScalarFunction|bool $preserveKeys = false): ArrayReverse
+    public function arrayReverse(bool $preserveKeys = false): ArrayReverse
     {
         return new ArrayReverse($this, $preserveKeys);
     }
 
     public function arraySort(
-        ScalarFunction|Sort|null $sortFunction = null,
+        ?Sort $sortFunction = null,
         ScalarFunction|int|null $flags = null,
         ScalarFunction|bool $recursive = true,
     ): ArraySort {
@@ -167,9 +172,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function call(
         ScalarFunction|callable $callable,
+        Type $returnType,
         array $arguments = [],
         string|int $refAlias = 0,
-        ?Type $returnType = null,
     ): CallUserFunc {
         return new CallUserFunc($callable, array_merge($arguments, [$refAlias => $this]), $returnType);
     }
@@ -257,9 +262,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new DOMElementNamespaceValue($this, $attribute);
     }
 
-    public function domElementNextSibling(bool $allowOnlyElement = false): DOMElementNextSibling
+    public function domElementNextSibling(): DOMElementNextSibling
     {
-        return new DOMElementNextSibling($this, $allowOnlyElement);
+        return new DOMElementNextSibling($this);
     }
 
     public function domElementParent(): DOMElementParent
@@ -267,9 +272,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new DOMElementParent($this);
     }
 
-    public function domElementPreviousSibling(bool $allowOnlyElement = false): DOMElementPreviousSibling
+    public function domElementPreviousSibling(): DOMElementPreviousSibling
     {
-        return new DOMElementPreviousSibling($this, $allowOnlyElement);
+        return new DOMElementPreviousSibling($this);
     }
 
     public function domElementValue(): DOMElementValue
@@ -531,7 +536,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *
      * Example: $df->withEntry('array', ref('array')->onEach(ref('element')->cast(type_string())))
      */
-    public function onEach(ScalarFunction $function, ScalarFunction|bool $preserveKeys = true): OnEach
+    public function onEach(ScalarFunction $function, bool $preserveKeys = true): OnEach
     {
         return new OnEach($this, $function, $preserveKeys);
     }
@@ -561,19 +566,13 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Prepend($this, $prefix);
     }
 
-    public function regex(
-        ScalarFunction|string $pattern,
-        ScalarFunction|int $flags = 0,
-        ScalarFunction|int $offset = 0,
-    ): Regex {
+    public function regex(ScalarFunction|string $pattern, int $flags = 0, ScalarFunction|int $offset = 0): Regex
+    {
         return new Regex($pattern, $this, $flags, $offset);
     }
 
-    public function regexAll(
-        ScalarFunction|string $pattern,
-        ScalarFunction|int $flags = 0,
-        ScalarFunction|int $offset = 0,
-    ): RegexAll {
+    public function regexAll(ScalarFunction|string $pattern, int $flags = 0, ScalarFunction|int $offset = 0): RegexAll
+    {
         return new RegexAll($pattern, $this, $flags, $offset);
     }
 

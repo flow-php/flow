@@ -9,17 +9,51 @@ use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 use function is_string;
 
-final class ToTimeZone extends ScalarFunctionChain
+final class ToTimeZone implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DateTimeInterface $value,
-        private readonly ScalarFunction|DateTimeZone|string $timezone,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $timezone;
+
+    public function __construct(ScalarFunction|DateTimeInterface $value, ScalarFunction|DateTimeZone|string $timezone)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->timezone = $timezone instanceof ScalarFunction ? $timezone : lit($timezone);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value, $this->timezone];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_datetime();
+    }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
@@ -32,9 +66,7 @@ final class ToTimeZone extends ScalarFunctionChain
         );
 
         if ($dateTime === null || $tz === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ToTimeZone function requires non-null values'));
+            throw new InvalidArgumentException('ToTimeZone function requires non-null values');
         }
 
         $tz = is_string($tz) ? new DateTimeZone($tz) : $tz;

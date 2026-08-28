@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -23,11 +22,9 @@ final class ArraySortTest extends FlowTestCase
     public function test_array_sort_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArraySort function requires non-null array and sort function');
+        $this->expectExceptionMessage('ArraySort function requires non-null array');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('array')->arraySort()->eval(row(str_entry('array', 'string')), $context);
     }
 
@@ -115,7 +112,10 @@ final class ArraySortTest extends FlowTestCase
 
     public function test_sorting_non_array_value(): void
     {
-        static::assertNull(ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArraySort function requires non-null array');
+
+        ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context());
     }
 
     private function json(): string

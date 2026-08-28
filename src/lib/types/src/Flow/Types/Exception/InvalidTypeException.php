@@ -25,6 +25,17 @@ final class InvalidTypeException extends InvalidArgumentException
     }
 
     /**
+     * @param Type<mixed> ...$types
+     */
+    public static function noCommonType(Type ...$types): self
+    {
+        return new self(sprintf('Cannot combine types "%s" - an explicit cast is required.', implode('", "', array_map(
+            static fn(Type $type): string => $type->toString(),
+            $types,
+        ))));
+    }
+
+    /**
      * @param Type<mixed> $expectedType
      */
     public static function value(mixed $value, Type $expectedType): self

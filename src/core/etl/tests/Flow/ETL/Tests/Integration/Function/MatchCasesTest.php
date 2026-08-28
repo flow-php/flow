@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 
 final class MatchCasesTest extends FlowTestCase
@@ -33,7 +34,7 @@ final class MatchCasesTest extends FlowTestCase
             ->read(from_rows($rows))
             ->withEntry('string', match_cases([
                 match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
-                match_condition(ref('string')->call('is_numeric'), ref('string')->cast(type_integer())),
+                match_condition(ref('string')->call('is_numeric', type_boolean()), ref('string')->cast(type_integer())),
                 match_condition(ref('string')->endsWith('%'), ref('string')->strReplace('%', '')->cast(type_integer())),
                 match_condition(
                     ref('string')->startsWith('+'),

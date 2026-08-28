@@ -10,6 +10,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -39,13 +40,13 @@ final class StartsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('starts_with', ref('id')->startsWith(lit('1')))
+            ->withEntry('starts_with', optional(ref('id')->startsWith(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
             [
-                ['id' => 1, 'starts_with' => false],
+                ['id' => 1, 'starts_with' => null],
             ],
             $memory->dump(),
         );
@@ -57,13 +58,13 @@ final class StartsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('starts_with', ref('id')->startsWith(lit(1)))
+            ->withEntry('starts_with', optional(ref('id')->startsWith(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
             [
-                ['id' => '1', 'starts_with' => false],
+                ['id' => '1', 'starts_with' => null],
             ],
             $memory->dump(),
         );

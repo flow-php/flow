@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -22,6 +23,9 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_null_haystack(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringMatch function requires non-null haystack');
+
         $result = ref('str')->stringMatch('/hello/')->eval(row(str_entry('str', null)), flow_context());
 
         static::assertNull($result);
@@ -29,6 +33,9 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_null_pattern(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringMatch function requires non-null pattern');
+
         $result = ref('str')
             ->stringMatch(ref('pattern'))
             ->eval(row(str_entry('str', 'hello world'), str_entry('pattern', null)), flow_context());

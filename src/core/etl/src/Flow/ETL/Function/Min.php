@@ -61,7 +61,7 @@ final class Min implements AggregatingFunction
                 }
             }
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Min error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Min error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -78,28 +78,26 @@ final class Min implements AggregatingFunction
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_min');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_min');
 
         if ($this->floatColumn) {
-            return float_entry($this->ref->name(), $this->min instanceof DateTimeInterface ? null : $this->min);
+            return float_entry($ref->name(), $this->min instanceof DateTimeInterface ? null : $this->min);
         }
 
         if ($this->min === null) {
-            return int_entry($this->ref->name(), null);
+            return int_entry($ref->name(), null);
         }
 
         if ($this->min instanceof DateTimeInterface) {
-            return datetime_entry($this->ref->name(), $this->min);
+            return datetime_entry($ref->name(), $this->min);
         }
 
         $resultInt = (int) $this->min;
 
         if (($this->min - $resultInt) === 0.0) {
-            return int_entry($this->ref->name(), (int) $this->min);
+            return int_entry($ref->name(), (int) $this->min);
         }
 
-        return float_entry($this->ref->name(), $this->min);
+        return float_entry($ref->name(), $this->min);
     }
 }

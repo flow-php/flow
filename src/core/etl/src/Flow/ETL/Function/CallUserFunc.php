@@ -10,11 +10,18 @@ use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 
+use function array_combine;
+use function array_keys;
+use function array_map;
+use function array_values;
 use function call_user_func;
+use function Flow\ETL\DSL\lit;
 use function is_callable;
 
-final class CallUserFunc extends ScalarFunctionChain
+final class CallUserFunc implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
     /**
      * @var callable|ScalarFunction
      */
@@ -23,24 +30,59 @@ final class CallUserFunc extends ScalarFunctionChain
     /**
      * @param callable|ScalarFunction $callable
      * @param array<mixed> $parameters
-     * @param null|Type<mixed> $returnType
+     * @param Type<mixed> $returnType
      */
+    /**
+     * @var array<array-key, ScalarFunction>
+     */
+    private readonly array $parameters;
+
     public function __construct(
         ScalarFunction|callable $callable,
-        private readonly array $parameters,
-        private readonly ?Type $returnType = null,
+        array $parameters,
+        private readonly Type $returnType,
     ) {
         $this->callable = $callable;
+        $this->parameters = array_map(static fn(mixed $parameter): ScalarFunction => $parameter
+            instanceof ScalarFunction
+                ? $parameter
+                : lit($parameter), $parameters);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return array_values($this->parameters);
+    }
+
+    /**
+     * String keys in the bag become PHP named arguments at call time, so the key list is
+     * carried as a field and restored here (Spark's otherCopyArgs).
+     *
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($this->callable, array_combine(array_keys($this->parameters), $children), $this->returnType);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return $this->returnType;
+    }
+
+    public function eval(Row $row, FlowContext $context): ScalarResult
     {
         $callable = (new Parameter($this->callable))->eval($row, $context);
 
         if (!is_callable($callable)) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('CallUserFunc requires a valid callable'));
+            throw new InvalidArgumentException('CallUserFunc requires a valid callable');
         }
 
         $parameters = [];
@@ -50,14 +92,10 @@ final class CallUserFunc extends ScalarFunctionChain
             $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
         }
 
-        if ($this->returnType) {
-            // The callable's output may not match the declared type - coerce it before trusting the ScalarResult.
-            // @mago-ignore analysis:mixed-assignment
-            $result = call_user_func($callable, ...$parameters);
+        // The callable's output may not match the declared type - coerce it before trusting the ScalarResult.
+        // @mago-ignore analysis:mixed-assignment
+        $result = call_user_func($callable, ...$parameters);
 
-            return new ScalarResult($result === null ? null : $this->returnType->cast($result), $this->returnType);
-        }
-
-        return call_user_func($callable, ...$parameters);
+        return new ScalarResult($result === null ? null : $this->returnType->cast($result), $this->returnType);
     }
 }

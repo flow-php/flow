@@ -55,7 +55,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Average error: ' . $e->getMessage()));
+            throw new InvalidArgumentException('Average error: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -92,16 +92,14 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_avg');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_avg');
 
         if (0 === $this->count) {
-            return float_entry($this->ref->name(), null);
+            return float_entry($ref->name(), null);
         }
 
         return float_entry(
-            $this->ref->name(),
+            $ref->name(),
             (float) (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding),
         );
     }

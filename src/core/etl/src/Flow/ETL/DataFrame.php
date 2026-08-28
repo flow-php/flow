@@ -16,7 +16,6 @@ use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\GroupBy\GroupBySteps;
@@ -34,10 +33,10 @@ use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
@@ -133,7 +132,7 @@ final class DataFrame
      */
     public function batchBy(string|Reference $column, ?int $minSize = null): self
     {
-        $this->pipeline->add(new BatchingByProcessor(EntryReference::init($column), $minSize));
+        $this->pipeline->add(new BatchingByProcessor(UnresolvedReference::init($column), $minSize));
 
         return $this;
     }
@@ -651,18 +650,6 @@ final class DataFrame
     public function match(Schema $schema, ?SchemaValidator $validator = null): self
     {
         $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new StrictValidator()));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @return $this
-     */
-    public function mode(ExecutionMode $mode): self
-    {
-        $this->context->functions()->setMode($mode);
 
         return $this;
     }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_get_collection;
@@ -25,8 +24,6 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('invalid_entry', 1));
 
         array_get_collection(ref('invalid_entry'), ['id'])->eval($row, $context);
@@ -34,13 +31,19 @@ final class ArrayGetCollectionTest extends FlowTestCase
 
     public function test_for_not_array_entry(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
+
         $row = row(int_entry('invalid_entry', 1));
 
-        static::assertNull(array_get_collection(ref('invalid_entry'), ['id'])->eval($row, flow_context()));
+        array_get_collection(ref('invalid_entry'), ['id'])->eval($row, flow_context());
     }
 
     public function test_getting_keys_from_simple_array(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
+
         $row = row(json_entry('array_entry', [
             'id' => 1,
             'status' => 'PENDING',
@@ -48,7 +51,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
             'array' => ['foo' => 'bar'],
         ]));
 
-        static::assertNull(array_get_collection(ref('array_entry'), ['id'])->eval($row, flow_context()));
+        array_get_collection(ref('array_entry'), ['id'])->eval($row, flow_context());
     }
 
     public function test_getting_specific_keys_from_collection_of_array(): void

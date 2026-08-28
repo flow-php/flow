@@ -8,6 +8,7 @@ use Flow\ETL\Function\Exists;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -15,6 +16,11 @@ use function Flow\ETL\DSL\str_entry;
 
 final class ExistsTest extends FlowTestCase
 {
+    public function test_a_throwing_operand_means_the_reference_does_not_exist(): void
+    {
+        static::assertFalse((new Exists(ref('value')->upper()))->eval(row(int_entry('value', 1)), flow_context()));
+    }
+
     public function test_if_reference_exists(): void
     {
         static::assertTrue(ref('value')->exists()->eval(row(str_entry('value', 'test')), flow_context()));

@@ -96,7 +96,6 @@ use Flow\ETL\Function\DateTimeFormat;
 use Flow\ETL\Function\DenseRank;
 use Flow\ETL\Function\EnumName;
 use Flow\ETL\Function\EnumValue;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\Exists;
 use Flow\ETL\Function\First;
 use Flow\ETL\Function\Greatest;
@@ -192,13 +191,13 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -280,6 +279,7 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
@@ -449,7 +449,7 @@ function batched_by(Extractor $extractor, string|Reference $column, ?int $min_si
         throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
     }
 
-    return new BatchByExtractor($extractor, EntryReference::init($column), $min_size);
+    return new BatchByExtractor($extractor, UnresolvedReference::init($column), $min_size);
 }
 
 /**
@@ -1124,9 +1124,9 @@ function rows_partitioned(array $rows, array|Partitions $partitions): Rows
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function col(string $entry): EntryReference
+function col(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 /**
@@ -1134,16 +1134,16 @@ function col(string $entry): EntryReference
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 #[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
-function entry(string $entry): EntryReference
+function entry(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 #[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
-function ref(string $entry): EntryReference
+function ref(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1232,7 +1232,7 @@ function when(mixed $condition, mixed $then, mixed $else = null): When
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_get(ScalarFunction $ref, ScalarFunction|string $path): ArrayGet
+function array_get(ScalarFunction $ref, string $path): ArrayGet
 {
     return new ArrayGet($ref, $path);
 }
@@ -1281,11 +1281,8 @@ function array_merge_collection(ScalarFunction|array $array): ArrayMergeCollecti
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_key_rename(
-    ScalarFunction $ref,
-    ScalarFunction|string $path,
-    ScalarFunction|string $newName,
-): ArrayKeyRename {
+function array_key_rename(ScalarFunction $ref, string $path, string $newName): ArrayKeyRename
+{
     return new ArrayKeyRename($ref, $path, $newName);
 }
 
@@ -1300,22 +1297,18 @@ function array_keys_style_convert(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_sort(
     ScalarFunction $function,
-    ScalarFunction|Sort|null $sort_function = null,
+    ?Sort $sort_function = null,
     ScalarFunction|int|null $flags = null,
     ScalarFunction|bool $recursive = true,
 ): ArraySort {
-    if ($sort_function === null) {
-        $sort_function = Sort::sort;
-    }
-
-    return new ArraySort($function, $sort_function, $flags, $recursive);
+    return new ArraySort($function, $sort_function ?? Sort::sort, $flags, $recursive);
 }
 
 /**
  * @param array<array-key, mixed>|ScalarFunction $function
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_reverse(ScalarFunction|array $function, ScalarFunction|bool $preserveKeys = false): ArrayReverse
+function array_reverse(ScalarFunction|array $function, bool $preserveKeys = false): ArrayReverse
 {
     return new ArrayReverse($function, $preserveKeys);
 }
@@ -1431,7 +1424,7 @@ function enum_value(mixed $value): EnumValue
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(?EntryReference $function = null): Count
+function count(?Reference $function = null): Count
 {
     return new Count($function);
 }
@@ -1440,11 +1433,11 @@ function count(?EntryReference $function = null): Count
  * Calls a user-defined function with the given parameters.
  *
  * @param callable|ScalarFunction $callable
+ * @param Type<mixed> $return_type
  * @param array<mixed> $parameters
- * @param null|Type<mixed> $return_type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $return_type = null): CallUserFunc
+function call(ScalarFunction|callable $callable, Type $return_type, array $parameters = []): CallUserFunc
 {
     return new CallUserFunc($callable, $parameters, $return_type);
 }
@@ -1520,7 +1513,7 @@ function uuid_v4(): Uuid
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function uuid_v7(ScalarFunction|DateTimeInterface|null $value = null): Uuid
+function uuid_v7(ScalarFunction|DateTimeInterface $value): Uuid
 {
     return Uuid::uuid7($value);
 }
@@ -1625,7 +1618,7 @@ function regex_match(
 function regex(
     ScalarFunction|string $pattern,
     ScalarFunction|string $subject,
-    ScalarFunction|int $flags = 0,
+    int $flags = 0,
     ScalarFunction|int $offset = 0,
 ): Regex {
     return new Regex($pattern, $subject, $flags, $offset);
@@ -1635,7 +1628,7 @@ function regex(
 function regex_all(
     ScalarFunction|string $pattern,
     ScalarFunction|string $subject,
-    ScalarFunction|int $flags = 0,
+    int $flags = 0,
     ScalarFunction|int $offset = 0,
 ): RegexAll {
     return new RegexAll($pattern, $subject, $flags, $offset);
@@ -1787,7 +1780,7 @@ function dense_rank(): DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(EntryReference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
+function average(Reference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
 {
     return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
 }
@@ -1805,19 +1798,19 @@ function least(mixed ...$values): Least
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect(EntryReference|string $ref): Collect
+function collect(Reference|string $ref): Collect
 {
     return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function string_agg(EntryReference|string $ref, string $separator = ', ', ?SortOrder $sort = null): StringAggregate
+function string_agg(Reference|string $ref, string $separator = ', ', ?SortOrder $sort = null): StringAggregate
 {
     return new StringAggregate(is_string($ref) ? ref($ref) : $ref, $separator, $sort);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect_unique(EntryReference|string $ref): CollectUnique
+function collect_unique(Reference|string $ref): CollectUnique
 {
     return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
@@ -1859,31 +1852,31 @@ function unbounded_following(): FrameBound
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(EntryReference|string $ref, ScalarFunction|bool $exact = false): Sum
+function sum(Reference|string $ref, ScalarFunction|bool $exact = false): Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref, $exact);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function first(EntryReference|string $ref): First
+function first(Reference|string $ref): First
 {
     return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function last(EntryReference|string $ref): Last
+function last(Reference|string $ref): Last
 {
     return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function max(EntryReference|string $ref): Max
+function max(Reference|string $ref): Max
 {
     return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function min(EntryReference|string $ref): Min
+function min(Reference|string $ref): Min
 {
     return new Min(is_string($ref) ? ref($ref) : $ref);
 }
@@ -2238,7 +2231,7 @@ function definition_from_type(
         $type instanceof EmptyArrayType => throw new RuntimeException(\sprintf(
             'Column "%s" cannot be typed as array{} - an empty array is a value, not a column type. '
             . 'Declare the element type, e.g. type_list(type_string()).',
-            EntryReference::init($ref)->name(),
+            UnresolvedReference::init($ref)->name(),
         )),
         $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
         $type instanceof TimeZoneType => new TimeZoneDefinition($ref, $nullable, $metadata),
@@ -2250,19 +2243,20 @@ function definition_from_type(
             ? definition_from_type(
                 $ref,
                 $type->types()->without(type_null())->first() ?? throw UnsupportedUnionTypeException::forColumn(
-                    EntryReference::init($ref),
+                    UnresolvedReference::init($ref),
                     $type,
                 ),
                 nullable: true,
                 metadata: $metadata,
             )
-            : throw UnsupportedUnionTypeException::forColumn(EntryReference::init($ref), $type),
+            : throw UnsupportedUnionTypeException::forColumn(UnresolvedReference::init($ref), $type),
         $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
         $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
         $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof NullType => new NullDefinition($ref, $metadata),
+        $type instanceof OptionalType => definition_from_type($ref, $type->base(), nullable: true, metadata: $metadata),
         // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };
@@ -2374,25 +2368,6 @@ function append(): SaveMode
 function save_mode_append(): SaveMode
 {
     return SaveMode::Append;
-}
-
-/**
- * In this mode, functions throws exceptions if the given entry is not found
- * or passed parameters are invalid.
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function execution_strict(): ExecutionMode
-{
-    return ExecutionMode::STRICT;
-}
-
-/**
- * In this mode, functions returns nulls instead of throwing exceptions.
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function execution_lenient(): ExecutionMode
-{
-    return ExecutionMode::LENIENT;
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -2646,7 +2621,9 @@ function constraint_unique(string $reference, string ...$references): UniqueCons
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function constraint_sorted_by(string|Reference $column, string|Reference ...$columns): SortedByConstraint
 {
-    $references = array_map(static fn(string|Reference $ref) => EntryReference::init($ref), [$column, ...$columns]);
+    $references = array_map(static fn(string|Reference $ref) => UnresolvedReference::init(
+        $ref,
+    ), [$column, ...$columns]);
 
     return new SortedByConstraint(...$references);
 }

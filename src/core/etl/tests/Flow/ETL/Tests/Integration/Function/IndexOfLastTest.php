@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -28,7 +29,7 @@ final class IndexOfLastTest extends FlowTestCase
                 ['text' => 'abababa', 'needle' => 'aba'],
                 ['text' => 'नमस्ते', 'needle' => 'स्ते'],
             ]))
-            ->withEntry('last_index', ref('text')->indexOfLast(ref('needle')))
+            ->withEntry('last_index', optional(ref('text')->indexOfLast(ref('needle'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -39,8 +40,8 @@ final class IndexOfLastTest extends FlowTestCase
                 ['text' => 'hello world', 'needle' => 'x', 'last_index' => null],
                 ['text' => 'hello world', 'needle' => '', 'last_index' => null],
                 ['text' => '', 'needle' => 'l', 'last_index' => null],
-                ['text' => null, 'needle' => 'l', 'last_index' => false],
-                ['text' => 'hello', 'needle' => null, 'last_index' => false],
+                ['text' => null, 'needle' => 'l', 'last_index' => null],
+                ['text' => 'hello', 'needle' => null, 'last_index' => null],
                 ['text' => 'abababa', 'needle' => 'aba', 'last_index' => 4],
                 ['text' => 'नमस्ते', 'needle' => 'स्ते', 'last_index' => 2],
             ],

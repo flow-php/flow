@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -28,8 +29,8 @@ final class RepeatTest extends FlowTestCase
                 ['text' => null, 'times' => 3],
                 ['text' => 'world', 'times' => 1],
             ]))
-            ->withEntry('repeated', ref('text')->repeat(ref('times')))
-            ->withEntry('repeated_fixed', ref('text')->repeat(2))
+            ->withEntry('repeated', optional(ref('text')->repeat(ref('times'))))
+            ->withEntry('repeated_fixed', optional(ref('text')->repeat(2)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,8 +41,8 @@ final class RepeatTest extends FlowTestCase
                 ['text' => 'café', 'times' => 2, 'repeated' => 'cafécafé', 'repeated_fixed' => 'cafécafé'],
                 ['text' => '🚀', 'times' => 4, 'repeated' => '🚀🚀🚀🚀', 'repeated_fixed' => '🚀🚀'],
                 ['text' => '', 'times' => 3, 'repeated' => '', 'repeated_fixed' => ''],
-                ['text' => 'test', 'times' => 0, 'repeated' => '', 'repeated_fixed' => 'testtest'],
-                ['text' => 'hello', 'times' => -1, 'repeated' => '', 'repeated_fixed' => 'hellohello'],
+                ['text' => 'test', 'times' => 0, 'repeated' => null, 'repeated_fixed' => 'testtest'],
+                ['text' => 'hello', 'times' => -1, 'repeated' => null, 'repeated_fixed' => 'hellohello'],
                 ['text' => null, 'times' => 3, 'repeated' => null, 'repeated_fixed' => null],
                 ['text' => 'world', 'times' => 1, 'repeated' => 'world', 'repeated_fixed' => 'worldworld'],
             ],

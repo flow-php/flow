@@ -9,7 +9,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Contains;
 use Flow\ETL\Function\EndsWith;
 use Flow\ETL\Function\Equals;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\GreaterThan;
 use Flow\ETL\Function\GreaterThanEqual;
 use Flow\ETL\Function\IsIn;
@@ -56,6 +55,9 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_greater_than(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('GreaterThan function requires non-null values');
+
         $row = row(
             int_entry('a', 100),
             int_entry('b', 100),
@@ -65,25 +67,25 @@ final class BinaryComparisonsTest extends FlowTestCase
             int_entry('f', null),
         );
 
-        static::assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row, flow_context()));
-        static::assertNull((new GreaterThan(ref('a'), ref('f')))->eval($row, flow_context()));
-        static::assertNull((new GreaterThan(ref('f'), ref('c')))->eval($row, flow_context()));
-        static::assertNull((new GreaterThan(ref('f'), ref('f')))->eval($row, flow_context()));
-        static::assertFalse((new GreaterThan(ref('a'), ref('b')))->eval($row, flow_context()));
-        static::assertTrue((new GreaterThanEqual(ref('a'), ref('c')))->eval($row, flow_context()));
-        static::assertTrue((new GreaterThanEqual(ref('a'), ref('b')))->eval($row, flow_context()));
-        static::assertTrue((new GreaterThanEqual(ref('e'), ref('d')))->eval($row, flow_context()));
-        static::assertTrue((new GreaterThanEqual(
-            ref('e'),
-            lit(new DateTimeImmutable('2022-01-01 00:00:00 UTC')),
-        ))->eval($row, flow_context()));
-        static::assertFalse((new GreaterThanEqual(
-            ref('e'),
-            lit(new DateTimeImmutable('2024-01-01 00:00:00 UTC')),
-        ))->eval($row, flow_context()));
-        static::assertNull((new GreaterThanEqual(ref('a'), ref('f')))->eval($row, flow_context()));
-        static::assertNull((new GreaterThanEqual(ref('f'), ref('c')))->eval($row, flow_context()));
-        static::assertNull((new GreaterThanEqual(ref('f'), ref('f')))->eval($row, flow_context()));
+        (new GreaterThan(ref('a'), ref('c')))->eval($row, flow_context());
+        (new GreaterThan(ref('a'), ref('f')))->eval($row, flow_context());
+        (new GreaterThan(ref('f'), ref('c')))->eval($row, flow_context());
+        (new GreaterThan(ref('f'), ref('f')))->eval($row, flow_context());
+        (new GreaterThan(ref('a'), ref('b')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('a'), ref('c')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('a'), ref('b')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('e'), ref('d')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('e'), lit(new DateTimeImmutable('2022-01-01 00:00:00 UTC'))))->eval(
+            $row,
+            flow_context(),
+        );
+        (new GreaterThanEqual(ref('e'), lit(new DateTimeImmutable('2024-01-01 00:00:00 UTC'))))->eval(
+            $row,
+            flow_context(),
+        );
+        (new GreaterThanEqual(ref('a'), ref('f')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('f'), ref('c')))->eval($row, flow_context());
+        (new GreaterThanEqual(ref('f'), ref('f')))->eval($row, flow_context());
     }
 
     public function test_greater_than_equal_with_null_in_strict_mode(): void
@@ -92,8 +94,6 @@ final class BinaryComparisonsTest extends FlowTestCase
         $this->expectExceptionMessage('GreaterThanEqual function requires non-null values');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('a', 100), int_entry('f', null));
         (new GreaterThanEqual(ref('a'), ref('f')))->eval($row, $context);
     }
@@ -104,8 +104,6 @@ final class BinaryComparisonsTest extends FlowTestCase
         $this->expectExceptionMessage('GreaterThan function requires non-null values');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('a', 100), int_entry('f', null));
         (new GreaterThan(ref('a'), ref('f')))->eval($row, $context);
     }
@@ -132,8 +130,6 @@ final class BinaryComparisonsTest extends FlowTestCase
         $this->expectExceptionMessage('IsIn function requires non-null array');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('a', null), int_entry('d', 1));
         (new IsIn(ref('a'), ref('d')))->eval($row, $context);
     }
@@ -168,18 +164,21 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_less_than(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('LessThan function requires non-null values');
+
         $row = row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), int_entry('d', null));
 
-        static::assertFalse((new LessThan(ref('a'), ref('c')))->eval($row, flow_context()));
-        static::assertNull((new LessThan(ref('a'), ref('d')))->eval($row, flow_context()));
-        static::assertNull((new LessThan(ref('d'), ref('d')))->eval($row, flow_context()));
-        static::assertNull((new LessThan(ref('d'), ref('c')))->eval($row, flow_context()));
-        static::assertFalse((new LessThan(ref('a'), ref('b')))->eval($row, flow_context()));
-        static::assertTrue((new LessThanEqual(ref('c'), ref('a')))->eval($row, flow_context()));
-        static::assertTrue((new LessThanEqual(ref('a'), ref('b')))->eval($row, flow_context()));
-        static::assertNull((new LessThanEqual(ref('a'), ref('d')))->eval($row, flow_context()));
-        static::assertNull((new LessThanEqual(ref('d'), ref('c')))->eval($row, flow_context()));
-        static::assertNull((new LessThanEqual(ref('d'), ref('d')))->eval($row, flow_context()));
+        (new LessThan(ref('a'), ref('c')))->eval($row, flow_context());
+        (new LessThan(ref('a'), ref('d')))->eval($row, flow_context());
+        (new LessThan(ref('d'), ref('d')))->eval($row, flow_context());
+        (new LessThan(ref('d'), ref('c')))->eval($row, flow_context());
+        (new LessThan(ref('a'), ref('b')))->eval($row, flow_context());
+        (new LessThanEqual(ref('c'), ref('a')))->eval($row, flow_context());
+        (new LessThanEqual(ref('a'), ref('b')))->eval($row, flow_context());
+        (new LessThanEqual(ref('a'), ref('d')))->eval($row, flow_context());
+        (new LessThanEqual(ref('d'), ref('c')))->eval($row, flow_context());
+        (new LessThanEqual(ref('d'), ref('d')))->eval($row, flow_context());
     }
 
     public function test_less_than_equal_with_null_in_strict_mode(): void
@@ -188,8 +187,6 @@ final class BinaryComparisonsTest extends FlowTestCase
         $this->expectExceptionMessage('LessThanEqual function requires non-null values');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('a', 100), int_entry('d', null));
         (new LessThanEqual(ref('a'), ref('d')))->eval($row, $context);
     }
@@ -200,8 +197,6 @@ final class BinaryComparisonsTest extends FlowTestCase
         $this->expectExceptionMessage('LessThan function requires non-null values');
 
         $context = flow_context();
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         $row = row(int_entry('a', 100), int_entry('d', null));
         (new LessThan(ref('a'), ref('d')))->eval($row, $context);
     }

@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArrayMerge;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -25,8 +24,6 @@ final class ArrayMergeTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
         ref('a')->arrayMerge(ref('b'))->eval(row(int_entry('a', 1), json_entry('b', ['b' => 2])), $context);
     }
 
@@ -49,15 +46,17 @@ final class ArrayMergeTest extends FlowTestCase
 
     public function test_array_merge_when_left_side_is_not_an_array(): void
     {
-        static::assertNull(
-            ref('a')->arrayMerge(ref('b'))->eval(row(int_entry('a', 1), json_entry('b', ['b' => 2])), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+
+        ref('a')->arrayMerge(ref('b'))->eval(row(int_entry('a', 1), json_entry('b', ['b' => 2])), flow_context());
     }
 
     public function test_array_merge_when_right_side_is_not_an_array(): void
     {
-        static::assertNull(
-            ref('a')->arrayMerge(ref('b'))->eval(row(json_entry('a', ['a' => 1]), int_entry('b', 2)), flow_context()),
-        );
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+
+        ref('a')->arrayMerge(ref('b'))->eval(row(json_entry('a', ['a' => 1]), int_entry('b', 2)), flow_context());
     }
 }

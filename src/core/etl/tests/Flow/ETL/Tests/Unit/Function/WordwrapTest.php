@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_entry;
@@ -40,6 +41,9 @@ final class WordwrapTest extends FlowTestCase
 
     public function test_null_value(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Wordwrap function requires non-null value');
+
         $result = ref('str')->wordwrap(10)->eval(row(str_entry('str', null)), flow_context());
 
         static::assertNull($result);

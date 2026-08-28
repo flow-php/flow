@@ -7,20 +7,60 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_optional;
 use function Symfony\Component\String\u;
 
-final class IndexOf extends ScalarFunctionChain
+final class IndexOf implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|string $string,
-        private readonly ScalarFunction|string $needle,
-        private readonly ScalarFunction|bool $ignoreCase = false,
-        private readonly ScalarFunction|int $offset = 0,
-    ) {}
+    use ScalarFunctionChain;
 
-    public function eval(Row $row, FlowContext $context): int|false|null
+    private readonly ScalarFunction $string;
+    private readonly ScalarFunction $needle;
+    private readonly ScalarFunction $ignoreCase;
+    private readonly ScalarFunction $offset;
+
+    public function __construct(
+        ScalarFunction|string $string,
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $ignoreCase = false,
+        ScalarFunction|int $offset = 0,
+    ) {
+        $this->string = $string instanceof ScalarFunction ? $string : lit($string);
+        $this->needle = $needle instanceof ScalarFunction ? $needle : lit($needle);
+        $this->ignoreCase = $ignoreCase instanceof ScalarFunction ? $ignoreCase : lit($ignoreCase);
+        $this->offset = $offset instanceof ScalarFunction ? $offset : lit($offset);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->string, $this->needle, $this->ignoreCase, $this->offset];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2], $children[3]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_integer());
+    }
+
+    public function eval(Row $row, FlowContext $context): ?int
     {
         $string = (new Parameter($this->string))->asString($row, $context);
         $needle = (new Parameter($this->needle))->asString($row, $context);
@@ -28,11 +68,7 @@ final class IndexOf extends ScalarFunctionChain
         $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row, $context);
 
         if ($string === null || $needle === null) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('IndexOf function requires non-null string and needle'));
-
-            return false;
+            throw new InvalidArgumentException('IndexOf function requires non-null string and needle');
         }
 
         if ($ignoreCase) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -15,17 +16,19 @@ use function Flow\ETL\DSL\str_entry;
 
 final class StringStyleTest extends FlowTestCase
 {
+    public function test_a_null_value_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringStyle function requires non-null value');
+
+        ref('value')->stringStyle(StringStyles::LOWER)->eval(row(str_entry('value', null)), flow_context());
+    }
+
     /**
      * @return iterable<array-key, mixed>
      */
     public static function provideStringStyles(): iterable
     {
-        yield 'null' => [
-            StringStyles::LOWER,
-            null,
-            null,
-        ];
-
         yield 'camel' => [
             StringStyles::CAMEL,
             'Foo: Bar-baz.',

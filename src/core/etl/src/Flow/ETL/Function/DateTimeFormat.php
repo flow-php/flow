@@ -8,13 +8,48 @@ use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
-final class DateTimeFormat extends ScalarFunctionChain
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
+
+final class DateTimeFormat implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DateTimeInterface $dateTime,
-        private readonly ScalarFunction|string $format,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $dateTime;
+    private readonly ScalarFunction $format;
+
+    public function __construct(ScalarFunction|DateTimeInterface $dateTime, ScalarFunction|string $format)
+    {
+        $this->dateTime = $dateTime instanceof ScalarFunction ? $dateTime : lit($dateTime);
+        $this->format = $format instanceof ScalarFunction ? $format : lit($format);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->dateTime, $this->format];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
@@ -22,9 +57,7 @@ final class DateTimeFormat extends ScalarFunctionChain
         $format = (new Parameter($this->format))->asString($row, $context);
 
         if ($value === null || $format === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('DateTimeFormat function requires non-null values'));
+            throw new InvalidArgumentException('DateTimeFormat function requires non-null values');
         }
 
         return $value->format($format);

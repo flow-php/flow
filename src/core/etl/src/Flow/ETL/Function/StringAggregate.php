@@ -57,18 +57,16 @@ final class StringAggregate implements AggregatingFunction
 
     public function result(EntryFactory $entryFactory): Entry
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_str_agg');
-        }
+        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_str_agg');
 
         if (!count($this->values)) {
-            return str_entry($this->ref->name(), '');
+            return str_entry($ref->name(), '');
         }
 
         if ($this->sort) {
             $this->sort === SortOrder::ASC ? sort($this->values) : rsort($this->values);
         }
 
-        return str_entry($this->ref->name(), implode($this->separator, $this->values));
+        return str_entry($ref->name(), implode($this->separator, $this->values));
     }
 }

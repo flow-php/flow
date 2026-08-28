@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,7 +16,10 @@ final class SplitTest extends FlowTestCase
 {
     public function test_split_not_string(): void
     {
-        static::assertNull(split(lit(123), ',')->eval(row(), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Split function requires non-null value');
+
+        split(lit(123), ',')->eval(row(), flow_context());
     }
 
     public function test_split_string(): void
