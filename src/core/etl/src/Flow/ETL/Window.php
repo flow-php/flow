@@ -15,24 +15,15 @@ use function array_unshift;
 
 final class Window
 {
-    private ?WindowFrame $frame;
-
     /**
-     * @var array<Reference>
+     * @param array<Reference> $partitions
+     * @param array<Reference> $orderBy
      */
-    private array $orderBy;
-
-    /**
-     * @var array<Reference>
-     */
-    private array $partitions;
-
-    public function __construct()
-    {
-        $this->partitions = [];
-        $this->orderBy = [];
-        $this->frame = null;
-    }
+    public function __construct(
+        private readonly array $partitions = [],
+        private readonly array $orderBy = [],
+        private readonly ?WindowFrame $frame = null,
+    ) {}
 
     public function frame(): WindowFrame
     {
@@ -55,18 +46,14 @@ final class Window
     {
         array_unshift($refs, $ref);
 
-        $this->orderBy = $refs;
-
-        return $this;
+        return new self($this->partitions, $refs, $this->frame);
     }
 
     public function partitionBy(Reference $ref, Reference ...$refs): self
     {
         array_unshift($refs, $ref);
 
-        $this->partitions = $refs;
-
-        return $this;
+        return new self($refs, $this->orderBy, $this->frame);
     }
 
     /**
@@ -79,8 +66,6 @@ final class Window
 
     public function rowsBetween(FrameBound $start, FrameBound $end): self
     {
-        $this->frame = new RowsFrame($start, $end);
-
-        return $this;
+        return new self($this->partitions, $this->orderBy, new RowsFrame($start, $end));
     }
 }

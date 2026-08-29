@@ -52,7 +52,7 @@ final class SumAccumulator implements FrameAccumulator
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         return $this->sum;
     }

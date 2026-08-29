@@ -6,23 +6,46 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type;
 
 use function current;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
 
 final class Collect implements AggregatingFunction
 {
+    use ResolvesFromChildren;
+
     /**
      * @var array<mixed>
      */
     private array $collection;
 
+    private readonly string $outputName;
+
     public function __construct(
         private readonly Reference $ref,
     ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_collection';
         $this->collection = [];
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0]);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
@@ -39,6 +62,11 @@ final class Collect implements AggregatingFunction
         $this->collection[] = current($values);
     }
 
+    public function outputName(): string
+    {
+        return $this->outputName;
+    }
+
     /**
      * @return list<Reference>
      */
@@ -48,12 +76,21 @@ final class Collect implements AggregatingFunction
     }
 
     /**
-     * @return Entry<mixed>
+     * The element type is the reference's own declaration - over a nullable column the collected
+     * list genuinely contains nulls, so ?list<?T> is the honest shape.
+     *
+     * @return Type<mixed>
      */
-    public function result(EntryFactory $entryFactory): Entry
+    public function returns(): Type
     {
-        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->name() . '_collection');
+        return type_optional(type_list($this->ref->returns()));
+    }
 
-        return $entryFactory->create($ref->name(), $this->collection);
+    /**
+     * @return array<mixed>
+     */
+    public function value(): array
+    {
+        return $this->collection;
     }
 }

@@ -11,10 +11,15 @@ use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
 
 use function array_keys;
 use function array_map;
 use function Flow\Types\DSL\type_bare;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 
 final class ArrayExpand implements ScalarFunction, ExpandResults
 {
@@ -49,14 +54,31 @@ final class ArrayExpand implements ScalarFunction, ExpandResults
     {
         $array = type_bare($this->ref->returns());
 
-        if ($array instanceof ListType) {
-            return $array->element();
+        if (!$array instanceof ListType && !$array instanceof MapType && !$array instanceof StructureType) {
+            throw SchemaNotDerivableException::function(
+                'array_expand',
+                'the array operand declares "' . $array->toString() . '", which has no element type',
+            );
         }
 
-        throw SchemaNotDerivableException::function(
-            'array_expand',
-            'the array operand declares "' . $array->toString() . '", which has no element type',
-        );
+        // The unification can refuse, so KEYS must not ask for the value type it does not declare.
+        $value = fn(): Type => match (true) {
+            $array instanceof ListType => $array->element(),
+            $array instanceof MapType => $array->value(),
+            default => StructureValues::type('array_expand', $array),
+        };
+
+        $key = match (true) {
+            $array instanceof ListType => type_integer(),
+            $array instanceof MapType => $array->key(),
+            default => type_string(),
+        };
+
+        return match ($this->expand) {
+            ArrayExpand\ArrayExpand::VALUES => $value(),
+            ArrayExpand\ArrayExpand::KEYS => $key,
+            ArrayExpand\ArrayExpand::BOTH => type_map($key, $value()),
+        };
     }
 
     /**

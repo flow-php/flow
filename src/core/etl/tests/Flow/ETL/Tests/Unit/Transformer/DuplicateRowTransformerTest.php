@@ -141,4 +141,14 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             $transformedRows->toArray(),
         );
     }
+
+    public function test_an_empty_batch_is_returned_without_binding(): void
+    {
+        $empty = rows();
+
+        static::assertSame($empty, (new DuplicateRowTransformer(ref('missing')->equals(lit(1))))->transform(
+            $empty,
+            flow_context(),
+        ));
+    }
 }

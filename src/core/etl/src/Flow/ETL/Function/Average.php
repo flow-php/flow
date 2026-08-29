@@ -9,33 +9,53 @@ use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\AverageAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
+use Flow\Types\Type;
 
-use function Flow\ETL\DSL\float_entry;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_optional;
 use function is_numeric;
 
 final class Average implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
+    use ResolvesFromChildren;
+
     private int $count;
 
-    private float $sum;
+    private readonly string $outputName;
 
-    private ?Window $window;
+    private float $sum;
 
     public function __construct(
         private readonly Reference $ref,
         private readonly int $scale = 2,
         private readonly Rounding $rounding = Rounding::HALF_UP,
+        private readonly ?Window $window = null,
     ) {
-        $this->window = null;
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_avg';
         $this->count = 0;
         $this->sum = 0;
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0], $this->scale, $this->rounding, $this->window);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
@@ -72,9 +92,12 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function over(Window $window): static
     {
-        $this->window = $window;
+        return new self($this->ref, $this->scale, $this->rounding, $window);
+    }
 
-        return $this;
+    public function outputName(): string
+    {
+        return $this->outputName;
     }
 
     /**
@@ -85,18 +108,21 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         return [$this->ref];
     }
 
-    public function result(EntryFactory $entryFactory): Entry
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
     {
-        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_avg');
+        return type_optional(type_float());
+    }
 
+    public function value(): ?float
+    {
         if (0 === $this->count) {
-            return float_entry($ref->name(), null);
+            return null;
         }
 
-        return float_entry(
-            $ref->name(),
-            (float) (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding),
-        );
+        return (float) (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
     }
 
     public function toString(): string

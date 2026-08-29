@@ -115,7 +115,7 @@ final class WindowFunctionsTest extends FlowTestCase
     public function test_default_frame_is_peer_aware(): void
     {
         static::assertSame(
-            [300, 300, 600, 1000],
+            [300.0, 300.0, 600.0, 1000.0],
             WindowFrameContext::tiedDates(sum(ref('salary'))->over(window()->orderBy(ref('date')))),
         );
     }
@@ -123,7 +123,7 @@ final class WindowFunctionsTest extends FlowTestCase
     public function test_default_frame_produces_a_running_total(): void
     {
         static::assertSame(
-            [100, 300, 600, 1000, 1500],
+            [100.0, 300.0, 600.0, 1000.0, 1500.0],
             WindowFrameContext::salaries(
                 sum(ref('salary'))->over(window()->partitionBy(ref('department'))->orderBy(ref('date'))),
             ),
@@ -149,7 +149,7 @@ final class WindowFunctionsTest extends FlowTestCase
     public function test_unbounded_frame_covers_the_whole_partition(): void
     {
         static::assertSame(
-            [1500, 1500, 1500, 1500, 1500],
+            [1500.0, 1500.0, 1500.0, 1500.0, 1500.0],
             WindowFrameContext::salaries(
                 sum(ref('salary'))
                     ->over(
@@ -160,5 +160,27 @@ final class WindowFunctionsTest extends FlowTestCase
                     ),
             ),
         );
+    }
+
+    public function test_over_does_not_leak_a_window_across_pipelines(): void
+    {
+        $window = window()->partitionBy(ref('region'));
+        $first = sum(ref('v'))->over($window);
+        $second = sum(ref('v'))->over($window);
+
+        $window->partitionBy(ref('region'), ref('country'));
+
+        static::assertNotSame($first, $second);
+        static::assertCount(1, $first->window()->partitions());
+        static::assertCount(1, $second->window()->partitions());
+
+        $bare = sum(ref('v'));
+        $overA = $bare->over(window()->partitionBy(ref('a')));
+        $overB = $bare->over(window()->partitionBy(ref('b')));
+
+        static::assertNotSame($bare, $overA);
+        static::assertNotSame($overA, $overB);
+        static::assertSame('a', $overA->window()->partitions()[0]->name());
+        static::assertSame('b', $overB->window()->partitions()[0]->name());
     }
 }

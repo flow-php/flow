@@ -6,14 +6,12 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
 
 final class FirstTest extends FlowTestCase
 {
@@ -32,16 +30,26 @@ final class FirstTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
 
-        static::assertSame('10', $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame('10', $aggregator->value());
     }
 
     public function test_aggregation_firs_value_when_nothing_aggregated(): void
     {
         $aggregator = first(ref('int'));
 
-        static::assertEquals(
-            string_entry('int_first', null),
-            $aggregator->result(flow_context(config())->entryFactory()),
-        );
+        static::assertNull($aggregator->value());
+        static::assertSame('int_first', $aggregator->outputName());
+    }
+
+    public function test_with_children_rebuilds_the_aggregate_with_the_given_reference(): void
+    {
+        $aggregate = first(ref('a'));
+
+        static::assertEquals([ref('a')], $aggregate->children());
+
+        $rebuilt = $aggregate->withChildren([ref('b')]);
+
+        static::assertNotSame($aggregate, $rebuilt);
+        static::assertEquals([ref('b')], $rebuilt->references());
     }
 }

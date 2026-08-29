@@ -36,7 +36,7 @@ final class CountAccumulator implements FrameAccumulator
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         return $this->count;
     }

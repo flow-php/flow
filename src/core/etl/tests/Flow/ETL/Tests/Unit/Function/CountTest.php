@@ -41,7 +41,7 @@ final class CountTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
         $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
-        static::assertSame(4, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(4, $aggregator->value());
     }
 
     public function test_aggregation_count_with_float_result(): void
@@ -53,7 +53,7 @@ final class CountTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
         $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
 
-        static::assertSame(4, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(4, $aggregator->value());
     }
 
     public function test_aggregation_count_without_reference(): void
@@ -66,7 +66,7 @@ final class CountTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
         $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
-        static::assertSame(5, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(5, $aggregator->value());
     }
 
     public function test_aggregation_when_row_does_not_have_entry(): void
@@ -79,7 +79,7 @@ final class CountTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', null)), flow_context());
         $aggregator->aggregate(row(str_entry('test', null)), flow_context());
 
-        static::assertSame(4, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(4, $aggregator->value());
     }
 
     public function test_window_function_count_of_a_reference_skips_nulls(): void
@@ -119,5 +119,30 @@ final class CountTest extends FlowTestCase
 
         $context = flow_context(config());
         $count->apply(WindowContextMother::forRow($row1, $rows, context: $context));
+    }
+
+    public function test_with_children_rebuilds_the_aggregate_with_the_given_reference(): void
+    {
+        $aggregate = count(ref('a'));
+
+        static::assertEquals([ref('a')], $aggregate->children());
+
+        $rebuilt = $aggregate->withChildren([ref('b')]);
+
+        static::assertNotSame($aggregate, $rebuilt);
+        static::assertEquals([ref('b')], $rebuilt->references());
+    }
+
+    public function test_with_children_keeps_a_ref_less_count_a_leaf(): void
+    {
+        $aggregate = count();
+
+        static::assertSame([], $aggregate->children());
+        static::assertSame([], $aggregate->withChildren([])->references());
+    }
+
+    public function test_counting_nothing_is_zero(): void
+    {
+        static::assertSame(0, count(ref('int'))->value());
     }
 }

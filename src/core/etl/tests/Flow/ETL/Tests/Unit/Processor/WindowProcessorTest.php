@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\current_row;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\following;
 use function Flow\ETL\DSL\int_entry;
@@ -24,6 +33,8 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_optional;
 
 final class WindowProcessorTest extends FlowTestCase
 {
@@ -32,7 +43,7 @@ final class WindowProcessorTest extends FlowTestCase
         $function = new CountingFrameAccumulating(ref('value'));
 
         static::assertSame(
-            [100, 100, 100, 100],
+            [100.0, 100.0, 100.0, 100.0],
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->partitionBy(ref('group'))),
@@ -57,7 +68,7 @@ final class WindowProcessorTest extends FlowTestCase
         $function = new CountingFrameAccumulating(ref('value'));
 
         static::assertSame(
-            [10, 30, 60, 100],
+            [10.0, 30.0, 60.0, 100.0],
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))),
@@ -81,7 +92,7 @@ final class WindowProcessorTest extends FlowTestCase
         $function = new CountingFrameAccumulating(ref('value'));
 
         static::assertSame(
-            [20, 20, 40, 70],
+            [20.0, 20.0, 40.0, 70.0],
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))),
@@ -105,7 +116,7 @@ final class WindowProcessorTest extends FlowTestCase
         $function = new CountingFrameAccumulating(ref('value'));
 
         static::assertSame(
-            [10, 30, 50, 70],
+            [10.0, 30.0, 50.0, 70.0],
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))->rowsBetween(preceding(1), current_row())),
@@ -144,15 +155,27 @@ final class WindowProcessorTest extends FlowTestCase
         }
     }
 
-    public function test_rows_missing_the_partition_key_fall_into_one_partition(): void
+    public function test_an_unknown_partition_reference_is_refused_at_bind(): void
     {
-        static::assertSame(
-            [1, 2, 3],
-            WindowProcessorContext::values(
-                'row_number',
-                row_number()->over(window()->partitionBy(ref('missing'))->orderBy(ref('value'))),
-                rows(row(int_entry('value', 10)), row(int_entry('value', 20)), row(int_entry('value', 30))),
-            ),
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "missing" not found.');
+
+        WindowProcessorContext::values(
+            'row_number',
+            row_number()->over(window()->partitionBy(ref('missing'))->orderBy(ref('value'))),
+            rows(row(int_entry('value', 10)), row(int_entry('value', 20)), row(int_entry('value', 30))),
+        );
+    }
+
+    public function test_an_unknown_order_reference_is_refused_at_bind(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "missing" not found.');
+
+        WindowProcessorContext::values(
+            'row_number',
+            row_number()->over(window()->orderBy(ref('missing'))),
+            rows(row(int_entry('value', 10)), row(int_entry('value', 20)), row(int_entry('value', 30))),
         );
     }
 
@@ -197,7 +220,7 @@ final class WindowProcessorTest extends FlowTestCase
     public function test_whole_partition_frame_gives_every_row_the_partition_total(): void
     {
         static::assertSame(
-            [100, 100, 100, 100],
+            [100.0, 100.0, 100.0, 100.0],
             WindowProcessorContext::values(
                 'total',
                 sum(ref('value'))->over(window()->partitionBy(ref('group'))),
@@ -279,6 +302,64 @@ final class WindowProcessorTest extends FlowTestCase
         static::assertContainsOnlyInt(array_column($allRows, 'rank'));
     }
 
+    /**
+     * @param callable(): (AggregatingFunction&WindowFunction) $factory
+     */
+    #[DataProvider('window_capable_aggregates')]
+    public function test_a_windowed_aggregate_has_the_same_type_as_the_plain_aggregate(callable $factory): void
+    {
+        static::assertEquals($factory()->returns(), $factory()->over(window()->partitionBy(ref('group')))->returns());
+    }
+
+    /**
+     * @return Generator<string, array{callable(): (AggregatingFunction&WindowFunction)}>
+     */
+    public static function window_capable_aggregates(): Generator
+    {
+        yield 'sum' => [static fn() => sum(ref('value'))];
+        yield 'count' => [static fn() => count(ref('value'))];
+        yield 'average' => [static fn() => average(ref('value'))];
+    }
+
+    public function test_the_frame_does_not_change_the_declared_type(): void
+    {
+        $windows = [
+            window()->partitionBy(ref('group')),
+            window()->orderBy(ref('value')),
+            window()->orderBy(ref('value'))->rowsBetween(preceding(1), current_row()),
+            window()->orderBy(ref('value'))->rowsBetween(following(10), following(20)),
+        ];
+
+        foreach ($windows as $window) {
+            static::assertEquals(type_optional(type_float()), sum(ref('value'))->over($window)->returns());
+        }
+    }
+
+    /**
+     * The window invariant: a running sum over [1, 2.5, 3] used to produce IntegerEntry, FloatEntry,
+     * FloatEntry in one Rows - the column now carries one Definition for the whole run.
+     */
+    public function test_a_running_sum_over_mixed_numerics_yields_one_definition(): void
+    {
+        $batches = WindowProcessorContext::batches(
+            'total',
+            sum(ref('value'))->over(window()->orderBy(ref('value'))),
+            rows(row(int_entry('value', 1)), row(float_entry('value', 2.5)), row(int_entry('value', 3))),
+        );
+
+        $definitions = [];
+
+        foreach ($batches as $batch) {
+            foreach ($batch as $row) {
+                $definitions[] = $row->get('total')->definition();
+            }
+        }
+
+        static::assertCount(3, $definitions);
+        static::assertEquals([$definitions[0], $definitions[0], $definitions[0]], $definitions);
+        static::assertEquals(float_schema('total', true), $definitions[0]);
+    }
+
     public function test_processes_multiple_partitions(): void
     {
         $windowFunction = rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('value')));
@@ -311,5 +392,26 @@ final class WindowProcessorTest extends FlowTestCase
 
         static::assertCount(2, $groupA);
         static::assertCount(2, $groupB);
+    }
+
+    public function test_a_leading_empty_batch_defers_the_bind_to_the_first_data_batch(): void
+    {
+        $processor = new WindowProcessor('row_number', row_number()->over(window()->orderBy(ref('value'))));
+
+        $generator = (static function () {
+            yield rows();
+            yield rows(row(int_entry('value', 10)), row(int_entry('value', 20)));
+        })();
+
+        $values = [];
+
+        /** @var Rows $batch */
+        foreach ($processor->process($generator, flow_context()) as $batch) {
+            foreach ($batch as $row) {
+                $values[] = $row->valueOf('row_number');
+            }
+        }
+
+        static::assertSame([1, 2], $values);
     }
 }

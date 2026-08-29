@@ -11,8 +11,8 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
 
-use function array_values;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
@@ -59,6 +59,7 @@ final class ArrayValues implements ScalarFunction
         return match (true) {
             $array instanceof ListType => type_list($array->element()),
             $array instanceof MapType => type_list($array->value()),
+            $array instanceof StructureType => type_list(StructureValues::type('array_values', $array)),
             default => throw SchemaNotDerivableException::function(
                 'array_values',
                 'the array operand declares "' . $array->toString() . '", which has no element type',

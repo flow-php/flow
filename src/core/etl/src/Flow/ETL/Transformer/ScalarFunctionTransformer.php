@@ -6,9 +6,9 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -17,6 +17,7 @@ use Flow\ETL\Transformer;
 use Throwable;
 
 use function array_map;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 
 final readonly class ScalarFunctionTransformer implements Transformer
@@ -53,18 +54,13 @@ final readonly class ScalarFunctionTransformer implements Transformer
 
     private function doTransform(Rows $rows, FlowContext $context): Rows
     {
-        if ($this->function instanceof ExpandResults) {
-            return $rows->flatMap(fn(Row $r): array => array_map(
-                fn($val): Row => new Row($r->entries()->set(
-                    $this->entry instanceof Definition
-                        ? $context->entryFactory()->cast($this->entryName(), $val, $this->entry->type())
-                        : $context->entryFactory()->create($this->entryName(), $val),
-                )),
-                // @mago-ignore analysis:mixed-argument
-                $this->function->eval($r, $context),
-            ));
+        // An empty batch has no schema to bind against.
+        if (!$rows->count()) {
+            return $rows;
         }
 
+        // N columns whose names come from runtime array keys cannot be declared before rows flow -
+        // ArrayUnpack::returns() throws SchemaNotDerivableException by design.
         if ($this->function instanceof UnpackResults) {
             return $rows->map(function (Row $r) use ($context): Row {
                 // @mago-ignore analysis:mixed-assignment
@@ -76,20 +72,34 @@ final readonly class ScalarFunctionTransformer implements Transformer
             });
         }
 
-        return $rows->map(function (Row $r) use ($context): Row {
+        $schema = $rows->schema();
+        $resolver = new ReferenceResolver();
+        $function = $resolver->resolve($this->function, $schema);
+        $resolver->assertResolved($function, $schema);
+
+        $definition = $this->entry instanceof Definition
+            ? $this->entry
+            : definition_from_type($this->entryName(), $function->returns());
+
+        if ($function instanceof ExpandResults) {
+            return $rows->flatMap(static fn(Row $r): array => array_map(
+                static fn($val): Row => new Row($r->entries()->set($context->entryFactory()->fromDefinition(
+                    $definition,
+                    $val === null ? null : $definition->type()->cast($val),
+                ))),
+                // @mago-ignore analysis:mixed-argument
+                $function->eval($r, $context),
+            ));
+        }
+
+        return $rows->map(static function (Row $r) use ($function, $definition, $context): Row {
             // @mago-ignore analysis:mixed-assignment
-            $value = $this->function->eval($r, $context);
+            $value = $function->eval($r, $context);
 
-            // No in-repo producer returns ScalarResult any more - the unwrap stays for 04b to delete with the class.
-            if ($value instanceof ScalarResult) {
-                return $r->set($context->entryFactory()->create($this->entryName(), $value->value, $value->type));
-            }
-
-            return $r->set(
-                $this->entry instanceof Definition
-                    ? $context->entryFactory()->cast($this->entryName(), $value, $this->entry->type())
-                    : $context->entryFactory()->create($this->entryName(), $value),
-            );
+            return $r->set($context->entryFactory()->fromDefinition(
+                $definition,
+                $value === null ? null : $definition->type()->cast($value),
+            ));
         });
     }
 

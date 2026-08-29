@@ -20,6 +20,7 @@ use function array_unique;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
@@ -53,17 +54,36 @@ final class GroupBy
         $this->aggregations = new Aggregators(...$aggregator);
     }
 
-    public function aggregatedRow(GroupKey $key, Aggregators $aggregators, EntryFactory $entryFactory): Row
-    {
+    public function aggregatedRow(
+        GroupKey $key,
+        Aggregators $aggregators,
+        Schema $output,
+        EntryFactory $entryFactory,
+    ): Row {
         $entries = [];
 
         /** @var mixed $value */
         foreach ($key as $name => $value) {
-            $entries[] = $entryFactory->create($name, $value);
+            $definition = $output->findDefinition($name);
+
+            // A group key with no input definition stays value-derived until schema inference types it.
+            $entries[] = $definition === null
+                ? $entryFactory->create($name, $value)
+                : $entryFactory->fromDefinition(
+                    $definition,
+                    $value === null ? null : $definition->type()->cast($value),
+                );
         }
 
         foreach ($aggregators as $aggregator) {
-            $entries[] = $aggregator->result($entryFactory);
+            $definition = $output->get($aggregator->outputName());
+            /** @var mixed $value */
+            $value = $aggregator->value();
+
+            $entries[] = $entryFactory->fromDefinition(
+                $definition,
+                $value === null ? null : $definition->type()->cast($value),
+            );
         }
 
         return Row::create(...$entries);
@@ -77,6 +97,30 @@ final class GroupBy
     public function isPivot(): bool
     {
         return $this->pivot !== null;
+    }
+
+    /**
+     * The aggregate operator's declared output schema, computed once per run. Group-key definitions
+     * come from the input schema and are made nullable, because keyValues() substitutes null for a
+     * ref the row lacks; a key with no input definition is omitted and stays value-derived.
+     */
+    public function outputSchema(Schema $input, Aggregators $bound): Schema
+    {
+        $definitions = [];
+
+        foreach ($this->refs as $ref) {
+            $definition = $input->findDefinition($ref);
+
+            if ($definition !== null) {
+                $definitions[] = $definition->makeNullable();
+            }
+        }
+
+        foreach ($bound as $aggregator) {
+            $definitions[] = definition_from_type($aggregator->outputName(), $aggregator->returns());
+        }
+
+        return new Schema(...$definitions);
     }
 
     public function keyValues(Row $row): GroupKey
@@ -173,9 +217,7 @@ final class GroupBy
             $row = [$this->refs->first()->name() => $index];
 
             foreach ($columns as $rowIndex => $value) {
-                $row[$rowIndex] = $value instanceof AggregatingFunction
-                    ? $value->result($context->entryFactory())->value()
-                    : $value;
+                $row[$rowIndex] = $value instanceof AggregatingFunction ? $value->value() : $value;
             }
 
             foreach ($pivotColumns as $column) {

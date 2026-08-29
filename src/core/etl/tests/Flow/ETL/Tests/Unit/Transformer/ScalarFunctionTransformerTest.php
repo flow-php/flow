@@ -16,7 +16,6 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -90,7 +89,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     public function test_plus_expression_on_non_existing_rows(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Entry "num" does not exist. Did you mean one of the following? ["a"]');
+        $this->expectExceptionMessage('Schema definition for entry "num" not found. Available columns: [a].');
 
         static::assertEquals(
             [
@@ -124,12 +123,75 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $nodes = type_instance_of(DOMNodeList::class)->assert($xpath->query('/root/foo'));
         $expected = [$nodes->item(0), $nodes->item(1)];
 
-        static::assertEquals(
-            list_entry('xpath', $expected, type_list(type_xml_element())),
-            (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
-                ->transform(rows(row(xml_entry('xml', $xml))), flow_context(config()))
-                ->first()
-                ->get(ref('xpath')),
+        $entry = (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
+            ->transform(rows(row(xml_entry('xml', $xml))), flow_context(config()))
+            ->first()
+            ->get(ref('xpath'));
+
+        static::assertEquals($expected, $entry->value());
+        static::assertEquals(type_list(type_xml_element()), $entry->definition()->type());
+        static::assertTrue($entry->definition()->isNullable());
+    }
+
+    public function test_a_widened_batch_definition_coerces_the_value(): void
+    {
+        $result = (new ScalarFunctionTransformer('out', ref('v')))->transform(
+            rows(row(int_entry('v', 1)), row(str_entry('v', 'a'))),
+            flow_context(config()),
         );
+
+        static::assertSame(
+            [
+                ['v' => 1, 'out' => '1'],
+                ['v' => 'a', 'out' => 'a'],
+            ],
+            $result->toArray(),
+        );
+    }
+
+    public function test_a_heterogeneous_batch_yields_one_definition_for_the_produced_column(): void
+    {
+        $result = (new ScalarFunctionTransformer('out', ref('v')))->transform(
+            rows(row(int_entry('v', 1)), row(str_entry('v', 'a'))),
+            flow_context(config()),
+        );
+
+        $definitions = [];
+
+        foreach ($result as $row) {
+            $definitions[] = $row->get('out')->definition();
+        }
+
+        static::assertCount(2, $definitions);
+        static::assertEquals($definitions[0], $definitions[1]);
+    }
+
+    public function test_the_produced_definition_does_not_depend_on_batch_size(): void
+    {
+        $wholeBatch = (new ScalarFunctionTransformer('out', ref('v')->plus(lit(1))))->transform(
+            rows(row(int_entry('v', 1)), row(int_entry('v', 2))),
+            flow_context(config()),
+        );
+
+        $transformer = new ScalarFunctionTransformer('out', ref('v')->plus(lit(1)));
+        $single = $transformer
+            ->transform(rows(row(int_entry('v', 1))), flow_context(config()))
+            ->merge($transformer->transform(rows(row(int_entry('v', 2))), flow_context(config())));
+
+        static::assertEquals(
+            $wholeBatch->first()->get('out')->definition(),
+            $single->first()->get('out')->definition(),
+        );
+        static::assertEquals($wholeBatch->toArray(), $single->toArray());
+    }
+
+    public function test_an_empty_batch_is_returned_without_binding(): void
+    {
+        $empty = rows();
+
+        static::assertSame($empty, (new ScalarFunctionTransformer('out', ref('missing')->upper()))->transform(
+            $empty,
+            flow_context(config()),
+        ));
     }
 }

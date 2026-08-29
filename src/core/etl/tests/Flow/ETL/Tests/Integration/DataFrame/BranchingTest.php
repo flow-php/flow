@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Transformation;
@@ -75,7 +76,18 @@ final class BranchingTest extends FlowIntegrationTestCase
             }))
             ->run();
 
-        static::assertSame([['id_sum' => 9]], $memoryA->dump());
+        static::assertSame([['id_sum' => 9.0]], $memoryA->dump());
+    }
+
+    public function test_branch_rejects_a_non_boolean_condition_at_bind(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('filter() requires a predicate returning boolean');
+
+        df()
+            ->read(from_array([['id' => 1, 'group' => 'A']]))
+            ->write(to_branch(ref('id'), to_memory(new ArrayMemory())))
+            ->run();
     }
 
     public function test_branching_with_blocking_transformation_sorts_the_whole_branch(): void

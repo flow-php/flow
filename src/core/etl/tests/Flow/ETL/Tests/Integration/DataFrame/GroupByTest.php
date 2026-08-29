@@ -28,13 +28,14 @@ use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
@@ -93,7 +94,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(json_schema('array'), int_schema('score_sum'), float_schema('score_avg')),
+            schema(json_schema('array', true), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         static::assertEquals(
@@ -125,7 +126,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg')),
+            schema(datetime_schema('date', true), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         /** @var list<array{date: DateTimeImmutable, score_sum: int, score_avg: float}> $aggregated */
@@ -225,14 +226,18 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
+        static::assertSame(
+            [
+                ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
+                ['country' => 'PL', 'gender' => 'female', 'age_avg' => 30.0],
+                ['country' => 'US', 'gender' => 'female', 'age_avg' => 42.5],
+                ['country' => 'US', 'gender' => 'male', 'age_avg' => 45.0],
+            ],
+            $rows->toArray(),
+        );
         static::assertEquals(
-            rows(
-                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
-                row(str_entry('country', 'PL'), str_entry('gender', 'female'), float_entry('age_avg', 30.0)),
-                row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 42.5)),
-                row(str_entry('country', 'US'), str_entry('gender', 'male'), float_entry('age_avg', 45.0)),
-            ),
-            $rows,
+            schema(str_schema('country', true), str_schema('gender', true), float_schema('age_avg', true)),
+            $rows->schema(),
         );
     }
 
@@ -263,15 +268,19 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
+        static::assertSame(
+            [
+                ['country' => 'PL', 'gender' => 'female', 'age_avg' => 30.0],
+                ['country' => 'US', 'gender' => 'female', 'age_avg' => 40.0],
+                ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
+                ['country' => 'US', 'gender' => 'male', 'age_avg' => 45.0],
+                ['country' => 'US', 'gender' => null, 'age_avg' => 45.0],
+            ],
+            $rows->sortBy(ref('gender'), ref('country'))->toArray(),
+        );
         static::assertEquals(
-            rows(
-                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
-                row(str_entry('country', 'PL'), str_entry('gender', 'female'), float_entry('age_avg', 30.0)),
-                row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 40.0)),
-                row(str_entry('country', 'US'), str_entry('gender', 'male'), float_entry('age_avg', 45.0)),
-                row(str_entry('country', 'US'), null_entry('gender'), float_entry('age_avg', 45.0)),
-            ),
-            $rows,
+            schema(str_schema('country', true), str_schema('gender', true), float_schema('age_avg', true)),
+            $rows->schema(),
         );
     }
 
@@ -318,10 +327,10 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum(ref('age')->as('total_age')))
             ->fetch();
 
-        static::assertEquals(
+        static::assertSame(
             [
-                ['country' => 'PL', 'total_age' => 95],
-                ['country' => 'US', 'total_age' => 175],
+                ['country' => 'PL', 'total_age' => 95.0],
+                ['country' => 'US', 'total_age' => 175.0],
             ],
             $rows->toArray(),
         );
@@ -344,13 +353,14 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        static::assertEquals(
-            rows(
-                row(str_entry('country', 'PL'), float_entry('age_avg', 23.75)),
-                row(str_entry('country', 'US'), float_entry('age_avg', 43.75)),
-            ),
-            $rows,
+        static::assertSame(
+            [
+                ['country' => 'PL', 'age_avg' => 23.75],
+                ['country' => 'US', 'age_avg' => 43.75],
+            ],
+            $rows->toArray(),
         );
+        static::assertEquals(schema(str_schema('country', true), float_schema('age_avg', true)), $rows->schema());
     }
 
     public function test_group_by_twice(): void
@@ -382,10 +392,10 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [
-                ['user' => 'user_01', 'contributions_sum' => 4],
-                ['user' => 'user_02', 'contributions_sum' => 2],
-                ['user' => 'user_03', 'contributions_sum' => 3],
-                ['user' => 'user_04', 'contributions_sum' => 3],
+                ['user' => 'user_01', 'contributions_sum' => 4.0],
+                ['user' => 'user_02', 'contributions_sum' => 2.0],
+                ['user' => 'user_03', 'contributions_sum' => 3.0],
+                ['user' => 'user_04', 'contributions_sum' => 3.0],
             ],
             $rows->toArray(),
         );
@@ -441,7 +451,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg')),
+            schema(uuid_schema('uuid', true), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         static::assertEquals(
@@ -500,28 +510,28 @@ final class GroupByTest extends FlowIntegrationTestCase
             [
                 [
                     'date' => '2023-11-01',
-                    'norberttech' => 5,
-                    'stloyd' => 4,
+                    'norberttech' => 5.0,
+                    'stloyd' => 4.0,
                 ],
                 [
                     'date' => '2023-11-02',
-                    'norberttech' => 3,
-                    'stloyd' => 6,
+                    'norberttech' => 3.0,
+                    'stloyd' => 6.0,
                 ],
                 [
                     'date' => '2023-11-03',
-                    'norberttech' => 2,
-                    'stloyd' => 7,
+                    'norberttech' => 2.0,
+                    'stloyd' => 7.0,
                 ],
                 [
                     'date' => '2023-11-04',
-                    'norberttech' => 3,
-                    'stloyd' => 5,
+                    'norberttech' => 3.0,
+                    'stloyd' => 5.0,
                 ],
                 [
                     'date' => '2023-11-05',
-                    'norberttech' => 7,
-                    'stloyd' => 11,
+                    'norberttech' => 7.0,
+                    'stloyd' => 11.0,
                 ],
             ],
             $rows->toArray(),
@@ -558,61 +568,61 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-01',
                     'type' => 'admin',
-                    'norberttech' => 5,
+                    'norberttech' => 5.0,
                     'stloyd' => null,
                 ],
                 [
                     'date' => '2023-11-01',
                     'type' => 'contributor',
-                    'stloyd' => 4,
+                    'stloyd' => 4.0,
                     'norberttech' => null,
                 ],
                 [
                     'date' => '2023-11-02',
                     'type' => 'admin',
-                    'norberttech' => 3,
+                    'norberttech' => 3.0,
                     'stloyd' => null,
                 ],
                 [
                     'date' => '2023-11-02',
                     'type' => 'contributor',
-                    'stloyd' => 6,
+                    'stloyd' => 6.0,
                     'norberttech' => null,
                 ],
                 [
                     'date' => '2023-11-03',
                     'type' => 'admin',
-                    'norberttech' => 2,
+                    'norberttech' => 2.0,
                     'stloyd' => null,
                 ],
                 [
                     'date' => '2023-11-03',
                     'type' => 'contributor',
-                    'stloyd' => 7,
+                    'stloyd' => 7.0,
                     'norberttech' => null,
                 ],
                 [
                     'date' => '2023-11-04',
                     'type' => 'admin',
-                    'norberttech' => 3,
+                    'norberttech' => 3.0,
                     'stloyd' => null,
                 ],
                 [
                     'date' => '2023-11-04',
                     'type' => 'contributor',
-                    'stloyd' => 5,
+                    'stloyd' => 5.0,
                     'norberttech' => null,
                 ],
                 [
                     'date' => '2023-11-05',
                     'type' => 'admin',
-                    'norberttech' => 7,
+                    'norberttech' => 7.0,
                     'stloyd' => null,
                 ],
                 [
                     'date' => '2023-11-05',
                     'type' => 'contributor',
-                    'stloyd' => 11,
+                    'stloyd' => 11.0,
                     'norberttech' => null,
                 ],
             ],
@@ -655,8 +665,41 @@ final class GroupByTest extends FlowIntegrationTestCase
             )))
             ->aggregate([average(ref('age')), max(ref('age'))])
             ->run(function (Rows $rows): void {
-                $this->assertEquals(rows(row(float_entry('age_avg', 33.75), int_entry('age_max', 50))), $rows);
+                $this->assertSame([['age_avg' => 33.75, 'age_max' => 50]], $rows->toArray());
+                $this->assertEquals(
+                    schema(float_schema('age_avg', true), int_schema('age_max', true)),
+                    $rows->schema(),
+                );
             });
+    }
+
+    /**
+     * A group with a whole-number minimum and a group with a fractional one used to yield
+     * IntegerEntry and FloatEntry side by side in one Rows - the declared type now comes from the
+     * bind, once for the whole run. Scope: groups spilled into separate buckets still bind against
+     * their own bucket's schema, so cross-bucket variance for a column typed differently per group
+     * remains until Rows carries one stream-wide schema.
+     */
+    public function test_the_output_definition_does_not_vary_between_groups(): void
+    {
+        $rows = df()
+            ->read(from_rows(rows(
+                row(str_entry('group', 'a'), float_entry('value', 10.0)),
+                row(str_entry('group', 'a'), float_entry('value', 20.0)),
+                row(str_entry('group', 'b'), float_entry('value', 0.5)),
+            )))
+            ->groupBy(['group'])
+            ->aggregate(min(ref('value')))
+            ->fetch();
+
+        static::assertEquals(schema(str_schema('group', true), float_schema('value_min', true)), $rows->schema());
+        static::assertSame(
+            [
+                ['group' => 'a', 'value_min' => 10.0],
+                ['group' => 'b', 'value_min' => 0.5],
+            ],
+            $rows->toArray(),
+        );
     }
 
     public function test_window_avg_function(): void

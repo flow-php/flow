@@ -51,7 +51,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
         df()->read(from_rows(...RowsMother::interleavedGroupBatches()))->write(to_transformation($sumV, $spy))->run();
 
-        static::assertSame([['v_sum' => 66]], $spy->loadedRowsToArray());
+        static::assertSame([['v_sum' => 66.0]], $spy->loadedRowsToArray());
         static::assertSame(1, $spy->loadsCount);
     }
 
@@ -161,7 +161,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
             ->run();
 
         static::assertSame([1, 1], $spy->loadedRowCounts());
-        static::assertSame([['g' => 'a', 'v_sum' => 6], ['g' => 'b', 'v_sum' => 60]], $spy->loadedRowsToArray());
+        static::assertSame([['g' => 'a', 'v_sum' => 6.0], ['g' => 'b', 'v_sum' => 60.0]], $spy->loadedRowsToArray());
     }
 
     public function test_join_inside_a_transformation_matches_every_row(): void
@@ -275,7 +275,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
         static::assertSame([2], $spy->loadedRowCounts());
         static::assertSame(
-            [['g' => 'a', 'a' => 6, 'b' => null], ['g' => 'b', 'b' => 60, 'a' => null]],
+            [['g' => 'a', 'a' => 6.0, 'b' => null], ['g' => 'b', 'b' => 60.0, 'a' => null]],
             $spy->loadedRowsToArray(),
         );
     }

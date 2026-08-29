@@ -33,6 +33,20 @@ final class GroupByContext
     }
 
     /**
+     * All aggregated batches merged into one Rows, for equality assertions.
+     */
+    public static function aggregated(GroupBy $groupBy, FlowContext $context, Rows ...$batches): Rows
+    {
+        $result = new Rows();
+
+        foreach (self::aggregate($groupBy, $context, ...$batches) as $batch) {
+            $result = $result->merge($batch);
+        }
+
+        return $result;
+    }
+
+    /**
      * @return Generator<Rows>
      */
     public static function batches(Rows ...$batches): Generator

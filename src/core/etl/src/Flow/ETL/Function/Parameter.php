@@ -6,7 +6,6 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -306,11 +305,7 @@ final readonly class Parameter
      */
     public function eval(Row $row, FlowContext $context): mixed
     {
-        // @mago-ignore analysis:mixed-assignment
-        $result = $this->function->eval($row, $context);
-
         // @mago-ignore analysis:mixed-return-statement
-        // No in-repo producer returns ScalarResult any more - the unwrap stays for 04b to delete with the class.
-        return $result instanceof ScalarResult ? $result->value : $result;
+        return $this->function->eval($row, $context);
     }
 }

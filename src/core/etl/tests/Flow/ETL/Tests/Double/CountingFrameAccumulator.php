@@ -28,7 +28,7 @@ final class CountingFrameAccumulator implements FrameAccumulator
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         $this->spy->valueCalls++;
 

@@ -79,4 +79,12 @@ final class RankTest extends FlowTestCase
 
         rank()->apply(WindowContextMother::atIndex($partition, 0));
     }
+
+    public function test_with_children_returns_the_same_leaf(): void
+    {
+        $function = rank();
+
+        static::assertSame([], $function->children());
+        static::assertSame($function, $function->withChildren([]));
+    }
 }

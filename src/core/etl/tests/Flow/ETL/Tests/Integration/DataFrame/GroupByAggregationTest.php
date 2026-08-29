@@ -63,9 +63,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [
-                'a' => ['count' => 3, 'sum' => 33],
-                'b' => ['count' => 2, 'sum' => 12],
-                'c' => ['count' => 1, 'sum' => 1],
+                'a' => ['count' => 3, 'sum' => 33.0],
+                'b' => ['count' => 2, 'sum' => 12.0],
+                'c' => ['count' => 1, 'sum' => 1.0],
             ],
             $bySeller,
         );
@@ -96,8 +96,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
             $byGroup[(string) $row['a'] . '|' . (string) $row['b']] = $row['v_sum'];
         }
 
-        static::assertSame(2, $byGroup['x|yz']);
-        static::assertSame(1, $byGroup['xy|z']);
+        static::assertSame(2.0, $byGroup['x|yz']);
+        static::assertSame(1.0, $byGroup['xy|z']);
     }
 
     public function test_mixed_presence_columns_survive_the_filesystem_round_trip(): void

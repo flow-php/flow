@@ -43,4 +43,12 @@ final class RowNumberTest extends FlowTestCase
         static::assertSame(1, $rowNumber->apply(WindowContextMother::forRow($row1, $rows, 0)));
         static::assertSame(2, $rowNumber->apply(WindowContextMother::forRow($row2, $rows, 1)));
     }
+
+    public function test_with_children_returns_the_same_leaf(): void
+    {
+        $function = row_number();
+
+        static::assertSame([], $function->children());
+        static::assertSame($function, $function->withChildren([]));
+    }
 }

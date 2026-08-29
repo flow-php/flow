@@ -47,7 +47,7 @@ final class AverageAccumulator implements FrameAccumulator
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         if (0 === $this->count) {
             return null;

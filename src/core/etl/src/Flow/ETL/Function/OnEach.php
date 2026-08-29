@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
 
 use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\definition_from_type;
@@ -18,6 +19,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_structure;
 
 final class OnEach implements ScalarFunction
 {
@@ -65,6 +68,7 @@ final class OnEach implements ScalarFunction
         $element = match (true) {
             $arrayType instanceof ListType => $arrayType->element(),
             $arrayType instanceof MapType => $arrayType->value(),
+            $arrayType instanceof StructureType => StructureValues::type('on_each', $arrayType),
             default => throw SchemaNotDerivableException::function(
                 'on_each',
                 'the array operand declares "' . $arrayType->toString() . '", which has no element type',
@@ -73,12 +77,24 @@ final class OnEach implements ScalarFunction
 
         $inner = schema(definition_from_type('element', $element));
 
-        /** @var ScalarFunction $body resolve() preserves the node's class for a non-leaf root */
         $body = (new ReferenceResolver())->resolve($this->function, $inner);
 
         (new ReferenceResolver())->assertResolved($body, $inner);
 
-        return type_list($body->returns());
+        $bodyType = $body->returns();
+
+        if ($this->preserveKeys && $arrayType instanceof StructureType) {
+            return type_structure(
+                array_map(static fn(): Type => $bodyType, $arrayType->elements()),
+                array_map(static fn(): Type => $bodyType, $arrayType->optionalElements()),
+            );
+        }
+
+        if ($this->preserveKeys && $arrayType instanceof MapType) {
+            return type_map($arrayType->key(), $bodyType);
+        }
+
+        return type_list($bodyType);
     }
 
     public function eval(Row $row, FlowContext $context): mixed

@@ -132,4 +132,14 @@ final class ReferenceResolverTest extends FlowTestCase
 
         $this->expectNotToPerformAssertions();
     }
+
+    public function test_an_aliased_reference_resolves_by_its_source_column(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(ref('age')->as('total_age'), schema(int_schema('age')));
+
+        static::assertInstanceOf(ResolvedReference::class, $resolved);
+        static::assertSame('total_age', $resolved->name());
+        static::assertSame('age', $resolved->to());
+        static::assertSame('integer', $resolved->returns()->toString());
+    }
 }

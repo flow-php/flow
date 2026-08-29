@@ -151,7 +151,6 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
             static::markTestSkipped($e->getMessage());
         }
 
-        /** @var ScalarFunction $resolved */
         $resolved = (new ReferenceResolver())->resolve($function, ScalarFunctionFixtures::schema());
 
         if ($class === Function\ArrayUnpack::class) {
@@ -228,7 +227,6 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
             static::markTestSkipped($e->getMessage());
         }
 
-        /** @var ScalarFunction $resolved */
         $resolved = (new ReferenceResolver())->resolve($function, ScalarFunctionFixtures::schema());
 
         $returns = $resolved->returns();

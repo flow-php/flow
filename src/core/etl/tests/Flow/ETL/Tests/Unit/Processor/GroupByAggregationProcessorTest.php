@@ -75,7 +75,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         ksort($aggregated);
 
-        static::assertSame(['a' => 30, 'b' => 15], $aggregated);
+        static::assertSame(['a' => 30.0, 'b' => 15.0], $aggregated);
     }
 
     public function test_aggregates_every_bucket_when_metadata_rows_arrive_in_one_batch(): void
@@ -127,7 +127,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         ksort($aggregated);
 
-        static::assertSame(['a' => 30, 'b' => 15], $aggregated);
+        static::assertSame(['a' => 30.0, 'b' => 15.0], $aggregated);
     }
 
     public function test_clears_storage_after_the_last_bucket(): void

@@ -9,7 +9,9 @@ use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Row;
+use Flow\ETL\Schema;
 use IteratorAggregate;
 use Traversable;
 
@@ -64,6 +66,25 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->aggregators);
+    }
+
+    /**
+     * Rebuilds every aggregator fresh - callers must bind before the first aggregate() call, or
+     * accumulated state is discarded.
+     */
+    public function resolved(Schema $schema): self
+    {
+        $resolver = new ReferenceResolver();
+        $resolved = [];
+
+        foreach ($this->aggregators as $aggregator) {
+            /** @var AggregatingFunction $bound an aggregate root is never a reference leaf */
+            $bound = $resolver->resolve($aggregator, $schema);
+            $resolver->assertResolved($bound, $schema);
+            $resolved[] = $bound;
+        }
+
+        return new self(...$resolved);
     }
 
     /**

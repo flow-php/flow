@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
+
+use function Flow\Types\DSL\type_bare;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_equals;
+use function sprintf;
 
 final class UntilTransformer implements Transformer
 {
@@ -34,10 +41,36 @@ final class UntilTransformer implements Transformer
                 throw new LimitReachedException(0);
             }
 
+            // An empty batch has no schema to bind against.
+            if (!$rows->count()) {
+                $context->telemetry()->transformationCompleted($this, [
+                    TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => 0,
+                    TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
+                ]);
+
+                return $rows;
+            }
+
+            $schema = $rows->schema();
+            $resolver = new ReferenceResolver();
+            $function = $resolver->resolve($this->function, $schema);
+            $resolver->assertResolved($function, $schema);
+
+            // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
+            // ?boolean, and an evaluated null stops the stream like false does.
+            if (!type_equals(type_bare($function->returns()), type_boolean())) {
+                throw new InvalidArgumentException(sprintf(
+                    'until() requires a predicate returning boolean, "%s" returns "%s". '
+                    . 'Use an explicit comparison, e.g. ->notEquals(lit(0)).',
+                    $function::class,
+                    $function->returns()->toString(),
+                ));
+            }
+
             $nextRows = [];
 
             foreach ($rows as $row) {
-                if (!$this->function->eval($row, $context)) {
+                if (!$function->eval($row, $context)) {
                     $this->limitReached = true;
                 } else {
                     $nextRows[] = $row;

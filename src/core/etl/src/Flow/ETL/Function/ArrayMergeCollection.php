@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\StructureType;
 
 use function array_merge;
 use function array_values;
@@ -55,13 +56,23 @@ final class ArrayMergeCollection implements ScalarFunction
     {
         $array = type_bare($this->array->returns());
 
-        if ($array instanceof ListType && type_bare($array->element()) instanceof ListType) {
-            return type_bare($array->element());
+        if ($array instanceof ListType) {
+            $element = type_bare($array->element());
+
+            if ($element instanceof ListType) {
+                return $element;
+            }
+
+            // Merging zero structures yields {} - a field is present iff the collection is non-empty,
+            // so every field of the merged structure is optional.
+            if ($element instanceof StructureType) {
+                return new StructureType([], $element->elements() + $element->optionalElements());
+            }
         }
 
         throw SchemaNotDerivableException::function(
             'array_merge_collection',
-            'the array operand declares "' . $array->toString() . '", which is not a list of lists',
+            'the array operand declares "' . $array->toString() . '", which is not a list of lists or structures',
         );
     }
 

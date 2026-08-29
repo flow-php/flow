@@ -6,23 +6,47 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\Types\DSL\type_optional;
 
 final class First implements AggregatingFunction
 {
+    use ResolvesFromChildren;
+
     /**
-     * @var null|Entry<mixed>
+     * @var null|array<array-key, mixed>|bool|float|int|object|string
      */
-    private ?Entry $first;
+    private mixed $first;
+
+    private bool $found;
+
+    private readonly string $outputName;
 
     public function __construct(
         private readonly Reference $ref,
     ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_first';
         $this->first = null;
+        $this->found = false;
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0]);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
@@ -31,9 +55,15 @@ final class First implements AggregatingFunction
             return;
         }
 
-        if ($this->first === null) {
-            $this->first = $row->get($this->ref);
+        if (!$this->found) {
+            $this->first = $row->valueOf($this->ref);
+            $this->found = true;
         }
+    }
+
+    public function outputName(): string
+    {
+        return $this->outputName;
     }
 
     /**
@@ -45,16 +75,18 @@ final class First implements AggregatingFunction
     }
 
     /**
-     * @return Entry<mixed>
+     * @return Type<mixed>
      */
-    public function result(EntryFactory $entryFactory): Entry
+    public function returns(): Type
     {
-        $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';
+        return type_optional($this->ref->returns());
+    }
 
-        if ($this->first) {
-            return $this->first->rename($name);
-        }
-
-        return string_entry($name, null);
+    /**
+     * @return null|array<array-key, mixed>|bool|float|int|object|string
+     */
+    public function value(): mixed
+    {
+        return $this->first;
     }
 }

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Row\UnresolvedReference;
 use ReflectionClass;
 
 use function array_filter;
+use function array_unique;
 use function array_values;
 use function class_exists;
 use function sort;
@@ -38,6 +41,32 @@ final class ScalarFunctionClasses
      */
     public static function all(): array
     {
+        return self::implementing(ScalarFunction::class);
+    }
+
+    /**
+     * Every concrete AggregatingFunction and/or WindowFunction implementation shipped in src/ - the
+     * producers that declare a column without being scalar functions.
+     *
+     * @return list<class-string<AggregatingFunction|WindowFunction>>
+     */
+    public static function producing(): array
+    {
+        $found = [...self::implementing(AggregatingFunction::class), ...self::implementing(WindowFunction::class)];
+        sort($found);
+
+        return array_values(array_unique($found));
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $interface
+     *
+     * @return list<class-string<T>>
+     */
+    public static function implementing(string $interface): array
+    {
         $found = [];
 
         foreach (ExtractorClasses::sourceFiles() as $file) {
@@ -49,11 +78,10 @@ final class ScalarFunctionClasses
 
             $reflection = new ReflectionClass($class);
 
-            if (!$reflection->implementsInterface(ScalarFunction::class) || $reflection->isAbstract()) {
+            if (!$reflection->implementsInterface($interface) || $reflection->isAbstract()) {
                 continue;
             }
 
-            /** @var class-string<ScalarFunction> $class */
             $found[] = $class;
         }
 

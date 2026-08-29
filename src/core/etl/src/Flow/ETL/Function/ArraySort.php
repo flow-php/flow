@@ -9,10 +9,14 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
+use function Flow\Types\DSL\type_structure;
 use function is_array;
+use function krsort;
+use function ksort;
 
 final class ArraySort implements ScalarFunction
 {
@@ -53,7 +57,31 @@ final class ArraySort implements ScalarFunction
      */
     public function returns(): Type
     {
-        return type_bare($this->ref->returns());
+        $array = type_bare($this->ref->returns());
+
+        // Only a key sort reorders a structure's fields deterministically at bind time; a value sort's
+        // field order is data-dependent, so the operand's declared order stands. Field order is
+        // bucket-scoped: StructureType keeps required fields before optional ones, so a mixed
+        // structure sorts within each bucket, not across them.
+        if (
+            $array instanceof StructureType
+            && ($this->sortFunction === Sort::ksort || $this->sortFunction === Sort::krsort)
+        ) {
+            $elements = $array->elements();
+            $optionalElements = $array->optionalElements();
+
+            if ($this->sortFunction === Sort::ksort) {
+                ksort($elements);
+                ksort($optionalElements);
+            } else {
+                krsort($elements);
+                krsort($optionalElements);
+            }
+
+            return type_structure($elements, $optionalElements);
+        }
+
+        return $array;
     }
 
     /**

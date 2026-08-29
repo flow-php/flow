@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Parameter;
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -379,26 +378,10 @@ final class ParameterTest extends FlowTestCase
         static::assertNull((new Parameter(lit(null)))->as(row(), flow_context(), type_integer()));
     }
 
-    public function test_as_one_of_on_scalar_result(): void
-    {
-        $parameter = new Parameter(lit(ScalarResult::from('42')));
-
-        static::assertSame('42', $parameter->as(row(), flow_context(), type_string(), type_integer()));
-    }
-
     public function test_as_scalar(): void
     {
         static::assertSame('42', (new Parameter(ref('value')))->as(
             row(str_entry('value', '42')),
-            flow_context(),
-            type_string(),
-        ));
-    }
-
-    public function test_as_scalar_on_scalar_result(): void
-    {
-        static::assertSame('test', (new Parameter(lit(ScalarResult::from('test'))))->as(
-            row(),
             flow_context(),
             type_string(),
         ));
@@ -446,11 +429,5 @@ final class ParameterTest extends FlowTestCase
         $result = $parameter->eval(row(str_entry('column', 'ref_value')), flow_context());
 
         static::assertSame('ref_value', $result);
-    }
-
-    public function test_eval_with_scalar_result(): void
-    {
-        $parameter = new Parameter(lit(ScalarResult::from('test_value')));
-        static::assertSame('test_value', $parameter->eval(row(), flow_context()));
     }
 }

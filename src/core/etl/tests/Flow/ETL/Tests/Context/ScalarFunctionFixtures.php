@@ -85,7 +85,6 @@ final class ScalarFunctionFixtures
                 continue;
             }
 
-            /** @var ScalarFunction $resolved */
             $resolved = (new ReferenceResolver())->resolve($function, self::schema());
 
             try {

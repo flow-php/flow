@@ -7,27 +7,43 @@ namespace Flow\ETL\Function;
 use DateTimeInterface;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\Types\DSL\type_optional;
 use function is_numeric;
 use function min;
 
 final class Min implements AggregatingFunction
 {
-    private bool $floatColumn = false;
+    use ResolvesFromChildren;
 
     private float|DateTimeInterface|null $min;
+
+    private readonly string $outputName;
 
     public function __construct(
         private readonly Reference $ref,
     ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_min';
         $this->min = null;
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0]);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
@@ -36,14 +52,8 @@ final class Min implements AggregatingFunction
             return;
         }
 
-        $entry = $row->get($this->ref);
-
-        if (!$this->floatColumn && $entry->definition()->type() instanceof FloatType) {
-            $this->floatColumn = true;
-        }
-
         /** @var mixed $value */
-        $value = $entry->value();
+        $value = $row->valueOf($this->ref);
 
         if ($this->min === null) {
             if (is_numeric($value)) {
@@ -60,6 +70,11 @@ final class Min implements AggregatingFunction
         }
     }
 
+    public function outputName(): string
+    {
+        return $this->outputName;
+    }
+
     /**
      * @return list<Reference>
      */
@@ -69,30 +84,18 @@ final class Min implements AggregatingFunction
     }
 
     /**
-     * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
+     * Exactly the argument type, nullable - an all-null or ref-less group leaves no minimum
+     * (DuckDB first_last_any.cpp: return_type = arguments[0]->return_type).
+     *
+     * @return Type<mixed>
      */
-    public function result(EntryFactory $entryFactory): Entry
+    public function returns(): Type
     {
-        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_min');
+        return type_optional($this->ref->returns());
+    }
 
-        if ($this->floatColumn) {
-            return float_entry($ref->name(), $this->min instanceof DateTimeInterface ? null : $this->min);
-        }
-
-        if ($this->min === null) {
-            return int_entry($ref->name(), null);
-        }
-
-        if ($this->min instanceof DateTimeInterface) {
-            return datetime_entry($ref->name(), $this->min);
-        }
-
-        $resultInt = (int) $this->min;
-
-        if (($this->min - $resultInt) === 0.0) {
-            return int_entry($ref->name(), (int) $this->min);
-        }
-
-        return float_entry($ref->name(), $this->min);
+    public function value(): float|DateTimeInterface|null
+    {
+        return $this->min;
     }
 }

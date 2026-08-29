@@ -9,37 +9,53 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\SumAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
-use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_optional;
 use function is_numeric;
 
 final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
-    private bool $floatColumn = false;
+    use ResolvesFromChildren;
 
     private int $aggregated = 0;
+
+    private readonly string $outputName;
 
     private ?RunningSum $runningSum = null;
 
     private float|int $sum;
 
-    private ?Window $window;
-
     public function __construct(
         private readonly Reference $ref,
         private readonly ScalarFunction|bool $exact = false,
+        private readonly ?Window $window = null,
     ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_sum';
         $this->sum = 0;
-        $this->window = null;
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return $this->exact instanceof ScalarFunction ? [$this->ref, $this->exact] : [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var array{0: Reference, 1?: ScalarFunction} $children */
+        return new self($children[0], $children[1] ?? $this->exact, $this->window);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
@@ -48,15 +64,8 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
             return;
         }
 
-        $entry = $row->get($this->ref);
-
-        if (!$this->floatColumn && $entry->definition()->type() instanceof FloatType) {
-            $this->floatColumn = true;
-        }
-
         try {
-            // @mago-ignore analysis:mixed-assignment
-            $value = $entry->value();
+            $value = $row->valueOf($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->runningSum ??= new RunningSum($context->calculator());
@@ -86,9 +95,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     public function over(Window $window): static
     {
-        $this->window = $window;
-
-        return $this;
+        return new self($this->ref, $this->exact, $window);
     }
 
     /**
@@ -100,26 +107,30 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         return $this->exact instanceof ScalarFunction ? null : [$this->ref];
     }
 
-    /**
-     * @return Entry<?float>|Entry<?int>
-     */
-    public function result(EntryFactory $entryFactory): Entry
+    public function outputName(): string
     {
-        $ref = $this->ref->hasAlias() ? $this->ref : $this->ref->as($this->ref->to() . '_sum');
+        return $this->outputName;
+    }
 
-        if ($this->floatColumn) {
-            return float_entry($ref->name(), (float) $this->sum);
-        }
+    /**
+     * float, not the argument type - RunningSum::add() promotes to float on int overflow, so integer
+     * would be a declaration the accumulator can violate on ordinary data (Spark promotes to
+     * LongType/DoubleType the same way; flow has no wider integer).
+     *
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_float());
+    }
 
+    public function value(): ?float
+    {
         if ($this->aggregated === 0) {
-            return int_entry($ref->name(), null);
+            return null;
         }
 
-        if (!is_float($this->sum)) {
-            return int_entry($ref->name(), (int) $this->sum);
-        }
-
-        return float_entry($ref->name(), $this->sum);
+        return (float) $this->sum;
     }
 
     public function toString(): string

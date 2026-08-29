@@ -45,7 +45,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
         $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
-        static::assertSame(110.0, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(110.0, $aggregator->value());
     }
 
     public function test_aggregation_sum_including_null_value(): void
@@ -57,7 +57,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
         $aggregator->aggregate(row(str_entry('int', null)), flow_context());
 
-        static::assertSame(60, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(60.0, $aggregator->value());
     }
 
     public function test_aggregation_sum_with_float_result(): void
@@ -69,7 +69,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
         $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
 
-        static::assertSame(360.25, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(360.25, $aggregator->value());
     }
 
     public function test_aggregation_sum_of_decimal_fractions(): void
@@ -79,7 +79,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(float_entry('value', 0.1)), flow_context());
         $aggregator->aggregate(row(float_entry('value', 0.2)), flow_context());
 
-        static::assertSame(0.3, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(0.30000000000000004, $aggregator->value());
     }
 
     public function test_window_function_sum_of_decimal_fractions_uses_float_arithmetic_by_default(): void
@@ -101,13 +101,11 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
         $aggregator->aggregate(row(float_entry('value', 2.5)), flow_context());
 
-        $result = $aggregator->result(flow_context(config())->entryFactory());
-
-        static::assertSame(5.0, $result->value());
-        static::assertSame('float', $result->definition()->type()->toString());
+        static::assertSame(5.0, $aggregator->value());
+        static::assertSame('?float', $aggregator->returns()->toString());
     }
 
-    public function test_sum_over_int_column_stays_int(): void
+    public function test_sum_over_an_int_column_declares_float(): void
     {
         $aggregator = sum(ref('value'));
 
@@ -116,10 +114,8 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('value', 3)), flow_context());
         $aggregator->aggregate(row(int_entry('value', 4)), flow_context());
 
-        $result = $aggregator->result(flow_context(config())->entryFactory());
-
-        static::assertSame(10, $result->value());
-        static::assertSame('integer', $result->definition()->type()->toString());
+        static::assertSame(10.0, $aggregator->value());
+        static::assertSame('?float', $aggregator->returns()->toString());
     }
 
     public function test_a_malformed_exact_operand_throws_wrapped_as_a_sum_error(): void
@@ -142,7 +138,7 @@ final class SumTest extends FlowTestCase
         $aggregator->aggregate(row(float_entry('value', 0.1)), flow_context());
         $aggregator->aggregate(row(float_entry('value', 0.2)), flow_context());
 
-        static::assertSame(0.3, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(0.3, $aggregator->value());
     }
 
     public function test_window_function_sum_on_partitioned_rows(): void
@@ -207,5 +203,41 @@ final class SumTest extends FlowTestCase
 
         $context = flow_context(config());
         $sum->apply(WindowContextMother::forRow($row1, $rows, context: $context));
+    }
+
+    public function test_with_children_rebuilds_the_aggregate_with_the_given_reference(): void
+    {
+        $aggregate = sum(ref('a'));
+
+        static::assertEquals([ref('a')], $aggregate->children());
+
+        $rebuilt = $aggregate->withChildren([ref('b')]);
+
+        static::assertNotSame($aggregate, $rebuilt);
+        static::assertEquals([ref('b')], $rebuilt->references());
+    }
+
+    public function test_with_children_carries_the_exact_operand_as_a_child(): void
+    {
+        $aggregate = sum(ref('a'), lit(true));
+
+        static::assertCount(2, $aggregate->children());
+        static::assertNull($aggregate->withChildren([ref('b'), lit(false)])->references());
+    }
+
+    public function test_output_name_is_not_affected_by_a_shared_reference(): void
+    {
+        $shared = ref('value');
+        $aggregate = sum($shared);
+        $sibling = sum($shared->as('renamed'));
+
+        static::assertSame('value_sum', $aggregate->outputName());
+        static::assertSame('renamed', $sibling->outputName());
+        static::assertSame('value_sum', $aggregate->outputName());
+    }
+
+    public function test_sum_of_nothing_is_null(): void
+    {
+        static::assertNull(sum(ref('value'))->value());
     }
 }

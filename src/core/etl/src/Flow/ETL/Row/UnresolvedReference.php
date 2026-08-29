@@ -18,7 +18,7 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
 
-final class UnresolvedReference implements ScalarFunction, Reference
+final class UnresolvedReference implements Reference
 {
     use ScalarFunctionChain;
 

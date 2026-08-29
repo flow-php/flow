@@ -60,6 +60,39 @@ final class WindowTest extends FlowTestCase
         static::assertSame(['dept'], array_map(static fn($ref) => $ref->name(), $window->partitions()));
     }
 
+    public function test_order_by_returns_a_copy(): void
+    {
+        $window = window()->orderBy(ref('date'));
+        $reordered = $window->orderBy(ref('id'));
+
+        static::assertNotSame($window, $reordered);
+        static::assertSame(['date'], array_map(static fn($ref) => $ref->name(), $window->order()));
+        static::assertSame(['id'], array_map(static fn($ref) => $ref->name(), $reordered->order()));
+    }
+
+    public function test_partition_by_returns_a_copy(): void
+    {
+        $window = window()->partitionBy(ref('dept'));
+        $repartitioned = $window->partitionBy(ref('dept'), ref('country'));
+
+        static::assertNotSame($window, $repartitioned);
+        static::assertSame(['dept'], array_map(static fn($ref) => $ref->name(), $window->partitions()));
+        static::assertSame(
+            ['dept', 'country'],
+            array_map(static fn($ref) => $ref->name(), $repartitioned->partitions()),
+        );
+    }
+
+    public function test_rows_between_returns_a_copy(): void
+    {
+        $window = window()->orderBy(ref('date'));
+        $framed = $window->rowsBetween(preceding(2), current_row());
+
+        static::assertNotSame($window, $framed);
+        static::assertInstanceOf(PeerFrame::class, $window->frame());
+        static::assertInstanceOf(RowsFrame::class, $framed->frame());
+    }
+
     public function test_unordered_window_defaults_to_the_whole_partition(): void
     {
         static::assertInstanceOf(WholePartitionFrame::class, window()->frame());

@@ -58,8 +58,8 @@ final class PivotProcessorTest extends FlowTestCase
 
         static::assertSame(
             [
-                '2024-01-01' => ['date' => '2024-01-01', 'norbert' => 2, 'stloyd' => 3],
-                '2024-01-02' => ['date' => '2024-01-02', 'norbert' => 5, 'stloyd' => null],
+                '2024-01-01' => ['date' => '2024-01-01', 'norbert' => 2.0, 'stloyd' => 3.0],
+                '2024-01-02' => ['date' => '2024-01-02', 'norbert' => 5.0, 'stloyd' => null],
             ],
             $pivoted,
         );

@@ -47,9 +47,9 @@ final class MatchCasesTest extends FlowTestCase
         static::assertSame(
             [
                 ['string' => 'string with dashes'],
-                ['string' => 123],
-                ['string' => 14],
-                ['string' => 14],
+                ['string' => '123'],
+                ['string' => '14'],
+                ['string' => '14'],
                 ['string' => 'DEFAULT'],
             ],
             $output,

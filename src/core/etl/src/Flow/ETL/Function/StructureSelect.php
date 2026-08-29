@@ -40,8 +40,9 @@ final readonly class StructureSelect implements ScalarFunction
      */
     public function children(): array
     {
-        /** @var list<ScalarFunction> UnresolvedReference and ResolvedReference are both scalar functions */
-        return [$this->ref, ...$this->refs->all()];
+        // The selected refs index INTO the structure's fields, never the row schema - returns() reads them as
+        // names, so the outer resolver must not touch them (the Exists::$ref exclusion, one level down).
+        return [$this->ref];
     }
 
     /**
@@ -49,17 +50,14 @@ final readonly class StructureSelect implements ScalarFunction
      */
     public function withChildren(array $children): static
     {
-        foreach ($children as $child) {
-            if (!$child instanceof Reference) {
-                throw InvalidLogicException::because(
-                    'StructureSelect child must be a Reference, got "%s".',
-                    $child::class,
-                );
-            }
+        if (!$children[0] instanceof Reference) {
+            throw InvalidLogicException::because(
+                'StructureSelect child must be a Reference, got "%s".',
+                $children[0]::class,
+            );
         }
 
-        /** @var non-empty-list<Reference> $children */
-        return new self(...$children);
+        return new self($children[0], ...$this->refs->all());
     }
 
     /**
@@ -67,9 +65,7 @@ final readonly class StructureSelect implements ScalarFunction
      */
     public function returns(): Type
     {
-        /** @var ScalarFunction $ref both reference implementations are scalar functions */
-        $ref = $this->ref;
-        $structure = type_bare($ref->returns());
+        $structure = type_bare($this->ref->returns());
 
         if (!$structure instanceof StructureType) {
             throw SchemaNotDerivableException::function(

@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
@@ -30,7 +29,7 @@ final class MinTest extends FlowTestCase
 
         $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
 
-        static::assertSame('int_min', $aggregator->result(flow_context(config())->entryFactory())->name());
+        static::assertSame('int_min', $aggregator->outputName());
     }
 
     public function test_aggregation_min_from_numeric_values(): void
@@ -43,7 +42,7 @@ final class MinTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
         $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
-        static::assertSame(10, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(10.0, $aggregator->value());
     }
 
     public function test_aggregation_min_including_null_value(): void
@@ -55,7 +54,7 @@ final class MinTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
         $aggregator->aggregate(row(str_entry('int', null)), flow_context());
 
-        static::assertSame(10, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(10.0, $aggregator->value());
     }
 
     public function test_aggregation_min_with_datetime_values(): void
@@ -67,10 +66,7 @@ final class MinTest extends FlowTestCase
         $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-03 00:00:00')), flow_context());
         $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-04 00:00:00')), flow_context());
 
-        static::assertEquals(
-            new DateTimeImmutable('2021-01-01 00:00:00'),
-            $aggregator->result(flow_context(config())->entryFactory())->value(),
-        );
+        static::assertEquals(new DateTimeImmutable('2021-01-01 00:00:00'), $aggregator->value());
     }
 
     public function test_aggregation_min_with_float_result(): void
@@ -82,7 +78,7 @@ final class MinTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
         $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
 
-        static::assertSame(10.25, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(10.25, $aggregator->value());
     }
 
     public function test_aggregation_min_with_integer_result(): void
@@ -94,6 +90,23 @@ final class MinTest extends FlowTestCase
         $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
         $aggregator->aggregate(row(int_entry('int', 40)), flow_context());
 
-        static::assertSame(10, $aggregator->result(flow_context(config())->entryFactory())->value());
+        static::assertSame(10.0, $aggregator->value());
+    }
+
+    public function test_with_children_rebuilds_the_aggregate_with_the_given_reference(): void
+    {
+        $aggregate = min(ref('a'));
+
+        static::assertEquals([ref('a')], $aggregate->children());
+
+        $rebuilt = $aggregate->withChildren([ref('b')]);
+
+        static::assertNotSame($aggregate, $rebuilt);
+        static::assertEquals([ref('b')], $rebuilt->references());
+    }
+
+    public function test_min_of_nothing_is_null(): void
+    {
+        static::assertNull(min(ref('int'))->value());
     }
 }

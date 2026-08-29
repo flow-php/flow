@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_merge_collection;
@@ -12,8 +13,13 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_structure;
 
 final class ArrayMergeCollectionTest extends FlowTestCase
 {
@@ -78,5 +84,15 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         ]));
 
         static::assertEquals([1, 2], array_merge_collection(ref('array_entry'))->eval($row, flow_context()));
+    }
+
+    public function test_a_list_of_structures_declares_the_structure(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('collection')->arrayMergeCollection(),
+            schema(list_schema('collection', type_list(type_structure([], ['a' => type_integer()])))),
+        );
+
+        static::assertSame('structure{a?: integer}', $resolved->returns()->toString());
     }
 }

@@ -13,7 +13,7 @@ use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 
-final class ResolvedReference implements ScalarFunction, Reference
+final class ResolvedReference implements Reference
 {
     use ScalarFunctionChain;
 

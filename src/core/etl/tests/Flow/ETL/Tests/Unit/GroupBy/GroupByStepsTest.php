@@ -91,7 +91,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         ksort($aggregated);
 
-        static::assertSame(['a' => 30, 'b' => 15], $aggregated);
+        static::assertSame(['a' => 30.0, 'b' => 15.0], $aggregated);
     }
 
     public function test_aggregates_each_bucket_separately_with_single_bucket(): void
@@ -118,8 +118,8 @@ final class GroupByStepsTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['category' => 'a', 'amount_sum' => 30],
-                ['category' => 'b', 'amount_sum' => 15],
+                ['category' => 'a', 'amount_sum' => 30.0],
+                ['category' => 'b', 'amount_sum' => 15.0],
             ],
             $aggregated,
         );
@@ -159,7 +159,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         ksort($aggregated);
 
-        static::assertSame(array_fill(0, 20, 3), $aggregated);
+        static::assertSame(array_fill(0, 20, 3.0), $aggregated);
     }
 
     public function test_removes_storage_buckets_after_last_bucket(): void
@@ -274,7 +274,7 @@ final class GroupByStepsTest extends FlowTestCase
             rows(row(str_entry('category', 'a'), int_entry('amount', 10)), row(str_entry('category', 'a'))),
         );
 
-        static::assertSame(10, $result[0]->first()->valueOf('amount_sum'));
+        static::assertSame(10.0, $result[0]->first()->valueOf('amount_sum'));
     }
 
     public function test_handles_empty_input(): void

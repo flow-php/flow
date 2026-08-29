@@ -81,4 +81,12 @@ final class DenseRankTest extends FlowTestCase
 
         dense_rank()->apply(WindowContextMother::atIndex($partition, 0));
     }
+
+    public function test_with_children_returns_the_same_leaf(): void
+    {
+        $function = dense_rank();
+
+        static::assertSame([], $function->children());
+        static::assertSame($function, $function->withChildren([]));
+    }
 }

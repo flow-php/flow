@@ -7,26 +7,53 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Window;
 use Flow\ETL\Window\WindowContext;
+use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_integer;
 
 final class RowNumber implements WindowFunction
 {
-    private ?Window $window;
+    use ResolvesFromChildren;
 
-    public function __construct()
-    {
-        $this->window = null;
-    }
+    public function __construct(
+        private readonly ?Window $window = null,
+    ) {}
 
     public function apply(WindowContext $window): mixed
     {
         return $window->index() + 1;
     }
 
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        return $this;
+    }
+
     public function over(Window $window): static
     {
-        $this->window = $window;
+        return new self($window);
+    }
 
-        return $this;
+    /**
+     * NOT NULL - every row of a partition has a row number (Spark RowNumberLike/RankLike nullable=false;
+     * DuckDB BIGINT).
+     *
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_integer();
     }
 
     public function toString(): string
