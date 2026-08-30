@@ -14,6 +14,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
@@ -24,6 +25,7 @@ use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function array_intersect_key;
@@ -63,16 +65,16 @@ final readonly class HashJoinProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $joiner = new Joiner($this->expression, $this->type, $context->entryFactory(), $this->batchSize);
+        $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 
         try {
-            $nullRightBuilder = $this->type === Join::left ? new NullRowBuilder($context->entryFactory()) : null;
+            $rightSchema = null;
 
             $rightRows = $this->tap(
                 $this->right->get(),
-                $nullRightBuilder,
+                $rightSchema,
                 // right rows with a null join key can never match, they only surface in right join output
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,
             );
@@ -84,16 +86,15 @@ final readonly class HashJoinProcessor implements Processor
                 'join-right',
             );
 
-            $nullRightRow = $nullRightBuilder?->row();
-
-            // in the resident path the Joiner collects the null-left row itself while streaming
-            $nullLeftBuilder = !$resident && $this->type === Join::right
-                ? new NullRowBuilder($context->entryFactory())
+            $nullRightRow = $this->type === Join::left
+                ? (new NullRowBuilder($rightSchema ?? new Schema()))->row()
                 : null;
+
+            $leftSchema = null;
 
             $leftRows = $this->tap(
                 $rows,
-                $nullLeftBuilder,
+                $leftSchema,
                 // left rows with a null join key can never match, they only surface in left/left_anti output
                 $equalityKeys !== null && $this->type !== Join::left && $this->type !== Join::left_anti
                     ? $equalityKeys->leftRefs()
@@ -115,7 +116,11 @@ final readonly class HashJoinProcessor implements Processor
 
             $this->bucketize($leftRows, $this->leftBuckets, $equalityKeys?->leftRefs(), 'join-left');
 
-            $nullLeftRow = $nullLeftBuilder?->row();
+            // only the bucketized path builds it here, the resident path above derives the null-left
+            // row inside the Joiner while streaming
+            $nullLeftRow = $this->type === Join::right
+                ? (new NullRowBuilder($leftSchema ?? new Schema()))->row()
+                : null;
 
             foreach ($this->bucketPairs() as [$leftBucket, $rightBucket]) {
                 $joinedBatches = $joiner->join(
@@ -131,7 +136,7 @@ final readonly class HashJoinProcessor implements Processor
                     yield $joinedBatch;
                 }
             }
-        } catch (DuplicatedEntriesException $e) {
+        } catch (DuplicatedEntriesException|SchemaDefinitionNotUniqueException $e) {
             throw new JoinException($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
             $this->leftBuckets->clear();
@@ -200,23 +205,20 @@ final readonly class HashJoinProcessor implements Processor
      * can never match and their unmatched padding never reaches the output for the given join type.
      *
      * @param Generator<Rows> $rows
+     * @param null|Schema $schema - out parameter, the schema of the first batch flowing through
      * @param null|array<Reference> $dropNullKeyRefs
      *
      * @return Generator<Rows>
      */
-    private function tap(Generator $rows, ?NullRowBuilder $nullRowBuilder, ?array $dropNullKeyRefs): Generator
+    private function tap(Generator $rows, ?Schema &$schema, ?array $dropNullKeyRefs): Generator
     {
         foreach ($rows as $batch) {
-            if ($nullRowBuilder !== null) {
-                foreach ($batch as $row) {
-                    $nullRowBuilder->collect($row);
-                }
-            }
+            $schema ??= $batch->schema();
 
             if ($dropNullKeyRefs !== null) {
                 $batch = $batch->filter(static function (Row $row) use ($dropNullKeyRefs): bool {
                     foreach ($dropNullKeyRefs as $ref) {
-                        if ($row->valueOf($ref) === null) {
+                        if ($row->get($ref) === null) {
                             return false;
                         }
                     }

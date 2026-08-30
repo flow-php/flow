@@ -23,12 +23,13 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\hash_join;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\path;
@@ -115,7 +116,10 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
                 new class implements DataFrameFactory {
                     public function from(Rows $rows): DataFrame
                     {
-                        return df()->process(rows(row(int_entry('id', 1), str_entry('n', 'a'))));
+                        return df()->process(rows(
+                            schema(int_schema('id'), str_schema('n')),
+                            row(['id' => 1, 'n' => 'a']),
+                        ));
                     }
                 },
                 join_on(['id' => 'id'], 'joined_'),

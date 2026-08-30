@@ -25,7 +25,8 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\window;
@@ -172,8 +173,9 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         $spy = new SpyLoader();
         $joinNames = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->join(
             data_frame()->process(rows(
-                row(str_entry('code', 'a'), str_entry('n', 'Alpha')),
-                row(str_entry('code', 'b'), str_entry('n', 'Bravo')),
+                schema(str_schema('code'), str_schema('n')),
+                row(['code' => 'a', 'n' => 'Alpha']),
+                row(['code' => 'b', 'n' => 'Bravo']),
             )),
             join_on(['g' => 'code'], 'j_'),
             Join::inner,

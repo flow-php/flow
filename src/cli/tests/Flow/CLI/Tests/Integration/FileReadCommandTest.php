@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileReadCommand;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -263,23 +264,16 @@ final class FileReadCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
+        // selecting a column the schema does not declare is an error, not an empty column - there is
+        // no type to give it and no reader could see a value that row storage does not carry
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "nonexistent_column" not found');
+
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 2,
             '--output-columns' => ['nonexistent_column'],
         ]);
-
-        $tester->assertCommandIsSuccessful();
-
-        self::assertCommandOutputContains(<<<'OUTPUT'
-            +--------------------+
-            | nonexistent_column |
-            +--------------------+
-            |                    |
-            |                    |
-            +--------------------+
-            2 rows
-            OUTPUT, $tester->getDisplay());
     }
 
     public function test_read_rows_with_output_columns_single_column(): void

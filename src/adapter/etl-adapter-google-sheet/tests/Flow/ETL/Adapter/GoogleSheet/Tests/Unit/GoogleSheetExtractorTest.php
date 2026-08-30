@@ -17,9 +17,7 @@ use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\string_entry;
 use function iterator_to_array;
 
 final class GoogleSheetExtractorTest extends FlowTestCase
@@ -127,20 +125,17 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         $service->spreadsheets_values = $spreadsheetsValues;
 
-        $spreadSheetIdEntry = string_entry('_spread_sheet_id', $spreadSheetId);
-        $sheetNameEntry = string_entry('_sheet_name', $sheetName);
-
         /** @var array<Rows> $rowsArray */
         $rowsArray = iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
         static::assertCount(2, $rowsArray);
         static::assertSame(1, $rowsArray[0]->count());
         static::assertEquals(
-            row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')),
+            row(['_sheet_name' => $sheetName, '_spread_sheet_id' => $spreadSheetId, 'header' => 'row1']),
             $rowsArray[0]->first(),
         );
         static::assertSame(1, $rowsArray[1]->count());
         static::assertEquals(
-            row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')),
+            row(['_sheet_name' => $sheetName, '_spread_sheet_id' => $spreadSheetId, 'header' => 'row2']),
             $rowsArray[1]->first(),
         );
     }

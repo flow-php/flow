@@ -91,7 +91,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertStringEndsWith(
             'metadata_column_collision.csv',
-            type_string()->assert($rows->first()->valueOf('_input_file_uri')),
+            type_string()->assert($rows->first()->get('_input_file_uri')),
         );
     }
 
@@ -502,13 +502,13 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(1, $rows->count());
 
         $row = $rows->first();
-        static::assertSame('ABBA', $row->valueOf('artist'));
-        static::assertSame("Ahe's My Kind Of Girl", $row->valueOf('song'));
-        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->valueOf('link'));
+        static::assertSame('ABBA', $row->get('artist'));
+        static::assertSame("Ahe's My Kind Of Girl", $row->get('song'));
+        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->get('link'));
 
         $expectedText = "Look at her face, it's a wonderful face  \nAnd it means something special to me  \nLook at the way that she smiles when she sees me  \nHow lucky can one fellow be?  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?  \n  \nAnd when we go for a walk in the park  \nAnd she holds me and squeezes my hand  \nWe'll go on walking for hours and talking  \nAbout all the things that we plan  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?\n\n";
 
-        static::assertSame($expectedText, $row->valueOf('text'));
+        static::assertSame($expectedText, $row->get('text'));
     }
 
     public function test_limit(): void
@@ -546,7 +546,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(
             [
                 ['id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
-                ['id' => 2, 'value' => 'b'],
+                ['id' => 2, 'value' => 'b', 'date' => null],
             ],
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/cross_stream/*/data.csv', schema: schema(

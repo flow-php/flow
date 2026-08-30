@@ -7,6 +7,7 @@ namespace Flow\ETL\Row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 
 use function count;
 
@@ -24,6 +25,7 @@ final class RowsBuffer
      * @param int<1, max> $size
      */
     public function __construct(
+        private readonly Schema $schema,
         private readonly int $size,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -50,7 +52,7 @@ final class RowsBuffer
             return null;
         }
 
-        $batch = new Rows(...$this->rows);
+        $batch = new Rows($this->schema, ...$this->rows);
         $this->rows = [];
 
         return $batch;

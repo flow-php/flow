@@ -70,15 +70,6 @@ pub enum HtKey<'a> {
     Str(&'a ZendStr),
 }
 
-impl<'a> HtKey<'a> {
-    pub fn from_zend_str(name: &'a ZendStr) -> Self {
-        match array_key_index(name.as_bytes()) {
-            Some(index) => Self::Index(index),
-            None => Self::Str(name),
-        }
-    }
-}
-
 pub fn ht_find_key<'a>(ht: &'a ZendHashTable, key: &HtKey<'_>) -> Option<&'a Zval> {
     match key {
         HtKey::Index(index) => ht.get_index(*index),
@@ -457,6 +448,8 @@ pub struct Ctx {
     metadata_from_array: Option<&'static Function>,
     metadata_map_slot: Option<u32>,
     typed_row_values_slots: Option<(u32, u32)>,
+    schema_set_metadata: Option<&'static Function>,
+    schema_find_definition: Option<&'static Function>,
     timezone_get_name: Option<&'static Function>,
     datetime_encode: HashMap<usize, DateTimeEncFns>,
     datetime_cast: HashMap<usize, DateTimeCastFns>,
@@ -499,6 +492,8 @@ impl Ctx {
             metadata_from_array: None,
             metadata_map_slot: None,
             typed_row_values_slots: None,
+            schema_set_metadata: None,
+            schema_find_definition: None,
             timezone_get_name: None,
             datetime_encode: HashMap::new(),
             datetime_cast: HashMap::new(),
@@ -519,6 +514,25 @@ impl Ctx {
         }
 
         Ok(self.typed_row_values_slots.expect("just initialized"))
+    }
+
+    /// `Schema::setMetadata` / `Schema::findDefinition` - the native hydrate and cast paths fold
+    /// `RawRowValues::metadata` into the batch Schema exactly like `HydratedBatch` does in PHP.
+    pub fn schema_set_metadata(&mut self) -> Result<&'static Function, PhpException> {
+        if self.schema_set_metadata.is_none() {
+            self.schema_set_metadata = Some(method_handle_ref("Flow\\ETL\\Schema", "setMetadata")?);
+        }
+
+        Ok(self.schema_set_metadata.expect("just initialized"))
+    }
+
+    pub fn schema_find_definition(&mut self) -> Result<&'static Function, PhpException> {
+        if self.schema_find_definition.is_none() {
+            self.schema_find_definition =
+                Some(method_handle_ref("Flow\\ETL\\Schema", "findDefinition")?);
+        }
+
+        Ok(self.schema_find_definition.expect("just initialized"))
     }
 
     pub fn metadata_map_slot(&mut self) -> Result<u32, PhpException> {

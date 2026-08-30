@@ -7,21 +7,23 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class RowsExtractorTest extends FlowTestCase
 {
     public function test_process_extractor(): void
     {
         $rows = rows(
-            row(int_entry('number', 1), str_entry('name', 'one')),
-            row(int_entry('number', 2), str_entry('name', 'two')),
-            row(int_entry('number', 3), str_entry('name', 'tree')),
-            row(int_entry('number', 4), str_entry('name', 'four')),
-            row(int_entry('number', 5), str_entry('name', 'five')),
+            schema(int_schema('number'), str_schema('name')),
+            row(['number' => 1, 'name' => 'one']),
+            row(['number' => 2, 'name' => 'two']),
+            row(['number' => 3, 'name' => 'tree']),
+            row(['number' => 4, 'name' => 'four']),
+            row(['number' => 5, 'name' => 'five']),
         );
 
         $extractor = from_rows($rows);

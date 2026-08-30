@@ -11,8 +11,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\array_merge_collection;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -31,7 +29,7 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        $row = row(int_entry('invalid_entry', 1));
+        $row = row(['invalid_entry' => 1]);
 
         array_merge_collection(ref('invalid_entry'))->eval($row, $context);
     }
@@ -42,10 +40,12 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
 
         $context = flow_context(config());
-        $row = row(json_entry('array_entry', [
-            ['foo' => 'bar'],
-            1,
-        ]));
+        $row = row([
+            'array_entry' => [
+                ['foo' => 'bar'],
+                1,
+            ],
+        ]);
 
         array_merge_collection(ref('array_entry'))->eval($row, $context);
     }
@@ -55,10 +55,12 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
 
-        $row = row(json_entry('array_entry', [
-            ['foo' => 'bar'],
-            1,
-        ]));
+        $row = row([
+            'array_entry' => [
+                ['foo' => 'bar'],
+                1,
+            ],
+        ]);
 
         array_merge_collection(ref('array_entry'))->eval($row, flow_context());
     }
@@ -68,22 +70,24 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = row(int_entry('invalid_entry', 1));
+        $row = row(['invalid_entry' => 1]);
 
         array_merge_collection(ref('invalid_entry'))->eval($row, flow_context());
     }
 
     public function test_merging_collection_of_arrays(): void
     {
-        $row = row(json_entry('array_entry', [
-            [
-                1,
+        $row = row([
+            'array_entry' => [
+                [
+                    1,
+                ],
+                [
+                    2,
+                ],
+                [],
             ],
-            [
-                2,
-            ],
-            [],
-        ]));
+        ]);
 
         static::assertEquals([1, 2], array_merge_collection(ref('array_entry'))->eval($row, flow_context()));
     }

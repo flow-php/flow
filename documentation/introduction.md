@@ -50,8 +50,8 @@ Every Flow pipeline has three stages:
 - **Load** - `->write(...)` streams the result into a sink; `->run()` executes
   the whole thing.
 
-Data moves through the pipeline as **DataFrame → Rows → Row → Entry**, with
-every value strongly typed.
+Data moves through the pipeline as **DataFrame → Rows → Row**. Every `Rows`
+batch carries the schema that types its columns.
 
 ## Where to go from here
 

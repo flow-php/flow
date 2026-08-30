@@ -17,13 +17,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Throwable;
 
 use function array_key_exists;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 
 final class FloeWriteContractTest extends FlowIntegrationTestCase
@@ -38,27 +36,27 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         return [
             'string into int' => [
                 schema(int_schema('id')),
-                rows(row(str_entry('id', 'AB-1'))),
+                rows(schema(str_schema('id')), row(['id' => 'AB-1'])),
                 "could not convert 'AB-1' (string) to integer",
             ],
             'float into int' => [
                 schema(int_schema('id')),
-                rows(row(float_entry('id', 1.5))),
+                rows(schema(float_schema('id')), row(['id' => 1.5])),
                 'could not convert 1.5 (float) to integer',
             ],
             'int into string' => [
                 schema(str_schema('name')),
-                rows(row(int_entry('name', 1000))),
+                rows(schema(int_schema('name')), row(['name' => 1000])),
                 'could not convert 1000 (integer) to string',
             ],
             'null into non nullable' => [
                 schema(str_schema('name')),
-                rows(row(str_entry('name', null))),
+                rows(schema(str_schema('name', nullable: true)), row(['name' => null])),
                 'could not convert null to string, column is not nullable',
             ],
             'undeclared column' => [
                 schema(int_schema('id')),
-                rows(row(int_entry('id', 1), int_entry('extra', 2))),
+                rows(schema(int_schema('id'), int_schema('extra')), row(['id' => 1, 'extra' => 2])),
                 'new column "extra"',
             ],
         ];
@@ -122,10 +120,10 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('contract-survivor-' . $engine->value . '.floe');
         $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options(validateData: true), null, $engine);
         $writer->create($path);
-        $writer->write(rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
 
         try {
-            $writer->write(rows(row(str_entry('id', 'AB-1'))));
+            $writer->write(rows(schema(str_schema('id')), row(['id' => 'AB-1'])));
             static::fail('rejected batch was accepted');
         } catch (IncompatibleSchemaException) {
         }
@@ -156,8 +154,8 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
             $engine,
         );
         $writer->create($path);
-        $writer->write(rows(row(int_entry('id', 1), str_entry('name', 'a'))));
-        $writer->write(rows(row(int_entry('id', 2))));
+        $writer->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
         $writer->close();
 
         static::assertSame(

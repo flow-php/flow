@@ -10,10 +10,11 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\html_entry;
+use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
@@ -35,7 +36,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
                 ],
             ],
             df()
-                ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
+                ->read(from_rows(rows(schema(html_schema('html_raw')), row(['html_raw' => $html]))))
                 ->withEntry('html', ref('html_raw')->htmlQuerySelectorAll('body div p'))
                 ->drop('html_raw')
                 ->fetch()
@@ -62,7 +63,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
                 ],
             ],
             df()
-                ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
+                ->read(from_rows(rows(schema(html_schema('html_raw')), row(['html_raw' => $html]))))
                 ->withEntry('html', ref('html_raw')->htmlQuerySelectorAll('body div span'))
                 ->drop('html_raw')
                 ->fetch()

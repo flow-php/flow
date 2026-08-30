@@ -18,10 +18,11 @@ use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function chr;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function pack;
@@ -35,9 +36,9 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
         );
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 3))));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 3])));
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://splice.floe'));
         (new FloeMerger($fs))->merge(
@@ -55,8 +56,8 @@ final class FloeMergerTest extends TestCase
     public function test_compact_coalesces_same_schema_sources_into_one_section(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])));
 
         (new FloeMerger($fs))->merge(
             [path('memory://a.floe'), path('memory://b.floe')],
@@ -70,8 +71,16 @@ final class FloeMergerTest extends TestCase
     public function test_merge_of_same_columns_in_different_order_re_encodes_instead_of_splicing(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('a', 1), int_entry('b', 100))));
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('b', 200), int_entry('a', 2))));
+        FloeStreamReaderContext::write(
+            $fs,
+            path('memory://a.floe'),
+            rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 100])),
+        );
+        FloeStreamReaderContext::write(
+            $fs,
+            path('memory://b.floe'),
+            rows(schema(int_schema('b'), int_schema('a')), row(['b' => 200, 'a' => 2])),
+        );
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
 
@@ -92,12 +101,12 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('a', 1), str_entry('b', 'one'))),
+            rows(schema(int_schema('a'), str_schema('b')), row(['a' => 1, 'b' => 'one'])),
         );
         FloeStreamReaderContext::write(
             $fs,
             path('memory://b.floe'),
-            rows(row(str_entry('b', 'two'), int_entry('a', 2))),
+            rows(schema(str_schema('b'), int_schema('a')), row(['b' => 'two', 'a' => 2])),
         );
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
@@ -114,9 +123,9 @@ final class FloeMergerTest extends TestCase
     public function test_empty_source_contributes_no_rows(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
-        FloeStreamReaderContext::write($fs, path('memory://empty.floe'), rows());
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($fs, path('memory://empty.floe'), rows(schema()));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])));
 
         (new FloeMerger($fs))->merge([
             path('memory://a.floe'),
@@ -125,7 +134,7 @@ final class FloeMergerTest extends TestCase
         ], path('memory://out.floe'));
 
         static::assertEquals(
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
             FloeStreamReaderContext::readAll($fs, path('memory://out.floe')),
         );
     }
@@ -141,11 +150,11 @@ final class FloeMergerTest extends TestCase
     public function test_merging_a_source_that_adds_a_non_nullable_column_throws(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
         FloeStreamReaderContext::write(
             $fs,
             path('memory://b.floe'),
-            rows(row(int_entry('id', 2), str_entry('email', 'x@y'))),
+            rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x@y'])),
         );
 
         // "email" is non-nullable in B but absent from A - padding A's rows with null would
@@ -162,9 +171,9 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('id', 1), str_entry('email', 'x@y'))),
+            rows(schema(int_schema('id'), str_schema('email')), row(['id' => 1, 'email' => 'x@y'])),
         );
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Floe merge cannot reconcile the schema of');
@@ -178,9 +187,9 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('id', 1), str_entry('email', null))),
+            rows(schema(int_schema('id'), str_schema('email', nullable: true)), row(['id' => 1, 'email' => null])),
         );
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])));
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
 
@@ -188,7 +197,11 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://reference.floe'),
-            rows(row(int_entry('id', 1), str_entry('email', null)), row(int_entry('id', 2))),
+            rows(
+                schema(int_schema('id'), str_schema('email', nullable: true)),
+                row(['id' => 1, 'email' => null]),
+                row(['id' => 2]),
+            ),
         );
 
         static::assertEquals(
@@ -200,11 +213,11 @@ final class FloeMergerTest extends TestCase
     public function test_metadata_is_merged_with_new_keys_winning(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))), [
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])), [
             'a' => '1',
             'shared' => 'from-a',
         ]);
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))), [
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])), [
             'b' => '2',
             'shared' => 'from-b',
         ]);
@@ -238,12 +251,12 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
         );
         FloeStreamReaderContext::write(
             $fs,
             path('memory://b.floe'),
-            rows(row(int_entry('id', 3)), row(int_entry('id', 4))),
+            rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4])),
         );
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
@@ -254,7 +267,7 @@ final class FloeMergerTest extends TestCase
             ->read(path('memory://out.floe'))
             ->rows(batchSize: 100, offset: 3) as $batch) {
             foreach ($batch as $r) {
-                $read[] = $r->valueOf('id');
+                $read[] = $r->get('id');
             }
         }
 
@@ -267,12 +280,20 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://pl.floe'),
-            Rows::partitioned([row(int_entry('id', 1), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+            Rows::partitioned(
+                schema(int_schema('id'), str_schema('c')),
+                [row(['id' => 1, 'c' => 'PL'])],
+                [new Partition('c', 'PL')],
+            ),
         );
         FloeStreamReaderContext::write(
             $fs,
             path('memory://us.floe'),
-            Rows::partitioned([row(int_entry('id', 2), str_entry('c', 'US'))], [new Partition('c', 'US')]),
+            Rows::partitioned(
+                schema(int_schema('id'), str_schema('c')),
+                [row(['id' => 2, 'c' => 'US'])],
+                [new Partition('c', 'US')],
+            ),
         );
 
         (new FloeMerger($fs))->merge([path('memory://pl.floe'), path('memory://us.floe')], path('memory://out.floe'));
@@ -298,14 +319,18 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://pl.floe'),
-            Rows::partitioned([row(int_entry('id', 1), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+            Rows::partitioned(
+                schema(int_schema('id'), str_schema('c')),
+                [row(['id' => 1, 'c' => 'PL'])],
+                [new Partition('c', 'PL')],
+            ),
         );
         // same schema {id, c} as pl, but written unpartitioned - so the merge exercises the
         // partition reset (partitioned -> unpartitioned) without a schema incompatibility
         FloeStreamReaderContext::write(
             $fs,
             path('memory://plain.floe'),
-            rows(row(int_entry('id', 2), str_entry('c', 'XX'))),
+            rows(schema(int_schema('id'), str_schema('c')), row(['id' => 2, 'c' => 'XX'])),
         );
 
         (new FloeMerger($fs))->merge([
@@ -339,12 +364,20 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            Rows::partitioned([row(int_entry('id', 1), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+            Rows::partitioned(
+                schema(int_schema('id'), str_schema('c')),
+                [row(['id' => 1, 'c' => 'PL'])],
+                [new Partition('c', 'PL')],
+            ),
         );
         FloeStreamReaderContext::write(
             $fs,
             path('memory://b.floe'),
-            Rows::partitioned([row(int_entry('id', 2), str_entry('c', 'PL'))], [new Partition('c', 'PL')]),
+            Rows::partitioned(
+                schema(int_schema('id'), str_schema('c')),
+                [row(['id' => 2, 'c' => 'PL'])],
+                [new Partition('c', 'PL')],
+            ),
         );
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
@@ -358,7 +391,7 @@ final class FloeMergerTest extends TestCase
     public function test_single_source_is_a_copy(): void
     {
         $fs = memory_filesystem();
-        $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         FloeStreamReaderContext::write($fs, path('memory://a.floe'), $value);
 
         (new FloeMerger($fs))->merge([path('memory://a.floe')], path('memory://out.floe'));
@@ -369,9 +402,9 @@ final class FloeMergerTest extends TestCase
     public function test_splices_three_files(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(int_entry('id', 2))));
-        FloeStreamReaderContext::write($fs, path('memory://c.floe'), rows(row(int_entry('id', 3))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(schema(int_schema('id')), row(['id' => 2])));
+        FloeStreamReaderContext::write($fs, path('memory://c.floe'), rows(schema(int_schema('id')), row(['id' => 3])));
 
         (new FloeMerger($fs))->merge([
             path('memory://a.floe'),
@@ -380,7 +413,7 @@ final class FloeMergerTest extends TestCase
         ], path('memory://out.floe'));
 
         static::assertEquals(
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
             FloeStreamReaderContext::readAll($fs, path('memory://out.floe')),
         );
     }
@@ -391,18 +424,18 @@ final class FloeMergerTest extends TestCase
         FloeStreamReaderContext::write(
             $fs,
             path('memory://a.floe'),
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
         );
         FloeStreamReaderContext::write(
             $fs,
             path('memory://b.floe'),
-            rows(row(int_entry('id', 3)), row(int_entry('id', 4))),
+            rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4])),
         );
 
         (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
 
         static::assertEquals(
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)), row(int_entry('id', 4))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4])),
             FloeStreamReaderContext::readAll($fs, path('memory://out.floe')),
         );
     }
@@ -410,8 +443,12 @@ final class FloeMergerTest extends TestCase
     public function test_type_conflict_throws(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
-        FloeStreamReaderContext::write($fs, path('memory://b.floe'), rows(row(str_entry('id', 'x'))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write(
+            $fs,
+            path('memory://b.floe'),
+            rows(schema(str_schema('id')), row(['id' => 'x'])),
+        );
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Floe merge cannot reconcile the schema of');
@@ -422,7 +459,7 @@ final class FloeMergerTest extends TestCase
     public function test_unsized_source_throws(): void
     {
         $fs = memory_filesystem();
-        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(row(int_entry('id', 1))));
+        FloeStreamReaderContext::write($fs, path('memory://a.floe'), rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('does not report its size');

@@ -11,7 +11,6 @@ use DOMElement;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -33,10 +32,7 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertSame(3, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $element->documentElement]), flow_context()));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -51,10 +47,7 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertSame(1, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $element->documentElement]), flow_context()));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -66,10 +59,7 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertSame(0, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $element->documentElement]), flow_context()));
     }
 
     public function test_xml_attributes_count_on_element_with_multiple_attributes(): void
@@ -80,10 +70,7 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertSame(3, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
     }
 
     public function test_xml_attributes_count_on_element_with_one_attribute(): void
@@ -94,10 +81,7 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertSame(1, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
     }
 
     public function test_xml_attributes_count_on_element_with_zero_attributes(): void
@@ -108,9 +92,6 @@ final class DOMElementAttributesCountTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertSame(0, ref('value')
             ->domElementAttributesCount()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
     }
 }

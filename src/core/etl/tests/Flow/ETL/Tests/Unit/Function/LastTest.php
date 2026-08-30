@@ -10,7 +10,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class LastTest extends FlowTestCase
 {
@@ -23,11 +22,11 @@ final class LastTest extends FlowTestCase
     {
         $aggregator = last(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
-        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
+        $aggregator->aggregate(row(['int' => '10']), flow_context());
+        $aggregator->aggregate(row(['int' => '20']), flow_context());
+        $aggregator->aggregate(row(['int' => '55']), flow_context());
+        $aggregator->aggregate(row(['int' => '25']), flow_context());
+        $aggregator->aggregate(row(['not_int' => null]), flow_context());
 
         static::assertSame('25', $aggregator->value());
     }

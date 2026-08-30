@@ -63,11 +63,10 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                 ($this->postRequest)($nextRequest, $response);
             }
 
-            foreach ($hydrator->cast($encoder->decode([new HttpExchange(
-                $nextRequest,
-                $response,
-            )]), $this->schema()) as $row) {
-                $signal = yield new Rows($row);
+            $hydrated = $hydrator->cast($encoder->decode([new HttpExchange($nextRequest, $response)]), $this->schema());
+
+            foreach ($hydrated as $row) {
+                $signal = yield new Rows($hydrated->schema(), $row);
 
                 if ($signal === Signal::STOP) {
                     return;

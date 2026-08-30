@@ -7,7 +7,6 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
@@ -106,9 +105,9 @@ final readonly class Parameter
     }
 
     /**
-     * @return null|Entry<mixed>
+     * @return null|array<array-key, mixed>|bool|float|int|object|string
      */
-    public function asEntry(Row $row): ?Entry
+    public function asValue(Row $row): mixed
     {
         if ($this->function instanceof Reference) {
             return $row->has($this->function) ? $row->get($this->function) : null;

@@ -11,11 +11,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 
 final class PivotProcessorTest extends FlowTestCase
@@ -37,9 +38,10 @@ final class PivotProcessorTest extends FlowTestCase
 
         $input = (static function (): Generator {
             yield rows(
-                row(str_entry('date', '2024-01-01'), str_entry('user', 'norbert'), int_entry('contributions', 2)),
-                row(str_entry('date', '2024-01-01'), str_entry('user', 'stloyd'), int_entry('contributions', 3)),
-                row(str_entry('date', '2024-01-02'), str_entry('user', 'norbert'), int_entry('contributions', 5)),
+                schema(str_schema('date'), str_schema('user'), int_schema('contributions')),
+                row(['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 2]),
+                row(['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 3]),
+                row(['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 5]),
             );
         })();
 

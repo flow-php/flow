@@ -11,12 +11,10 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\coalesce;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 
 final class CoalesceTest extends FlowTestCase
@@ -34,31 +32,31 @@ final class CoalesceTest extends FlowTestCase
 
     public function test_coalesce_entries(): void
     {
-        static::assertSame(1, coalesce(ref('name'), ref('id'), lit('N/A'))->eval(
-            row(str_entry('name', null), int_entry('id', 1)),
-            flow_context(),
-        ));
+        static::assertSame(1, coalesce(ref('name'), ref('id'), lit('N/A'))->eval(row([
+            'name' => null,
+            'id' => 1,
+        ]), flow_context()));
     }
 
     public function test_coalesce_on_null_entries_falls_through_to_lit(): void
     {
-        static::assertSame('N/A', coalesce(ref('name'), ref('string'), lit('N/A'))->eval(
-            row(str_entry('name', null), str_entry('string', null)),
-            flow_context(),
-        ));
+        static::assertSame('N/A', coalesce(ref('name'), ref('string'), lit('N/A'))->eval(row([
+            'name' => null,
+            'string' => null,
+        ]), flow_context()));
     }
 
     public function test_coalesce_on_ref(): void
     {
         static::assertSame(1, ref('name')
             ->coalesce(ref('id'), lit('N/A'))
-            ->eval(row(str_entry('name', null), int_entry('id', 1)), flow_context()));
+            ->eval(row(['name' => null, 'id' => 1]), flow_context()));
     }
 
     public function test_a_throwing_branch_is_not_swallowed(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        coalesce(ref('a')->upper(), ref('b')->upper())->eval(row(int_entry('a', 1), int_entry('b', 2)), flow_context());
+        coalesce(ref('a')->upper(), ref('b')->upper())->eval(row(['a' => 1, 'b' => 2]), flow_context());
     }
 }

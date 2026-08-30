@@ -9,42 +9,52 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
 
-use function Flow\ETL\DSL\date_entry;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\with_entry;
+use function Flow\Types\DSL\type_date;
 
 final class DuplicateRowTransformerTest extends FlowTestCase
 {
     public function test_applying_two_transformations(): void
     {
         $rows = rows(
-            row(
-                int_entry('id', 1),
-                string_entry('status', 'active'),
-                int_entry('amount', 100),
-                date_entry('date_created', '2025-01-01'),
-                date_entry('date_deactivated', null),
+            schema(
+                int_schema('id'),
+                string_schema('status'),
+                int_schema('amount'),
+                date_schema('date_created'),
+                date_schema('date_deactivated', nullable: true),
+                date_schema('date_updated', nullable: true),
             ),
-            row(
-                int_entry('id', 2),
-                string_entry('status', 'inactive'),
-                int_entry('amount', 100),
-                date_entry('date_created', '2025-01-01'),
-                date_entry('date_deactivated', '2025-01-03'),
-            ),
-            row(
-                int_entry('id', 3),
-                string_entry('status', 'active'),
-                int_entry('amount', 100),
-                date_entry('date_created', '2025-01-01'),
-                date_entry('date_deactivated', null),
-            ),
+            row([
+                'id' => 1,
+                'status' => 'active',
+                'amount' => 100,
+                'date_created' => type_date()->cast('2025-01-01'),
+                'date_deactivated' => null,
+            ]),
+            row([
+                'id' => 2,
+                'status' => 'inactive',
+                'amount' => 100,
+                'date_created' => type_date()->cast('2025-01-01'),
+                'date_deactivated' => type_date()->cast('2025-01-03'),
+            ]),
+            row([
+                'id' => 3,
+                'status' => 'active',
+                'amount' => 100,
+                'date_created' => type_date()->cast('2025-01-01'),
+                'date_deactivated' => null,
+            ]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -94,9 +104,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     public function test_doing_nothing_when_condition_is_not_satisfied(): void
     {
         $rows = rows(
-            row(int_entry('id', 1), string_entry('status', 'active'), int_entry('amount', 100)),
-            row(int_entry('id', 2), string_entry('status', 'active'), int_entry('amount', 100)),
-            row(int_entry('id', 3), string_entry('status', 'active'), int_entry('amount', 100)),
+            schema(int_schema('id'), string_schema('status'), int_schema('amount')),
+            row(['id' => 1, 'status' => 'active', 'amount' => 100]),
+            row(['id' => 2, 'status' => 'active', 'amount' => 100]),
+            row(['id' => 3, 'status' => 'active', 'amount' => 100]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -119,9 +130,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     public function test_duplicating_row(): void
     {
         $rows = rows(
-            row(int_entry('id', 1), string_entry('status', 'active'), int_entry('amount', 100)),
-            row(int_entry('id', 2), string_entry('status', 'inactive'), int_entry('amount', 100)),
-            row(int_entry('id', 3), string_entry('status', 'active'), int_entry('amount', 100)),
+            schema(int_schema('id'), string_schema('status'), int_schema('amount')),
+            row(['id' => 1, 'status' => 'active', 'amount' => 100]),
+            row(['id' => 2, 'status' => 'inactive', 'amount' => 100]),
+            row(['id' => 3, 'status' => 'active', 'amount' => 100]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -144,7 +156,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_an_empty_batch_is_returned_without_binding(): void
     {
-        $empty = rows();
+        $empty = rows(schema());
 
         static::assertSame($empty, (new DuplicateRowTransformer(ref('missing')->equals(lit(1))))->transform(
             $empty,

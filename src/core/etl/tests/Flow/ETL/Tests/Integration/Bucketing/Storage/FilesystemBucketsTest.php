@@ -12,12 +12,13 @@ use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeWriter;
 
 use function array_map;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\structure_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
@@ -31,11 +32,11 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
 
         static::assertCount(1, BucketsStorageContext::rows($storage->get('bucket')));
 
-        $storage->append('bucket', rows(row(int_entry('id', 2))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 2])));
 
         static::assertCount(2, BucketsStorageContext::rows($storage->get('bucket')));
 
@@ -48,12 +49,15 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessageMatches('/new column "name"/');
 
-        $storage->append('bucket', rows(row(int_entry('id', 2), str_entry('name', 'John'))));
+        $storage->append('bucket', rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 2, 'name' => 'John']),
+        ));
     }
 
     public function test_append_widening_a_column_type_fails(): void
@@ -62,14 +66,14 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('amount', 1))));
+        $storage->append('bucket', rows(schema(int_schema('amount')), row(['amount' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessageMatches(
             '/column "amount" \(row 0\): could not convert 1\.5 \(float\) to integer/',
         );
 
-        $storage->append('bucket', rows(row(float_entry('amount', 1.5))));
+        $storage->append('bucket', rows(schema(float_schema('amount')), row(['amount' => 1.5])));
     }
 
     public function test_appends_accumulate_into_one_bucket_in_order(): void
@@ -78,15 +82,13 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, batchSize: 2);
-        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-        $storage->append('bucket', rows(row(int_entry('id', 3))));
-        $storage->append('bucket', rows(row(int_entry('id', 4)), row(int_entry('id', 5))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 3])));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5])));
 
         static::assertSame(
             [1, 2, 3, 4, 5],
-            array_map(static fn(Row $r): mixed => $r->valueOf(
-                'id',
-            ), BucketsStorageContext::rows($storage->get('bucket'))),
+            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);
@@ -98,7 +100,12 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, batchSize: 2);
-        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))));
+        $storage->append('bucket', rows(
+            schema(int_schema('id')),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+        ));
 
         static::assertCount(3, BucketsStorageContext::rows($storage->get('bucket')));
 
@@ -122,7 +129,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
         $storage->remove('bucket');
 
         static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
@@ -136,7 +143,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
         $storage->remove('bucket');
 
         static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
@@ -154,10 +161,10 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $input = [];
 
         for ($i = 0; $i < 1500; $i++) {
-            $input[] = row(int_entry('id', $i));
+            $input[] = row(['id' => $i]);
         }
 
-        $storage->append('bucket', rows(...$input));
+        $storage->append('bucket', rows(schema(int_schema('id')), ...$input));
 
         static::assertEquals($input, BucketsStorageContext::rows($storage->get('bucket')));
 
@@ -170,14 +177,12 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-        $storage->set('bucket', rows(row(int_entry('id', 3))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $storage->set('bucket', rows(schema(int_schema('id')), row(['id' => 3])));
 
         static::assertSame(
             [3],
-            array_map(static fn(Row $r): mixed => $r->valueOf(
-                'id',
-            ), BucketsStorageContext::rows($storage->get('bucket'))),
+            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);
@@ -189,7 +194,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->set('bucket', rows());
+        $storage->set('bucket', rows(schema()));
 
         static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
 
@@ -204,14 +209,17 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
 
         $input = [
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2), str_entry('name', 'John')),
-            row(str_entry('name', 'Jane')),
+            row(['id' => 1]),
+            row(['id' => 2, 'name' => 'John']),
+            row(['name' => 'Jane']),
         ];
 
-        $storage->append('bucket', rows(...$input));
+        $storage->append('bucket', rows(
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            ...$input,
+        ));
 
-        // one write session = one schema: rows keep their own columns (unpadded) but entry
+        // one write session = one schema: rows keep their own columns (unpadded) but column
         // types widen to the batch union, so compare values rather than exact definitions
         static::assertSame(
             array_map(static fn(Row $r): array => $r->toArray(), $input),
@@ -227,26 +235,32 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append(
-            'bucket',
-            rows(row(int_entry('id', 1), structure_entry('s', ['a' => 1, 'b' => 'x'], type_structure([
-                'a' => type_integer(),
-                'b' => type_string(),
-            ])))),
-        );
-        $storage->append(
-            'bucket',
-            rows(row(int_entry('id', 2), structure_entry('s', ['b' => 'y', 'a' => 2], type_structure([
-                'b' => type_string(),
-                'a' => type_integer(),
-            ])))),
-        );
+        $storage->append('bucket', rows(
+            schema(
+                int_schema('id'),
+                structure_schema('s', type_structure([
+                    'a' => type_integer(),
+                    'b' => type_string(),
+                ])),
+            ),
+            row(['id' => 1, 's' => ['a' => 1, 'b' => 'x']]),
+        ));
+        $storage->append('bucket', rows(
+            schema(
+                int_schema('id'),
+                structure_schema('s', type_structure([
+                    'b' => type_string(),
+                    'a' => type_integer(),
+                ])),
+            ),
+            row(['id' => 2, 's' => ['b' => 'y', 'a' => 2]]),
+        ));
 
         $read = BucketsStorageContext::rows($storage->get('bucket'));
 
         static::assertCount(2, $read);
-        static::assertSame(['a' => 1, 'b' => 'x'], $read[0]->get('s')->value());
-        static::assertSame(['a' => 2, 'b' => 'y'], $read[1]->get('s')->value());
+        static::assertSame(['a' => 1, 'b' => 'x'], $read[0]->get('s'));
+        static::assertSame(['a' => 2, 'b' => 'y'], $read[1]->get('s'));
 
         $this->fs()->rm($cacheDir);
     }
@@ -257,8 +271,8 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
-        $storage->append('bucket', rows(row(int_entry('id', 1), str_entry('name', 'x'))));
-        $storage->append('bucket', rows(row(str_entry('name', 'y'), int_entry('id', 2))));
+        $storage->append('bucket', rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'x'])));
+        $storage->append('bucket', rows(schema(str_schema('name'), int_schema('id')), row(['name' => 'y', 'id' => 2])));
 
         $read = BucketsStorageContext::rows($storage->get('bucket'));
 
@@ -277,13 +291,16 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         $writer = new FloeWriter(
             $this->fs(),
-            ($first = rows(row(int_entry('id', 1), str_entry('name', 'x'))))->schema(),
+            ($first = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'x'])))->schema(),
         );
         $writer->create($path);
         $writer->write($first);
         $writer->close();
 
-        $writer = new FloeWriter($this->fs(), rows(row(int_entry('id', 2), str_entry('city', 'y')))->schema());
+        $writer = new FloeWriter(
+            $this->fs(),
+            rows(schema(int_schema('id'), str_schema('city')), row(['id' => 2, 'city' => 'y']))->schema(),
+        );
 
         $this->expectException(IncompatibleSchemaException::class);
 

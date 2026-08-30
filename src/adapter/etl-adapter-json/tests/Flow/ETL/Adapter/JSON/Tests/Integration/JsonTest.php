@@ -20,16 +20,18 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_json;
 use function unlink;
 
 final class JsonTest extends FlowTestCase
@@ -78,7 +80,7 @@ final class JsonTest extends FlowTestCase
     {
         $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
 
-        $loader->load(rows(), $context = flow_context(config()));
+        $loader->load(rows(schema()), $context = flow_context(config()));
 
         $loader->closure($context);
 
@@ -129,7 +131,10 @@ final class JsonTest extends FlowTestCase
     {
         $jsonObject = ['short' => 'short_description', 'long' => 'long_description'];
         df()
-            ->read(from_rows(rows(row(int_entry('id', 1), json_entry('nested', $jsonObject)))))
+            ->read(from_rows(rows(
+                schema(int_schema('id'), json_schema('nested')),
+                row(['id' => 1, 'nested' => type_json()->cast($jsonObject)]),
+            )))
             ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json')->saveMode(overwrite()))
             ->run();
 

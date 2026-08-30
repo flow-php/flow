@@ -7,6 +7,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -152,6 +153,21 @@ final class TimeTypeTest extends TestCase
         $recreated = type_from_array($normalized);
 
         static::assertEquals($type, $recreated);
+    }
+
+    public function test_time_type_cast_rejects_relative_interval(): void
+    {
+        $this->expectException(CastingException::class);
+        $this->expectExceptionMessage("Relative DateInterval (with months/years) can't be cast to time");
+
+        type_time()->cast(new DateInterval('P1M'));
+    }
+
+    public function test_time_type_rejects_relative_interval(): void
+    {
+        static::assertFalse(type_time()->isValid(new DateInterval('P1M')));
+        static::assertFalse(type_time()->isValid(new DateInterval('P1Y')));
+        static::assertTrue(type_time()->isValid(new DateInterval('PT1H2M3S')));
     }
 
     public function test_to_string(): void

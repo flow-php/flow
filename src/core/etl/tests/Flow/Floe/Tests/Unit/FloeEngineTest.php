@@ -12,10 +12,10 @@ use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\Tests\Context\FloeSchemaContext;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 
 final class FloeEngineTest extends TestCase
 {
@@ -47,8 +47,6 @@ final class FloeEngineTest extends TestCase
 
     private function schema(): Schema
     {
-        $row = row(int_entry('id', 1), str_entry('name', 'flow'));
-
-        return schema_from_json(FloeSchemaContext::schemaBody($row->schema()));
+        return schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
     }
 }

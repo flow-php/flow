@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Window;
 
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\TypedValueComparator;
 use Flow\ETL\Rows;
 
 final readonly class PeerFrame implements WindowFrame
@@ -26,12 +27,14 @@ final readonly class PeerFrame implements WindowFrame
 
         $row = $partition[$index];
         $end = $index;
+        $schema = $partition->schema();
+        $comparator = new TypedValueComparator();
 
         while ($end < $lastIndex) {
             $next = $partition[$end + 1];
 
             foreach ($this->orderBy as $ref) {
-                if (!$row->get($ref)->isEqual($next->get($ref))) {
+                if (!$comparator->equals($schema->get($ref)->type(), $row->get($ref), $next->get($ref))) {
                     return [0, $end];
                 }
             }

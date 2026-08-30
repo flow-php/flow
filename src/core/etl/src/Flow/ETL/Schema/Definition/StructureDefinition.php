@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
@@ -145,17 +144,9 @@ final readonly class StructureDefinition implements Definition
         return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $entry->type() instanceof StructureType && $this->type->isValid($entry->value());
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -235,13 +226,5 @@ final readonly class StructureDefinition implements Definition
     public function type(): StructureType
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\StructureEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\StructureEntry::class;
     }
 }

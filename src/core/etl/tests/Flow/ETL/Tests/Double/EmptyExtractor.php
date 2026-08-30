@@ -10,12 +10,13 @@ use Flow\ETL\Schema;
 use Generator;
 
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class EmptyExtractor implements Extractor
 {
     public function extract(FlowContext $context): Generator
     {
-        yield rows();
+        yield rows(schema());
     }
 
     public function schema(): Schema

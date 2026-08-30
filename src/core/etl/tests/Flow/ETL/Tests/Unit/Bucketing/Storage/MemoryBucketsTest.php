@@ -11,23 +11,22 @@ use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class MemoryBucketsTest extends FlowTestCase
 {
     public function test_append_accumulates_rows_in_order(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('bucket', rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-        $storage->append('bucket', rows(row(int_entry('id', 3))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 3])));
 
         static::assertSame(
             [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->valueOf(
-                'id',
-            ), BucketsStorageContext::rows($storage->get('bucket'))),
+            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
         );
     }
 
@@ -44,7 +43,7 @@ final class MemoryBucketsTest extends FlowTestCase
     public function test_remove_drops_the_bucket(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
         $storage->remove('bucket');
 
         static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
@@ -53,14 +52,12 @@ final class MemoryBucketsTest extends FlowTestCase
     public function test_set_replaces_previous_rows(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('bucket', rows(row(int_entry('id', 1))));
-        $storage->set('bucket', rows(row(int_entry('id', 42))));
+        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
+        $storage->set('bucket', rows(schema(int_schema('id')), row(['id' => 42])));
 
         static::assertSame(
             [42],
-            array_map(static fn(Row $r): mixed => $r->valueOf(
-                'id',
-            ), BucketsStorageContext::rows($storage->get('bucket'))),
+            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
         );
     }
 }

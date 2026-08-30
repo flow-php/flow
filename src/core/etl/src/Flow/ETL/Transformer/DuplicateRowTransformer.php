@@ -72,7 +72,7 @@ final readonly class DuplicateRowTransformer implements Transformer
             // The maps inside ScalarFunctionTransformer are per-row and stateless, so applying each
             // entry once over all duplicated rows is equivalent to applying it per duplicated row.
             if ($duplicated !== []) {
-                $duplicatedRows = rows(...$duplicated);
+                $duplicatedRows = rows($rows->schema(), ...$duplicated);
 
                 foreach ($this->entries as $entry) {
                     $duplicatedRows = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(

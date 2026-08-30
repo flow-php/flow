@@ -32,7 +32,7 @@ final readonly class SellersDataset
 
         foreach (data_frame()->read(from_parquet($ordersPath)->withColumns(['seller_id']))->get() as $batch) {
             foreach ($batch->all() as $row) {
-                $sellerId = $row->valueOf('seller_id');
+                $sellerId = $row->get('seller_id');
 
                 if (is_scalar($sellerId) || $sellerId instanceof Stringable) {
                     $sellerIds[(string) $sellerId] = true;

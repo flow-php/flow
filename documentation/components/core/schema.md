@@ -9,9 +9,9 @@ metadata management for your data processing pipelines.
 
 ## Understanding Schema Components
 
-A schema consists of entry definitions that specify:
+A schema consists of column definitions that specify:
 
-- **Entry Name**: The column/field identifier
+- **Name**: The column identifier
 - **Type**: The expected data type (class string)
 - **Nullable**: Whether NULL values are permitted
 - **Metadata**: Key-value pairs for additional context

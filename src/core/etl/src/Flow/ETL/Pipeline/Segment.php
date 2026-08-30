@@ -90,7 +90,7 @@ final readonly class Segment
                                 $rows = $step->transform($rows, $context);
                             } catch (LimitReachedException $e) {
                                 $context->telemetry()->limitReached(['limit' => $e->limit]);
-                                $rows = new Rows();
+                                $rows = new Rows($rows->schema());
                                 $input->send(Signal::STOP);
                             }
                         } elseif ($rows->count()) {

@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
@@ -19,6 +18,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 
 use function array_key_exists;
+use function array_values;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
@@ -110,13 +110,14 @@ final readonly class ListSelect implements ScalarFunction
 
         $list = $row->get($this->ref);
 
-        if (!$list instanceof ListEntry) {
+        if (!is_array($list)) {
             return null;
         }
 
         $output = [];
 
-        foreach ($list->value() ?: [] as $index => $element) {
+        // @mago-ignore analysis:mixed-assignment
+        foreach (array_values($list) as $index => $element) {
             $output[$index] = [];
 
             foreach ($this->refs as $ref) {

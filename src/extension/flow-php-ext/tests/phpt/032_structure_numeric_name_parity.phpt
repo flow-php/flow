@@ -6,16 +6,21 @@ a numeric element name ("0" on the wire, always a JSON string) keeps its Declare
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 
-use function Flow\ETL\DSL\{row, rows, structure_entry, schema, structure_schema};
-use function Flow\Types\DSL\{type_structure, type_integer, type_string};
-
 $numericNamed = type_structure([0 => type_integer(), 'b' => type_string()]);
 
-$rows = rows(row(structure_entry('st', [0 => 1, 'b' => 'x'], $numericNamed)));
+$rows = rows(schema(structure_schema('st', $numericNamed)), row(['st' => [0 => 1, 'b' => 'x']]));
 
 printf("frames-identical:%s\n", php_frames($rows) === ext_frames($rows) ? 'yes' : 'NO');
 

@@ -12,7 +12,9 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -39,8 +41,8 @@ final class ExternalSortLifecycleTest extends FlowIntegrationTestCase
         try {
             df(config_builder()->sort(external_sort()->runSize(1)->bucketsCount(2))->build())
                 ->read(from_array($this->descendingIds()))
-                ->map(static function (Row $row): Row {
-                    if ($row->valueOf('id') === 5) {
+                ->map(schema(int_schema('id')), static function (Row $row): Row {
+                    if ($row->get('id') === 5) {
                         throw new RuntimeException('upstream failed mid-bucketing');
                     }
 

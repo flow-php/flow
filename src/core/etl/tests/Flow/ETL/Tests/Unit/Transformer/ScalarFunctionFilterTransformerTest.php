@@ -10,17 +10,18 @@ use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 {
     public function test_equal(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -34,7 +35,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_equal_on_literal(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -48,7 +49,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_greater_than(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -62,7 +63,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_greater_than_or_equal(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -77,7 +78,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_less_than(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -91,7 +92,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_less_than_equal(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -106,7 +107,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_not_equal(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -120,7 +121,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_not_same(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -134,7 +135,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_same(): void
     {
-        $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
+        $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
 
         static::assertSame(
             [
@@ -152,7 +153,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
         $this->expectExceptionMessage('filter() requires a predicate returning boolean');
 
         (new ScalarFunctionFilterTransformer(ref('score')))->transform(
-            rows(row(int_entry('score', 1)), row(int_entry('score', null))),
+            rows(schema(int_schema('score', nullable: true)), row(['score' => 1]), row(['score' => null])),
             flow_context(config()),
         );
     }
@@ -165,7 +166,12 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
             ],
             (new ScalarFunctionFilterTransformer(ref('score')->greaterThan(lit(10))))
                 ->transform(
-                    rows(row(int_entry('score', 11)), row(int_entry('score', 2)), row(int_entry('score', null))),
+                    rows(
+                        schema(int_schema('score', nullable: true)),
+                        row(['score' => 11]),
+                        row(['score' => 2]),
+                        row(['score' => null]),
+                    ),
                     flow_context(config()),
                 )
                 ->toArray(),
@@ -174,7 +180,7 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
     public function test_an_empty_batch_is_returned_without_binding(): void
     {
-        $empty = rows();
+        $empty = rows(schema());
 
         static::assertSame($empty, (new ScalarFunctionFilterTransformer(ref('missing')->equals(lit(1))))->transform(
             $empty,

@@ -77,7 +77,7 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
         }
 
         if ($this->ref) {
-            $row->valueOf($this->ref);
+            $row->get($this->ref);
         }
         $this->count++;
     }

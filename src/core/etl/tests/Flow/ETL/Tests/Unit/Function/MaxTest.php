@@ -7,14 +7,11 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\Types\DSL\type_datetime;
 
 final class MaxTest extends FlowTestCase
 {
@@ -27,11 +24,11 @@ final class MaxTest extends FlowTestCase
     {
         $aggregator = max(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
-        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
+        $aggregator->aggregate(row(['int' => '10']), flow_context());
+        $aggregator->aggregate(row(['int' => '20']), flow_context());
+        $aggregator->aggregate(row(['int' => '55']), flow_context());
+        $aggregator->aggregate(row(['int' => '25']), flow_context());
+        $aggregator->aggregate(row(['not_int' => null]), flow_context());
 
         static::assertSame(55.0, $aggregator->value());
     }
@@ -40,10 +37,10 @@ final class MaxTest extends FlowTestCase
     {
         $aggregator = max(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
-        $aggregator->aggregate(row(str_entry('int', null)), flow_context());
+        $aggregator->aggregate(row(['int' => 10]), flow_context());
+        $aggregator->aggregate(row(['int' => 20]), flow_context());
+        $aggregator->aggregate(row(['int' => 30]), flow_context());
+        $aggregator->aggregate(row(['int' => null]), flow_context());
 
         static::assertSame(30.0, $aggregator->value());
     }
@@ -52,10 +49,10 @@ final class MaxTest extends FlowTestCase
     {
         $aggregator = max(ref('datetime'));
 
-        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-01 00:00:00')), flow_context());
-        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-02 00:00:00')), flow_context());
-        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-03 00:00:00')), flow_context());
-        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-04 00:00:00')), flow_context());
+        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-01 00:00:00')]), flow_context());
+        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-02 00:00:00')]), flow_context());
+        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-03 00:00:00')]), flow_context());
+        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-04 00:00:00')]), flow_context());
 
         static::assertEquals(new DateTimeImmutable('2021-01-04 00:00:00'), $aggregator->value());
     }
@@ -64,10 +61,10 @@ final class MaxTest extends FlowTestCase
     {
         $aggregator = max(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
-        $aggregator->aggregate(row(float_entry('int', 30.5)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
+        $aggregator->aggregate(row(['int' => 10]), flow_context());
+        $aggregator->aggregate(row(['int' => 20]), flow_context());
+        $aggregator->aggregate(row(['int' => 30.5]), flow_context());
+        $aggregator->aggregate(row(['int' => 25]), flow_context());
 
         static::assertSame(30.5, $aggregator->value());
     }
@@ -76,10 +73,10 @@ final class MaxTest extends FlowTestCase
     {
         $aggregator = max(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 40)), flow_context());
+        $aggregator->aggregate(row(['int' => 10]), flow_context());
+        $aggregator->aggregate(row(['int' => 20]), flow_context());
+        $aggregator->aggregate(row(['int' => 30]), flow_context());
+        $aggregator->aggregate(row(['int' => 40]), flow_context());
 
         static::assertSame(40.0, $aggregator->value());
     }

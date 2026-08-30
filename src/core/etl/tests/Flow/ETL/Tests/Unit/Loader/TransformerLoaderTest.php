@@ -32,13 +32,14 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ignore_error_handler;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\skip_rows_handler;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\to_transformation;
@@ -51,13 +52,14 @@ final class TransformerLoaderTest extends FlowTestCase
         $context = flow_context(config())->setErrorHandler(ignore_error_handler());
         $spy = new SpyLoader();
         $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-            static fn(Row $row): Row => $row->valueOf('id') === 1 ? throw new RuntimeException('boom') : $row,
+            schema(int_schema('id')),
+            static fn(Row $row): Row => $row->get('id') === 1 ? throw new RuntimeException('boom') : $row,
         )), $spy);
 
         $thrown = null;
 
         try {
-            $loader->load(rows(row(int_entry('id', 1))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         } catch (RuntimeException $e) {
             $thrown = $e;
         }
@@ -65,7 +67,7 @@ final class TransformerLoaderTest extends FlowTestCase
         static::assertInstanceOf(RuntimeException::class, $thrown);
         static::assertSame('boom', $thrown->getMessage());
 
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
         $loader->closure($context);
 
         static::assertSame(
@@ -81,13 +83,14 @@ final class TransformerLoaderTest extends FlowTestCase
         $next = flow_context(config());
         $spy = new SpyLoader();
         $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-            static fn(Row $row): Row => $row->valueOf('id') === 1 ? throw new RuntimeException('boom') : $row,
+            schema(int_schema('id')),
+            static fn(Row $row): Row => $row->get('id') === 1 ? throw new RuntimeException('boom') : $row,
         )), $spy);
 
         $thrown = null;
 
         try {
-            $loader->load(rows(row(int_entry('id', 1))), $failed);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $failed);
         } catch (RuntimeException $e) {
             $thrown = $e;
         }
@@ -95,7 +98,7 @@ final class TransformerLoaderTest extends FlowTestCase
         static::assertInstanceOf(RuntimeException::class, $thrown);
         static::assertSame('boom', $thrown->getMessage());
 
-        $loader->load(rows(row(int_entry('id', 2))), $next);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $next);
         $loader->closure($next);
 
         static::assertSame(
@@ -113,8 +116,8 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(add_row_index('n', StartFrom::ONE), $spy);
 
         // Run 1 dies via a sibling step, so closure() never runs and the stream is left suspended, not dropped.
-        $loader->load(rows(row(int_entry('id', 1))), $first);
-        $loader->load(rows(row(int_entry('id', 2))), $second);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $first);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $second);
 
         static::assertSame(
             [[['id' => 1, 'n' => 1]], [['id' => 2, 'n' => 1]]],
@@ -132,7 +135,7 @@ final class TransformerLoaderTest extends FlowTestCase
         ), $spy);
 
         for ($id = 1; $id <= 4; $id++) {
-            $loader->load(rows(row(int_entry('id', $id))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
         }
 
         $loader->closure($context);
@@ -152,7 +155,7 @@ final class TransformerLoaderTest extends FlowTestCase
         ), $spy);
 
         // Run 1 buffers a batch in the stream and dies without closure(); run 2 routes no batches to this loader.
-        $loader->load(rows(row(int_entry('id', 1))), $dead);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $dead);
         $loader->closure($next);
 
         static::assertSame(0, $spy->loadsCount);
@@ -165,12 +168,13 @@ final class TransformerLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $loader = to_transformation(
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->map(
+                schema(int_schema('id')),
                 static fn(Row $row): Row => throw new RuntimeException('boom'),
             )),
             $spy,
         );
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         static::assertSame(0, $spy->loadsCount);
@@ -185,8 +189,8 @@ final class TransformerLoaderTest extends FlowTestCase
             static fn(DataFrame $df): DataFrame => $df->collect(),
         ), $throwing);
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
 
         static::assertSame(0, $throwing->loadsCount);
 
@@ -202,7 +206,7 @@ final class TransformerLoaderTest extends FlowTestCase
 
         static::assertSame(1, $throwing->loadsCount);
 
-        $loader->load(rows(row(int_entry('id', 3))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
 
         $thrown = null;
 
@@ -229,7 +233,7 @@ final class TransformerLoaderTest extends FlowTestCase
             $thrown = null;
 
             try {
-                $loader->load(rows(row(int_entry('id', $id))), $context);
+                $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
             } catch (RuntimeException $e) {
                 $thrown = $e;
             }
@@ -252,7 +256,8 @@ final class TransformerLoaderTest extends FlowTestCase
             ->batchSize(1)
             ->onError(skip_rows_handler())
             ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-                static fn(Row $row): Row => $row->valueOf('id') === 2 ? throw new RuntimeException('boom') : $row,
+                schema(int_schema('id')),
+                static fn(Row $row): Row => $row->get('id') === 2 ? throw new RuntimeException('boom') : $row,
             )), new SpyLoader()))
             ->write($tail)
             ->run();
@@ -272,6 +277,7 @@ final class TransformerLoaderTest extends FlowTestCase
             df()
                 ->read(from_array([['id' => 1], ['id' => 2]]))
                 ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
+                    schema(int_schema('id')),
                     static fn(Row $row): Row => throw new RuntimeException('boom'),
                 )), $spy))
                 ->run();
@@ -295,7 +301,7 @@ final class TransformerLoaderTest extends FlowTestCase
         ), $spy);
 
         for ($id = 1; $id <= 3; $id++) {
-            $loader->load(rows(row(int_entry('id', $id))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
         }
 
         static::assertSame(0, $spy->loadsCount);
@@ -317,8 +323,8 @@ final class TransformerLoaderTest extends FlowTestCase
 
         // The first load drops the stream; the second arrives on the SAME run, rebuilds it, and the sink throws again.
         // One logical limit event, so exactly one report.
-        $loader->load(rows(row(int_entry('id', 1))), $telemetry->flowContext);
-        $loader->load(rows(row(int_entry('id', 2))), $telemetry->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $telemetry->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $telemetry->flowContext);
 
         static::assertCount(1, $telemetry->logs->entriesContaining('Limit reached'));
         static::assertEmpty($telemetry->logs->entriesContaining('Loading failed'));
@@ -331,8 +337,8 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(select('id'), new ThrowingLoader(new LimitReachedException(1)));
 
         // Run 1 dies without closure(), so only the run-change check can re-arm reporting for run 2.
-        $loader->load(rows(row(int_entry('id', 1))), $first->flowContext);
-        $loader->load(rows(row(int_entry('id', 2))), $second->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $first->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $second->flowContext);
 
         static::assertCount(1, $first->logs->entriesContaining('Limit reached'));
         static::assertCount(1, $second->logs->entriesContaining('Limit reached'));
@@ -350,7 +356,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
 
         $loader = to_transformation(new LimitTransformer(1), to_memory(new ArrayMemory()));
-        $batch = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $batch = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
 
         $loader->load($batch, $context->flowContext);
         $loader->load($batch, $context->flowContext);
@@ -379,9 +385,9 @@ final class TransformerLoaderTest extends FlowTestCase
 
         $loader = to_transformation(select('id'), to_memory(new ArrayMemory()));
 
-        $loader->load(rows(row(int_entry('id', 1))), $first->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $first->flowContext);
         $loader->closure($first->flowContext);
-        $loader->load(rows(row(int_entry('id', 2))), $second->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $second->flowContext);
 
         $memoryLoaderSpans = static fn(MemoryTelemetryContext $context): int => count(array_filter(
             $context->spans->endedSpans(),
@@ -398,10 +404,10 @@ final class TransformerLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $loader = to_transformation(add_row_index('n', StartFrom::ONE), $spy);
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
         $loader->closure($context);
-        $loader->load(rows(row(int_entry('id', 3))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
 
         static::assertSame(
             [[['id' => 1, 'n' => 1]], [['id' => 2, 'n' => 2]], [['id' => 3, 'n' => 1]]],
@@ -416,7 +422,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(select('id'), $spy);
 
         for ($id = 1; $id <= 3; $id++) {
-            $loader->load(rows(row(int_entry('id', $id))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
         }
 
         $loader->closure($context);
@@ -436,7 +442,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(add_row_index('n', StartFrom::ONE), $spy);
 
         for ($id = 1; $id <= 3; $id++) {
-            $loader->load(rows(row(int_entry('id', $id))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
         }
 
         static::assertSame(3, $spy->loadsCount);
@@ -453,7 +459,10 @@ final class TransformerLoaderTest extends FlowTestCase
         $loader = to_transformation(select('id'), $spy);
 
         for ($id = 1; $id <= 3; $id++) {
-            $loader->load(rows(row(int_entry('id', $id), str_entry('name', 'name-' . $id))), $context);
+            $loader->load(
+                rows(schema(int_schema('id'), str_schema('name')), row(['id' => $id, 'name' => 'name-' . $id])),
+                $context,
+            );
         }
 
         static::assertSame(3, $spy->loadsCount);
@@ -466,14 +475,14 @@ final class TransformerLoaderTest extends FlowTestCase
     public function test_transformer_loader(): void
     {
         $transformerMock = $this->createMock(Transformer::class);
-        $transformerMock->expects(self::once())->method('transform')->willReturn(rows());
+        $transformerMock->expects(self::once())->method('transform')->willReturn(rows(schema()));
 
         $loaderMock = $this->createMock(Loader::class);
         $loaderMock->expects(self::once())->method('load');
 
         $transformer = to_transformation($transformerMock, $loaderMock);
 
-        $transformer->load(rows(), flow_context(config()));
+        $transformer->load(rows(schema()), flow_context(config()));
     }
 
     public function test_transformer_loader_with_transformation(): void
@@ -508,7 +517,7 @@ final class TransformerLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $loader = to_transformation(select('id'), $spy);
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
 
         static::assertSame([$context], $spy->contexts);
     }

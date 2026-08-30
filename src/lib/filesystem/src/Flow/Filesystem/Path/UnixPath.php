@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Path;
 
-use Flow\ETL\Exception\InvalidArgumentException as EtlInvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Partition;
@@ -285,7 +284,7 @@ final readonly class UnixPath
         foreach ($values as $name => $value) {
             try {
                 $partitionsList[] = new Partition($name, $value);
-            } catch (EtlInvalidArgumentException) {
+            } catch (InvalidArgumentException) {
             }
         }
 

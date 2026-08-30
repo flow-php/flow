@@ -97,7 +97,7 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader
         ]);
 
         try {
-            $headers = array_values($rows->first()->entries()->names());
+            $headers = array_values($rows->schema()->references()->names());
 
             if ($rows->partitions()->count()) {
                 $this->write($rows, $headers, $context, $rows->partitions()->toArray());

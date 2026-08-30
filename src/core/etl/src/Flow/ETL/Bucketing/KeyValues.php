@@ -44,7 +44,7 @@ final readonly class KeyValues
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[] = $this->nullOnMissing && !$row->has($ref) ? null : $row->valueOf($ref);
+            $values[] = $this->nullOnMissing && !$row->has($ref) ? null : $row->get($ref);
         }
 
         return $values;

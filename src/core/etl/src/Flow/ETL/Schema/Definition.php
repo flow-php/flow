@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\Types\Type;
 
@@ -43,10 +42,7 @@ interface Definition
      */
     public function makeNullable(bool $nullable = true): static;
 
-    /**
-     * @param Entry<mixed> $entry
-     */
-    public function matches(Entry $entry): bool;
+    public function matches(mixed $value): bool;
 
     /**
      * @param Definition<mixed> $definition
@@ -76,9 +72,4 @@ interface Definition
      * @return Type<T>
      */
     public function type(): Type;
-
-    /**
-     * @return class-string<Entry>
-     */
-    public function entryClass(): string;
 }

@@ -81,7 +81,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys(type_array()->assert($row->get('/timezones')->value())),
+                array_keys(type_array()->assert($row->get('/timezones'))),
             );
         }
 
@@ -156,7 +156,7 @@ final class JsonExtractorTest extends FlowTestCase
         static::assertSame(
             [
                 ['id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
-                ['id' => 2, 'value' => 'b'],
+                ['id' => 2, 'value' => 'b', 'date' => null],
             ],
             df()
                 ->read(from_json(__DIR__ . '/../../Fixtures/cross_stream/*/data.json', schema: schema(

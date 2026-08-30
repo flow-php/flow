@@ -10,9 +10,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class BatchingProcessorTest extends FlowTestCase
 {
@@ -31,10 +32,11 @@ final class BatchingProcessorTest extends FlowTestCase
         $processor = new BatchingProcessor(2);
         $generator = (static function () {
             yield rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 4)),
+                schema(int_schema('id')),
+                row(['id' => 1]),
+                row(['id' => 2]),
+                row(['id' => 3]),
+                row(['id' => 4]),
             );
         })();
         /** @var list<Rows> $result */
@@ -49,11 +51,12 @@ final class BatchingProcessorTest extends FlowTestCase
         $processor = new BatchingProcessor(3);
         $generator = (static function () {
             yield rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 4)),
-                row(int_entry('id', 5)),
+                schema(int_schema('id')),
+                row(['id' => 1]),
+                row(['id' => 2]),
+                row(['id' => 3]),
+                row(['id' => 4]),
+                row(['id' => 5]),
             );
         })();
         /** @var list<Rows> $result */
@@ -67,11 +70,11 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $processor = new BatchingProcessor(2);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)));
-            yield rows(row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)));
-            yield rows(row(int_entry('id', 4)));
-            yield rows(row(int_entry('id', 5)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield rows(schema(int_schema('id')), row(['id' => 4]));
+            yield rows(schema(int_schema('id')), row(['id' => 5]));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));

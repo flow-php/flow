@@ -90,8 +90,9 @@ final readonly class Schema implements Countable
         $totalRows = 0;
 
         foreach ($extractor as $rows) {
+            $schema = $schema->merge($rows->schema());
+
             foreach ($rows as $row) {
-                $schema = $schema->merge($row->schema());
                 $totalRows++;
 
                 if ($totalRows >= $maxRows) {

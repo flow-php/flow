@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
@@ -88,9 +87,9 @@ final readonly class NullDefinition implements Definition
         return new self($this->ref, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        return $entry->is($this->ref) && $entry->value() === null;
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -141,13 +140,5 @@ final readonly class NullDefinition implements Definition
     public function type(): Type
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\NullEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\NullEntry::class;
     }
 }

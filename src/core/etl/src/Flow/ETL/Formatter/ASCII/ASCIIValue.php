@@ -4,33 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Formatter\ASCII;
 
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\XMLElementEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
-use JsonException;
+use Flow\Types\Exception\Exception as TypesException;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\TypedValueFormatter;
 
 use function floor;
-use function is_bool;
-use function is_float;
 use function is_int;
-use function is_string;
-use function json_encode;
 use function mb_strlen;
 use function mb_substr;
 use function str_repeat;
 use function str_replace;
-
-use const JSON_THROW_ON_ERROR;
 
 final class ASCIIValue
 {
     private ?string $stringValue = null;
 
     /**
-     * @param null|array<mixed>|bool|Entry<mixed>|float|int|string $value
+     * @param Type<mixed> $type
      */
     public function __construct(
-        private readonly string|int|bool|float|array|Entry|null $value,
+        private readonly Type $type,
+        private readonly mixed $value,
     ) {}
 
     /**
@@ -115,32 +111,16 @@ final class ASCIIValue
     {
         if ($this->stringValue === null) {
             try {
-                $val = $this->value;
-
-                if ($val instanceof Entry) {
-                    $this->stringValue = $val->toString();
-
-                    if ($val instanceof XMLEntry || $val instanceof XMLElementEntry) {
-                        $this->stringValue = str_replace("\n", '', $this->stringValue);
-                    }
-
-                    return $this->stringValue;
-                }
-
-                if ($val === null) {
-                    $this->stringValue = 'null';
-
-                    return $this->stringValue;
-                }
-
-                $this->stringValue = match (true) {
-                    is_string($val) => $val,
-                    is_bool($val) => $val ? 'true' : 'false',
-                    is_int($val), is_float($val) => (string) $val,
-                    default => json_encode($val, JSON_THROW_ON_ERROR),
-                };
-            } catch (JsonException) {
+                $this->stringValue = (new TypedValueFormatter())->format($this->type, $this->value);
+            } catch (TypesException) {
                 $this->stringValue = '{...}';
+
+                return $this->stringValue;
+            }
+
+            if ($this->type instanceof XMLType || $this->type instanceof XMLElementType) {
+                $this->stringValue = str_replace('
+', '', $this->stringValue);
             }
         }
 

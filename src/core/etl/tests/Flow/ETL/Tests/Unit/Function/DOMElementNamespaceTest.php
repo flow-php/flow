@@ -11,7 +11,6 @@ use DOMElement;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -40,10 +39,7 @@ final class DOMElementNamespaceTest extends TestCase
         static::assertInstanceOf(Element::class, $element->documentElement);
         static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', ref('node')
             ->domElementNamespace()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('node', $element->documentElement)),
-                flow_context(),
-            ));
+            ->eval(row(['node' => $element->documentElement]), flow_context()));
     }
 
     public function test_xml_getting_element_namespace(): void
@@ -54,7 +50,7 @@ final class DOMElementNamespaceTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', ref('node')
             ->domElementNamespace()
-            ->eval(row(flow_context(config())->entryFactory()->create('node', $xml->documentElement)), flow_context()));
+            ->eval(row(['node' => $xml->documentElement]), flow_context()));
     }
 
     public function test_xml_getting_element_non_default_namespace(): void
@@ -65,6 +61,6 @@ final class DOMElementNamespaceTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertSame('http://www.unece.org/cefact/nodes/StandardBusinessDocumentHeader', ref('node')
             ->domElementNamespace('xmlns:sh')
-            ->eval(row(flow_context(config())->entryFactory()->create('node', $xml->documentElement)), flow_context()));
+            ->eval(row(['node' => $xml->documentElement]), flow_context()));
     }
 }

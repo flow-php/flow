@@ -63,18 +63,10 @@ final readonly class BucketAggregation
             return;
         }
 
-        $buffer = new RowsBuffer($this->batchSize);
-        $entryFactory = $context->entryFactory();
+        $buffer = new RowsBuffer($output, $this->batchSize);
 
         foreach ($groups as $group) {
-            if (
-                null !== ($batch = $buffer->add($groupBy->aggregatedRow(
-                    $group->key,
-                    $group->aggregators,
-                    $output,
-                    $entryFactory,
-                )))
-            ) {
+            if (null !== ($batch = $buffer->add($groupBy->aggregatedRow($group->key, $group->aggregators, $output)))) {
                 yield $batch;
             }
         }

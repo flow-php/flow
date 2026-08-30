@@ -9,11 +9,12 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class MemorySortProcessorTest extends FlowTestCase
 {
@@ -33,9 +34,9 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')));
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)));
-            yield rows(row(int_entry('id', 1)));
-            yield rows(row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield rows(schema(int_schema('id')), row(['id' => 2]));
         })();
 
         /** @var list<Rows> $result */
@@ -56,7 +57,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')));
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
         })();
 
         /** @var list<Rows> $result */
@@ -77,7 +78,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')->desc()));
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 3)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 3]), row(['id' => 2]));
         })();
 
         /** @var list<Rows> $result */

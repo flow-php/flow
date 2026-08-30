@@ -97,7 +97,7 @@ final class UnresolvedReference implements Reference
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        return $row->valueOf($this->entry);
+        return $row->get($this->entry);
     }
 
     public function hasAlias(): bool

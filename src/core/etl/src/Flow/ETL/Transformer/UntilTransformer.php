@@ -77,7 +77,7 @@ final class UntilTransformer implements Transformer
                 }
             }
 
-            $result = new Rows(...$nextRows);
+            $result = new Rows($rows->schema(), ...$nextRows);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

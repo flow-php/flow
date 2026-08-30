@@ -10,13 +10,12 @@ use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\window;
 
 final class CountTest extends FlowTestCase
@@ -35,11 +34,11 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
-        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
+        $aggregator->aggregate(row(['int' => '10']), flow_context());
+        $aggregator->aggregate(row(['int' => '20']), flow_context());
+        $aggregator->aggregate(row(['int' => '55']), flow_context());
+        $aggregator->aggregate(row(['int' => '25']), flow_context());
+        $aggregator->aggregate(row(['not_int' => null]), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -48,10 +47,10 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(float_entry('int', 10.25)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
+        $aggregator->aggregate(row(['int' => 10.25]), flow_context());
+        $aggregator->aggregate(row(['int' => 20]), flow_context());
+        $aggregator->aggregate(row(['int' => 305]), flow_context());
+        $aggregator->aggregate(row(['int' => 25]), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -60,11 +59,11 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count();
 
-        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
-        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
-        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
+        $aggregator->aggregate(row(['int' => '10']), flow_context());
+        $aggregator->aggregate(row(['int' => '20']), flow_context());
+        $aggregator->aggregate(row(['int' => '55']), flow_context());
+        $aggregator->aggregate(row(['int' => '25']), flow_context());
+        $aggregator->aggregate(row(['not_int' => null]), flow_context());
 
         static::assertSame(5, $aggregator->value());
     }
@@ -73,11 +72,11 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
-        $aggregator->aggregate(row(int_entry('int', null)), flow_context());
-        $aggregator->aggregate(row(str_entry('test', null)), flow_context());
+        $aggregator->aggregate(row(['int' => 10]), flow_context());
+        $aggregator->aggregate(row(['int' => 20]), flow_context());
+        $aggregator->aggregate(row(['int' => 30]), flow_context());
+        $aggregator->aggregate(row(['int' => null]), flow_context());
+        $aggregator->aggregate(row(['test' => null]), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -85,9 +84,10 @@ final class CountTest extends FlowTestCase
     public function test_window_function_count_of_a_reference_skips_nulls(): void
     {
         $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 10)),
-            row(int_entry('id', 2), int_entry('value', null)),
-            row(int_entry('id', 3), int_entry('value', 30)),
+            schema(int_schema('id'), int_schema('value', nullable: true)),
+            $row1 = row(['id' => 1, 'value' => 10]),
+            row(['id' => 2, 'value' => null]),
+            row(['id' => 3, 'value' => 30]),
         );
 
         $count = count(ref('value'))->over(window()->orderBy(ref('id')));
@@ -98,9 +98,10 @@ final class CountTest extends FlowTestCase
     public function test_window_function_count_without_a_reference_counts_every_row_in_the_frame(): void
     {
         $rows = rows(
-            $row1 = row(int_entry('id', 1), int_entry('value', 10)),
-            row(int_entry('id', 2), int_entry('value', null)),
-            row(int_entry('id', 3), int_entry('value', 30)),
+            schema(int_schema('id'), int_schema('value', nullable: true)),
+            $row1 = row(['id' => 1, 'value' => 10]),
+            row(['id' => 2, 'value' => null]),
+            row(['id' => 3, 'value' => 30]),
         );
 
         $count = count()->over(window()->orderBy(ref('id')));
@@ -113,7 +114,7 @@ final class CountTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Count window function error:');
 
-        $rows = rows($row1 = row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $rows = rows(schema(int_schema('id')), $row1 = row(['id' => 1]), row(['id' => 2]));
 
         $count = count(ref('missing_column'))->over(window()->orderBy(ref('id')));
 

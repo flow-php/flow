@@ -10,26 +10,25 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class TrimTest extends FlowTestCase
 {
     public function test_trim_both_valid_string(): void
     {
-        static::assertSame('value', ref('string')->trim()->eval(row(str_entry('string', '   value')), flow_context()));
+        static::assertSame('value', ref('string')->trim()->eval(row(['string' => '   value']), flow_context()));
     }
 
     public function test_trim_left_valid_string(): void
     {
         static::assertSame('value   ', ref('string')
             ->trim(Type::LEFT)
-            ->eval(row(str_entry('string', '   value   ')), flow_context()));
+            ->eval(row(['string' => '   value   ']), flow_context()));
     }
 
     public function test_trim_right_valid_string(): void
     {
         static::assertSame('   value', ref('string')
             ->trim(Type::RIGHT)
-            ->eval(row(str_entry('string', '   value   ')), flow_context()));
+            ->eval(row(['string' => '   value   ']), flow_context()));
     }
 }

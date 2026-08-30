@@ -8,11 +8,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\PruneEntriesTransformer;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class PruneEntriesTransformerTest extends FlowTestCase
 {
@@ -22,7 +23,10 @@ final class PruneEntriesTransformerTest extends FlowTestCase
             [['id' => 1, 'name' => 'a']],
             (new PruneEntriesTransformer(ref('id'), ref('name')))
                 ->transform(
-                    rows(row(int_entry('id', 1), str_entry('name', 'a'), int_entry('dropped', 9))),
+                    rows(
+                        schema(int_schema('id'), str_schema('name'), int_schema('dropped')),
+                        row(['id' => 1, 'name' => 'a', 'dropped' => 9]),
+                    ),
                     flow_context(),
                 )
                 ->toArray(),
@@ -35,7 +39,11 @@ final class PruneEntriesTransformerTest extends FlowTestCase
             [['id' => 1, 'name' => 'a'], ['id' => 2]],
             (new PruneEntriesTransformer(ref('id'), ref('name')))
                 ->transform(
-                    rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2))),
+                    rows(
+                        schema(int_schema('id'), str_schema('name', nullable: true)),
+                        row(['id' => 1, 'name' => 'a']),
+                        row(['id' => 2]),
+                    ),
                     flow_context(),
                 )
                 ->toArray(),
@@ -47,7 +55,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
         static::assertSame(
             [[]],
             (new PruneEntriesTransformer(ref('missing')))
-                ->transform(rows(row(int_entry('id', 1))), flow_context())
+                ->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context())
                 ->toArray(),
         );
     }

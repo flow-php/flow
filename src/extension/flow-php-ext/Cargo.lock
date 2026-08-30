@@ -443,7 +443,7 @@ dependencies = [
 
 [[package]]
 name = "flow_php"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ext-php-rs",
  "serde",

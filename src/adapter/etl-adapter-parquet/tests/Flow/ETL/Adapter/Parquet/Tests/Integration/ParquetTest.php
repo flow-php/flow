@@ -27,16 +27,16 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -131,12 +131,12 @@ final class ParquetTest extends FlowTestCase
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
 
-        $first = $rows[0]->valueOf('body');
+        $first = $rows[0]->get('body');
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->valueOf('body');
+        $second = $rows[1]->get('body');
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -149,33 +149,40 @@ final class ParquetTest extends FlowTestCase
         $config = config();
 
         data_frame($config)
-            ->read(from_rows(rows(row(
-                struct_entry('body', ['data' => Json::fromArray(['a' => 1]), 'n' => 1], type_structure([
-                    'data' => type_json(),
-                    'n' => type_integer(),
-                ])),
-                list_entry('json_list', [Json::fromArray(['c' => 3])], type_list(type_json())),
-                struct_entry('outer', ['inner' => ['deep' => Json::fromArray(['e' => 5])]], type_structure([
-                    'inner' => type_structure(['deep' => type_json()]),
-                ])),
-            ))))
+            ->read(from_rows(rows(
+                schema(
+                    structure_schema('body', type_structure([
+                        'data' => type_json(),
+                        'n' => type_integer(),
+                    ])),
+                    list_schema('json_list', type_list(type_json())),
+                    structure_schema('outer', type_structure([
+                        'inner' => type_structure(['deep' => type_json()]),
+                    ])),
+                ),
+                row([
+                    'body' => ['data' => Json::fromArray(['a' => 1]), 'n' => 1],
+                    'json_list' => [Json::fromArray(['c' => 3])],
+                    'outer' => ['inner' => ['deep' => Json::fromArray(['e' => 5])]],
+                ]),
+            )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
         $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
 
-        $body = $row->valueOf('body');
+        $body = $row->get('body');
         static::assertIsArray($body);
         static::assertInstanceOf(Json::class, $body['data']);
         static::assertSame(['a' => 1], $body['data']->toArray());
         static::assertSame(1, $body['n']);
 
-        $jsonList = $row->valueOf('json_list');
+        $jsonList = $row->get('json_list');
         static::assertIsArray($jsonList);
         static::assertInstanceOf(Json::class, $jsonList[0]);
         static::assertSame(['c' => 3], $jsonList[0]->toArray());
 
-        $outer = $row->valueOf('outer');
+        $outer = $row->get('outer');
         static::assertIsArray($outer);
         // @mago-ignore analysis:mixed-assignment
         $inner = $outer['inner'];
@@ -192,31 +199,38 @@ final class ParquetTest extends FlowTestCase
         $uuid = 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a';
 
         data_frame($config)
-            ->read(from_rows(rows(row(
-                struct_entry('body', ['id' => FlowUuid::fromString($uuid), 'n' => 1], type_structure([
-                    'id' => type_uuid(),
-                    'n' => type_integer(),
-                ])),
-                list_entry('uuid_list', [FlowUuid::fromString($uuid)], type_list(type_uuid())),
-                struct_entry('outer', ['inner' => ['id' => FlowUuid::fromString($uuid)]], type_structure([
-                    'inner' => type_structure(['id' => type_uuid()]),
-                ])),
-            ))))
+            ->read(from_rows(rows(
+                schema(
+                    structure_schema('body', type_structure([
+                        'id' => type_uuid(),
+                        'n' => type_integer(),
+                    ])),
+                    list_schema('uuid_list', type_list(type_uuid())),
+                    structure_schema('outer', type_structure([
+                        'inner' => type_structure(['id' => type_uuid()]),
+                    ])),
+                ),
+                row([
+                    'body' => ['id' => FlowUuid::fromString($uuid), 'n' => 1],
+                    'uuid_list' => [FlowUuid::fromString($uuid)],
+                    'outer' => ['inner' => ['id' => FlowUuid::fromString($uuid)]],
+                ]),
+            )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
         $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
 
-        $body = $row->valueOf('body');
+        $body = $row->get('body');
         static::assertIsArray($body);
         static::assertInstanceOf(FlowUuid::class, $body['id']);
         static::assertSame($uuid, $body['id']->toString());
 
-        $uuidList = $row->valueOf('uuid_list');
+        $uuidList = $row->get('uuid_list');
         static::assertIsArray($uuidList);
         static::assertInstanceOf(FlowUuid::class, $uuidList[0]);
 
-        $outer = $row->valueOf('outer');
+        $outer = $row->get('outer');
         static::assertIsArray($outer);
         // @mago-ignore analysis:mixed-assignment
         $inner = $outer['inner'];
@@ -233,22 +247,28 @@ final class ParquetTest extends FlowTestCase
         $uuid = 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a';
 
         data_frame($config)
-            ->read(from_rows(rows(row(
-                map_entry('uuid_map', ['k' => FlowUuid::fromString($uuid)], type_map(type_string(), type_uuid())),
-                map_entry('json_map', ['k' => Json::fromArray(['d' => 4])], type_map(type_string(), type_json())),
-            ))))
+            ->read(from_rows(rows(
+                schema(
+                    map_schema('uuid_map', type_map(type_string(), type_uuid())),
+                    map_schema('json_map', type_map(type_string(), type_json())),
+                ),
+                row([
+                    'uuid_map' => ['k' => FlowUuid::fromString($uuid)],
+                    'json_map' => ['k' => Json::fromArray(['d' => 4])],
+                ]),
+            )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
         $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
 
-        $uuidMap = $row->valueOf('uuid_map');
+        $uuidMap = $row->get('uuid_map');
         static::assertIsArray($uuidMap);
         static::assertSame(['k'], array_keys($uuidMap));
         static::assertInstanceOf(FlowUuid::class, $uuidMap['k']);
         static::assertSame($uuid, $uuidMap['k']->toString());
 
-        $jsonMap = $row->valueOf('json_map');
+        $jsonMap = $row->get('json_map');
         static::assertIsArray($jsonMap);
         static::assertSame(['k'], array_keys($jsonMap));
         static::assertInstanceOf(Json::class, $jsonMap['k']);

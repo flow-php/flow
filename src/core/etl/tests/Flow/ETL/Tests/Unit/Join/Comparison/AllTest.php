@@ -8,7 +8,6 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 
 final class AllTest extends FlowTestCase
@@ -21,10 +20,7 @@ final class AllTest extends FlowTestCase
         $comparison2 = self::createStub(Comparison::class);
         $comparison2->method('compare')->willReturn(false);
 
-        static::assertFalse((new All($comparison1, $comparison2))->compare(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-        ));
+        static::assertFalse((new All($comparison1, $comparison2))->compare(row(['id' => 1]), row(['id' => 2])));
     }
 
     public function test_success(): void
@@ -35,9 +31,6 @@ final class AllTest extends FlowTestCase
         $comparison2 = self::createStub(Comparison::class);
         $comparison2->method('compare')->willReturn(true);
 
-        static::assertTrue((new All($comparison1, $comparison2))->compare(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-        ));
+        static::assertTrue((new All($comparison1, $comparison2))->compare(row(['id' => 1]), row(['id' => 2])));
     }
 }

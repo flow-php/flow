@@ -11,12 +11,13 @@ use PHPUnit\Framework\TestCase;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
 use function iterator_to_array;
@@ -25,7 +26,7 @@ final class WindowFunctionPipelineTest extends TestCase
 {
     public function test_handles_empty_input(): void
     {
-        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline = new Pipeline(from_rows(rows(schema())));
 
         $window = window()->orderBy(ref('id'));
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
@@ -39,8 +40,9 @@ final class WindowFunctionPipelineTest extends TestCase
     public function test_handles_no_order_by(): void
     {
         $pipeline = new Pipeline(from_rows(rows(
-            row(str_entry('dept', 'IT'), int_entry('value', 100)),
-            row(str_entry('dept', 'IT'), int_entry('value', 150)),
+            schema(str_schema('dept'), int_schema('value')),
+            row(['dept' => 'IT', 'value' => 100]),
+            row(['dept' => 'IT', 'value' => 150]),
         )));
 
         $window = window()->partitionBy(ref('dept'));
@@ -53,15 +55,16 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(1, $result);
         static::assertCount(2, $result[0]);
 
-        static::assertEquals(250, $result[0][0]->get('total')->value());
-        static::assertEquals(250, $result[0][1]->get('total')->value());
+        static::assertEquals(250, $result[0][0]->get('total'));
+        static::assertEquals(250, $result[0][1]->get('total'));
     }
 
     public function test_handles_single_row_partition(): void
     {
         $pipeline = new Pipeline(from_rows(rows(
-            row(str_entry('dept', 'IT'), int_entry('salary', 5000)),
-            row(str_entry('dept', 'HR'), int_entry('salary', 4000)),
+            schema(str_schema('dept'), int_schema('salary')),
+            row(['dept' => 'IT', 'salary' => 5000]),
+            row(['dept' => 'HR', 'salary' => 4000]),
         )));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
@@ -79,10 +82,11 @@ final class WindowFunctionPipelineTest extends TestCase
     public function test_processes_multiple_partitions_separately(): void
     {
         $pipeline = new Pipeline(from_rows(rows(
-            row(str_entry('dept', 'IT'), int_entry('salary', 5000)),
-            row(str_entry('dept', 'IT'), int_entry('salary', 6000)),
-            row(str_entry('dept', 'HR'), int_entry('salary', 4000)),
-            row(str_entry('dept', 'HR'), int_entry('salary', 4500)),
+            schema(str_schema('dept'), int_schema('salary')),
+            row(['dept' => 'IT', 'salary' => 5000]),
+            row(['dept' => 'IT', 'salary' => 6000]),
+            row(['dept' => 'HR', 'salary' => 4000]),
+            row(['dept' => 'HR', 'salary' => 4500]),
         )));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
@@ -95,20 +99,21 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(2, $result);
 
         static::assertCount(2, $result[0]);
-        static::assertEquals(1, $result[0][0]->get('row_num')->value());
-        static::assertEquals(2, $result[0][1]->get('row_num')->value());
+        static::assertEquals(1, $result[0][0]->get('row_num'));
+        static::assertEquals(2, $result[0][1]->get('row_num'));
 
         static::assertCount(2, $result[1]);
-        static::assertEquals(1, $result[1][0]->get('row_num')->value());
-        static::assertEquals(2, $result[1][1]->get('row_num')->value());
+        static::assertEquals(1, $result[1][0]->get('row_num'));
+        static::assertEquals(2, $result[1][1]->get('row_num'));
     }
 
     public function test_processes_single_partition_without_partition_by(): void
     {
         $pipeline = new Pipeline(from_rows(rows(
-            row(int_entry('id', 1), int_entry('value', 100)),
-            row(int_entry('id', 2), int_entry('value', 150)),
-            row(int_entry('id', 3), int_entry('value', 200)),
+            schema(int_schema('id'), int_schema('value')),
+            row(['id' => 1, 'value' => 100]),
+            row(['id' => 2, 'value' => 150]),
+            row(['id' => 3, 'value' => 200]),
         )));
 
         $window = window()->orderBy(ref('id'));
@@ -120,17 +125,18 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
 
-        static::assertEquals(1, $result[0][0]->get('row_num')->value());
-        static::assertEquals(2, $result[0][1]->get('row_num')->value());
-        static::assertEquals(3, $result[0][2]->get('row_num')->value());
+        static::assertEquals(1, $result[0][0]->get('row_num'));
+        static::assertEquals(2, $result[0][1]->get('row_num'));
+        static::assertEquals(3, $result[0][2]->get('row_num'));
     }
 
     public function test_sorts_partition_by_order_by(): void
     {
         $pipeline = new Pipeline(from_rows(rows(
-            row(str_entry('dept', 'IT'), int_entry('salary', 6000)),
-            row(str_entry('dept', 'IT'), int_entry('salary', 5000)),
-            row(str_entry('dept', 'IT'), int_entry('salary', 7000)),
+            schema(str_schema('dept'), int_schema('salary')),
+            row(['dept' => 'IT', 'salary' => 6000]),
+            row(['dept' => 'IT', 'salary' => 5000]),
+            row(['dept' => 'IT', 'salary' => 7000]),
         )));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
@@ -140,12 +146,12 @@ final class WindowFunctionPipelineTest extends TestCase
         $context = flow_context(config());
         $result = iterator_to_array($pipeline->process($context));
 
-        static::assertEquals(5000, $result[0][0]->get('salary')->value());
-        static::assertEquals(6000, $result[0][1]->get('salary')->value());
-        static::assertEquals(7000, $result[0][2]->get('salary')->value());
+        static::assertEquals(5000, $result[0][0]->get('salary'));
+        static::assertEquals(6000, $result[0][1]->get('salary'));
+        static::assertEquals(7000, $result[0][2]->get('salary'));
 
-        static::assertEquals(1, $result[0][0]->get('row_num')->value());
-        static::assertEquals(2, $result[0][1]->get('row_num')->value());
-        static::assertEquals(3, $result[0][2]->get('row_num')->value());
+        static::assertEquals(1, $result[0][0]->get('row_num'));
+        static::assertEquals(2, $result[0][1]->get('row_num'));
+        static::assertEquals(3, $result[0][2]->get('row_num'));
     }
 }

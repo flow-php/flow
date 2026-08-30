@@ -26,7 +26,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\path_real;
 
@@ -234,11 +233,12 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $result = df()
             ->read(from_rows(rows(
-                row(string_entry('sheet', 'ValidSheet')),
-                row(string_entry('sheet', 'Invalid/Sheet')),
-                row(string_entry('sheet', 'Sheet*Name')),
-                row(string_entry('sheet', 'This is a very long sheet name that exceeds the 31 character limit')),
-                row(string_entry('sheet', 'Normal')),
+                schema(string_schema('sheet')),
+                row(['sheet' => 'ValidSheet']),
+                row(['sheet' => 'Invalid/Sheet']),
+                row(['sheet' => 'Sheet*Name']),
+                row(['sheet' => 'This is a very long sheet name that exceeds the 31 character limit']),
+                row(['sheet' => 'Normal']),
             )))
             ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
             ->fetch()
@@ -282,8 +282,8 @@ final class ExcelExtractorTest extends FlowTestCase
             [
                 ['group' => '1', 'id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
                 ['group' => '1', 'id' => 2, 'value' => 'b', 'date' => '2026-01-01'],
-                ['group' => '2', 'id' => 5, 'value' => 'e'],
-                ['group' => '2', 'id' => 6, 'value' => 'f'],
+                ['group' => '2', 'id' => 5, 'value' => 'e', 'date' => null],
+                ['group' => '2', 'id' => 6, 'value' => 'f', 'date' => null],
             ],
             df()
                 ->read(from_excel(__DIR__ . '/../Fixtures/cross_stream/*/*.xlsx')->withSchema(schema(

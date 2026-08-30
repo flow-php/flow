@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Exception\SchemaNotDerivableException;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\FlowTestCase;
@@ -61,12 +59,10 @@ final class ArrayExtractorTest extends FlowTestCase
 
         $rows = iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
-        static::assertInstanceOf(IntegerEntry::class, $rows[0]->first()->get('a'));
-        static::assertSame(42, $rows[0]->first()->get('a')->value());
-        static::assertInstanceOf(StringEntry::class, $rows[1]->first()->get('a'));
-        static::assertSame('x', $rows[1]->first()->get('a')->value());
-        static::assertInstanceOf(StringEntry::class, $rows[2]->first()->get('a'));
-        static::assertNull($rows[2]->first()->get('a')->value());
+        static::assertSame(42, $rows[0]->first()->get('a'));
+        static::assertSame('x', $rows[1]->first()->get('a'));
+        static::assertNull($rows[2]->first()->get('a'));
+        static::assertInstanceOf(UnionDefinition::class, $rows[0]->schema()->get('a'));
     }
 
     public function test_generator_extraction_with_a_declared_schema(): void

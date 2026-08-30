@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -13,13 +12,14 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
 
+use function array_key_exists;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 
 /**
- * Unlike {@see SelectEntriesTransformer} a column the row never had stays absent
- * instead of becoming null - pruned rows are spilled to storage, where absent and
- * null are distinct.
+ * Unlike {@see SelectEntriesTransformer}, which throws when a reference is not declared by the
+ * schema, prune keeps what is there and silently skips absent references - pruned rows are spilled
+ * to storage, where the pruning is opportunistic rather than a contract.
  */
 final readonly class PruneEntriesTransformer implements Transformer
 {
@@ -35,22 +35,31 @@ final readonly class PruneEntriesTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
+            $present = [];
+
+            foreach ($this->refs as $ref) {
+                if ($rows->schema()->findDefinition($ref) !== null) {
+                    $present[] = $ref;
+                }
+            }
+
+            $schema = $rows->schema()->keep(...$present)->reorder(...$present);
             $newRows = [];
 
             foreach ($rows as $row) {
-                $newRowEntries = [];
+                $values = $row->values();
+                $pruned = [];
 
                 foreach ($this->refs as $ref) {
-                    try {
-                        $newRowEntries[] = $row->get($ref);
-                    } catch (InvalidArgumentException) {
+                    if (array_key_exists($ref->name(), $values)) {
+                        $pruned[$ref->name()] = $values[$ref->name()];
                     }
                 }
 
-                $newRows[] = row(...$newRowEntries);
+                $newRows[] = row($pruned);
             }
 
-            $result = rows(...$newRows);
+            $result = rows($schema, ...$newRows);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

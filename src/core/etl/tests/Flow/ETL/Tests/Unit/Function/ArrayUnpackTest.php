@@ -10,8 +10,6 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 
@@ -19,14 +17,14 @@ final class ArrayUnpackTest extends FlowTestCase
 {
     public function test_array_unpack(): void
     {
-        $row = row(
-            int_entry('id', 1),
-            json_entry('array_entry', [
+        $row = row([
+            'id' => 1,
+            'array_entry' => [
                 'status' => 'PENDING',
                 'enabled' => true,
                 'array' => ['foo' => 'bar'],
-            ]),
-        );
+            ],
+        ]);
 
         static::assertSame(
             [
@@ -44,6 +42,6 @@ final class ArrayUnpackTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayUnpack requires non-null array and skipKeys');
 
         $context = flow_context(config());
-        (new ArrayUnpack(ref('array_entry')))->eval(row(int_entry('id', 1), json_entry('array_entry', null)), $context);
+        (new ArrayUnpack(ref('array_entry')))->eval(row(['id' => 1, 'array_entry' => null]), $context);
     }
 }

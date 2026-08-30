@@ -11,7 +11,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class SlugTest extends FlowTestCase
 {
@@ -19,7 +18,7 @@ final class SlugTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        ref('value')->slug(lit(123))->eval(row(str_entry('value', 'hello world')), flow_context());
+        ref('value')->slug(lit(123))->eval(row(['value' => 'hello world']), flow_context());
     }
 
     public function test_ascii_on_null(): void
@@ -27,18 +26,16 @@ final class SlugTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Slug function requires non-null value');
 
-        ref('str')->slug()->eval(row(str_entry('str', null)), flow_context());
+        ref('str')->slug()->eval(row(['str' => null]), flow_context());
     }
 
     public function test_slug(): void
     {
-        static::assertSame('azcz', ref('str')->slug()->eval(row(str_entry('str', 'ąźćż')), flow_context()));
+        static::assertSame('azcz', ref('str')->slug()->eval(row(['str' => 'ąźćż']), flow_context()));
     }
 
     public function test_slug_separator(): void
     {
-        static::assertSame('Some_Text', ref('str')
-            ->slug('_')
-            ->eval(row(str_entry('str', 'Some Text')), flow_context()));
+        static::assertSame('Some_Text', ref('str')->slug('_')->eval(row(['str' => 'Some Text']), flow_context()));
     }
 }

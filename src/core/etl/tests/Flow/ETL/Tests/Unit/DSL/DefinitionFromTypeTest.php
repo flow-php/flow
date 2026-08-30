@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\DSL;
 
-use DateTimeZone;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
-use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Definition\NullDefinition;
@@ -18,7 +16,6 @@ use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_empty_array;
@@ -126,14 +123,8 @@ final class DefinitionFromTypeTest extends FlowTestCase
         }
     }
 
-    public function test_time_zone_entry_and_time_zone_schema_delegate_purely(): void
+    public function test_time_zone_schema_delegates_purely(): void
     {
-        static::assertEquals(new TimeZoneEntry('tz', new DateTimeZone('UTC')), time_zone_entry('tz', 'UTC'));
-        static::assertEquals(
-            new TimeZoneEntry('tz', new DateTimeZone('UTC')),
-            time_zone_entry('tz', new DateTimeZone('UTC')),
-        );
-        static::assertEquals(new TimeZoneEntry('tz', null), time_zone_entry('tz', null));
         static::assertEquals(new TimeZoneDefinition('tz', true), time_zone_schema('tz', true));
     }
 

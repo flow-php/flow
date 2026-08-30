@@ -11,10 +11,11 @@ use function Flow\ETL\DSL\batched_by;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
 final class BatchByExtractorTest extends TestCase
@@ -23,11 +24,12 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(
             from_rows(rows(
-                row(int_entry('order_id', 1), int_entry('item', 1)),
-                row(int_entry('order_id', 2), int_entry('item', 2)),
-                row(int_entry('order_id', 3), int_entry('item', 3)),
-                row(int_entry('order_id', 4), int_entry('item', 4)),
-                row(int_entry('order_id', 5), int_entry('item', 5)),
+                schema(int_schema('order_id'), int_schema('item')),
+                row(['order_id' => 1, 'item' => 1]),
+                row(['order_id' => 2, 'item' => 2]),
+                row(['order_id' => 3, 'item' => 3]),
+                row(['order_id' => 4, 'item' => 4]),
+                row(['order_id' => 5, 'item' => 5]),
             )),
             ref('order_id'),
             3,
@@ -42,11 +44,12 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(
             from_rows(rows(
-                row(int_entry('order_id', 1), int_entry('item', 1)),
-                row(int_entry('order_id', 1), int_entry('item', 2)),
-                row(int_entry('order_id', 2), int_entry('item', 3)),
-                row(int_entry('order_id', 2), int_entry('item', 4)),
-                row(int_entry('order_id', 3), int_entry('item', 5)),
+                schema(int_schema('order_id'), int_schema('item')),
+                row(['order_id' => 1, 'item' => 1]),
+                row(['order_id' => 1, 'item' => 2]),
+                row(['order_id' => 2, 'item' => 3]),
+                row(['order_id' => 2, 'item' => 4]),
+                row(['order_id' => 3, 'item' => 5]),
             )),
             ref('order_id'),
             null,
@@ -62,9 +65,10 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(
             from_rows(rows(
-                row(int_entry('order_id', 1), int_entry('item', 1)),
-                row(int_entry('order_id', 2), int_entry('item', 2)),
-                row(int_entry('order_id', 3), int_entry('item', 3)),
+                schema(int_schema('order_id'), int_schema('item')),
+                row(['order_id' => 1, 'item' => 1]),
+                row(['order_id' => 2, 'item' => 2]),
+                row(['order_id' => 3, 'item' => 3]),
             )),
             ref('order_id'),
             null,
@@ -78,7 +82,7 @@ final class BatchByExtractorTest extends TestCase
 
     public function test_grouping_with_empty_data(): void
     {
-        $extractor = batched_by(from_rows(rows()), ref('order_id'), null);
+        $extractor = batched_by(from_rows(rows(schema())), ref('order_id'), null);
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
         static::assertCount(0, $batches);
     }
@@ -87,12 +91,13 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(
             from_rows(rows(
-                row(int_entry('order_id', 1), int_entry('item', 1)),
-                row(int_entry('order_id', 1), int_entry('item', 2)),
-                row(int_entry('order_id', 1), int_entry('item', 3)),
-                row(int_entry('order_id', 1), int_entry('item', 4)),
-                row(int_entry('order_id', 1), int_entry('item', 5)),
-                row(int_entry('order_id', 2), int_entry('item', 6)),
+                schema(int_schema('order_id'), int_schema('item')),
+                row(['order_id' => 1, 'item' => 1]),
+                row(['order_id' => 1, 'item' => 2]),
+                row(['order_id' => 1, 'item' => 3]),
+                row(['order_id' => 1, 'item' => 4]),
+                row(['order_id' => 1, 'item' => 5]),
+                row(['order_id' => 2, 'item' => 6]),
             )),
             ref('order_id'),
             2,
@@ -107,9 +112,10 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(
             from_rows(rows(
-                row(int_entry('order_id', 1), int_entry('item', 1)),
-                row(int_entry('order_id', 1), int_entry('item', 2)),
-                row(int_entry('order_id', 1), int_entry('item', 3)),
+                schema(int_schema('order_id'), int_schema('item')),
+                row(['order_id' => 1, 'item' => 1]),
+                row(['order_id' => 1, 'item' => 2]),
+                row(['order_id' => 1, 'item' => 3]),
             )),
             ref('order_id'),
             null,
@@ -124,6 +130,6 @@ final class BatchByExtractorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Minimum batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
-        batched_by(from_rows(rows()), ref('order_id'), 0);
+        batched_by(from_rows(rows(schema())), ref('order_id'), 0);
     }
 }

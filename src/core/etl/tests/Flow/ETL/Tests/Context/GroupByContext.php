@@ -12,6 +12,9 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Generator;
 
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+
 final class GroupByContext
 {
     /**
@@ -37,13 +40,13 @@ final class GroupByContext
      */
     public static function aggregated(GroupBy $groupBy, FlowContext $context, Rows ...$batches): Rows
     {
-        $result = new Rows();
+        $result = null;
 
         foreach (self::aggregate($groupBy, $context, ...$batches) as $batch) {
-            $result = $result->merge($batch);
+            $result = $result === null ? $batch : $result->merge($batch);
         }
 
-        return $result;
+        return $result ?? rows(schema());
     }
 
     /**

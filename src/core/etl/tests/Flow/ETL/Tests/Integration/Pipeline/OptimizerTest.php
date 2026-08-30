@@ -12,12 +12,13 @@ use Flow\ETL\Transformer\SelectEntriesTransformer;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class OptimizerTest extends FlowTestCase
 {
     public function test_adding_element_to_pipeline_when_no_optimization_is_applicable(): void
     {
-        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline = new Pipeline(from_rows(rows(schema())));
 
         $optimizedPipeline = (new Optimizer())->optimize(new SelectEntriesTransformer(ref('id')), $pipeline);
 

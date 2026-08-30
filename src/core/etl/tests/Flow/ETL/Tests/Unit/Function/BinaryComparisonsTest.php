@@ -22,30 +22,26 @@ use Flow\ETL\Function\NotEquals;
 use Flow\ETL\Function\NotSame;
 use Flow\ETL\Function\Same;
 use Flow\ETL\Function\StartsWith;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_string;
 
 final class BinaryComparisonsTest extends FlowTestCase
 {
     public function test_equals(): void
     {
-        $row = row(
-            int_entry('a', 100),
-            int_entry('b', 100),
-            int_entry('c', 10),
-            datetime_entry('d', '2023-01-01 00:00:00 UTC'),
-            datetime_entry('e', '2023-01-01 00:00:00 UTC'),
-        );
+        $row = row([
+            'a' => 100,
+            'b' => 100,
+            'c' => 10,
+            'd' => type_datetime()->cast('2023-01-01 00:00:00 UTC'),
+            'e' => type_datetime()->cast('2023-01-01 00:00:00 UTC'),
+        ]);
 
         static::assertTrue((new Equals(ref('a'), ref('b')))->eval($row, flow_context()));
         static::assertTrue((new Equals(ref('d'), ref('e')))->eval($row, flow_context()));
@@ -54,14 +50,14 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_greater_than(): void
     {
-        $row = row(
-            int_entry('a', 100),
-            int_entry('b', 100),
-            int_entry('c', 10),
-            datetime_entry('d', '2023-01-01 00:00:00 UTC'),
-            datetime_entry('e', '2023-01-02 00:00:00 UTC'),
-            int_entry('f', null),
-        );
+        $row = row([
+            'a' => 100,
+            'b' => 100,
+            'c' => 10,
+            'd' => type_datetime()->cast('2023-01-01 00:00:00 UTC'),
+            'e' => type_datetime()->cast('2023-01-02 00:00:00 UTC'),
+            'f' => null,
+        ]);
 
         static::assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row, flow_context()));
         static::assertNull((new GreaterThan(ref('a'), ref('f')))->eval($row, flow_context()));
@@ -87,26 +83,26 @@ final class BinaryComparisonsTest extends FlowTestCase
     public function test_greater_than_equal_with_null_in_strict_mode(): void
     {
         $context = flow_context();
-        $row = row(int_entry('a', 100), int_entry('f', null));
+        $row = row(['a' => 100, 'f' => null]);
         static::assertNull((new GreaterThanEqual(ref('a'), ref('f')))->eval($row, $context));
     }
 
     public function test_greater_than_with_null_in_strict_mode(): void
     {
         $context = flow_context();
-        $row = row(int_entry('a', 100), int_entry('f', null));
+        $row = row(['a' => 100, 'f' => null]);
         static::assertNull((new GreaterThan(ref('a'), ref('f')))->eval($row, $context));
     }
 
     public function test_is_in(): void
     {
-        $row = Row::with(
-            json_entry('a', [1, 2, 3, 4, 5]),
-            json_entry('b', ['a', 'b', 'c']),
-            str_entry('c', 'another'),
-            int_entry('d', 4),
-            str_entry('e', 'b'),
-        );
+        $row = row([
+            'a' => [1, 2, 3, 4, 5],
+            'b' => ['a', 'b', 'c'],
+            'c' => 'another',
+            'd' => 4,
+            'e' => 'b',
+        ]);
 
         static::assertTrue((new IsIn(ref('a'), lit(1)))->eval($row, flow_context()));
         static::assertFalse((new IsIn(ref('a'), lit(10)))->eval($row, flow_context()));
@@ -117,13 +113,13 @@ final class BinaryComparisonsTest extends FlowTestCase
     public function test_is_in_with_null_array_in_strict_mode(): void
     {
         $context = flow_context();
-        $row = row(int_entry('a', null), int_entry('d', 1));
+        $row = row(['a' => null, 'd' => 1]);
         static::assertNull((new IsIn(ref('a'), ref('d')))->eval($row, $context));
     }
 
     public function test_is_numeric(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', null));
+        $row = row(['a' => 100, 'b' => null]);
         static::assertTrue((new IsNumeric(ref('a')))->eval($row, flow_context()));
         static::assertNull((new IsNumeric(ref('b')))->eval($row, flow_context()));
         static::assertFalse((new IsNotNumeric(ref('a')))->eval($row, flow_context()));
@@ -134,7 +130,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_is_type(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', null));
+        $row = row(['a' => 100, 'b' => null]);
 
         static::assertTrue((new IsType(ref('a'), 'integer', 'string'))->eval($row, flow_context()));
         static::assertFalse((new IsType(ref('a'), type_string()))->eval($row, flow_context()));
@@ -144,14 +140,14 @@ final class BinaryComparisonsTest extends FlowTestCase
     {
         $this->expectExceptionMessage('Unknown type \'aaa\'');
 
-        $row = row(int_entry('a', 100), int_entry('b', null));
+        $row = row(['a' => 100, 'b' => null]);
 
         static::assertFalse((new IsType(ref('a'), 'aaa'))->eval($row, flow_context()));
     }
 
     public function test_less_than(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), int_entry('d', null));
+        $row = row(['a' => 100, 'b' => 100, 'c' => 10, 'd' => null]);
 
         static::assertFalse((new LessThan(ref('a'), ref('c')))->eval($row, flow_context()));
         static::assertNull((new LessThan(ref('a'), ref('d')))->eval($row, flow_context()));
@@ -168,20 +164,20 @@ final class BinaryComparisonsTest extends FlowTestCase
     public function test_less_than_equal_with_null_in_strict_mode(): void
     {
         $context = flow_context();
-        $row = row(int_entry('a', 100), int_entry('d', null));
+        $row = row(['a' => 100, 'd' => null]);
         static::assertNull((new LessThanEqual(ref('a'), ref('d')))->eval($row, $context));
     }
 
     public function test_less_than_with_null_in_strict_mode(): void
     {
         $context = flow_context();
-        $row = row(int_entry('a', 100), int_entry('d', null));
+        $row = row(['a' => 100, 'd' => null]);
         static::assertNull((new LessThan(ref('a'), ref('d')))->eval($row, $context));
     }
 
     public function test_not_equals(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
+        $row = row(['a' => 100, 'b' => 100, 'c' => 10]);
 
         static::assertFalse((new NotEquals(ref('a'), ref('b')))->eval($row, flow_context()));
         static::assertTrue((new NotEquals(ref('a'), ref('c')))->eval($row, flow_context()));
@@ -189,7 +185,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_not_same(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
+        $row = row(['a' => 100, 'b' => 100, 'c' => 10]);
 
         static::assertTrue((new NotSame(ref('a'), ref('c')))->eval($row, flow_context()));
         static::assertFalse((new NotSame(ref('a'), ref('b')))->eval($row, flow_context()));
@@ -197,7 +193,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_null(): void
     {
-        $row = row(int_entry('a', 100), int_entry('b', null));
+        $row = row(['a' => 100, 'b' => null]);
 
         static::assertFalse((new IsNull(ref('a')))->eval($row, flow_context()));
         static::assertTrue((new IsNull(ref('b')))->eval($row, flow_context()));
@@ -209,13 +205,13 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_same(): void
     {
-        $row = row(
-            int_entry('a', 100),
-            int_entry('b', 100),
-            int_entry('c', 10),
-            datetime_entry('d', '2023-01-01 00:00:00 UTC'),
-            datetime_entry('e', '2023-01-01 00:00:00 UTC'),
-        );
+        $row = row([
+            'a' => 100,
+            'b' => 100,
+            'c' => 10,
+            'd' => type_datetime()->cast('2023-01-01 00:00:00 UTC'),
+            'e' => type_datetime()->cast('2023-01-01 00:00:00 UTC'),
+        ]);
 
         static::assertTrue((new Same(ref('a'), ref('b')))->eval($row, flow_context()));
         static::assertFalse((new Same(ref('d'), ref('e')))->eval($row, flow_context()));
@@ -224,12 +220,12 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_starts_ends_with(): void
     {
-        $row = Row::with(
-            str_entry('a', 'some not too long string'),
-            str_entry('b', 'another not too long text'),
-            str_entry('c', 'another'),
-            str_entry('d', 'text'),
-        );
+        $row = row([
+            'a' => 'some not too long string',
+            'b' => 'another not too long text',
+            'c' => 'another',
+            'd' => 'text',
+        ]);
 
         static::assertTrue((new StartsWith(ref('a'), lit('some not')))->eval($row, flow_context()));
         static::assertTrue((new EndsWith(ref('a'), lit('long string')))->eval($row, flow_context()));

@@ -52,7 +52,7 @@ final class Last implements AggregatingFunction
             return;
         }
 
-        $this->last = $row->valueOf($this->ref);
+        $this->last = $row->get($this->ref);
     }
 
     public function outputName(): string

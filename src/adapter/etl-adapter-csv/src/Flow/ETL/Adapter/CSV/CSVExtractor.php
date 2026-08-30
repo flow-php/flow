@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -83,6 +84,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $batchSize = $context->config->extractorBatchSize();
         $baseSchema = $this->schema === null ? null : $this->schema();
 
+        $partitionColumns = new PartitionColumns($this->filesystem);
+        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
@@ -93,15 +97,16 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $escape = $this->escape ?? $option->escape;
             $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
+            $partitionValues = [];
+
+            foreach ($partitions as $partition) {
+                $partitionValues[$partition->name] = $partition->value;
+            }
 
             $schema = $baseSchema;
 
             if ($schema !== null) {
-                foreach ($partitions as $partition) {
-                    if ($schema->findDefinition($partition->name) === null) {
-                        $schema = $schema->add(str_schema($partition->name));
-                    }
-                }
+                $schema = $partitionColumns->declare($schema, $partitionNames);
             }
 
             $lines = (new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM))->readLines($stream);
@@ -135,17 +140,21 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                             $row['_input_file_uri'] = $streamUri;
                         }
 
-                        foreach ($partitions as $partition) {
-                            $row[$partition->name] = $partition->value;
-                        }
+                        $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
 
                         $batch[] = new RawRowValues($row);
                     }
 
                     $rawLines = [];
 
-                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+                    $hydrated = $hydrator->cast($batch, $schema);
+
+                    if ($baseSchema === null) {
+                        $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                    }
+
+                    foreach ($hydrated as $hydratedRow) {
+                        $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
 
                         $this->incrementReturnedRows();
 
@@ -167,15 +176,19 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $row['_input_file_uri'] = $streamUri;
                 }
 
-                foreach ($partitions as $partition) {
-                    $row[$partition->name] = $partition->value;
-                }
+                $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
 
                 $batch[] = new RawRowValues($row);
             }
 
-            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+            $hydrated = $hydrator->cast($batch, $schema);
+
+            if ($baseSchema === null) {
+                $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+            }
+
+            foreach ($hydrated as $hydratedRow) {
+                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
 
                 $this->incrementReturnedRows();
 

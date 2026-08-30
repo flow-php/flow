@@ -10,7 +10,6 @@ use Flow\ETL\Exception\RequiredPHPVersionException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -21,9 +20,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
     public function test_getting_element_for_older_versions(): void
     {
         $this->expectException(RequiredPHPVersionException::class);
-        ref('value')
-            ->htmlQuerySelectorAll('body div p')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
+        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(['value' => '']), flow_context());
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -34,9 +31,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
         /** @var array<mixed> $result */
-        $result = ref('value')
-            ->htmlQuerySelectorAll('body div span')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
+        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(['value' => $html]), flow_context());
         static::assertCount(1, $result);
         static::assertInstanceOf(Element::class, $result[0]);
     }
@@ -48,18 +43,14 @@ final class HTMLQuerySelectorAllTest extends TestCase
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-        $result = ref('value')
-            ->htmlQuerySelectorAll('body div p')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
+        $result = ref('value')->htmlQuerySelectorAll('body div p')->eval(row(['value' => $html]), flow_context());
         static::assertNull($result);
     }
 
     #[RequiresPhp('>= 8.4.0')]
     public function test_invalid_value(): void
     {
-        $result = ref('value')
-            ->htmlQuerySelectorAll('body div span')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
+        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(['value' => '']), flow_context());
         static::assertNull($result);
     }
 }

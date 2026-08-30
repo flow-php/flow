@@ -54,12 +54,20 @@ final readonly class TimeType implements Type
             throw new CastingException($value, type_time());
         }
 
+        if ($value instanceof DateInterval) {
+            throw new CastingException(
+                $value,
+                $this,
+                reason: "Relative DateInterval (with months/years) can't be cast to time",
+            );
+        }
+
         throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value): bool
     {
-        return $value instanceof DateInterval;
+        return $value instanceof DateInterval && $value->y === 0 && $value->m === 0;
     }
 
     public function normalize(): array

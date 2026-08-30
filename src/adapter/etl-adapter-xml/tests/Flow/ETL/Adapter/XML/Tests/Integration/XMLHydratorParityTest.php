@@ -6,24 +6,25 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use Flow\ETL\Config;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_xml;
 
 final class XMLHydratorParityTest extends FlowTestCase
 {
-    public function test_reads_each_node_into_a_typed_xml_entry(): void
+    public function test_reads_each_node_into_a_typed_xml_column(): void
     {
         $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/simple_items.xml'))->withXMLNodePath('root/items/item');
 
         $rows = [];
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
+            static::assertEquals(type_xml(), $batch->schema()->get('node')->type());
+
             foreach ($batch as $row) {
-                static::assertInstanceOf(XMLEntry::class, $row->get('node'));
                 $rows[] = $row;
             }
         }
@@ -40,7 +41,7 @@ final class XMLHydratorParityTest extends FlowTestCase
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
             foreach ($batch as $row) {
                 static::assertTrue($row->has('_input_file_uri'));
-                static::assertSame($path->uri(), $row->valueOf('_input_file_uri'));
+                static::assertSame($path->uri(), $row->get('_input_file_uri'));
             }
         }
     }
@@ -54,10 +55,9 @@ final class XMLHydratorParityTest extends FlowTestCase
         foreach ($extractor->extract(
             flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
         ) as $batch) {
-            foreach ($batch as $row) {
-                static::assertInstanceOf(XMLEntry::class, $row->get('node'));
-                $count++;
-            }
+            static::assertEquals(type_xml(), $batch->schema()->get('node')->type());
+
+            $count += $batch->count();
         }
 
         static::assertSame(5, $count);

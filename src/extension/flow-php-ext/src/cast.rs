@@ -11,10 +11,7 @@ use crate::ctx::{
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
-use crate::hydrate::{
-    build_hydrate_plan, resolve_entry_definition, AssemblyClasses, DefRareFnCache, EntrySlotCache,
-    HydratePlan, RowValuesClass,
-};
+use crate::hydrate::{build_hydrate_plan, fold_metadata_into_schema, AssemblyClasses, HydratePlan, RowValuesClass};
 use crate::plan::{parse_schema_json, TypeJson};
 use crate::values::date_from_free_form;
 
@@ -123,12 +120,8 @@ pub struct CastPlan {
     columns: Vec<CastColumn>,
 }
 
-fn build_cast_plan(
-    schema: &Zval,
-    entry_slot_cache: &mut EntrySlotCache,
-    ctx: &mut Ctx,
-) -> Result<CastPlan, PhpException> {
-    let hydrate = build_hydrate_plan(schema, entry_slot_cache)?;
+fn build_cast_plan(schema: &Zval, ctx: &mut Ctx) -> Result<CastPlan, PhpException> {
+    let hydrate = build_hydrate_plan(schema)?;
 
     let schema_obj = expect_object(schema, "a Schema")?;
     let schema_ce = unsafe { schema_obj.ce.as_ref() }
@@ -197,7 +190,6 @@ fn build_cast_plan(
 fn ensure_cast_plan(
     plan: &mut Option<CastPlan>,
     schema: &Zval,
-    entry_slot_cache: &mut EntrySlotCache,
     ctx: &mut Ctx,
 ) -> Result<(), PhpException> {
     let schema_obj = expect_object(schema, "a Schema")?;
@@ -212,7 +204,7 @@ fn ensure_cast_plan(
         return Ok(());
     }
 
-    *plan = Some(build_cast_plan(schema, entry_slot_cache, ctx)?);
+    *plan = Some(build_cast_plan(schema, ctx)?);
 
     Ok(())
 }
@@ -701,118 +693,63 @@ fn cast_json(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
 /// where proven identical, otherwise per value through the retained PHP
 /// `Type::cast`; a null value or an absent column yields a typed-null entry
 /// (fill-missing), mirroring `instantiate(..., $prepare, fillMissing: true)`.
-#[allow(clippy::too_many_arguments)]
 pub fn cast_rows(
     batch: &Zval,
     schema: &Zval,
     plan_slot: &mut Option<CastPlan>,
     raw_class: &RowValuesClass,
     assembly: &AssemblyClasses,
-    entry_slot_cache: &mut EntrySlotCache,
-    def_rare_cache: &mut DefRareFnCache,
     ctx: &mut Ctx,
 ) -> Result<Zval, PhpException> {
-    ensure_cast_plan(plan_slot, schema, entry_slot_cache, ctx)?;
+    ensure_cast_plan(plan_slot, schema, ctx)?;
     let plan = plan_slot.as_ref().expect("plan built above");
 
     let batch_ht = batch
         .array()
         .ok_or_else(|| ext_exception("flow_php expected a list of raw row values"))?;
 
-    let mut rows_args: Vec<Zval> = Vec::with_capacity(batch_ht.len());
+    let mut rows_args: Vec<Zval> = Vec::with_capacity(batch_ht.len() + 1);
+    rows_args.push(fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?);
 
     ht_for_each(batch_ht, |_, _, rv_zv| {
         let rv = expect_object(rv_zv, "a RawRowValues")?;
         let values_ht = read_slot(rv, raw_class.values_slot)
             .array()
             .ok_or_else(|| ext_exception("flow_php expected RawRowValues::values to be an array"))?;
-        let metadata_ht = read_slot(rv, raw_class.metadata_slot).array().ok_or_else(|| {
-            ext_exception("flow_php expected RawRowValues::metadata to be an array")
-        })?;
 
-        let mut entries_ht = ZendHashTable::with_capacity(plan.hydrate.columns.len() as u32);
-        let has_metadata = !metadata_ht.is_empty();
+        let mut row_values = ZendHashTable::with_capacity(plan.hydrate.columns.len() as u32);
 
         for (column, cast_column) in plan.hydrate.columns.iter().zip(&plan.columns) {
             let key = column.key();
 
-            let (definition, entry_ce, entry_slots, casted) =
-                match ht_find_key(values_ht, &key) {
+            // fill-missing: an absent column becomes a declared null
+            let casted = match ht_find_key(values_ht, &key) {
+                None => null_zval(),
+                Some(value) if value.is_null() => null_zval(),
+                Some(value) => match cast_value(&cast_column.kind, value, ctx)? {
+                    Some(casted) => casted,
                     None => {
-                        // fill-missing: typed-null entry from the ORIGINAL
-                        // definition; per-value metadata is ignored for
-                        // absent columns (PHP checks presence first)
-                        let (definition, entry_ce, entry_slots) = resolve_entry_definition(
-                            column,
-                            None,
-                            None,
-                            entry_slot_cache,
-                            def_rare_cache,
-                        )?;
+                        let type_obj = cast_column
+                            .type_zv
+                            .object()
+                            .ok_or_else(|| ext_exception("flow_php expected a Type object"))?;
 
-                        (definition, entry_ce, entry_slots, null_zval())
+                        call_handle_transparent(
+                            cast_column.cast_fn,
+                            Some(type_obj),
+                            &mut [value.shallow_clone()],
+                        )?
                     }
-                    Some(value) => {
-                        let metadata = if has_metadata {
-                            ht_find_key(metadata_ht, &key)
-                        } else {
-                            None
-                        };
-                        // Cast first: `PhpRowHydrator::cast()` hands `fromDefinition()` the
-                        // already-cast value, so a union column must pick its member from that
-                        // same value for both engines to agree.
-                        let casted = if value.is_null() {
-                            null_zval()
-                        } else {
-                            match cast_value(&cast_column.kind, value, ctx)? {
-                                Some(casted) => casted,
-                                None => {
-                                    let type_obj =
-                                        cast_column.type_zv.object().ok_or_else(|| {
-                                            ext_exception("flow_php expected a Type object")
-                                        })?;
+                },
+            };
 
-                                    call_handle_transparent(
-                                        cast_column.cast_fn,
-                                        Some(type_obj),
-                                        &mut [value.shallow_clone()],
-                                    )?
-                                }
-                            }
-                        };
-
-                        let (definition, entry_ce, entry_slots) = resolve_entry_definition(
-                            column,
-                            metadata,
-                            Some(&casted),
-                            entry_slot_cache,
-                            def_rare_cache,
-                        )?;
-
-                        (definition, entry_ce, entry_slots, casted)
-                    }
-                };
-
-            let mut entry = ZendObject::new(entry_ce);
-            write_slot(&mut entry, entry_slots.0, column.name_zv.shallow_clone());
-            write_slot(&mut entry, entry_slots.1, casted);
-            write_slot(&mut entry, entry_slots.2, definition);
-
-            let mut entry_zv = Zval::new();
-            entry_zv.set_object(&mut entry);
-            ht_insert_key(&mut entries_ht, &key, entry_zv);
+            ht_insert_key(&mut row_values, &key, casted);
         }
 
-        let mut entries_zv = Zval::new();
-        entries_zv.set_hashtable(entries_ht);
-        let entries = call_handle(
-            assembly.entries_recreate,
-            None,
-            &mut [entries_zv],
-            "recreate row entries",
-        )?;
+        let mut values_zv = Zval::new();
+        values_zv.set_hashtable(row_values);
 
-        let mut row = construct_with_zvals(assembly.row_ce, &mut [entries], "a Row")?;
+        let mut row = construct_with_zvals(assembly.row_ce, &mut [values_zv], "a Row")?;
         let mut row_zv = Zval::new();
         row_zv.set_object(&mut row);
         rows_args.push(row_zv);

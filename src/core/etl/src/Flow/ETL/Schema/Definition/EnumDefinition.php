@@ -6,7 +6,6 @@ namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
@@ -110,17 +109,9 @@ final readonly class EnumDefinition implements Definition
         return new self($this->ref, $this->enumClass, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $entry->type() instanceof EnumType && $this->type->isValid($entry->value());
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -138,7 +129,7 @@ final readonly class EnumDefinition implements Definition
         }
 
         if ($definition instanceof self) {
-            // A null enum value carries no class, EnumEntry falls back to UnitEnum, so the concrete side wins.
+            // A null enum value carries no class, so it is declared as the UnitEnum base - the concrete side wins.
             $enumClass = $this->enumClass === UnitEnum::class ? $definition->enumClass : $this->enumClass;
 
             if ($enumClass === $definition->enumClass || $definition->enumClass === UnitEnum::class) {
@@ -205,13 +196,5 @@ final readonly class EnumDefinition implements Definition
     public function type(): EnumType
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\EnumEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\EnumEntry::class;
     }
 }

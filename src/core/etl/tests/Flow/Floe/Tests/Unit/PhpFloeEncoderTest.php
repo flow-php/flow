@@ -13,13 +13,14 @@ use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\Tests\Context\FloeSchemaContext;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
@@ -28,11 +29,12 @@ final class PhpFloeEncoderTest extends TestCase
     public function test_decode_produces_row_values(): void
     {
         $original = rows(
-            row(int_entry('id', 1), str_entry('name', 'flow'), float_entry('price', 1.5)),
-            row(int_entry('id', 2), str_entry('name', null), float_entry('price', 0.5)),
+            schema(int_schema('id'), str_schema('name', nullable: true), float_schema('price')),
+            row(['id' => 1, 'name' => 'flow', 'price' => 1.5]),
+            row(['id' => 2, 'name' => null, 'price' => 0.5]),
         );
 
-        $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->first()->schema())));
+        $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->schema())));
 
         $decoded = $encoder->decode($encoder->encode((new PhpRowHydrator())->dehydrate($original)));
 
@@ -44,11 +46,12 @@ final class PhpFloeEncoderTest extends TestCase
     public function test_encode_from_dehydrated_rows_round_trips(): void
     {
         $original = rows(
-            row(int_entry('id', 1), str_entry('name', 'flow')),
-            row(int_entry('id', 2), str_entry('name', null)),
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            row(['id' => 1, 'name' => 'flow']),
+            row(['id' => 2, 'name' => null]),
         );
 
-        $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->first()->schema())));
+        $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->schema())));
 
         $decoded = $encoder->decode($encoder->encode((new PhpRowHydrator())->dehydrate($original)));
 
@@ -63,9 +66,7 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_encode_decode_round_trip_preserves_flags(): void
     {
-        $schema = schema_from_json(
-            FloeSchemaContext::schemaBody(row(int_entry('id', 1), str_entry('name', 'flow'))->schema()),
-        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoder = new PhpFloeEncoder($schema);
 
@@ -94,9 +95,7 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_encode_decode_round_trip_preserves_arbitrary_metadata(): void
     {
-        $schema = schema_from_json(
-            FloeSchemaContext::schemaBody(row(int_entry('id', 1), str_entry('name', 'flow'))->schema()),
-        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoder = new PhpFloeEncoder($schema);
 
@@ -118,15 +117,13 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_null_entry_in_a_typed_column_encodes_as_a_plain_null(): void
     {
-        $schema = schema_from_json(
-            FloeSchemaContext::schemaBody(row(int_entry('id', 1), str_entry('name', 'x'))->schema()),
-        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoder = new PhpFloeEncoder($schema);
-        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(row(
-            int_entry('id', 2),
-            null_entry('name'),
-        ))))[0];
+        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(
+            schema(int_schema('id'), null_schema('name')),
+            row(['id' => 2, 'name' => null]),
+        )))[0];
 
         $decoded = $encoder->decode([$body]);
 
@@ -136,10 +133,13 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_row_body_with_trailing_garbage_throws(): void
     {
-        $schema = schema_from_json(FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema()));
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoder = new PhpFloeEncoder($schema);
-        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(row(int_entry('id', 1)))))[0];
+        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(
+            schema(int_schema('id')),
+            row(['id' => 1]),
+        )))[0];
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe row frame length does not match its content');
@@ -149,7 +149,7 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_unknown_value_flag_throws(): void
     {
-        $schema = schema_from_json(FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema()));
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('unknown value flag');

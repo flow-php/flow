@@ -7,7 +7,6 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
 
 /**
@@ -34,11 +33,6 @@ final class FlowContext
     public function calculator(): Calculator
     {
         return $this->config->calculator();
-    }
-
-    public function entryFactory(): EntryFactory
-    {
-        return $this->config->entryFactory();
     }
 
     public function errorHandler(): ErrorHandler

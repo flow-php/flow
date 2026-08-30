@@ -6,14 +6,15 @@ structure schema-shape skew guards: the legacy two-bucket shape and an empty fie
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, int_entry};
-
-$hydrator = new PhpRowHydrator();
-$typed = $hydrator->dehydrate(new Rows(row(int_entry('id', 1))));
+$typed = (new PhpRowHydrator())->dehydrate(new Rows(schema(int_schema('id')), row(['id' => 1])));
 
 // direction 2 of the skew guard: a new binary reading the legacy two-bucket shape
 // has no "structure" arm and rejects the unknown tag.

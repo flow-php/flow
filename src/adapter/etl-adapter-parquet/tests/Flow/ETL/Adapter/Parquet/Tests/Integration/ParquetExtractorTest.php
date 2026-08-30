@@ -73,7 +73,7 @@ final class ParquetExtractorTest extends FlowTestCase
             ->withSchema(schema(str_schema('email')));
 
         foreach ($extractor->extract(flow_context(config())) as $batch) {
-            static::assertSame($extractor->schema()->references()->names(), $batch->first()->entries()->names());
+            static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
 
             break;
         }

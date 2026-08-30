@@ -11,6 +11,7 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Throwable;
@@ -41,7 +42,7 @@ final class BranchingLoader implements Closure, Discardable, Loader, OverridingL
             } catch (Throwable $failure) {
                 // Same ruling as TransformerLoader::closure(): a drain failure never reached load(), so the
                 // ErrorHandler rules here; declining means the run continues and the loader must still close.
-                if ($context->errorHandler()->throw($failure, new Rows())) {
+                if ($context->errorHandler()->throw($failure, new Rows(new Schema()))) {
                     throw $failure;
                 }
             }

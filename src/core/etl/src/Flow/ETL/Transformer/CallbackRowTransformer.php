@@ -8,21 +8,24 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
 final class CallbackRowTransformer implements Transformer
 {
     /**
-     * @phpstan-var callable(Row) : Row
+     * @var callable(Row) : Row
      */
     private $callable;
 
     /**
      * @param callable(Row) : Row $callable
      */
-    public function __construct(callable $callable)
-    {
+    public function __construct(
+        private readonly Schema $schema,
+        callable $callable,
+    ) {
         $this->callable = $callable;
     }
 
@@ -31,7 +34,7 @@ final class CallbackRowTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map($this->callable);
+            $result = $rows->map($this->schema, $this->callable);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

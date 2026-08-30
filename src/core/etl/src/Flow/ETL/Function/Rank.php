@@ -62,7 +62,7 @@ final class Rank implements PartitionRanking, WindowFunction
         $previous = null;
 
         foreach ($partition as $row) {
-            if ($previous !== null && !$comparator->arePeers($previous, $row)) {
+            if ($previous !== null && !$comparator->arePeers($previous, $row, $partition->schema())) {
                 $rank = $index + 1;
             }
 

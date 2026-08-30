@@ -11,7 +11,8 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\RowProjection;
+use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
@@ -23,34 +24,31 @@ use Generator;
 use PHPUnit\Framework\Assert;
 use RuntimeException;
 
-use function array_keys;
 use function array_merge;
 use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\boolean_entry;
-use function Flow\ETL\DSL\compare_entries_by_name_desc;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema_sort_by_name;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\to_callable;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function iterator_to_array;
 
 final class DataFrameTest extends FlowTestCase
@@ -116,18 +114,20 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->drop('id')
             ->fetch();
 
         static::assertEquals(
             rows(
-                row(str_entry('name', 'foo'), bool_entry('active', true)),
-                row(str_entry('name', null), bool_entry('active', false)),
-                row(str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(str_schema('name', nullable: true), bool_schema('active')),
+                row(['name' => 'foo', 'active' => true]),
+                row(['name' => null, 'active' => false]),
+                row(['name' => 'bar', 'active' => false]),
             ),
             $rows,
         );
@@ -137,17 +137,19 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->dropDuplicates(ref('id'))
             ->fetch();
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ),
             $rows,
         );
@@ -157,29 +159,15 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 4),
-                    str_entry('country', 'PL'),
-                    int_entry('age', 30),
-                    str_entry('gender', 'female'),
-                ),
-                row(
-                    int_entry('id', 5),
-                    str_entry('country', 'US'),
-                    int_entry('age', 40),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 7),
-                    str_entry('country', 'US'),
-                    int_entry('age', 45),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male']),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female']),
+                row(['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female']),
+                row(['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male']),
+                row(['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => 'female']),
+                row(['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male']),
             ))
             ->rows(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
@@ -199,14 +187,15 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(str_entry('country', 'pl'), float_entry('age', 2.0)),
-                row(str_entry('country', 'pl'), float_entry('age', 2.0)),
-                row(str_entry('country', 'pl'), float_entry('age', 2.5)),
-                row(str_entry('country', 'pl'), float_entry('age', 3.0)),
-                row(str_entry('country', 'us'), float_entry('age', 4.0)),
-                row(str_entry('country', 'us'), float_entry('age', 4.0)),
-                row(str_entry('country', 'us'), float_entry('age', 4.5)),
-                row(str_entry('country', 'us'), float_entry('age', 5.0)),
+                schema(str_schema('country'), float_schema('age')),
+                row(['country' => 'pl', 'age' => 2.0]),
+                row(['country' => 'pl', 'age' => 2.0]),
+                row(['country' => 'pl', 'age' => 2.5]),
+                row(['country' => 'pl', 'age' => 3.0]),
+                row(['country' => 'us', 'age' => 4.0]),
+                row(['country' => 'us', 'age' => 4.0]),
+                row(['country' => 'us', 'age' => 4.5]),
+                row(['country' => 'us', 'age' => 5.0]),
             ),
             $rows,
         );
@@ -234,7 +223,7 @@ final class DataFrameTest extends FlowTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
-                        yield rows(row(integer_entry('id', $i)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
             })
@@ -249,16 +238,18 @@ final class DataFrameTest extends FlowTestCase
     {
         df()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->foreach(function (Rows $rows): void {
                 $this->assertEquals(
                     rows(
-                        row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                        row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                        row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                        schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                        row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                        row(['id' => 2, 'name' => null, 'active' => false]),
+                        row(['id' => 2, 'name' => 'bar', 'active' => false]),
                     ),
                     $rows,
                 );
@@ -269,12 +260,13 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()->read(from_rows(
             $extractedRows = rows(
-                row(int_entry('id', 1), str_entry('name', 'foo')),
-                row(int_entry('id', 2), str_entry('name', 'bar')),
-                row(int_entry('id', 3), str_entry('name', 'baz')),
-                row(int_entry('id', 4), str_entry('name', 'foo')),
-                row(int_entry('id', 5), str_entry('name', 'bar')),
-                row(int_entry('id', 6), str_entry('name', 'baz')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'foo']),
+                row(['id' => 2, 'name' => 'bar']),
+                row(['id' => 3, 'name' => 'baz']),
+                row(['id' => 4, 'name' => 'foo']),
+                row(['id' => 5, 'name' => 'bar']),
+                row(['id' => 6, 'name' => 'baz']),
             ),
         ))->get();
 
@@ -286,12 +278,13 @@ final class DataFrameTest extends FlowTestCase
         $rows = df()
             ->read(from_rows(
                 $extractedRows = rows(
-                    row(int_entry('id', 1), str_entry('name', 'foo')),
-                    row(int_entry('id', 2), str_entry('name', 'bar')),
-                    row(int_entry('id', 3), str_entry('name', 'baz')),
-                    row(int_entry('id', 4), str_entry('name', 'foo')),
-                    row(int_entry('id', 5), str_entry('name', 'bar')),
-                    row(int_entry('id', 6), str_entry('name', 'baz')),
+                    schema(int_schema('id'), str_schema('name')),
+                    row(['id' => 1, 'name' => 'foo']),
+                    row(['id' => 2, 'name' => 'bar']),
+                    row(['id' => 3, 'name' => 'baz']),
+                    row(['id' => 4, 'name' => 'foo']),
+                    row(['id' => 5, 'name' => 'bar']),
+                    row(['id' => 6, 'name' => 'baz']),
                 ),
             ))
             ->getAsArray();
@@ -308,23 +301,24 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo')),
-                row(int_entry('id', 2), str_entry('name', 'bar')),
-                row(int_entry('id', 3), str_entry('name', 'baz')),
-                row(int_entry('id', 4), str_entry('name', 'foo')),
-                row(int_entry('id', 5), str_entry('name', 'bar')),
-                row(int_entry('id', 6), str_entry('name', 'baz')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'foo']),
+                row(['id' => 2, 'name' => 'bar']),
+                row(['id' => 3, 'name' => 'baz']),
+                row(['id' => 4, 'name' => 'foo']),
+                row(['id' => 5, 'name' => 'bar']),
+                row(['id' => 6, 'name' => 'baz']),
             )))
             ->getEach();
 
         static::assertEquals(
             [
-                row(int_entry('id', 1), str_entry('name', 'foo')),
-                row(int_entry('id', 2), str_entry('name', 'bar')),
-                row(int_entry('id', 3), str_entry('name', 'baz')),
-                row(int_entry('id', 4), str_entry('name', 'foo')),
-                row(int_entry('id', 5), str_entry('name', 'bar')),
-                row(int_entry('id', 6), str_entry('name', 'baz')),
+                row(['id' => 1, 'name' => 'foo']),
+                row(['id' => 2, 'name' => 'bar']),
+                row(['id' => 3, 'name' => 'baz']),
+                row(['id' => 4, 'name' => 'foo']),
+                row(['id' => 5, 'name' => 'bar']),
+                row(['id' => 6, 'name' => 'baz']),
             ],
             iterator_to_array($rows),
         );
@@ -334,12 +328,13 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo')),
-                row(int_entry('id', 2), str_entry('name', 'bar')),
-                row(int_entry('id', 3), str_entry('name', 'baz')),
-                row(int_entry('id', 4), str_entry('name', 'foo')),
-                row(int_entry('id', 5), str_entry('name', 'bar')),
-                row(int_entry('id', 6), str_entry('name', 'baz')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'foo']),
+                row(['id' => 2, 'name' => 'bar']),
+                row(['id' => 3, 'name' => 'baz']),
+                row(['id' => 4, 'name' => 'foo']),
+                row(['id' => 5, 'name' => 'bar']),
+                row(['id' => 6, 'name' => 'baz']),
             )))
             ->getEachAsArray();
 
@@ -378,14 +373,14 @@ final class DataFrameTest extends FlowTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
-                        yield rows(row(integer_entry('id', $i)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
             })
-            ->map(static fn(Row $row) => $row->add(boolean_entry(
-                'odd',
-                (type_integer()->assert($row->valueOf('id')) % 2) === 0,
-            )))
+            ->map(schema(int_schema('id'), bool_schema('odd')), static fn(Row $row): Row => row([
+                ...$row->values(),
+                'odd' => (type_integer()->assert($row->get('id')) % 2) === 0,
+            ]))
             ->fetch();
 
         static::assertCount(10, $rows);
@@ -415,9 +410,10 @@ final class DataFrameTest extends FlowTestCase
             ['id' => 1, 'name' => 'test', 'active' => false],
         ];
 
-        $df = df()->read(from_array($dataset1))->autoCast()->reorderEntries(compare_entries_by_name_desc());
+        $df = df()->read(from_array($dataset1))->autoCast()->reorderEntries(schema_sort_by_name(SortOrder::DESC));
 
-        static::assertEquals(['name', 'id', 'active'], array_keys($df->fetch()[0]->toArray()));
+        // R10: reorderEntries sorts the SCHEMA; row storage is never rekeyed
+        static::assertSame(['name', 'id', 'active'], $df->fetch()->schema()->references()->names());
     }
 
     public function test_pipeline(): void
@@ -440,26 +436,45 @@ final class DataFrameTest extends FlowTestCase
              */
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(
-                    integer_entry('id', 101),
-                    boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null),
-                ));
+                yield rows(
+                    schema(
+                        int_schema('id'),
+                        bool_schema('deleted'),
+                        datetime_schema('expiration-date'),
+                        str_schema('phase', nullable: true),
+                    ),
+                    row([
+                        'id' => 101,
+                        'deleted' => false,
+                        'expiration-date' => new DateTimeImmutable('2020-08-24'),
+                        'phase' => null,
+                    ]),
+                );
 
-                yield rows(row(
-                    integer_entry('id', 102),
-                    boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
-                    string_entry('phase', null),
-                ));
+                yield rows(
+                    schema(
+                        int_schema('id'),
+                        bool_schema('deleted'),
+                        datetime_schema('expiration-date'),
+                        str_schema('phase', nullable: true),
+                    ),
+                    row([
+                        'id' => 102,
+                        'deleted' => true,
+                        'expiration-date' => new DateTimeImmutable('2020-08-25'),
+                        'phase' => null,
+                    ]),
+                );
             }
         };
 
         $addStampStringEntry = new class implements Transformer {
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                return $rows->map(static fn(Row $row): Row => $row->set(string_entry('stamp', 'zero')));
+                return $rows->map($rows->schema()->add(str_schema('stamp')), static fn(Row $row): Row => row([
+                    ...$row->values(),
+                    'stamp' => 'zero',
+                ]));
             }
         };
 
@@ -514,12 +529,20 @@ final class DataFrameTest extends FlowTestCase
     {
         $collectedRows = data_frame()
             ->process(
-                $rows = rows(row(
-                    integer_entry('id', 101),
-                    boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null),
-                )),
+                $rows = rows(
+                    schema(
+                        int_schema('id'),
+                        bool_schema('deleted'),
+                        datetime_schema('expiration-date'),
+                        str_schema('phase', nullable: true),
+                    ),
+                    row([
+                        'id' => 101,
+                        'deleted' => false,
+                        'expiration-date' => new DateTimeImmutable('2020-08-24'),
+                        'phase' => null,
+                    ]),
+                ),
             )
             ->fetch();
 
@@ -530,18 +553,20 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = data_frame()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->select('name', 'id')
             ->fetch();
 
         static::assertEquals(
             rows(
-                row(str_entry('name', 'foo'), int_entry('id', 1)),
-                row(str_entry('name', null), int_entry('id', 2)),
-                row(str_entry('name', 'bar'), int_entry('id', 2)),
+                schema(str_schema('name', nullable: true), int_schema('id')),
+                row(['name' => 'foo', 'id' => 1]),
+                row(['name' => null, 'id' => 2]),
+                row(['name' => 'bar', 'id' => 2]),
             ),
             $rows,
         );
@@ -551,18 +576,30 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = data_frame()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(
+                    int_schema('id'),
+                    str_schema('name', nullable: true),
+                    bool_schema('active', nullable: true),
+                    json_schema('tags', nullable: true),
+                ),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'tags' => type_json()->cast(['foo', 'bar'])]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->match(schema(integer_schema('id', false)), new SelectiveValidator())
             ->fetch();
 
         static::assertSame(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(
+                    int_schema('id'),
+                    str_schema('name', nullable: true),
+                    bool_schema('active', nullable: true),
+                    json_schema('tags', nullable: true),
+                ),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'tags' => type_json()->cast(['foo', 'bar'])]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             )->toArray(),
             $rows->toArray(),
         );
@@ -600,18 +637,20 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = data_frame()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             ))
             ->match(schema(integer_schema('id', false), string_schema('name', true), bool_schema('active', false)))
             ->fetch();
 
         static::assertSame(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
+                row(['id' => 1, 'name' => 'foo', 'active' => true]),
+                row(['id' => 2, 'name' => null, 'active' => false]),
+                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             )->toArray(),
             $rows->toArray(),
         );
@@ -654,14 +693,15 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = data_frame()
             ->process(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             ))
             ->rename('country', 'country_code')
             ->void()
@@ -669,7 +709,7 @@ final class DataFrameTest extends FlowTestCase
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        static::assertEquals(rows(), $rows);
+        static::assertEquals(rows(schema()), $rows);
     }
 
     public function test_with_batch_size(): void
@@ -694,23 +734,27 @@ final class DataFrameTest extends FlowTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     yield rows(
-                        row(integer_entry('id', 1)),
-                        row(integer_entry('id', 2)),
-                        row(integer_entry('id', 3)),
-                        row(integer_entry('id', 4)),
-                        row(integer_entry('id', 5)),
-                        row(integer_entry('id', 6)),
-                        row(integer_entry('id', 7)),
-                        row(integer_entry('id', 8)),
-                        row(integer_entry('id', 9)),
-                        row(integer_entry('id', 10)),
+                        schema(integer_schema('id')),
+                        row(['id' => 1]),
+                        row(['id' => 2]),
+                        row(['id' => 3]),
+                        row(['id' => 4]),
+                        row(['id' => 5]),
+                        row(['id' => 6]),
+                        row(['id' => 7]),
+                        row(['id' => 8]),
+                        row(['id' => 9]),
+                        row(['id' => 10]),
                     );
                 }
             })
             ->with(new class implements Transformer {
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    return $rows->map(static fn(Row $row) => $row->rename('id', 'new_id'));
+                    return $rows->map(
+                        $rows->schema()->rename('id', 'new_id'),
+                        static fn(Row $row): Row => (new RowProjection())->rename($row, ['id' => 'new_id']),
+                    );
                 }
             })
             ->batchSize(2)
@@ -744,15 +788,18 @@ final class DataFrameTest extends FlowTestCase
                  */
                 public function extract(FlowContext $context): Generator
                 {
-                    yield rows(row(integer_entry('id', 1)));
-                    yield rows(row(integer_entry('id', 2)));
-                    yield rows(row(integer_entry('id', 3)));
+                    yield rows(schema(integer_schema('id')), row(['id' => 1]));
+                    yield rows(schema(integer_schema('id')), row(['id' => 2]));
+                    yield rows(schema(integer_schema('id')), row(['id' => 3]));
                 }
             })
             ->with(new class implements Transformer {
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    return $rows->map(static fn(Row $row) => $row->rename('id', 'new_id'));
+                    return $rows->map(
+                        $rows->schema()->rename('id', 'new_id'),
+                        static fn(Row $row): Row => (new RowProjection())->rename($row, ['id' => 'new_id']),
+                    );
                 }
             })
             ->collect()

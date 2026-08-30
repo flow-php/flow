@@ -31,10 +31,12 @@ final class BatchExtractor implements Extractor, OverridingExtractor
             $this->extractor->withSchema($this->schema);
         }
 
-        $chunk = new Rows();
+        $chunk = null;
         $chunkSize = 0;
 
         foreach ($this->extractor->extract($context) as $rows) {
+            $chunk ??= new Rows($rows->schema());
+
             foreach ($rows->all() as $row) {
                 $chunk = $chunk->add($row);
                 $chunkSize++;
@@ -46,7 +48,7 @@ final class BatchExtractor implements Extractor, OverridingExtractor
                         return;
                     }
                     $chunkSize = 0;
-                    $chunk = new Rows();
+                    $chunk = new Rows($rows->schema());
                 }
 
                 if ($chunkSize > $this->chunkSize) {
@@ -61,7 +63,7 @@ final class BatchExtractor implements Extractor, OverridingExtractor
             }
         }
 
-        if ($chunkSize) {
+        if ($chunkSize && $chunk !== null) {
             yield $chunk;
         }
     }

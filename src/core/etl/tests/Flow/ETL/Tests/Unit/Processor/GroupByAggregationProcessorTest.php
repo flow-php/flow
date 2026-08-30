@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
@@ -17,11 +18,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 
 final class GroupByAggregationProcessorTest extends FlowTestCase
@@ -42,9 +44,10 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         $input = (static function (): Generator {
             yield rows(
-                row(str_entry('category', 'a'), int_entry('amount', 10)),
-                row(str_entry('category', 'b'), int_entry('amount', 15)),
-                row(str_entry('category', 'a'), int_entry('amount', 20)),
+                schema(str_schema('category'), int_schema('amount')),
+                row(['category' => 'a', 'amount' => 10]),
+                row(['category' => 'b', 'amount' => 15]),
+                row(['category' => 'a', 'amount' => 20]),
             );
         })();
 
@@ -52,7 +55,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         foreach ($strategy->bucketize($input, $buckets->storage()) as $bucket) {
             $buckets->add($bucket);
-            $metadata[] = rows($bucket->toRow());
+            $metadata[] = rows(Bucket::schema(), $bucket->toRow());
         }
 
         $result = iterator_to_array(
@@ -94,9 +97,10 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         $input = (static function (): Generator {
             yield rows(
-                row(str_entry('category', 'a'), int_entry('amount', 10)),
-                row(str_entry('category', 'b'), int_entry('amount', 15)),
-                row(str_entry('category', 'a'), int_entry('amount', 20)),
+                schema(str_schema('category'), int_schema('amount')),
+                row(['category' => 'a', 'amount' => 10]),
+                row(['category' => 'b', 'amount' => 15]),
+                row(['category' => 'a', 'amount' => 20]),
             );
         })();
 
@@ -110,7 +114,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         $result = iterator_to_array(
             (new GroupByAggregationProcessor($groupBy, $buckets))->process(
                 (static function () use ($metadataRows): Generator {
-                    yield rows(...$metadataRows);
+                    yield rows(Bucket::schema(), ...$metadataRows);
                 })(),
                 flow_context(),
             ),
@@ -147,8 +151,9 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         $input = (static function (): Generator {
             yield rows(
-                row(str_entry('category', 'a'), int_entry('amount', 10)),
-                row(str_entry('category', 'b'), int_entry('amount', 15)),
+                schema(str_schema('category'), int_schema('amount')),
+                row(['category' => 'a', 'amount' => 10]),
+                row(['category' => 'b', 'amount' => 15]),
             );
         })();
 
@@ -156,7 +161,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         foreach ($strategy->bucketize($input, $buckets->storage()) as $bucket) {
             $buckets->add($bucket);
-            $metadata[] = rows($bucket->toRow());
+            $metadata[] = rows(Bucket::schema(), $bucket->toRow());
         }
 
         iterator_to_array(

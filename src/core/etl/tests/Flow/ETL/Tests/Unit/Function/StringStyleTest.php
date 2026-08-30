@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class StringStyleTest extends FlowTestCase
 {
@@ -21,7 +20,7 @@ final class StringStyleTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringStyle function requires non-null value');
 
-        ref('value')->stringStyle(StringStyles::LOWER)->eval(row(str_entry('value', null)), flow_context());
+        ref('value')->stringStyle(StringStyles::LOWER)->eval(row(['value' => null]), flow_context());
     }
 
     /**
@@ -58,28 +57,26 @@ final class StringStyleTest extends FlowTestCase
     {
         static::assertSame('fooBarBaz', ref('str')
             ->stringStyle(ref('style'))
-            ->eval(row(str_entry('str', 'Foo: Bar-baz.'), str_entry('style', 'camel')), flow_context()));
+            ->eval(row(['str' => 'Foo: Bar-baz.', 'style' => 'camel']), flow_context()));
     }
 
     public function test_string_style_kebab(): void
     {
         static::assertSame('foo-bar-baz', ref('str')
             ->stringStyle('kebab')
-            ->eval(row(str_entry('str', 'Foo: Bar-baz.')), flow_context()));
+            ->eval(row(['str' => 'Foo: Bar-baz.']), flow_context()));
     }
 
     public function test_string_style_lower(): void
     {
         static::assertSame('foo bar bri̇an', ref('str')
             ->stringStyle('lower')
-            ->eval(row(str_entry('str', 'FOO Bar Brİan')), flow_context()));
+            ->eval(row(['str' => 'FOO Bar Brİan']), flow_context()));
     }
 
     #[DataProvider('provideStringStyles')]
     public function test_string_styles(StringStyles $style, ?string $value, ?string $expected): void
     {
-        static::assertSame($expected, ref('str')
-            ->stringStyle($style)
-            ->eval(row(str_entry('str', $value)), flow_context()));
+        static::assertSame($expected, ref('str')->stringStyle($style)->eval(row(['str' => $value]), flow_context()));
     }
 }

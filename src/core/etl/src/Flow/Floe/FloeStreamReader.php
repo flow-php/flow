@@ -7,7 +7,6 @@ namespace Flow\Floe;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -53,7 +52,7 @@ final class FloeStreamReader
         private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
+        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder());
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
     }
 
@@ -417,8 +416,7 @@ final class FloeStreamReader
                 continue;
             }
 
-            $batch[] =
-                $padding === null || $row->entries()->count() === $fileSchemaCount ? $row : $padding->apply($row);
+            $batch[] = $padding === null || count($row->values()) === $fileSchemaCount ? $row : $padding->apply($row);
 
             if ($limit !== null && ++$yielded >= $limit) {
                 $ready[] = $this->batch($batch, $partitions);
@@ -459,7 +457,9 @@ final class FloeStreamReader
      */
     private function batch(array $rows, array $partitions): Rows
     {
-        return $partitions === [] ? new Rows(...$rows) : Rows::partitioned($rows, $partitions);
+        return $partitions === []
+            ? new Rows($this->footer()->schema(), ...$rows)
+            : Rows::partitioned($this->footer()->schema(), $rows, $partitions);
     }
 
     /**

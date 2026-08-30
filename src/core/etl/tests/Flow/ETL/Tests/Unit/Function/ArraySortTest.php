@@ -11,11 +11,9 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
@@ -31,7 +29,7 @@ final class ArraySortTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('array')->arraySort()->eval(row(str_entry('array', 'string')), $context);
+        ref('array')->arraySort()->eval(row(['array' => 'string']), $context);
     }
 
     public function test_sorting_big_arrays(): void
@@ -39,22 +37,20 @@ final class ArraySortTest extends FlowTestCase
         static::assertSame(
             ref('array')
                 ->arraySort()
-                ->eval(
-                    row(json_entry(
-                        'array',
-                        type_array()->assert(json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)),
-                    )),
-                    flow_context(),
-                ),
+                ->eval(row(['array' => type_array()->assert(json_decode(
+                    $this->jsonDifferentOrder(),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR,
+                ))]), flow_context()),
             ref('array')
                 ->arraySort()
-                ->eval(
-                    row(json_entry(
-                        'array',
-                        type_array()->assert(json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)),
-                    )),
-                    flow_context(),
-                ),
+                ->eval(row(['array' => type_array()->assert(json_decode(
+                    $this->json(),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR,
+                ))]), flow_context()),
         );
     }
 
@@ -72,8 +68,8 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::asort)
-                ->eval(
-                    row(json_entry('array', [
+                ->eval(row([
+                    'array' => [
                         'a' => [
                             'b' => [
                                 'e' => 'f',
@@ -81,9 +77,8 @@ final class ArraySortTest extends FlowTestCase
                             ],
                             'g' => 'h',
                         ],
-                    ])),
-                    flow_context(),
-                ),
+                    ],
+                ]), flow_context()),
         );
     }
 
@@ -101,8 +96,8 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::ksort)
-                ->eval(
-                    row(json_entry('array', [
+                ->eval(row([
+                    'array' => [
                         'a' => [
                             'g' => 'h',
                             'b' => [
@@ -110,9 +105,8 @@ final class ArraySortTest extends FlowTestCase
                                 'c' => 'd',
                             ],
                         ],
-                    ])),
-                    flow_context(),
-                ),
+                    ],
+                ]), flow_context()),
         );
     }
 
@@ -121,7 +115,7 @@ final class ArraySortTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context());
+        ref('array')->arraySort()->eval(row(['array' => 'string']), flow_context());
     }
 
     private function json(): string

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Rename;
 
-use Flow\ETL\Row;
+use Flow\ETL\Schema;
 use Flow\ETL\String\StringStyles;
 
 final readonly class RenameCaseEntryStrategy implements RenameEntryStrategy
@@ -13,18 +13,18 @@ final readonly class RenameCaseEntryStrategy implements RenameEntryStrategy
         private StringStyles $style,
     ) {}
 
-    public function rename(Row $row): Row
+    public function renames(Schema $schema): array
     {
         $renames = [];
 
-        foreach ($row->entries()->all() as $entry) {
-            $newName = $this->style->convert($entry->name());
+        foreach ($schema->references()->names() as $name) {
+            $newName = $this->style->convert($name);
 
-            if ($newName !== $entry->name()) {
-                $renames[$entry->name()] = $newName;
+            if ($newName !== $name) {
+                $renames[$name] = $newName;
             }
         }
 
-        return $renames === [] ? $row : $row->renameMany($renames);
+        return $renames;
     }
 }

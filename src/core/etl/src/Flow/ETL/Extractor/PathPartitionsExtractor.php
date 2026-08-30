@@ -19,13 +19,11 @@ use function array_map;
 use function array_merge;
 use function array_values;
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
@@ -64,18 +62,17 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
             $partitions = $fileStatus->path->partitions();
 
-            $row = row(
-                string_entry('path', $fileStatus->path->uri()),
-                map_entry(
-                    'partitions',
-                    array_merge(...array_values(array_map(static fn(Partition $p) => [
-                        $p->name => $p->value,
-                    ], $partitions->toArray()))),
-                    type_map(type_string(), type_string()),
-                ),
-            );
+            $row = row([
+                'path' => $fileStatus->path->uri(),
+                'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
+                    $p->name => $p->value,
+                ], $partitions->toArray()))),
+            ]);
 
-            $batch = rows($row);
+            $batch = rows(
+                schema(str_schema('path'), map_schema('partitions', type_map(type_string(), type_string()))),
+                $row,
+            );
 
             if ($this->schema !== null) {
                 $batch = array_to_rows($batch->toArray(), $context->hydrator(), $batch->partitions(), $this->schema);

@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Config;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
 
 final class TextHydratorParityTest extends FlowTestCase
 {
@@ -22,8 +22,9 @@ final class TextHydratorParityTest extends FlowTestCase
         $actual = [];
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            static::assertEquals(type_string(), $rows->schema()->get('text')->type());
+
             foreach ($rows as $row) {
-                static::assertInstanceOf(StringEntry::class, $row->get('text'));
                 $actual[] = $row->toArray();
             }
         }

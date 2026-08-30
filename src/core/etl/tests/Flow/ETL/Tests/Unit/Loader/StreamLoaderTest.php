@@ -13,11 +13,12 @@ use Flow\Filesystem\Stream\Mode;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_output;
 use function Flow\ETL\DSL\to_stream;
 use function ob_end_clean;
@@ -36,9 +37,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -60,9 +62,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -76,9 +79,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1'), str_entry('group', 'a')),
-                row(int_entry('id', 2), str_entry('name', 'id_2'), str_entry('group', 'a')),
-                row(int_entry('id', 3), str_entry('name', 'id_3'), str_entry('group', 'a')),
+                schema(int_schema('id'), str_schema('name'), str_schema('group')),
+                row(['id' => 1, 'name' => 'id_1', 'group' => 'a']),
+                row(['id' => 2, 'name' => 'id_2', 'group' => 'a']),
+                row(['id' => 3, 'name' => 'id_3', 'group' => 'a']),
             )->partitionBy(ref('group'))[0],
             flow_context(config()),
         );
@@ -107,9 +111,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -141,9 +146,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -170,9 +176,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -195,9 +202,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -218,9 +226,10 @@ final class StreamLoaderTest extends FlowTestCase
 
         $loader->load(
             rows(
-                row(int_entry('id', 1), str_entry('name', 'id_1')),
-                row(int_entry('id', 2), str_entry('name', 'id_2')),
-                row(int_entry('id', 3), str_entry('name', 'id_3')),
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'id_1']),
+                row(['id' => 2, 'name' => 'id_2']),
+                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );

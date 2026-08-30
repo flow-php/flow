@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function array_splice;
@@ -40,19 +41,22 @@ final readonly class BatchingProcessor implements Processor
         /** @var array<Row> $buffer */
         $buffer = [];
 
+        $schema = null;
+
         foreach ($rows as $batch) {
-            /** @var Rows $batch */
+            $schema ??= $batch->schema();
+
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
                 if (count($buffer) >= $this->size) {
-                    yield new Rows(...array_splice($buffer, 0, $this->size));
+                    yield new Rows($schema, ...array_splice($buffer, 0, $this->size));
                 }
             }
         }
 
         if ($buffer !== []) {
-            yield new Rows(...$buffer);
+            yield new Rows($schema ?? new Schema(), ...$buffer);
         }
     }
 }

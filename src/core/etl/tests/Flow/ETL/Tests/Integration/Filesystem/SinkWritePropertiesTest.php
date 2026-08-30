@@ -19,7 +19,9 @@ use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
 use function iterator_to_array;
@@ -61,8 +63,8 @@ final class SinkWritePropertiesTest extends FlowIntegrationTestCase
             df()
                 ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
                 ->batchSize(1)
-                ->map(function (Row $row): Row {
-                    if ($row->valueOf('id') === 3) {
+                ->map(schema(int_schema('id')), function (Row $row): Row {
+                    if ($row->get('id') === 3) {
                         throw new RuntimeException('aborted');
                     }
 

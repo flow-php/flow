@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
+use DateInterval;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
@@ -18,10 +18,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
@@ -109,26 +107,14 @@ final class TimeDefinitionTest extends FlowTestCase
     {
         $def = time_schema('col');
 
-        static::assertFalse($def->matches(time_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = time_schema('duration');
-
-        static::assertFalse($def->matches(time_entry('other', '10:30:00')));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = time_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(TimeEntry::class, time_schema('duration')->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     /**
@@ -187,7 +173,7 @@ final class TimeDefinitionTest extends FlowTestCase
     {
         $def = time_schema('duration');
 
-        static::assertTrue($def->matches(time_entry('duration', '10:30:00')));
+        static::assertTrue($def->matches(new DateInterval('PT10H30M')));
     }
 
     /**
@@ -264,28 +250,21 @@ final class TimeDefinitionTest extends FlowTestCase
     {
         $def = time_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = time_schema('col', true);
 
-        static::assertTrue($def->matches(time_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = time_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = time_schema('col', true);
 
-        static::assertTrue($def->matches(time_entry('col', '10:30:00')));
+        static::assertTrue($def->matches(new DateInterval('PT10H30M')));
     }
 
     public function test_rename(): void

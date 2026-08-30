@@ -15,7 +15,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\to_memory;
 
 final class ArrayKeysStyleConvertTest extends FlowTestCase
@@ -44,6 +43,6 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        array_keys_style_convert(ref('string'), 'camel')->eval(row(string_entry('string', 'test')), $context);
+        array_keys_style_convert(ref('string'), 'camel')->eval(row(['string' => 'test']), $context);
     }
 }

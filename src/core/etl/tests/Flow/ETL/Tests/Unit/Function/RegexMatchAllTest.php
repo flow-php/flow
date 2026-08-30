@@ -21,7 +21,7 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'), lit('invalid'));
 
-        $pregMatchAll->eval(row(), flow_context());
+        $pregMatchAll->eval(row([]), flow_context());
     }
 
     public function test_regex_match_all_expression_on_invalid_pattern(): void
@@ -31,7 +31,7 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit(1), lit('12 apples and 45 oranges'));
 
-        $pregMatchAll->eval(row(), flow_context());
+        $pregMatchAll->eval(row([]), flow_context());
     }
 
     public function test_regex_match_all_expression_on_invalid_subject(): void
@@ -41,14 +41,14 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit(2));
 
-        $pregMatchAll->eval(row(), flow_context());
+        $pregMatchAll->eval(row([]), flow_context());
     }
 
     public function test_regex_match_all_expression_on_valid_strings(): void
     {
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'));
 
-        static::assertTrue($pregMatchAll->eval(row(), flow_context()));
+        static::assertTrue($pregMatchAll->eval(row([]), flow_context()));
     }
 
     public function test_regex_match_all_expression_on_valid_strings_with_flags(): void
@@ -59,6 +59,6 @@ final class RegexMatchAllTest extends FlowTestCase
             lit(PREG_PATTERN_ORDER),
         );
 
-        static::assertTrue($pregMatchAll->eval(row(), flow_context()));
+        static::assertTrue($pregMatchAll->eval(row([]), flow_context()));
     }
 }

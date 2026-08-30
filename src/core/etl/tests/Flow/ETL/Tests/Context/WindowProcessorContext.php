@@ -50,7 +50,7 @@ final class WindowProcessorContext
 
         foreach (self::batches($entry, $function, $rows) as $batch) {
             foreach ($batch as $row) {
-                $values[] = $row->valueOf($name);
+                $values[] = $row->get($name);
             }
         }
 

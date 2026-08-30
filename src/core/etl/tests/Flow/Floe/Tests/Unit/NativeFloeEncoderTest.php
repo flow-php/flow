@@ -12,11 +12,12 @@ use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\Tests\Context\FloeSchemaContext;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
@@ -31,9 +32,7 @@ final class NativeFloeEncoderTest extends TestCase
 
     public function test_native_encode_matches_the_php_engine(): void
     {
-        $schema = schema_from_json(
-            FloeSchemaContext::schemaBody(row(int_entry('id', 1), str_entry('name', 'flow'))->schema()),
-        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoded = [new TypedRowValues(['id' => 1, 'name' => 'flow'], [
             'id' => type_integer(),
@@ -49,11 +48,12 @@ final class NativeFloeEncoderTest extends TestCase
     public function test_native_decode_matches_the_php_engine(): void
     {
         $data = rows(
-            row(int_entry('id', 1), str_entry('name', 'flow')),
-            row(int_entry('id', 2), str_entry('name', null)),
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            row(['id' => 1, 'name' => 'flow']),
+            row(['id' => 2, 'name' => null]),
         );
 
-        $schema = schema_from_json(FloeSchemaContext::schemaBody($data->first()->schema()));
+        $schema = schema_from_json(FloeSchemaContext::schemaBody($data->schema()));
         $bodies = (new PhpFloeEncoder($schema))->encode((new PhpRowHydrator())->dehydrate($data));
 
         static::assertEquals(
@@ -64,9 +64,7 @@ final class NativeFloeEncoderTest extends TestCase
 
     public function test_native_metadata_bearing_frames_match_the_php_engine(): void
     {
-        $schema = schema_from_json(
-            FloeSchemaContext::schemaBody(row(int_entry('id', 1), str_entry('name', 'x'))->schema()),
-        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoded = [new TypedRowValues(
             ['id' => 2, 'name' => null],

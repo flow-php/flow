@@ -53,7 +53,7 @@ final class Max implements AggregatingFunction
         }
 
         /** @var mixed $value */
-        $value = $row->valueOf($this->ref);
+        $value = $row->get($this->ref);
 
         if ($this->max === null) {
             if (is_numeric($value)) {

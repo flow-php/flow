@@ -8,10 +8,11 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class CacheIndexTest extends FlowTestCase
 {
@@ -40,7 +41,7 @@ final class CacheIndexTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        CacheIndex::fromRows('dataset-id', rows(row(int_entry('id', 1))));
+        CacheIndex::fromRows('dataset-id', rows(schema(int_schema('id')), row(['id' => 1])));
     }
 
     public function test_from_rows_with_non_string_key_entry_throws(): void
@@ -48,7 +49,7 @@ final class CacheIndexTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('CacheIndex expects rows with a string "key" entry, got: null');
 
-        CacheIndex::fromRows('dataset-id', rows(row(str_entry('key', null))));
+        CacheIndex::fromRows('dataset-id', rows(schema(str_schema('key', nullable: true)), row(['key' => null])));
     }
 
     public function test_to_rows_from_rows_round_trip_preserves_order(): void
@@ -71,7 +72,7 @@ final class CacheIndexTest extends FlowTestCase
         $index->add('chunk-2');
 
         static::assertEquals(
-            rows(row(str_entry('key', 'chunk-1')), row(str_entry('key', 'chunk-2'))),
+            rows(schema(str_schema('key')), row(['key' => 'chunk-1']), row(['key' => 'chunk-2'])),
             $index->toRows(),
         );
     }

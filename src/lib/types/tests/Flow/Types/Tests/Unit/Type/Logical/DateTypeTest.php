@@ -165,6 +165,17 @@ final class DateTypeTest extends TestCase
         }
     }
 
+    public function test_date_type_rejects_non_midnight(): void
+    {
+        static::assertFalse(type_date()->isValid(new DateTimeImmutable('2024-01-02 03:04:05')));
+    }
+
+    public function test_date_type_rejects_sub_second_midnight(): void
+    {
+        static::assertFalse(type_date()->isValid(new DateTimeImmutable('2024-01-02 00:00:00.500000')));
+        static::assertTrue(type_date()->isValid(new DateTimeImmutable('2024-01-02 00:00:00')));
+    }
+
     #[DataProvider('is_valid_data_provider')]
     public function test_is_valid(mixed $value, bool $expected): void
     {

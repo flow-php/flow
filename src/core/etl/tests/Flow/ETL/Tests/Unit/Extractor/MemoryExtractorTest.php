@@ -13,11 +13,10 @@ use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 use function iterator_to_array;
@@ -28,10 +27,13 @@ final class MemoryExtractorTest extends FlowTestCase
     {
         $memory = new ArrayMemory();
 
-        to_memory($memory)->load(rows(row(int_entry('number', 1), str_entry('name', 'one'))), flow_context(config()));
+        to_memory($memory)->load(
+            rows(schema(int_schema('number'), str_schema('name')), row(['number' => 1, 'name' => 'one'])),
+            flow_context(config()),
+        );
 
         self::assertExtractedRowsEquals(
-            rows(row(str_entry('number', '1'), str_entry('name', 'one'))),
+            rows(schema(str_schema('number'), str_schema('name')), row(['number' => '1', 'name' => 'one'])),
             from_memory($memory)->withSchema(schema(str_schema('number'), str_schema('name'))),
         );
     }
@@ -39,11 +41,12 @@ final class MemoryExtractorTest extends FlowTestCase
     public function test_memory_extractor(): void
     {
         $rows = rows(
-            row(int_entry('number', 1), str_entry('name', 'one')),
-            row(int_entry('number', 2), str_entry('name', 'two')),
-            row(int_entry('number', 3), str_entry('name', 'tree')),
-            row(int_entry('number', 4), str_entry('name', 'four')),
-            row(int_entry('number', 5), str_entry('name', 'five')),
+            schema(int_schema('number'), str_schema('name')),
+            row(['number' => 1, 'name' => 'one']),
+            row(['number' => 2, 'name' => 'two']),
+            row(['number' => 3, 'name' => 'tree']),
+            row(['number' => 4, 'name' => 'four']),
+            row(['number' => 5, 'name' => 'five']),
         );
 
         $memory = new ArrayMemory();

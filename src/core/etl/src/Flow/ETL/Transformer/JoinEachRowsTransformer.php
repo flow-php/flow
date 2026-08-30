@@ -55,9 +55,9 @@ final readonly class JoinEachRowsTransformer implements Transformer
             $rightRows = $this->factory->from($rows)->fetch();
 
             $result = match ($this->type) {
-                Join::left => $rows->joinLeft($rightRows, $this->expression, $context->entryFactory()),
+                Join::left => $rows->joinLeft($rightRows, $this->expression),
                 Join::left_anti => $rows->joinLeftAnti($rightRows, $this->expression),
-                Join::right => $rows->joinRight($rightRows, $this->expression, $context->entryFactory()),
+                Join::right => $rows->joinRight($rightRows, $this->expression),
                 default => $rows->joinInner($rightRows, $this->expression),
             };
 

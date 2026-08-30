@@ -34,8 +34,8 @@ final readonly class TextDataset
 
         foreach (data_frame()->read(from_parquet($parquetPath)->withColumns(['customer', 'notes']))->get() as $batch) {
             foreach ($batch->all() as $row) {
-                $customer = $row->valueOf('customer');
-                $notes = $row->valueOf('notes');
+                $customer = $row->get('customer');
+                $notes = $row->get('notes');
 
                 $customerText = is_scalar($customer) || $customer instanceof Stringable ? (string) $customer : '';
                 $notesText = is_array($notes)

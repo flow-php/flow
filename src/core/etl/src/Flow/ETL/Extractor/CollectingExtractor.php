@@ -24,13 +24,13 @@ final class CollectingExtractor implements Extractor, OverridingExtractor
             $this->extractor->withSchema($this->schema);
         }
 
-        $collectedRows = new Rows();
+        $collectedRows = null;
 
         foreach ($this->extractor->extract($context) as $rows) {
-            $collectedRows = $collectedRows->merge($rows);
+            $collectedRows = $collectedRows === null ? $rows : $collectedRows->merge($rows);
         }
 
-        yield $collectedRows;
+        yield $collectedRows ?? new Rows($this->schema());
     }
 
     public function extractors(): array

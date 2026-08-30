@@ -8,10 +8,14 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\RowProjection;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Throwable;
+
+use function array_search;
+use function is_string;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -34,13 +38,24 @@ final readonly class RenameEachEntryTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row): Row {
-                foreach ($this->strategies as $strategy) {
-                    $row = $strategy->rename($row);
-                }
+            $schema = $rows->schema();
+            $renames = [];
 
-                return $row;
-            });
+            foreach ($this->strategies as $strategy) {
+                foreach ($strategy->renames($schema) as $from => $to) {
+                    $schema = $schema->rename($from, $to);
+
+                    // strategies chain, so a later one renames what an earlier one produced; the map
+                    // has to stay keyed by the row's original name or the projection lands short
+                    $original = array_search($from, $renames, true);
+
+                    $renames[is_string($original) ? $original : $from] = $to;
+                }
+            }
+
+            $projection = new RowProjection();
+
+            $result = $rows->map($schema, static fn(Row $row): Row => $projection->rename($row, $renames));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

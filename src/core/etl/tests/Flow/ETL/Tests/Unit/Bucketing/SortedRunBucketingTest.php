@@ -14,10 +14,11 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function array_unique;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
 final class SortedRunBucketingTest extends FlowTestCase
@@ -27,8 +28,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
 
         $ids = [];
@@ -47,7 +48,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
         })();
 
         $sizes = [];
@@ -65,7 +66,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
         })();
 
         $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
@@ -73,7 +74,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         static::assertCount(1, $buckets);
         static::assertSame(
             [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->valueOf(
+            array_map(static fn(Row $r): mixed => $r->get(
                 'id',
             ), BucketsStorageContext::rows($storage->get($buckets[0]->id))),
         );
@@ -85,8 +86,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
 
         $firstRun = $strategy->bucketize($generator, $storage)->current();
@@ -101,8 +102,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
 
         $sizes = [];
@@ -119,9 +120,9 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
-            yield rows(row(int_entry('id', 5)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
+            yield rows(schema(int_schema('id')), row(['id' => 5]));
         })();
 
         $indexes = [];

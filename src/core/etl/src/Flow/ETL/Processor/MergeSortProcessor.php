@@ -57,7 +57,7 @@ final class MergeSortProcessor implements Processor
             foreach ($rows as $batch) {
                 foreach ($batch as $row) {
                     /** @var string $bucketId */
-                    $bucketId = $row->valueOf(BucketShape::id->value);
+                    $bucketId = $row->get(BucketShape::id->value);
                     $runs[] = new BucketRun($bucketId, $this->spill);
                 }
             }

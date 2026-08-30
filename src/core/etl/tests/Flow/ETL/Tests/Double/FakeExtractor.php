@@ -14,41 +14,32 @@ use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use Ramsey\Uuid\Uuid;
 
-use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\datetime_schema;
-use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
-use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_xml;
 use function random_int;
 
 final readonly class FakeExtractor implements Extractor
@@ -98,31 +89,19 @@ final readonly class FakeExtractor implements Extractor
         for ($i = 0; $i < $this->total; $i++) {
             $id = $i;
 
-            yield rows(row(
-                int_entry('int', $id),
-                float_entry('float', generate_random_int(100, 100000) / 100),
-                bool_entry('bool', random_int(0, 1) === 1),
-                datetime_entry('datetime', new DateTimeImmutable('now')),
-                null_entry('null'),
-                uuid_entry('uuid', new FlowUuid(Uuid::uuid4())),
-                json_entry('json', ['id' => $id, 'status' => 'NEW']),
-                list_entry('list', [1, 2, 3], type_list(type_integer())),
-                list_entry(
-                    'list_of_datetimes',
-                    [new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable()],
-                    type_list(type_datetime()),
-                ),
-                map_entry('map', ['NEW', 'PENDING'], type_map(type_integer(), type_string())),
-                struct_entry(
-                    'struct',
-                    [
-                        'street' => 'street_' . $id,
-                        'city' => 'city_' . $id,
-                        'zip' => 'zip_' . $id,
-                        'country' => 'country_' . $id,
-                        'location' => ['lat' => 1.5, 'lon' => 1.5],
-                    ],
-                    type_structure([
+            yield rows(
+                schema(
+                    int_schema('int'),
+                    float_schema('float'),
+                    bool_schema('bool'),
+                    datetime_schema('datetime'),
+                    null_schema('null'),
+                    uuid_schema('uuid'),
+                    json_schema('json'),
+                    list_schema('list', type_list(type_integer())),
+                    list_schema('list_of_datetimes', type_list(type_datetime())),
+                    map_schema('map', type_map(type_integer(), type_string())),
+                    structure_schema('struct', type_structure([
                         'street' => type_string(),
                         'city' => type_string(),
                         'zip' => type_string(),
@@ -131,11 +110,32 @@ final readonly class FakeExtractor implements Extractor
                             'lat' => type_float(),
                             'lon' => type_float(),
                         ]),
-                    ]),
+                    ])),
+                    enum_schema('enum', BackedStringEnum::class),
+                    xml_schema('xml'),
                 ),
-                enum_entry('enum', BackedStringEnum::three),
-                xml_entry('xml', '<xml><node id="' . $id . '">node-' . $id . '</node></xml>'),
-            ));
+                row([
+                    'int' => $id,
+                    'float' => type_float()->cast(generate_random_int(100, 100000) / 100),
+                    'bool' => random_int(0, 1) === 1,
+                    'datetime' => new DateTimeImmutable('now'),
+                    'null' => null,
+                    'uuid' => new FlowUuid(Uuid::uuid4()),
+                    'json' => type_json()->cast(['id' => $id, 'status' => 'NEW']),
+                    'list' => [1, 2, 3],
+                    'list_of_datetimes' => [new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable()],
+                    'map' => ['NEW', 'PENDING'],
+                    'struct' => [
+                        'street' => 'street_' . $id,
+                        'city' => 'city_' . $id,
+                        'zip' => 'zip_' . $id,
+                        'country' => 'country_' . $id,
+                        'location' => ['lat' => 1.5, 'lon' => 1.5],
+                    ],
+                    'enum' => BackedStringEnum::three,
+                    'xml' => type_xml()->cast('<xml><node id="' . $id . '">node-' . $id . '</node></xml>'),
+                ]),
+            );
         }
     }
 

@@ -111,7 +111,7 @@ final class FileSchemaCommandTest extends TestCase
             |   order_id | string |    false |       [] |
             | created_at | string |    false |       [] |
             | updated_at | string |    false |       [] |
-            |   discount | string |    false |       [] |
+            |   discount | string |     true |       [] |
             |    address | string |    false |       [] |
             |      notes | string |    false |       [] |
             |      items | string |    false |       [] |

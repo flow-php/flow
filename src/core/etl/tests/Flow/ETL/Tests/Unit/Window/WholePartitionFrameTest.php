@@ -9,6 +9,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Window\WholePartitionFrame;
 
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class WholePartitionFrameTest extends FlowTestCase
 {
@@ -23,7 +24,7 @@ final class WholePartitionFrameTest extends FlowTestCase
 
     public function test_empty_partition_yields_an_empty_frame(): void
     {
-        static::assertSame([0, -1], (new WholePartitionFrame())->bounds(0, rows()));
+        static::assertSame([0, -1], (new WholePartitionFrame())->bounds(0, rows(schema())));
     }
 
     public function test_single_row_partition(): void

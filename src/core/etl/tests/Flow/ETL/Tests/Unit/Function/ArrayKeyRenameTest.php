@@ -11,8 +11,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\array_key_rename;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 
@@ -24,7 +22,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        $row = row(int_entry('integer_entry', 1));
+        $row = row(['integer_entry' => 1]);
 
         array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, $context);
     }
@@ -34,26 +32,26 @@ final class ArrayKeyRenameTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = row(int_entry('integer_entry', 1));
+        $row = row(['integer_entry' => 1]);
 
         array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, flow_context());
     }
 
     public function test_renames_array_entry_keys_in_multiple_array_entry(): void
     {
-        $row = row(
-            json_entry('customer', [
+        $row = row([
+            'customer' => [
                 'first' => 'John',
                 'last' => 'Snow',
-            ]),
-            json_entry('shipping', [
+            ],
+            'shipping' => [
                 'address' => [
                     'line' => '3644 Clement Street',
                     'city' => 'Atalanta',
                 ],
                 'estimated_delivery_date' => '2023-04-01T10:00:00+00:00',
-            ]),
-        );
+            ],
+        ]);
 
         static::assertEquals(
             [
@@ -77,12 +75,14 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_renames_array_entry_keys_in_single_array_entry(): void
     {
-        $row = row(json_entry('array_entry', [
-            'id' => 1,
-            'status' => 'PENDING',
-            'enabled' => true,
-            'array' => ['foo' => 'bar'],
-        ]));
+        $row = row([
+            'array_entry' => [
+                'id' => 1,
+                'status' => 'PENDING',
+                'enabled' => true,
+                'array' => ['foo' => 'bar'],
+            ],
+        ]);
 
         static::assertEquals(
             [
@@ -97,12 +97,14 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_throws_exception_for_invalid_path(): void
     {
-        $row = row(json_entry('array_entry', [
-            'id' => 1,
-            'status' => 'PENDING',
-            'enabled' => true,
-            'array' => ['foo' => 'bar'],
-        ]));
+        $row = row([
+            'array_entry' => [
+                'id' => 1,
+                'status' => 'PENDING',
+                'enabled' => true,
+                'array' => ['foo' => 'bar'],
+            ],
+        ]);
 
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage('Path "invalid_path" does not exists in array ');

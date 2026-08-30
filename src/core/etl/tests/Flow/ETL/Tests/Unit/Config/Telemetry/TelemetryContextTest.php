@@ -31,11 +31,12 @@ use function array_map;
 use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_stream;
@@ -55,7 +56,10 @@ final class TelemetryContextTest extends FlowTestCase
         $context->telemetryContext->transformationStarted($inner);
         $context->telemetryContext->transformationCompleted($inner);
 
-        $context->telemetryContext->dataFrameBatchProcessed(rows(row(int_entry('id', 1))), $context->flowContext);
+        $context->telemetryContext->dataFrameBatchProcessed(
+            rows(schema(int_schema('id')), row(['id' => 1])),
+            $context->flowContext,
+        );
 
         $endedSpans = $context->spans->endedSpans();
 
@@ -99,7 +103,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
 
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
 
@@ -171,7 +175,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
 
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
         $telemetryContext->dataFrameCompleted($context);
@@ -247,7 +251,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]));
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
 
         $exception = new RuntimeException('Processing failed due to invalid data');
@@ -568,7 +572,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
@@ -611,7 +615,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
@@ -657,7 +661,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $telemetryContext->dataFrameStarted($context);
 
-        $rows = rows(row(int_entry('id', 1)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]));
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();

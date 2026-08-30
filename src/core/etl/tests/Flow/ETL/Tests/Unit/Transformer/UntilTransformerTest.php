@@ -11,11 +11,12 @@ use Flow\ETL\Transformer\UntilTransformer;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class UntilTransformerTest extends FlowTestCase
 {
@@ -28,7 +29,7 @@ final class UntilTransformerTest extends FlowTestCase
             ],
             (new UntilTransformer(ref('id')->lessThan(lit(3))))
                 ->transform(
-                    rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))),
+                    rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
                     flow_context(config()),
                 )
                 ->toArray(),
@@ -38,11 +39,11 @@ final class UntilTransformerTest extends FlowTestCase
     public function test_a_reached_limit_stops_the_next_batch(): void
     {
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
-        $transformer->transform(rows(row(int_entry('id', 5))), flow_context(config()));
+        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
 
         $this->expectException(LimitReachedException::class);
 
-        $transformer->transform(rows(row(int_entry('id', 0))), flow_context(config()));
+        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 0])), flow_context(config()));
     }
 
     public function test_a_non_boolean_predicate_is_rejected_at_bind(): void
@@ -50,12 +51,15 @@ final class UntilTransformerTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('until() requires a predicate returning boolean');
 
-        (new UntilTransformer(ref('id')))->transform(rows(row(int_entry('id', 1))), flow_context(config()));
+        (new UntilTransformer(ref('id')))->transform(
+            rows(schema(int_schema('id')), row(['id' => 1])),
+            flow_context(config()),
+        );
     }
 
     public function test_an_empty_batch_is_returned_without_binding(): void
     {
-        $empty = rows();
+        $empty = rows(schema());
 
         static::assertSame($empty, (new UntilTransformer(ref('missing')->equals(lit(1))))->transform(
             $empty,
@@ -66,10 +70,10 @@ final class UntilTransformerTest extends FlowTestCase
     public function test_a_reached_limit_stops_an_empty_next_batch(): void
     {
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
-        $transformer->transform(rows(row(int_entry('id', 5))), flow_context(config()));
+        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
 
         $this->expectException(LimitReachedException::class);
 
-        $transformer->transform(rows(), flow_context(config()));
+        $transformer->transform(rows(schema()), flow_context(config()));
     }
 }

@@ -10,6 +10,7 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function count;
@@ -48,11 +49,13 @@ final readonly class BatchingByProcessor implements Processor
         $buffer = [];
         $currentValue = null;
         $hasValue = false;
+        $schema = null;
 
         foreach ($rows as $batch) {
-            /** @var Rows $batch */
+            $schema ??= $batch->schema();
+
             foreach ($batch as $row) {
-                $value = $row->valueOf($this->column);
+                $value = $row->get($this->column);
 
                 if (!$hasValue) {
                     $currentValue = $value;
@@ -62,7 +65,7 @@ final readonly class BatchingByProcessor implements Processor
                 if ($value !== $currentValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
                         if ($buffer !== []) {
-                            yield new Rows(...$buffer);
+                            yield new Rows($schema, ...$buffer);
                             $buffer = [];
                         }
                     }
@@ -74,7 +77,7 @@ final readonly class BatchingByProcessor implements Processor
         }
 
         if ($buffer !== []) {
-            yield new Rows(...$buffer);
+            yield new Rows($schema ?? new Schema(), ...$buffer);
         }
     }
 }

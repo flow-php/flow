@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use DateInterval;
 use DateTimeInterface;
 use DateTimeZone;
 use Dom\HTMLDocument;
@@ -23,6 +24,8 @@ use function is_object;
 use function is_scalar;
 use function is_string;
 use function json_encode;
+use function round;
+use function sprintf;
 
 /**
  * @template T of string
@@ -65,6 +68,15 @@ final readonly class StringType implements Type
 
             if ($value instanceof DateTimeZone) {
                 return $value->getName();
+            }
+
+            if ($value instanceof DateInterval) {
+                $hours = ($value->d * 24) + $value->h;
+                $fraction = (int) round($value->f * 1_000_000);
+
+                return $fraction === 0
+                    ? sprintf('%02d:%02d:%02d', $hours, $value->i, $value->s)
+                    : sprintf('%02d:%02d:%02d.%06d', $hours, $value->i, $value->s, $fraction);
             }
 
             if ($value instanceof DOMDocument) {

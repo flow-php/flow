@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -87,20 +88,24 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
             ),
         };
 
+        $partitionColumns = new PartitionColumns($this->filesystem);
+        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
             $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
+            $partitionValues = [];
+
+            foreach ($partitions as $partition) {
+                $partitionValues[$partition->name] = $partition->value;
+            }
 
             $schema = $baseSchema;
 
             if ($schema !== null) {
-                foreach ($partitions as $partition) {
-                    if ($schema->findDefinition($partition->name) === null) {
-                        $schema = $schema->add(str_schema($partition->name));
-                    }
-                }
+                $schema = $partitionColumns->declare($schema, $partitionNames);
             }
 
             $rawBatch = [];
@@ -124,15 +129,19 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                         $row['_input_file_uri'] = $streamUri;
                     }
 
-                    foreach ($partitions as $partition) {
-                        $row[$partition->name] = $partition->value;
-                    }
+                    $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
 
                     $rawBatch[] = $row;
 
                     if (count($rawBatch) >= $batchSize) {
-                        foreach ($hydrator->cast($encoder->decode($rawBatch), $schema) as $hydratedRow) {
-                            $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+                        $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
+
+                        if ($baseSchema === null) {
+                            $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                        }
+
+                        foreach ($hydrated as $hydratedRow) {
+                            $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
 
                             $this->incrementReturnedRows();
 
@@ -146,8 +155,14 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                 }
             }
 
-            foreach ($hydrator->cast($encoder->decode($rawBatch), $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+            $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
+
+            if ($baseSchema === null) {
+                $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+            }
+
+            foreach ($hydrated as $hydratedRow) {
+                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
 
                 $this->incrementReturnedRows();
 

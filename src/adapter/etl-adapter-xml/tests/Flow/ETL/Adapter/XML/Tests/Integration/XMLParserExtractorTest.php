@@ -56,7 +56,8 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
         static::assertSame(['node', 'date'], array_keys($rows[0]));
         static::assertSame('2026-01-01', $rows[0]['date']);
-        static::assertSame(['node'], array_keys($rows[1]));
+        static::assertSame(['node', 'date'], array_keys($rows[1]));
+        static::assertNull($rows[1]['date']);
     }
 
     public function test_reading_deep_xml(): void
@@ -89,7 +90,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             </item>
             XML, type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[0]->valueOf('node')));
+            ->fetch()[0]->get('node')));
 
         static::assertXmlStringEqualsXmlString(<<<'XML'
             <item item_attribute_01="5">
@@ -97,7 +98,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             </item>
             XML, type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[4]->valueOf('node')));
+            ->fetch()[4]->get('node')));
     }
 
     public function test_reading_xml_from_path(): void
@@ -122,7 +123,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             </items>
             XML, type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
-            ->fetch()[0]->valueOf('node')));
+            ->fetch()[0]->get('node')));
     }
 
     public function test_reading_xml_with_ancestor_namespace_declaration(): void
@@ -132,9 +133,9 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        static::assertSame(['Product 1', 'Product 2'], [$rows[0]->valueOf('title'), $rows[1]->valueOf('title')]);
+        static::assertSame(['Product 1', 'Product 2'], [$rows[0]->get('title'), $rows[1]->get('title')]);
 
-        $node = type_string()->cast($rows[0]->valueOf('node'));
+        $node = type_string()->cast($rows[0]->get('node'));
 
         static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
         static::assertStringContainsString('xmlns:c="http://example.com/custom"', $node);
@@ -144,7 +145,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_default.xml', 'feed/entry'))
-            ->fetch()[0]->valueOf('node'));
+            ->fetch()[0]->get('node'));
 
         static::assertStringContainsString('xmlns="http://example.com/default"', $node);
     }
@@ -153,7 +154,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_multi_ancestor.xml', 'feed/group/entry'))
-            ->fetch()[0]->valueOf('node'));
+            ->fetch()[0]->get('node'));
 
         static::assertStringContainsString('xmlns:a="http://example.com/a"', $node);
         static::assertStringContainsString('xmlns:b="http://example.com/b"', $node);
@@ -166,10 +167,10 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        static::assertSame('Product 1', $rows[0]->valueOf('title'));
+        static::assertSame('Product 1', $rows[0]->get('title'));
         static::assertStringContainsString(
             'xmlns:g="http://base.google.com/ns/1.0"',
-            type_string()->cast($rows[0]->valueOf('node')),
+            type_string()->cast($rows[0]->get('node')),
         );
     }
 
@@ -177,7 +178,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_prefixed_attribute.xml', 'feed/entry'))
-            ->fetch()[0]->valueOf('node'));
+            ->fetch()[0]->get('node'));
 
         static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
         static::assertStringContainsString('xml:lang="en"', $node);
@@ -205,7 +206,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_nested.xml', 'feed/group/entry'))
-            ->fetch()[0]->valueOf('node'));
+            ->fetch()[0]->get('node'));
 
         static::assertStringContainsString('xmlns:g="http://example.com/override"', $node);
         static::assertStringContainsString('xmlns:x="http://example.com/extra"', $node);
@@ -235,7 +236,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             </item>
             XML, type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[0]->valueOf('node')));
+            ->fetch()[0]->get('node')));
     }
 
     public function test_schema_appends_the_metadata_column(): void

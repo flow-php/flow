@@ -6,9 +6,10 @@ namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Rows;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 /**
  * Five salaries with a three-way tie, pre-sorted. A PartitionRanking function is always handed an
@@ -22,22 +23,24 @@ final class RankingContext
     public static function salariesAscending(): Rows
     {
         return rows(
-            row(int_entry('id', 4), int_entry('salary', 2000)),
-            row(int_entry('id', 5), int_entry('salary', 4000)),
-            row(int_entry('id', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 2), int_entry('salary', 6000)),
-            row(int_entry('id', 3), int_entry('salary', 6000)),
+            schema(int_schema('id'), int_schema('salary')),
+            row(['id' => 4, 'salary' => 2000]),
+            row(['id' => 5, 'salary' => 4000]),
+            row(['id' => 1, 'salary' => 6000]),
+            row(['id' => 2, 'salary' => 6000]),
+            row(['id' => 3, 'salary' => 6000]),
         );
     }
 
     public static function salariesDescending(): Rows
     {
         return rows(
-            row(int_entry('id', 1), int_entry('salary', 6000)),
-            row(int_entry('id', 2), int_entry('salary', 6000)),
-            row(int_entry('id', 3), int_entry('salary', 6000)),
-            row(int_entry('id', 5), int_entry('salary', 4000)),
-            row(int_entry('id', 4), int_entry('salary', 2000)),
+            schema(int_schema('id'), int_schema('salary')),
+            row(['id' => 1, 'salary' => 6000]),
+            row(['id' => 2, 'salary' => 6000]),
+            row(['id' => 3, 'salary' => 6000]),
+            row(['id' => 5, 'salary' => 4000]),
+            row(['id' => 4, 'salary' => 2000]),
         );
     }
 }

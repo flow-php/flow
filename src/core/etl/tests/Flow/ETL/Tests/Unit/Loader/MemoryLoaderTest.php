@@ -9,10 +9,11 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 
 final class MemoryLoaderTest extends FlowTestCase
@@ -20,8 +21,9 @@ final class MemoryLoaderTest extends FlowTestCase
     public function test_loads_rows_data_into_memory(): void
     {
         $rows = rows(
-            row(int_entry('number', 1), str_entry('name', 'one')),
-            row(int_entry('number', 2), str_entry('name', 'two')),
+            schema(int_schema('number'), str_schema('name')),
+            row(['number' => 1, 'name' => 'one']),
+            row(['number' => 2, 'name' => 'two']),
         );
 
         $memory = new ArrayMemory();

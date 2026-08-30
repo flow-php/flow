@@ -16,11 +16,12 @@ use function array_map;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\integer_entry;
-use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -65,7 +66,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        df()->read(from_rows(rows()))->fetch(-1);
+        df()->read(from_rows(rows(schema())))->fetch(-1);
     }
 
     public function test_fetch_without_limit(): void
@@ -89,7 +90,7 @@ final class LimitTest extends FlowIntegrationTestCase
             public function extract(FlowContext $context): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
-                    yield rows(row(integer_entry('id', $i)));
+                    yield rows(schema(integer_schema('id')), row(['id' => $i]));
                 }
             }
         })->fetch();
@@ -119,7 +120,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
                 }
             })
@@ -134,7 +135,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        df()->read(from_rows(rows()))->limit(-1);
+        df()->read(from_rows(rows(schema())))->limit(-1);
     }
 
     public function test_limit_null(): void
@@ -169,18 +170,22 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(row(list_entry(
-                            'ids',
-                            [
-                                ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
-                                ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
-                                ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
-                            ],
-                            type_list(type_structure([
-                                'id' => type_integer(),
-                                'more_ids' => type_list(type_map(type_string(), type_integer())),
-                            ])),
-                        )));
+                        yield rows(
+                            schema(list_schema(
+                                'ids',
+                                type_list(type_structure([
+                                    'id' => type_integer(),
+                                    'more_ids' => type_list(type_map(type_string(), type_integer())),
+                                ])),
+                            )),
+                            row([
+                                'ids' => [
+                                    ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
+                                    ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
+                                    ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
+                                ],
+                            ]),
+                        );
                     }
                 }
             })
@@ -219,7 +224,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
                 }
             })
@@ -252,7 +257,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
                 }
             })
@@ -285,7 +290,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(row(integer_entry('id', $i)));
+                        yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
             })

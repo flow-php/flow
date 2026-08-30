@@ -13,11 +13,17 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\write_with_retries;
 use function implode;
@@ -30,6 +36,26 @@ final class CSVTest extends FlowTestCase
     {
         if (!file_exists(__DIR__ . '/var')) {
             mkdir(__DIR__ . '/var');
+        }
+    }
+
+    public function test_header_and_body_follow_the_schema_order_not_the_row_key_order(): void
+    {
+        // R10: the Schema owns column order and rows are never rekeyed, so the writer reads the order
+        // off the Schema - the first row's key order must not decide the header
+        df()
+            ->read(from_rows(rows(
+                schema(int_schema('id'), str_schema('name')),
+                row(['name' => 'a', 'id' => 1]),
+                row(['id' => 2, 'name' => 'b']),
+            )))
+            ->load(to_csv($path = __DIR__ . '/var/test_schema_order.csv')->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(implode(PHP_EOL, ['id,name', '1,a', '2,b', '']), file_get_contents($path));
+
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 

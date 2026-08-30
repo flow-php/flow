@@ -200,9 +200,7 @@ pub struct RustRowHydratorNative {
     typed_row_values_class: hydrate::TypedRowValuesClass,
     raw_row_values_class: hydrate::RowValuesClass,
     assembly: hydrate::AssemblyClasses,
-    entry_slots: hydrate::EntrySlotCache,
     def_dehydrate_fns: hydrate::DefFnCache,
-    def_rare_fns: hydrate::DefRareFnCache,
     hydrate_plan: Option<hydrate::HydratePlan>,
     cast_plan: Option<cast::CastPlan>,
 }
@@ -216,9 +214,7 @@ impl RustRowHydratorNative {
             typed_row_values_class: hydrate::TypedRowValuesClass::resolve()?,
             raw_row_values_class: hydrate::RowValuesClass::resolve()?,
             assembly: hydrate::AssemblyClasses::resolve()?,
-            entry_slots: hydrate::EntrySlotCache::new(),
             def_dehydrate_fns: hydrate::DefFnCache::new(),
-            def_rare_fns: hydrate::DefRareFnCache::new(),
             hydrate_plan: None,
             cast_plan: None,
         })
@@ -233,8 +229,6 @@ impl RustRowHydratorNative {
             &mut self.cast_plan,
             &self.raw_row_values_class,
             &self.assembly,
-            &mut self.entry_slots,
-            &mut self.def_rare_fns,
             &mut self.ctx,
         )
     }
@@ -247,8 +241,7 @@ impl RustRowHydratorNative {
             &mut self.hydrate_plan,
             &self.raw_row_values_class,
             &self.assembly,
-            &mut self.entry_slots,
-            &mut self.def_rare_fns,
+            &mut self.ctx,
         )
     }
 
@@ -258,7 +251,6 @@ impl RustRowHydratorNative {
             rows,
             &self.rows_classes,
             &self.typed_row_values_class,
-            &mut self.entry_slots,
             &mut self.def_dehydrate_fns,
             &mut self.ctx,
         )

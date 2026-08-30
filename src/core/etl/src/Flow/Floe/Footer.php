@@ -167,7 +167,9 @@ final readonly class Footer
     {
         $partitions = $this->filePartitions();
 
-        return $partitions === [] ? new Rows(...$rows) : Rows::partitioned($rows, $partitions);
+        return $partitions === []
+            ? new Rows($this->schema(), ...$rows)
+            : Rows::partitioned($this->schema(), $rows, $partitions);
     }
 
     public function schemaBody(): string

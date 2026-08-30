@@ -5,46 +5,32 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class NullRowBuilderTest extends FlowTestCase
 {
-    public function test_collects_every_entry_name_across_rows(): void
+    public function test_empty_schema_produces_empty_row(): void
     {
-        $builder = new NullRowBuilder(new EntryFactory());
-
-        $builder->collect(row(int_entry('id', 1), str_entry('name', 'Alice')));
-        $builder->collect(row(int_entry('id', 2), str_entry('country', 'PL')));
-
-        static::assertSame(['id' => null, 'name' => null, 'country' => null], $builder->row()->toArray());
+        static::assertSame([], (new NullRowBuilder(schema()))->row()->toArray());
     }
 
-    public function test_definitions_are_nullable(): void
+    public function test_row_follows_schema_column_order(): void
     {
-        $builder = new NullRowBuilder(new EntryFactory());
-
-        $builder->collect(row(int_entry('id', 1)));
-
-        static::assertTrue($builder->row()->get('id')->definition()->isNullable());
+        static::assertSame(
+            ['name', 'id'],
+            (new NullRowBuilder(schema(str_schema('name'), int_schema('id'))))->row()->names(),
+        );
     }
 
-    public function test_empty_builder_produces_empty_row(): void
+    public function test_row_nulls_every_schema_column(): void
     {
-        static::assertSame([], (new NullRowBuilder(new EntryFactory()))->row()->toArray());
-    }
-
-    public function test_first_seen_definition_wins(): void
-    {
-        $builder = new NullRowBuilder(new EntryFactory());
-
-        $builder->collect(row(int_entry('id', 1)));
-        $builder->collect(row(str_entry('id', 'one')));
-
-        static::assertSame('integer', $builder->row()->get('id')->definition()->type()->toString());
+        static::assertSame(
+            ['id' => null, 'name' => null, 'country' => null],
+            (new NullRowBuilder(schema(int_schema('id'), str_schema('name'), str_schema('country'))))->row()->toArray(),
+        );
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\FloatDefinition;
@@ -17,10 +16,8 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\float_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
@@ -101,26 +98,14 @@ final class IntegerDefinitionTest extends FlowTestCase
     {
         $def = int_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = int_schema('id');
-
-        static::assertFalse($def->matches(int_entry('other', 1)));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = int_schema('col');
 
-        static::assertFalse($def->matches(str_entry('col', 'value')));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(IntegerEntry::class, int_schema('id')->entryClass());
+        static::assertFalse($def->matches('value'));
     }
 
     /**
@@ -179,7 +164,7 @@ final class IntegerDefinitionTest extends FlowTestCase
     {
         $def = int_schema('id');
 
-        static::assertTrue($def->matches(int_entry('id', 1)));
+        static::assertTrue($def->matches(1));
     }
 
     /**
@@ -256,28 +241,21 @@ final class IntegerDefinitionTest extends FlowTestCase
     {
         $def = int_schema('col', true);
 
-        static::assertFalse($def->matches(str_entry('col', 'value')));
+        static::assertFalse($def->matches('value'));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = int_schema('col', true);
 
-        static::assertTrue($def->matches(int_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = int_schema('col', true);
-
-        static::assertTrue($def->matches(str_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = int_schema('col', true);
 
-        static::assertTrue($def->matches(int_entry('col', 1)));
+        static::assertTrue($def->matches(1));
     }
 
     public function test_rename(): void

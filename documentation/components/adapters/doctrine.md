@@ -113,8 +113,8 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 
 data_frame()
     ->read(from_array([
-        ['id' => 1, 'data' => xml_entry('data', $domDocument)],
-        ['id' => 2, 'data' => xml_entry('data', $domElement)],
+        ['id' => 1, 'data' => $domDocument],
+        ['id' => 2, 'data' => $domElement],
     ]))
     ->write(to_dbal_table_insert($connection, 'xml_table'))
     ->run();

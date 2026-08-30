@@ -7,18 +7,14 @@ namespace Flow\ETL\Tests\Unit\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -34,8 +30,9 @@ final class ArrayToRowsTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(list_entry('data', ['a', 'b', 'c', 'd'], type_list(type_string()))),
-                row(list_entry('data', ['e', 'f', 'g', 'd'], type_list(type_string()))),
+                schema(list_schema('data', type_list(type_string()))),
+                row(['data' => ['a', 'b', 'c', 'd']]),
+                row(['data' => ['e', 'f', 'g', 'd']]),
             ),
             $rows,
         );
@@ -47,7 +44,10 @@ final class ArrayToRowsTest extends FlowTestCase
             ['data' => ['e', 'f', 'g', 'd']],
         ], flow_context(config())->hydrator());
 
-        static::assertEquals(rows(row(list_entry('data', ['e', 'f', 'g', 'd'], type_list(type_string())))), $rows);
+        static::assertEquals(
+            rows(schema(list_schema('data', type_list(type_string()))), row(['data' => ['e', 'f', 'g', 'd']])),
+            $rows,
+        );
     }
 
     public function test_building_row_from_array_with_schema_and_additional_fields_not_covered_by_schema(): void
@@ -58,7 +58,10 @@ final class ArrayToRowsTest extends FlowTestCase
             schema: schema(int_schema('id'), bool_schema('deleted')),
         );
 
-        static::assertEquals(rows(row(int_entry('id', 1234), bool_entry('deleted', false))), $rows);
+        static::assertEquals(
+            rows(schema(int_schema('id'), bool_schema('deleted')), row(['id' => 1234, 'deleted' => false])),
+            $rows,
+        );
     }
 
     public function test_building_row_from_array_with_schema_but_entries_not_available_in_rows(): void
@@ -70,7 +73,10 @@ final class ArrayToRowsTest extends FlowTestCase
         );
 
         static::assertEquals(
-            rows(row(int_entry('id', 1234), bool_entry('deleted', false), str_entry('phase', null))),
+            rows(
+                schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', nullable: true)),
+                row(['id' => 1234, 'deleted' => false, 'phase' => null]),
+            ),
             $rows,
         );
     }
@@ -84,8 +90,9 @@ final class ArrayToRowsTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1234), bool_entry('deleted', false), null_entry('phase')),
-                row(int_entry('id', 4321), bool_entry('deleted', true), str_entry('phase', 'launch')),
+                schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', nullable: true)),
+                row(['id' => 1234, 'deleted' => false, 'phase' => null]),
+                row(['id' => 4321, 'deleted' => true, 'phase' => 'launch']),
             ),
             $rows,
         );
@@ -104,8 +111,9 @@ final class ArrayToRowsTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1234), bool_entry('deleted', false)),
-                row(int_entry('id', 4321), bool_entry('deleted', true)),
+                schema(int_schema('id'), bool_schema('deleted')),
+                row(['id' => 1234, 'deleted' => false]),
+                row(['id' => 4321, 'deleted' => true]),
             ),
             $rows,
         );
@@ -124,8 +132,9 @@ final class ArrayToRowsTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1234), bool_entry('deleted', false), str_entry('phase', null)),
-                row(int_entry('id', 4321), bool_entry('deleted', true), str_entry('phase', null)),
+                schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', nullable: true)),
+                row(['id' => 1234, 'deleted' => false, 'phase' => null]),
+                row(['id' => 4321, 'deleted' => true, 'phase' => null]),
             ),
             $rows,
         );

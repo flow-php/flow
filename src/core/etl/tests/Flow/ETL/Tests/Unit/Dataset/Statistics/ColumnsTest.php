@@ -8,8 +8,8 @@ use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Tests\FlowTestCase;
 use InvalidArgumentException;
 
-use function Flow\ETL\DSL\integer_entry;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\string_schema;
 
 final class ColumnsTest extends FlowTestCase
 {
@@ -17,12 +17,12 @@ final class ColumnsTest extends FlowTestCase
     {
         $columns = new Columns();
 
-        $columns->add(integer_entry('a', 1));
-        $columns->add(integer_entry('a', 100));
-        $columns->add(integer_entry('a', -5));
-        $columns->add(string_entry('b', 'a'));
-        $columns->add(string_entry('b', 'some text'));
-        $columns->add(string_entry('b', null));
+        $columns->add(integer_schema('a'), 1);
+        $columns->add(integer_schema('a'), 100);
+        $columns->add(integer_schema('a'), -5);
+        $columns->add(string_schema('b', true), 'a');
+        $columns->add(string_schema('b', true), 'some text');
+        $columns->add(string_schema('b', true), null);
 
         static::assertCount(2, $columns->all());
         static::assertSame(3, $columns->get('a')->distinctCount());

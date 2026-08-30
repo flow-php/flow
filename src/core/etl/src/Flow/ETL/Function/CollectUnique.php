@@ -58,7 +58,7 @@ final class CollectUnique implements AggregatingFunction
         /** @var array<string, mixed> $values */
         $values = [];
 
-        $values[$this->ref->name()] = $row->valueOf($this->ref);
+        $values[$this->ref->name()] = $row->get($this->ref);
 
         /** @var mixed $value */
         $value = current($values);

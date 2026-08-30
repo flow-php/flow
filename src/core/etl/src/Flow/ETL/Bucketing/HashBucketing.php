@@ -70,7 +70,7 @@ final class HashBucketing implements BucketingStrategy
             }
 
             foreach ($groups as $id => $groupRows) {
-                $storage->append($id, new Rows(...$groupRows));
+                $storage->append($id, new Rows($batch->schema(), ...$groupRows));
                 $totals[$id] = ($totals[$id] ?? 0) + count($groupRows);
             }
         }

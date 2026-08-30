@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Schema\Definition;
 use Flow\Types\Exception\Exception as TypesException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
@@ -13,31 +12,14 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\UnionType;
 
 use function count;
-use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function get_debug_type;
 
 /**
- * Resolves the concrete Type an Entry should be created as, entries cannot carry union types.
+ * Resolves the concrete member Type of a union column for a given value.
  */
 final readonly class EntryTypeResolver
 {
-    /**
-     * OptionalType cannot wrap a UnionType, nullability of union definitions is handled during union resolution.
-     *
-     * @param Definition<mixed> $definition
-     *
-     * @return Type<mixed>
-     */
-    public function fromDefinition(Definition $definition): Type
-    {
-        if (!$definition->isNullable() || $definition->type() instanceof UnionType) {
-            return $definition->type();
-        }
-
-        return type_optional($definition->type());
-    }
-
     /**
      * A union is resolved to the first member accepting the value, falling back to the first
      * member the value can be cast to, mirroring UnionType::cast().
@@ -73,10 +55,10 @@ final readonly class EntryTypeResolver
             return $members[0];
         }
 
-        foreach ($members as $member) {
-            if ($member->isValid($value)) {
-                return $member;
-            }
+        $member = $type->memberFor($value);
+
+        if ($member !== null) {
+            return $member;
         }
 
         foreach ($members as $member) {

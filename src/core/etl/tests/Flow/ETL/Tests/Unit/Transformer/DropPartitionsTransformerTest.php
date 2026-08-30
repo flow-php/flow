@@ -59,7 +59,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             $notPartitioned = (new DropPartitionsTransformer(true))->transform($rows, flow_context());
 
             static::assertFalse($notPartitioned->isPartitioned());
-            static::assertFalse($notPartitioned->first()->has('category'));
+            static::assertNull($notPartitioned->schema()->findDefinition('category'));
         }
     }
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
@@ -15,6 +14,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class TextExtractorTest extends FlowTestCase
@@ -25,10 +25,7 @@ final class TextExtractorTest extends FlowTestCase
 
         $rows = data_frame()->read(from_text($path))->fetch();
 
-        foreach ($rows as $row) {
-            static::assertInstanceOf(StringEntry::class, $row->get('text'));
-        }
-
+        static::assertEquals(type_string(), $rows->schema()->get('text')->type());
         static::assertSame(1024, $rows->count());
     }
 
@@ -45,7 +42,7 @@ final class TextExtractorTest extends FlowTestCase
         static::assertSame(
             [
                 ['text' => 'line a', 'date' => '2026-01-01'],
-                ['text' => 'line b'],
+                ['text' => 'line b', 'date' => null],
             ],
             data_frame()
                 ->read(from_text(__DIR__ . '/../Fixtures/cross_stream/*/data.txt'))

@@ -17,7 +17,7 @@ final class FilesExtractorTest extends FlowTestCase
     {
         $batches = iterator_to_array(files(__DIR__ . '/Fixtures/ZeroExtension/*')->extract(flow_context()));
 
-        static::assertSame('0', $batches[0]->first()->valueOf('extension'));
+        static::assertSame('0', $batches[0]->first()->get('extension'));
     }
 
     public function test_extracting_files_from_directory(): void

@@ -6,10 +6,6 @@ namespace Flow\ETL\Join\HashJoin;
 
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\Instantiators;
-use Flow\ETL\Schema\Definition;
 
 use function array_key_exists;
 use function array_keys;
@@ -28,17 +24,10 @@ final class RowMerger
      */
     private readonly array $dropRight;
 
-    private readonly Instantiators $instantiators;
-
     /**
      * @var array<string, array{array<string, true>, array<string, true>, array<string, string>}>
      */
     private array $plans = [];
-
-    /**
-     * @var array<string, array{Definition<mixed>, Definition<mixed>}>
-     */
-    private array $renamedDefinitions = [];
 
     /**
      * @param array<string> $dropLeft - left side entries skipped in the output (duplicated join columns)
@@ -63,7 +52,6 @@ final class RowMerger
 
         $this->dropLeft = $dropLeftSet;
         $this->dropRight = $dropRightSet;
-        $this->instantiators = new Instantiators();
     }
 
     /**
@@ -71,61 +59,33 @@ final class RowMerger
      */
     public function merge(Row $left, Row $right): Row
     {
-        $leftEntries = $left->entries();
-        $rightEntries = $right->entries();
+        $leftValues = $left->values();
+        $rightValues = $right->values();
 
-        $planKey = implode("\x00", $leftEntries->names()) . "\x01" . implode("\x00", $rightEntries->names());
+        $planKey = implode("\x00", array_keys($leftValues)) . "\x01" . implode("\x00", array_keys($rightValues));
 
         [$keepLeft, $keepRight, $renames] =
-            $this->plans[$planKey] ??= $this->plan($leftEntries->names(), $rightEntries->names());
+            $this->plans[$planKey] ??= $this->plan(array_keys($leftValues), array_keys($rightValues));
 
-        $entries = [];
+        $values = [];
 
-        foreach ($leftEntries->all() as $entry) {
-            $name = $entry->name();
-
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($leftValues as $name => $value) {
             if (array_key_exists($name, $keepLeft)) {
-                $entries[$name] = $entry;
+                $values[$name] = $value;
             }
         }
 
-        foreach ($rightEntries->all() as $entry) {
-            $name = $entry->name();
-
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rightValues as $name => $value) {
             if (!array_key_exists($name, $keepRight)) {
                 continue;
             }
 
-            if (array_key_exists($name, $renames)) {
-                $entries[$renames[$name]] = $this->rename($entry, $renames[$name]);
-            } else {
-                $entries[$name] = $entry;
-            }
+            $values[$renames[$name] ?? $name] = $value;
         }
 
-        return new Row(Entries::recreate($entries));
-    }
-
-    /**
-     * Entry::rename() runs the full entry constructor and rebuilds the definition for every call,
-     * this path instantiates the renamed entry without the constructor and reuses the renamed
-     * definition as long as the source rows share the same definition instance per column.
-     *
-     * @param Entry<mixed> $entry
-     *
-     * @return Entry<mixed>
-     */
-    private function rename(Entry $entry, string $newName): Entry
-    {
-        $definition = $entry->definition();
-        $cached = $this->renamedDefinitions[$newName] ?? null;
-
-        if ($cached === null || $cached[0] !== $definition) {
-            $cached = [$definition, $definition->rename($newName)];
-            $this->renamedDefinitions[$newName] = $cached;
-        }
-
-        return $this->instantiators->for($entry::class)->instantiate($newName, $entry->value(), $cached[1]);
+        return new Row($values);
     }
 
     /**

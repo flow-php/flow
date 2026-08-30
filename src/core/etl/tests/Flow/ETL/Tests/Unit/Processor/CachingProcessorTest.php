@@ -12,9 +12,10 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class CachingProcessorTest extends FlowTestCase
 {
@@ -26,8 +27,8 @@ final class CachingProcessorTest extends FlowTestCase
         $processor = new CachingProcessor('test-cache');
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)));
-            yield rows(row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield rows(schema(int_schema('id')), row(['id' => 2]));
         })();
 
         $result = iterator_to_array($processor->process($generator, $context));
@@ -75,7 +76,7 @@ final class CachingProcessorTest extends FlowTestCase
         $processor = new CachingProcessor('test-cache');
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]));
         })();
 
         $result = iterator_to_array($processor->process($generator, $context));
@@ -91,7 +92,7 @@ final class CachingProcessorTest extends FlowTestCase
         $processor = new CachingProcessor();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]));
         })();
 
         iterator_to_array($processor->process($generator, $context));

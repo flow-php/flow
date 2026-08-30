@@ -15,7 +15,7 @@ use Flow\Floe\Tests\Double\UnsizedSourceStream;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -30,7 +30,7 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://footer.floe');
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -95,7 +95,7 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://close-ok.floe');
-        $data = rows(row(int_entry('id', 1)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]));
         $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);

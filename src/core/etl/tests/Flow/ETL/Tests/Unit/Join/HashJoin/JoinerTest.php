@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
-use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Join\Comparison\Equal;
@@ -16,11 +16,12 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class JoinerTest extends FlowTestCase
 {
@@ -39,12 +40,14 @@ final class JoinerTest extends FlowTestCase
 
         foreach ($joiner->join(
             $batches(rows(
-                row(int_entry('id', 1), str_entry('email', 'alice@flow.php')),
-                row(int_entry('id', 2), str_entry('email', 'bob@flow.php')),
+                schema(int_schema('id'), str_schema('email')),
+                row(['id' => 1, 'email' => 'alice@flow.php']),
+                row(['id' => 2, 'email' => 'bob@flow.php']),
             )),
             $batches(rows(
-                row(int_entry('user_id', 5), str_entry('contact', 'alice@flow.php'), str_entry('name', 'Alice')),
-                row(int_entry('user_id', 2), str_entry('contact', 'other@flow.php'), str_entry('name', 'Bob')),
+                schema(int_schema('user_id'), str_schema('contact'), str_schema('name')),
+                row(['user_id' => 5, 'contact' => 'alice@flow.php', 'name' => 'Alice']),
+                row(['user_id' => 2, 'contact' => 'other@flow.php', 'name' => 'Bob']),
             )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -87,12 +90,14 @@ final class JoinerTest extends FlowTestCase
 
         foreach ($joiner->join(
             $batches(rows(
-                row(int_entry('id', 1), str_entry('email', 'alice@flow.php'), str_entry('phone', '111')),
-                row(int_entry('id', 2), str_entry('email', 'bob@flow.php'), str_entry('phone', '222')),
+                schema(int_schema('id'), str_schema('email'), str_schema('phone')),
+                row(['id' => 1, 'email' => 'alice@flow.php', 'phone' => '111']),
+                row(['id' => 2, 'email' => 'bob@flow.php', 'phone' => '222']),
             )),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('contact', 'alice@flow.php'), str_entry('phone', '999')),
-                row(int_entry('user_id', 2), str_entry('contact', 'other@flow.php'), str_entry('phone', '999')),
+                schema(int_schema('user_id'), str_schema('contact'), str_schema('phone')),
+                row(['user_id' => 1, 'contact' => 'alice@flow.php', 'phone' => '999']),
+                row(['user_id' => 2, 'contact' => 'other@flow.php', 'phone' => '999']),
             )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -126,10 +131,11 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1)))),
+            $batches(rows(schema(int_schema('id')), row(['id' => 1]))),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
+                schema(int_schema('user_id'), str_schema('name')),
+                row(['user_id' => 1, 'name' => 'Alice']),
+                row(['user_id' => 1, 'name' => 'Alice']),
             )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -151,11 +157,12 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('role', 'admin')),
-                row(int_entry('user_id', 1), str_entry('role', 'writer')),
-                row(int_entry('user_id', 2), str_entry('role', 'reader')),
+                schema(int_schema('user_id'), str_schema('role')),
+                row(['user_id' => 1, 'role' => 'admin']),
+                row(['user_id' => 1, 'role' => 'writer']),
+                row(['user_id' => 2, 'role' => 'reader']),
             )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -183,8 +190,8 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'id']), Join::inner);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
-            $batches(rows(row(int_entry('id', 1), str_entry('name', 'Alice')))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
+            $batches(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'Alice']))),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $joined[] = $rowData;
@@ -206,8 +213,8 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left_anti);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1)), row(int_entry('id', 2)))),
-            $batches(rows(row(str_entry('user_id', '1')), row(int_entry('user_id', 2)))),
+            $batches(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))),
+            $batches(rows(schema(str_schema('user_id')), row(['user_id' => '1']), row(['user_id' => 2]))),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $joined[] = $rowData;
@@ -229,8 +236,11 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
-            $batches(rows(row(str_entry('user_id', '1'), str_entry('name', 'Alice')))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
+            $batches(rows(
+                schema(str_schema('user_id'), str_schema('name')),
+                row(['user_id' => '1', 'name' => 'Alice']),
+            )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $joined[] = $rowData;
@@ -252,10 +262,11 @@ final class JoinerTest extends FlowTestCase
 
         foreach ($joiner->join(
             $batches(rows(
-                row(int_entry('id', 1), int_entry('amount', 100)),
-                row(int_entry('id', 404), int_entry('amount', 200)),
+                schema(int_schema('id'), int_schema('amount')),
+                row(['id' => 1, 'amount' => 100]),
+                row(['id' => 404, 'amount' => 200]),
             )),
-            $batches(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))),
+            $batches(rows(schema(int_schema('user_id'), str_schema('name')), row(['user_id' => 1, 'name' => 'Alice']))),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $joined[] = $rowData;
@@ -271,20 +282,23 @@ final class JoinerTest extends FlowTestCase
         );
     }
 
-    public function test_prefix_collision_suggests_different_prefix(): void
+    public function test_prefix_collision_with_left_column_throws(): void
     {
         $batches = static function (Rows $rows): Generator {
             yield $rows;
         };
 
-        $this->expectException(DuplicatedEntriesException::class);
-        $this->expectExceptionMessage('try to use a different join prefix than: "left_"');
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+        $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [left_name]');
 
         $joiner = new Joiner(join_on(['id' => 'user_id'], join_prefix: 'left_'), Join::inner);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), str_entry('left_name', 'collision')))),
-            $batches(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))),
+            $batches(rows(
+                schema(int_schema('id'), str_schema('left_name')),
+                row(['id' => 1, 'left_name' => 'collision']),
+            )),
+            $batches(rows(schema(int_schema('user_id'), str_schema('name')), row(['user_id' => 1, 'name' => 'Alice']))),
         ) as $batch) {
             $batch->count();
         }
@@ -301,11 +315,12 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('role', 'admin')),
-                row(int_entry('user_id', 1), str_entry('role', 'writer')),
-                row(int_entry('user_id', 2), str_entry('role', 'reader')),
+                schema(int_schema('user_id'), str_schema('role')),
+                row(['user_id' => 1, 'role' => 'admin']),
+                row(['user_id' => 1, 'role' => 'writer']),
+                row(['user_id' => 2, 'role' => 'reader']),
             )),
             buildLeft: true,
         ) as $batch) {
@@ -334,8 +349,8 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left_anti);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1)), row(int_entry('id', 2)))),
-            $batches(rows(row(int_entry('user_id', 1)))),
+            $batches(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))),
+            $batches(rows(schema(int_schema('user_id')), row(['user_id' => 1]))),
             buildLeft: true,
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -358,10 +373,11 @@ final class JoinerTest extends FlowTestCase
 
         foreach ($joiner->join(
             $batches(rows(
-                row(int_entry('id', 1), int_entry('amount', 100)),
-                row(int_entry('id', 404), int_entry('amount', 200)),
+                schema(int_schema('id'), int_schema('amount')),
+                row(['id' => 1, 'amount' => 100]),
+                row(['id' => 404, 'amount' => 200]),
             )),
-            $batches(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))),
+            $batches(rows(schema(int_schema('user_id'), str_schema('name')), row(['user_id' => 1, 'name' => 'Alice']))),
             buildLeft: true,
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {
@@ -393,7 +409,7 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
             $empty(),
             buildLeft: true,
         ) as $batch) {
@@ -416,10 +432,11 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+                schema(int_schema('user_id'), str_schema('name')),
+                row(['user_id' => 1, 'name' => 'Alice']),
+                row(['user_id' => 2, 'name' => 'Bob']),
             )),
             buildLeft: true,
         ) as $batch) {
@@ -448,10 +465,11 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
 
         foreach ($joiner->join(
-            $batches(rows(row(int_entry('id', 1), int_entry('amount', 100)))),
+            $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
             $batches(rows(
-                row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-                row(int_entry('user_id', 2), str_entry('name', 'Bob')),
+                schema(int_schema('user_id'), str_schema('name')),
+                row(['user_id' => 1, 'name' => 'Alice']),
+                row(['user_id' => 2, 'name' => 'Bob']),
             )),
         ) as $batch) {
             foreach ($batch->toArray() as $rowData) {

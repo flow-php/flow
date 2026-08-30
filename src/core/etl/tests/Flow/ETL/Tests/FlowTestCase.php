@@ -12,6 +12,7 @@ use RuntimeException;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function getenv;
 use function iterator_to_array;
 
@@ -61,7 +62,7 @@ abstract class FlowTestCase extends TestCase
         string $message = '',
     ): void {
         $flowContext ??= flow_context();
-        $extractedRows = rows();
+        $extractedRows = rows(schema());
 
         foreach ($extractor->extract($flowContext) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);
@@ -93,7 +94,7 @@ abstract class FlowTestCase extends TestCase
         string $message = '',
     ): void {
         $flowContext ??= flow_context();
-        $extractedRows = rows();
+        $extractedRows = rows(schema());
 
         foreach ($extractor->extract($flowContext) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);

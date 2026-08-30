@@ -38,7 +38,7 @@ final class SumAccumulator implements FrameAccumulator
     public function accumulate(Row $row): void
     {
         try {
-            $value = $row->valueOf($this->ref);
+            $value = $row->get($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->sum = $this->runningSum->add(

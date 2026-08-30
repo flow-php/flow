@@ -17,6 +17,7 @@ use Flow\ETL\Transformer;
 use Throwable;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 
@@ -62,14 +63,20 @@ final readonly class ScalarFunctionTransformer implements Transformer
         // N columns whose names come from runtime array keys cannot be declared before rows flow -
         // ArrayUnpack::returns() throws SchemaNotDerivableException by design.
         if ($this->function instanceof UnpackResults) {
-            return $rows->map(function (Row $r) use ($context): Row {
+            $batch = [];
+
+            foreach ($rows as $r) {
+                $values = $r->values();
+
                 // @mago-ignore analysis:mixed-assignment
                 foreach (type_array()->assert($this->function->eval($r, $context)) as $key => $val) {
-                    $r = $r->set($context->entryFactory()->create($this->entryName() . '.' . $key, $val));
+                    $values[$this->entryName() . '.' . $key] = $val;
                 }
 
-                return $r;
-            });
+                $batch[] = $values;
+            }
+
+            return array_to_rows($batch, $context->hydrator(), $rows->partitions());
         }
 
         $schema = $rows->schema();
@@ -81,25 +88,30 @@ final readonly class ScalarFunctionTransformer implements Transformer
             ? $this->entry
             : definition_from_type($this->entryName(), $function->returns());
 
+        $name = $definition->entry()->name();
+        $output = $schema->findDefinition($name) === null
+            ? $schema->add($definition)
+            : $schema->replace($name, $definition);
+
         if ($function instanceof ExpandResults) {
-            return $rows->flatMap(static fn(Row $r): array => array_map(
-                static fn($val): Row => new Row($r->entries()->set($context->entryFactory()->fromDefinition(
-                    $definition,
-                    $val === null ? null : $definition->type()->cast($val),
-                ))),
+            return $rows->flatMap($output, static fn(Row $r): array => array_map(
+                static fn(mixed $val): Row => new Row([
+                    ...$r->values(),
+                    $name => $val === null ? null : $definition->type()->cast($val),
+                ]),
                 // @mago-ignore analysis:mixed-argument
                 $function->eval($r, $context),
             ));
         }
 
-        return $rows->map(static function (Row $r) use ($function, $definition, $context): Row {
+        return $rows->map($output, static function (Row $r) use ($function, $definition, $name, $context): Row {
             // @mago-ignore analysis:mixed-assignment
             $value = $function->eval($r, $context);
 
-            return $r->set($context->entryFactory()->fromDefinition(
-                $definition,
-                $value === null ? null : $definition->type()->cast($value),
-            ));
+            return new Row([
+                ...$r->values(),
+                $name => $value === null ? null : $definition->type()->cast($value),
+            ]);
         });
     }
 

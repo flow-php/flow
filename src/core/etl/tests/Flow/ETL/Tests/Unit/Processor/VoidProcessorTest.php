@@ -9,9 +9,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class VoidProcessorTest extends FlowTestCase
 {
@@ -20,8 +21,8 @@ final class VoidProcessorTest extends FlowTestCase
         $processor = new VoidProcessor();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
 
         /** @var list<Rows> $result */

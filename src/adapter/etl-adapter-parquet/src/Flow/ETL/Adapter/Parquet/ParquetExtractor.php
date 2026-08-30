@@ -126,12 +126,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 $rawBatch[] = $row;
 
                 if (count($rawBatch) >= $batchSize) {
-                    foreach ($hydrator->hydrate(
-                        $encoder->decode($rawBatch),
-                        $promisedSchema ?? $flowSchema,
-                    ) as $hydratedRow) {
+                    $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema);
+
+                    foreach ($hydrated as $hydratedRow) {
                         $this->incrementReturnedRows();
-                        $signal = yield new Rows($hydratedRow);
+                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
                             return;
@@ -142,9 +141,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 }
             }
 
-            foreach ($hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema) as $hydratedRow) {
+            $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema);
+
+            foreach ($hydrated as $hydratedRow) {
                 $this->incrementReturnedRows();
-                $signal = yield new Rows($hydratedRow);
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     return;

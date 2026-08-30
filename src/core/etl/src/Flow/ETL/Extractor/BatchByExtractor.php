@@ -46,15 +46,19 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
         $buffer = [];
         $currentGroupValue = null;
 
+        $schema = null;
+
         foreach ($this->extractor->extract($context) as $rows) {
+            $schema ??= $rows->schema();
+
             foreach ($rows->all() as $row) {
-                $groupValue = $row->valueOf($this->column);
+                $groupValue = $row->get($this->column);
 
                 if ($currentGroupValue === null) {
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        $signal = yield new Rows(...$buffer);
+                        $signal = yield new Rows($schema, ...$buffer);
 
                         if ($signal === Signal::STOP) {
                             return;
@@ -71,7 +75,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
         }
 
         if (count($buffer) > 0) {
-            yield new Rows(...$buffer);
+            yield new Rows($schema ?? $this->schema(), ...$buffer);
         }
     }
 

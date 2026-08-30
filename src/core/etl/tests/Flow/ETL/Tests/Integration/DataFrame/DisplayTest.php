@@ -14,29 +14,32 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\enum_entry;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_xml;
 use function ob_get_clean;
 use function ob_start;
 
@@ -63,26 +66,44 @@ final class DisplayTest extends FlowIntegrationTestCase
             public function extract(FlowContext $context): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
-                    yield rows(row(
-                        int_entry('id', 1234),
-                        float_entry('price', 123.45),
-                        int_entry('100', 100),
-                        bool_entry('deleted', false),
-                        datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
-                        str_entry('phase', null),
-                        json_entry('array', [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
+                    yield rows(
+                        schema(
+                            int_schema('id'),
+                            float_schema('price'),
+                            int_schema('100'),
+                            bool_schema('deleted'),
+                            datetime_schema('created-at'),
+                            str_schema('phase', nullable: true),
+                            json_schema('array'),
+                            list_schema('list', type_list(type_integer())),
+                            map_schema('map', type_map(type_integer(), type_string())),
+                            structure_schema('items', type_structure([
+                                'item-id' => type_string(),
+                                'name' => type_string(),
+                            ])),
+                            enum_schema('enum', BackedStringEnum::class),
+                            xml_schema('xml'),
+                        ),
+                        // PHP casts the numeric column name "100" to an int array key
+                        // @mago-ignore analysis:possibly-invalid-argument
+                        row([
+                            'id' => 1234,
+                            'price' => 123.45,
+                            '100' => 100,
+                            'deleted' => false,
+                            'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                            'phase' => null,
+                            'array' => type_json()->cast([
+                                ['id' => 1, 'status' => 'NEW'],
+                                ['id' => 2, 'status' => 'PENDING'],
+                            ]),
+                            'list' => [1, 2, 3],
+                            'map' => ['NEW', 'PENDING'],
+                            'items' => ['item-id' => '1', 'name' => 'one'],
+                            'enum' => BackedStringEnum::three,
+                            'xml' => type_xml()->cast('<xml><node id="123">test<foo>bar</foo></node></xml>'),
                         ]),
-                        list_entry('list', [1, 2, 3], type_list(type_integer())),
-                        map_entry('map', ['NEW', 'PENDING'], type_map(type_integer(), type_string())),
-                        struct_entry('items', ['item-id' => '1', 'name' => 'one'], type_structure([
-                            'item-id' => type_string(),
-                            'name' => type_string(),
-                        ])),
-                        enum_entry('enum', BackedStringEnum::three),
-                        xml_entry('xml', '<xml><node id="123">test<foo>bar</foo></node></xml>'),
-                    ));
+                    );
                 }
             }
         })->collect();
@@ -122,25 +143,49 @@ final class DisplayTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(row(
-                            int_entry('id', 1234),
-                            float_entry('price', 123.45),
-                            int_entry('100', 100),
-                            bool_entry('deleted', false),
-                            datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
-                            string_entry('group', 'A'),
-                        ));
+                        yield rows(
+                            schema(
+                                int_schema('id'),
+                                float_schema('price'),
+                                int_schema('100'),
+                                bool_schema('deleted'),
+                                datetime_schema('created-at'),
+                                string_schema('group'),
+                            ),
+                            // PHP casts the numeric column name "100" to an int array key
+                            // @mago-ignore analysis:possibly-invalid-argument
+                            row([
+                                'id' => 1234,
+                                'price' => 123.45,
+                                '100' => 100,
+                                'deleted' => false,
+                                'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                                'group' => 'A',
+                            ]),
+                        );
                     }
 
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(row(
-                            int_entry('id', 1234),
-                            float_entry('price', 123.45),
-                            int_entry('100', 100),
-                            bool_entry('deleted', false),
-                            datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
-                            string_entry('group', 'B'),
-                        ));
+                        yield rows(
+                            schema(
+                                int_schema('id'),
+                                float_schema('price'),
+                                int_schema('100'),
+                                bool_schema('deleted'),
+                                datetime_schema('created-at'),
+                                string_schema('group'),
+                            ),
+                            // PHP casts the numeric column name "100" to an int array key
+                            // @mago-ignore analysis:possibly-invalid-argument
+                            row([
+                                'id' => 1234,
+                                'price' => 123.45,
+                                '100' => 100,
+                                'deleted' => false,
+                                'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                                'group' => 'B',
+                            ]),
+                        );
                     }
                 }
             })
@@ -239,23 +284,20 @@ final class DisplayTest extends FlowIntegrationTestCase
         df()
             ->read(from_rows(
                 rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
                 ),
                 rows(
-                    row(
-                        int_entry('id', 1),
-                        str_entry('country', 'PL'),
-                        int_entry('age', 20),
-                        int_entry('salary', 5000),
+                    schema(
+                        int_schema('id'),
+                        str_schema('country'),
+                        int_schema('age'),
+                        int_schema('salary', nullable: true),
                     ),
-                    row(
-                        int_entry('id', 1),
-                        str_entry('country', 'PL'),
-                        int_entry('age', 20),
-                        int_entry('salary', null),
-                    ),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000]),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null]),
                 ),
             ))
             ->printRows();
@@ -286,23 +328,20 @@ final class DisplayTest extends FlowIntegrationTestCase
         df()
             ->read(from_rows(
                 rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
                 ),
                 rows(
-                    row(
-                        int_entry('id', 1),
-                        str_entry('country', 'PL'),
-                        int_entry('age', 20),
-                        int_entry('salary', 5000),
+                    schema(
+                        int_schema('id'),
+                        str_schema('country'),
+                        int_schema('age'),
+                        int_schema('salary', nullable: true),
                     ),
-                    row(
-                        int_entry('id', 1),
-                        str_entry('country', 'PL'),
-                        int_entry('age', 20),
-                        int_entry('salary', null),
-                    ),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000]),
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null]),
                 ),
             ))
             ->printSchema();

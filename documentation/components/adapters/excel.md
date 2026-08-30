@@ -152,18 +152,23 @@ data_frame()
 
 ### Cell Styling
 
-Apply custom styles to individual cells based on entry values:
+Apply custom styles to individual cells based on their value and the column they belong to:
 
 ```php
 <?php
 
 use Flow\ETL\Adapter\Excel\CellStyler;
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Schema\Definition;
 use OpenSpout\Common\Entity\Style\Style;
 
 $cellStyler = new class implements CellStyler {
-    public function style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName): ?Style
-    {
+    public function style(
+        mixed $value,
+        Definition $definition,
+        int $rowNumber,
+        int $columnIndex,
+        string $sheetName,
+    ): ?Style {
         // Make first column bold
         if ($columnIndex === 0) {
             return new Style(fontBold: true);

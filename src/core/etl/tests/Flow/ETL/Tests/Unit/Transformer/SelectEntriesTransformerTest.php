@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\null_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_json;
 
 final class SelectEntriesTransformerTest extends FlowTestCase
 {
     public function test_selecting_entries(): void
     {
-        $rows = rows(row(int_entry('id', 1), str_entry('name', 'Row Name'), json_entry('array', ['test'])));
+        $rows = rows(
+            schema(int_schema('id'), str_schema('name'), json_schema('array')),
+            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
+        );
 
         $transformer = new SelectEntriesTransformer('name');
         static::assertSame(
@@ -36,23 +39,15 @@ final class SelectEntriesTransformerTest extends FlowTestCase
 
     public function test_selecting_not_existing_entries(): void
     {
-        $rows = rows(row(int_entry('id', 1), string_entry('name', 'Row Name'), json_entry('array', ['test'])));
-
-        $transformer = new SelectEntriesTransformer('not_existing');
-        static::assertSame(
-            [['not_existing' => null]],
-            $transformer->transform($rows, flow_context(config()))->toArray(),
+        $rows = rows(
+            schema(int_schema('id'), string_schema('name'), json_schema('array')),
+            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
         );
-    }
 
-    public function test_selecting_not_existing_entries_types_them_as_null_not_string(): void
-    {
-        $transformer = new SelectEntriesTransformer('not_existing');
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "not_existing" not found');
 
-        static::assertEquals(
-            schema(null_schema('not_existing')),
-            $transformer->transform(rows(row(int_entry('id', 1))), flow_context(config()))->schema(),
-        );
+        (new SelectEntriesTransformer('not_existing'))->transform($rows, flow_context(config()));
     }
 
     public function test_selecting_an_entry_missing_from_some_rows_widens_to_a_nullable_real_type(): void
@@ -62,21 +57,33 @@ final class SelectEntriesTransformerTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id', nullable: true)),
             $transformer
-                ->transform(rows(row(int_entry('id', 1)), row(str_entry('name', 'no id here'))), flow_context(config()))
+                ->transform(
+                    rows(
+                        schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+                        row(['id' => 1]),
+                        row(['name' => 'no id here']),
+                    ),
+                    flow_context(config()),
+                )
                 ->schema(),
         );
     }
 
     public function test_using_select_entries_in_order_to_change_entries_order(): void
     {
-        $rows = rows(row(int_entry('id', 1), str_entry('name', 'Row Name'), json_entry('array', ['test'])));
+        $rows = rows(
+            schema(int_schema('id'), str_schema('name'), json_schema('array')),
+            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
+        );
 
-        $transformer = new SelectEntriesTransformer('name', 'id', 'array');
+        $result = (new SelectEntriesTransformer('name', 'id', 'array'))->transform($rows, flow_context(config()));
+
+        static::assertSame(['name', 'id', 'array'], $result->schema()->references()->names());
         static::assertSame(
             [
                 ['name' => 'Row Name', 'id' => 1, 'array' => ['test']],
             ],
-            $transformer->transform($rows, flow_context(config()))->toArray(),
+            $result->toArray(),
         );
     }
 }

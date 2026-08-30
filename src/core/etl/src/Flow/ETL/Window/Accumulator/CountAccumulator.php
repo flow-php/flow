@@ -28,7 +28,7 @@ final class CountAccumulator implements FrameAccumulator
         }
 
         try {
-            if ($row->valueOf($this->ref) !== null) {
+            if ($row->get($this->ref) !== null) {
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {

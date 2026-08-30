@@ -17,12 +17,11 @@ use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
@@ -53,13 +52,13 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://input-uri.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
         $batches = iterator_to_array($extractor->extract($context));
 
-        static::assertSame($path->uri(), $batches[0]->first()->valueOf('_input_file_uri'));
+        static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
     }
 
     public function test_extract_applies_offset_within_a_file(): void
@@ -69,14 +68,14 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://offset-within.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])), $context);
         $loader->closure($context);
 
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->withOffset(1)->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->valueOf('id');
+                $ids[] = $extractedRow->get('id');
             }
         }
 
@@ -90,7 +89,7 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://limited.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])), $context);
         $loader->closure($context);
 
         $extractor = from_floe($path, filesystem: $memory);
@@ -100,7 +99,7 @@ final class FloeExtractorTest extends TestCase
 
         foreach ($extractor->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->valueOf('id');
+                $ids[] = $extractedRow->get('id');
             }
         }
 
@@ -114,12 +113,12 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://no-input-uri.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         $batches = iterator_to_array(from_floe($path, filesystem: $memory)->extract($context));
 
-        static::assertSame(['id'], $batches[0]->first()->entries()->names());
+        static::assertSame(['id'], $batches[0]->first()->names());
     }
 
     public function test_extract_reads_rows(): void
@@ -129,14 +128,14 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://read.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
         $loader->closure($context);
 
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->valueOf('id');
+                $ids[] = $extractedRow->get('id');
             }
         }
 
@@ -149,14 +148,16 @@ final class FloeExtractorTest extends TestCase
         $memory = memory_filesystem();
         $path = path('memory://extract-multi-combination.floe');
 
-        $batchPL = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
-        $batchUS = Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
-            'country',
-            'US',
-        )]);
+        $batchPL = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 1, 'country' => 'PL'])],
+            [new Partition('country', 'PL')],
+        );
+        $batchUS = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 2, 'country' => 'US'])],
+            [new Partition('country', 'US')],
+        );
         $writer = new FloeWriter($memory, $batchPL->merge($batchUS)->schema());
         $writer->create($path);
         $writer->write($batchPL);
@@ -179,7 +180,10 @@ final class FloeExtractorTest extends TestCase
 
         foreach (['a' => [1, 2], 'b' => [10, 11]] as $name => $values) {
             $loader = to_floe(path('memory://skip-files/' . $name . '.floe'), filesystem: $memory);
-            $loader->load(rows(row(int_entry('id', $values[0])), row(int_entry('id', $values[1]))), $context);
+            $loader->load(
+                rows(schema(int_schema('id')), row(['id' => $values[0]]), row(['id' => $values[1]])),
+                $context,
+            );
             $loader->closure($context);
         }
 
@@ -189,7 +193,7 @@ final class FloeExtractorTest extends TestCase
             ->withOffset(2)
             ->extract($context) as $batch) {
             foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->valueOf('id');
+                $ids[] = $extractedRow->get('id');
             }
         }
 
@@ -203,7 +207,7 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://stop.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1)), row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
         $loader->closure($context);
 
         $generator = from_floe($path, filesystem: $memory)->extract($context);
@@ -224,7 +228,7 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://declared-with-metadata.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         $extractor = from_floe($path, filesystem: $memory)
@@ -233,8 +237,8 @@ final class FloeExtractorTest extends TestCase
 
         $batches = iterator_to_array($extractor->extract($context));
 
-        static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->entries()->names());
-        static::assertSame($path->uri(), $batches[0]->first()->valueOf('_input_file_uri'));
+        static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->names());
+        static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
     }
 
     public function test_is_limited_reflects_change_limit(): void
@@ -262,7 +266,7 @@ final class FloeExtractorTest extends TestCase
         $path = path('memory://schema.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         $schema = from_floe($path, filesystem: $memory)->schema();

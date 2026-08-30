@@ -9,9 +9,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class CollectingProcessorTest extends FlowTestCase
 {
@@ -20,9 +21,9 @@ final class CollectingProcessorTest extends FlowTestCase
         $processor = new CollectingProcessor();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)));
-            yield rows(row(int_entry('id', 4)), row(int_entry('id', 5)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5]));
         })();
 
         /** @var list<Rows> $result */
@@ -62,7 +63,7 @@ final class CollectingProcessorTest extends FlowTestCase
         $processor = new CollectingProcessor();
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         })();
 
         /** @var list<Rows> $result */

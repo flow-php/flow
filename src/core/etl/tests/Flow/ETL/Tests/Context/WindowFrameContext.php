@@ -23,7 +23,7 @@ final class WindowFrameContext
 
         foreach ($frame->get() as $batch) {
             foreach ($batch as $row) {
-                $value = $row->valueOf('result');
+                $value = $row->get('result');
 
                 $results[] = is_int($value) || is_float($value) ? $value : null;
             }

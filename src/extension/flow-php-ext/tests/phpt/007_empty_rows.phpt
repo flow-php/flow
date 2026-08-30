@@ -6,10 +6,10 @@ empty Rows produce no frame bodies and decode to an empty row list
 <?php
 require __DIR__ . '/bootstrap.php';
 
-
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
-$frames = php_frames(rows());
+$frames = php_frames(rows(schema()));
 $actual = ext_decode_frames($frames);
 
 var_dump($frames === []);

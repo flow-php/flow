@@ -10,7 +10,6 @@ use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -33,7 +32,7 @@ final class OnEachTest extends FlowTestCase
 
         ref('array')
             ->onEach(ref('element')->upper())
-            ->eval(row(json_entry('array', ['a', 'b', ['nested' => 1], 'd'])), flow_context());
+            ->eval(row(['array' => ['a', 'b', ['nested' => 1], 'd']]), flow_context());
     }
 
     public function test_executing_function_on_each_value_from_array(): void
@@ -42,7 +41,7 @@ final class OnEachTest extends FlowTestCase
             ['1', '2', '3', '4', '5'],
             ref('array')
                 ->onEach(ref('element')->cast(type_string()))
-                ->eval(row(json_entry('array', [1, 2, 3, 4, 5])), flow_context()),
+                ->eval(row(['array' => [1, 2, 3, 4, 5]]), flow_context()),
         );
     }
 
@@ -50,9 +49,7 @@ final class OnEachTest extends FlowTestCase
     {
         static::assertSame(
             [],
-            ref('array')
-                ->onEach(ref('element')->cast(type_string()))
-                ->eval(row(json_entry('array', [])), flow_context()),
+            ref('array')->onEach(ref('element')->cast(type_string()))->eval(row(['array' => []]), flow_context()),
         );
     }
 
@@ -62,7 +59,7 @@ final class OnEachTest extends FlowTestCase
             ['a' => '1', 'b' => '2', 'c' => '3', 'd' => '4', 'e' => '5'],
             ref('array')
                 ->onEach(ref('element')->cast(type_string()), true)
-                ->eval(row(json_entry('array', ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5])), flow_context()),
+                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
         );
     }
 
@@ -72,7 +69,7 @@ final class OnEachTest extends FlowTestCase
             ['1', '2', '3', '4', '5'],
             ref('array')
                 ->onEach(ref('element')->cast(type_string()), false)
-                ->eval(row(json_entry('array', ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5])), flow_context()),
+                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
         );
     }
 

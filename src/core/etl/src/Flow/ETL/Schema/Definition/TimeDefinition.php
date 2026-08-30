@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\TimeType;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_time;
@@ -90,17 +88,9 @@ final readonly class TimeDefinition implements Definition
         return new self($this->ref, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $entry->type() instanceof TimeType;
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -184,13 +174,5 @@ final readonly class TimeDefinition implements Definition
     public function type(): Type
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\TimeEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\TimeEntry::class;
     }
 }

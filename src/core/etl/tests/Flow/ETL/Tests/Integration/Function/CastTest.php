@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 
@@ -46,8 +45,8 @@ final class CastTest extends FlowTestCase
             ->fetch();
 
         // Cast declares type_array (a json column) and the bind enforces that declaration.
-        static::assertInstanceOf(JsonEntry::class, $rows->first()->entries()->get('b'));
-        $json = $rows->first()->valueOf('b');
+        $json = $rows->first()->get('b');
+
         static::assertInstanceOf(Json::class, $json);
         static::assertSame([1, 2, 3], $json->toArray());
     }
@@ -63,8 +62,6 @@ final class CastTest extends FlowTestCase
             ->fetch()
             ->first();
 
-        // Until 04b binds declared types, the entry type is detected from the produced value -
-        // Cast declares ?list<integer> and 04b will enforce that declaration.
-        static::assertSame([], $row->get('list_int')->value());
+        static::assertSame([], $row->get('list_int'));
     }
 }

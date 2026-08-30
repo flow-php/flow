@@ -6,10 +6,12 @@ namespace Flow\ETL\Window;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\TypedValueComparator;
+use Flow\ETL\Schema;
 
 /**
  * Two rows are peers when they carry equal values in every ORDER BY column. Compared with
- * Entry::isEqual() rather than ===, so two DateTimeImmutable instances of the same instant are peers.
+ * TypedValueComparator rather than ===, so two DateTimeImmutable instances of the same instant are peers.
  */
 final readonly class PeerComparator
 {
@@ -20,10 +22,12 @@ final readonly class PeerComparator
         private array $orderBy,
     ) {}
 
-    public function arePeers(Row $left, Row $right): bool
+    public function arePeers(Row $left, Row $right, Schema $schema): bool
     {
+        $comparator = new TypedValueComparator();
+
         foreach ($this->orderBy as $ref) {
-            if (!$left->get($ref)->isEqual($right->get($ref))) {
+            if (!$comparator->equals($schema->get($ref)->type(), $left->get($ref), $right->get($ref))) {
                 return false;
             }
         }

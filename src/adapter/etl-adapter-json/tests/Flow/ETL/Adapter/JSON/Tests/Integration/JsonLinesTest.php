@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\path;
@@ -79,7 +80,7 @@ final class JsonLinesTest extends FlowTestCase
     {
         $loader = new JsonLinesLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.jsonl'));
 
-        $loader->load(rows(), $context = flow_context(config()));
+        $loader->load(rows(schema()), $context = flow_context(config()));
 
         $loader->closure($context);
 

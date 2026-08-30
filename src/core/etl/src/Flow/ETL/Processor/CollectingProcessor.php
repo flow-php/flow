@@ -7,6 +7,7 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -22,12 +23,12 @@ final readonly class CollectingProcessor implements Processor
 {
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $collected = new Rows();
+        $collected = null;
 
         foreach ($rows as $batch) {
-            $collected = $collected->merge($batch);
+            $collected = $collected === null ? $batch : $collected->merge($batch);
         }
 
-        yield $collected;
+        yield $collected ?? new Rows(new Schema());
     }
 }

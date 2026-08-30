@@ -14,7 +14,6 @@ use Flow\Types\Type\AutoCaster;
 
 use function array_map;
 use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
@@ -226,7 +225,6 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
                         ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
-                flow_context(config())->entryFactory(),
                 new AutoCaster(),
                 flow_context(),
             ),

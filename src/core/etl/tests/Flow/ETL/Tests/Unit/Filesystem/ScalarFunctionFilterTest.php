@@ -21,7 +21,6 @@ final class ScalarFunctionFilterTest extends FlowTestCase
     {
         $filter = new ScalarFunctionFilter(
             ref('year')->cast('int')->equals(lit(2024)),
-            flow_context(config())->entryFactory(),
             new AutoCaster(),
             flow_context(config()),
         );

@@ -61,7 +61,7 @@ final class DenseRank implements PartitionRanking, WindowFunction
         $previous = null;
 
         foreach ($partition as $row) {
-            if ($previous !== null && !$comparator->arePeers($previous, $row)) {
+            if ($previous !== null && !$comparator->arePeers($previous, $row, $partition->schema())) {
                 $rank++;
             }
 

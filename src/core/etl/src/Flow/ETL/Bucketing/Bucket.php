@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Bucketing;
 
 use Flow\ETL\Row;
+use Flow\ETL\Schema;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final readonly class Bucket
 {
@@ -17,11 +20,16 @@ final readonly class Bucket
         public int $index,
     ) {}
 
+    public static function schema(): Schema
+    {
+        return schema(str_schema(BucketShape::id->value), int_schema(BucketShape::totalRows->value));
+    }
+
     public function toRow(): Row
     {
-        return Row::create(
-            str_entry(BucketShape::id->value, $this->id),
-            int_entry(BucketShape::totalRows->value, $this->totalRows),
-        );
+        return row([
+            BucketShape::id->value => $this->id,
+            BucketShape::totalRows->value => $this->totalRows,
+        ]);
     }
 }

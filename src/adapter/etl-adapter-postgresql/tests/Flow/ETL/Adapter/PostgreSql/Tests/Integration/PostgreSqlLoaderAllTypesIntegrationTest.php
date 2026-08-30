@@ -13,25 +13,26 @@ use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\date_entry;
-use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\enum_entry;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\structure_entry;
-use function Flow\ETL\DSL\time_entry;
-use function Flow\ETL\DSL\uuid_entry;
-use function Flow\ETL\DSL\xml_element_entry;
-use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
@@ -51,6 +52,7 @@ use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
@@ -106,28 +108,49 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         $xmlElement = $xmlElementDoc->getElementsByTagName('item')->item(0);
 
         df()
-            ->read(from_rows(rows(row(
-                str_entry('col_string', 'test string'),
-                int_entry('col_integer', 42),
-                float_entry('col_float', 3.14159),
-                bool_entry('col_boolean', true),
-                date_entry('col_date', $date),
-                datetime_entry('col_datetime', $dateTime),
-                time_entry('col_time', $time),
-                uuid_entry('col_uuid', $uuid),
-                json_entry('col_json', ['key' => 'value', 'number' => 123]),
-                xml_entry('col_xml', $xmlDoc),
-                xml_element_entry('col_xml_element', $xmlElement),
-                str_entry('col_html', '<p>HTML content</p>'),
-                str_entry('col_html_element', '<span>element</span>'),
-                enum_entry('col_enum', BackedStringEnum::one),
-                list_entry('col_list', [1, 2, 3], type_list(type_integer())),
-                map_entry('col_map', ['a' => 1, 'b' => 2], type_map(type_string(), type_integer())),
-                structure_entry('col_structure', ['name' => 'John', 'age' => 30], type_structure([
-                    'name' => type_string(),
-                    'age' => type_integer(),
-                ])),
-            ))))
+            ->read(from_rows(rows(
+                schema(
+                    str_schema('col_string'),
+                    int_schema('col_integer'),
+                    float_schema('col_float'),
+                    bool_schema('col_boolean'),
+                    date_schema('col_date'),
+                    datetime_schema('col_datetime'),
+                    time_schema('col_time'),
+                    uuid_schema('col_uuid'),
+                    json_schema('col_json'),
+                    xml_schema('col_xml'),
+                    xml_element_schema('col_xml_element'),
+                    str_schema('col_html'),
+                    str_schema('col_html_element'),
+                    enum_schema('col_enum', BackedStringEnum::class),
+                    list_schema('col_list', type_list(type_integer())),
+                    map_schema('col_map', type_map(type_string(), type_integer())),
+                    structure_schema('col_structure', type_structure([
+                        'name' => type_string(),
+                        'age' => type_integer(),
+                    ])),
+                ),
+                row([
+                    'col_string' => 'test string',
+                    'col_integer' => 42,
+                    'col_float' => 3.14159,
+                    'col_boolean' => true,
+                    'col_date' => $date,
+                    'col_datetime' => $dateTime,
+                    'col_time' => $time,
+                    'col_uuid' => $uuid,
+                    'col_json' => type_json()->cast(['key' => 'value', 'number' => 123]),
+                    'col_xml' => $xmlDoc,
+                    'col_xml_element' => $xmlElement,
+                    'col_html' => '<p>HTML content</p>',
+                    'col_html_element' => '<span>element</span>',
+                    'col_enum' => BackedStringEnum::one,
+                    'col_list' => [1, 2, 3],
+                    'col_map' => ['a' => 1, 'b' => 2],
+                    'col_structure' => ['name' => 'John', 'age' => 30],
+                ]),
+            )))
             ->write(to_pgsql_table($this->client, $this->tableName))
             ->run();
 
@@ -197,28 +220,53 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
     public function test_inserts_null_values_for_all_entry_types(): void
     {
         df()
-            ->read(from_rows(rows(row(
-                str_entry('col_string', null),
-                int_entry('col_integer', null),
-                float_entry('col_float', null),
-                bool_entry('col_boolean', null),
-                date_entry('col_date', null),
-                datetime_entry('col_datetime', null),
-                time_entry('col_time', null),
-                uuid_entry('col_uuid', null),
-                json_entry('col_json', null),
-                xml_entry('col_xml', null),
-                xml_entry('col_xml_element', null),
-                str_entry('col_html', null),
-                str_entry('col_html_element', null),
-                str_entry('col_enum', null),
-                list_entry('col_list', null, type_list(type_integer())),
-                map_entry('col_map', null, type_map(type_string(), type_integer())),
-                structure_entry('col_structure', null, type_structure([
-                    'name' => type_string(),
-                    'age' => type_integer(),
-                ])),
-            ))))
+            ->read(from_rows(rows(
+                schema(
+                    str_schema('col_string', nullable: true),
+                    int_schema('col_integer', nullable: true),
+                    float_schema('col_float', nullable: true),
+                    bool_schema('col_boolean', nullable: true),
+                    date_schema('col_date', nullable: true),
+                    datetime_schema('col_datetime', nullable: true),
+                    time_schema('col_time', nullable: true),
+                    uuid_schema('col_uuid', nullable: true),
+                    json_schema('col_json', nullable: true),
+                    xml_schema('col_xml', nullable: true),
+                    xml_schema('col_xml_element', nullable: true),
+                    str_schema('col_html', nullable: true),
+                    str_schema('col_html_element', nullable: true),
+                    str_schema('col_enum', nullable: true),
+                    list_schema('col_list', type_list(type_integer()), nullable: true),
+                    map_schema('col_map', type_map(type_string(), type_integer()), nullable: true),
+                    structure_schema(
+                        'col_structure',
+                        type_structure([
+                            'name' => type_string(),
+                            'age' => type_integer(),
+                        ]),
+                        nullable: true,
+                    ),
+                ),
+                row([
+                    'col_string' => null,
+                    'col_integer' => null,
+                    'col_float' => null,
+                    'col_boolean' => null,
+                    'col_date' => null,
+                    'col_datetime' => null,
+                    'col_time' => null,
+                    'col_uuid' => null,
+                    'col_json' => null,
+                    'col_xml' => null,
+                    'col_xml_element' => null,
+                    'col_html' => null,
+                    'col_html_element' => null,
+                    'col_enum' => null,
+                    'col_list' => null,
+                    'col_map' => null,
+                    'col_structure' => null,
+                ]),
+            )))
             ->write(to_pgsql_table($this->client, $this->tableName))
             ->run();
 

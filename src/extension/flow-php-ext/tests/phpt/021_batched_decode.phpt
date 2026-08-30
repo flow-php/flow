@@ -6,20 +6,25 @@ RustFloeEncoderNative + RowHydrator decode a batch identically to the pure-PHP p
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\schema_from_json;
+use function Flow\ETL\DSL\str_schema;
+
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, schema_from_json};
+$build = static fn(int $i): Flow\ETL\Row => row(['id' => $i, 'name' => $i % 7 === 0 ? null : 'user_' . $i, 'price' => $i / 4.0]);
 
-$build = static fn(int $i): Flow\ETL\Row => row(
-    int_entry('id', $i),
-    str_entry('name', $i % 7 === 0 ? null : 'user_' . $i),
-    float_entry('price', $i / 4),
+$rows = rows(
+    schema(int_schema('id'), str_schema('name', nullable: true), float_schema('price')),
+    ...array_map($build, range(1, 500)),
 );
-
-$rows = rows(...array_map($build, range(1, 500)));
 $frames = php_frames($rows);
 
 $schemaBody = null;

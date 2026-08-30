@@ -39,7 +39,10 @@ function php_frames(Rows $rows): array
     $frames = [['type' => SCHEMA_ENTRY, 'body' => $schemaBody]];
 
     foreach ($rows->all() as $row) {
-        $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
+        $frames[] = [
+            'type' => Format::FRAME_ROW,
+            'body' => $encoder->encode($hydrator->dehydrate(new Rows($rows->schema(), $row)))[0],
+        ];
     }
 
     return $frames;
@@ -65,7 +68,10 @@ function ext_frames(Rows $rows): array
     $frames = [['type' => SCHEMA_ENTRY, 'body' => $schemaBody]];
 
     foreach ($rows->all() as $row) {
-        $frames[] = ['type' => Format::FRAME_ROW, 'body' => $encoder->encode($hydrator->dehydrate(new Rows($row)))[0]];
+        $frames[] = [
+            'type' => Format::FRAME_ROW,
+            'body' => $encoder->encode($hydrator->dehydrate(new Rows($rows->schema(), $row)))[0],
+        ];
     }
 
     return $frames;

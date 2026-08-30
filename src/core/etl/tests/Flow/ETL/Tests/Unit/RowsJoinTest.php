@@ -4,34 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use Flow\ETL\Exception\DuplicatedEntriesException;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class RowsJoinTest extends FlowTestCase
 {
     public function test_cross_join(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
         $joined = $left->joinCross(rows(
-            row(int_entry('num', 1), bool_entry('active', true)),
-            row(int_entry('num', 2), bool_entry('active', false)),
+            schema(int_schema('num'), bool_schema('active')),
+            row(['num' => 1, 'active' => true]),
+            row(['num' => 2, 'active' => false]),
         ));
 
         static::assertEquals(
@@ -52,13 +52,14 @@ final class RowsJoinTest extends FlowTestCase
     public function test_cross_join_empty(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
-        $joined = $left->joinCross(rows());
+        $joined = $left->joinCross(rows(schema()));
 
         static::assertEquals(
             [
@@ -71,15 +72,35 @@ final class RowsJoinTest extends FlowTestCase
         );
     }
 
+    public function test_cross_join_with_an_empty_side_keeps_each_side_self_describing(): void
+    {
+        // nothing is merged, so the surviving side keeps its OWN schema - handing back the cross
+        // schema would describe columns the rows do not carry, and every schema-driven reader
+        // (hash, serialize, compare) would read them as null
+        $emptyRight = rows(
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+        )->joinCross(rows(schema(str_schema('code'))));
+
+        static::assertSame(['id', 'country'], $emptyRight->schema()->references()->names());
+        static::assertSame([['id' => 1, 'country' => 'PL']], $emptyRight->toArray());
+
+        $emptyLeft = rows(schema(int_schema('id')))->joinCross(rows(schema(str_schema('code')), row(['code' => 'PL'])));
+
+        static::assertSame(['code'], $emptyLeft->schema()->references()->names());
+        static::assertSame([['code' => 'PL']], $emptyLeft->toArray());
+    }
+
     public function test_cross_join_left_empty(): void
     {
-        $left = rows();
+        $left = rows(schema());
 
         $joined = $left->joinCross(rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         ));
 
         static::assertEquals(
@@ -95,30 +116,33 @@ final class RowsJoinTest extends FlowTestCase
 
     public function test_cross_join_left_with_name_conflict(): void
     {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Merged entries names must be unique, given: [id, country, active] + [active]. Please consider using join prefix option',
+            'Entry definitions must be unique, duplicated entries: [active], all: [id, country, active, active]',
         );
 
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
-            row(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
-            row(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
-            row(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
+            schema(int_schema('id'), str_schema('country'), bool_schema('active')),
+            row(['id' => 1, 'country' => 'PL', 'active' => false]),
+            row(['id' => 2, 'country' => 'PL', 'active' => false]),
+            row(['id' => 3, 'country' => 'US', 'active' => false]),
+            row(['id' => 4, 'country' => 'FR', 'active' => false]),
         );
 
-        $left->joinCross(rows(row(bool_entry('active', true))), '');
+        $left->joinCross(rows(schema(bool_schema('active')), row(['active' => true])), '');
     }
 
     public function test_cross_join_left_with_name_conflict_with_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
-            row(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
-            row(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
-            row(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
+            schema(int_schema('id'), str_schema('country'), bool_schema('active')),
+            row(['id' => 1, 'country' => 'PL', 'active' => false]),
+            row(['id' => 2, 'country' => 'PL', 'active' => false]),
+            row(['id' => 3, 'country' => 'US', 'active' => false]),
+            row(['id' => 4, 'country' => 'FR', 'active' => false]),
         );
 
-        $joined = $left->joinCross(rows(row(bool_entry('active', true))), '_');
+        $joined = $left->joinCross(rows(schema(bool_schema('active')), row(['active' => true])), '_');
 
         static::assertEquals(
             [
@@ -134,31 +158,34 @@ final class RowsJoinTest extends FlowTestCase
     public function test_inner_empty(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
-        $joined = $left->joinInner(rows(), Expression::on(['country' => 'code']));
+        $joined = $left->joinInner(rows(schema()), Expression::on(['country' => 'code']));
 
-        static::assertEquals(rows(), $joined);
+        static::assertEquals(rows(schema(int_schema('id'), str_schema('country'))), $joined);
     }
 
     public function test_inner_join(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
         $joined = $left->joinInner(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             join_on(['country' => 'code'], 'joined_'),
         );
@@ -175,14 +202,14 @@ final class RowsJoinTest extends FlowTestCase
 
     public function test_inner_join_emits_every_matching_right_row(): void
     {
-        $joined = rows(row(int_entry('id', 1), str_entry('country', 'PL')))
-            ->joinInner(
-                rows(
-                    row(int_entry('code', 1), str_entry('city', 'Warsaw')),
-                    row(int_entry('code', 1), str_entry('city', 'Cracow')),
-                ),
-                join_on(['id' => 'code']),
-            );
+        $joined = rows(schema(int_schema('id'), str_schema('country')), row(['id' => 1, 'country' => 'PL']))->joinInner(
+            rows(
+                schema(int_schema('code'), str_schema('city')),
+                row(['code' => 1, 'city' => 'Warsaw']),
+                row(['code' => 1, 'city' => 'Cracow']),
+            ),
+            join_on(['id' => 'code']),
+        );
 
         static::assertSame(
             [
@@ -195,39 +222,42 @@ final class RowsJoinTest extends FlowTestCase
 
     public function test_inner_join_into_empty(): void
     {
-        $left = rows();
+        $left = rows(schema());
 
         $joined = $left->joinInner(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code']),
         );
 
-        static::assertEquals(rows(), $joined);
+        static::assertEquals(rows(schema(str_schema('code'), str_schema('name'))), $joined);
     }
 
     public function test_inner_join_with_duplicated_entries(): void
     {
-        $this->expectException(DuplicatedEntriesException::class);
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Merged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""',
+            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
         );
 
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
         $left->joinInner(
             rows(
-                row(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(int_schema('id'), str_schema('code'), str_schema('name')),
+                row(['id' => 101, 'code' => 'PL', 'name' => 'Poland']),
+                row(['id' => 102, 'code' => 'US', 'name' => 'United States']),
+                row(['id' => 103, 'code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], joinPrefix: ''),
         );
@@ -236,17 +266,19 @@ final class RowsJoinTest extends FlowTestCase
     public function test_inner_join_without_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country_code', 'PL')),
-            row(int_entry('id', 2), str_entry('country_code', 'PL')),
-            row(int_entry('id', 3), str_entry('country_code', 'US')),
-            row(int_entry('id', 4), str_entry('country_code', 'FR')),
+            schema(int_schema('id'), str_schema('country_code')),
+            row(['id' => 1, 'country_code' => 'PL']),
+            row(['id' => 2, 'country_code' => 'PL']),
+            row(['id' => 3, 'country_code' => 'US']),
+            row(['id' => 4, 'country_code' => 'FR']),
         );
 
         $joined = $left->joinInner(
             rows(
-                row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('country_code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('country_code'), str_schema('name')),
+                row(['country_code' => 'PL', 'name' => 'Poland']),
+                row(['country_code' => 'US', 'name' => 'United States']),
+                row(['country_code' => 'GB', 'name' => 'Great Britain']),
             ),
             join_on(['country_code' => 'country_code']),
         );
@@ -264,31 +296,37 @@ final class RowsJoinTest extends FlowTestCase
     public function test_left_anti_join(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'US')),
-            row(int_entry('id', 3), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'US']),
+            row(['id' => 3, 'country' => 'FR']),
         );
 
         $joined = $left->joinLeftAnti(
             rows(
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'FR'), str_entry('name', 'France')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'FR', 'name' => 'France']),
             ),
             Expression::on(['country' => 'code']),
         );
 
-        static::assertEquals(rows(row(int_entry('id', 1), str_entry('country', 'PL'))), $joined);
+        static::assertEquals(
+            rows(schema(int_schema('id'), str_schema('country')), row(['id' => 1, 'country' => 'PL'])),
+            $joined,
+        );
     }
 
     public function test_left_anti_join_on_empty(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'US')),
-            row(int_entry('id', 3), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'US']),
+            row(['id' => 3, 'country' => 'FR']),
         );
 
-        $joined = $left->joinLeftAnti(rows(), Expression::on(['country' => 'code']));
+        $joined = $left->joinLeftAnti(rows(schema()), Expression::on(['country' => 'code']));
 
         static::assertEquals($left, $joined);
     }
@@ -296,38 +334,44 @@ final class RowsJoinTest extends FlowTestCase
     public function test_left_anti_join_without_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country_code', 'PL')),
-            row(int_entry('id', 2), str_entry('country_code', 'US')),
-            row(int_entry('id', 3), str_entry('country_code', 'FR')),
+            schema(int_schema('id'), str_schema('country_code')),
+            row(['id' => 1, 'country_code' => 'PL']),
+            row(['id' => 2, 'country_code' => 'US']),
+            row(['id' => 3, 'country_code' => 'FR']),
         );
 
         $joined = $left->joinLeftAnti(
             rows(
-                row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('country_code', 'FR'), str_entry('name', 'France')),
+                schema(str_schema('country_code'), str_schema('name')),
+                row(['country_code' => 'US', 'name' => 'United States']),
+                row(['country_code' => 'FR', 'name' => 'France']),
             ),
             Expression::on(['country_code' => 'country_code']),
         );
 
-        static::assertEquals(rows(row(int_entry('id', 1), str_entry('country_code', 'PL'))), $joined);
+        static::assertEquals(
+            rows(schema(int_schema('id'), str_schema('country_code')), row(['id' => 1, 'country_code' => 'PL'])),
+            $joined,
+        );
     }
 
     public function test_left_join(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'US')),
-            row(int_entry('id', 3), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'US']),
+            row(['id' => 3, 'country' => 'FR']),
         );
 
         $joined = $left->joinLeft(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], 'joined_'),
-            flow_context(config())->entryFactory(),
         );
 
         static::assertEquals(
@@ -343,22 +387,20 @@ final class RowsJoinTest extends FlowTestCase
     public function test_left_join_empty(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'US')),
-            row(int_entry('id', 3), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'US']),
+            row(['id' => 3, 'country' => 'FR']),
         );
 
-        $joined = $left->joinLeft(
-            rows(),
-            Expression::on(['country' => 'code']),
-            flow_context(config())->entryFactory(),
-        );
+        $joined = $left->joinLeft(rows(schema()), Expression::on(['country' => 'code']));
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1), str_entry('country', 'PL')),
-                row(int_entry('id', 2), str_entry('country', 'US')),
-                row(int_entry('id', 3), str_entry('country', 'FR')),
+                schema(int_schema('id'), str_schema('country')),
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 2, 'country' => 'US']),
+                row(['id' => 3, 'country' => 'FR']),
             ),
             $joined,
         );
@@ -367,22 +409,20 @@ final class RowsJoinTest extends FlowTestCase
     public function test_left_join_empty_without_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country_code', 'PL')),
-            row(int_entry('id', 2), str_entry('country_code', 'US')),
-            row(int_entry('id', 3), str_entry('country_code', 'FR')),
+            schema(int_schema('id'), str_schema('country_code')),
+            row(['id' => 1, 'country_code' => 'PL']),
+            row(['id' => 2, 'country_code' => 'US']),
+            row(['id' => 3, 'country_code' => 'FR']),
         );
 
-        $joined = $left->joinLeft(
-            rows(),
-            Expression::on(['country_code' => 'country_code']),
-            flow_context(config())->entryFactory(),
-        );
+        $joined = $left->joinLeft(rows(schema()), Expression::on(['country_code' => 'country_code']));
 
         static::assertEquals(
             rows(
-                row(int_entry('id', 1), str_entry('country_code', 'PL')),
-                row(int_entry('id', 2), str_entry('country_code', 'US')),
-                row(int_entry('id', 3), str_entry('country_code', 'FR')),
+                schema(int_schema('id'), str_schema('country_code')),
+                row(['id' => 1, 'country_code' => 'PL']),
+                row(['id' => 2, 'country_code' => 'US']),
+                row(['id' => 3, 'country_code' => 'FR']),
             ),
             $joined,
         );
@@ -390,61 +430,66 @@ final class RowsJoinTest extends FlowTestCase
 
     public function test_left_join_to_empty(): void
     {
-        $left = rows();
+        $left = rows(schema());
 
         $joined = $left->joinLeft(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code']),
-            flow_context(config())->entryFactory(),
         );
 
-        static::assertEquals(rows(), $joined);
+        static::assertEquals(
+            rows(schema(str_schema('code', nullable: true), str_schema('name', nullable: true))),
+            $joined,
+        );
     }
 
     public function test_left_join_with_the_duplicated_columns(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Merged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""',
+            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
         );
 
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'US')),
-            row(int_entry('id', 3), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'US']),
+            row(['id' => 3, 'country' => 'FR']),
         );
 
         $left->joinLeft(
             rows(
-                row(int_entry('id', 100), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(int_entry('id', 101), str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(int_entry('id', 102), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(int_schema('id'), str_schema('code'), str_schema('name')),
+                row(['id' => 100, 'code' => 'PL', 'name' => 'Poland']),
+                row(['id' => 101, 'code' => 'US', 'name' => 'United States']),
+                row(['id' => 102, 'code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], ''),
-            flow_context(config())->entryFactory(),
         );
     }
 
     public function test_left_join_without_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country_code', 'PL')),
-            row(int_entry('id', 2), str_entry('country_code', 'US')),
-            row(int_entry('id', 3), str_entry('country_code', 'FR')),
+            schema(int_schema('id'), str_schema('country_code')),
+            row(['id' => 1, 'country_code' => 'PL']),
+            row(['id' => 2, 'country_code' => 'US']),
+            row(['id' => 3, 'country_code' => 'FR']),
         );
 
         $joined = $left->joinLeft(
             rows(
-                row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('country_code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('country_code'), str_schema('name')),
+                row(['country_code' => 'PL', 'name' => 'Poland']),
+                row(['country_code' => 'US', 'name' => 'United States']),
+                row(['country_code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country_code' => 'country_code']),
-            flow_context(config())->entryFactory(),
         );
 
         static::assertEquals(
@@ -460,20 +505,21 @@ final class RowsJoinTest extends FlowTestCase
     public function test_right_join(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
         $joined = $left->joinRight(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], 'joined_'),
-            flow_context(config())->entryFactory(),
         );
 
         static::assertEquals(
@@ -490,33 +536,33 @@ final class RowsJoinTest extends FlowTestCase
     public function test_right_join_empty(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
-        $joined = $left->joinRight(
-            rows(),
-            Expression::on(['country' => 'code']),
-            flow_context(config())->entryFactory(),
-        );
+        $joined = $left->joinRight(rows(schema()), Expression::on(['country' => 'code']));
 
-        static::assertEquals(rows(), $joined);
+        static::assertEquals(
+            rows(schema(int_schema('id', nullable: true), str_schema('country', nullable: true))),
+            $joined,
+        );
     }
 
     public function test_right_join_to_empty(): void
     {
-        $left = rows();
+        $left = rows(schema());
 
         $joined = $left->joinRight(
             rows(
-                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('code'), str_schema('name')),
+                row(['code' => 'PL', 'name' => 'Poland']),
+                row(['code' => 'US', 'name' => 'United States']),
+                row(['code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], 'joined_'),
-            flow_context(config())->entryFactory(),
         );
 
         static::assertEquals(
@@ -531,46 +577,48 @@ final class RowsJoinTest extends FlowTestCase
 
     public function test_right_join_with_duplicated_entry_names(): void
     {
-        $this->expectException(DuplicatedEntriesException::class);
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'erged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""',
+            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
         );
 
         $left = rows(
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'US')),
-            row(int_entry('id', 4), str_entry('country', 'FR')),
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+            row(['id' => 3, 'country' => 'US']),
+            row(['id' => 4, 'country' => 'FR']),
         );
 
         $left->joinRight(
             rows(
-                row(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                row(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
-                row(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(int_schema('id'), str_schema('code'), str_schema('name')),
+                row(['id' => 101, 'code' => 'PL', 'name' => 'Poland']),
+                row(['id' => 102, 'code' => 'US', 'name' => 'United States']),
+                row(['id' => 103, 'code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country' => 'code'], ''),
-            flow_context(config())->entryFactory(),
         );
     }
 
     public function test_right_join_without_prefix(): void
     {
         $left = rows(
-            row(int_entry('id', 1), str_entry('country_code', 'PL')),
-            row(int_entry('id', 2), str_entry('country_code', 'PL')),
-            row(int_entry('id', 3), str_entry('country_code', 'US')),
-            row(int_entry('id', 4), str_entry('country_code', 'FR')),
+            schema(int_schema('id'), str_schema('country_code')),
+            row(['id' => 1, 'country_code' => 'PL']),
+            row(['id' => 2, 'country_code' => 'PL']),
+            row(['id' => 3, 'country_code' => 'US']),
+            row(['id' => 4, 'country_code' => 'FR']),
         );
 
         $joined = $left->joinRight(
             rows(
-                row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
-                row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
-                row(str_entry('country_code', 'GB'), str_entry('name', 'Great Britain')),
+                schema(str_schema('country_code'), str_schema('name')),
+                row(['country_code' => 'PL', 'name' => 'Poland']),
+                row(['country_code' => 'US', 'name' => 'United States']),
+                row(['country_code' => 'GB', 'name' => 'Great Britain']),
             ),
             Expression::on(['country_code' => 'country_code']),
-            flow_context(config())->entryFactory(),
         );
 
         static::assertEquals(

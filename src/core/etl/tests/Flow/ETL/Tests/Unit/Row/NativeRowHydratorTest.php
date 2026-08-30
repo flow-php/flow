@@ -43,7 +43,6 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
-use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_datetime;
@@ -535,13 +534,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         $recastBatch = [];
 
         foreach ($php->cast($batch, $schema) as $row) {
-            $values = [];
-
-            foreach ($row->entries()->all() as $entry) {
-                $values[$entry->name()] = $entry->value();
-            }
-
-            $recastBatch[] = new RawRowValues($values);
+            $recastBatch[] = new RawRowValues($row->values());
         }
 
         static::assertSame(
@@ -600,7 +593,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<root a="1"><i>v</i></root>');
 
-        $rows = rows(row(xml_entry('doc', $document)));
+        $rows = rows(schema(xml_schema('doc')), row(['doc' => $document]));
 
         $php = new PhpRowHydrator();
         $native = new NativeRowHydrator();

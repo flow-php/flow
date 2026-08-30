@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Pipeline;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -19,7 +15,6 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -28,8 +23,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -126,12 +119,7 @@ final class SchemaTest extends FlowIntegrationTestCase
     {
         static::assertEquals(
             schema(enum_schema('status', BackedStringEnum::class, nullable: true)),
-            df()
-                ->read(from_rows(rows(
-                    row(enum_entry('status', BackedStringEnum::one)),
-                    row(enum_entry('status', null)),
-                )))
-                ->schema(),
+            df()->read(from_array([['status' => BackedStringEnum::one], ['status' => null]]))->schema(),
         );
     }
 
@@ -155,7 +143,11 @@ final class SchemaTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_getting_schema_from_limited_rows(): void
+    /**
+     * The batch carries one Schema derived over every row, so limit() selects rows out of a shape it
+     * cannot narrow - the first 50 rows hold only ints in "union", but the column stays string.
+     */
+    public function test_limit_does_not_narrow_the_schema(): void
     {
         $rows = array_to_rows(
             array_map(
@@ -171,7 +163,11 @@ final class SchemaTest extends FlowIntegrationTestCase
         );
 
         static::assertEquals(
-            schema(int_schema('id'), str_schema('name'), bool_schema('active'), int_schema('union')),
+            schema(int_schema('id'), str_schema('name'), bool_schema('active'), str_schema('union')),
+            df()->read(from_rows($rows))->autoCast()->limit(50)->schema(),
+        );
+        static::assertEquals(
+            df()->read(from_rows($rows))->autoCast()->schema(),
             df()->read(from_rows($rows))->autoCast()->limit(50)->schema(),
         );
     }
@@ -217,7 +213,7 @@ final class SchemaTest extends FlowIntegrationTestCase
         );
 
         // The extractor derives one schema before it yields, so row 1's nulls are TYPED nulls in
-        // known columns rather than untyped NullEntries a later row contradicts.
+        // known columns rather than untyped null columns a later row contradicts.
         $batches = iterator_to_array($extractor->extract($context));
 
         static::assertSame(
@@ -227,9 +223,14 @@ final class SchemaTest extends FlowIntegrationTestCase
             ],
             array_map(static fn(Rows $rows): array => $rows->toArray(), $batches),
         );
-        static::assertInstanceOf(StringEntry::class, $batches[0]->first()->get('string'));
-        static::assertInstanceOf(BooleanEntry::class, $batches[0]->first()->get('bool'));
-        static::assertInstanceOf(IntegerEntry::class, $batches[0]->first()->get('int'));
-        static::assertInstanceOf(FloatEntry::class, $batches[0]->first()->get('float'));
+        static::assertEquals(
+            schema(
+                str_schema('string', true),
+                bool_schema('bool', true),
+                int_schema('int', true),
+                float_schema('float', true),
+            ),
+            $batches[0]->schema(),
+        );
     }
 }

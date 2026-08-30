@@ -11,7 +11,6 @@ use DOMElement;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -33,10 +32,7 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertEquals('foobar', ref('value')
             ->domElementAttributeValue('id')
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $element->documentElement]), flow_context()));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -49,10 +45,7 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertNull(
             ref('value')
                 ->domElementAttributeValue('id')
-                ->eval(
-                    row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                    flow_context(),
-                ),
+                ->eval(row(['value' => $element->documentElement]), flow_context()),
         );
     }
 
@@ -64,10 +57,7 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertEquals('buz', ref('value')
             ->domElementAttributeValue('baz')
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
-                flow_context(),
-            ));
+            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
     }
 
     public function test_xml_extracting_non_existing_attribute_from_dom_element_entry(): void
@@ -79,10 +69,7 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertNull(
             ref('value')
                 ->domElementAttributeValue('bar')
-                ->eval(
-                    row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
-                    flow_context(),
-                ),
+                ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()),
         );
     }
 }

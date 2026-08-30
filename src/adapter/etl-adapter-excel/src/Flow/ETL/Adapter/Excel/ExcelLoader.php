@@ -17,6 +17,7 @@ use Flow\ETL\Loader\FileLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -137,9 +138,9 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
             foreach ($rows as $rowIndex => $row) {
                 $sheetName = $this->resolveSheetName($row);
 
-                $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
-                    ? $row->remove($this->sheetNameEntryName)
-                    : $row;
+                $rowSchema = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
+                    ? $rows->schema()->gracefulRemove($this->sheetNameEntryName)
+                    : $rows->schema();
 
                 $typed = $dehydrated[$rowIndex];
                 $values = $typed->values;
@@ -158,7 +159,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
                     $manager->writeHeader($sheetName, $encoder->encodeHeader(array_keys($values)), $this->headerStyle);
                 }
 
-                $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
+                $styles = $this->resolveCellStyles($row, $rowSchema, $rowIndex, $sheetName);
                 /** @var array<int, null|bool|float|int|string> $cells */
                 $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
                 $manager->writeRow($sheetName, $cells, $styles);
@@ -277,7 +278,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
     /**
      * @return null|array<int, null|Style>
      */
-    private function resolveCellStyles(Row $row, int $rowIndex, string $sheetName): ?array
+    private function resolveCellStyles(Row $row, Schema $schema, int $rowIndex, string $sheetName): ?array
     {
         if ($this->cellStyler === null) {
             return null;
@@ -286,8 +287,14 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
         $styles = [];
         $columnIndex = 0;
 
-        foreach ($row->entries() as $entry) {
-            $styles[$columnIndex] = $this->cellStyler->style($entry, $rowIndex + 1, $columnIndex, $sheetName);
+        foreach ($schema->definitions() as $definition) {
+            $styles[$columnIndex] = $this->cellStyler->style(
+                $row->get($definition->entry()->name()),
+                $definition,
+                $rowIndex + 1,
+                $columnIndex,
+                $sheetName,
+            );
             $columnIndex++;
         }
 
@@ -297,8 +304,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
     private function resolveSheetName(Row $row): string
     {
         if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
-            // @mago-expect analysis:mixed-assignment
-            $value = $row->get($this->sheetNameEntryName)->value();
+            $value = $row->get($this->sheetNameEntryName);
 
             if (is_string($value) && $value !== '') {
                 SheetNameAssertion::assert($value);

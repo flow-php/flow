@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 final readonly class KWayMerge
@@ -38,18 +39,20 @@ final readonly class KWayMerge
 
         /** @var array<string, BucketCursor> $cursors */
         $cursors = [];
+        $schema = null;
 
         foreach ($runs as $run) {
             $cursor = new BucketCursor($run->rows());
 
             if ($cursor->valid()) {
+                $schema ??= $cursor->schema();
                 $heap->push($cursor->current(), $run->id);
                 $cursor->next();
                 $cursors[$run->id] = $cursor;
             }
         }
 
-        $buffer = new RowsBuffer($this->batchSize);
+        $buffer = new RowsBuffer($schema ?? new Schema(), $this->batchSize);
 
         while (!$heap->isEmpty()) {
             $top = $heap->extract();

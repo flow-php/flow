@@ -11,9 +11,10 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
 use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class ChainExtractorTest extends FlowTestCase
 {
@@ -32,8 +33,8 @@ final class ChainExtractorTest extends FlowTestCase
 
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(int_entry('id', 1)));
-                yield rows(row(int_entry('id', 2)));
+                yield rows(schema(int_schema('id')), row(['id' => 1]));
+                yield rows(schema(int_schema('id')), row(['id' => 2]));
             }
         }, new class implements Extractor {
             public function withSchema(Schema $schema): static
@@ -48,13 +49,13 @@ final class ChainExtractorTest extends FlowTestCase
 
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(int_entry('id', 3)));
-                yield rows(row(int_entry('id', 4)));
+                yield rows(schema(int_schema('id')), row(['id' => 3]));
+                yield rows(schema(int_schema('id')), row(['id' => 4]));
             }
         });
 
         self::assertExtractedRowsEquals(
-            rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)), row(int_entry('id', 4))),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4])),
             $extractor,
         );
     }

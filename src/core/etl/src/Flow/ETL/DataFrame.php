@@ -39,9 +39,12 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
+use Flow\ETL\Schema\SortingStrategy;
+use Flow\ETL\Schema\SortingStrategy\TypeStrategy;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Transformer\AutoCastTransformer;
+use Flow\ETL\Transformer\CallbackRowsTransformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
@@ -50,8 +53,6 @@ use Flow\ETL\Transformer\DropPartitionsTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\OrderEntries\Comparator;
-use Flow\ETL\Transformer\OrderEntries\TypeComparator;
 use Flow\ETL\Transformer\OrderEntriesTransformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Flow\ETL\Transformer\RenameEachEntryTransformer;
@@ -224,12 +225,12 @@ final class DataFrame
      */
     public function collectRefs(References $references): self
     {
-        $this->with(new CallbackRowTransformer(static function (Row $row) use ($references): Row {
-            foreach ($row->entries()->all() as $entry) {
-                $references->add($entry->ref());
+        $this->with(new CallbackRowsTransformer(static function (Rows $rows) use ($references): Rows {
+            foreach ($rows->schema()->references() as $reference) {
+                $references->add($reference);
             }
 
-            return $row;
+            return $rows;
         }));
 
         return $this;
@@ -374,11 +375,11 @@ final class DataFrame
             $this->limit($limit);
         }
 
-        $rows = new Rows();
+        $rows = null;
 
         try {
             foreach ($this->pipeline->process($this->context) as $nextRows) {
-                $rows = $rows->merge($nextRows);
+                $rows = $rows === null ? $nextRows : $rows->merge($nextRows);
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
         } catch (Throwable $e) {
@@ -387,7 +388,7 @@ final class DataFrame
             throw $e;
         }
 
-        return $rows;
+        return $rows ?? new Rows($this->schema());
     }
 
     /**
@@ -421,9 +422,7 @@ final class DataFrame
             return $this;
         }
 
-        $extractor->withPathFilter(
-            new ScalarFunctionFilter($filter, $this->context->entryFactory(), new AutoCaster(), $this->context),
-        );
+        $extractor->withPathFilter(new ScalarFunctionFilter($filter, new AutoCaster(), $this->context));
 
         return $this;
     }
@@ -635,9 +634,9 @@ final class DataFrame
      *
      * @param callable(Row $row) : Row $callback
      */
-    public function map(callable $callback): self
+    public function map(Schema $schema, callable $callback): self
     {
-        $this->pipeline->add(new CallbackRowTransformer($callback));
+        $this->pipeline->add(new CallbackRowTransformer($schema, $callback));
 
         return $this;
     }
@@ -748,9 +747,9 @@ final class DataFrame
         return $this;
     }
 
-    public function reorderEntries(Comparator $comparator = new TypeComparator()): self
+    public function reorderEntries(SortingStrategy $strategy = new TypeStrategy()): self
     {
-        $this->pipeline->add(new OrderEntriesTransformer($comparator));
+        $this->pipeline->add(new OrderEntriesTransformer($strategy));
 
         return $this;
     }

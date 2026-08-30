@@ -10,12 +10,13 @@ use Flow\ETL\Formatter\ASCII\Headers;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
 
 final class ASCIIBodyTest extends FlowTestCase
 {
@@ -24,8 +25,9 @@ final class ASCIIBodyTest extends FlowTestCase
     public function test_printing_ascii_body(): void
     {
         $rows = rows(
-            row(int_entry('id', 1), float_entry('value', 1.4)),
-            row(int_entry('id', 2), float_entry('value', 3.4)),
+            schema(int_schema('id'), float_schema('value')),
+            row(['id' => 1, 'value' => 1.4]),
+            row(['id' => 2, 'value' => 3.4]),
         );
 
         $headers = new ASCIIBody(new Headers($rows), new Body($rows));
@@ -40,8 +42,9 @@ final class ASCIIBodyTest extends FlowTestCase
     public function test_printing_ascii_body_with_partitioned_rows(): void
     {
         $rows = rows(
-            row(int_entry('id', 1), float_entry('value', 1.4), string_entry('group', 'a')),
-            row(int_entry('id', 2), float_entry('value', 3.4), string_entry('group', 'a')),
+            schema(int_schema('id'), float_schema('value'), string_schema('group')),
+            row(['id' => 1, 'value' => 1.4, 'group' => 'a']),
+            row(['id' => 2, 'value' => 3.4, 'group' => 'a']),
         )->partitionBy(ref('group'));
 
         $headers = new ASCIIBody(new Headers($rows[0]), new Body($rows[0]));

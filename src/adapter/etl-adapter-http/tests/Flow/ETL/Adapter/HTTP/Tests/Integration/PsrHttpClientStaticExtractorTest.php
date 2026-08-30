@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\CastingException;
@@ -83,13 +82,13 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             static::fail('Expected Rows instance for tomaszhanc');
         }
 
-        $norbertResponseBodyValue = $norbertRows->first()->valueOf('response_body');
+        $norbertResponseBodyValue = $norbertRows->first()->get('response_body');
         $norbertBodyJson = is_scalar($norbertResponseBodyValue) || $norbertResponseBodyValue instanceof Stringable
             ? (string) $norbertResponseBodyValue
             : '';
         $norbertResponseBody = type_array()->assert(json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR));
 
-        $tomekResponseBodyValue = $tomekRows->first()->valueOf('response_body');
+        $tomekResponseBodyValue = $tomekRows->first()->get('response_body');
         $tomekBodyJson = is_scalar($tomekResponseBodyValue) || $tomekResponseBodyValue instanceof Stringable
             ? (string) $tomekResponseBodyValue
             : '';
@@ -196,6 +195,10 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             static::fail('Expected Rows instance');
         }
 
-        static::assertInstanceOf(StructureEntry::class, $rows->first()->get('response_body'));
+        static::assertEquals(
+            type_structure(['login' => type_string(), 'id' => type_integer()]),
+            $rows->schema()->get('response_body')->type(),
+        );
+        static::assertSame(['login' => 'norberttech', 'id' => 1], $rows->first()->get('response_body'));
     }
 }

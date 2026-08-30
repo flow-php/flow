@@ -57,7 +57,7 @@ final class Collect implements AggregatingFunction
         /** @var array<string, mixed> $values */
         $values = [];
 
-        $values[$this->ref->name()] = $row->valueOf($this->ref);
+        $values[$this->ref->name()] = $row->get($this->ref);
 
         $this->collection[] = current($values);
     }

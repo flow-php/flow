@@ -7,8 +7,8 @@ namespace Flow\Filesystem;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
 use IteratorAggregate;
 use Traversable;
 

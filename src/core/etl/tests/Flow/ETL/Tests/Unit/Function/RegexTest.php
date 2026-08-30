@@ -22,7 +22,7 @@ final class RegexTest extends FlowTestCase
 
         $pregMatch = regex(lit(1), lit('12 apples and 45 oranges'));
 
-        $pregMatch->eval(row(), flow_context());
+        $pregMatch->eval(row([]), flow_context());
     }
 
     public function test_regex_expression_on_invalid_subject(): void
@@ -32,20 +32,20 @@ final class RegexTest extends FlowTestCase
 
         $pregMatch = regex(lit('/\d+/'), lit(2));
 
-        $pregMatch->eval(row(), flow_context());
+        $pregMatch->eval(row([]), flow_context());
     }
 
     public function test_regex_expression_on_no_match(): void
     {
         $pregMatch = regex(lit('/\d+/'), lit('apples and oranges'));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        static::assertNull($pregMatch->eval(row([]), flow_context()));
     }
 
     public function test_regex_expression_on_valid_strings(): void
     {
         $pregMatch = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'));
 
-        static::assertTrue($pregMatch->eval(row(), flow_context()));
+        static::assertTrue($pregMatch->eval(row([]), flow_context()));
     }
 }

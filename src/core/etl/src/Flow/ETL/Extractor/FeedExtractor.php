@@ -30,6 +30,8 @@ final class FeedExtractor implements Extractor
 
     private bool $finished = false;
 
+    private ?Schema $fedSchema = null;
+
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
@@ -48,6 +50,7 @@ final class FeedExtractor implements Extractor
 
             $rows = $this->batch;
             $this->batch = null;
+            $this->fedSchema = $rows->schema();
 
             $signal = yield $rows;
 
@@ -59,7 +62,9 @@ final class FeedExtractor implements Extractor
             // Mago does not model the generator suspension above: feed() and finish() run while the enclosing Fiber
             // is parked, so both operands can change between the yield and this check.
             if ($this->batch === null && !$this->finished) {
-                $signal = yield new Rows();
+                // the idle yield keeps the shape of what has been fed, so a downstream projection
+                // still sees the columns it was built against
+                $signal = yield new Rows($this->schema ?? $this->fedSchema);
 
                 if ($signal === Signal::STOP) {
                     return;

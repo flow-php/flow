@@ -48,6 +48,8 @@ final readonly class WindowProcessor implements Processor
         $partitionRows = [];
         $bound = null;
         $definition = null;
+        $schema = null;
+        $outputSchema = null;
 
         foreach ($rows as $batch) {
             // Bind once per run, against the first non-empty batch's schema - one Definition for the
@@ -67,13 +69,28 @@ final readonly class WindowProcessor implements Processor
                 $definition = $this->entry instanceof Definition
                     ? $this->entry
                     : definition_from_type($this->entry, $bound->returns());
+                $outputSchema = $schema->findDefinition($definition->entry()->name()) === null
+                    ? $schema->add($definition)
+                    : $schema->replace($definition->entry()->name(), $definition);
             }
 
             foreach ($batch as $row) {
                 $partitionKey = $this->extractPartitionKey($bound, $row);
 
-                if ($currentPartitionKey !== null && $currentPartitionKey !== $partitionKey) {
-                    yield $this->processPartition($bound, $definition, $partitionRows, $context);
+                if (
+                    $currentPartitionKey !== null
+                    && $currentPartitionKey !== $partitionKey
+                    && $schema !== null
+                    && $outputSchema !== null
+                ) {
+                    yield $this->processPartition(
+                        $bound,
+                        $definition,
+                        $schema,
+                        $outputSchema,
+                        $partitionRows,
+                        $context,
+                    );
 
                     $partitionRows = [];
                 }
@@ -83,8 +100,14 @@ final readonly class WindowProcessor implements Processor
             }
         }
 
-        if ([] !== $partitionRows && $bound !== null && $definition !== null) {
-            yield $this->processPartition($bound, $definition, $partitionRows, $context);
+        if (
+            [] !== $partitionRows
+            && $bound !== null
+            && $definition !== null
+            && $schema !== null
+            && $outputSchema !== null
+        ) {
+            yield $this->processPartition($bound, $definition, $schema, $outputSchema, $partitionRows, $context);
         }
     }
 
@@ -117,7 +140,7 @@ final readonly class WindowProcessor implements Processor
 
         foreach ($partitions as $partition) {
             try {
-                $keyParts[] = $row->valueOf($partition);
+                $keyParts[] = $row->get($partition);
             } catch (InvalidArgumentException) {
                 $keyParts[] = null;
             }
@@ -195,12 +218,14 @@ final readonly class WindowProcessor implements Processor
     private function processPartition(
         WindowFunction $function,
         Definition $definition,
+        Schema $inputSchema,
+        Schema $outputSchema,
         array $rows,
         FlowContext $context,
     ): Rows {
         $window = $function->window();
         $orderBy = $window->order();
-        $partitionRows = rows(...$rows)->sortBy(...$orderBy ?: $window->partitions());
+        $partitionRows = rows($inputSchema, ...$rows)->sortBy(...$orderBy ?: $window->partitions());
 
         $frame = $window->frame();
         $processedRows = [];
@@ -221,12 +246,12 @@ final readonly class WindowProcessor implements Processor
                 ? $function->apply(new WindowContext($row, $index, $partitionRows, $frame, $context))
                 : $values[$index];
 
-            $processedRows[] = $row->add($context->entryFactory()->fromDefinition(
-                $definition,
-                $value === null ? null : $definition->type()->cast($value),
-            ));
+            $processedRows[] = new Row([
+                ...$row->values(),
+                $definition->entry()->name() => $value === null ? null : $definition->type()->cast($value),
+            ]);
         }
 
-        return rows(...$processedRows);
+        return rows($outputSchema, ...$processedRows);
     }
 }

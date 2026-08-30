@@ -51,7 +51,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
 
                 foreach ($this->entries as $entry) {
                     try {
-                        $values[] = $row->valueOf($entry);
+                        $values[] = $row->get($entry);
                     } catch (InvalidArgumentException) {
                         $values[] = null;
                     }
@@ -65,7 +65,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
                 }
             }
 
-            $result = new Rows(...$newRows);
+            $result = new Rows($rows->schema(), ...$newRows);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

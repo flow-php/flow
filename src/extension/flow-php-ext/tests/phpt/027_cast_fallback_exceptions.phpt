@@ -6,12 +6,22 @@ native cast propagates the exact PHP cast exceptions and aborts the batch
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_string;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
-
-use function Flow\ETL\DSL\{schema, datetime_schema, date_schema, uuid_schema, json_schema, list_schema, map_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_integer, type_string, type_positive_integer};
 
 $throwing = [
     'uuid invalid' => [schema(uuid_schema('u')), [new RawRowValues(['u' => 'not-a-uuid'])]],

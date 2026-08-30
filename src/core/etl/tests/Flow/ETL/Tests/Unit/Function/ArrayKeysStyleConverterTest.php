@@ -12,8 +12,6 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_keys_style_convert;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
@@ -29,7 +27,7 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unrecognized style invalid, please use one of following:');
 
-        $row = row(json_entry('invalid_entry', []));
+        $row = row(['invalid_entry' => []]);
 
         array_keys_style_convert(ref('invalid_entry'), 'invalid')->eval($row, flow_context());
     }
@@ -39,31 +37,33 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = row(int_entry('invalid_entry', 1));
+        $row = row(['invalid_entry' => 1]);
 
         array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row, flow_context());
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry(): void
     {
-        $row = row(json_entry('arrayEntry', [
-            'itemId' => 1,
-            'itemStatus' => 'PENDING',
-            'itemEnabled' => true,
-            'itemVariants' => [
-                'variantStatuses' => [
-                    [
-                        'statusId' => 1000,
-                        'statusName' => 'NEW',
+        $row = row([
+            'arrayEntry' => [
+                'itemId' => 1,
+                'itemStatus' => 'PENDING',
+                'itemEnabled' => true,
+                'itemVariants' => [
+                    'variantStatuses' => [
+                        [
+                            'statusId' => 1000,
+                            'statusName' => 'NEW',
+                        ],
+                        [
+                            'statusId' => 2000,
+                            'statusName' => 'ACTIVE',
+                        ],
                     ],
-                    [
-                        'statusId' => 2000,
-                        'statusName' => 'ACTIVE',
-                    ],
+                    'variantName' => 'Variant Name',
                 ],
-                'variantName' => 'Variant Name',
             ],
-        ]));
+        ]);
 
         static::assertEquals(
             [

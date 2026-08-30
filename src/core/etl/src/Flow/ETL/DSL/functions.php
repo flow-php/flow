@@ -4,20 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Brick\Math\BigDecimal;
 use DateInterval;
 use DatePeriod;
-use DateTime;
-use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Dom\Element;
-use Dom\HTMLDocument;
-use Dom\HTMLElement;
-use Dom\XMLDocument;
-use DOMDocument;
-use DOMElement;
-use Exception;
 use Flow\Calculator\Rounding;
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
@@ -169,28 +159,6 @@ use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\ColumnName;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\HTMLElementEntry;
-use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\TimeEntry;
-use Flow\ETL\Row\Entry\TimeZoneEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
-use Flow\ETL\Row\Entry\XMLElementEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\RawRowValues;
@@ -250,12 +218,6 @@ use Flow\ETL\Transformation\Limit;
 use Flow\ETL\Transformation\MaskColumns;
 use Flow\ETL\Transformation\Select;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\OrderEntries\CombinedComparator;
-use Flow\ETL\Transformer\OrderEntries\Comparator;
-use Flow\ETL\Transformer\OrderEntries\NameComparator;
-use Flow\ETL\Transformer\OrderEntries\Order;
-use Flow\ETL\Transformer\OrderEntries\TypeComparator;
-use Flow\ETL\Transformer\OrderEntries\TypePriorities;
 use Flow\ETL\Transformer\Rename\RenameCaseEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameReplaceEntryStrategy;
@@ -296,10 +258,7 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
-use Flow\Types\Value\Json;
-use Flow\Types\Value\Uuid as FlowUuid;
 use Psr\Clock\ClockInterface;
-use ReflectionProperty;
 use Throwable;
 use UnitEnum;
 
@@ -627,487 +586,18 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 /**
- * @return ($value is null ? Entry<null> : Entry<bool>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function bool_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
-{
-    return new BooleanEntry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<bool>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
-{
-    return bool_entry($name, $value, $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new DateTimeEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateTime) {
-        return new DateTimeEntry($name, DateTimeImmutable::createFromMutable($value), $metadata);
-    }
-
-    if ($value instanceof DateTimeInterface) {
-        return new DateTimeEntry($name, $value, $metadata);
-    }
-
-    try {
-        return new DateTimeEntry($name, new DateTimeImmutable($value), $metadata);
-    } catch (Exception $e) {
-        throw new InvalidArgumentException(
-            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-            previous: $e,
-        );
-    }
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateInterval>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, DateInterval|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new TimeEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateInterval) {
-        return new TimeEntry($name, $value, $metadata);
-    }
-
-    try {
-        return new TimeEntry($name, new DateInterval($value), $metadata);
-    } catch (Throwable $dateIntervalException) {
-        try {
-            $dateTime = new DateTimeImmutable($value);
-            $hours = (int) $dateTime->format('H');
-            $minutes = (int) $dateTime->format('i');
-            $seconds = (int) $dateTime->format('s');
-            $fraction = (int) $dateTime->format('u') / 1_000_000;
-
-            $interval = new DateInterval('PT' . $hours . 'H' . $minutes . 'M' . $seconds . 'S');
-            (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
-
-            return new TimeEntry($name, $interval, $metadata);
-        } catch (Throwable) {
-            throw new InvalidArgumentException(
-                "Invalid value given: '{$value}', reason: " . $dateIntervalException->getMessage(),
-                previous: $dateIntervalException,
-            );
-        }
-    }
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new DateEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateTimeImmutable) {
-        return new DateEntry($name, $value->setTime(0, 0, 0, 0), $metadata);
-    }
-
-    if ($value instanceof DateTimeInterface) {
-        return new DateEntry($name, DateTimeImmutable::createFromInterface($value)->setTime(0, 0, 0, 0), $metadata);
-    }
-
-    try {
-        return new DateEntry($name, (new DateTimeImmutable($value))->setTime(0, 0, 0, 0), $metadata);
-    } catch (Exception $e) {
-        throw new InvalidArgumentException(
-            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-            previous: $e,
-        );
-    }
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<int>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function int_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
-{
-    return new IntegerEntry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<int>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
-{
-    return int_entry($name, $value, $metadata);
-}
-
-/**
- * @return ($enum is null ? Entry<null> : Entry<\UnitEnum>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?UnitEnum $enum, ?Metadata $metadata = null): Entry
-{
-    return new EnumEntry($name, $enum, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<float>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, float|int|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new FloatEntry($name, null, $metadata);
-    }
-
-    return new FloatEntry($name, BigDecimal::of((string) $value)->toFloat(), $metadata);
-}
-
-/**
- * @param null|array<array-key, mixed>|Json|string $data
- *
- * @throws InvalidArgumentException
- *
- * @return ($data is null ? Entry<null> : Entry<Json>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
-{
-    if ($data === null) {
-        return new JsonEntry($name, null, $metadata);
-    }
-
-    if ($data instanceof Json) {
-        return new JsonEntry($name, $data, $metadata);
-    }
-
-    if (is_array($data)) {
-        return new JsonEntry($name, Json::fromArray($data), $metadata);
-    }
-
-    try {
-        return new JsonEntry($name, new Json($data), $metadata);
-    } catch (Throwable $e) {
-        throw new InvalidArgumentException("Invalid value given: '{$data}', reason: " . $e->getMessage(), previous: $e);
-    }
-}
-
-/**
- * @param null|array<array-key, mixed>|Json|string $data
- *
- * @throws InvalidArgumentException
- *
- * @return ($data is null ? Entry<null> : Entry<Json>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
-{
-    if ($data instanceof Json) {
-        return new JsonEntry($name, $data, $metadata);
-    }
-
-    if (is_string($data)) {
-        try {
-            return new JsonEntry($name, new Json($data), $metadata);
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException(
-                "Invalid value given: '{$data}', reason: " . $e->getMessage(),
-                previous: $e,
-            );
-        }
-    }
-
-    return JsonEntry::object($name, $data, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<string>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function str_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
-{
-    return new StringEntry($name, $value, $metadata);
-}
-
-/**
- * An entry whose column type is not known. Use only when nothing about the column's type is
- * available - a column that is null in every row. For a nullable column of a known type, use the
- * typed entry with a null value: str_entry('id', null).
- *
- * When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals
- * a real type, at which point the schema merge turns it into that type made nullable.
- *
- * @return Entry<null>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function null_entry(string $name, ?Metadata $metadata = null): Entry
-{
-    return new NullEntry($name, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<string>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function string_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
-{
-    return str_entry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<\Flow\Types\Value\Uuid>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new UuidEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof FlowUuid) {
-        return new UuidEntry($name, $value, $metadata);
-    }
-
-    return new UuidEntry($name, FlowUuid::fromString($value), $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<\DateTimeZone>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_zone_entry(string $name, DateTimeZone|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new TimeZoneEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateTimeZone) {
-        return new TimeZoneEntry($name, $value, $metadata);
-    }
-
-    return new TimeZoneEntry($name, new DateTimeZone($value), $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DOMDocument|XMLDocument>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, DOMDocument|XMLDocument|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new XMLEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DOMDocument || $value instanceof XMLDocument) {
-        return new XMLEntry($name, $value, $metadata);
-    }
-
-    $doc = new DOMDocument();
-
-    if (!@$doc->loadXML($value)) {
-        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
-    }
-
-    return new XMLEntry($name, $doc, $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DOMElement|Element>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, DOMElement|Element|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new XMLElementEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DOMElement || $value instanceof Element) {
-        return new XMLElementEntry($name, $value, $metadata);
-    }
-
-    $doc = new DOMDocument();
-
-    if (!@$doc->loadXML($value)) {
-        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
-    }
-
-    $element = $doc->documentElement;
-
-    if (!$element instanceof DOMElement) {
-        throw new InvalidArgumentException("Given string \"{$value}\" does not contain a root XML element");
-    }
-
-    return new XMLElementEntry($name, $element, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<HTMLDocument>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new HTMLEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof HTMLDocument) {
-        return new HTMLEntry($name, $value, $metadata);
-    }
-
-    return HTMLEntry::fromString($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<HTMLElement>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new HTMLElementEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof HTMLElement) {
-        return new HTMLElementEntry($name, $value, $metadata);
-    }
-
-    return HTMLElementEntry::fromString($name, $value, $metadata);
-}
-
-/**
- * @param Entry<mixed> ...$entries
+ * @param array<string, mixed> $values
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function entries(Entry ...$entries): Entries
+function row(array $values): Row
 {
-    return new Entries(...$entries);
-}
-
-/**
- * @template TShape of array<array-key, mixed>
- *
- * @param ?TShape $value
- * @param StructureType<array<array-key, mixed>>|Type<TShape> $type
- *
- * @return ($value is null ? Entry<null> : Entry<TShape>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof StructureType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Structure entry "%s" requires a StructureType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new StructureEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @template TShape of array<array-key, mixed>
- *
- * @param ?TShape $value
- * @param StructureType<array<array-key, mixed>>|Type<TShape> $type
- *
- * @return ($value is null ? Entry<null> : Entry<TShape>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof StructureType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Structure entry "%s" requires a StructureType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new StructureEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @param null|list<mixed> $value
- * @param Type<mixed> $type
- *
- * @return ($value is null ? Entry<null> : Entry<list<mixed>>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof ListType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'List entry "%s" requires a ListType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new ListEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @param ?array<array-key, mixed> $value
- * @param Type<mixed> $mapType
- *
- * @return ($value is null ? Entry<null> : Entry<array<array-key, mixed>>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
-{
-    if (!$mapType instanceof MapType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Map entry "%s" requires a MapType, got %s',
-            $name,
-            $mapType::class,
-        ));
-    }
-
-    return new MapEntry($name, $value, $mapType, $metadata);
-}
-
-/**
- * @param Entry<mixed> ...$entry
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function row(Entry ...$entry): Row
-{
-    return Row::create(...$entry);
+    return new Row($values);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows(Row ...$row): Rows
+function rows(Schema $schema, Row ...$row): Rows
 {
-    return new Rows(...$row);
+    return new Rows($schema, ...$row);
 }
 
 /**
@@ -1115,9 +605,9 @@ function rows(Row ...$row): Rows
  * @param array<Partition|string>|Partitions $partitions
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows_partitioned(array $rows, array|Partitions $partitions): Rows
+function rows_partitioned(Schema $schema, array $rows, array|Partitions $partitions): Rows
 {
-    return Rows::partitioned($rows, $partitions);
+    return Rows::partitioned($schema, $rows, $partitions);
 }
 
 /**
@@ -1669,17 +1159,6 @@ function number_format(
 }
 
 /**
- * @param array<mixed> $data
- *
- * @return Entry<mixed>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new EntryFactory()): Entry
-{
-    return $entryFactory->create($name, $data);
-}
-
-/**
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|Partitions $partitions
  * @param null|Schema $schema
@@ -1758,7 +1237,9 @@ function array_to_rows(
         $maps[] = new RawRowValues($map);
     }
 
-    return Rows::partitioned($hydrator->cast($maps, $schema)->all(), $partitions);
+    $hydrated = $hydrator->cast($maps, $schema);
+
+    return Rows::partitioned($hydrated->schema(), $hydrated->all(), $partitions);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]
@@ -2409,50 +1890,6 @@ function compare_any(Comparison $comparison, Comparison ...$comparisons): Compar
 function join_on(array|Comparison $comparisons, string $join_prefix = ''): Expression
 {
     return Expression::on($comparisons, $join_prefix);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name(Order $order = Order::ASC): Comparator
-{
-    return new NameComparator($order);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name_desc(): Comparator
-{
-    return new NameComparator(Order::DESC);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type(array $priorities = TypePriorities::PRIORITIES, Order $order = Order::ASC): Comparator
-{
-    return new TypeComparator(new TypePriorities($priorities), $order);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_desc(array $priorities = TypePriorities::PRIORITIES): Comparator
-{
-    return new TypeComparator(new TypePriorities($priorities), Order::DESC);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_and_name(
-    array $priorities = TypePriorities::PRIORITIES,
-    Order $order = Order::ASC,
-): Comparator {
-    return new CombinedComparator(
-        new TypeComparator(new TypePriorities($priorities), $order),
-        new NameComparator($order),
-    );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]

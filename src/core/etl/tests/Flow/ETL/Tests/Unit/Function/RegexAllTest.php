@@ -21,14 +21,14 @@ final class RegexAllTest extends FlowTestCase
 
         $pregMatch = regex_all(lit('/\d+/'), lit(2));
 
-        $pregMatch->eval(row(), flow_context());
+        $pregMatch->eval(row([]), flow_context());
     }
 
     public function test_regex_all_expression_on_no_match(): void
     {
         $pregMatch = regex_all(lit('/\d+/'), lit('apples and oranges'));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        static::assertNull($pregMatch->eval(row([]), flow_context()));
     }
 
     public function test_regex_all_expression_on_valid_strings(): void
@@ -41,7 +41,7 @@ final class RegexAllTest extends FlowTestCase
                 ['124.23',     '12',     '45'],
                 ['EUR',        'USD',    'PLN'],
             ],
-            $pregMatch->eval(row(), flow_context()),
+            $pregMatch->eval(row([]), flow_context()),
         );
     }
 
@@ -52,6 +52,6 @@ final class RegexAllTest extends FlowTestCase
 
         $pregMatch = regex_all(lit(1), lit('12 apples and 45 oranges'));
 
-        $pregMatch->eval(row(), flow_context());
+        $pregMatch->eval(row([]), flow_context());
     }
 }

@@ -26,12 +26,12 @@ use PHPUnit\Framework\TestCase;
 use function array_map;
 use function array_slice;
 use function count;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -67,11 +67,12 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://batches.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-            row(int_entry('id', 5)),
+            schema(int_schema('id')),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4]),
+            row(['id' => 5]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -102,12 +103,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://limit.floe');
 
-        $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        );
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -119,7 +115,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows(batchSize: 100, offset: 0, limit: 2) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -131,7 +127,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://limit-batch.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -188,12 +184,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-single.floe');
 
-        $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        );
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -205,7 +196,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows(offset: 2) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -218,13 +209,14 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://offset-sections.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4), str_entry('email', 'a')),
-            row(int_entry('id', 5), str_entry('email', 'b')),
-            row(int_entry('id', 6)),
-            row(int_entry('id', 7)),
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4, 'email' => 'a']),
+            row(['id' => 5, 'email' => 'b']),
+            row(['id' => 6]),
+            row(['id' => 7]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -239,9 +231,9 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows(offset: 4) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
-                $names[] = $row->entries()->names();
-                $emails[] = $row->valueOf('email');
+                $ids[] = $row->get('id');
+                $names[] = $row->names();
+                $emails[] = $row->get('email');
             }
         }
 
@@ -256,7 +248,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-past-end.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -285,12 +277,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-batches.floe');
 
-        $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        );
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -314,11 +301,12 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://offset-limit.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-            row(int_entry('id', 5)),
+            schema(int_schema('id')),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4]),
+            row(['id' => 5]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -331,7 +319,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows(batchSize: 100, offset: 1, limit: 2) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -344,13 +332,14 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://offset-tail.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4), str_entry('email', 'a')),
-            row(int_entry('id', 5), str_entry('email', 'b')),
-            row(int_entry('id', 6)),
-            row(int_entry('id', 7)),
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4, 'email' => 'a']),
+            row(['id' => 5, 'email' => 'b']),
+            row(['id' => 6]),
+            row(['id' => 7]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -362,7 +351,7 @@ final class FloeReaderTest extends TestCase
 
         foreach ($reader->rows() as $batch) {
             foreach ($batch->all() as $row) {
-                $full[] = $row->valueOf('id');
+                $full[] = $row->get('id');
             }
         }
 
@@ -371,7 +360,7 @@ final class FloeReaderTest extends TestCase
 
             foreach ($reader->rows(offset: $offset) as $batch) {
                 foreach ($batch->all() as $row) {
-                    $tail[] = $row->valueOf('id');
+                    $tail[] = $row->get('id');
                 }
             }
 
@@ -384,7 +373,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-codec.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
         $writer = new FloeWriter($filesystem, $data->schema(), new Options(codec: new CodecStub(0x00)));
         $writer->create($path);
         $writer->write($data);
@@ -396,7 +385,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows(offset: 1) as $batch) {
             foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->valueOf('id');
+                $ids[] = $extractedRow->get('id');
             }
         }
 
@@ -408,11 +397,15 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-partitioned.floe');
 
-        $data = Rows::partitioned([
-            row(int_entry('id', 1), str_entry('country', 'PL')),
-            row(int_entry('id', 2), str_entry('country', 'PL')),
-            row(int_entry('id', 3), str_entry('country', 'PL')),
-        ], [new Partition('country', 'PL')]);
+        $data = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 2, 'country' => 'PL']),
+                row(['id' => 3, 'country' => 'PL']),
+            ],
+            [new Partition('country', 'PL')],
+        );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -424,7 +417,7 @@ final class FloeReaderTest extends TestCase
                 ->rows(offset: 1),
         );
 
-        static::assertSame([2, 3], array_map(static fn($row) => $row->valueOf('id'), $batches[0]->all()));
+        static::assertSame([2, 3], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
         static::assertEquals([new Partition('country', 'PL')], iterator_to_array($batches[0]->partitions()));
     }
 
@@ -432,7 +425,7 @@ final class FloeReaderTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://corrupt-row.floe');
-        $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
+        $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
             Format::header(0x00) . Format::frame(Format::FRAME_ROW, "\xEE")
@@ -477,13 +470,13 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://appended.floe');
 
-        $created = rows(row(int_entry('id', 1)));
+        $created = rows(schema(int_schema('id')), row(['id' => 1]));
         $writer = new FloeWriter($filesystem, $created->schema());
         $writer->create($path);
         $writer->write($created);
         $writer->close();
 
-        $appended = rows(row(int_entry('id', 2)));
+        $appended = rows(schema(int_schema('id')), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $appended->schema());
         $writer->append($path);
         $writer->write($appended);
@@ -496,7 +489,7 @@ final class FloeReaderTest extends TestCase
         );
 
         static::assertCount(1, $batches);
-        static::assertSame([1, 2], array_map(static fn($row) => $row->valueOf('id'), $batches[0]->all()));
+        static::assertSame([1, 2], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
     }
 
     public function test_empty_file_yields_no_batches(): void
@@ -524,15 +517,16 @@ final class FloeReaderTest extends TestCase
         $baseFile = path('memory://evolved-base.floe');
         $evolvedFile = path('memory://evolved-new.floe');
 
-        $baseRows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $baseRows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $baseRows->schema());
         $writer->create($baseFile);
         $writer->write($baseRows);
         $writer->close();
 
         $evolvedRows = rows(
-            row(int_entry('id', 3), str_entry('email', null)),
-            row(int_entry('id', 4), str_entry('email', 'x@flow.php')),
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 3, 'email' => null]),
+            row(['id' => 4, 'email' => 'x@flow.php']),
         );
         $writer = new FloeWriter($filesystem, $evolvedRows->schema());
         $writer->create($evolvedFile);
@@ -551,13 +545,16 @@ final class FloeReaderTest extends TestCase
         static::assertCount(4, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['id', 'email'], $row->entries()->names());
+            static::assertSame(['id', 'email'], $row->names());
         }
 
-        static::assertNull($rows[0]->valueOf('email'));
-        static::assertTrue($rows[0]->get('email')->definition()->isNullable());
-        static::assertTrue($rows[0]->get('email')->definition()->metadata()->isEmpty());
-        static::assertSame('x@flow.php', $rows[3]->valueOf('email'));
+        static::assertNull($rows[0]->get('email'));
+        static::assertSame('x@flow.php', $rows[3]->get('email'));
+
+        // the merged schema is what carries nullability now, not a per-cell definition
+        $merged = $batches[0]->schema();
+        static::assertTrue($merged->get('email')->isNullable());
+        static::assertTrue($merged->get('email')->metadata()->isEmpty());
     }
 
     public function test_footer_length_exceeding_file_throws(): void
@@ -614,7 +611,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://accessors.floe');
 
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'x')));
+        $data = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'x']));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path, Metadata::fromArray(['source' => 'unit']));
         $writer->write($data);
@@ -648,10 +645,11 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://partitioned.floe');
 
-        $data = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
+        $data = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 1, 'country' => 'PL'])],
+            [new Partition('country', 'PL')],
+        );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -672,16 +670,19 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://multi-combination.floe');
 
-        $batchPL = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
-        $batchUS = Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
-            'country',
-            'US',
-        )]);
-        $batchPlain = rows(row(int_entry('id', 3)));
-        $writer = new FloeWriter($filesystem, $batchPL->merge($batchUS)->merge($batchPlain)->schema());
+        $batchPL = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 1, 'country' => 'PL'])],
+            [new Partition('country', 'PL')],
+        );
+        $batchUS = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 2, 'country' => 'US'])],
+            [new Partition('country', 'US')],
+        );
+        $batchPlain = rows(schema(int_schema('id')), row(['id' => 3]));
+        // R6 refuses to merge batches whose schemas differ, so the file schema is stated as the union
+        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country', nullable: true)));
         $writer->create($path);
         $writer->write($batchPL);
         $writer->write($batchUS);
@@ -695,7 +696,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->rows() as $batch) {
             $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-            $ids[] = array_map(static fn($row) => $row->valueOf('id'), $batch->all());
+            $ids[] = array_map(static fn($row) => $row->get('id'), $batch->all());
         }
 
         static::assertSame([['PL'], ['US'], []], $combos);
@@ -707,15 +708,17 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://offset-multi-combination.floe');
 
-        $batchPL = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
-        $batchUS = Rows::partitioned([row(int_entry('id', 2), str_entry('country', 'US'))], [new Partition(
-            'country',
-            'US',
-        )]);
-        $writer = new FloeWriter($filesystem, $batchPL->merge($batchUS)->schema());
+        $batchPL = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 1, 'country' => 'PL'])],
+            [new Partition('country', 'PL')],
+        );
+        $batchUS = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 2, 'country' => 'US'])],
+            [new Partition('country', 'US')],
+        );
+        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
         $writer->create($path);
         $writer->write($batchPL);
         $writer->write($batchUS);
@@ -727,7 +730,7 @@ final class FloeReaderTest extends TestCase
                 ->rows(offset: 1),
         );
 
-        static::assertSame([2], array_map(static fn($row) => $row->valueOf('id'), $batches[0]->all()));
+        static::assertSame([2], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
         static::assertEquals([new Partition('country', 'US')], iterator_to_array($batches[0]->partitions()));
     }
 
@@ -752,7 +755,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://custom-codec.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $data->schema(), new Options(codec: new CodecStub(0x00)));
         $writer->create($path);
         $writer->write($data);
@@ -772,11 +775,11 @@ final class FloeReaderTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://custom-codec-long-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
+        $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
         $rowBody = (new PhpFloeEncoder(schema_from_json(
             $schemaBody,
-        )))->encode((new AdaptiveRowHydrator())->dehydrate(rows(row(int_entry('id', 1)))))[0];
-        $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
+        )))->encode((new AdaptiveRowHydrator())->dehydrate(rows(schema(int_schema('id')), row(['id' => 1]))))[0];
+        $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
             Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
@@ -820,11 +823,11 @@ final class FloeReaderTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://long-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(row(int_entry('id', 1))->schema());
+        $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
         $rowBody = (new PhpFloeEncoder(schema_from_json(
             $schemaBody,
-        )))->encode((new AdaptiveRowHydrator())->dehydrate(rows(row(int_entry('id', 1)))))[0];
-        $footerJson = FooterMother::footer(schema: row(int_entry('id', 1))->schema()->normalize())->toJson();
+        )))->encode((new AdaptiveRowHydrator())->dehydrate(rows(schema(int_schema('id')), row(['id' => 1]))))[0];
+        $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
             Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
@@ -847,7 +850,11 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://strict-torn.floe');
 
-        FloeStreamReaderContext::writeWithoutFooter($filesystem, $path, rows(row(int_entry('id', 1))));
+        FloeStreamReaderContext::writeWithoutFooter(
+            $filesystem,
+            $path,
+            rows(schema(int_schema('id')), row(['id' => 1])),
+        );
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('magic');
@@ -887,11 +894,12 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://head.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-            row(int_entry('id', 5)),
+            schema(int_schema('id')),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4]),
+            row(['id' => 5]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -904,7 +912,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->head(3) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -916,7 +924,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://head-all.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -928,7 +936,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->head(5) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -940,12 +948,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://head-batches.floe');
 
-        $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        );
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -987,13 +990,14 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://tail-sections.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4), str_entry('email', 'a')),
-            row(int_entry('id', 5), str_entry('email', 'b')),
-            row(int_entry('id', 6)),
-            row(int_entry('id', 7)),
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4, 'email' => 'a']),
+            row(['id' => 5, 'email' => 'b']),
+            row(['id' => 6]),
+            row(['id' => 7]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -1007,8 +1011,8 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->tail(3) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
-                $names[] = $row->entries()->names();
+                $ids[] = $row->get('id');
+                $names[] = $row->names();
             }
         }
 
@@ -1021,7 +1025,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://tail-all.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -1033,7 +1037,7 @@ final class FloeReaderTest extends TestCase
             ->read($path)
             ->tail(5) as $batch) {
             foreach ($batch->all() as $row) {
-                $ids[] = $row->valueOf('id');
+                $ids[] = $row->get('id');
             }
         }
 
@@ -1045,12 +1049,7 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://tail-batches.floe');
 
-        $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-        );
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4]));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
@@ -1074,13 +1073,14 @@ final class FloeReaderTest extends TestCase
         $path = path('memory://tail-slice.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-            row(int_entry('id', 5)),
-            row(int_entry('id', 6)),
-            row(int_entry('id', 7)),
+            schema(int_schema('id')),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4]),
+            row(['id' => 5]),
+            row(['id' => 6]),
+            row(['id' => 7]),
         );
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
@@ -1093,7 +1093,7 @@ final class FloeReaderTest extends TestCase
 
         foreach ($reader->rows() as $batch) {
             foreach ($batch->all() as $row) {
-                $full[] = $row->valueOf('id');
+                $full[] = $row->get('id');
             }
         }
 
@@ -1102,7 +1102,7 @@ final class FloeReaderTest extends TestCase
 
             foreach ($reader->tail($count) as $batch) {
                 foreach ($batch->all() as $row) {
-                    $tail[] = $row->valueOf('id');
+                    $tail[] = $row->get('id');
                 }
             }
 

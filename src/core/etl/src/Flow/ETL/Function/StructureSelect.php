@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
@@ -21,6 +20,7 @@ use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
+use function is_array;
 
 final readonly class StructureSelect implements ScalarFunction
 {
@@ -97,17 +97,15 @@ final readonly class StructureSelect implements ScalarFunction
             return null;
         }
 
-        $structure = $row->get($this->ref);
+        $value = $row->get($this->ref);
 
-        if (!$structure instanceof StructureEntry) {
+        if (!is_array($value)) {
             return null;
         }
-
-        $value = $structure->value();
         $output = [];
 
         foreach ($this->refs as $ref) {
-            if ($value !== null && array_key_exists($ref->to(), $value)) {
+            if (array_key_exists($ref->to(), $value)) {
                 $output[$ref->name()] = $value[$ref->to()];
             } else {
                 $output[$ref->name()] = null;

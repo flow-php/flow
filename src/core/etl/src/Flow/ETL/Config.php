@@ -13,7 +13,6 @@ use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Pipeline\Optimizer;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
@@ -43,7 +42,6 @@ final readonly class Config
         public HashGroupByConfig $grouping,
         public HashJoinConfig $join,
         private int $extractorBatchSize = 1000,
-        private EntryFactory $entryFactory = new EntryFactory(),
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
@@ -71,11 +69,6 @@ final readonly class Config
     public function clock(): ClockInterface
     {
         return $this->clock;
-    }
-
-    public function entryFactory(): EntryFactory
-    {
-        return $this->entryFactory;
     }
 
     /**

@@ -130,7 +130,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
 
     public function toRows(Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
     {
-        $rows = rows();
+        $rows = rows(schema());
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {

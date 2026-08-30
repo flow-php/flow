@@ -24,6 +24,7 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path_real;
 
 final class LimitOptimizationTest extends FlowTestCase
@@ -43,7 +44,7 @@ final class LimitOptimizationTest extends FlowTestCase
         static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithPartitioning));
 
         // Pipeline with empty rows extractor - should not optimize
-        $pipelineWithEmptyExtractor = new Pipeline(from_rows(rows()));
+        $pipelineWithEmptyExtractor = new Pipeline(from_rows(rows(schema())));
 
         static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithEmptyExtractor));
     }

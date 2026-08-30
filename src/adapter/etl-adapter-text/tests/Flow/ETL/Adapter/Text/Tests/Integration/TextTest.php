@@ -18,8 +18,9 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function unlink;
 
@@ -37,9 +38,10 @@ final class TextTest extends FlowTestCase
 
         data_frame()
             ->process(rows(
-                row(string_entry('name', 'Norbert')),
-                row(string_entry('name', 'Tomek')),
-                row(string_entry('name', 'Dawid')),
+                schema(string_schema('name')),
+                row(['name' => 'Norbert']),
+                row(['name' => 'Tomek']),
+                row(['name' => 'Dawid']),
             ))
             ->write(to_text($path))
             ->run();

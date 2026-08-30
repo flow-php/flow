@@ -16,7 +16,8 @@ use Throwable;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
 
 final readonly class SerializeTransformer implements Transformer
@@ -35,9 +36,25 @@ final readonly class SerializeTransformer implements Transformer
             // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
-            $result = $rows->map(fn(Row $row) => $this->standalone
-                ? row(str_entry($target->name(), serialize_to_string($serializer, rows($row))))
-                : $row->add(str_entry($target->name(), serialize_to_string($serializer, rows($row)))));
+            $inputSchema = $rows->schema();
+            $column = str_schema($target->name());
+            $outputSchema = $this->standalone
+                ? schema($column)
+                : (
+                    $inputSchema->findDefinition($target->name()) === null
+                        ? $inputSchema->add($column)
+                        : $inputSchema->replace($target->name(), $column)
+                );
+
+            $result = $rows->map($outputSchema, function (Row $row) use ($target, $serializer, $inputSchema): Row {
+                $serialized = serialize_to_string($serializer, rows($inputSchema, $row));
+
+                return (
+                    $this->standalone
+                        ? row([$target->name() => $serialized])
+                        : row([...$row->values(), $target->name() => $serialized])
+                );
+            });
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

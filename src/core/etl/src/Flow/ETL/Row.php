@@ -7,168 +7,74 @@ namespace Flow\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type\TypedValueFormatter;
+use Flow\Types\Value\Json;
 
-final class Row
+use function array_key_exists;
+use function array_keys;
+use function implode;
+
+final readonly class Row
 {
+    /**
+     * @param array<string, mixed> $values storage keyed by name; the Schema defines column order (Rows::schema()->references())
+     */
     public function __construct(
-        private readonly Entries $entries,
+        private array $values,
     ) {}
 
     /**
-     * @param Entry<mixed> ...$entries
-     *
-     * @throws InvalidArgumentException
-     */
-    public static function create(Entry ...$entries): self
-    {
-        return new self(new Entries(...$entries));
-    }
-
-    /**
-     * @param Entry<mixed> ...$entries
-     */
-    public static function with(Entry ...$entries): self
-    {
-        return self::create(...$entries);
-    }
-
-    /**
-     * @param Entry<mixed> ...$entries
-     *
-     * @throws InvalidArgumentException
-     */
-    public function add(Entry ...$entries): self
-    {
-        return new self($this->entries->add(...$entries));
-    }
-
-    public function entries(): Entries
-    {
-        return $this->entries;
-    }
-
-    /**
      * @throws InvalidArgumentException
      *
-     * @return Entry<mixed>
+     * @return null|array<array-key, mixed>|bool|float|int|object|string
      */
-    public function get(string|Reference $reference): Entry
+    public function get(string|Reference $reference): mixed
     {
-        return $this->entries->get($reference);
+        $name = $reference instanceof Reference ? $reference->base() : $reference;
+
+        if (!array_key_exists($name, $this->values)) {
+            throw new InvalidArgumentException(
+                "Column \"{$name}\" does not exist. Did you mean one of the following? [\""
+                . implode('", "', array_keys($this->values))
+                . '"]',
+            );
+        }
+
+        // @mago-ignore analysis:mixed-return-statement
+        return $this->values[$name];
     }
 
-    public function has(string|Reference $reference): bool
+    public function has(string|Reference ...$references): bool
     {
-        return $this->entries->has($reference);
+        foreach ($references as $reference) {
+            if (!array_key_exists($reference instanceof Reference ? $reference->base() : $reference, $this->values)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public function hash(Algorithm $algorithm = new NativePHPHash()): string
+    public function hash(Schema $schema, Algorithm $algorithm = new NativePHPHash()): string
     {
+        $formatter = new TypedValueFormatter();
         $string = '';
 
-        foreach ($this->entries->sort()->all() as $entry) {
-            $string .= $entry->name() . $entry->toString();
+        foreach ($schema->sort()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $string .= $name . $formatter->format($definition->type(), $this->values[$name] ?? null);
         }
 
         return $algorithm->hash($string);
     }
 
-    public function isEqual(self $row): bool
-    {
-        return $this->entries->isEqual($row->entries());
-    }
-
-    public function keep(string|Reference ...$references): self
-    {
-        $entries = [];
-
-        foreach ($references as $name) {
-            $entries[] = $this->entries->get($name);
-        }
-
-        return new self(new Entries(...$entries));
-    }
-
     /**
-     * @param callable(Entry<mixed>) : Entry<mixed> $mapper
+     * @return list<string>
      */
-    public function map(callable $mapper): self
+    public function names(): array
     {
-        return new self(new Entries(...$this->entries->map($mapper)));
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function merge(self $row, string $prefix = '_'): self
-    {
-        return new self(
-            $this->entries()->merge(
-                $row->map(static fn(Entry $entry): Entry => $entry->rename($prefix . $entry->name()))->entries(),
-            ),
-        );
-    }
-
-    public function remove(string|Reference ...$references): self
-    {
-        $namesToRemove = [];
-
-        foreach ($references as $name) {
-            if ($this->entries->has($name)) {
-                $namesToRemove[] = $name;
-            }
-        }
-
-        return new self($this->entries->remove(...$namesToRemove));
-    }
-
-    public function rename(string $currentName, string $newName): self
-    {
-        return new self($this->entries->rename($currentName, $newName));
-    }
-
-    /**
-     * Rename multiple entries in a single pass.
-     *
-     * @param array<string, string> $renames Map of old_name => new_name
-     */
-    public function renameMany(array $renames): self
-    {
-        if ($renames === []) {
-            return $this;
-        }
-
-        return new self($this->entries->renameMany($renames));
-    }
-
-    /**
-     * @return Schema
-     */
-    public function schema(): Schema
-    {
-        $definitions = [];
-
-        foreach ($this->entries->all() as $entry) {
-            $definitions[] = $entry->definition();
-        }
-
-        return new Schema(...$definitions);
-    }
-
-    /**
-     * @param Entry<mixed> ...$entries
-     */
-    public function set(Entry ...$entries): self
-    {
-        return new self($this->entries->set(...$entries));
-    }
-
-    public function sortEntries(): self
-    {
-        return new self($this->entries->sort());
+        return array_keys($this->values);
     }
 
     /**
@@ -176,17 +82,25 @@ final class Row
      */
     public function toArray(bool $withKeys = true): array
     {
-        return $this->entries->toArray($withKeys);
+        $data = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($this->values as $name => $value) {
+            if ($value instanceof Json) {
+                $value = $value->toArray();
+            }
+
+            $withKeys ? ($data[$name] = $value) : ($data[] = $value);
+        }
+
+        return $data;
     }
 
     /**
-     * @throws InvalidArgumentException
-     *
-     * @return null|array<array-key, mixed>|bool|float|int|object|string
+     * @return array<string, mixed>
      */
-    public function valueOf(string|Reference $references): mixed
+    public function values(): array
     {
-        // @mago-ignore analysis:mixed-return-statement
-        return $this->get($references)->value();
+        return $this->values;
     }
 }

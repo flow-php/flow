@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\RowProjection;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
@@ -27,7 +28,13 @@ final readonly class RenameEntryTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(fn(Row $row): Row => $row->rename($this->from, $this->to));
+            $projection = new RowProjection();
+            $renames = [$this->from => $this->to];
+
+            $result = $rows->map(
+                $rows->schema()->rename($this->from, $this->to),
+                static fn(Row $row): Row => $projection->rename($row, $renames),
+            );
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

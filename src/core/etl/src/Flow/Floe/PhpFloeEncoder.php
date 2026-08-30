@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -42,7 +41,7 @@ final class PhpFloeEncoder implements Encoder
     public function __construct(
         private readonly Schema $schema,
     ) {
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
+        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder());
     }
 
     public function decode(array $batch): array

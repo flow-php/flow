@@ -14,11 +14,9 @@ use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\cast;
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 use function is_object;
 
 final class CastTest extends FlowTestCase
@@ -28,7 +26,7 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function requires non-null value');
 
-        cast(ref('value'), 'int')->eval(row(str_entry('value', null)), flow_context());
+        cast(ref('value'), 'int')->eval(row(['value' => null]), flow_context());
     }
 
     public function test_constructor_rejects_a_non_representable_target(): void
@@ -41,8 +39,8 @@ final class CastTest extends FlowTestCase
 
     public function test_double_and_real_resolve_to_float(): void
     {
-        static::assertSame(1.0, cast(ref('value'), 'double')->eval(row(str_entry('value', '1')), flow_context()));
-        static::assertSame(1.0, cast(ref('value'), 'real')->eval(row(str_entry('value', '1')), flow_context()));
+        static::assertSame(1.0, cast(ref('value'), 'double')->eval(row(['value' => '1']), flow_context()));
+        static::assertSame(1.0, cast(ref('value'), 'real')->eval(row(['value' => '1']), flow_context()));
     }
 
     public function test_constructor_rejects_json_pretty(): void
@@ -111,12 +109,10 @@ final class CastTest extends FlowTestCase
     #[DataProvider('cast_provider')]
     public function test_cast(mixed $from, string $to, mixed $expected): void
     {
-        $entryFactory = flow_context(config())->entryFactory();
-
         // @mago-ignore analysis:mixed-assignment
-        $resultRefCast = ref('value')->cast($to)->eval(row($entryFactory->create('value', $from)), flow_context());
+        $resultRefCast = ref('value')->cast($to)->eval(row(['value' => $from]), flow_context());
         // @mago-ignore analysis:mixed-assignment
-        $resultCastRef = cast(ref('value'), $to)->eval(row($entryFactory->create('value', $from)), flow_context());
+        $resultCastRef = cast(ref('value'), $to)->eval(row(['value' => $from]), flow_context());
 
         if (is_object($expected) || is_object($from)) {
             static::assertEquals($expected, $resultRefCast);
@@ -132,9 +128,7 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "int" into "timezone" type');
 
-        ref('value')
-            ->cast('timezone')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', 123)), flow_context());
+        ref('value')->cast('timezone')->eval(row(['value' => 123]), flow_context());
     }
 
     public function test_casting_integer_to_xml(): void
@@ -142,9 +136,7 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "int" into "xml" type');
 
-        ref('value')
-            ->cast('xml')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', 1)), flow_context());
+        ref('value')->cast('xml')->eval(row(['value' => 1]), flow_context());
     }
 
     public function test_casting_invalid_string_to_timezone(): void
@@ -152,9 +144,7 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "timezone" type');
 
-        ref('value')
-            ->cast('timezone')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', 'invalid-timezone')), flow_context());
+        ref('value')->cast('timezone')->eval(row(['value' => 'invalid-timezone']), flow_context());
     }
 
     public function test_casting_non_xml_string_to_xml(): void
@@ -162,8 +152,6 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "xml" type');
 
-        ref('value')
-            ->cast('xml')
-            ->eval(row(flow_context(config())->entryFactory()->create('value', 'foo')), flow_context());
+        ref('value')->cast('xml')->eval(row(['value' => 'foo']), flow_context());
     }
 }

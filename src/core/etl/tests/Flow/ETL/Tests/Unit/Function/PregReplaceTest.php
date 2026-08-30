@@ -21,7 +21,7 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit(1), lit('bar'), lit('foo is awesome'));
 
-        $pregReplace->eval(row(), flow_context());
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_invalid_replacement(): void
@@ -31,7 +31,7 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit(2), lit('foo is awesome'));
 
-        $pregReplace->eval(row(), flow_context());
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_invalid_subject(): void
@@ -41,13 +41,13 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit(3));
 
-        $pregReplace->eval(row(), flow_context());
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_valid_strings(): void
     {
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit('foo is awesome'));
 
-        static::assertSame('bar is awesome', $pregReplace->eval(row(), flow_context()));
+        static::assertSame('bar is awesome', $pregReplace->eval(row([]), flow_context()));
     }
 }

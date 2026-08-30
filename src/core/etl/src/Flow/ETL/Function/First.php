@@ -56,7 +56,7 @@ final class First implements AggregatingFunction
         }
 
         if (!$this->found) {
-            $this->first = $row->valueOf($this->ref);
+            $this->first = $row->get($this->ref);
             $this->found = true;
         }
     }

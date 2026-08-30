@@ -12,10 +12,11 @@ use Flow\Types\Exception\InvalidArgumentException;
 
 use function file_get_contents;
 use function file_put_contents;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\structure_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
@@ -30,7 +31,7 @@ final class FilesystemCacheTest extends CacheTestCase
     public function test_torn_entry_is_treated_as_a_cache_miss(): void
     {
         $cache = $this->cache();
-        $cache->set('torn', rows(row(int_entry('id', 1))));
+        $cache->set('torn', rows(schema(int_schema('id')), row(['id' => 1])));
 
         // simulate a crash mid-write / bit rot: overwrite the closed cache file with garbage
         $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/torn') ?: [];
@@ -45,7 +46,7 @@ final class FilesystemCacheTest extends CacheTestCase
     public function test_corrupted_frame_with_intact_footer_is_treated_as_a_cache_miss(): void
     {
         $cache = $this->cache();
-        $cache->set('corrupt', rows(row(int_entry('id', 1))));
+        $cache->set('corrupt', rows(schema(int_schema('id')), row(['id' => 1])));
 
         $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/corrupt') ?: [];
         static::assertNotEmpty($files);
@@ -67,7 +68,7 @@ final class FilesystemCacheTest extends CacheTestCase
         $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/filesystem-cache-spy'), $spy);
         $cache->clear();
 
-        $cache->set('spy', $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
+        $cache->set('spy', $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
 
         static::assertEquals($rows, $cache->get('spy'));
         static::assertCount(1, $spy->serialized);
@@ -79,7 +80,7 @@ final class FilesystemCacheTest extends CacheTestCase
     public function test_schema_of_an_entry_without_a_stored_schema_is_a_cache_miss(): void
     {
         $cache = $this->cache();
-        $cache->set('orphan', rows(row(int_entry('id', 1))));
+        $cache->set('orphan', rows(schema(int_schema('id')), row(['id' => 1])));
 
         $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/orphan.schema') ?: [];
         static::assertNotEmpty($files);
@@ -93,7 +94,7 @@ final class FilesystemCacheTest extends CacheTestCase
     public function test_torn_schema_is_treated_as_a_cache_miss(): void
     {
         $cache = $this->cache();
-        $cache->set('torn-schema', rows(row(int_entry('id', 1))));
+        $cache->set('torn-schema', rows(schema(int_schema('id')), row(['id' => 1])));
 
         $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/torn-schema.schema') ?: [];
         static::assertNotEmpty($files);
@@ -111,7 +112,10 @@ final class FilesystemCacheTest extends CacheTestCase
         // this single test pins the contract for all three
 
         $cache = $this->cache();
-        $cache->set('legacy', rows(row(structure_entry('s', ['a' => 1], type_structure(['a' => type_integer()])))));
+        $cache->set('legacy', rows(
+            schema(structure_schema('s', type_structure(['a' => type_integer()]))),
+            row(['s' => ['a' => 1]]),
+        ));
 
         $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/legacy.schema') ?: [];
         static::assertNotEmpty($files);

@@ -17,13 +17,11 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -35,7 +33,11 @@ final class FloeStreamWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $viaCreate = path('memory://via-create.floe');
         $viaStream = path('memory://via-stream.floe');
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
+        $data = rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'a']),
+            row(['id' => 2, 'name' => 'b']),
+        );
         $schema = $data->schema();
 
         $create = new FloeWriter($filesystem, $schema);
@@ -57,9 +59,10 @@ final class FloeStreamWriterTest extends TestCase
         $default = path('memory://default-buffer.floe');
         $tiny = path('memory://tiny-buffer.floe');
         $data = rows(
-            row(int_entry('id', 1), str_entry('name', 'alpha')),
-            row(int_entry('id', 2), str_entry('name', 'beta')),
-            row(int_entry('id', 3), str_entry('name', 'gamma')),
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'alpha']),
+            row(['id' => 2, 'name' => 'beta']),
+            row(['id' => 3, 'name' => 'gamma']),
         );
 
         $schema = $data->schema();
@@ -82,7 +85,7 @@ final class FloeStreamWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://on-stream.floe');
 
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
 
         $writer = new FloeStreamWriter($data->schema());
         $writer->create($filesystem->writeTo($path), Metadata::fromArray(['source' => 'stream']));
@@ -125,7 +128,7 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe writer session is not open');
 
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
     }
 
     public function test_aligned_multi_batch_session_is_byte_identical_to_a_single_batch(): void
@@ -134,13 +137,17 @@ final class FloeStreamWriterTest extends TestCase
         $multi = path('memory://multi-batch.floe');
         $single = path('memory://single-batch.floe');
 
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
+        $data = rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'a']),
+            row(['id' => 2, 'name' => 'b']),
+        );
         $schema = $data->schema();
 
         $multiWriter = new FloeStreamWriter($schema);
         $multiWriter->create($filesystem->writeTo($multi));
-        $multiWriter->write(rows(row(int_entry('id', 1), str_entry('name', 'a'))));
-        $multiWriter->write(rows(row(int_entry('id', 2), str_entry('name', 'b'))));
+        $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+        $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 2, 'name' => 'b'])));
         $multiWriter->close();
 
         $singleWriter = new FloeStreamWriter($schema);
@@ -160,12 +167,12 @@ final class FloeStreamWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://subset.floe');
 
-        $first = rows(row(int_entry('id', 1), str_entry('name', 'a')));
+        $first = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a']));
 
         $writer = new FloeStreamWriter($first->schema());
         $writer->create($filesystem->writeTo($path));
         $writer->write($first);
-        $writer->write(rows(row(int_entry('id', 2))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
         $writer->close();
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
@@ -178,38 +185,38 @@ final class FloeStreamWriterTest extends TestCase
     {
         $writer = new FloeStreamWriter(schema(int_schema('id')));
         $writer->create(memory_filesystem()->writeTo(path('memory://new-column.floe')));
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('new column "email"');
 
-        $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
+        $writer->write(rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x'])));
     }
 
     public function test_batch_with_an_incompatible_type_throws_naming_the_column(): void
     {
         $writer = new FloeStreamWriter(schema(int_schema('id')));
         $writer->create(memory_filesystem()->writeTo(path('memory://type-drift.floe')));
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('column "id"');
 
-        $writer->write(rows(row(str_entry('id', 'x'))));
+        $writer->write(rows(schema(str_schema('id')), row(['id' => 'x'])));
     }
 
     public function test_new_column_message_names_the_session_schema_and_the_column(): void
     {
         $writer = new FloeStreamWriter(schema(int_schema('id')));
         $writer->create(memory_filesystem()->writeTo(path('memory://hint.floe')));
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage(
             'Floe write session schema is fixed and this batch does not fit it: new column "email".',
         );
 
-        $writer->write(rows(row(int_entry('id', 2), str_entry('email', 'x'))));
+        $writer->write(rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x'])));
     }
 
     public function test_explicit_session_schema_is_used_for_the_footer(): void
@@ -219,7 +226,7 @@ final class FloeStreamWriterTest extends TestCase
 
         $writer = new FloeStreamWriter(schema(int_schema('id'), str_schema('name')));
         $writer->create($filesystem->writeTo($path));
-        $writer->write(rows(row(int_entry('id', 1), str_entry('name', 'a'))));
+        $writer->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
         $writer->close();
 
         $fileSchema = FloeStreamReaderContext::footer($filesystem, $path)->schema();
@@ -234,7 +241,7 @@ final class FloeStreamWriterTest extends TestCase
 
         $writer = new FloeStreamWriter(schema());
         $writer->create($filesystem->writeTo($path));
-        $writer->write(rows());
+        $writer->write(rows(schema()));
         $writer->close();
 
         static::assertSame([Format::FRAME_FOOTER], FloeStreamReaderContext::frameTypes($filesystem, $path));
@@ -247,7 +254,7 @@ final class FloeStreamWriterTest extends TestCase
 
     public function test_writing_a_column_name_with_invalid_utf8_throws(): void
     {
-        $badRows = rows(row(str_entry("bad\xFFname", 'x')));
+        $badRows = rows(schema(str_schema('badÿname')), row(['badÿname' => 'x']));
 
         $writer = new FloeStreamWriter($badRows->schema());
         $writer->create(memory_filesystem()->writeTo(path('memory://bad-name.floe')));
@@ -266,7 +273,11 @@ final class FloeStreamWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $on = path('memory://validate-on.floe');
         $off = path('memory://validate-off.floe');
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
+        $data = rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'a']),
+            row(['id' => 2, 'name' => 'b']),
+        );
         $schema = $data->schema();
 
         $onWriter = new FloeStreamWriter($schema);
@@ -287,13 +298,17 @@ final class FloeStreamWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $multi = path('memory://off-multi.floe');
         $single = path('memory://off-single.floe');
-        $data = rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b')));
+        $data = rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'a']),
+            row(['id' => 2, 'name' => 'b']),
+        );
         $schema = $data->schema();
 
         $multiWriter = new FloeStreamWriter($schema, new Options(validateData: false));
         $multiWriter->create($filesystem->writeTo($multi));
-        $multiWriter->write(rows(row(int_entry('id', 1), str_entry('name', 'a'))));
-        $multiWriter->write(rows(row(int_entry('id', 2), str_entry('name', 'b'))));
+        $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+        $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 2, 'name' => 'b'])));
         $multiWriter->close();
 
         $singleWriter = new FloeStreamWriter($schema, new Options(validateData: false));
@@ -308,12 +323,15 @@ final class FloeStreamWriterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://off-present-then-null.floe');
-        $first = rows(row(int_entry('id', 1), str_entry('opt', 'present')));
+        $first = rows(schema(int_schema('id'), str_schema('opt')), row(['id' => 1, 'opt' => 'present']));
 
         $writer = new FloeStreamWriter($first->schema(), new Options(validateData: false));
         $writer->create($filesystem->writeTo($path));
         $writer->write($first);
-        $writer->write(rows(row(int_entry('id', 2), str_entry('opt', null))));
+        $writer->write(rows(
+            schema(int_schema('id'), str_schema('opt', nullable: true)),
+            row(['id' => 2, 'opt' => null]),
+        ));
         $writer->close();
 
         static::assertSame(
@@ -324,7 +342,7 @@ final class FloeStreamWriterTest extends TestCase
 
     public function test_validation_on_rejects_a_later_null_into_a_non_nullable_session_column(): void
     {
-        $first = rows(row(int_entry('id', 1), str_entry('opt', 'present')));
+        $first = rows(schema(int_schema('id'), str_schema('opt')), row(['id' => 1, 'opt' => 'present']));
 
         $writer = new FloeStreamWriter($first->schema());
         $writer->create(memory_filesystem()->writeTo(path('memory://on-present-then-null.floe')));
@@ -332,7 +350,10 @@ final class FloeStreamWriterTest extends TestCase
 
         $this->expectException(IncompatibleSchemaException::class);
 
-        $writer->write(rows(row(int_entry('id', 2), str_entry('opt', null))));
+        $writer->write(rows(
+            schema(int_schema('id'), str_schema('opt', nullable: true)),
+            row(['id' => 2, 'opt' => null]),
+        ));
     }
 
     /**
@@ -348,7 +369,7 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('new column "b"');
 
-        $writer->write(rows(row(int_entry('a', 1), int_entry('b', 2))));
+        $writer->write(rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2])));
     }
 
     public function test_rejected_batch_registers_no_partition_combination(): void
@@ -358,10 +379,14 @@ final class FloeStreamWriterTest extends TestCase
 
         $writer = new FloeStreamWriter(schema(int_schema('id')));
         $writer->create($filesystem->writeTo($path));
-        $writer->write(rows(row(int_entry('id', 1))));
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
 
         try {
-            $writer->write(Rows::partitioned([row(str_entry('id', 'AB-1'))], [new Partition('g', 'x')]));
+            $writer->write(Rows::partitioned(
+                schema(str_schema('id')),
+                [row(['id' => 'AB-1'])],
+                [new Partition('g', 'x')],
+            ));
         } catch (IncompatibleSchemaException) {
         }
 
@@ -378,7 +403,7 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage("could not convert '" . str_repeat('x', 32) . "...' (string) to integer");
 
-        $writer->write(rows(row(str_entry('id', str_repeat('x', 40)))));
+        $writer->write(rows(schema(str_schema('id')), row(['id' => str_repeat('x', 40)])));
     }
 
     public function test_boolean_value_is_rendered_unquoted_in_the_error_message(): void
@@ -389,6 +414,6 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('could not convert true (boolean) to integer');
 
-        $writer->write(rows(row(bool_entry('id', true))));
+        $writer->write(rows(schema(bool_schema('id')), row(['id' => true])));
     }
 }

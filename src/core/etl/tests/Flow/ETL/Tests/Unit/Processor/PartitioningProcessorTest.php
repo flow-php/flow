@@ -12,11 +12,12 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class PartitioningProcessorTest extends FlowTestCase
 {
@@ -45,9 +46,10 @@ final class PartitioningProcessorTest extends FlowTestCase
 
         $generator = (static function () {
             yield rows(
-                row(str_entry('category', 'a'), int_entry('id', 1)),
-                row(str_entry('category', 'a'), int_entry('id', 2)),
-                row(str_entry('category', 'b'), int_entry('id', 3)),
+                schema(str_schema('category'), int_schema('id')),
+                row(['category' => 'a', 'id' => 1]),
+                row(['category' => 'a', 'id' => 2]),
+                row(['category' => 'b', 'id' => 3]),
             );
         })();
 
@@ -73,8 +75,9 @@ final class PartitioningProcessorTest extends FlowTestCase
 
         $generator = (static function () {
             yield rows(
-                row(str_entry('category', 'a'), int_entry('id', 1)),
-                row(str_entry('category', 'a'), int_entry('id', 2)),
+                schema(str_schema('category'), int_schema('id')),
+                row(['category' => 'a', 'id' => 1]),
+                row(['category' => 'a', 'id' => 2]),
             );
         })();
 

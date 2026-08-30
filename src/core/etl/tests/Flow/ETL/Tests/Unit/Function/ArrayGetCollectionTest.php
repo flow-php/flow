@@ -11,8 +11,6 @@ use function Flow\ETL\DSL\array_get_collection;
 use function Flow\ETL\DSL\array_get_collection_first;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 
@@ -24,7 +22,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters');
 
         $context = flow_context(config());
-        $row = row(int_entry('invalid_entry', 1));
+        $row = row(['invalid_entry' => 1]);
 
         array_get_collection(ref('invalid_entry'), ['id'])->eval($row, $context);
     }
@@ -34,7 +32,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        $row = row(int_entry('invalid_entry', 1));
+        $row = row(['invalid_entry' => 1]);
 
         array_get_collection(ref('invalid_entry'), ['id'])->eval($row, flow_context());
     }
@@ -44,32 +42,36 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        $row = row(json_entry('array_entry', [
-            'id' => 1,
-            'status' => 'PENDING',
-            'enabled' => true,
-            'array' => ['foo' => 'bar'],
-        ]));
+        $row = row([
+            'array_entry' => [
+                'id' => 1,
+                'status' => 'PENDING',
+                'enabled' => true,
+                'array' => ['foo' => 'bar'],
+            ],
+        ]);
 
         array_get_collection(ref('array_entry'), ['id'])->eval($row, flow_context());
     }
 
     public function test_getting_specific_keys_from_collection_of_array(): void
     {
-        $row = row(json_entry('array_entry', [
-            [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
+        $row = row([
+            'array_entry' => [
+                [
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
+                [
+                    'id' => 2,
+                    'status' => 'NEW',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
             ],
-            [
-                'id' => 2,
-                'status' => 'NEW',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]));
+        ]);
 
         static::assertEquals(
             [
@@ -82,22 +84,24 @@ final class ArrayGetCollectionTest extends FlowTestCase
 
     public function test_getting_specific_keys_from_first_element_in_collection_of_array(): void
     {
-        $row = row(json_entry('array_entry', [
-            [
-                'parent_id' => 1,
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
+        $row = row([
+            'array_entry' => [
+                [
+                    'parent_id' => 1,
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
+                [
+                    'parent_id' => 1,
+                    'id' => 2,
+                    'status' => 'NEW',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
             ],
-            [
-                'parent_id' => 1,
-                'id' => 2,
-                'status' => 'NEW',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]));
+        ]);
 
         static::assertEquals(
             [
@@ -109,22 +113,24 @@ final class ArrayGetCollectionTest extends FlowTestCase
 
     public function test_getting_specific_keys_from_first_element_in_collection_of_array_when_first_index_does_not_exists(): void
     {
-        $row = row(json_entry('array_entry', [
-            2 => [
-                'parent_id' => 1,
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
+        $row = row([
+            'array_entry' => [
+                2 => [
+                    'parent_id' => 1,
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
+                3 => [
+                    'parent_id' => 1,
+                    'id' => 2,
+                    'status' => 'NEW',
+                    'enabled' => true,
+                    'array' => ['foo' => 'bar'],
+                ],
             ],
-            3 => [
-                'parent_id' => 1,
-                'id' => 2,
-                'status' => 'NEW',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]));
+        ]);
 
         static::assertEquals(
             [

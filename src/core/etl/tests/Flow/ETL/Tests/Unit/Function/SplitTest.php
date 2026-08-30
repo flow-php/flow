@@ -19,16 +19,16 @@ final class SplitTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "string", got "integer".');
 
-        split(lit(123), ',')->eval(row(), flow_context());
+        split(lit(123), ',')->eval(row([]), flow_context());
     }
 
     public function test_split_string(): void
     {
-        static::assertSame(['foo', 'bar', 'baz'], split(lit('foo,bar,baz'), ',')->eval(row(), flow_context()));
+        static::assertSame(['foo', 'bar', 'baz'], split(lit('foo,bar,baz'), ',')->eval(row([]), flow_context()));
     }
 
     public function test_split_string_with_limit(): void
     {
-        static::assertSame(['foo', 'bar,baz'], split(lit('foo,bar,baz'), ',', 2)->eval(row(), flow_context()));
+        static::assertSame(['foo', 'bar,baz'], split(lit('foo,bar,baz'), ',', 2)->eval(row([]), flow_context()));
     }
 }

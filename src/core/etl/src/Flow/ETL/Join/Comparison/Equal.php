@@ -25,8 +25,8 @@ final readonly class Equal implements Comparison
 
     public function compare(Row $left, Row $right): bool
     {
-        $leftValue = $left->valueOf($this->entryLeft);
-        $rightValue = $right->valueOf($this->entryRight);
+        $leftValue = $left->get($this->entryLeft);
+        $rightValue = $right->get($this->entryRight);
 
         // SQL semantics - null never equals anything, including null
         if ($leftValue === null || $rightValue === null) {

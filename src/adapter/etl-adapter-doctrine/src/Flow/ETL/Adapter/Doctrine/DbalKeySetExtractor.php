@@ -147,8 +147,10 @@ final class DbalKeySetExtractor implements Extractor
                 $rawBatch[] = $row;
             }
 
-            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
-                $signal = yield new Rows($hydratedRow);
+            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
+
+            foreach ($hydrated as $hydratedRow) {
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 $totalFetched++;
 

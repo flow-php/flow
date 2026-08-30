@@ -10,15 +10,16 @@ use Flow\ETL\GroupBy\BucketAggregation;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\first;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 
 final class BucketAggregationTest extends FlowTestCase
@@ -29,7 +30,11 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('v')));
 
         $batches = (static function () {
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 1)), row(str_entry('k', 'b'), int_entry('v', 10)));
+            yield rows(
+                schema(str_schema('k'), int_schema('v')),
+                row(['k' => 'a', 'v' => 1]),
+                row(['k' => 'b', 'v' => 10]),
+            );
         })();
 
         $result = iterator_to_array(
@@ -61,18 +66,26 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('v')));
 
         $batches = (static function () {
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 1)), row(str_entry('k', 'b'), int_entry('v', 10)));
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 2)), row(str_entry('k', 'b'), int_entry('v', 20)));
+            yield rows(
+                schema(str_schema('k'), int_schema('v')),
+                row(['k' => 'a', 'v' => 1]),
+                row(['k' => 'b', 'v' => 10]),
+            );
+            yield rows(
+                schema(str_schema('k'), int_schema('v')),
+                row(['k' => 'a', 'v' => 2]),
+                row(['k' => 'b', 'v' => 20]),
+            );
         })();
 
         $sums = [];
 
         foreach ((new BucketAggregation())->aggregate($batches, $context, $groupBy) as $resultRows) {
             foreach ($resultRows as $resultRow) {
-                $key = $resultRow->valueOf(ref('k'));
+                $key = $resultRow->get(ref('k'));
                 assert(is_string($key));
 
-                $sums[$key] = $resultRow->valueOf(ref('v_sum'));
+                $sums[$key] = $resultRow->get(ref('v_sum'));
             }
         }
 
@@ -87,18 +100,18 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(first(ref('v')));
 
         $batches = (static function () {
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 100)));
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 200)));
+            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 100]));
+            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 200]));
         })();
 
         $firsts = [];
 
         foreach ((new BucketAggregation())->aggregate($batches, $context, $groupBy) as $resultRows) {
             foreach ($resultRows as $resultRow) {
-                $key = $resultRow->valueOf(ref('k'));
+                $key = $resultRow->get(ref('k'));
                 assert(is_string($key));
 
-                $firsts[$key] = $resultRow->valueOf(ref('v_first'));
+                $firsts[$key] = $resultRow->get(ref('v_first'));
             }
         }
 
@@ -113,18 +126,18 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(last(ref('v')));
 
         $batches = (static function () {
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 100)));
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 200)));
+            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 100]));
+            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 200]));
         })();
 
         $lasts = [];
 
         foreach ((new BucketAggregation())->aggregate($batches, $context, $groupBy) as $resultRows) {
             foreach ($resultRows as $resultRow) {
-                $key = $resultRow->valueOf(ref('k'));
+                $key = $resultRow->get(ref('k'));
                 assert(is_string($key));
 
-                $lasts[$key] = $resultRow->valueOf(ref('v_last'));
+                $lasts[$key] = $resultRow->get(ref('v_last'));
             }
         }
 
@@ -137,8 +150,12 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('v')));
 
         $batches = (static function () {
-            yield rows();
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 1)), row(str_entry('k', 'a'), int_entry('v', 2)));
+            yield rows(schema());
+            yield rows(
+                schema(str_schema('k'), int_schema('v')),
+                row(['k' => 'a', 'v' => 1]),
+                row(['k' => 'a', 'v' => 2]),
+            );
         })();
 
         $result = iterator_to_array(
@@ -156,18 +173,25 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(min(ref('v')));
 
         $batches = (static function () {
-            yield rows(row(str_entry('k', 'a'), int_entry('v', 10)), row(str_entry('k', 'b'), float_entry('v', 0.5)));
+            yield rows(
+                schema(str_schema('k'), float_schema('v')),
+                row(['k' => 'a', 'v' => 10.0]),
+                row(['k' => 'b', 'v' => 0.5]),
+            );
         })();
 
         $definitions = [];
+        $mins = [];
 
         foreach ((new BucketAggregation())->aggregate($batches, flow_context(), $groupBy) as $batch) {
+            $definitions[] = $batch->schema()->get('v_min');
+
             foreach ($batch as $row) {
-                $definitions[] = $row->get('v_min')->definition();
+                $mins[] = $row->get('v_min');
             }
         }
 
-        static::assertCount(2, $definitions);
-        static::assertEquals($definitions[0], $definitions[1]);
+        static::assertCount(2, $mins);
+        static::assertEquals([float_schema('v_min', true)], array_unique($definitions, SORT_REGULAR));
     }
 }

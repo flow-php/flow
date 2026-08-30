@@ -53,7 +53,7 @@ final class Min implements AggregatingFunction
         }
 
         /** @var mixed $value */
-        $value = $row->valueOf($this->ref);
+        $value = $row->get($this->ref);
 
         if ($this->min === null) {
             if (is_numeric($value)) {

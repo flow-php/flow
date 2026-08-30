@@ -5,23 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 
@@ -35,7 +32,12 @@ final class GroupByTest extends FlowTestCase
         $result = GroupByContext::aggregated(
             $groupBy,
             flow_context(config()),
-            rows(row(str_entry('type', 'a')), row(str_entry('not-type', 'b')), row(str_entry('type', 'c'))),
+            rows(
+                schema(str_schema('type', nullable: true), str_schema('not-type', nullable: true)),
+                row(['type' => 'a']),
+                row(['not-type' => 'b']),
+                row(['type' => 'c']),
+            ),
         );
 
         static::assertSame(
@@ -58,11 +60,12 @@ final class GroupByTest extends FlowTestCase
             $group,
             flow_context(config()),
             rows(
-                row(int_entry('id', 1), str_entry('type', 'a')),
-                row(int_entry('id', 2), str_entry('type', 'b')),
-                row(int_entry('id', 3), str_entry('type', 'c')),
-                row(int_entry('id', 4), str_entry('type', 'a')),
-                row(int_entry('id', 5), str_entry('type', 'd')),
+                schema(int_schema('id'), str_schema('type')),
+                row(['id' => 1, 'type' => 'a']),
+                row(['id' => 2, 'type' => 'b']),
+                row(['id' => 3, 'type' => 'c']),
+                row(['id' => 4, 'type' => 'a']),
+                row(['id' => 5, 'type' => 'd']),
             ),
         );
 
@@ -107,51 +110,35 @@ final class GroupByTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(
-                    str_entry('product', 'Banana'),
-                    float_entry('Canada', 2000.0),
-                    float_entry('China', 400.0),
-                    null_entry('Mexico'),
-                    float_entry('USA', 1000.0),
+                schema(
+                    str_schema('product'),
+                    float_schema('Canada', nullable: true),
+                    float_schema('China'),
+                    float_schema('Mexico', nullable: true),
+                    float_schema('USA'),
                 ),
-                row(
-                    str_entry('product', 'Beans'),
-                    null_entry('Canada'),
-                    float_entry('China', 1500.0),
-                    float_entry('Mexico', 2000.0),
-                    float_entry('USA', 1600.0),
-                ),
-                row(
-                    str_entry('product', 'Carrots'),
-                    float_entry('Canada', 2000.0),
-                    float_entry('China', 1200.0),
-                    null_entry('Mexico'),
-                    float_entry('USA', 1500.0),
-                ),
-                row(
-                    str_entry('product', 'Orange'),
-                    null_entry('Canada'),
-                    float_entry('China', 4000.0),
-                    null_entry('Mexico'),
-                    float_entry('USA', 4000.0),
-                ),
+                row(['product' => 'Banana', 'Canada' => 2000.0, 'China' => 400.0, 'Mexico' => null, 'USA' => 1000.0]),
+                row(['product' => 'Beans', 'Canada' => null, 'China' => 1500.0, 'Mexico' => 2000.0, 'USA' => 1600.0]),
+                row(['product' => 'Carrots', 'Canada' => 2000.0, 'China' => 1200.0, 'Mexico' => null, 'USA' => 1500.0]),
+                row(['product' => 'Orange', 'Canada' => null, 'China' => 4000.0, 'Mexico' => null, 'USA' => 4000.0]),
             ),
             GroupByContext::aggregated(
                 $group,
                 flow_context(config()),
                 rows(
-                    row(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
-                    row(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
-                    row(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
-                    row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-                    row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-                    row(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
-                    row(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
-                    row(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
-                    row(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
-                    row(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-                    row(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-                    row(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
+                    schema(str_schema('product'), int_schema('amount'), str_schema('country')),
+                    row(['product' => 'Banana', 'amount' => 1000, 'country' => 'USA']),
+                    row(['product' => 'Carrots', 'amount' => 1500, 'country' => 'USA']),
+                    row(['product' => 'Beans', 'amount' => 1600, 'country' => 'USA']),
+                    row(['product' => 'Orange', 'amount' => 2000, 'country' => 'USA']),
+                    row(['product' => 'Orange', 'amount' => 2000, 'country' => 'USA']),
+                    row(['product' => 'Banana', 'amount' => 400, 'country' => 'China']),
+                    row(['product' => 'Carrots', 'amount' => 1200, 'country' => 'China']),
+                    row(['product' => 'Beans', 'amount' => 1500, 'country' => 'China']),
+                    row(['product' => 'Orange', 'amount' => 4000, 'country' => 'China']),
+                    row(['product' => 'Banana', 'amount' => 2000, 'country' => 'Canada']),
+                    row(['product' => 'Carrots', 'amount' => 2000, 'country' => 'Canada']),
+                    row(['product' => 'Beans', 'amount' => 2000, 'country' => 'Mexico']),
                 ),
             )->sortBy(ref('product')),
         );
@@ -165,32 +152,38 @@ final class GroupByTest extends FlowTestCase
 
         static::assertEquals(
             rows(
-                row(str_entry('product', 'Apple'), null_entry('USA')),
-                row(str_entry('product', 'Banana'), float_entry('USA', 1000.0)),
+                schema(str_schema('product'), float_schema('USA', nullable: true)),
+                row(['product' => 'Apple', 'USA' => null]),
+                row(['product' => 'Banana', 'USA' => 1000.0]),
             ),
             GroupByContext::aggregated(
                 $group,
                 flow_context(config()),
                 rows(
-                    row(str_entry('product', 'Banana'), str_entry('country', 'USA'), int_entry('amount', 1000)),
-                    row(str_entry('product', 'Apple'), str_entry('country', null), int_entry('amount', 400)),
+                    schema(str_schema('product'), str_schema('country', nullable: true), int_schema('amount')),
+                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 1000]),
+                    row(['product' => 'Apple', 'country' => null, 'amount' => 400]),
                 ),
             )->sortBy(ref('product')),
         );
     }
 
-    public function test_a_group_column_absent_from_the_schema_stays_value_derived(): void
+    /**
+     * Inventing a group column the batch schema does not declare would write a value into row storage
+     * that no schema-driven reader can see, so the aggregate refuses at bind instead.
+     */
+    public function test_a_group_column_absent_from_the_schema_is_refused_at_bind(): void
     {
         $groupBy = new GroupBy('missing');
         $groupBy->aggregate(count());
 
-        $result = GroupByContext::aggregated(
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "missing" not found');
+
+        GroupByContext::aggregated(
             $groupBy,
             flow_context(config()),
-            rows(row(str_entry('type', 'a')), row(str_entry('type', 'b'))),
+            rows(schema(str_schema('type')), row(['type' => 'a']), row(['type' => 'b'])),
         );
-
-        static::assertSame([['missing' => null, '_count' => 2]], $result->toArray());
-        static::assertTrue($result->schema()->get('missing')->isNullable());
     }
 }

@@ -6,14 +6,37 @@ NativeRowHydrator cast is serialize-identical to PhpRowHydrator
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_non_empty_string;
+use function Flow\Types\DSL\type_numeric_string;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
-
-use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, json_schema, xml_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, structure_element, type_integer, type_string, type_optional, type_positive_integer, type_non_empty_string, type_numeric_string};
 
 enum CastSuit: string
 {

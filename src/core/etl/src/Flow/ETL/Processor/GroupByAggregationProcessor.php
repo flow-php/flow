@@ -49,7 +49,7 @@ final readonly class GroupByAggregationProcessor implements Processor
             foreach ($rows as $metadata) {
                 foreach ($metadata as $row) {
                     /** @var string $bucketId */
-                    $bucketId = $row->valueOf(BucketShape::id->value);
+                    $bucketId = $row->get(BucketShape::id->value);
 
                     $aggregated = $aggregation->aggregate($this->buckets->rows($bucketId), $context, $this->groupBy);
 

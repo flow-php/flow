@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\RowProjection;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
@@ -27,9 +28,11 @@ final readonly class DropEntriesTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $transformer = fn(Row $row): Row => $row->remove(...$this->refs);
+            $schema = $rows->schema()->gracefulRemove(...$this->refs);
+            $names = $schema->references()->names();
+            $projection = new RowProjection();
 
-            $result = $rows->map($transformer);
+            $result = $rows->map($schema, static fn(Row $row): Row => $projection->keep($row, $names));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

@@ -11,6 +11,7 @@ use Flow\Filesystem\Tests\OperatingSystem;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path_real;
 use function iterator_to_array;
 use function str_replace;
@@ -26,7 +27,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         $extractedData = iterator_to_array($extractor->extract(flow_context()));
 
-        $rows = rows();
+        $rows = rows(schema());
 
         foreach ($extractedData as $nextRows) {
             static::assertInstanceOf(Rows::class, $nextRows);

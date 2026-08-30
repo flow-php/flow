@@ -11,9 +11,10 @@ use Generator;
 use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class FlowBufferedResponseTest extends FlowTestCase
 {
@@ -34,7 +35,7 @@ final class FlowBufferedResponseTest extends FlowTestCase
             ->method('extract')
             ->willReturn(
                 (static function (): Generator {
-                    yield rows(row(int_entry('id', 1)));
+                    yield rows(schema(int_schema('id')), row(['id' => 1]));
                 })(),
             );
 

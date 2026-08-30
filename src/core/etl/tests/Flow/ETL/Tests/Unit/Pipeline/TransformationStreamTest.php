@@ -18,9 +18,10 @@ use RuntimeException;
 use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 
 final class TransformationStreamTest extends FlowTestCase
@@ -35,7 +36,7 @@ final class TransformationStreamTest extends FlowTestCase
             flow_context(config()),
         );
 
-        $stream->feed(rows(row(int_entry('id', 1))));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $loadsBeforeDrain = $sink->loadsCount;
 
@@ -57,7 +58,7 @@ final class TransformationStreamTest extends FlowTestCase
         $stream = new TransformationStream(select('id'), new ThrowingLoader($failure), flow_context(config()));
 
         try {
-            $stream->feed(rows(row(int_entry('id', 1))));
+            $stream->feed(rows(schema(int_schema('id')), row(['id' => 1])));
 
             static::fail('Expected the sink failure to propagate out of feed().');
         } catch (RuntimeException $e) {
@@ -74,8 +75,8 @@ final class TransformationStreamTest extends FlowTestCase
             flow_context(config()),
         );
 
-        $stream->feed(rows(row(int_entry('id', 1))));
-        $stream->feed(rows(row(int_entry('id', 2))));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 2])));
 
         static::assertSame(1, $sink->loadsCount);
 
@@ -122,9 +123,9 @@ final class TransformationStreamTest extends FlowTestCase
             flow_context(config()),
         );
 
-        $stream->feed(rows(row(int_entry('id', 1))));
-        $stream->feed(rows(row(int_entry('id', 2))));
-        $stream->feed(rows(row(int_entry('id', 3))));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 2])));
+        $stream->feed(rows(schema(int_schema('id')), row(['id' => 3])));
 
         $loadsBeforeDrain = $sink->loadsCount;
 
@@ -141,8 +142,8 @@ final class TransformationStreamTest extends FlowTestCase
         $context = flow_context(config());
         $stream = new TransformationStream(select('id'), $sink, $context);
 
-        $stream->feed(rows(row(int_entry('id', 1), int_entry('other', 10))));
-        $stream->feed(rows(row(int_entry('id', 2), int_entry('other', 20))));
+        $stream->feed(rows(schema(int_schema('id'), int_schema('other')), row(['id' => 1, 'other' => 10])));
+        $stream->feed(rows(schema(int_schema('id'), int_schema('other')), row(['id' => 2, 'other' => 20])));
 
         static::assertSame(2, $sink->loadsCount);
         static::assertSame([1, 1], $sink->loadedRowCounts());

@@ -20,10 +20,11 @@ use function array_map;
 use function count;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
 final class BucketingProcessorTest extends FlowTestCase
@@ -54,10 +55,11 @@ final class BucketingProcessorTest extends FlowTestCase
 
         $generator = (static function () {
             yield rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 4)),
+                schema(int_schema('id')),
+                row(['id' => 1]),
+                row(['id' => 2]),
+                row(['id' => 3]),
+                row(['id' => 4]),
             );
         })();
 
@@ -69,7 +71,7 @@ final class BucketingProcessorTest extends FlowTestCase
         $registeredIds = array_map(static fn(Bucket $bucket): string => $bucket->id, $buckets->all());
 
         foreach ($result as $batch) {
-            static::assertContains($batch->first()->valueOf(BucketShape::id->value), $registeredIds);
+            static::assertContains($batch->first()->get(BucketShape::id->value), $registeredIds);
         }
     }
 
@@ -82,7 +84,7 @@ final class BucketingProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
         })();
 
         /** @var list<Rows> $result */
@@ -94,7 +96,7 @@ final class BucketingProcessorTest extends FlowTestCase
 
         foreach ($result as $batch) {
             static::assertCount(1, $batch);
-            $totalRows += (int) $batch->first()->valueOf(BucketShape::totalRows->value);
+            $totalRows += (int) $batch->first()->get(BucketShape::totalRows->value);
         }
 
         static::assertSame(3, $totalRows);

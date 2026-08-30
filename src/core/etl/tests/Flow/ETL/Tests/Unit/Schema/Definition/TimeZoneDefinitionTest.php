@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\TimeZoneEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\TimeZoneDefinition;
@@ -16,11 +15,8 @@ use Flow\Types\Type\Logical\TimeZoneType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\time_zone_entry;
 use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_string;
@@ -49,11 +45,6 @@ final class TimeZoneDefinitionTest extends FlowTestCase
     public function test_entry(): void
     {
         static::assertSame('tz', time_zone_schema('tz')->entry()->name());
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(TimeZoneEntry::class, time_zone_schema('tz')->entryClass());
     }
 
     /**
@@ -92,11 +83,10 @@ final class TimeZoneDefinitionTest extends FlowTestCase
 
     public function test_matches(): void
     {
-        static::assertTrue(time_zone_schema('tz')->matches(time_zone_entry('tz', 'UTC')));
-        static::assertFalse(time_zone_schema('tz')->matches(time_zone_entry('other', 'UTC')));
-        static::assertFalse(time_zone_schema('tz')->matches(int_entry('tz', 1)));
-        static::assertFalse(time_zone_schema('tz')->matches(time_zone_entry('tz', null)));
-        static::assertTrue(time_zone_schema('tz', true)->matches(time_zone_entry('tz', null)));
+        static::assertTrue(time_zone_schema('tz')->matches(type_time_zone()->cast('UTC')));
+        static::assertFalse(time_zone_schema('tz')->matches(1));
+        static::assertFalse(time_zone_schema('tz')->matches(null));
+        static::assertTrue(time_zone_schema('tz', true)->matches(null));
     }
 
     public function test_merge_with_itself_keeps_the_type(): void
@@ -187,6 +177,6 @@ final class TimeZoneDefinitionTest extends FlowTestCase
 
     public function test_does_not_match_a_string_entry_carrying_a_timezone_name(): void
     {
-        static::assertFalse(time_zone_schema('tz')->matches(str_entry('tz', 'UTC')));
+        static::assertFalse(time_zone_schema('tz')->matches('UTC'));
     }
 }

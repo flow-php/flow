@@ -65,7 +65,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         }
 
         try {
-            $value = $row->valueOf($this->ref);
+            $value = $row->get($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->runningSum ??= new RunningSum($context->calculator());

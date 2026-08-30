@@ -9,6 +9,7 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Partitions;
 use Generator;
 
@@ -34,7 +35,10 @@ final readonly class MemorySortProcessor implements Processor
         $partitionsId = null;
         $maxSize = 1;
 
+        $schema = null;
+
         foreach ($rows as $batch) {
+            $schema ??= $batch->schema();
             if ($batch->empty()) {
                 continue;
             }
@@ -54,7 +58,7 @@ final readonly class MemorySortProcessor implements Processor
             }
         }
 
-        yield from Rows::partitioned($buffer, $partitions ?? new Partitions())
+        yield from Rows::partitioned($schema ?? new Schema(), $buffer, $partitions ?? new Partitions())
             ->sortBy(...$this->refs->all())
             ->chunks($maxSize);
     }

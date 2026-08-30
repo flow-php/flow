@@ -10,9 +10,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class OffsetProcessorTest extends FlowTestCase
 {
@@ -20,7 +21,7 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(10);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
@@ -37,7 +38,7 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(1);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
@@ -62,7 +63,7 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(0);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
@@ -79,8 +80,8 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(2);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];

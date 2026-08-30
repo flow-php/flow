@@ -25,7 +25,6 @@ use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
@@ -85,7 +84,10 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
 
             foreach ($reader->rows(1000, $fileOffset, $remaining) as $rows) {
                 if ($this->addMetadataColumns) {
-                    $rows = $rows->map(static fn(Row $row): Row => $row->add(str_entry('_input_file_uri', $uri)));
+                    $rows = $rows->map(
+                        $rows->schema()->add(str_schema('_input_file_uri')),
+                        static fn(Row $row): Row => new Row([...$row->values(), '_input_file_uri' => $uri]),
+                    );
                 }
 
                 if ($promisedSchema !== null) {

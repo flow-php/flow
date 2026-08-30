@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Rename;
 
-use Flow\ETL\Row;
+use Flow\ETL\Schema;
 
 use function str_replace;
 
@@ -19,18 +19,18 @@ final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
         private string|array $replace,
     ) {}
 
-    public function rename(Row $row): Row
+    public function renames(Schema $schema): array
     {
         $renames = [];
 
-        foreach ($row->entries()->all() as $entry) {
-            $newName = str_replace($this->search, $this->replace, $entry->name());
+        foreach ($schema->references()->names() as $name) {
+            $newName = str_replace($this->search, $this->replace, $name);
 
-            if ($newName !== $entry->name()) {
-                $renames[$entry->name()] = $newName;
+            if ($newName !== $name) {
+                $renames[$name] = $newName;
             }
         }
 
-        return $renames === [] ? $row : $row->renameMany($renames);
+        return $renames;
     }
 }

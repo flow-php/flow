@@ -16,10 +16,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
 use function Flow\Serializer\DSL\unserialize_from_string;
 use function range;
@@ -33,13 +34,17 @@ final class FloeSerializerTest extends TestCase
     public static function values(): array
     {
         return [
-            'single row' => [rows(row(int_entry('id', 1), str_entry('name', 'John')))],
-            'rows' => [rows(row(int_entry('id', 1)), row(int_entry('id', 2)))],
+            'single row' => [rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'John']))],
+            'rows' => [rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))],
             'partitioned rows' => [RowsMother::partitioned()],
             'heterogeneous rows' => [RowsMother::heterogeneous()],
             'all entry types' => [RowsMother::withAllEntryTypes()],
-            'empty rows' => [rows()],
-            'empty partitioned rows' => [Rows::partitioned([], [new Partition('country', 'PL')])],
+            'empty rows' => [rows(schema())],
+            'empty partitioned rows' => [Rows::partitioned(
+                schema(str_schema('country')),
+                [],
+                [new Partition('country', 'PL')],
+            )],
         ];
     }
 
@@ -91,9 +96,10 @@ final class FloeSerializerTest extends TestCase
         // entry types widen to the batch union - id and name become nullable because
         // each is absent from some row. Values are unchanged; only nullability widens.
         $value = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2), str_entry('name', 'John')),
-            row(str_entry('name', 'Jane')),
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            row(['id' => 1]),
+            row(['id' => 2, 'name' => 'John']),
+            row(['name' => 'Jane']),
         );
 
         $result = unserialize_from_string($serializer, serialize_to_string($serializer, $value));
@@ -127,7 +133,10 @@ final class FloeSerializerTest extends TestCase
     public function test_batch_size_smaller_than_row_count(): void
     {
         $serializer = new FloeSerializer(3);
-        $value = rows(...array_map(static fn(int $id): Row => row(int_entry('id', $id)), range(1, 10)));
+        $value = rows(
+            schema(int_schema('id')),
+            ...array_map(static fn(int $id): Row => row(['id' => $id]), range(1, 10)),
+        );
 
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string(
             new FloeSerializer(),
@@ -138,7 +147,7 @@ final class FloeSerializerTest extends TestCase
     public function test_batch_size_larger_than_row_count(): void
     {
         $serializer = new FloeSerializer(100);
-        $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
 
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
     }
@@ -169,7 +178,7 @@ final class FloeSerializerTest extends TestCase
 
     public function test_unserialize_rejects_row_count_mismatch(): void
     {
-        $bytes = serialize_to_string(new FloeSerializer(), rows(row(int_entry('id', 1))));
+        $bytes = serialize_to_string(new FloeSerializer(), rows(schema(int_schema('id')), row(['id' => 1])));
         // inflate the footer's totalRows while the body still holds a single row; the JSON
         // byte-length is unchanged (1 -> 2) so the trailer stays valid and the read reaches
         // the whole-value row-count guard

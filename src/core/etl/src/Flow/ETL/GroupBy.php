@@ -6,10 +6,10 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\GroupBy\Aggregators;
 use Flow\ETL\GroupBy\GroupKey;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Generator;
@@ -54,39 +54,23 @@ final class GroupBy
         $this->aggregations = new Aggregators(...$aggregator);
     }
 
-    public function aggregatedRow(
-        GroupKey $key,
-        Aggregators $aggregators,
-        Schema $output,
-        EntryFactory $entryFactory,
-    ): Row {
-        $entries = [];
+    public function aggregatedRow(GroupKey $key, Aggregators $aggregators, Schema $output): Row
+    {
+        $values = [];
 
         /** @var mixed $value */
         foreach ($key as $name => $value) {
-            $definition = $output->findDefinition($name);
-
-            // A group key with no input definition stays value-derived until schema inference types it.
-            $entries[] = $definition === null
-                ? $entryFactory->create($name, $value)
-                : $entryFactory->fromDefinition(
-                    $definition,
-                    $value === null ? null : $definition->type()->cast($value),
-                );
+            $values[$name] = $value === null ? null : $output->get($name)->type()->cast($value);
         }
 
         foreach ($aggregators as $aggregator) {
             $definition = $output->get($aggregator->outputName());
             /** @var mixed $value */
             $value = $aggregator->value();
-
-            $entries[] = $entryFactory->fromDefinition(
-                $definition,
-                $value === null ? null : $definition->type()->cast($value),
-            );
+            $values[$aggregator->outputName()] = $value === null ? null : $definition->type()->cast($value);
         }
 
-        return Row::create(...$entries);
+        return new Row($values);
     }
 
     public function aggregations(): Aggregators
@@ -102,7 +86,8 @@ final class GroupBy
     /**
      * The aggregate operator's declared output schema, computed once per run. Group-key definitions
      * come from the input schema and are made nullable, because keyValues() substitutes null for a
-     * ref the row lacks; a key with no input definition is omitted and stays value-derived.
+     * ref the row lacks. A key the batch schema does not declare refuses at bind - inventing a
+     * column would put a value in row storage that no schema-driven reader can see.
      */
     public function outputSchema(Schema $input, Aggregators $bound): Schema
     {
@@ -111,9 +96,11 @@ final class GroupBy
         foreach ($this->refs as $ref) {
             $definition = $input->findDefinition($ref);
 
-            if ($definition !== null) {
-                $definitions[] = $definition->makeNullable();
+            if ($definition === null) {
+                throw SchemaDefinitionNotFoundException::withAvailable($ref->name(), ...$input->references()->names());
             }
+
+            $definitions[] = $definition->makeNullable();
         }
 
         foreach ($bound as $aggregator) {
@@ -128,7 +115,7 @@ final class GroupBy
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[$ref->name()] = $row->has($ref) ? $row->valueOf($ref) : null;
+            $values[$ref->name()] = $row->has($ref) ? $row->get($ref) : null;
         }
 
         return new GroupKey($values);
@@ -167,7 +154,7 @@ final class GroupBy
         foreach ($rows as $batch) {
             foreach ($batch as $row) {
                 try {
-                    $pivotColumns[] = $row->valueOf($pivot);
+                    $pivotColumns[] = $row->get($pivot);
                 } catch (InvalidArgumentException) {
                     $pivotColumns[] = null;
                 }
@@ -177,18 +164,18 @@ final class GroupBy
                 $values = [];
 
                 foreach ($this->refs as $ref) {
-                    $values[$ref->name()] = $row->valueOf($ref);
+                    $values[$ref->name()] = $row->get($ref);
                 }
 
                 $indexValue = (string) new GroupKey($values);
-                $pivotValue = $row->valueOf($pivot);
+                $pivotValue = $row->get($pivot);
 
                 if (!array_key_exists($indexValue, $pivotedTable)) {
                     $pivotedTable[$indexValue] = [];
                 }
 
                 foreach ($this->refs as $ref) {
-                    $pivotedTable[$indexValue][$ref->name()] = $row->valueOf($ref);
+                    $pivotedTable[$indexValue][$ref->name()] = $row->get($ref);
                 }
 
                 if ($pivotValue === null) {

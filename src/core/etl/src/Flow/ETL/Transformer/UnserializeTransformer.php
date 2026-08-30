@@ -40,12 +40,12 @@ final readonly class UnserializeTransformer implements Transformer
             // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
-            $result = $rows->map(function (Row $row) use ($source, $serializer): Row {
+            $result = $rows->map($rows->schema(), function (Row $row) use ($source, $serializer): Row {
                 if (!$row->has($source->name())) {
                     return $row;
                 }
 
-                $serialized = $row->valueOf($source->name());
+                $serialized = $row->get($source->name());
 
                 if (!is_string($serialized)) {
                     return $row;
@@ -62,7 +62,18 @@ final readonly class UnserializeTransformer implements Transformer
                     return $row;
                 }
 
-                return $this->merge ? $row->merge($decoded->first(), $this->mergePrefix) : $decoded->first();
+                if (!$this->merge) {
+                    return $decoded->first();
+                }
+
+                $values = $row->values();
+
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($decoded->first()->values() as $name => $value) {
+                    $values[$this->mergePrefix . $name] = $value;
+                }
+
+                return new Row($values);
             });
 
             $context->telemetry()->transformationCompleted($this, [

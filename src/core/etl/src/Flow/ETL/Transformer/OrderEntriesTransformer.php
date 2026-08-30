@@ -6,18 +6,15 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\OrderEntries\Comparator;
 use Throwable;
-
-use function Flow\ETL\DSL\row;
 
 final readonly class OrderEntriesTransformer implements Transformer
 {
     public function __construct(
-        private Comparator $comparator,
+        private SortingStrategy $strategy,
     ) {}
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -25,13 +22,7 @@ final readonly class OrderEntriesTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row): Row {
-                $entries = $row->entries()->all();
-
-                usort($entries, fn($left, $right) => $this->comparator->compare($left, $right));
-
-                return row(...$entries);
-            });
+            $result = $rows->sortEntries($this->strategy);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

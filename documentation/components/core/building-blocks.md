@@ -2,10 +2,11 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-Entries are the columns of the [Data Frame](/documentation/components/core/core.md), they are represented by
-the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
-Group of Entries is called `Row`, it is represented by the [Row](/src/core/etl/src/Flow/ETL/Row.php) class.
-Group of Rows is called `Rows`, it is represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php) class.
+Columns of the [Data Frame](/documentation/components/core/core.md) are described by the
+[Schema](/src/core/etl/src/Flow/ETL/Schema.php) - it owns their names, order, types and nullability.
+A [Row](/src/core/etl/src/Flow/ETL/Row.php) carries the values for one record, keyed by column name.
+A group of Rows is called `Rows`, represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php)
+class, and every `Rows` carries the one `Schema` that describes it.
 
 Let's look at the following example:
 
@@ -14,13 +15,14 @@ Let's look at the following example:
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, row, rows, str_entry};
+use function Flow\ETL\DSL\{bool_schema, int_schema, row, rows, schema, str_schema};
 
 $rows = rows(
-    row(int_entry('id', 1), str_entry('name', 'user_01'), bool_entry('active', true)),
-    row(int_entry('id', 2), str_entry('name', 'user_02'), bool_entry('active', false)),
-    row(int_entry('id', 3), str_entry('name', 'user_03'), bool_entry('active', true)),
-    row(int_entry('id', 3), str_entry('name', 'user_04'), bool_entry('active', false)),
+    schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+    row(['id' => 1, 'name' => 'user_01', 'active' => true]),
+    row(['id' => 2, 'name' => 'user_02', 'active' => false]),
+    row(['id' => 3, 'name' => 'user_03', 'active' => true]),
+    row(['id' => 4, 'name' => 'user_04', 'active' => false]),
 );
 ```
 
@@ -44,29 +46,36 @@ $rows = array_to_rows([
 ]);
 ```
 
-## Entry Types
+## Column Types
 
-- [Boolean](/src/core/etl/src/Flow/ETL/Row/Entry/BooleanEntry.php)
-- [Time](/src/core/etl/src/Flow/ETL/Row/Entry/TimeEntry.php)
-- [Date](/src/core/etl/src/Flow/ETL/Row/Entry/DateEntry.php)
-- [DateTime](/src/core/etl/src/Flow/ETL/Row/Entry/DateTimeEntry.php)
-- [Enum](/src/core/etl/src/Flow/ETL/Row/Entry/EnumEntry.php)
-- [Float](/src/core/etl/src/Flow/ETL/Row/Entry/FloatEntry.php)
-- [Integer](/src/core/etl/src/Flow/ETL/Row/Entry/IntegerEntry.php)
-- [Json](/src/core/etl/src/Flow/ETL/Row/Entry/JsonEntry.php)
-- [List](/src/core/etl/src/Flow/ETL/Row/Entry/ListEntry.php)
-- [Map](/src/core/etl/src/Flow/ETL/Row/Entry/MapEntry.php)
-- [Null](/src/core/etl/src/Flow/ETL/Row/Entry/NullEntry.php)
-- [String](/src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
-- [Structure](/src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
-- [Uuid](/src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
-- [HTML](/src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php)
-- [HTMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/HTMLElementEntry.php)
-- [XML](/src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
-- [XMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
+Every column is described by a [Definition](/src/core/etl/src/Flow/ETL/Schema/Definition.php), built with
+the matching `*_schema()` [DSL function](/src/core/etl/src/Flow/ETL/DSL/functions.php). A definition owns
+the column name, its [Flow Type](/documentation/components/libs/types.md), nullability and metadata.
 
-Internally, Flow is using a [Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) to turn raw values
-into rows and an [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create single entries.
-Both will try to detect and create the most appropriate entry type based on the value.
+| Column | DSL function | Definition |
+|--------|--------------|------------|
+| Boolean | `bool_schema()` | [BooleanDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/BooleanDefinition.php) |
+| Date | `date_schema()` | [DateDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateDefinition.php) |
+| DateTime | `datetime_schema()` | [DateTimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateTimeDefinition.php) |
+| Enum | `enum_schema()` | [EnumDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/EnumDefinition.php) |
+| Float | `float_schema()` | [FloatDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/FloatDefinition.php) |
+| HTML | `html_schema()` | [HTMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLDefinition.php) |
+| HTML Element | `html_element_schema()` | [HTMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLElementDefinition.php) |
+| Integer | `int_schema()`, `integer_schema()` | [IntegerDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/IntegerDefinition.php) |
+| Json | `json_schema()` | [JsonDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/JsonDefinition.php) |
+| List | `list_schema()` | [ListDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/ListDefinition.php) |
+| Map | `map_schema()` | [MapDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/MapDefinition.php) |
+| Null | `null_schema()` | [NullDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/NullDefinition.php) |
+| String | `str_schema()`, `string_schema()` | [StringDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StringDefinition.php) |
+| Structure | `structure_schema()` | [StructureDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StructureDefinition.php) |
+| Time | `time_schema()` | [TimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeDefinition.php) |
+| Time Zone | `time_zone_schema()` | [TimeZoneDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeZoneDefinition.php) |
+| Union | `union_schema()` | [UnionDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UnionDefinition.php) |
+| Uuid | `uuid_schema()` | [UuidDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UuidDefinition.php) |
+| XML | `xml_schema()` | [XMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLDefinition.php) |
+| XML Element | `xml_element_schema()` | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLElementDefinition.php) |
 
-Flow Entries are based on [Flow Types Library](/documentation/components/libs/types.md)
+When no schema is given up front - as in the `array_to_rows()` example above - a
+[Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) infers one from the whole batch and turns the raw
+values into `Rows`. Inference looks at every row of the batch, not at a single value, so one column always
+ends up with one type.

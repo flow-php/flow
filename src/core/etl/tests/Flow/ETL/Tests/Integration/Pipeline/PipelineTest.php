@@ -16,12 +16,13 @@ use Flow\ETL\Transformer;
 
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class PipelineTest extends FlowTestCase
 {
     public function test_getting_steps_from_pipeline(): void
     {
-        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline = new Pipeline(from_rows(rows(schema())));
         $pipeline->add($transformer1 = $this->createStub(Transformer::class));
         $pipeline->add($groupBy = new GroupByAggregationProcessor(new GroupBy(), new Buckets(new MemoryBuckets())));
         $pipeline->add($transformer2 = $this->createStub(Transformer::class));

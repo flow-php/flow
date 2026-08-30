@@ -60,7 +60,7 @@ final class StringAggregate implements AggregatingFunction
             return;
         }
 
-        $stringValue = $row->valueOf($this->ref->to());
+        $stringValue = $row->get($this->ref->to());
 
         if (is_string($stringValue)) {
             $this->values[] = $stringValue;

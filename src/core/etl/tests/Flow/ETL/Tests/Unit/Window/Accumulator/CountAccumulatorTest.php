@@ -9,10 +9,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\CountAccumulator;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class CountAccumulatorTest extends FlowTestCase
 {
@@ -20,8 +18,8 @@ final class CountAccumulatorTest extends FlowTestCase
     {
         $accumulator = new CountAccumulator(null, flow_context());
 
-        $accumulator->accumulate(row(int_entry('value', 1)));
-        $accumulator->accumulate(row(str_entry('other', 'x')));
+        $accumulator->accumulate(row(['value' => 1]));
+        $accumulator->accumulate(row(['other' => 'x']));
 
         static::assertSame(2, $accumulator->value());
     }
@@ -30,9 +28,9 @@ final class CountAccumulatorTest extends FlowTestCase
     {
         $accumulator = new CountAccumulator(ref('value'), flow_context());
 
-        $accumulator->accumulate(row(int_entry('value', 1)));
-        $accumulator->accumulate(row(int_entry('value', null)));
-        $accumulator->accumulate(row(int_entry('value', 3)));
+        $accumulator->accumulate(row(['value' => 1]));
+        $accumulator->accumulate(row(['value' => null]));
+        $accumulator->accumulate(row(['value' => 3]));
 
         static::assertSame(2, $accumulator->value());
     }
@@ -53,18 +51,18 @@ final class CountAccumulatorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Count window function error: /');
 
-        (new CountAccumulator(ref('value'), $context))->accumulate(row(str_entry('other', 'x')));
+        (new CountAccumulator(ref('value'), $context))->accumulate(row(['other' => 'x']));
     }
 
     public function test_value_is_idempotent(): void
     {
         $accumulator = new CountAccumulator(ref('value'), flow_context());
-        $accumulator->accumulate(row(int_entry('value', 1)));
+        $accumulator->accumulate(row(['value' => 1]));
 
         static::assertSame(1, $accumulator->value());
         static::assertSame(1, $accumulator->value());
 
-        $accumulator->accumulate(row(int_entry('value', 2)));
+        $accumulator->accumulate(row(['value' => 2]));
 
         static::assertSame(2, $accumulator->value());
     }

@@ -6,10 +6,8 @@ namespace Flow\ETL\Tests\Unit\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryTypeResolver;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\int_schema;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -21,29 +19,6 @@ use function Flow\Types\DSL\type_uuid;
 
 final class EntryTypeResolverTest extends FlowTestCase
 {
-    public function test_from_definition_keeps_non_nullable_type(): void
-    {
-        static::assertEquals(type_integer(), (new EntryTypeResolver())->fromDefinition(int_schema('e')));
-    }
-
-    public function test_from_definition_keeps_nullable_union_unwrapped(): void
-    {
-        static::assertEquals(
-            type_union(type_integer(), type_string()),
-            (new EntryTypeResolver())->fromDefinition(
-                new UnionDefinition('e', type_union(type_integer(), type_string()), true),
-            ),
-        );
-    }
-
-    public function test_from_definition_wraps_nullable_type_as_optional(): void
-    {
-        static::assertEquals(
-            type_optional(type_integer()),
-            (new EntryTypeResolver())->fromDefinition(int_schema('e', true)),
-        );
-    }
-
     public function test_from_union_falls_back_to_first_castable_member(): void
     {
         static::assertEquals(type_integer(), (new EntryTypeResolver())->fromUnion(

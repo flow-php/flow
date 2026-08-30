@@ -15,12 +15,10 @@ use Flow\Floe\Tests\Mother\FooterMother;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -224,16 +222,20 @@ final class FooterTest extends TestCase
 
     public function test_reconstruct_rows_builds_rows_from_decoded_rows(): void
     {
-        $footer = FooterMother::footer(totalRows: 1);
+        // reconstructRows now stamps the footer's own schema onto the batch
+        $footer = FooterMother::footer(schema: schema(int_schema('id'))->normalize(), totalRows: 1);
 
-        static::assertEquals(rows(row(int_entry('id', 1))), $footer->reconstructRows([row(int_entry('id', 1))]));
+        static::assertEquals(
+            rows(schema(int_schema('id')), row(['id' => 1])),
+            $footer->reconstructRows([row(['id' => 1])]),
+        );
     }
 
     public function test_reconstruct_rows_round_trips_unpartitioned_rows(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-rows.floe');
-        $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
 
         $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);
@@ -247,7 +249,7 @@ final class FooterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-empty.floe');
-        $value = rows();
+        $value = rows(schema());
 
         $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);
@@ -261,10 +263,11 @@ final class FooterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-partitioned.floe');
-        $value = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
+        $value = Rows::partitioned(
+            schema(int_schema('id'), str_schema('country')),
+            [row(['id' => 1, 'country' => 'PL'])],
+            [new Partition('country', 'PL')],
+        );
 
         $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);
@@ -278,12 +281,15 @@ final class FooterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-partition-order.floe');
-        $value = Rows::partitioned([row(
-            int_entry('id', 1),
-            str_entry('year', '2020'),
-            str_entry('day', '15'),
-            str_entry('month', '03'),
-        )], [new Partition('year', '2020'), new Partition('day', '15'), new Partition('month', '03')]);
+        $value = Rows::partitioned(
+            schema(int_schema('id'), str_schema('year'), str_schema('day'), str_schema('month')),
+            [row(['id' => 1, 'year' => '2020', 'day' => '15', 'month' => '03'])],
+            [
+                new Partition('year', '2020'),
+                new Partition('day', '15'),
+                new Partition('month', '03'),
+            ],
+        );
 
         $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);

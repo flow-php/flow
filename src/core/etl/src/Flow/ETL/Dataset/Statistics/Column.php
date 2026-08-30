@@ -6,19 +6,19 @@ namespace Flow\ETL\Dataset\Statistics;
 
 use DateTimeInterface;
 use DateTimeZone;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\TimeZoneEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\Definition;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeZoneType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Uuid;
 
 use function count;
@@ -54,28 +54,27 @@ final class Column
     private readonly Reference $reference;
 
     /**
-     * @param Entry<mixed> $entry
+     * @param Definition<mixed> $definition
      *
      * @throws \JsonException
      */
-    public function __construct(Entry $entry)
+    public function __construct(Definition $definition, mixed $value)
     {
-        $this->reference = $entry->ref();
+        $this->reference = $definition->entry();
         $this->distinctCounter = new DistinctCounter();
-        $this->calculate($entry);
+        $this->add($definition, $value);
     }
 
     /**
-     * @param Entry<mixed> $entry
+     * @param Definition<mixed> $definition
      */
-    public function calculate(Entry $entry): void
+    public function add(Definition $definition, mixed $value): void
     {
-        if (!$this->reference->is($entry->ref())) {
+        if ($this->reference->name() !== $definition->entry()->name()) {
             return;
         }
 
-        // @mago-ignore analysis:mixed-assignment
-        $value = $entry->value();
+        $type = $definition->type();
 
         if ($value === null) {
             $this->nullsCount++;
@@ -83,25 +82,25 @@ final class Column
             return;
         }
 
-        if ($entry instanceof UuidEntry) {
+        if ($type instanceof UuidType) {
             $this->distinctCounter->add(type_instance_of(Uuid::class)->assert($value)->toString());
 
             return;
         }
 
-        if ($entry instanceof TimeZoneEntry) {
+        if ($type instanceof TimeZoneType) {
             $this->distinctCounter->add(type_instance_of(DateTimeZone::class)->assert($value)->getName());
 
             return;
         }
 
-        if ($entry instanceof StructureEntry) {
+        if ($type instanceof StructureType) {
             $this->distinctCounter->add(json_encode($value, JSON_THROW_ON_ERROR));
 
             return;
         }
 
-        if ($entry instanceof ListEntry || $entry instanceof MapEntry) {
+        if ($type instanceof ListType || $type instanceof MapType) {
             $this->distinctCounter->add(json_encode($value, JSON_THROW_ON_ERROR));
             $elementsCount = is_countable($value) ? count($value) : 0;
             $this->maxElementsCount = max($this->maxElementsCount ?? $elementsCount, $elementsCount);
@@ -114,15 +113,15 @@ final class Column
             $this->distinctCounter->add($value);
         }
 
-        if ($entry instanceof StringEntry) {
-            $valueLength = mb_strlen(is_scalar($entry->value()) ? $entry->value() : '');
+        if ($type instanceof StringType) {
+            $valueLength = mb_strlen(is_scalar($value) ? (string) $value : '');
             $this->maxLength = max($this->maxLength ?? $valueLength, $valueLength);
             $this->minLength = min($this->minLength ?? $valueLength, $valueLength);
 
             return;
         }
 
-        if ($entry instanceof DateEntry || $entry instanceof DateTimeEntry) {
+        if ($type instanceof DateType || $type instanceof DateTimeType) {
             if ($value instanceof DateTimeInterface) {
                 $this->max = max($this->max ?? $value, $value);
                 $this->min = min($this->min ?? $value, $value);
@@ -131,7 +130,7 @@ final class Column
             return;
         }
 
-        if ($entry instanceof IntegerEntry || $entry instanceof FloatEntry || $entry instanceof BooleanEntry) {
+        if ($type instanceof IntegerType || $type instanceof FloatType || $type instanceof BooleanType) {
             if (is_int($value) || is_float($value) || is_bool($value)) {
                 $this->min = min($this->min ?? $value, $value);
                 $this->max = max($this->max ?? $value, $value);

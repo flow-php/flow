@@ -24,9 +24,10 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use RuntimeException;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 #[CoversClass(TraceableCache::class)]
 final class TraceableCacheTest extends FlowTestCase
@@ -100,7 +101,7 @@ final class TraceableCacheTest extends FlowTestCase
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
-        $innerCache->set('existing-key', rows(row()));
+        $innerCache->set('existing-key', rows(schema(), row([])));
         $cache->get('existing-key');
 
         $this->telemetry->flush();
@@ -140,7 +141,7 @@ final class TraceableCacheTest extends FlowTestCase
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
-        $innerCache->set('existing-key', rows(row()));
+        $innerCache->set('existing-key', rows(schema(), row([])));
         $exists = $cache->has('existing-key');
 
         static::assertTrue($exists);
@@ -180,7 +181,7 @@ final class TraceableCacheTest extends FlowTestCase
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
-        $innerCache->set('existing-key', $rows = rows(row(int_entry('id', 1))));
+        $innerCache->set('existing-key', $rows = rows(schema(int_schema('id')), row(['id' => 1])));
 
         static::assertEquals($rows->schema(), $cache->schema('existing-key'));
 
@@ -217,7 +218,7 @@ final class TraceableCacheTest extends FlowTestCase
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
 
-        $cache->set('test-key', rows());
+        $cache->set('test-key', rows(schema()));
 
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
@@ -289,7 +290,7 @@ final class TraceableCacheTest extends FlowTestCase
         $this->expectExceptionMessage('Test error');
 
         try {
-            $cache->set('test-key', rows(row()));
+            $cache->set('test-key', rows(schema(), row([])));
         } finally {
             $this->telemetry->flush();
             $spans = $this->spanProcessor->endedSpans();

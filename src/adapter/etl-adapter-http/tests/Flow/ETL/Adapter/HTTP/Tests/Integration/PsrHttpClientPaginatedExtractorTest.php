@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\CastingException;
 use Http\Mock\Client;
@@ -380,7 +379,11 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             ]))),
         )->extract(flow_context(config())));
 
-        static::assertInstanceOf(StructureEntry::class, $rows[0]->first()->get('response_body'));
+        static::assertEquals(
+            type_structure(['login' => type_string(), 'id' => type_integer()]),
+            $rows[0]->schema()->get('response_body')->type(),
+        );
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
     }
 
     public function test_schema_typed_response_body_with_missing_field(): void
@@ -417,7 +420,11 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
 
         $rows = iterator_to_array($extractor->extract(flow_context(config())));
 
-        static::assertInstanceOf(StructureEntry::class, $rows[0]->first()->get('response_body'));
+        static::assertEquals(
+            type_structure(['login' => type_string(), 'id' => type_integer()]),
+            $rows[0]->schema()->get('response_body')->type(),
+        );
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
     }
 
     public function test_stops_on_client_error_but_yields_its_row(): void
@@ -434,6 +441,6 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
 
         static::assertCount(2, $client->getRequests());
         static::assertCount(2, $rows);
-        static::assertSame(500, $rows[1]->first()->valueOf('response_status_code'));
+        static::assertSame(500, $rows[1]->first()->get('response_status_code'));
     }
 }

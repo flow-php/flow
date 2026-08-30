@@ -9,7 +9,6 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\col;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 
 final class ExpressionTest extends FlowTestCase
@@ -27,6 +26,6 @@ final class ExpressionTest extends FlowTestCase
     {
         $expression = Expression::on(new Equal('id', 'id'), '_');
 
-        static::assertTrue($expression->meet(row(int_entry('id', 1)), row(int_entry('id', 1))));
+        static::assertTrue($expression->meet(row(['id' => 1]), row(['id' => 1])));
     }
 }

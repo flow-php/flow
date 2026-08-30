@@ -65,7 +65,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         }
 
         /** @var mixed $value */
-        $value = $row->valueOf($this->ref);
+        $value = $row->get($this->ref);
 
         if (is_numeric($value)) {
             // @mago-ignore analysis:possibly-invalid-argument

@@ -22,14 +22,15 @@ use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\partition;
 use function iterator_to_array;
 use function range;
@@ -44,14 +45,18 @@ final class PartitioningTest extends FlowIntegrationTestCase
     public function test_dropping_partitions(): void
     {
         $rows = df()
-            ->read(from_rows(rows_partitioned([
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-            ], [
-                partition('country', 'PL'),
-            ])))
+            ->read(from_rows(rows_partitioned(
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                [
+                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                    row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                ],
+                [
+                    partition('country', 'PL'),
+                ],
+            )))
             ->dropPartitions()
             ->fetch();
 
@@ -137,36 +142,45 @@ final class PartitioningTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->partitionBy(ref('country'))
             ->get();
 
         static::assertEquals(
             [
-                rows_partitioned([
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                ], [
-                    partition('country', 'PL'),
-                ]),
-                rows_partitioned([
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                ], [
-                    partition('country', 'US'),
-                ]),
+                rows_partitioned(
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                    [
+                        row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                        row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                        row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                        row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                    ],
+                    [
+                        partition('country', 'PL'),
+                    ],
+                ),
+                rows_partitioned(
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                    [
+                        row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                        row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                        row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                        row(['id' => 9, 'country' => 'US', 'age' => 50]),
+                    ],
+                    [
+                        partition('country', 'US'),
+                    ],
+                ),
             ],
             iterator_to_array($rows),
         );
@@ -299,6 +313,6 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertCount(1, $rows);
-        static::assertSame(2023, $rows->first()->valueOf('year'));
+        static::assertSame(2023, $rows->first()->get('year'));
     }
 }

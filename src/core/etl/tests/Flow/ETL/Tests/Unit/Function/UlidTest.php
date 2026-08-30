@@ -18,18 +18,18 @@ final class UlidTest extends FlowTestCase
     public function test_ulid_produces_a_string_column(): void
     {
         $expression = ulid();
-        $result = $expression->eval(row(), flow_context());
+        $result = $expression->eval(row([]), flow_context());
 
         static::assertIsString($result);
         static::assertTrue(Ulid::isValid($result));
-        static::assertNotSame($expression->eval(row(), flow_context()), $expression->eval(row(), flow_context()));
+        static::assertNotSame($expression->eval(row([]), flow_context()), $expression->eval(row([]), flow_context()));
     }
 
     public function test_ulid_is_unique(): void
     {
         $expression = ulid();
 
-        static::assertNotEquals($expression->eval(row(), flow_context()), $expression->eval(row(), flow_context()));
+        static::assertNotEquals($expression->eval(row([]), flow_context()), $expression->eval(row([]), flow_context()));
     }
 
     public function test_ulid_with_invalid_value_throws(): void
@@ -37,6 +37,6 @@ final class UlidTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Ulid requires valid ULID string: Invalid ULID.');
 
-        ulid(lit(''))->eval(row(), flow_context());
+        ulid(lit(''))->eval(row([]), flow_context());
     }
 }

@@ -9,8 +9,11 @@ use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\RowProjection;
 
+use function array_diff;
 use function array_slice;
+use function array_values;
 use function gettype;
 use function is_array;
 use function is_string;
@@ -91,7 +94,7 @@ final readonly class Expression
             }
         }
 
-        return $left->remove(...$dropLeft);
+        return (new RowProjection())->keep($left, array_values(array_diff($left->names(), $dropLeft)));
     }
 
     public function dropDuplicateRightEntries(Row $right): Row
@@ -112,7 +115,7 @@ final readonly class Expression
             }
         }
 
-        return $right->remove(...$dropRight);
+        return (new RowProjection())->keep($right, array_values(array_diff($right->names(), $dropRight)));
     }
 
     /**

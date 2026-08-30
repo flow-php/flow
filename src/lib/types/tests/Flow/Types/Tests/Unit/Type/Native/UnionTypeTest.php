@@ -264,6 +264,29 @@ final class UnionTypeTest extends TestCase
         );
     }
 
+    public function test_union_member_for_picks_first_valid(): void
+    {
+        $type = type_union(type_string(), type_integer());
+
+        static::assertEquals(type_string(), $type->memberFor('5'));
+        static::assertEquals(type_integer(), $type->memberFor(5));
+    }
+
+    public function test_union_member_for_returns_null_when_no_member_matches(): void
+    {
+        static::assertNull(type_union(type_string(), type_integer())->memberFor(new stdClass()));
+    }
+
+    public function test_union_member_for_skips_the_null_member(): void
+    {
+        static::assertNull(type_union(type_null(), type_string())->memberFor(null));
+    }
+
+    public function test_union_member_for_unwraps_optional_members(): void
+    {
+        static::assertEquals(type_integer(), type_union(type_optional(type_integer()), type_string())->memberFor(5));
+    }
+
     public function test_union_with_mixed_type(): void
     {
         $this->expectException(InvalidTypeException::class);

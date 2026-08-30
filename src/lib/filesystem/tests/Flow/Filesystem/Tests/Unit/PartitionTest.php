@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
+use DateTimeImmutable;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\html_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_xml;
 
 final class PartitionTest extends TestCase
 {
@@ -40,38 +37,37 @@ final class PartitionTest extends TestCase
         ];
     }
 
-    public function test_creating_partition_value_date_entry(): void
+    public function test_creating_partition_value_from_date(): void
     {
-        static::assertEquals('2023-01-01', Partition::valueFromRow(
-            ref('date'),
-            row(datetime_entry('date', '2023-01-01 00:00:00 UTC')),
+        static::assertEquals('2023-01-01', Partition::fromValue(
+            'date',
+            type_datetime(),
+            new DateTimeImmutable('2023-01-01 00:00:00 UTC'),
         ));
     }
 
-    public function test_creating_partition_value_datetime_entry(): void
+    public function test_creating_partition_value_from_datetime(): void
     {
-        static::assertEquals('2023-01-01', Partition::valueFromRow(
-            ref('date'),
-            row(datetime_entry('date', '2023-01-01 21:51:14 PST')),
+        static::assertEquals('2023-01-01', Partition::fromValue(
+            'date',
+            type_datetime(),
+            new DateTimeImmutable('2023-01-01 21:51:14 PST'),
         ));
     }
 
     #[RequiresPhp('>= 8.4.0')]
-    public function test_creating_partition_value_from_html_entry(): void
+    public function test_creating_partition_value_from_html(): void
     {
-        $this->expectExceptionMessage(HTMLEntry::class . ' can\'t be used as a partition');
+        $this->expectExceptionMessage('Column "html" of type html can\'t be used as a partition');
 
-        Partition::valueFromRow(
-            ref('html'),
-            row(html_entry('html', '<!DOCTYPE html><html><head></head><body></body></html>')),
-        );
+        Partition::fromValue('html', type_html(), '<!DOCTYPE html><html><head></head><body></body></html>');
     }
 
-    public function test_creating_partition_value_from_xml_entry(): void
+    public function test_creating_partition_value_from_xml(): void
     {
-        $this->expectExceptionMessage(XMLEntry::class . ' can\'t be used as a partition');
+        $this->expectExceptionMessage('Column "xml" of type xml can\'t be used as a partition');
 
-        Partition::valueFromRow(ref('xml'), row(xml_entry('xml', '<xml></xml>')));
+        Partition::fromValue('xml', type_xml(), '<xml></xml>');
     }
 
     public function test_creating_partitions_from_uri_with_partition_with_forbidden_character(): void

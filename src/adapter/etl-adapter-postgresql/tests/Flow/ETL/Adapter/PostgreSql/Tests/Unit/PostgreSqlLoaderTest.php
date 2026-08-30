@@ -15,9 +15,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class PostgreSqlLoaderTest extends TestCase
 {
@@ -32,7 +33,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('DeleteOptions must be set for DELETE operation');
 
-        $loader->load(rows(row(int_entry('id', 1))), flow_context());
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
     }
 
     public function test_load_delete_requires_primary_keys(): void
@@ -47,7 +48,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for DELETE operation');
 
-        $loader->load(rows(row(int_entry('id', 1))), flow_context());
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
     }
 
     public function test_load_update_requires_primary_keys(): void
@@ -62,7 +63,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for UPDATE operation');
 
-        $loader->load(rows(row(int_entry('id', 1))), flow_context());
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
     }
 
     public function test_load_update_requires_update_options(): void
@@ -76,7 +77,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('UpdateOptions must be set for UPDATE operation');
 
-        $loader->load(rows(row(int_entry('id', 1))), flow_context());
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
     }
 
     public function test_load_with_empty_rows_does_not_call_client(): void
@@ -85,7 +86,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $client->expects(self::never())->method('execute');
 
         $loader = new PostgreSqlLoader($client, 'test_table');
-        $loader->load(rows(), flow_context());
+        $loader->load(rows(schema()), flow_context());
     }
 
     /**

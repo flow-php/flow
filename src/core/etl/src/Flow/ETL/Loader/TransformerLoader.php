@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use Throwable;
@@ -35,7 +36,7 @@ final class TransformerLoader implements Closure, Discardable, Loader, Overridin
                     $this->stream->drain();
                 }
             } catch (Throwable $failure) {
-                if ($context->errorHandler()->throw($failure, new Rows())) {
+                if ($context->errorHandler()->throw($failure, new Rows(new Schema()))) {
                     throw $failure;
                 }
             }

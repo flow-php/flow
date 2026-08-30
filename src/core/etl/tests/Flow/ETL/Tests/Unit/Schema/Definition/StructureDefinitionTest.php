@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
@@ -15,11 +14,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
@@ -27,7 +23,6 @@ use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -326,53 +321,32 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
-    public function test_does_not_match_a_map_entry_holding_a_structure_shaped_value(): void
-    {
-        $def = structure_schema('col', type_structure(['a' => type_integer()]));
-
-        static::assertFalse($def->matches(map_entry('col', ['a' => 1], type_map(type_string(), type_integer()))));
-    }
-
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
-        static::assertFalse($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_an_entry_of_a_different_structure_instantiation(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
-            'b' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['b' => 'x']));
     }
 
     public function test_does_not_match_an_entry_with_extra_elements_when_extra_is_not_allowed(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
-            'a' => type_integer(),
-            'b' => type_string(),
-        ]))));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = structure_schema('data', type_structure(['name' => type_string()]));
-
-        static::assertFalse($def->matches(structure_entry('other', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['a' => 1, 'b' => 'x']));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
     public function test_array_element_is_projected_to_json(): void
@@ -398,14 +372,6 @@ final class StructureDefinitionTest extends FlowTestCase
             ]))
                 ->type()
                 ->toString(),
-        );
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(
-            StructureEntry::class,
-            structure_schema('data', type_structure(['name' => type_string()]))->entryClass(),
         );
     }
 
@@ -485,19 +451,14 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()], true));
 
-        static::assertTrue($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
-            'a' => type_integer(),
-            'b' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['a' => 1, 'b' => 'x']));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
-            'b' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['b' => 'x']));
         static::assertFalse($def->isCompatible(structure_schema('col', type_structure(['b' => type_string()]))));
     }
 
@@ -505,9 +466,7 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $def = structure_schema('data', type_structure(['name' => type_string()]));
 
-        static::assertTrue($def->matches(structure_entry('data', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['name' => 'John']));
     }
 
     /**
@@ -575,30 +534,21 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertTrue($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = structure_schema('col', type_structure(['name' => type_string()]), true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertTrue($def->matches(structure_entry('col', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['name' => 'John']));
     }
 
     public function test_rename(): void

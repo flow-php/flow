@@ -41,10 +41,10 @@ final class ConstrainedProcessor implements Processor
         foreach ($rows as $batch) {
             foreach ($batch->all() as $row) {
                 foreach ($this->constraints as $constraint) {
-                    if (!$constraint->isSatisfiedBy($row)) {
+                    if (!$constraint->isSatisfiedBy($row, $batch->schema())) {
                         throw new ConstraintViolationException(
                             $constraint->toString(),
-                            $constraint->violation($row),
+                            $constraint->violation($row, $batch->schema()),
                             $this->rowIndex,
                         );
                     }

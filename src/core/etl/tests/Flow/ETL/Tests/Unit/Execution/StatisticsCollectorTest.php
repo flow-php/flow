@@ -15,10 +15,11 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class StatisticsCollectorTest extends FlowTestCase
 {
@@ -28,8 +29,9 @@ final class StatisticsCollectorTest extends FlowTestCase
         $collector = new StatisticsCollector(analyze()->withColumnStatistics(), $context);
 
         $collector->capture(rows(
-            row(int_entry('id', 1), str_entry('name', 'Alice')),
-            row(int_entry('id', 2), str_entry('name', 'Bob')),
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'Alice']),
+            row(['id' => 2, 'name' => 'Bob']),
         ));
 
         $collector->end();
@@ -47,7 +49,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(analyze()->withSchema(), $context);
 
-        $collector->capture(rows(row(int_entry('id', 1), str_entry('name', 'Alice'))));
+        $collector->capture(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'Alice'])));
 
         $collector->end();
         $report = $collector->report();
@@ -65,8 +67,8 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(true, $context);
 
-        $collector->capture(rows(row(int_entry('id', 1)), row(int_entry('id', 2))));
-        $collector->capture(rows(row(int_entry('id', 3))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 3])));
 
         $collector->end();
         $report = $collector->report();
@@ -80,7 +82,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(false, $context);
 
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $collector->end();
         static::assertNull($collector->report());
@@ -91,7 +93,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(analyze(), $context);
 
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $collector->end();
         $report = $collector->report();
@@ -146,7 +148,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $collector = new StatisticsCollector(true, $context);
 
         $clock->modify('+5 minutes');
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $clock->modify('+5 minutes');
         $collector->end();
@@ -169,7 +171,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(true, $context);
 
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $collector->end();
         $report = $collector->report();
@@ -183,7 +185,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(true, $context);
 
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $collector->end();
         $report = $collector->report();
@@ -197,7 +199,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $context = flow_context();
         $collector = new StatisticsCollector(analyze(), $context);
 
-        $collector->capture(rows(row(int_entry('id', 1))));
+        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $collector->end();
         $report = $collector->report();

@@ -18,19 +18,21 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
-use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
-use function Flow\ETL\DSL\time_zone_entry;
+use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_time_zone;
 
 final class FloeDataFrameTest extends FlowIntegrationTestCase
 {
@@ -89,7 +91,11 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('timezones.floe');
 
         data_frame()
-            ->read(from_rows(rows(row(time_zone_entry('tz', 'Europe/Warsaw')), row(time_zone_entry('tz', 'UTC')))))
+            ->read(from_rows(rows(
+                schema(time_zone_schema('tz')),
+                row(['tz' => type_time_zone()->cast('Europe/Warsaw')]),
+                row(['tz' => type_time_zone()->cast('UTC')]),
+            )))
             ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
@@ -100,7 +106,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $names = [];
 
         foreach ($read as $row) {
-            $names[] = type_instance_of(DateTimeZone::class)->assert($row->valueOf('tz'))->getName();
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row->get('tz'))->getName();
         }
 
         static::assertSame(['Europe/Warsaw', 'UTC'], $names);
@@ -125,12 +131,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         // NOT NULL declaration.
         static::assertFalse($rows->schema()->get('body')->isNullable());
 
-        $first = $rows[0]->valueOf('body');
+        $first = $rows[0]->get('body');
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->valueOf('body');
+        $second = $rows[1]->get('body');
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -141,11 +147,10 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('list-json.floe');
 
         data_frame()
-            ->read(from_rows(rows(row(list_entry(
-                'json_list',
-                [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])],
-                type_list(type_json()),
-            )))))
+            ->read(from_rows(rows(
+                schema(list_schema('json_list', type_list(type_json()))),
+                row(['json_list' => [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])]]),
+            )))
             ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
@@ -153,7 +158,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
 
-        $list = $rows[0]->valueOf('json_list');
+        $list = $rows[0]->get('json_list');
         static::assertIsArray($list);
         static::assertInstanceOf(Json::class, $list[0]);
         static::assertSame(['a' => 1], $list[0]->toArray());
@@ -194,7 +199,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
 
-        static::assertTrue($rows->first()->entries()->has('_input_file_uri'));
+        static::assertTrue($rows->first()->has('_input_file_uri'));
     }
 
     public function test_offset_and_limit_pushdown(): void
@@ -277,6 +282,6 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $result = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame(2, $result->count());
-        static::assertSame(['id', 'name'], $result->first()->entries()->names());
+        static::assertSame(['id', 'name'], $result->first()->names());
     }
 }

@@ -44,7 +44,8 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
         static::assertSame(['node', 'date'], array_keys($rows[0]));
         static::assertSame('2026-01-01', $rows[0]['date']);
-        static::assertSame(['node'], array_keys($rows[1]));
+        static::assertSame(['node', 'date'], array_keys($rows[1]));
+        static::assertNull($rows[1]['date']);
     }
 
     public function test_reading_deep_xml(): void
@@ -87,7 +88,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="1">
               <id id_attribute_01="1">1</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->get('node')));
 
         // @mago-ignore analysis:deprecated-class
         $extractor2 = new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item');
@@ -95,7 +96,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="5">
               <id id_attribute_01="5">5</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->get('node')));
     }
 
     public function test_reading_xml_from_path(): void
@@ -123,7 +124,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             type_string()->cast(data_frame()
                 // @mago-ignore analysis:deprecated-class
                 ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
-                ->fetch()[0]->valueOf('node')),
+                ->fetch()[0]->get('node')),
         );
     }
 

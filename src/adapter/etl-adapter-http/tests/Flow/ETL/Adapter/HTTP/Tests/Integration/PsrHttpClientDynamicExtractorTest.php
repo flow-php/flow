@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
@@ -83,7 +82,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         // The row carries the body as raw text, so response_body holds one type whatever the
         // content type is; pagination reads the structured map through HttpEncoder::structuredBody().
         $body = type_array()->assert(json_decode(
-            type_string()->assert($currentRows->first()->valueOf('response_body')),
+            type_string()->assert($currentRows->first()->get('response_body')),
             true,
             512,
             JSON_THROW_ON_ERROR,
@@ -93,13 +92,13 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         static::assertSame('flow-php', $body['login']);
         static::assertSame(73_495_297, $body['id']);
 
-        $responseHeaders = type_array()->assert($currentRows->first()->valueOf('response_headers'));
+        $responseHeaders = type_array()->assert($currentRows->first()->get('response_headers'));
         static::assertSame(['GitHub.com'], $responseHeaders['Server']);
-        static::assertSame(200, $currentRows->first()->valueOf('response_status_code'));
-        static::assertSame('1.1', $currentRows->first()->valueOf('response_protocol_version'));
-        static::assertSame('OK', $currentRows->first()->valueOf('response_reason_phrase'));
-        static::assertSame('https://api.github.com/orgs/flow-php', $currentRows->first()->valueOf('request_uri'));
-        static::assertSame('GET', $currentRows->first()->valueOf('request_method'));
+        static::assertSame(200, $currentRows->first()->get('response_status_code'));
+        static::assertSame('1.1', $currentRows->first()->get('response_protocol_version'));
+        static::assertSame('OK', $currentRows->first()->get('response_reason_phrase'));
+        static::assertSame('https://api.github.com/orgs/flow-php', $currentRows->first()->get('request_uri'));
+        static::assertSame('GET', $currentRows->first()->get('request_method'));
     }
 
     public function test_schema_is_the_fixed_http_exchange_shape(): void
@@ -170,6 +169,10 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
             static::fail('Expected Rows instance from extractor');
         }
 
-        static::assertInstanceOf(StructureEntry::class, $rows->first()->get('response_body'));
+        static::assertEquals(
+            type_structure(['login' => type_string(), 'id' => type_integer()]),
+            $rows->schema()->get('response_body')->type(),
+        );
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows->first()->get('response_body'));
     }
 }

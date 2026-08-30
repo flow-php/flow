@@ -7,6 +7,7 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -21,6 +22,6 @@ final readonly class VoidProcessor implements Processor
         foreach ($rows as $_batch) {
         }
 
-        yield new Rows();
+        yield new Rows(new Schema());
     }
 }

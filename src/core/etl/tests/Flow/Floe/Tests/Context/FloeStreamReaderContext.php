@@ -15,6 +15,7 @@ use Flow\Floe\Format;
 use Flow\Floe\FrameReader;
 
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -65,7 +66,7 @@ final class FloeStreamReaderContext
                 ->rows(),
         );
 
-        return $batches === [] ? rows() : $batches[0];
+        return $batches === [] ? rows(schema()) : $batches[0];
     }
 
     /**
@@ -104,15 +105,15 @@ final class FloeStreamReaderContext
      */
     public static function readAll(Filesystem $filesystem, Path $path): Rows
     {
-        $merged = new Rows();
+        $merged = null;
 
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows() as $batch) {
-            $merged = $merged->merge($batch);
+            $merged = $merged === null ? $batch : $merged->merge($batch);
         }
 
-        return $merged;
+        return $merged ?? rows(schema());
     }
 
     /**

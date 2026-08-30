@@ -6,6 +6,7 @@ namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function array_values;
@@ -21,6 +22,8 @@ final class BucketCursor
      * @var list<Row>
      */
     private array $rows = [];
+
+    private ?Schema $schema = null;
 
     private bool $started = false;
 
@@ -43,6 +46,11 @@ final class BucketCursor
         if (++$this->index >= $this->count) {
             $this->load();
         }
+    }
+
+    public function schema(): Schema
+    {
+        return $this->schema ?? new Schema();
     }
 
     public function valid(): bool
@@ -69,6 +77,7 @@ final class BucketCursor
             $batch = $this->batches->current();
 
             if ($batch->count() > 0) {
+                $this->schema ??= $batch->schema();
                 $this->rows = array_values($batch->all());
                 $this->count = count($this->rows);
 

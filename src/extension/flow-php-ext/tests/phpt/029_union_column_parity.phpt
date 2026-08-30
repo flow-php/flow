@@ -6,15 +6,20 @@ NativeRowHydrator resolves a union column member per value, identically to PhpRo
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\type_uuid;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Metadata;
 
 use Flow\ETL\Schema\Definition\UnionDefinition;
-
-use function Flow\ETL\DSL\{schema, int_schema};
-use function Flow\Types\DSL\{type_datetime, type_integer, type_string, type_union, type_uuid};
 
 $union = type_union(type_string(), type_integer());
 $unmatchable = type_union(type_uuid(), type_datetime());
@@ -70,15 +75,14 @@ foreach ($castOnly as $label => [$s, $batch]) {
     );
 }
 
-$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 42])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
-    ->first()
-    ->get('a');
-printf("int value entry:%s\n", (new ReflectionClass($entry))->getShortName());
+$resolved = static fn(mixed $value): string => get_debug_type(
+    $native->cast([new RawRowValues(['id' => 1, 'a' => $value])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
+        ->first()
+        ->get('a'),
+);
 
-$entry = $native->cast([new RawRowValues(['id' => 1, 'a' => 'x'])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
-    ->first()
-    ->get('a');
-printf("string value entry:%s\n", (new ReflectionClass($entry))->getShortName());
+printf("int value type:%s\n", $resolved(42));
+printf("string value type:%s\n", $resolved('x'));
 
 $outside = [new RawRowValues(['a' => [1, 2]])];
 $outsideSchema = schema(new UnionDefinition('a', $unmatchable));
@@ -110,6 +114,6 @@ printf(
 members   hydrate:yes cast:yes
 metadata  hydrate:yes cast:yes
 castable  cast:yes
-int value entry:IntegerEntry
-string value entry:StringEntry
+int value type:int
+string value type:string
 outside member exception parity:yes

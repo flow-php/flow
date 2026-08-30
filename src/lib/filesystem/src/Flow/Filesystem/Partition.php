@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\XMLElementEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\UnresolvedReference;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\TypedValueFormatter;
 
 use function array_filter;
 use function explode;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function preg_match;
+use function sprintf;
 use function strlen;
 
 final class Partition
@@ -94,31 +96,37 @@ final class Partition
         return new Partitions(...$partitions);
     }
 
-    public static function valueFromRow(Reference $ref, Row $row): mixed
+    /**
+     * @param Type<mixed> $type
+     */
+    public static function fromValue(string $name, Type $type, mixed $value): string
     {
-        $entry = $row->get($ref);
+        if ($type instanceof DateTimeType) {
+            return type_datetime()->assert($value)->format('Y-m-d');
+        }
 
-        return match ($entry::class) {
-            DateTimeEntry::class => $entry->value()?->format('Y-m-d'),
-            HTMLEntry::class,
-            XMLEntry::class,
-            XMLElementEntry::class,
-            JsonEntry::class,
-            ListEntry::class,
-            StructureEntry::class,
-            MapEntry::class,
-                => throw new InvalidArgumentException($entry::class . ' can\'t be used as a partition'),
-            default => $entry->toString(),
-        };
+        if (
+            $type instanceof HTMLType
+            || $type instanceof HTMLElementType
+            || $type instanceof XMLType
+            || $type instanceof XMLElementType
+            || $type instanceof JsonType
+            || $type instanceof ListType
+            || $type instanceof StructureType
+            || $type instanceof MapType
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'Column "%s" of type %s can\'t be used as a partition',
+                $name,
+                $type->toString(),
+            ));
+        }
+
+        return (new TypedValueFormatter())->format($type, $value);
     }
 
     public function id(): string
     {
         return $this->name . '|' . $this->value;
-    }
-
-    public function reference(): Reference
-    {
-        return new UnresolvedReference($this->name);
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\DateEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\DateDefinition;
@@ -16,10 +15,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\date_entry;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\time_schema;
@@ -109,26 +106,14 @@ final class DateDefinitionTest extends FlowTestCase
     {
         $def = date_schema('col');
 
-        static::assertFalse($def->matches(date_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = date_schema('created_at');
-
-        static::assertFalse($def->matches(date_entry('other', '2024-01-15')));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = date_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(DateEntry::class, date_schema('created_at')->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     /**
@@ -187,7 +172,7 @@ final class DateDefinitionTest extends FlowTestCase
     {
         $def = date_schema('created_at');
 
-        static::assertTrue($def->matches(date_entry('created_at', '2024-01-15')));
+        static::assertTrue($def->matches(type_date()->cast('2024-01-15')));
     }
 
     /**
@@ -264,28 +249,21 @@ final class DateDefinitionTest extends FlowTestCase
     {
         $def = date_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = date_schema('col', true);
 
-        static::assertTrue($def->matches(date_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = date_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = date_schema('col', true);
 
-        static::assertTrue($def->matches(date_entry('col', '2024-01-15')));
+        static::assertTrue($def->matches(type_date()->cast('2024-01-15')));
     }
 
     public function test_rename(): void

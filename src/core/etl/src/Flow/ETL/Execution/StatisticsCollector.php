@@ -82,8 +82,12 @@ final class StatisticsCollector
 
         if ($this->columnStatistics !== null) {
             foreach ($rows->all() as $row) {
-                foreach ($row->entries()->all() as $entry) {
-                    $this->columnStatistics->add($entry);
+                foreach ($rows->schema()->definitions() as $definition) {
+                    $name = $definition->entry()->name();
+
+                    if ($row->has($name)) {
+                        $this->columnStatistics->add($definition, $row->get($name));
+                    }
                 }
             }
         }

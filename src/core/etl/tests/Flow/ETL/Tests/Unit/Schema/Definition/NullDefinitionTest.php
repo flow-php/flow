@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Definition\NullDefinition;
@@ -16,10 +15,8 @@ use Flow\Types\Type\Native\NullType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
@@ -54,11 +51,6 @@ final class NullDefinitionTest extends FlowTestCase
         static::assertSame('id', null_schema('id')->entry()->name());
     }
 
-    public function test_entry_class_is_null_entry(): void
-    {
-        static::assertSame(NullEntry::class, null_schema('id')->entryClass());
-    }
-
     public function test_is_always_nullable(): void
     {
         static::assertTrue(null_schema('id')->isNullable());
@@ -68,11 +60,6 @@ final class NullDefinitionTest extends FlowTestCase
     public function test_is_compatible_with_another_null_definition(): void
     {
         static::assertTrue(null_schema('id')->isCompatible(null_schema('id')));
-    }
-
-    public function test_is_not_compatible_with_a_different_name(): void
-    {
-        static::assertFalse(null_schema('id')->isCompatible(null_schema('other')));
     }
 
     public function test_is_not_compatible_with_a_different_type(): void
@@ -137,24 +124,14 @@ final class NullDefinitionTest extends FlowTestCase
         static::assertTrue(null_schema('id')->makeNullable()->isNullable());
     }
 
-    public function test_matches_a_null_entry_with_the_same_name(): void
+    public function test_matches_null(): void
     {
-        static::assertTrue(null_schema('id')->matches(null_entry('id')));
-    }
-
-    public function test_matches_a_typed_entry_holding_null(): void
-    {
-        static::assertTrue(null_schema('id')->matches(int_entry('id', null)));
+        static::assertTrue(null_schema('id')->matches(null));
     }
 
     public function test_does_not_match_a_non_null_entry_with_the_same_name(): void
     {
-        static::assertFalse(null_schema('id')->matches(int_entry('id', 1)));
-    }
-
-    public function test_does_not_match_an_entry_with_a_different_name(): void
-    {
-        static::assertFalse(null_schema('id')->matches(null_entry('other')));
+        static::assertFalse(null_schema('id')->matches(1));
     }
 
     public function test_merge_of_two_null_definitions_stays_a_null_definition(): void

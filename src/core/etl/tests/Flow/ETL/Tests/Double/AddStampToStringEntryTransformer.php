@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -28,14 +28,14 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        return $rows->map(fn(Row $row): Row => $row->set(string_entry(
-            $this->entryName,
-            sprintf(
+        return $rows->map($rows->schema(), fn(Row $row): Row => row([
+            ...$row->values(),
+            $this->entryName => sprintf(
                 '%s%s%s',
-                type_string()->assert($row->get($this->entryName)->value()),
+                type_string()->assert($row->get($this->entryName)),
                 $this->divider,
                 $this->stamp,
             ),
-        )));
+        ]));
     }
 }

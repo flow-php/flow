@@ -13,18 +13,14 @@ use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
@@ -34,12 +30,13 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\window;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_uuid;
 
 final class GroupByTest extends FlowIntegrationTestCase
 {
@@ -80,14 +77,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), int_entry('score', 20), json_entry('array', ['a', 'b', 'c', 'd'])),
-                row(int_entry('id', 2), int_entry('score', 20), json_entry('array', ['a', 'b', 'c', 'd'])),
-                row(int_entry('id', 3), int_entry('score', 25), json_entry('array', ['a', 'b', 'c'])),
-                row(int_entry('id', 4), int_entry('score', 30), json_entry('array', ['a', 'b', 'c'])),
-                row(int_entry('id', 5), int_entry('score', 40), json_entry('array', ['a', 'b'])),
-                row(int_entry('id', 6), int_entry('score', 40), json_entry('array', ['a', 'b'])),
-                row(int_entry('id', 7), int_entry('score', 45), json_entry('array', ['a', 'b'])),
-                row(int_entry('id', 9), int_entry('score', 50), json_entry('array', ['a'])),
+                schema(int_schema('id'), int_schema('score'), json_schema('array')),
+                row(['id' => 1, 'score' => 20, 'array' => type_json()->cast(['a', 'b', 'c', 'd'])]),
+                row(['id' => 2, 'score' => 20, 'array' => type_json()->cast(['a', 'b', 'c', 'd'])]),
+                row(['id' => 3, 'score' => 25, 'array' => type_json()->cast(['a', 'b', 'c'])]),
+                row(['id' => 4, 'score' => 30, 'array' => type_json()->cast(['a', 'b', 'c'])]),
+                row(['id' => 5, 'score' => 40, 'array' => type_json()->cast(['a', 'b'])]),
+                row(['id' => 6, 'score' => 40, 'array' => type_json()->cast(['a', 'b'])]),
+                row(['id' => 7, 'score' => 45, 'array' => type_json()->cast(['a', 'b'])]),
+                row(['id' => 9, 'score' => 50, 'array' => type_json()->cast(['a'])]),
             )))
             ->groupBy(['array'])
             ->aggregate(sum('score'), average('score'))
@@ -112,14 +110,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), int_entry('score', 20), datetime_entry('date', '2024-01-01 10:00:00')),
-                row(int_entry('id', 2), int_entry('score', 20), datetime_entry('date', '2024-01-01 10:00:00')),
-                row(int_entry('id', 3), int_entry('score', 25), datetime_entry('date', '2024-01-02 10:00:00')),
-                row(int_entry('id', 4), int_entry('score', 30), datetime_entry('date', '2024-01-02 10:00:00')),
-                row(int_entry('id', 5), int_entry('score', 40), datetime_entry('date', '2024-01-03 10:00:00')),
-                row(int_entry('id', 6), int_entry('score', 40), datetime_entry('date', '2024-01-03 10:00:00')),
-                row(int_entry('id', 7), int_entry('score', 45), datetime_entry('date', '2024-01-03 10:00:00')),
-                row(int_entry('id', 9), int_entry('score', 50), datetime_entry('date', '2024-01-04 10:00:00')),
+                schema(int_schema('id'), int_schema('score'), datetime_schema('date')),
+                row(['id' => 1, 'score' => 20, 'date' => type_datetime()->cast('2024-01-01 10:00:00')]),
+                row(['id' => 2, 'score' => 20, 'date' => type_datetime()->cast('2024-01-01 10:00:00')]),
+                row(['id' => 3, 'score' => 25, 'date' => type_datetime()->cast('2024-01-02 10:00:00')]),
+                row(['id' => 4, 'score' => 30, 'date' => type_datetime()->cast('2024-01-02 10:00:00')]),
+                row(['id' => 5, 'score' => 40, 'date' => type_datetime()->cast('2024-01-03 10:00:00')]),
+                row(['id' => 6, 'score' => 40, 'date' => type_datetime()->cast('2024-01-03 10:00:00')]),
+                row(['id' => 7, 'score' => 45, 'date' => type_datetime()->cast('2024-01-03 10:00:00')]),
+                row(['id' => 9, 'score' => 50, 'date' => type_datetime()->cast('2024-01-04 10:00:00')]),
             )))
             ->groupBy(['date'])
             ->aggregate(sum('score'), average('score'))
@@ -152,29 +151,15 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 4),
-                    str_entry('country', 'PL'),
-                    int_entry('age', 30),
-                    str_entry('gender', 'female'),
-                ),
-                row(
-                    int_entry('id', 5),
-                    str_entry('country', 'US'),
-                    int_entry('age', 40),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 7),
-                    str_entry('country', 'US'),
-                    int_entry('age', 45),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male']),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female']),
+                row(['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female']),
+                row(['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male']),
+                row(['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => 'female']),
+                row(['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male']),
             )))
             ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
@@ -198,29 +183,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 4),
-                    str_entry('country', 'PL'),
-                    int_entry('age', 30),
-                    str_entry('gender', 'female'),
-                ),
-                row(
-                    int_entry('id', 5),
-                    str_entry('country', 'US'),
-                    int_entry('age', 40),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 7),
-                    str_entry('country', 'US'),
-                    int_entry('age', 45),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male']),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female']),
+                row(['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female']),
+                row(['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male']),
+                row(['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => 'female']),
+                row(['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male']),
             )))
             ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
@@ -245,24 +216,20 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                row(
-                    int_entry('id', 4),
-                    str_entry('country', 'PL'),
-                    int_entry('age', 30),
-                    str_entry('gender', 'female'),
+                schema(
+                    int_schema('id'),
+                    str_schema('country'),
+                    int_schema('age'),
+                    str_schema('gender', nullable: true),
                 ),
-                row(
-                    int_entry('id', 5),
-                    str_entry('country', 'US'),
-                    int_entry('age', 40),
-                    str_entry('gender', 'female'),
-                ),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', null)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male']),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male']),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female']),
+                row(['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female']),
+                row(['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male']),
+                row(['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => null]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male']),
             )))
             ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
@@ -288,14 +255,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->groupBy(['country'])
             ->aggregate(sum(ref('age')))
@@ -314,14 +282,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->groupBy(['country'])
             ->aggregate(sum(ref('age')->as('total_age')))
@@ -340,14 +309,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->groupBy(['country'])
             ->aggregate(average(ref('age')))
@@ -405,46 +375,15 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(
-                    int_entry('id', 1),
-                    int_entry('score', 20),
-                    uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110'),
-                ),
-                row(
-                    int_entry('id', 2),
-                    int_entry('score', 20),
-                    uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110'),
-                ),
-                row(
-                    int_entry('id', 3),
-                    int_entry('score', 25),
-                    uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'),
-                ),
-                row(
-                    int_entry('id', 4),
-                    int_entry('score', 30),
-                    uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'),
-                ),
-                row(
-                    int_entry('id', 5),
-                    int_entry('score', 40),
-                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
-                ),
-                row(
-                    int_entry('id', 6),
-                    int_entry('score', 40),
-                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
-                ),
-                row(
-                    int_entry('id', 7),
-                    int_entry('score', 45),
-                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
-                ),
-                row(
-                    int_entry('id', 9),
-                    int_entry('score', 50),
-                    uuid_entry('uuid', 'c7c22b40-45ad-46d1-a47b-0d1dd389ae41'),
-                ),
+                schema(int_schema('id'), int_schema('score'), uuid_schema('uuid')),
+                row(['id' => 1, 'score' => 20, 'uuid' => type_uuid()->cast('b97a23ab-ba84-4d8f-9d9a-abd32cc58110')]),
+                row(['id' => 2, 'score' => 20, 'uuid' => type_uuid()->cast('b97a23ab-ba84-4d8f-9d9a-abd32cc58110')]),
+                row(['id' => 3, 'score' => 25, 'uuid' => type_uuid()->cast('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae')]),
+                row(['id' => 4, 'score' => 30, 'uuid' => type_uuid()->cast('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae')]),
+                row(['id' => 5, 'score' => 40, 'uuid' => type_uuid()->cast('5085fabf-15f7-4467-9076-61547afbbdc9')]),
+                row(['id' => 6, 'score' => 40, 'uuid' => type_uuid()->cast('5085fabf-15f7-4467-9076-61547afbbdc9')]),
+                row(['id' => 7, 'score' => 45, 'uuid' => type_uuid()->cast('5085fabf-15f7-4467-9076-61547afbbdc9')]),
+                row(['id' => 9, 'score' => 50, 'uuid' => type_uuid()->cast('c7c22b40-45ad-46d1-a47b-0d1dd389ae41')]),
             )))
             ->groupBy(['uuid'])
             ->aggregate(sum('score'), average('score'))
@@ -634,34 +573,39 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->aggregate([average(ref('age'))])
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        static::assertEquals(rows(row(float_entry('average_age', 33.75))), $rows);
+        static::assertEquals(
+            rows(schema(float_schema('average_age', nullable: true)), row(['average_age' => 33.75])),
+            $rows,
+        );
     }
 
     public function test_standalone_avg_and_max_aggregation(): void
     {
         df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
+                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 7, 'country' => 'US', 'age' => 45]),
+                row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->aggregate([average(ref('age')), max(ref('age'))])
             ->run(function (Rows $rows): void {
@@ -684,9 +628,10 @@ final class GroupByTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(str_entry('group', 'a'), float_entry('value', 10.0)),
-                row(str_entry('group', 'a'), float_entry('value', 20.0)),
-                row(str_entry('group', 'b'), float_entry('value', 0.5)),
+                schema(str_schema('group'), float_schema('value')),
+                row(['group' => 'a', 'value' => 10.0]),
+                row(['group' => 'a', 'value' => 20.0]),
+                row(['group' => 'b', 'value' => 0.5]),
             )))
             ->groupBy(['group'])
             ->aggregate(min(ref('value')))

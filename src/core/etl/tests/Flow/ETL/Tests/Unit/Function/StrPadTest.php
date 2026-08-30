@@ -9,7 +9,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 use const STR_PAD_LEFT;
 
@@ -19,6 +18,6 @@ final class StrPadTest extends FlowTestCase
     {
         static::assertSame('----N', ref('value')
             ->strPad(5, '-', STR_PAD_LEFT)
-            ->eval(row(str_entry('value', 'N')), flow_context()));
+            ->eval(row(['value' => 'N']), flow_context()));
     }
 }

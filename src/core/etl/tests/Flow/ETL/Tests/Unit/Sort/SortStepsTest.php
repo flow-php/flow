@@ -20,12 +20,13 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 use function range;
 use function str_starts_with;
@@ -56,7 +57,10 @@ final class SortStepsTest extends FlowTestCase
 
         $context = flow_context(config());
         $input = (static function (): Generator {
-            yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), range(9, 0)));
+            yield rows(
+                schema(int_schema('id')),
+                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
+            );
         })();
 
         static::assertInstanceOf(BucketingProcessor::class, $steps[0]);
@@ -84,7 +88,10 @@ final class SortStepsTest extends FlowTestCase
 
         $context = flow_context(config());
         $input = (static function (): Generator {
-            yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), range(9, 0)));
+            yield rows(
+                schema(int_schema('id')),
+                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
+            );
         })();
 
         static::assertInstanceOf(MergeSortProcessor::class, $steps[1]);
