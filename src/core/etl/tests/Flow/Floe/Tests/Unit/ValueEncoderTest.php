@@ -80,7 +80,7 @@ final class ValueEncoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe does not support structures that allow extra values');
 
-        (new ValueEncoder())->encoderFor(structure_schema('c', type_structure(['id' => type_integer()], [], true)));
+        (new ValueEncoder())->encoderFor(structure_schema('c', type_structure(['id' => type_integer()], true)));
     }
 
     public function test_encoding_map_with_unsupported_key_type_throws(): void

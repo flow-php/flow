@@ -98,8 +98,11 @@ builds a `type_structure()` shape by reading type parameter 0 off each element's
 no type parameters makes the plugin discard the *entire* shape, degrading it to `array<array-key, mixed>` - again with
 no diagnostic.
 [`StructureShapeInference`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/StructureShapeInference.php)
-pins those shapes so `just analyze` fails if this is broken. Removing the templates requires an upstream mago change
-that resolves the element through the `Flow\Types\Type` template instead.
+pins those shapes so `just analyze` fails if this is broken. The derivation runs in the `flow/types` Mago analyzer plugin shipped by
+[flow-php/mago-types-bridge](/src/bridge/mago/types), configured in `mago.toml`, which replaces Mago's built-in `flow-php` plugin: same
+`type_structure()` shape derivation, plus `structure_element()` marker support - the member value type comes from
+the element's first template and a literal `optional: true` (the `TOptional` template) marks the shape key
+optional. `StructureShapeInference::markerElements` pins the marker derivation.
 
 ## Testing
 

@@ -9,6 +9,7 @@ use Flow\ETL\Function\StructureValues;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\StructureType;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -21,7 +22,10 @@ final class StructureValuesTest extends FlowTestCase
     {
         static::assertSame(
             'float',
-            StructureValues::type('fn', new StructureType(['a' => type_integer()], ['b' => type_float()]))->toString(),
+            StructureValues::type('fn', StructureType::fromElements([
+                'a' => type_integer(),
+                'b' => structure_element('b', type_float(), optional: true),
+            ]))->toString(),
         );
     }
 
@@ -29,7 +33,7 @@ final class StructureValuesTest extends FlowTestCase
     {
         static::assertSame(
             '?float',
-            StructureValues::type('fn', new StructureType([
+            StructureValues::type('fn', StructureType::fromElements([
                 'a' => type_integer(),
                 'b' => type_optional(type_float()),
             ]))->toString(),
@@ -41,6 +45,9 @@ final class StructureValuesTest extends FlowTestCase
         $this->expectException(SchemaNotDerivableException::class);
         $this->expectExceptionMessage('whose field types do not unify');
 
-        StructureValues::type('fn', new StructureType(['a' => type_boolean(), 'b' => type_list(type_integer())]));
+        StructureValues::type('fn', StructureType::fromElements([
+            'a' => type_boolean(),
+            'b' => type_list(type_integer()),
+        ]));
     }
 }

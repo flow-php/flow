@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -42,31 +43,39 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         ];
 
         yield 'declared optional, key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'email' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             $withNickname,
             true,
         ];
 
         yield 'declared optional, key absent' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'email' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             $withoutNickname,
             true,
         ];
 
         yield 'allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], true),
+            type_structure(['id' => type_integer(), 'email' => type_string()], true),
             $withNickname,
             true,
         ];
 
         yield 'allow extra, undeclared key absent' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], true),
+            type_structure(['id' => type_integer(), 'email' => type_string()], true),
             $withoutNickname,
             true,
         ];
 
         yield 'without allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], false),
+            type_structure(['id' => type_integer(), 'email' => type_string()], false),
             $withNickname,
             false,
         ];
@@ -177,7 +186,11 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
 
     public function test_mixed_shapes_in_one_batch_stay_a_structure(): void
     {
-        $declared = type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]);
+        $declared = type_structure([
+            'id' => type_integer(),
+            'email' => type_string(),
+            'nickname' => structure_element('nickname', type_string(), optional: true),
+        ]);
 
         data_frame()
             ->read(from_array([

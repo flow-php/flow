@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_keys_style_convert;
@@ -13,6 +16,11 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ArrayKeysStyleConverterTest extends FlowTestCase
 {
@@ -78,5 +86,23 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
             ],
             array_keys_style_convert(ref('arrayEntry'), 'snake')->eval($row, flow_context()),
         );
+    }
+
+    public function test_colliding_converted_field_names_are_refused_instead_of_silently_dropped(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage(
+            'fields "foo_bar" and "fooBar" of "structure{foo_bar: integer, fooBar: string}" both convert to "fooBar"',
+        );
+
+        (new ReferenceResolver())
+            ->resolve(
+                array_keys_style_convert(ref('structure'), StringStyles::CAMEL),
+                schema(structure_schema('structure', type_structure([
+                    'foo_bar' => type_integer(),
+                    'fooBar' => type_string(),
+                ]))),
+            )
+            ->returns();
     }
 }

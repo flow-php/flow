@@ -260,12 +260,8 @@ final class ValueEncoder
 
         $elements = [];
 
-        foreach ($type->elements() as $name => $elementType) {
-            $elements[$name] = $this->elementEncoderFor($elementType);
-        }
-
-        foreach ($type->optionalElements() as $name => $elementType) {
-            $elements[$name] = $this->elementEncoderFor($elementType);
+        foreach ($type->elements() as $element) {
+            $elements[$element->name] = $this->elementEncoderFor($element->type);
         }
 
         return new StructureEncoder($elements);

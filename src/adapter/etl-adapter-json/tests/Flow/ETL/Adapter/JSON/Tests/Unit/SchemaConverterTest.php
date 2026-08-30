@@ -36,6 +36,7 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
@@ -350,8 +351,9 @@ final class SchemaConverterTest extends FlowTestCase
         ]);
 
         static::assertEquals(
-            schema(structure_schema('money', type_structure(['amount' => type_float()], [
-                'currency' => type_string(),
+            schema(structure_schema('money', type_structure([
+                'amount' => type_float(),
+                'currency' => structure_element('currency', type_string(), optional: true),
             ]))),
             $flowSchema,
         );
@@ -408,7 +410,8 @@ final class SchemaConverterTest extends FlowTestCase
                 type_list(type_structure([
                     'sku' => type_string(),
                     'attributes' => type_map(type_string(), type_string()),
-                ], ['quantity' => type_integer()])),
+                    'quantity' => structure_element('quantity', type_integer(), optional: true),
+                ])),
             )),
             $flowSchema,
         );
@@ -513,7 +516,8 @@ final class SchemaConverterTest extends FlowTestCase
                 structure_schema('address', type_structure([
                     'street' => type_string(),
                     'city' => type_string(),
-                ], ['zip' => type_string()])),
+                    'zip' => structure_element('zip', type_string(), optional: true),
+                ])),
                 structure_schema(
                     'location',
                     type_structure([
@@ -690,8 +694,9 @@ final class SchemaConverterTest extends FlowTestCase
             datetime_schema('created_at'),
             list_schema('tags', type_list(type_string())),
             map_schema('attributes', type_map(type_string(), type_string()), true),
-            structure_schema('address', type_structure(['street' => type_string()], [
-                'zip' => type_optional(type_string()),
+            structure_schema('address', type_structure([
+                'street' => type_string(),
+                'zip' => structure_element('zip', type_optional(type_string()), optional: true),
             ])),
             json_schema('document'),
             json_schema('anything', true, Metadata::with(JsonSchemaMetadata::ANY->value, true)),
@@ -701,6 +706,33 @@ final class SchemaConverterTest extends FlowTestCase
         $converter = new SchemaConverter();
 
         static::assertEquals($flowSchema, $converter->toFlow($converter->toJsonSchema($flowSchema)));
+    }
+
+    public function test_to_json_schema_interleaved_structure_lists_required_fields_regardless_of_declaration_order(): void
+    {
+        static::assertSame(
+            [
+                '$schema' => 'https://json-schema.org/draft/2020-12/schema',
+                'type' => 'object',
+                'properties' => [
+                    's' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'z' => ['type' => 'integer'],
+                            'a' => ['type' => 'string'],
+                            'b' => ['type' => 'string'],
+                        ],
+                        'required' => ['z', 'b'],
+                    ],
+                ],
+                'required' => ['s'],
+            ],
+            (new SchemaConverter())->toJsonSchema(schema(structure_schema('s', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_string(), optional: true),
+                'b' => type_string(),
+            ])))),
+        );
     }
 
     public function test_a_union_column_cannot_round_trip_because_it_cannot_be_read_back(): void
@@ -983,7 +1015,8 @@ final class SchemaConverterTest extends FlowTestCase
     {
         $jsonSchema = (new SchemaConverter())->toJsonSchema(schema(structure_schema('address', type_structure([
             'street' => type_string(),
-        ], ['zip' => type_optional(type_string())]))));
+            'zip' => structure_element('zip', type_optional(type_string()), optional: true),
+        ]))));
 
         static::assertSame(
             [

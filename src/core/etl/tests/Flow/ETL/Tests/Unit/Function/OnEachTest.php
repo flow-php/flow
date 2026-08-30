@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -83,6 +84,20 @@ final class OnEachTest extends FlowTestCase
         );
 
         static::assertSame('structure{a: string, b: string}', $resolved->returns()->toString());
+    }
+
+    public function test_an_interleaved_structure_operand_keeps_every_position_and_flag(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->onEach(ref('element')->cast(type_string())),
+            schema(structure_schema('structure', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_float(), optional: true),
+                'b' => type_integer(),
+            ]))),
+        );
+
+        static::assertSame('structure{z: string, a?: string, b: string}', $resolved->returns()->toString());
     }
 
     public function test_a_structure_operand_without_keys_declares_a_list_of_the_body_type(): void

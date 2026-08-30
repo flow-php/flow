@@ -12,6 +12,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -241,16 +242,35 @@ final class TypeUnifierTest extends TestCase
         ));
     }
 
+    public function test_structures_with_same_fields_in_different_order_have_no_common_type(): void
+    {
+        static::assertNull((new PromotingUnifier())->unify(
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+            type_structure(['b' => type_string(), 'a' => type_integer()]),
+        ));
+    }
+
+    public function test_structures_with_same_fields_in_same_order_unify(): void
+    {
+        $result = (new PromotingUnifier())->unify(
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+        );
+
+        static::assertNotNull($result);
+        static::assertSame('structure{a: integer, b: string}', $result->toString());
+    }
+
     public function test_structure_optionality_and_allows_extra_are_or_ed(): void
     {
         $result = (new PromotingUnifier())->unify(
-            type_structure(['a' => type_integer()], [], false),
-            type_structure([], ['a' => type_integer()], true),
+            type_structure(['a' => type_integer()], false),
+            type_structure(['a' => structure_element('a', type_integer(), optional: true)], true),
         );
 
         static::assertNotNull($result);
         static::assertTrue(
-            type_equals(type_structure([], ['a' => type_integer()], true), $result),
+            type_equals(type_structure(['a' => structure_element('a', type_integer(), optional: true)], true), $result),
             $result->toString(),
         );
     }

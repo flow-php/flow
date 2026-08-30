@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -131,7 +132,11 @@ final class TypeWidenerTest extends TestCase
         yield 'nested structures merge recursively' => [
             type_structure(['id' => type_integer(), 'name' => type_string()]),
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['name' => type_string(), 'nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'name' => structure_element('name', type_string(), optional: true),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'nested structures widen only the conflicting element' => [
@@ -218,37 +223,67 @@ final class TypeWidenerTest extends TestCase
         yield 'key missing on the right becomes optional' => [
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
             type_structure(['id' => type_integer()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'key missing on the left becomes optional' => [
             type_structure(['id' => type_integer()]),
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'fully disjoint keys become all optional' => [
             type_structure(['name' => type_string()]),
             type_structure(['age' => type_integer()]),
-            type_structure([], ['name' => type_string(), 'age' => type_integer()]),
+            type_structure([
+                'name' => structure_element('name', type_string(), optional: true),
+                'age' => structure_element('age', type_integer(), optional: true),
+            ]),
         ];
 
         yield 'optional on the left stays optional' => [
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'optional on the right stays optional' => [
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'optional on both sides stays optional' => [
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
         ];
 
         yield 'null element promotes the other side to optional' => [
@@ -258,21 +293,21 @@ final class TypeWidenerTest extends TestCase
         ];
 
         yield 'allow extra on the left wins' => [
-            type_structure(['id' => type_integer()], [], true),
-            type_structure(['id' => type_integer()], [], false),
-            type_structure(['id' => type_integer()], [], true),
+            type_structure(['id' => type_integer()], true),
+            type_structure(['id' => type_integer()], false),
+            type_structure(['id' => type_integer()], true),
         ];
 
         yield 'allow extra on the right wins' => [
-            type_structure(['id' => type_integer()], [], false),
-            type_structure(['id' => type_integer()], [], true),
-            type_structure(['id' => type_integer()], [], true),
+            type_structure(['id' => type_integer()], false),
+            type_structure(['id' => type_integer()], true),
+            type_structure(['id' => type_integer()], true),
         ];
 
         yield 'allow extra false on both sides stays false' => [
-            type_structure(['id' => type_integer()], [], false),
-            type_structure(['id' => type_integer()], [], false),
-            type_structure(['id' => type_integer()], [], false),
+            type_structure(['id' => type_integer()], false),
+            type_structure(['id' => type_integer()], false),
+            type_structure(['id' => type_integer()], false),
         ];
 
         yield 'nested structures merge recursively when equal' => [
@@ -290,13 +325,19 @@ final class TypeWidenerTest extends TestCase
         yield 'nested structures merge instead of collapsing the parent' => [
             type_structure(['user' => type_structure(['id' => type_integer(), 'name' => type_string()])]),
             type_structure(['user' => type_structure(['id' => type_integer()])]),
-            type_structure(['user' => type_structure(['id' => type_integer()], ['name' => type_string()])]),
+            type_structure(['user' => type_structure([
+                'id' => type_integer(),
+                'name' => structure_element('name', type_string(), optional: true),
+            ])]),
         ];
 
         yield 'conflict in a one sided key is impossible, it stays optional' => [
             type_structure(['name' => type_string()]),
             type_structure(['name' => type_string(), 'age' => type_integer()]),
-            type_structure(['name' => type_string()], ['age' => type_integer()]),
+            type_structure([
+                'name' => type_string(),
+                'age' => structure_element('age', type_integer(), optional: true),
+            ]),
         ];
     }
 
@@ -358,6 +399,29 @@ final class TypeWidenerTest extends TestCase
                 ->widen(
                     type_structure(['b' => type_string(), 'a' => type_string()]),
                     type_structure(['c' => type_string(), 'b' => type_string()]),
+                )
+                ->toString(),
+        );
+    }
+
+    public function test_structure_widening_keeps_left_declared_order_and_appends_right_only_names(): void
+    {
+        static::assertSame(
+            'structure{a?: integer, b: integer}',
+            (new TypeWidener())
+                ->widen(
+                    type_structure(['a' => type_integer(), 'b' => type_integer()]),
+                    type_structure(['b' => type_integer()]),
+                )
+                ->toString(),
+        );
+
+        static::assertSame(
+            'structure{b: integer, a?: integer}',
+            (new TypeWidener())
+                ->widen(
+                    type_structure(['b' => type_integer()]),
+                    type_structure(['a' => type_integer(), 'b' => type_integer()]),
                 )
                 ->toString(),
         );

@@ -75,8 +75,10 @@ data_frame()
 > Floe additionally supports appending into a **single** file through the low-level
 > `Flow\Floe\FloeWriter::append()` API - appended batches must match the file's schema (a drifted
 > batch throws `IncompatibleSchemaException`; schema evolution is only available through
-> `merge_floe()`). The DataFrame `Append` save mode uses the sibling-file behavior for consistency
-> with the rest of Flow.
+> `merge_floe()`). Before the check, the appending schema is rewritten into the file's declared
+> column and structure-field order, so a batch that carries the same columns or the same structure
+> fields in a different order appends cleanly instead of throwing. The DataFrame `Append` save mode
+> uses the sibling-file behavior for consistency with the rest of Flow.
 
 ## Partitioning
 
@@ -322,6 +324,18 @@ type throws `IncompatibleSchemaException` - schema evolution lives only in `merg
   column's schema metadata; otherwise every value uses `0x00`/`0x01`. Every value is encoded positionally
   against its column type, so no value carries a type tag. A row whose columns exactly match the section,
   with no divergent metadata, produces the same bytes as a plain positional encode. One frame per row.
+
+  A **structure** value nests the same idea one level down: one flag byte per declared element, in the
+  structure type's declared field order, with no element names on the wire -
+
+  - `0x01` **present** - followed by the element value encoded per its declared type.
+  - `0x00` **null** - the element key is present in the value, holding null.
+  - `0x03` **absent** - the value has no such key (an `optional` element that was omitted).
+
+  Because the bytes carry no names, the declared field order binds each flag byte to its element. The
+  writer looks each element up **by name** in the value and emits in declared order, so a value whose
+  keys arrive in a different order still produces the declared-order bytes; the reader rebuilds keys
+  in declared order.
 - **PARTITIONS (`0x03`)** - the partition key/value pairs for the section that follows: a 4-byte count
   followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
   whose combination differs from the previous one; the reader starts at the empty combination, so an

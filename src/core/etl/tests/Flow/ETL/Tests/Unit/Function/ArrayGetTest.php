@@ -147,4 +147,15 @@ final class ArrayGetTest extends FlowTestCase
 
         static::assertSame('integer', $resolved->returns()->toString());
     }
+
+    public function test_returns_resolves_a_numeric_path_segment_to_an_integer_named_element(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            array_get(ref('data'), '0'),
+            schema(structure_schema('data', type_structure([0 => type_integer(), 'b' => type_string()]))),
+        );
+
+        static::assertSame('integer', $resolved->returns()->toString());
+    }
 }

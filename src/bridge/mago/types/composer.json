@@ -1,0 +1,37 @@
+{
+    "name": "flow-php/mago-types-bridge",
+    "type": "mago-extension",
+    "description": "Flow PHP - Mago Types Bridge",
+    "keywords": [
+        "flow-php",
+        "mago",
+        "types",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+    },
+    "require-dev": {
+        "carthage-software/mago": "^1.47.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

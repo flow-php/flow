@@ -13,7 +13,7 @@ use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
 
 use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, null_schema, json_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional};
+use function Flow\Types\DSL\{structure_element, type_list, type_map, type_structure, type_integer, type_string, type_optional};
 
 enum PhptSuit: string
 {
@@ -56,7 +56,7 @@ $datasets = [
         schema(
             list_schema('l', type_list(type_integer())),
             map_schema('m', type_map(type_string(), type_integer())),
-            structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()], true)),
+            structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true)),
             list_schema('opt', type_list(type_optional(type_integer()))),
             json_schema('j'),
         ),

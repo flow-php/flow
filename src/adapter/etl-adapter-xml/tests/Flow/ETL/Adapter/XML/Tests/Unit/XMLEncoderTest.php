@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_enum;
@@ -180,7 +181,39 @@ final class XMLEncoderTest extends FlowTestCase
 
         $encoder->encode([new TypedRowValues(['address' => ['city' => 'Krakow']], ['address' => type_structure([
             'city' => type_string(),
-        ], ['zip' => type_string()])])]);
+            'zip' => structure_element('zip', type_string(), optional: true),
+        ])])]);
+    }
+
+    public function test_encoding_structure_with_an_interleaved_optional_element_throws(): void
+    {
+        $encoder = new XMLEncoder(new DOMDocumentWriter());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'XML encoder does not support structure optional elements, given: structure{zip?: string, city: string}',
+        );
+
+        $encoder->encode([new TypedRowValues(['address' => ['city' => 'Krakow']], ['address' => type_structure([
+            'zip' => structure_element('zip', type_string(), optional: true),
+            'city' => type_string(),
+        ])])]);
+    }
+
+    public function test_encoding_structure_with_more_values_than_declared_elements_throws(): void
+    {
+        $encoder = new XMLEncoder(new DOMDocumentWriter());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'XML encoder received 3 values for structure "structure{city: string, zip: string}" which declares 2 elements',
+        );
+
+        $encoder->encode([new TypedRowValues(['address' => [
+            'city' => 'Krakow',
+            'zip' => '31-021',
+            'extra' => 'lost',
+        ]], ['address' => type_structure(['city' => type_string(), 'zip' => type_string()], true)])]);
     }
 
     public function test_encodes_null_scalar_as_an_empty_node(): void

@@ -25,7 +25,7 @@ final class When implements ScalarFunction
 
     /**
      * Null means "no else branch" - never lit(null), so a falsy else value stays distinguishable
-     * from an absent one (Spark's CaseWhen.elseValue: Option[Expression]).
+     * from an absent one
      */
     private readonly ?ScalarFunction $else;
 

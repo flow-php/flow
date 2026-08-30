@@ -42,6 +42,22 @@ final class StructureShapeInferenceTest extends TestCase
         static::assertSame('present', $shape['optional']);
     }
 
+    public function test_marker_element_shapes(): void
+    {
+        $inference = new StructureShapeInference();
+
+        $present = $inference->markerElements(['id' => 1, 'interleaved' => 'here', 'name' => 'flow']);
+
+        static::assertSame(1, $present['id']);
+        static::assertSame('here', $present['interleaved'] ?? null);
+        static::assertSame('flow', $present['name']);
+
+        $absent = $inference->markerElements(['id' => 2, 'name' => 'flow']);
+
+        static::assertSame(2, $absent['id']);
+        static::assertArrayNotHasKey('interleaved', $absent);
+    }
+
     public function test_container_accessor_shapes(): void
     {
         $shape = (new StructureShapeInference())->containerAccessors(['a'], ['one' => 1], 'element', 'key', 9);

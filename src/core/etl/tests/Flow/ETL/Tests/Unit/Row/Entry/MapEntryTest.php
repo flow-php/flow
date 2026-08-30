@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\map_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class MapEntryTest extends FlowTestCase
 {
@@ -30,6 +31,19 @@ final class MapEntryTest extends FlowTestCase
             map_schema('strings', type_map(type_integer(), type_string())),
             map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->definition(),
         );
+    }
+
+    public function test_is_equal_follows_structure_field_order_in_the_value_type(): void
+    {
+        static::assertFalse(map_entry(
+            'm',
+            ['k' => ['a' => 1, 'b' => 'x']],
+            type_map(type_string(), type_structure(['a' => type_integer(), 'b' => type_string()])),
+        )->isEqual(map_entry(
+            'm',
+            ['k' => ['b' => 'x', 'a' => 1]],
+            type_map(type_string(), type_structure(['b' => type_string(), 'a' => type_integer()])),
+        )));
     }
 
     public function test_is_equal(): void

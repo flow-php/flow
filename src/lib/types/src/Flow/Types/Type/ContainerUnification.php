@@ -11,12 +11,11 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 
-use function array_key_exists;
 use function count;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_structure;
 
 final readonly class ContainerUnification
 {
@@ -70,37 +69,36 @@ final readonly class ContainerUnification
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            $leftOptional = $left->optionalElements();
-            $rightOptional = $right->optionalElements();
-            $leftElements = $left->elements() + $leftOptional;
-            $rightElements = $right->elements() + $rightOptional;
+            $leftElements = $left->elements();
+            $rightElements = $right->elements();
 
             if (count($leftElements) !== count($rightElements)) {
                 return null;
             }
 
-            $required = [];
-            $optional = [];
+            $elements = [];
 
-            foreach ($leftElements as $name => $leftElement) {
-                if (!array_key_exists($name, $rightElements)) {
+            foreach ($leftElements as $position => $leftElement) {
+                $rightElement = $rightElements[$position];
+
+                if ($leftElement->name !== $rightElement->name) {
                     return null;
                 }
 
-                $element = $pairwise($leftElement, $rightElements[$name]);
+                $type = $pairwise($leftElement->type, $rightElement->type);
 
-                if ($element === null) {
+                if ($type === null) {
                     return null;
                 }
 
-                if (array_key_exists($name, $leftOptional) || array_key_exists($name, $rightOptional)) {
-                    $optional[$name] = $element;
-                } else {
-                    $required[$name] = $element;
-                }
+                $elements[] = structure_element(
+                    $leftElement->name,
+                    $type,
+                    $leftElement->optional || $rightElement->optional,
+                );
             }
 
-            return type_structure($required, $optional, $left->allowsExtra() || $right->allowsExtra());
+            return new StructureType($elements, $left->allowsExtra() || $right->allowsExtra());
         }
 
         return null;

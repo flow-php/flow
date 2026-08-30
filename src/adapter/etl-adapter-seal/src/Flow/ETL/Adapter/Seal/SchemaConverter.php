@@ -103,11 +103,15 @@ final class SchemaConverter
      */
     private function flowToSealField(string $name, Type $type, bool $multiple, Metadata $metadata): AbstractField
     {
-        if ($type instanceof StructureType && count($type->optionalElements())) {
-            throw new RuntimeException(sprintf(
-                'Seal schema does not support structure optional elements, given: %s',
-                $type->toString(),
-            ));
+        if ($type instanceof StructureType) {
+            foreach ($type->elements() as $element) {
+                if ($element->optional) {
+                    throw new RuntimeException(sprintf(
+                        'Seal schema does not support structure optional elements, given: %s',
+                        $type->toString(),
+                    ));
+                }
+            }
         }
 
         return match ($type::class) {
@@ -210,10 +214,10 @@ final class SchemaConverter
     {
         $fields = [];
 
-        foreach ($type->elements() as $elementName => $elementType) {
-            $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
-            $fields[(string) $elementName] = $this->flowToSealField(
-                (string) $elementName,
+        foreach ($type->elements() as $element) {
+            $elementType = $element->type instanceof OptionalType ? $element->type->base() : $element->type;
+            $fields[(string) $element->name] = $this->flowToSealField(
+                (string) $element->name,
                 $elementType,
                 false,
                 Metadata::empty(),

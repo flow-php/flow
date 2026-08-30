@@ -17,8 +17,10 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
 final class ArrayMergeCollectionTest extends FlowTestCase
@@ -90,9 +92,29 @@ final class ArrayMergeCollectionTest extends FlowTestCase
     {
         $resolved = (new ReferenceResolver())->resolve(
             ref('collection')->arrayMergeCollection(),
-            schema(list_schema('collection', type_list(type_structure([], ['a' => type_integer()])))),
+            schema(list_schema(
+                'collection',
+                type_list(type_structure(['a' => structure_element('a', type_integer(), optional: true)])),
+            )),
         );
 
         static::assertSame('structure{a?: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_an_interleaved_structure_keeps_its_order_and_every_field_comes_out_optional(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('collection')->arrayMergeCollection(),
+            schema(list_schema(
+                'collection',
+                type_list(type_structure([
+                    'z' => type_integer(),
+                    'a' => structure_element('a', type_string(), optional: true),
+                    'b' => type_integer(),
+                ])),
+            )),
+        );
+
+        static::assertSame('structure{z?: integer, a?: string, b?: integer}', $resolved->returns()->toString());
     }
 }

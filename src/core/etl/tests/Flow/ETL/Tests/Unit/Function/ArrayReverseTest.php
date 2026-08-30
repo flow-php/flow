@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -61,28 +62,27 @@ final class ArrayReverseTest extends FlowTestCase
     {
         $resolved = (new ReferenceResolver())->resolve(
             ref('structure')->arrayReverse(),
-            schema(structure_schema('structure', type_structure(['a' => type_integer()], [
-                'x' => type_string(),
-                'y' => type_string(),
+            schema(structure_schema('structure', type_structure([
+                'a' => type_integer(),
+                'x' => structure_element('x', type_string(), optional: true),
+                'y' => structure_element('y', type_string(), optional: true),
             ]))),
         );
 
-        static::assertSame('structure{a: integer, y?: string, x?: string}', $resolved->returns()->toString());
+        static::assertSame('structure{y?: string, x?: string, a: integer}', $resolved->returns()->toString());
     }
 
-    /**
-     * Pins the bucket-scoped limit: required fields stay before optional ones, because
-     * StructureType cannot represent an interleaved required/optional field order.
-     */
-    public function test_reversal_stays_within_the_required_and_optional_buckets(): void
+    public function test_reversal_crosses_the_required_and_optional_buckets(): void
     {
         $resolved = (new ReferenceResolver())->resolve(
             ref('structure')->arrayReverse(),
-            schema(structure_schema('structure', type_structure(['a' => type_integer(), 'b' => type_integer()], [
-                'x' => type_string(),
+            schema(structure_schema('structure', type_structure([
+                'a' => type_integer(),
+                'b' => type_integer(),
+                'x' => structure_element('x', type_string(), optional: true),
             ]))),
         );
 
-        static::assertSame('structure{b: integer, a: integer, x?: string}', $resolved->returns()->toString());
+        static::assertSame('structure{x?: string, b: integer, a: integer}', $resolved->returns()->toString());
     }
 }

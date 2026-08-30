@@ -13,8 +13,9 @@ use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
+use function array_key_exists;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
-use function Flow\Types\DSL\type_structure;
 
 final class ArrayKeysStyleConvert implements ScalarFunction
 {
@@ -57,18 +58,31 @@ final class ArrayKeysStyleConvert implements ScalarFunction
         }
 
         $elements = [];
+        $sources = [];
 
-        foreach ($array->elements() as $name => $element) {
-            $elements[$this->style->convert((string) $name)] = $element;
+        foreach ($array->elements() as $element) {
+            $converted = $this->style->convert((string) $element->name);
+
+            if (array_key_exists($converted, $sources)) {
+                throw SchemaNotDerivableException::function(
+                    'array_keys_style_convert',
+                    'fields "'
+                    . $sources[$converted]
+                    . '" and "'
+                    . $element->name
+                    . '" of "'
+                    . $array->toString()
+                    . '" both convert to "'
+                    . $converted
+                    . '"',
+                );
+            }
+
+            $sources[$converted] = $element->name;
+            $elements[] = structure_element($converted, $element->type, $element->optional);
         }
 
-        $optional = [];
-
-        foreach ($array->optionalElements() as $name => $element) {
-            $optional[$this->style->convert((string) $name)] = $element;
-        }
-
-        return type_structure($elements, $optional, $array->allowsExtra());
+        return new StructureType($elements, $array->allowsExtra());
     }
 
     public function eval(Row $row, FlowContext $context): mixed

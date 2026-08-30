@@ -11,16 +11,17 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 
 use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_structure;
 
 final class OnEach implements ScalarFunction
 {
@@ -41,7 +42,7 @@ final class OnEach implements ScalarFunction
 
     /**
      * The lambda body evaluates against a synthesised one-column row, so ref('element') inside it
-     * indexes a different input - the outer resolver must not touch it (DuckDB's BOUND_LAMBDA rule).
+     * indexes a different input - the outer resolver must not touch it.
      *
      * @return list<ScalarFunction>
      */
@@ -84,10 +85,14 @@ final class OnEach implements ScalarFunction
         $bodyType = $body->returns();
 
         if ($this->preserveKeys && $arrayType instanceof StructureType) {
-            return type_structure(
-                array_map(static fn(): Type => $bodyType, $arrayType->elements()),
-                array_map(static fn(): Type => $bodyType, $arrayType->optionalElements()),
-            );
+            return new StructureType(array_map(
+                static fn(StructureElement $element): StructureElement => structure_element(
+                    $element->name,
+                    $bodyType,
+                    $element->optional,
+                ),
+                $arrayType->elements(),
+            ));
         }
 
         if ($this->preserveKeys && $arrayType instanceof MapType) {

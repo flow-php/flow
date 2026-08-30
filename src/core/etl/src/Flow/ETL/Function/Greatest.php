@@ -71,7 +71,7 @@ final class Greatest implements ScalarFunction
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        // NULL iff every argument is NULL - nulls are skipped, never compared (Spark Greatest).
+        // NULL iff every argument is NULL - nulls are skipped, never compared
         $values = [];
 
         foreach ($this->values as $value) {

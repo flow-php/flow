@@ -30,6 +30,7 @@ use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\PositiveIntegerType;
 use Flow\Types\Type\Logical\ScalarType;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
@@ -61,15 +62,29 @@ use UnitEnum;
 /**
  * @template T
  *
- * @param array<array-key, Type<T>> $elements
- * @param array<array-key, Type<T>> $optional_elements
+ * @param array<array-key, StructureElement<T>|Type<T>> $elements
  *
  * @return StructureType<array<array-key, T>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false): StructureType
+function type_structure(array $elements = [], bool $allow_extra = false): StructureType
 {
-    return new StructureType($elements, $optional_elements, $allow_extra);
+    return StructureType::fromElements($elements, $allow_extra);
+}
+
+/**
+ * @template T
+ * @template TOptional of bool
+ *
+ * @param Type<T> $type
+ * @param TOptional $optional
+ *
+ * @return StructureElement<T, TOptional>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function structure_element(int|string $name, Type $type, bool $optional = false): StructureElement
+{
+    return new StructureElement($name, $type, $optional);
 }
 
 /**

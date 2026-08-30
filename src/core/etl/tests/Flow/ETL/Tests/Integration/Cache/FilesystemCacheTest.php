@@ -8,15 +8,22 @@ use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\Double\SpySerializer;
+use Flow\Types\Exception\InvalidArgumentException;
 
 use function file_get_contents;
 use function file_put_contents;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\structure_entry;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_structure;
 use function glob;
+use function json_encode;
 use function unlink;
+
+use const JSON_THROW_ON_ERROR;
 
 final class FilesystemCacheTest extends CacheTestCase
 {
@@ -95,6 +102,35 @@ final class FilesystemCacheTest extends CacheTestCase
         $this->expectException(KeyNotInCacheException::class);
 
         $cache->schema('torn-schema');
+    }
+
+    public function test_legacy_structure_schema_payload_is_rejected_loudly(): void
+    {
+        // a warm cache written before the structure_v2 wire shape must fail loudly, not silently;
+        // ApcuCache and the PSR cache read schemas through the same schema_from_json() path, so
+        // this single test pins the contract for all three
+
+        $cache = $this->cache();
+        $cache->set('legacy', rows(row(structure_entry('s', ['a' => 1], type_structure(['a' => type_integer()])))));
+
+        $files = glob(__DIR__ . '/var/filesystem-cache/*/*/*/*/legacy.schema') ?: [];
+        static::assertNotEmpty($files);
+        file_put_contents($files[0], json_encode([[
+            'ref' => 's',
+            'type' => [
+                'type' => 'structure',
+                'elements' => ['a' => ['type' => 'integer']],
+                'optional_elements' => [],
+                'allow_extra' => false,
+            ],
+            'nullable' => false,
+            'metadata' => [],
+        ]], JSON_THROW_ON_ERROR));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unknown type 'structure'");
+
+        $cache->schema('legacy');
     }
 
     protected function cache(): Cache

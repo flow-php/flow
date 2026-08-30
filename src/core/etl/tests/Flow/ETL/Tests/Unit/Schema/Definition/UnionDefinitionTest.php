@@ -37,6 +37,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\type_uuid;
 
@@ -271,6 +272,29 @@ final class UnionDefinitionTest extends FlowTestCase
         $other = string_schema('col');
 
         static::assertFalse($def->isSame($other));
+    }
+
+    public function test_is_same_is_field_order_sensitive_for_structure_members(): void
+    {
+        $ordered = type_union(type_structure(['a' => type_integer(), 'b' => type_string()]), type_integer());
+        $reordered = type_union(type_structure(['b' => type_string(), 'a' => type_integer()]), type_integer());
+
+        static::assertFalse((new UnionDefinition('col', $ordered))->isSame(new UnionDefinition('col', $reordered)));
+        static::assertFalse((new UnionDefinition('col', $ordered))->isCompatible(new UnionDefinition(
+            'col',
+            $reordered,
+        )));
+
+        // structure members differing only in field order are no longer the same union - the merge
+        // degrades to json instead of collapsing
+        static::assertInstanceOf(
+            JsonDefinition::class,
+            (new UnionDefinition('col', $ordered))->merge(new UnionDefinition('col', $reordered)),
+        );
+        static::assertInstanceOf(
+            UnionDefinition::class,
+            (new UnionDefinition('col', $ordered))->merge(new UnionDefinition('col', $ordered)),
+        );
     }
 
     public function test_is_same_with_identical_definition(): void

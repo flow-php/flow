@@ -21,14 +21,15 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 
-use function array_key_exists;
-use function count;
-use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
 use function in_array;
 
 final class Comparator
 {
+    public function __construct(
+        private StructureComparison $structures = new StructureComparison(),
+    ) {}
+
     /**
      * @param Type<mixed> $left
      * @param Type<mixed> $right
@@ -102,7 +103,7 @@ final class Comparator
             return $left instanceof ListType || $left instanceof MapType || $left instanceof StructureType;
         }
 
-        return type_equals($left, $right);
+        return $this->equals($left, $right);
     }
 
     /**
@@ -124,15 +125,7 @@ final class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            if ($left->allowsExtra() !== $right->allowsExtra()) {
-                return false;
-            }
-
-            if (!$this->elementsEqual($left->elements(), $right->elements())) {
-                return false;
-            }
-
-            return $this->elementsEqual($left->optionalElements(), $right->optionalElements());
+            return $this->structures->identical($left, $right, $this);
         }
 
         return $left->toString() === $right->toString();
@@ -163,29 +156,6 @@ final class Comparator
         }
 
         return false;
-    }
-
-    /**
-     * @param array<array-key, Type<mixed>> $left
-     * @param array<array-key, Type<mixed>> $right
-     */
-    private function elementsEqual(array $left, array $right): bool
-    {
-        if (count($left) !== count($right)) {
-            return false;
-        }
-
-        foreach ($left as $name => $element) {
-            if (!array_key_exists($name, $right)) {
-                return false;
-            }
-
-            if (!$this->equals($element, $right[$name])) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**

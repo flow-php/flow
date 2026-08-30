@@ -31,7 +31,6 @@ final readonly class GroupedDataFrame
             }
         };
 
-        // @mago-ignore analysis:invalid-method-access
         $register->bindTo($this->df, $this->df)($this->groupBy, $this->algorithm);
 
         return $this->df;

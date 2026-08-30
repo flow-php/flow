@@ -122,8 +122,14 @@ final class FloeStreamWriter
         $this->metadata = $footer->metadata->merge($metadata ?? Metadata::empty());
         $this->sections = $footer->sections;
 
-        if ($footer->schema !== [] && $this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
-            throw new IncompatibleSchemaException('Floe append schema does not match the existing file schema.');
+        if ($footer->schema !== []) {
+            // A batch carrying the same columns or struct fields in a different order must append,
+            // not throw - conform the order instead of loosening the guard below.
+            $this->sessionSchema = $this->sessionSchema->conformOrderTo($footer->schema());
+
+            if ($this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
+                throw new IncompatibleSchemaException('Floe append schema does not match the existing file schema.');
+            }
         }
 
         $this->lastSectionPartitionsId = $lastSection?->partitionsId;

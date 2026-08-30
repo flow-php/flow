@@ -114,8 +114,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     /**
      * float, not the argument type - RunningSum::add() promotes to float on int overflow, so integer
-     * would be a declaration the accumulator can violate on ordinary data (Spark promotes to
-     * LongType/DoubleType the same way; flow has no wider integer).
+     * would be a declaration the accumulator can violate on ordinary data
      *
      * @return Type<mixed>
      */

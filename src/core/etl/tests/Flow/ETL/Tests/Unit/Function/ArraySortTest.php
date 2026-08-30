@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
@@ -251,17 +252,30 @@ final class ArraySortTest extends FlowTestCase
         static::assertSame('structure{b: integer, a: integer}', $resolved->returns()->toString());
     }
 
-    /**
-     * Pins the bucket-scoped limit: required fields sort before optional ones regardless of key
-     * order, because StructureType cannot represent an interleaved required/optional field order.
-     */
-    public function test_ksort_orders_within_the_required_and_optional_buckets(): void
+    public function test_ksort_orders_across_the_required_and_optional_buckets(): void
     {
         $resolved = (new ReferenceResolver())->resolve(
             ref('structure')->arraySort(Sort::ksort),
-            schema(structure_schema('structure', type_structure(['z' => type_integer()], ['a' => type_integer()]))),
+            schema(structure_schema('structure', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_integer(), optional: true),
+            ]))),
         );
 
-        static::assertSame('structure{z: integer, a?: integer}', $resolved->returns()->toString());
+        static::assertSame('structure{a?: integer, z: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_ksort_reproduces_php_key_order_for_numeric_element_names(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::ksort),
+            schema(structure_schema('structure', type_structure([
+                10 => type_integer(),
+                9 => type_integer(),
+                'b' => type_integer(),
+            ]))),
+        );
+
+        static::assertSame('structure{9: integer, 10: integer, b: integer}', $resolved->returns()->toString());
     }
 }

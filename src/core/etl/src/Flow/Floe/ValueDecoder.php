@@ -280,12 +280,8 @@ final class ValueDecoder
 
         $elements = [];
 
-        foreach ($type->elements() as $name => $elementType) {
-            $elements[$name] = $this->elementDecoderFor($elementType);
-        }
-
-        foreach ($type->optionalElements() as $name => $elementType) {
-            $elements[$name] = $this->elementDecoderFor($elementType);
+        foreach ($type->elements() as $element) {
+            $elements[$element->name] = $this->elementDecoderFor($element->type);
         }
 
         return new StructureDecoder($elements);

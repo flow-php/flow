@@ -31,6 +31,7 @@ use ReflectionFunction;
 use RuntimeException;
 
 use function implode;
+use function is_int;
 use function sprintf;
 
 final class TypeFormatter
@@ -133,21 +134,21 @@ final class TypeFormatter
 
         $fields = [];
 
-        foreach ($type->elements() as $name => $element) {
-            $fields[] = sprintf('"%s" => %s', $name, $this->format($element));
+        foreach ($type->elements() as $element) {
+            // a quoted "0" would NOT coerce back to int 0 as a function argument, unlike an array key
+            $name = is_int($element->name) ? (string) $element->name : sprintf('"%s"', $element->name);
+
+            $fields[] = $element->optional
+                ? sprintf(
+                    '%s => \\Flow\\Types\\DSL\\structure_element(%s, %s, optional: true)',
+                    $name,
+                    $name,
+                    $this->format($element->type),
+                )
+                : sprintf('%s => %s', $name, $this->format($element->type));
         }
 
         $arguments = sprintf('elements: [%s]', implode(', ', $fields));
-
-        if (count($type->optionalElements())) {
-            $optionalFields = [];
-
-            foreach ($type->optionalElements() as $name => $element) {
-                $optionalFields[] = sprintf('"%s" => %s', $name, $this->format($element));
-            }
-
-            $arguments .= sprintf(', optional_elements: [%s]', implode(', ', $optionalFields));
-        }
 
         if ($type->allowsExtra()) {
             $arguments .= ', allow_extra: true';

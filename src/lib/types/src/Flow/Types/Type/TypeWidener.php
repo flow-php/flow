@@ -19,8 +19,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 
-use function array_key_exists;
-use function array_keys;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
@@ -29,7 +28,6 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_structure;
 use function in_array;
 
 final readonly class TypeWidener
@@ -168,37 +166,31 @@ final readonly class TypeWidener
      */
     public function widenStructures(StructureType $left, StructureType $right): StructureType
     {
-        $leftOptional = $left->optionalElements();
-        $rightOptional = $right->optionalElements();
-        $leftElements = $left->elements() + $leftOptional;
-        $rightElements = $right->elements() + $rightOptional;
+        $rightByName = [];
 
-        $required = [];
-        $optional = [];
-
-        foreach ([...array_keys($leftElements), ...array_keys($rightElements)] as $name) {
-            if (array_key_exists($name, $required) || array_key_exists($name, $optional)) {
-                continue;
-            }
-
-            $inLeft = array_key_exists($name, $leftElements);
-            $inRight = array_key_exists($name, $rightElements);
-
-            if ($inLeft && $inRight) {
-                $element = $this->widen($leftElements[$name], $rightElements[$name]);
-                $isOptional = array_key_exists($name, $leftOptional) || array_key_exists($name, $rightOptional);
-            } else {
-                $element = $inLeft ? $leftElements[$name] : $rightElements[$name];
-                $isOptional = true;
-            }
-
-            if ($isOptional) {
-                $optional[$name] = $element;
-            } else {
-                $required[$name] = $element;
-            }
+        foreach ($right->elements() as $element) {
+            $rightByName[$element->name] = $element;
         }
 
-        return type_structure($required, $optional, $left->allowsExtra() || $right->allowsExtra());
+        $elements = [];
+
+        foreach ($left->elements() as $element) {
+            $other = $rightByName[$element->name] ?? null;
+            unset($rightByName[$element->name]);
+
+            $elements[] = $other === null
+                ? structure_element($element->name, $element->type, optional: true)
+                : structure_element(
+                    $element->name,
+                    $this->widen($element->type, $other->type),
+                    $element->optional || $other->optional,
+                );
+        }
+
+        foreach ($rightByName as $element) {
+            $elements[] = structure_element($element->name, $element->type, optional: true);
+        }
+
+        return new StructureType($elements, $left->allowsExtra() || $right->allowsExtra());
     }
 }

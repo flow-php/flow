@@ -87,7 +87,7 @@ final class TypeFactory
             'literal' => LiteralType::fromArray($data),
             'list' => ListType::fromArray($data),
             'map' => MapType::fromArray($data),
-            'structure' => StructureType::fromArray($data),
+            'structure_v2' => StructureType::fromArray($data),
             'xml_element' => type_xml_element(),
             'xml' => type_xml(),
             'union' => UnionType::fromArray($data),

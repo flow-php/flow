@@ -287,6 +287,9 @@
         <testsuite name="tools-documentation-integration">
             <directory>src/tools/documentation/tests/Flow/Documentation/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-mago-types-unit">
+            <directory>src/bridge/mago/types/tests/Flow/Bridge/Mago/Types/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="bridge-phpstan-types-unit">
             <directory>src/bridge/phpstan/types/tests/Flow/Bridge/PHPStan/Types/Tests/Unit</directory>
         </testsuite>

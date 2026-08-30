@@ -57,7 +57,7 @@ final class CallUserFunc implements ScalarFunction
 
     /**
      * String keys in the bag become PHP named arguments at call time, so the key list is
-     * carried as a field and restored here (Spark's otherCopyArgs).
+     * carried as a field and restored here
      *
      * @param list<FunctionTree> $children
      */

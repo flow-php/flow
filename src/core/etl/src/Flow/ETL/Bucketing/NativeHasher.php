@@ -28,12 +28,9 @@ final readonly class NativeHasher implements Hasher
         }
 
         if (is_numeric($value)) {
-            // @mago-expect analysis:impossible-assignment
             $float = (float) $value;
 
             // -0.0 == 0.0 but casts to the string "-0"
-            // @mago-expect analysis:redundant-comparison
-            // @mago-expect analysis:impossible-condition
             return 'n:' . ($float === 0.0 ? '0' : (string) $float);
         }
 

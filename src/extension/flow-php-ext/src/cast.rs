@@ -56,26 +56,17 @@ pub(crate) enum CastKind {
 fn build_structure_kind(type_json: &TypeJson) -> CastKind {
     let mut elements = Vec::new();
 
-    let entries = type_json
-        .required_elements()
-        .map(|(name, element)| (name, element, true))
-        .chain(
-            type_json
-                .structure_optional_elements()
-                .map(|(name, element)| (name, element, false)),
-        );
-
-    for (name, element, required) in entries {
+    for field in type_json.fields() {
         // numeric element names would list-coerce the assembled array -
         // PHP's final assert has odd edge behavior there, not worth mirroring
-        if array_key_index(name.as_bytes()).is_some() {
+        if array_key_index(field.name.as_bytes()).is_some() {
             return CastKind::Fallback;
         }
 
         elements.push(StructureElement {
-            name: name.clone(),
-            kind: build_cast_kind(element),
-            required,
+            name: field.name.clone(),
+            kind: build_cast_kind(&field.type_),
+            required: !field.optional,
         });
     }
 
@@ -110,7 +101,7 @@ fn build_cast_kind(type_json: &TypeJson) -> CastKind {
             },
             _ => CastKind::Fallback,
         },
-        "structure" => build_structure_kind(type_json),
+        "structure_v2" => build_structure_kind(type_json),
         "optional" => match type_json.base() {
             Some(base) => CastKind::Optional(Box::new(build_cast_kind(base))),
             None => CastKind::Fallback,

@@ -90,12 +90,13 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $fields = [];
 
-            foreach ($structureType->elements() as $name => $type) {
-                $fields += $this->formatStructureElement($name, $type, $fields, 1);
-            }
-
-            foreach ($structureType->optionalElements() as $name => $type) {
-                $fields += $this->formatStructureElement($name . '?', $type, $fields, 1);
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    1,
+                );
             }
 
             $buffer = array_merge($buffer, $fields);
@@ -132,12 +133,13 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $fields = [];
 
-            foreach ($structureType->elements() as $nextName => $nextType) {
-                $fields += $this->formatStructureElement($nextName, $nextType, $fields, $level + 1);
-            }
-
-            foreach ($structureType->optionalElements() as $nextName => $nextType) {
-                $fields += $this->formatStructureElement($nextName . '?', $nextType, $fields, $level + 1);
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    $level + 1,
+                );
             }
 
             $buffer = array_merge($buffer, $fields);

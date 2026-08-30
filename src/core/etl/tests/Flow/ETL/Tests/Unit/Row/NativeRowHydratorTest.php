@@ -45,6 +45,7 @@ use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -262,7 +263,10 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         /** @var StructureType<array<array-key, mixed>> $allowExtraStructure */
-        $allowExtraStructure = type_structure(['a' => type_integer()], ['b' => type_string()], true);
+        $allowExtraStructure = type_structure([
+            'a' => type_integer(),
+            'b' => structure_element('b', type_string(), optional: true),
+        ], true);
 
         yield 'containers from raw values' => [
             schema(
@@ -271,7 +275,10 @@ final class NativeRowHydratorTest extends FlowTestCase
                 map_schema('m', type_map(type_string(), type_integer())),
                 map_schema('mi', type_map(type_integer(), type_string())),
                 list_schema('lo', type_list(type_optional(type_integer()))),
-                structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()])),
+                structure_schema('st', type_structure([
+                    'a' => type_integer(),
+                    'b' => structure_element('b', type_string(), optional: true),
+                ])),
                 structure_schema('se', $allowExtraStructure),
             ),
             [
@@ -321,8 +328,24 @@ final class NativeRowHydratorTest extends FlowTestCase
         yield 'empty cast batch' => [schema(int_schema('id')), []];
 
         yield 'all-optional structure with no matching keys' => [
-            schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
+            schema(structure_schema('st', type_structure(['b' => structure_element(
+                'b',
+                type_string(),
+                optional: true,
+            )]))),
             [new RawRowValues(['st' => ['other' => 1]])],
+        ];
+
+        yield 'interleaved structure' => [
+            schema(structure_schema('st', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_string(), optional: true),
+                'b' => type_string(),
+            ]))),
+            [
+                new RawRowValues(['st' => ['b' => 'x', 'z' => '5']]),
+                new RawRowValues(['st' => ['z' => 1, 'a' => 'present', 'b' => 'y']]),
+            ],
         ];
     }
 
@@ -410,7 +433,10 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'structure present-null optional element' => [
-            schema(structure_schema('data', type_structure(['id' => type_integer()], ['name' => type_string()]))),
+            schema(structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'name' => structure_element('name', type_string(), optional: true),
+            ]))),
             [new RawRowValues(['data' => ['id' => 1, 'name' => null]])],
         ];
     }

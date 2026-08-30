@@ -36,6 +36,7 @@ use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -218,7 +219,8 @@ final class FloeValueRoundTripTest extends TestCase
         $type = type_structure([
             'street' => type_string(),
             'nested' => type_structure(['count' => type_integer(), 'tags' => type_list(type_string())]),
-        ], ['optional_zip' => type_string()]);
+            'optional_zip' => structure_element('optional_zip', type_string(), optional: true),
+        ]);
 
         static::assertEquals(
             $rows = rows(row(
@@ -250,6 +252,38 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
+    public function test_interleaved_structure_entries(): void
+    {
+        $type = type_structure([
+            'z' => type_integer(),
+            'a' => structure_element('a', type_string(), optional: true),
+            'b' => type_string(),
+        ]);
+
+        static::assertEquals(
+            $rows = rows(row(
+                structure_entry('full', ['z' => 1, 'a' => 'present', 'b' => 'x'], $type),
+                structure_entry('without_optional', ['z' => 2, 'b' => 'y'], $type),
+            )),
+            FloeStreamReaderContext::roundTrip($rows),
+        );
+    }
+
+    public function test_round_trip_rewrites_value_key_order_into_schema_order(): void
+    {
+        $type = type_structure(['a' => type_integer(), 'b' => type_string()]);
+
+        $inOrder = rows(row(structure_entry('s', ['a' => 1, 'b' => 'x'], $type)));
+
+        static::assertTrue(FloeStreamReaderContext::roundTrip($inOrder)->first()->isEqual($inOrder->first()));
+
+        $outOfOrder = rows(row(structure_entry('s', ['b' => 'x', 'a' => 1], $type)));
+        $decoded = FloeStreamReaderContext::roundTrip($outOfOrder)->first();
+
+        static::assertSame(['a' => 1, 'b' => 'x'], $decoded->get('s')->value());
+        static::assertTrue($decoded->isEqual($outOfOrder->first()));
+    }
+
     public function test_structure_allowing_extra_values_is_rejected(): void
     {
         $this->expectException(FloeException::class);
@@ -258,7 +292,7 @@ final class FloeValueRoundTripTest extends TestCase
         FloeStreamReaderContext::roundTrip(rows(row(structure_entry(
             'with_extra',
             ['id' => 1, 'custom' => 'x'],
-            type_structure(['id' => type_integer()], [], true),
+            type_structure(['id' => type_integer()], true),
         ))));
     }
 

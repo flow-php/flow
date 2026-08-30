@@ -13,7 +13,7 @@ use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\RustFloeEncoderNative;
 
 use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, bool_entry, datetime_entry, time_entry, uuid_entry, list_entry, map_entry, structure_entry, xml_entry, json_entry, null_entry, enum_entry, date_entry, schema_from_json};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float, type_mixed, type_optional};
+use function Flow\Types\DSL\{type_list, type_map, type_structure, structure_element, type_integer, type_string, type_float, type_mixed, type_optional};
 
 enum PhptColor: string
 {
@@ -36,7 +36,8 @@ $datasets = [
         list_entry('ints', [1, 2, 3], type_list(type_integer())),
         map_entry('m', ['cpu' => 1.5], type_map(type_string(), type_float())),
         map_entry('mi', [7 => 'a', -1 => 'b'], type_map(type_integer(), type_string())),
-        structure_entry('st', ['a' => 1], type_structure(['a' => type_integer()], ['b' => type_string()])),
+        structure_entry('st', ['a' => 1], type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])),
+        structure_entry('st_interleaved', ['z' => 1, 'b' => 'x'], type_structure(['z' => type_integer(), 'a' => structure_element('a', type_string(), optional: true), 'b' => type_string()])),
         list_entry('opt', [1, null], type_list(type_optional(type_integer()))),
     )),
     'enum_json_xml' => rows(row(

@@ -11,7 +11,7 @@ use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
 
 use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, uuid_schema, list_schema, map_schema, structure_schema, json_schema, enum_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional};
+use function Flow\Types\DSL\{structure_element, type_list, type_map, type_structure, type_integer, type_string, type_optional};
 
 enum LeakSuit: string
 {
@@ -28,7 +28,7 @@ $schema = schema(
     uuid_schema('uuid'),
     list_schema('ints', type_list(type_optional(type_integer()))),
     map_schema('metrics', type_map(type_string(), type_integer())),
-    structure_schema('nested', type_structure(['a' => type_integer()], ['b' => type_string()])),
+    structure_schema('nested', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])),
     json_schema('json'),
     enum_schema('suit', LeakSuit::class),     // exotic - per-value PHP fallback
 );

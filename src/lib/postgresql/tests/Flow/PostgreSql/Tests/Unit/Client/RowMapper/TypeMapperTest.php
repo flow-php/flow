@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\UuidV7;
 
 use function Flow\PostgreSql\DSL\type_mapper;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_instance_of;
@@ -189,7 +190,10 @@ final class TypeMapperTest extends TestCase
         yield 'map jsonb with optional element present' => [
             ['profile' => '{"name":"Alice","nickname":"Ali"}'],
             type_structure([
-                'profile' => type_structure(['name' => type_string()], ['nickname' => type_string()]),
+                'profile' => type_structure([
+                    'name' => type_string(),
+                    'nickname' => structure_element('nickname', type_string(), optional: true),
+                ]),
             ]),
             ['profile' => ['name' => 'Alice', 'nickname' => 'Ali']],
         ];
@@ -197,7 +201,10 @@ final class TypeMapperTest extends TestCase
         yield 'map jsonb with optional element absent' => [
             ['profile' => '{"name":"Alice"}'],
             type_structure([
-                'profile' => type_structure(['name' => type_string()], ['nickname' => type_string()]),
+                'profile' => type_structure([
+                    'name' => type_string(),
+                    'nickname' => structure_element('nickname', type_string(), optional: true),
+                ]),
             ]),
             ['profile' => ['name' => 'Alice']],
         ];

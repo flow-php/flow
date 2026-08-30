@@ -80,8 +80,7 @@ final class Rank implements PartitionRanking, WindowFunction
     }
 
     /**
-     * NOT NULL - every row of a partition has a rank (Spark RowNumberLike/RankLike nullable=false;
-     * DuckDB BIGINT).
+     * NOT NULL - every row of a partition has a rank
      *
      * @return Type<mixed>
      */

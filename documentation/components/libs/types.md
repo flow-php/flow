@@ -144,7 +144,8 @@ $mapOfStringToInt = type_map(type_string(), type_integer());
 
 #### Structures
 
-Structure is a associative array with a defined shape. 
+Structure is an associative array with a defined shape. Field order is part of the type: two
+structures with the same fields in a different order are different types.
 
 ```php
 <?php
@@ -158,6 +159,29 @@ $userStructure = type_structure([
     'name' => type_string()
 ])
 ```
+
+Insertion order of the `$elements` map is the field order. A plain `Type` value declares a required
+field; a `structure_element()` value carries its own `optional` flag, so an optional field can sit
+anywhere - including before a required one:
+
+```php
+<?php
+
+use Flow\Types\DSL\structure_element;
+use Flow\Types\DSL\type_structure;
+use Flow\Types\DSL\type_string;
+
+$userStructure = type_structure([
+    'id' => type_string(),
+    'nickname' => structure_element('nickname', type_string(), optional: true),
+    'name' => type_string(),
+]);
+// structure{id: string, nickname?: string, name: string}
+```
+
+A `structure_element()` value must carry the same name as its key. Each element is a
+`StructureElement` carrying its name, type, and `optional` flag; `StructureType::elements()`
+returns them as one ordered list, and `StructureType::element($name)` looks a field up by name.
 
 #### Combined Types 
 

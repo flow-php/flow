@@ -63,7 +63,7 @@ final class IsIn implements ScalarFunction
             return null;
         }
 
-        // A match beats a NULL element; no match with a NULL element is unknowable (Spark's In).
+        // A match beats a NULL element; no match with a NULL element is unknowable
         if (in_array($needle, $haystack, true)) {
             return true;
         }

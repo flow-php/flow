@@ -29,6 +29,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 
 final class MapDefinitionTest extends FlowTestCase
@@ -218,6 +219,20 @@ final class MapDefinitionTest extends FlowTestCase
         $other = map_schema('data', type_map(type_string(), type_integer()), true, Metadata::with('key', 'value'));
 
         static::assertTrue($def->isSame($other));
+    }
+
+    public function test_is_same_is_field_order_sensitive_for_nested_structures(): void
+    {
+        $def = map_schema('data', type_map(type_string(), type_structure([
+            'a' => type_integer(),
+            'b' => type_string(),
+        ])));
+        $other = map_schema('data', type_map(type_string(), type_structure([
+            'b' => type_string(),
+            'a' => type_integer(),
+        ])));
+
+        static::assertFalse($def->isSame($other));
     }
 
     public function test_make_nullable(): void

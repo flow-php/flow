@@ -13,6 +13,7 @@ use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\Time;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
@@ -72,6 +73,24 @@ final class StructureShapeInference
             'map' => type_map(type_string(), type_integer()),
             'nested' => type_structure(['inner' => type_integer()]),
             'optional' => type_optional(type_string()),
+        ])->assert($data);
+    }
+
+    /**
+     * Pins the marker derivation the flow/types Mago plugin (flow-php/mago-types-bridge) provides:
+     * the member value type comes from the element's first template and a literal `optional: true`
+     * (TOptional) marks the key possibly undefined.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array{id: int, interleaved?: string, name: string}
+     */
+    public function markerElements(array $data): array
+    {
+        return type_structure([
+            'id' => type_integer(),
+            'interleaved' => structure_element('interleaved', type_string(), optional: true),
+            'name' => type_string(),
         ])->assert($data);
     }
 

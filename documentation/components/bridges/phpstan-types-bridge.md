@@ -39,6 +39,17 @@ $schema = type_structure(
 );
 ```
 
+The bridge also narrows `structure_element()` marker values inside the first argument - the member
+type comes from the element's type and a literal `optional: true` flag turns the shape key optional:
+
+```php
+// Inferred as: Type<array{id: int, nickname?: string}>&StructureType
+$schema = type_structure([
+    'id' => type_integer(),
+    'nickname' => structure_element('nickname', type_string(), optional: true),
+]);
+```
+
 > **Note:** Flow PHP itself is analyzed with [Mago](https://mago.carthage.software/), whose `flow-php`
 > plugin handles `type_structure()` natively. This bridge exists purely for downstream projects that use
 > PHPStan.

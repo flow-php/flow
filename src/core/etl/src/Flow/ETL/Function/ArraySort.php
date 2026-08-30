@@ -11,9 +11,9 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
+use function array_values;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
-use function Flow\Types\DSL\type_structure;
 use function is_array;
 use function krsort;
 use function ksort;
@@ -60,25 +60,25 @@ final class ArraySort implements ScalarFunction
         $array = type_bare($this->ref->returns());
 
         // Only a key sort reorders a structure's fields deterministically at bind time; a value sort's
-        // field order is data-dependent, so the operand's declared order stands. Field order is
-        // bucket-scoped: StructureType keeps required fields before optional ones, so a mixed
-        // structure sorts within each bucket, not across them.
+        // field order is data-dependent, so the operand's declared order stands. Sorting by array key
+        // rather than by a string comparator reproduces PHP's key order for integer element names.
         if (
             $array instanceof StructureType
             && ($this->sortFunction === Sort::ksort || $this->sortFunction === Sort::krsort)
         ) {
-            $elements = $array->elements();
-            $optionalElements = $array->optionalElements();
+            $byName = [];
 
-            if ($this->sortFunction === Sort::ksort) {
-                ksort($elements);
-                ksort($optionalElements);
-            } else {
-                krsort($elements);
-                krsort($optionalElements);
+            foreach ($array->elements() as $element) {
+                $byName[$element->name] = $element;
             }
 
-            return type_structure($elements, $optionalElements);
+            if ($this->sortFunction === Sort::ksort) {
+                ksort($byName);
+            } else {
+                krsort($byName);
+            }
+
+            return new StructureType(array_values($byName));
         }
 
         return $array;

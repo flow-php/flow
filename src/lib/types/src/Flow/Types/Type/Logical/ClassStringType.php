@@ -10,6 +10,7 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 use function class_exists;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_structure;
@@ -43,9 +44,10 @@ final readonly class ClassStringType implements Type
      */
     public static function fromArray(array $data): Type
     {
-        $data = type_structure(['type' => type_literal('class_string')], ['class' => type_class_string()])->assert(
-            $data,
-        );
+        $data = type_structure([
+            'type' => type_literal('class_string'),
+            'class' => structure_element('class', type_class_string(), optional: true),
+        ])->assert($data);
 
         return new self($data['class'] ?? null);
     }

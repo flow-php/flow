@@ -6,12 +6,15 @@ namespace Flow\ETL\Tests\Unit\Schema\Formatter\PHPFormatter;
 
 use Flow\ETL\Schema\Formatter\PHPFormatter\TypeFormatter;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type\Logical\StructureType;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_html_element;
@@ -52,6 +55,50 @@ final class FlowTypeFormatterTest extends FlowTestCase
         );
     }
 
+    public function test_format_interleaved_structure_emits_marker_elements_and_round_trips(): void
+    {
+        $type = type_structure([
+            'z' => type_integer(),
+            'a' => structure_element('a', type_integer(), optional: true),
+            'b' => type_string(),
+        ]);
+
+        $formatted = (new TypeFormatter())->format($type);
+
+        static::assertSame(
+            '\\Flow\\Types\\DSL\\type_structure(elements: ["z" => \\Flow\\Types\\DSL\\type_integer(), "a" => \\Flow\\Types\\DSL\\structure_element("a", \\Flow\\Types\\DSL\\type_integer(), optional: true), "b" => \\Flow\\Types\\DSL\\type_string()])',
+            $formatted,
+        );
+
+        // the emitted PHP must evaluate back to the same type - eval is the round-trip oracle
+        // @mago-expect lint:no-eval
+        // @mago-ignore analysis:mixed-assignment
+        $evaluated = eval('return ' . $formatted . ';');
+
+        static::assertInstanceOf(StructureType::class, $evaluated);
+        static::assertTrue(type_equals($type, $evaluated));
+    }
+
+    public function test_format_interleaved_structure_with_a_numeric_element_name_round_trips(): void
+    {
+        $type = type_structure([0 => structure_element(0, type_integer(), optional: true), 'b' => type_string()]);
+
+        $formatted = (new TypeFormatter())->format($type);
+
+        static::assertSame(
+            '\\Flow\\Types\\DSL\\type_structure(elements: [0 => \\Flow\\Types\\DSL\\structure_element(0, \\Flow\\Types\\DSL\\type_integer(), optional: true), "b" => \\Flow\\Types\\DSL\\type_string()])',
+            $formatted,
+        );
+
+        // @mago-expect lint:no-eval
+        // @mago-ignore analysis:mixed-assignment
+        $evaluated = eval('return ' . $formatted . ';');
+
+        static::assertInstanceOf(StructureType::class, $evaluated);
+        static::assertTrue(type_equals($type, $evaluated));
+        static::assertSame(0, $evaluated->element(0)?->name);
+    }
+
     public function test_format_structure_type(): void
     {
         static::assertEquals(
@@ -74,8 +121,11 @@ final class FlowTypeFormatterTest extends FlowTestCase
     public function test_format_structure_type_with_optional_elements(): void
     {
         static::assertEquals(
-            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string()], optional_elements: ["nickname" => \\Flow\\Types\\DSL\\type_string()])',
-            (new TypeFormatter())->format(type_structure(['name' => type_string()], ['nickname' => type_string()])),
+            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string(), "nickname" => \\Flow\\Types\\DSL\\structure_element("nickname", \\Flow\\Types\\DSL\\type_string(), optional: true)])',
+            (new TypeFormatter())->format(type_structure([
+                'name' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
         );
     }
 
@@ -83,28 +133,28 @@ final class FlowTypeFormatterTest extends FlowTestCase
     {
         static::assertEquals(
             '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string()], allow_extra: true)',
-            (new TypeFormatter())->format(type_structure(['name' => type_string()], [], true)),
+            (new TypeFormatter())->format(type_structure(['name' => type_string()], true)),
         );
     }
 
     public function test_format_structure_type_with_optional_elements_and_allow_extra(): void
     {
         static::assertEquals(
-            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string()], optional_elements: ["nickname" => \\Flow\\Types\\DSL\\type_string()], allow_extra: true)',
-            (new TypeFormatter())->format(type_structure(
-                ['name' => type_string()],
-                ['nickname' => type_string()],
-                true,
-            )),
+            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string(), "nickname" => \\Flow\\Types\\DSL\\structure_element("nickname", \\Flow\\Types\\DSL\\type_string(), optional: true)], allow_extra: true)',
+            (new TypeFormatter())->format(type_structure([
+                'name' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ], true)),
         );
     }
 
     public function test_format_nullable_structure_type_with_optional_elements(): void
     {
         static::assertEquals(
-            '\\Flow\\Types\\DSL\\type_optional(\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string()], optional_elements: ["nickname" => \\Flow\\Types\\DSL\\type_string()]))',
-            (new TypeFormatter())->format(type_optional(type_structure(['name' => type_string()], [
-                'nickname' => type_string(),
+            '\\Flow\\Types\\DSL\\type_optional(\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string(), "nickname" => \\Flow\\Types\\DSL\\structure_element("nickname", \\Flow\\Types\\DSL\\type_string(), optional: true)]))',
+            (new TypeFormatter())->format(type_optional(type_structure([
+                'name' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
             ]))),
         );
     }

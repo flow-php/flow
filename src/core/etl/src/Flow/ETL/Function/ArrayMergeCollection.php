@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\StructureType;
 use function array_merge;
 use function array_values;
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function is_array;
 
@@ -66,7 +67,13 @@ final class ArrayMergeCollection implements ScalarFunction
             // Merging zero structures yields {} - a field is present iff the collection is non-empty,
             // so every field of the merged structure is optional.
             if ($element instanceof StructureType) {
-                return new StructureType([], $element->elements() + $element->optionalElements());
+                $fields = [];
+
+                foreach ($element->elements() as $structureElement) {
+                    $fields[] = structure_element($structureElement->name, $structureElement->type, optional: true);
+                }
+
+                return new StructureType($fields);
             }
         }
 

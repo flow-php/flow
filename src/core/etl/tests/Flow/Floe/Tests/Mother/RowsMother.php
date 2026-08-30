@@ -33,6 +33,7 @@ use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -104,6 +105,11 @@ final class RowsMother
                     'nested' => type_structure(['count' => type_integer(), 'tags' => type_list(type_string())]),
                 ]),
             ),
+            structure_entry('structure_interleaved', ['z' => 1, 'b' => 'x'], type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_string(), optional: true),
+                'b' => type_string(),
+            ])),
             xml_entry('xml', '<root attr="1"><child>text &amp; entity</child></root>'),
             xml_element_entry('xml_element', '<item id="5">value</item>'),
         ));

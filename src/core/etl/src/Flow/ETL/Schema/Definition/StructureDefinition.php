@@ -14,7 +14,6 @@ use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeWidener;
 
 use function array_key_exists;
-use function array_keys;
 use function Flow\Types\DSL\type_equals;
 use function sprintf;
 
@@ -75,34 +74,37 @@ final readonly class StructureDefinition implements Definition
             return false;
         }
 
-        $declaredRequired = $this->type->elements();
-        $declaredOptional = $this->type->optionalElements();
-        $givenRequired = $definition->type->elements();
-        $givenOptional = $definition->type->optionalElements();
-
         $compatibility = new ElementCompatibility();
 
-        foreach ($declaredRequired as $name => $element) {
-            // A given optional element may be absent, so it cannot satisfy a declared required one.
-            if (!array_key_exists($name, $givenRequired)) {
-                return false;
-            }
+        $declaredByName = [];
 
-            if (!$compatibility->isCompatible($this->ref->name() . '.' . $name, $element, $givenRequired[$name])) {
-                return false;
-            }
+        foreach ($this->type->elements() as $declared) {
+            $declaredByName[$declared->name] = $declared;
         }
 
-        foreach ($declaredOptional as $name => $element) {
-            if (array_key_exists($name, $givenRequired)) {
-                $givenElement = $givenRequired[$name];
-            } elseif (array_key_exists($name, $givenOptional)) {
-                $givenElement = $givenOptional[$name];
-            } else {
-                continue;
+        $givenByName = [];
+
+        foreach ($definition->type->elements() as $given) {
+            $givenByName[$given->name] = $given;
+        }
+
+        foreach ($declaredByName as $declared) {
+            $given = $givenByName[$declared->name] ?? null;
+
+            if ($declared->optional) {
+                if ($given === null) {
+                    continue;
+                }
+            } elseif ($given === null || $given->optional) {
+                // A given optional element may be absent, so it cannot satisfy a declared required one.
+                return false;
             }
 
-            if (!$compatibility->isCompatible($this->ref->name() . '.' . $name, $element, $givenElement)) {
+            if (!$compatibility->isCompatible(
+                $this->ref->name() . '.' . $declared->name,
+                $declared->type,
+                $given->type,
+            )) {
                 return false;
             }
         }
@@ -111,8 +113,8 @@ final readonly class StructureDefinition implements Definition
             return true;
         }
 
-        foreach ([...array_keys($givenRequired), ...array_keys($givenOptional)] as $name) {
-            if (!array_key_exists($name, $declaredRequired) && !array_key_exists($name, $declaredOptional)) {
+        foreach ($givenByName as $given) {
+            if (!array_key_exists($given->name, $declaredByName)) {
                 return false;
             }
         }

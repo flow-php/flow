@@ -32,11 +32,13 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\structure_entry;
 use function Flow\Filesystem\DSL\partition;
 use function Flow\Filesystem\DSL\partitions;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function is_int;
 use function is_numeric;
 use function iterator_to_array;
@@ -1215,5 +1217,21 @@ final class RowsTest extends FlowTestCase
             ],
             $rows->toArray(withKeys: false),
         );
+    }
+
+    public function test_unique_and_diff_follow_structure_field_order(): void
+    {
+        $left = rows(row(structure_entry('s', ['a' => 1, 'b' => 'x'], type_structure([
+            'a' => type_integer(),
+            'b' => type_string(),
+        ]))));
+        $right = rows(row(structure_entry('s', ['b' => 'x', 'a' => 1], type_structure([
+            'b' => type_string(),
+            'a' => type_integer(),
+        ]))));
+
+        static::assertCount(2, $left->merge($right)->unique());
+        static::assertCount(1, $left->diffLeft($right));
+        static::assertCount(1, $left->diffRight($right));
     }
 }

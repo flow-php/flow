@@ -205,22 +205,20 @@ $row['id'];        // \Flow\Types\Value\Uuid
 
 ## Optional Fields
 
-Use `type_optional(...)` for columns that may be absent in the row OR `null`:
+Absent and null are two different facts about a structure field. Declare a field as
+`structure_element(..., optional: true)` when the driver row may omit the column entirely; wrap its
+type in `type_optional(...)` when a present column may hold `null`:
 
 ```php
 <?php
 
 use function Flow\PostgreSql\DSL\type_mapper;
-use function Flow\Types\DSL\{type_optional, type_string, type_structure};
+use function Flow\Types\DSL\{structure_element, type_optional, type_string, type_structure};
 
-$mapper = type_mapper(type_structure(
-    elements: [
-        'name' => type_string(),
-    ],
-    optional_elements: [
-        'nickname' => type_string(),
-    ],
-));
+$mapper = type_mapper(type_structure([
+    'name' => type_string(),
+    'nickname' => structure_element('nickname', type_string(), optional: true),
+]));
 
 // Row: ['name' => 'Alice', 'nickname' => 'Ali']  → ['name' => 'Alice', 'nickname' => 'Ali']
 // Row: ['name' => 'Alice']                       → ['name' => 'Alice']

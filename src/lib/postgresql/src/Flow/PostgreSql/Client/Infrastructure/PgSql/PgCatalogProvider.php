@@ -72,6 +72,7 @@ use function Flow\PostgreSql\DSL\sub_select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\PostgreSql\DSL\when;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
@@ -218,8 +219,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'identity' => type_string(),
                 'generated' => type_string(),
                 'ordinal_position' => type_integer(),
-            ], [
-                'default_value' => type_union(type_string(), type_null()),
+                'default_value' => structure_element(
+                    'default_value',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('attname', 'a')->as('name'),
@@ -339,8 +343,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'base_type' => type_string(),
                 'nullable' => type_boolean(),
-            ], [
-                'default_value' => type_union(type_string(), type_null()),
+                'default_value' => structure_element(
+                    'default_value',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('typname', 't')->as('name'),
@@ -423,8 +430,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
-            ], [
-                'version' => type_union(type_string(), type_null()),
+                'version' => structure_element('version', type_union(type_string(), type_null()), optional: true),
             ])),
             select(col('extname', 'e')->as('name'), col('extversion', 'e')->as('version'))
                 ->from(table('pg_extension', 'pg_catalog')->as('e'))
@@ -548,8 +554,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'language' => type_string(),
                 'definition' => type_string(),
                 'is_strict' => type_boolean(),
-            ], [
-                'volatility' => type_union(type_string(), type_null()),
+                'volatility' => structure_element('volatility', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('proname', 'p')->as('name'),
@@ -607,8 +612,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'is_primary' => type_boolean(),
                 'method' => type_string(),
                 'columns' => type_string(),
-            ], [
-                'predicate' => type_union(type_string(), type_null()),
+                'predicate' => structure_element('predicate', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('relname', 'i')->as('name'),
@@ -825,8 +829,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'arguments' => type_string(),
                 'language' => type_string(),
-            ], [
-                'definition' => type_union(type_string(), type_null()),
+                'definition' => structure_element('definition', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('proname', 'p')->as('name'),
@@ -939,10 +942,21 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'increment_by' => $intOrString,
                 'cycle' => type_boolean(),
                 'cache_value' => $intOrString,
-            ], [
-                'max_value' => type_union(type_integer(), type_string(), type_null()),
-                'owned_by_table' => type_union(type_string(), type_null()),
-                'owned_by_column' => type_union(type_string(), type_null()),
+                'max_value' => structure_element(
+                    'max_value',
+                    type_union(type_integer(), type_string(), type_null()),
+                    optional: true,
+                ),
+                'owned_by_table' => structure_element(
+                    'owned_by_table',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
+                'owned_by_column' => structure_element(
+                    'owned_by_column',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('relname', 'c')->as('name'),
@@ -1054,8 +1068,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'relname' => type_string(),
                 'relpersistence' => type_string(),
                 'relkind' => type_string(),
-            ], [
-                'tablespace' => type_union(type_string(), type_null()),
+                'tablespace' => structure_element('tablespace', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('relname', 'c'),

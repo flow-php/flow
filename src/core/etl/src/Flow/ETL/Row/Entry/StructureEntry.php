@@ -95,6 +95,8 @@ final class StructureEntry implements Entry
             return false;
         }
 
+        // Value equality, not type identity: entry value comparison is already key-order-insensitive
+        // (ArrayComparison sorts by key), so the type check must stay field-order-insensitive too.
         if (!$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
             return false;
         }

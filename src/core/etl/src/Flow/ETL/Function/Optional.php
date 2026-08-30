@@ -37,9 +37,6 @@ final class Optional implements ScalarFunction
     }
 
     /**
-     * Spark's TryEval: the type passes through, nullability is forced true. Total - the
-     * OptionalType collapse makes the wrap idempotent for an already-nullable operand.
-     *
      * @return Type<mixed>
      */
     public function returns(): Type

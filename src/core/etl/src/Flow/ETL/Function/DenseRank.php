@@ -78,8 +78,7 @@ final class DenseRank implements PartitionRanking, WindowFunction
     }
 
     /**
-     * NOT NULL - every row of a partition has a dense rank (Spark RowNumberLike/RankLike nullable=false;
-     * DuckDB BIGINT).
+     * NOT NULL - every row of a partition has a dense rank
      *
      * @return Type<mixed>
      */

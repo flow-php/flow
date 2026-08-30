@@ -487,6 +487,14 @@
             }
         },
         {
+            "name": "flow-php/mago-types-bridge",
+            "path": "src/bridge/mago/types",
+            "type": "bridge",
+            "links": {
+                "documentation": "/documentation/components/bridges/mago-types-bridge"
+            }
+        },
+        {
             "name": "flow-php/phpstan-types-bridge",
             "path": "src/bridge/phpstan/types",
             "type": "bridge",

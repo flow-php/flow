@@ -803,16 +803,23 @@ final class SchemaTest extends FlowTestCase
                 {
                     "ref": "struct",
                     "type": {
-                        "type": "structure",
-                        "elements": {
-                            "street": {
-                                "type": "string"
+                        "type": "structure_v2",
+                        "fields": [
+                            {
+                                "name": "street",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             },
-                            "city": {
-                                "type": "string"
+                            {
+                                "name": "city",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             }
-                        },
-                        "optional_elements": [],
+                        ],
                         "allow_extra": false
                     },
                     "nullable": false,
@@ -879,5 +886,42 @@ final class SchemaTest extends FlowTestCase
     public function test_sort_empty_schema(): void
     {
         static::assertSame([], array_keys(schema()->sort()->definitions()));
+    }
+
+    public function test_conform_order_to_reorders_columns_and_structure_fields(): void
+    {
+        $schema = schema(
+            structure_schema('s', type_structure(['b' => type_string(), 'a' => type_integer()])),
+            int_schema('id'),
+        );
+        $authority = schema(
+            int_schema('id'),
+            structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_string()])),
+        );
+
+        $conformed = $schema->conformOrderTo($authority);
+
+        static::assertSame(['id', 's'], array_keys($conformed->definitions()));
+        static::assertSame('structure{a: integer, b: string}', $conformed->get('s')->type()->toString());
+    }
+
+    public function test_conform_order_to_appends_columns_the_authority_does_not_know(): void
+    {
+        static::assertSame(
+            ['id', 'extra'],
+            array_keys(
+                schema(int_schema('id'), str_schema('extra'))->conformOrderTo(schema(int_schema('id')))->definitions(),
+            ),
+        );
+    }
+
+    public function test_conform_order_to_adds_and_drops_nothing(): void
+    {
+        static::assertSame(
+            ['id'],
+            array_keys(
+                schema(int_schema('id'))->conformOrderTo(schema(int_schema('id'), str_schema('name')))->definitions(),
+            ),
+        );
     }
 }

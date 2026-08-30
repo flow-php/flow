@@ -99,16 +99,24 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
                 )?),
             )
         }
-        "structure" => {
+        "structure_v2" => {
+            if type_json.fields().is_empty() {
+                return Err(ext_exception(
+                    "flow_php read a structure type with no fields; the loaded flow_php extension and the \
+                     flow-php/etl in use disagree on the structure schema format - reinstall one to match the \
+                     other, or set the Floe engine to FloeEngine::php",
+                ));
+            }
+
             let mut elements = Vec::new();
 
-            for (name, element) in type_json.all_elements() {
-                let bytes = name.clone().into_bytes();
+            for field in type_json.fields() {
+                let bytes = field.name.clone().into_bytes();
                 let declared = match crate::ctx::array_key_index(&bytes) {
                     Some(index) => DeclaredKey::Index(index),
                     None => DeclaredKey::Str(bytes.clone()),
                 };
-                elements.push((declared, bytes, build_encoder(element)?));
+                elements.push((declared, bytes, build_encoder(&field.type_)?));
             }
 
             if type_json.allow_extra() {

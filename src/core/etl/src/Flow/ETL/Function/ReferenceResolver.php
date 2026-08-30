@@ -51,8 +51,6 @@ final readonly class ReferenceResolver
             $resolved[] = $this->resolve($child, $schema);
         }
 
-        // PHP === on arrays is element-wise and identity-comparing for objects, so a no-op pass
-        // allocates nothing and returns the same object (Spark's childrenFastEquals).
         if ($resolved === $children) {
             return $function;
         }

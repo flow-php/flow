@@ -9,9 +9,9 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
+use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\StructureType;
 
-use function array_key_exists;
 use function explode;
 use function Flow\ArrayDot\array_dot_get;
 use function Flow\Types\DSL\type_bare;
@@ -69,16 +69,17 @@ final class ArrayGet implements ScalarFunction
                 );
             }
 
-            $elements = $bare->elements() + $bare->optionalElements();
+            // '0' finds the element named int 0, exactly as it did when elements were array keys
+            $element = $bare->element(ArrayKey::coerce($segment));
 
-            if (!array_key_exists($segment, $elements)) {
+            if ($element === null) {
                 throw SchemaNotDerivableException::function(
                     'array_get',
                     'path segment "' . $segment . '" is not declared by "' . $bare->toString() . '"',
                 );
             }
 
-            $type = $elements[$segment];
+            $type = $element->type;
         }
 
         return $type;

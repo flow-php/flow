@@ -54,7 +54,7 @@ final class Same implements ScalarFunction
 
     public function eval(Row $row, FlowContext $context): bool
     {
-        // PHP identity, not SQL equality: null === null is a defined, useful answer (Spark's <=>).
+        // PHP identity, not SQL equality: null === null is a defined, useful answer
         return (
             (new Parameter($this->left))->eval($row, $context) === (new Parameter($this->right))->eval($row, $context)
         );

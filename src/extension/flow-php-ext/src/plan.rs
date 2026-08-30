@@ -1,11 +1,8 @@
 //! Decode plan built from a SCHEMA frame body (a JSON list of normalized definitions):
 //! per column a name and a recursive value `Decoder`, in schema order.
 
-use std::fmt;
-
 use ext_php_rs::exception::PhpException;
-use serde::de::{MapAccess, Visitor};
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
 use crate::ctx::Ctx;
 use crate::exception::ext_exception;
@@ -56,11 +53,20 @@ pub struct TypeJson {
     value: Option<Box<TypeJson>>,
     base: Option<Box<TypeJson>>,
     #[serde(default)]
-    elements: OrderedTypes,
-    #[serde(default)]
-    optional_elements: OrderedTypes,
+    fields: Vec<StructureElementJson>,
     #[serde(default)]
     allow_extra: bool,
+}
+
+#[derive(Deserialize)]
+pub struct StructureElementJson {
+    // ALWAYS a JSON string - PHP casts the name on normalize(). A JSON number here
+    // would fail parse_schema_json for the WHOLE schema, not just this field.
+    pub name: String,
+    #[serde(rename = "type")]
+    pub type_: TypeJson,
+    #[serde(default)]
+    pub optional: bool,
 }
 
 impl TypeJson {
@@ -80,23 +86,8 @@ impl TypeJson {
         self.base.as_deref()
     }
 
-    pub fn all_elements(&self) -> impl Iterator<Item = (&String, &TypeJson)> {
-        self.elements
-            .0
-            .iter()
-            .chain(&self.optional_elements.0)
-            .map(|(name, element)| (name, element))
-    }
-
-    pub fn required_elements(&self) -> impl Iterator<Item = (&String, &TypeJson)> {
-        self.elements.0.iter().map(|(name, element)| (name, element))
-    }
-
-    pub fn structure_optional_elements(&self) -> impl Iterator<Item = (&String, &TypeJson)> {
-        self.optional_elements
-            .0
-            .iter()
-            .map(|(name, element)| (name, element))
+    pub fn fields(&self) -> &[StructureElementJson] {
+        &self.fields
     }
 
     pub fn allow_extra(&self) -> bool {
@@ -118,43 +109,6 @@ pub fn parse_schema_json(schema_json: &[u8]) -> Result<Vec<NormalizedDefinition>
 
     serde_json::from_str(json)
         .map_err(|e| ext_exception(format!("flow_php failed to decode schema JSON: {e}")))
-}
-
-#[derive(Default)]
-struct OrderedTypes(Vec<(String, TypeJson)>);
-
-impl<'de> Deserialize<'de> for OrderedTypes {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct OrderedTypesVisitor;
-
-        impl<'de> Visitor<'de> for OrderedTypesVisitor {
-            type Value = OrderedTypes;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("a map of element names to types")
-            }
-
-            fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
-                let mut entries = Vec::with_capacity(access.size_hint().unwrap_or(0));
-
-                while let Some((key, value)) = access.next_entry::<String, TypeJson>()? {
-                    entries.push((key, value));
-                }
-
-                Ok(OrderedTypes(entries))
-            }
-
-            fn visit_seq<A: serde::de::SeqAccess<'de>>(
-                self,
-                _: A,
-            ) -> Result<Self::Value, A::Error> {
-                // an empty PHP array json_encodes as [] instead of {}
-                Ok(OrderedTypes(Vec::new()))
-            }
-        }
-
-        deserializer.deserialize_any(OrderedTypesVisitor)
-    }
 }
 
 fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
@@ -211,18 +165,19 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
                 )?),
             )
         }
-        "structure" => {
-            let mut elements = Vec::with_capacity(
-                type_json.elements.0.len() + type_json.optional_elements.0.len(),
-            );
+        "structure_v2" => {
+            if type_json.fields.is_empty() {
+                return Err(ext_exception(
+                    "flow_php read a structure type with no fields; the loaded flow_php extension and the \
+                     flow-php/etl in use disagree on the structure schema format - reinstall one to match the \
+                     other, or set the Floe engine to FloeEngine::php",
+                ));
+            }
 
-            for (name, element) in type_json
-                .elements
-                .0
-                .iter()
-                .chain(&type_json.optional_elements.0)
-            {
-                elements.push((name.clone().into_bytes(), build_decoder(element)?));
+            let mut elements = Vec::with_capacity(type_json.fields.len());
+
+            for field in &type_json.fields {
+                elements.push((field.name.clone().into_bytes(), build_decoder(&field.type_)?));
             }
 
             if type_json.allow_extra {

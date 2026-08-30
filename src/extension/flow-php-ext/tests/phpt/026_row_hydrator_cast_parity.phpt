@@ -13,7 +13,7 @@ use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
 
 use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, json_schema, xml_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional, type_positive_integer, type_non_empty_string, type_numeric_string};
+use function Flow\Types\DSL\{type_list, type_map, type_structure, structure_element, type_integer, type_string, type_optional, type_positive_integer, type_non_empty_string, type_numeric_string};
 
 enum CastSuit: string
 {
@@ -67,7 +67,7 @@ $datasets = [
             map_schema('m', type_map(type_string(), type_integer())),
             map_schema('mi', type_map(type_integer(), type_string())),
             list_schema('lo', type_list(type_optional(type_integer()))),
-            structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()], true)),
+            structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true)),
         ),
         [
             new RawRowValues([
@@ -97,8 +97,15 @@ $datasets = [
         ],
     ],
     'all_optional_st' => [
-        schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
+        schema(structure_schema('st', type_structure(['b' => structure_element('b', type_string(), optional: true)]))),
         [new RawRowValues(['st' => ['other' => 1]])],
+    ],
+    'interleaved_st' => [
+        schema(structure_schema('st', type_structure(['z' => type_integer(), 'a' => structure_element('a', type_string(), optional: true), 'b' => type_string()]))),
+        [
+            new RawRowValues(['st' => ['b' => 'x', 'z' => '5']]),
+            new RawRowValues(['st' => ['z' => 1, 'a' => 'present', 'b' => 'y']]),
+        ],
     ],
     'empty' => [schema(int_schema('id')), []],
 ];
@@ -140,6 +147,7 @@ containers       cast:yes
 exotic_fallback  cast:yes
 fill_and_metadata cast:yes
 all_optional_st  cast:yes
+interleaved_st   cast:yes
 empty            cast:yes
 schema_mutation  cast:yes
 null_schema      cast:yes

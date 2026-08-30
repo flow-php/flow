@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -111,8 +112,27 @@ final class SchemaConverterTest extends FlowTestCase
         to_seal_schema(
             schema(
                 str_schema('id'),
-                structure_schema('author', type_structure(['name' => type_string()], ['nickname' => type_string()])),
+                structure_schema('author', type_structure([
+                    'name' => type_string(),
+                    'nickname' => structure_element('nickname', type_string(), optional: true),
+                ])),
             ),
+            'index',
+        );
+    }
+
+    public function test_structure_with_an_interleaved_optional_element_throws(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Seal schema does not support structure optional elements, given: structure{nickname?: string, name: string}',
+        );
+
+        to_seal_schema(
+            schema(structure_schema('author', type_structure([
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+                'name' => type_string(),
+            ]))),
             'index',
         );
     }

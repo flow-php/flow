@@ -18,6 +18,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
@@ -114,44 +115,72 @@ final class ComparatorTest extends TestCase
         ];
         yield [
             type_structure(['a' => type_integer()]),
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
             type_structure(['a' => type_integer()]),
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
             true,
         ];
         yield [
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
-            type_structure(['a' => type_integer()], ['b' => type_integer()]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_integer(), optional: true)]),
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], ['b' => type_string()]),
-            type_structure(['a' => type_integer()], ['c' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
+            type_structure(['a' => type_integer(), 'c' => structure_element('c', type_string(), optional: true)]),
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], [], false),
-            type_structure(['a' => type_integer()], [], true),
+            type_structure(['a' => type_integer()], false),
+            type_structure(['a' => type_integer()], true),
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], [], true),
-            type_structure(['a' => type_integer()], [], true),
+            type_structure(['a' => type_integer()], true),
+            type_structure(['a' => type_integer()], true),
             true,
         ];
         yield [
-            type_structure(['a' => type_integer()], ['b' => type_string()], true),
-            type_structure(['a' => type_integer()], ['b' => type_string()], true),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true),
             true,
         ];
+        yield 'same fields, different order' => [
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+            type_structure(['b' => type_string(), 'a' => type_integer()]),
+            false,
+        ];
+        yield 'same fields, different order, nested in list' => [
+            type_list(type_structure(['a' => type_integer(), 'b' => type_string()])),
+            type_list(type_structure(['b' => type_string(), 'a' => type_integer()])),
+            false,
+        ];
+        yield 'interleaved optional equals required-first only when order matches' => [
+            type_structure(['z' => type_integer(), 'a' => structure_element('a', type_integer(), optional: true)]),
+            type_structure(['a' => structure_element('a', type_integer(), optional: true), 'z' => type_integer()]),
+            false,
+        ];
+    }
+
+    public function test_comparable_follows_declared_field_order(): void
+    {
+        static::assertFalse((new Comparator())->comparable(
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+            type_structure(['b' => type_string(), 'a' => type_integer()]),
+        ));
+        static::assertTrue((new Comparator())->comparable(
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+            type_structure(['a' => type_integer(), 'b' => type_string()]),
+        ));
+        static::assertTrue((new Comparator())->comparable(type_integer(), type_string()));
     }
 
     public static function type_not_comparable_data_provider(): Generator

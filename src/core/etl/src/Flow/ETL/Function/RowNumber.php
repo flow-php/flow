@@ -46,8 +46,7 @@ final class RowNumber implements WindowFunction
     }
 
     /**
-     * NOT NULL - every row of a partition has a row number (Spark RowNumberLike/RankLike nullable=false;
-     * DuckDB BIGINT).
+     * NOT NULL - every row of a partition has a row number
      *
      * @return Type<mixed>
      */

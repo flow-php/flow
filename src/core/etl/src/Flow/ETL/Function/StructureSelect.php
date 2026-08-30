@@ -13,13 +13,14 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\Types\Type;
+use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\StructureType;
 
 use function array_key_exists;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_structure;
 
 final readonly class StructureSelect implements ScalarFunction
 {
@@ -74,14 +75,17 @@ final readonly class StructureSelect implements ScalarFunction
             );
         }
 
-        $all = $structure->elements() + $structure->optionalElements();
         $elements = [];
 
         foreach ($this->refs as $selected) {
-            $elements[$selected->name()] = $all[$selected->to()] ?? type_null();
+            $selectedElement = $structure->element(ArrayKey::coerce($selected->to()));
+
+            $elements[] = $selectedElement === null
+                ? structure_element($selected->name(), type_null())
+                : structure_element($selected->name(), $selectedElement->type, $selectedElement->optional);
         }
 
-        return type_optional(type_structure($elements));
+        return type_optional(new StructureType($elements));
     }
 
     /**

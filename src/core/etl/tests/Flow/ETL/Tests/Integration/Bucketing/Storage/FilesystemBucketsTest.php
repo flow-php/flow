@@ -9,6 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\FloeWriter;
 
 use function array_map;
 use function Flow\ETL\DSL\float_entry;
@@ -16,7 +17,11 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\structure_entry;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class FilesystemBucketsTest extends FlowIntegrationTestCase
 {
@@ -214,5 +219,74 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         );
 
         $this->fs()->rm($cacheDir);
+    }
+
+    public function test_append_with_reordered_structure_keys_conforms_and_keeps_every_row(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_struct_order');
+        $this->fs()->rm($cacheDir);
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->append(
+            'bucket',
+            rows(row(int_entry('id', 1), structure_entry('s', ['a' => 1, 'b' => 'x'], type_structure([
+                'a' => type_integer(),
+                'b' => type_string(),
+            ])))),
+        );
+        $storage->append(
+            'bucket',
+            rows(row(int_entry('id', 2), structure_entry('s', ['b' => 'y', 'a' => 2], type_structure([
+                'b' => type_string(),
+                'a' => type_integer(),
+            ])))),
+        );
+
+        $read = BucketsStorageContext::rows($storage->get('bucket'));
+
+        static::assertCount(2, $read);
+        static::assertSame(['a' => 1, 'b' => 'x'], $read[0]->get('s')->value());
+        static::assertSame(['a' => 2, 'b' => 'y'], $read[1]->get('s')->value());
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_append_with_reordered_columns_conforms_and_keeps_every_row(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_append_col_order');
+        $this->fs()->rm($cacheDir);
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->append('bucket', rows(row(int_entry('id', 1), str_entry('name', 'x'))));
+        $storage->append('bucket', rows(row(str_entry('name', 'y'), int_entry('id', 2))));
+
+        $read = BucketsStorageContext::rows($storage->get('bucket'));
+
+        static::assertCount(2, $read);
+        static::assertSame([['id' => 1, 'name' => 'x'], ['id' => 2, 'name' => 'y']], [
+            $read[0]->toArray(),
+            $read[1]->toArray(),
+        ]);
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_append_resume_with_a_genuinely_different_column_set_still_throws(): void
+    {
+        $path = $this->cacheDir->suffix('resume-different-columns.floe');
+
+        $writer = new FloeWriter(
+            $this->fs(),
+            ($first = rows(row(int_entry('id', 1), str_entry('name', 'x'))))->schema(),
+        );
+        $writer->create($path);
+        $writer->write($first);
+        $writer->close();
+
+        $writer = new FloeWriter($this->fs(), rows(row(int_entry('id', 2), str_entry('city', 'y')))->schema());
+
+        $this->expectException(IncompatibleSchemaException::class);
+
+        $writer->append($path);
     }
 }

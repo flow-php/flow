@@ -15,6 +15,7 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ListEntryTest extends FlowTestCase
 {
@@ -31,6 +32,19 @@ final class ListEntryTest extends FlowTestCase
             list_schema('strings', type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->definition(),
         );
+    }
+
+    public function test_is_equal_follows_structure_field_order_in_the_element_type(): void
+    {
+        static::assertFalse(list_entry(
+            'items',
+            [['a' => 1, 'b' => 'x']],
+            type_list(type_structure(['a' => type_integer(), 'b' => type_string()])),
+        )->isEqual(list_entry(
+            'items',
+            [['b' => 'x', 'a' => 1]],
+            type_list(type_structure(['b' => type_string(), 'a' => type_integer()])),
+        )));
     }
 
     public function test_is_equal(): void

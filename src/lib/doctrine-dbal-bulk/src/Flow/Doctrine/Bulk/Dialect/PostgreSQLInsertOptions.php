@@ -6,6 +6,7 @@ namespace Flow\Doctrine\Bulk\Dialect;
 
 use Flow\Doctrine\Bulk\InsertOptions;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
@@ -28,12 +29,16 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
 
     public static function fromArray(array $options): InsertOptions
     {
-        $options = type_structure([], [
-            'skip_conflicts' => type_optional(type_boolean()),
-            'constraint' => type_optional(type_string()),
-            'conflict_columns' => type_list(type_string()),
-            'update_columns' => type_list(type_string()),
-            'preserve_existing_values' => type_optional(type_boolean()),
+        $options = type_structure([
+            'skip_conflicts' => structure_element('skip_conflicts', type_optional(type_boolean()), optional: true),
+            'constraint' => structure_element('constraint', type_optional(type_string()), optional: true),
+            'conflict_columns' => structure_element('conflict_columns', type_list(type_string()), optional: true),
+            'update_columns' => structure_element('update_columns', type_list(type_string()), optional: true),
+            'preserve_existing_values' => structure_element(
+                'preserve_existing_values',
+                type_optional(type_boolean()),
+                optional: true,
+            ),
         ])->assert($options);
 
         return new self(

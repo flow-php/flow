@@ -16,6 +16,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
+use Flow\Types\Type\FieldOrderConformer;
 
 use function array_key_exists;
 use function array_keys;
@@ -25,6 +26,7 @@ use function array_splice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_array;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\schema;
 use function implode;
 use function is_array;
@@ -165,6 +167,44 @@ final readonly class Schema implements Countable
     public function addMetadata(string $definition, string $name, int|string|bool|float|array $value): self
     {
         return $this->replace($definition, $this->get($definition)->addMetadata($name, $value));
+    }
+
+    /**
+     * Columns present in both schemas are emitted in $authority's order with each definition's type
+     * reordered through FieldOrderConformer; columns only in $this are appended unchanged. Nothing
+     * is added, nothing is dropped, no type is widened.
+     */
+    public function conformOrderTo(self $authority): self
+    {
+        $conformer = new FieldOrderConformer();
+        $definitions = [];
+
+        foreach ($authority->definitions() as $authorityDefinition) {
+            $definition = $this->findDefinition($authorityDefinition->entry());
+
+            if ($definition === null) {
+                continue;
+            }
+
+            $conformed = $conformer->conform($definition->type(), $authorityDefinition->type());
+
+            $definitions[] = $conformed === $definition->type()
+                ? $definition
+                : definition_from_type(
+                    $definition->entry(),
+                    $conformed,
+                    $definition->isNullable(),
+                    $definition->metadata(),
+                );
+        }
+
+        foreach ($this->definitions as $definition) {
+            if ($authority->findDefinition($definition->entry()) === null) {
+                $definitions[] = $definition;
+            }
+        }
+
+        return new self(...$definitions);
     }
 
     public function count(): int

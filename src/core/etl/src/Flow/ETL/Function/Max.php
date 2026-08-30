@@ -85,7 +85,6 @@ final class Max implements AggregatingFunction
 
     /**
      * Exactly the argument type, nullable - an all-null or ref-less group leaves no maximum
-     * (DuckDB first_last_any.cpp: return_type = arguments[0]->return_type).
      *
      * @return Type<mixed>
      */

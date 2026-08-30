@@ -18,9 +18,8 @@ final class ResolvedReference implements Reference
     use ScalarFunctionChain;
 
     /**
-     * The Type is a constructor parameter so an untyped resolved node is unconstructable -
-     * Spark's AttributeReference. Nullability arrives fused into the Type as a top-level
-     * OptionalType, wrapped by UnresolvedReference::resolve().
+     * The Type is a constructor parameter so an untyped resolved node is unconstructable.
+     * Nullability arrives fused into the Type as a top-level OptionalType, wrapped by UnresolvedReference::resolve().
      *
      * @param Type<mixed> $type
      */

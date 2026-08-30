@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -45,8 +46,7 @@ final class OpenAPIConverterTest extends TestCase
                 'address',
                 type_structure([
                     'street' => type_string(),
-                ], [
-                    'city' => type_string(),
+                    'city' => structure_element('city', type_string(), optional: true),
                 ]),
                 false,
             ),

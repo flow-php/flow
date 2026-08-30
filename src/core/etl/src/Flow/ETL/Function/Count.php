@@ -121,7 +121,7 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
     }
 
     /**
-     * NOT NULL - an empty group counts to 0, never to null (DuckDB's count() BIGINT, no ReturnNull branch).
+     * NOT NULL - an empty group counts to 0, never to null.
      *
      * @return Type<mixed>
      */

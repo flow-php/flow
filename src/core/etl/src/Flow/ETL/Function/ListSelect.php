@@ -13,16 +13,17 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\Types\Type;
+use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 
 use function array_key_exists;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_structure;
 use function is_array;
 
 final readonly class ListSelect implements ScalarFunction
@@ -44,8 +45,6 @@ final readonly class ListSelect implements ScalarFunction
      */
     public function children(): array
     {
-        // The selected refs index INTO the element, never the row schema - returns() reads them as
-        // names, so the outer resolver must not touch them (the Exists::$ref exclusion, one level down).
         return [$this->ref];
     }
 
@@ -82,16 +81,22 @@ final readonly class ListSelect implements ScalarFunction
         $elements = [];
 
         foreach ($this->refs as $selected) {
-            $elements[$selected->name()] = match (true) {
-                $element instanceof StructureType => (
-                    $element->elements() + $element->optionalElements()
-                )[$selected->to()] ?? type_null(),
-                $element instanceof MapType => type_optional($element->value()),
-                default => type_null(),
-            };
+            if ($element instanceof StructureType) {
+                $selectedElement = $element->element(ArrayKey::coerce($selected->to()));
+
+                $elements[] = $selectedElement === null
+                    ? structure_element($selected->name(), type_null())
+                    : structure_element($selected->name(), $selectedElement->type, $selectedElement->optional);
+
+                continue;
+            }
+
+            $elements[] = $element instanceof MapType
+                ? structure_element($selected->name(), type_optional($element->value()))
+                : structure_element($selected->name(), type_null());
         }
 
-        return type_optional(type_list(type_structure($elements)));
+        return type_optional(type_list(new StructureType($elements)));
     }
 
     /**

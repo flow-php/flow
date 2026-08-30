@@ -16,6 +16,10 @@ A schema consists of entry definitions that specify:
 - **Nullable**: Whether NULL values are permitted
 - **Metadata**: Key-value pairs for additional context
 
+Structure field order is part of a structure type's identity: `structure{a, b}` and `structure{b, a}`
+are different types, so `Schema::isSame()` and `Definition::isSame()` distinguish them. Value-level
+comparisons (`Row::isEqual()`, `Rows::unique()`) stay field-order-insensitive.
+
 ## Arrays in a Schema
 
 `type_array()` declares a `json` column. The data layer has no array type - parquet, Spark and Floe all express an

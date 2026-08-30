@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use ArrayIterator;
 use BackedEnum;
 use Countable;
 use DateInterval;
@@ -37,9 +36,9 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
-use MultipleIterator;
 use Stringable;
 
+use function array_values;
 use function count;
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\type_string;
@@ -107,11 +106,15 @@ final class XMLEncoder implements Encoder
      */
     private function normalize(string $name, Type $type, mixed $value): XMLNode|XMLAttribute
     {
-        if ($type instanceof StructureType && count($type->optionalElements())) {
-            throw new RuntimeException(sprintf(
-                'XML encoder does not support structure optional elements, given: %s',
-                $type->toString(),
-            ));
+        if ($type instanceof StructureType) {
+            foreach ($type->elements() as $element) {
+                if ($element->optional) {
+                    throw new RuntimeException(sprintf(
+                        'XML encoder does not support structure optional elements, given: %s',
+                        $type->toString(),
+                    ));
+                }
+            }
         }
 
         if (str_starts_with($name, $this->attributePrefix)) {
@@ -163,24 +166,22 @@ final class XMLEncoder implements Encoder
         if ($type instanceof StructureType) {
             $structureNode = XMLNode::nestedNode($name);
 
-            if (!count($type->elements())) {
-                return $structureNode;
+            $values = is_array($value) ? array_values($value) : [];
+
+            if (count($values) > count($type->elements())) {
+                throw new RuntimeException(sprintf(
+                    'XML encoder received %d values for structure "%s" which declares %d elements - extra values would be silently lost',
+                    count($values),
+                    $type->toString(),
+                    count($type->elements()),
+                ));
             }
 
-            $structureIterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
-            $structureIterator->attachIterator(new ArrayIterator($type->elements()), 'structure_element');
-            $structureIterator->attachIterator(new ArrayIterator(is_array($value) ? $value : []), 'value_element');
-
-            foreach ($structureIterator as $keys => $element) {
-                /** @var Type<mixed> $structureElementType */
-                $structureElementType = $element['structure_element'];
-                // @mago-ignore analysis:mixed-assignment
-                $structureValue = $element['value_element'];
-
+            foreach ($type->elements() as $position => $element) {
                 $structureNode = $structureNode->append($this->normalize(
-                    type_string()->assert($keys['structure_element']),
-                    $structureElementType,
-                    $structureValue,
+                    (string) $element->name,
+                    $element->type,
+                    $values[$position] ?? null,
                 ));
             }
 

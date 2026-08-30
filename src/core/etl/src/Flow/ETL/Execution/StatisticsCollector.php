@@ -47,9 +47,8 @@ final class StatisticsCollector
     ) {
         // @mago-ignore analysis:invalid-property-assignment-value
         $this->analyze = match (true) {
-            // @mago-ignore analysis:redundant-comparison,unreachable-match-arm
             $analyze === true => new Analyze(),
-            // @mago-ignore analysis:impossible-type-comparison,redundant-comparison,redundant-logical-operation
+            // @mago-ignore analysis:impossible-type-comparison
             $analyze === false || $analyze === null => null,
             default => $analyze,
         };

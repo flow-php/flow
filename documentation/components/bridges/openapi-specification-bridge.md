@@ -259,6 +259,9 @@ Here are some commonly used OpenAPI formats you can specify with `OpenAPIMetadat
 
 ### Usage Example
 
+A structure's `properties` object preserves the structure type's declared field order; an element
+declared with `structure_element(..., optional: true)` emits `nullable: true` in its property.
+
 ```php
 <?php
 
