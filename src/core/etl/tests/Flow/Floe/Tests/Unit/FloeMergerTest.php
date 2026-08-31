@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeMerger;
@@ -16,7 +14,6 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\UnsizedFilesystem;
 use PHPUnit\Framework\TestCase;
 
-use function array_map;
 use function chr;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -272,120 +269,6 @@ final class FloeMergerTest extends TestCase
         }
 
         static::assertSame([4], $read);
-    }
-
-    public function test_differing_partition_combinations_are_preserved(): void
-    {
-        $fs = memory_filesystem();
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://pl.floe'),
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('c')),
-                [row(['id' => 1, 'c' => 'PL'])],
-                [new Partition('c', 'PL')],
-            ),
-        );
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://us.floe'),
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('c')),
-                [row(['id' => 2, 'c' => 'US'])],
-                [new Partition('c', 'US')],
-            ),
-        );
-
-        (new FloeMerger($fs))->merge([path('memory://pl.floe'), path('memory://us.floe')], path('memory://out.floe'));
-
-        $file = (new FloeReader($fs))->read(path('memory://out.floe'));
-
-        static::assertSame([['c' => 'PL'], ['c' => 'US']], $file->footer()->partitions);
-        static::assertSame(0, $file->footer()->sections[0]->partitionsId);
-        static::assertSame(1, $file->footer()->sections[1]->partitionsId);
-
-        $combos = [];
-
-        foreach ($file->rows() as $batch) {
-            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-        }
-
-        static::assertSame([['PL'], ['US']], $combos);
-    }
-
-    public function test_unpartitioned_source_after_partitioned_resets_the_reader(): void
-    {
-        $fs = memory_filesystem();
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://pl.floe'),
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('c')),
-                [row(['id' => 1, 'c' => 'PL'])],
-                [new Partition('c', 'PL')],
-            ),
-        );
-        // same schema {id, c} as pl, but written unpartitioned - so the merge exercises the
-        // partition reset (partitioned -> unpartitioned) without a schema incompatibility
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://plain.floe'),
-            rows(schema(int_schema('id'), str_schema('c')), row(['id' => 2, 'c' => 'XX'])),
-        );
-
-        (new FloeMerger($fs))->merge([
-            path('memory://pl.floe'),
-            path('memory://plain.floe'),
-        ], path('memory://splice.floe'));
-        (new FloeMerger($fs))->merge(
-            [path('memory://pl.floe'), path('memory://plain.floe')],
-            path('memory://compact.floe'),
-            compact: true,
-        );
-
-        $combos = [];
-
-        foreach ((new FloeReader($fs))
-            ->read(path('memory://splice.floe'))
-            ->rows() as $batch) {
-            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-        }
-
-        static::assertSame([['PL'], []], $combos);
-        static::assertEquals(
-            FloeStreamReaderContext::readAll($fs, path('memory://compact.floe')),
-            FloeStreamReaderContext::readAll($fs, path('memory://splice.floe')),
-        );
-    }
-
-    public function test_partitioned_sources_merge_and_preserve_partition(): void
-    {
-        $fs = memory_filesystem();
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://a.floe'),
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('c')),
-                [row(['id' => 1, 'c' => 'PL'])],
-                [new Partition('c', 'PL')],
-            ),
-        );
-        FloeStreamReaderContext::write(
-            $fs,
-            path('memory://b.floe'),
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('c')),
-                [row(['id' => 2, 'c' => 'PL'])],
-                [new Partition('c', 'PL')],
-            ),
-        );
-
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
-
-        $file = (new FloeReader($fs))->read(path('memory://out.floe'));
-
-        static::assertSame([['c' => 'PL']], $file->footer()->partitions);
-        static::assertSame(2, $file->totalRows());
     }
 
     public function test_single_source_is_a_copy(): void

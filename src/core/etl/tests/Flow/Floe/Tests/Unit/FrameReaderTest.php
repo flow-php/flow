@@ -61,15 +61,13 @@ final class FrameReaderTest extends TestCase
     {
         $bytes =
             Format::header(0x00)
-            . Format::frame(Format::FRAME_PARTITIONS, 'partitions')
             . Format::frame(Format::FRAME_ROW, 'row-1')
             . Format::frame(Format::FRAME_FOOTER, 'footer');
 
         static::assertSame(
             [
-                [Format::FRAME_PARTITIONS, 'partitions'],
-                [Format::FRAME_ROW,        'row-1'],
-                [Format::FRAME_FOOTER,     'footer'],
+                [Format::FRAME_ROW,    'row-1'],
+                [Format::FRAME_FOOTER, 'footer'],
             ],
             iterator_to_array(FrameReaderMother::overBytes($bytes)->frames()),
         );

@@ -7,7 +7,6 @@ namespace Flow\Floe;
 use Flow\Filesystem\DestinationStream;
 
 use function chr;
-use function count;
 use function pack;
 use function strlen;
 
@@ -35,17 +34,6 @@ final class FrameWriter
     public function row(string $body): void
     {
         $this->buffer .= chr(Format::FRAME_ROW) . pack('V', strlen($body)) . $body;
-        $this->position += Format::FRAME_HEADER_LENGTH + strlen($body);
-        $this->flushIfFull();
-    }
-
-    /**
-     * @param array<string, string> $combo
-     */
-    public function partitions(array $combo): void
-    {
-        $body = self::partitionsBody($combo);
-        $this->buffer .= Format::frame(Format::FRAME_PARTITIONS, $body);
         $this->position += Format::FRAME_HEADER_LENGTH + strlen($body);
         $this->flushIfFull();
     }
@@ -83,20 +71,6 @@ final class FrameWriter
     {
         $this->flush();
         $this->stream->close();
-    }
-
-    /**
-     * @param array<string, string> $combo
-     */
-    private static function partitionsBody(array $combo): string
-    {
-        $body = pack('V', count($combo));
-
-        foreach ($combo as $name => $value) {
-            $body .= pack('V', strlen($name)) . $name . pack('V', strlen($value)) . $value;
-        }
-
-        return $body;
     }
 
     private function flushIfFull(): void

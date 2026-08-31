@@ -34,7 +34,6 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         return [
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'heterogeneous' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
             'empty' => [rows(schema())],
         ];
     }

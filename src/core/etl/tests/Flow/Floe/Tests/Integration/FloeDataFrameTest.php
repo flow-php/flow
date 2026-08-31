@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -259,8 +260,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['id' => 2, 'country' => 'US'],
                 ['id' => 3, 'country' => 'PL'],
             ]))
-            ->partitionBy('country')
-            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite()))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite())->partitionBy(partition_by('country')))
             ->run();
 
         static::assertFileExists($dir . '/country=PL/data.floe');

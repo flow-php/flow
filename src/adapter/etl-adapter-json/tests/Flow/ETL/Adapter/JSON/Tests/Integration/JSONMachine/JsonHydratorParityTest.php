@@ -62,8 +62,8 @@ final class JsonHydratorParityTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['group' => 1, 'id' => 1, 'value' => 'a'],
-                ['group' => 2, 'id' => 2, 'value' => 'b'],
+                ['id' => 1, 'value' => 'a', 'group' => 1],
+                ['id' => 2, 'value' => 'b', 'group' => 2],
             ],
             $actual,
         );

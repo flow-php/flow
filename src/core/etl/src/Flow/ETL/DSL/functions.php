@@ -21,6 +21,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
 use Flow\ETL\Config\Join\HashJoinBuilder;
+use Flow\ETL\Config\Repartition\HashRepartitionBuilder;
 use Flow\ETL\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Config\Sort\MemorySortBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
@@ -43,6 +44,7 @@ use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
+use Flow\ETL\Extractor\PartitionTypes;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
@@ -137,6 +139,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\ArrayLoader;
 use Flow\ETL\Loader\BranchingLoader;
 use Flow\ETL\Loader\MemoryLoader;
+use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\RetryLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
@@ -597,12 +600,6 @@ function rows(Schema $schema, Row ...$row): Rows
  * @param array<Row> $rows
  * @param array<Partition|string>|Partitions $partitions
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows_partitioned(Schema $schema, array $rows, array|Partitions $partitions): Rows
-{
-    return Rows::partitioned($schema, $rows, $partitions);
-}
-
 /**
  * An alias for `ref`.
  */
@@ -1180,18 +1177,11 @@ function array_to_row(
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition>|Partitions $partitions
  * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(
-    array $data,
-    Hydrator $hydrator = new AdaptiveRowHydrator(),
-    array|Partitions $partitions = [],
-    ?Schema $schema = null,
-): Rows {
-    $partitions = is_array($partitions) ? new Partitions(...$partitions) : $partitions;
-
+function array_to_rows(array $data, Hydrator $hydrator = new AdaptiveRowHydrator(), ?Schema $schema = null): Rows
+{
     $isRows = true;
 
     // @mago-ignore analysis:mixed-assignment
@@ -1220,18 +1210,10 @@ function array_to_rows(
             $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
         }
 
-        foreach ($partitions as $partition) {
-            if (!array_key_exists($partition->name, $map)) {
-                $map[$partition->name] = $partition->value;
-            }
-        }
-
         $maps[] = new RawRowValues($map);
     }
 
-    $hydrated = $hydrator->cast($maps, $schema);
-
-    return Rows::partitioned($hydrated->schema(), $hydrated->all(), $partitions);
+    return $hydrator->cast($maps, $schema);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]
@@ -1781,6 +1763,28 @@ function hash_join(): HashJoinBuilder
 function hash_group_by(): HashGroupByBuilder
 {
     return new HashGroupByBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function hash_repartition(): HashRepartitionBuilder
+{
+    return new HashRepartitionBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
+function partition_by(string|Reference $entry, string|Reference ...$entries): Partitioning
+{
+    return Partitioning::by($entry, ...$entries);
+}
+
+/**
+ * @param Type<mixed> ...$types partition column name => type, passed as named arguments
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+function partition_types(Type ...$types): PartitionTypes
+{
+    /** @var array<string, Type<mixed>> $types */
+    return new PartitionTypes($types);
 }
 
 /**

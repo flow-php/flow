@@ -16,32 +16,26 @@ use Flow\ETL\Join\HashJoin\Joiner;
 use Flow\ETL\Join\HashJoin\RowMerger;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
-use Flow\ETL\Row\CartesianProduct;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 use Flow\ETL\Serializer\DomValueCodec;
 use Flow\ETL\Sort\ValuesSorter;
-use Flow\Filesystem\Partition;
-use Flow\Filesystem\Partitions;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use Iterator;
 use IteratorAggregate;
 
-use function array_filter;
 use function array_key_exists;
 use function array_map;
 use function array_merge;
 use function array_reduce;
 use function array_reverse;
 use function array_slice;
-use function array_unique;
 use function array_values;
 use function count;
 use function Flow\Types\DSL\type_integer;
@@ -58,8 +52,6 @@ use function usort;
  */
 final class Rows implements ArrayAccess, Countable, IteratorAggregate
 {
-    private Partitions $partitions;
-
     /**
      * @var array<int, Row>
      */
@@ -70,50 +62,10 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         Row ...$rows,
     ) {
         $this->rows = array_values($rows);
-        $this->partitions = new Partitions();
     }
 
     /**
-     * @param array<int, Row>|array<Row> $rows
-     * @param array<Partition>|array<string, string>|Partitions $partitions
-     */
-    public static function partitioned(Schema $schema, array $rows, array|Partitions $partitions): self
-    {
-        if (!count($rows)) {
-            return new self($schema);
-        }
-
-        if (is_array($partitions)) {
-            $allArePartitions =
-                count($partitions) > 0
-                && array_reduce(
-                    $partitions,
-                    static fn(bool $carry, $item) => $carry && $item instanceof Partition,
-                    true,
-                );
-
-            if ($allArePartitions) {
-                // All elements are Partition objects, safe to spread
-                $partitions = new Partitions(...array_filter(
-                    $partitions,
-                    static fn($item) => $item instanceof Partition,
-                ));
-            } else {
-                // Convert associative array to Partitions
-                /** @var array<string, string> $typedPartitions */
-                $typedPartitions = $partitions;
-                $partitions = new Partitions(...Partition::fromArray($typedPartitions));
-            }
-        }
-
-        $rows = new self($schema, ...$rows);
-        $rows->partitions = $partitions;
-
-        return $rows;
-    }
-
-    /**
-     * @return array{schema: Schema, partitions: Partitions, rows: list<array<string, mixed>>}
+     * @return array{schema: Schema, rows: list<array<string, mixed>>}
      */
     public function __serialize(): array
     {
@@ -140,16 +92,15 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $values;
         }
 
-        return ['schema' => $this->schema, 'partitions' => $this->partitions, 'rows' => $rows];
+        return ['schema' => $this->schema, 'rows' => $rows];
     }
 
     /**
-     * @param array{schema: Schema, partitions: Partitions, rows: list<array<string, mixed>>} $data
+     * @param array{schema: Schema, rows: list<array<string, mixed>>} $data
      */
     public function __unserialize(array $data): void
     {
         $this->schema = $data['schema'];
-        $this->partitions = $data['partitions'];
 
         $codec = new DomValueCodec();
         $domColumns = [];
@@ -198,7 +149,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         foreach (array_chunk($this->rows, $size) as $chunk) {
             $rows = new self($this->schema);
             $rows->rows = $chunk;
-            $rows->partitions = $this->partitions;
 
             yield $rows;
         }
@@ -230,7 +180,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return self::partitioned($this->schema, $differentRows, $this->partitions);
+        return new self($this->schema, ...$differentRows);
     }
 
     public function diffRight(self $rows): self
@@ -254,7 +204,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return self::partitioned($this->schema, $differentRows, $this->partitions);
+        return new self($this->schema, ...$differentRows);
     }
 
     public function drop(int $size): self
@@ -263,22 +213,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return $this;
         }
 
-        return self::partitioned($this->schema, array_slice($this->rows, $size), $this->partitions);
-    }
-
-    public function dropPartitions(bool $dropPartitionColumns = false): self
-    {
-        if ($dropPartitionColumns) {
-            return new self(
-                $this->schema->gracefulRemove(...array_map(
-                    static fn(Partition $partition): string => $partition->name,
-                    $this->partitions->toArray(),
-                )),
-                ...$this->rows,
-            );
-        }
-
-        return new self($this->schema, ...$this->rows);
+        return new self($this->schema, ...array_slice($this->rows, $size));
     }
 
     public function dropRight(int $size): self
@@ -287,7 +222,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return $this;
         }
 
-        return self::partitioned($this->schema, array_slice($this->rows, 0, -$size), $this->partitions);
+        return new self($this->schema, ...array_slice($this->rows, 0, -$size));
     }
 
     /**
@@ -318,7 +253,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return self::partitioned($this->schema, $results, $this->partitions);
+        return new self($this->schema, ...$results);
     }
 
     public function find(callable $callable): self
@@ -335,7 +270,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return self::partitioned($this->schema, $rows, $this->partitions);
+        return new self($this->schema, ...$rows);
     }
 
     public function findOne(callable $callable): ?Row
@@ -401,15 +336,10 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         if ($count === 0) {
-            return self::partitioned($this->schema, [], $this->partitions);
+            return new self($this->schema);
         }
 
-        return self::partitioned($this->schema, array_slice($this->rows, 0, $count), $this->partitions);
-    }
-
-    public function isPartitioned(): bool
-    {
-        return count($this->partitions) > 0;
+        return new self($this->schema, ...array_slice($this->rows, 0, $count));
     }
 
     public function joinCross(self $right, string $joinPrefix = 'joined_'): self
@@ -523,7 +453,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $callable($row);
         }
 
-        return self::partitioned($schema, $rows, $this->partitions);
+        return new self($schema, ...$rows);
     }
 
     public function merge(self $rows): self
@@ -553,13 +483,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
                 $describe($this->schema),
                 $describe($rows->schema()),
             ));
-        }
-
-        if ($this->partitions->id() === $rows->partitions()->id()) {
-            $mergedRows = new self($this->schema, ...$this->rows, ...$rows->rows);
-            $mergedRows->partitions = $this->partitions;
-
-            return $mergedRows;
         }
 
         return new self($this->schema, ...$this->rows, ...$rows->rows);
@@ -617,64 +540,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      *
      * @return array<Rows>
      */
-    public function partitionBy(string|Reference $reference, string|Reference ...$references): array
-    {
-        $refs = References::init($reference, ...$references);
-
-        /** @var array<string, array<mixed>> $partitions */
-        $partitions = [];
-
-        foreach ($refs as $ref) {
-            foreach ($this->rows as $row) {
-                $partitions[$ref->name()][] = Partition::fromValue(
-                    $ref->name(),
-                    $this->schema->get($ref)->type(),
-                    $row->get($ref),
-                );
-            }
-
-            $partitions[$ref->name()] = array_values(array_unique($partitions[$ref->name()]));
-        }
-
-        /** @var array<Rows> $partitionedRows */
-        $partitionedRows = [];
-
-        /**
-         * @var array<string, mixed> $partitionsData
-         */
-        foreach ((new CartesianProduct())($partitions) as $partitionsData) {
-            $parts = Partition::fromArray($partitionsData);
-            $rows = [];
-
-            foreach ($this->rows as $row) {
-                foreach ($parts as $partition) {
-                    if (
-                        Partition::fromValue(
-                            $partition->name,
-                            $this->schema->get($partition->name)->type(),
-                            $row->get($partition->name),
-                        ) !== $partition->value
-                    ) {
-                        continue 2;
-                    }
-                }
-
-                $rows[] = $row;
-            }
-
-            if ($rows) {
-                $partitionedRows[] = self::partitioned($this->schema, $rows, $parts);
-            }
-        }
-
-        return $partitionedRows;
-    }
-
-    public function partitions(): Partitions
-    {
-        return $this->partitions;
-    }
-
     /**
      * @param callable(mixed, Row) : mixed $callable
      * @param null|mixed $input
@@ -713,12 +578,12 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         $rows = iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 
-        return self::partitioned($this->schema, $rows, $this->partitions);
+        return new self($this->schema, ...$rows);
     }
 
     public function reverse(): self
     {
-        return self::partitioned($this->schema, array_reverse($this->rows), $this->partitions);
+        return new self($this->schema, ...array_reverse($this->rows));
     }
 
     public function schema(): Schema
@@ -734,7 +599,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         $rows = $this->rows;
         usort($rows, $callback);
 
-        return self::partitioned($this->schema, $rows, $this->partitions);
+        return new self($this->schema, ...$rows);
     }
 
     /**
@@ -754,7 +619,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $this->rows[$index];
         }
 
-        return self::partitioned($this->schema, $rows, $this->partitions);
+        return new self($this->schema, ...$rows);
     }
 
     /**
@@ -788,7 +653,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $this->rows[$index];
         }
 
-        return self::partitioned($this->schema, $rows, $this->partitions);
+        return new self($this->schema, ...$rows);
     }
 
     public function sortEntries(SortingStrategy $strategy = new AlphabeticalStrategy()): self
@@ -810,30 +675,26 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         if ($count === 0) {
-            return self::partitioned($this->schema, [], $this->partitions);
+            return new self($this->schema);
         }
 
         $rowsCount = count($this->rows);
 
         if ($count >= $rowsCount) {
-            return self::partitioned($this->schema, $this->rows, $this->partitions);
+            return new self($this->schema, ...$this->rows);
         }
 
-        return self::partitioned($this->schema, array_slice($this->rows, -$count), $this->partitions);
+        return new self($this->schema, ...array_slice($this->rows, -$count));
     }
 
     public function take(int $size): self
     {
-        return self::partitioned($this->schema, array_slice($this->rows, 0, $size), $this->partitions);
+        return new self($this->schema, ...array_slice($this->rows, 0, $size));
     }
 
     public function takeRight(int $size): self
     {
-        return self::partitioned(
-            $this->schema,
-            array_reverse(array_slice($this->rows, -$size, $size)),
-            $this->partitions,
-        );
+        return new self($this->schema, ...array_reverse(array_slice($this->rows, -$size, $size)));
     }
 
     /**
@@ -873,6 +734,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return self::partitioned($this->schema, $uniqueRows, $this->partitions);
+        return new self($this->schema, ...$uniqueRows);
     }
 }

@@ -39,7 +39,6 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         return [
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'heterogeneous' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
             'empty' => [rows(schema())],
         ];
     }
@@ -132,7 +131,6 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $cases = [
             'plain' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
             'multi-write' => [
                 rows(schema(int_schema('id'), str_schema('email')), row(['id' => 1, 'email' => 'a'])),
                 rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x'])),

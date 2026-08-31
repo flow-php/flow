@@ -40,7 +40,6 @@ use function Flow\Types\DSL\type_xml;
 
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
 use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\RustFloeEncoderNative;
 
@@ -56,7 +55,7 @@ $datasets = [
     'containers' => rows(schema(list_schema('ints', type_list(type_integer())), map_schema('m', type_map(type_string(), type_float())), map_schema('mi', type_map(type_integer(), type_string())), structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])), structure_schema('st_interleaved', type_structure(['z' => type_integer(), 'a' => structure_element('a', type_string(), optional: true), 'b' => type_string()])), list_schema('opt', type_list(type_optional(type_integer())))), row(['ints' => [1, 2, 3], 'm' => ['cpu' => 1.5], 'mi' => [7 => 'a', -1 => 'b'], 'st' => ['a' => 1], 'st_interleaved' => ['z' => 1, 'b' => 'x'], 'opt' => [1, null]])),
     'enum_json_xml' => rows(schema(enum_schema('en', PhptColor::class), json_schema('j'), xml_schema('x')), row(['en' => PhptColor::Red, 'j' => type_json()->cast(['a' => 1]), 'x' => type_xml()->cast('<root a="1"><i>v</i></root>')])),
     'heterogeneous' => rows(schema(int_schema('id'), str_schema('n')), row(['id' => 1]), row(['id' => 2, 'n' => 'x']), row(['n' => 'y', 'id' => 3])),
-    'partitioned' => Rows::partitioned(schema(int_schema('id'), str_schema('g')), [row(['id' => 1, 'g' => 'a'])], [new Partition('g', 'a')]),
+    'two_columns'  => rows(schema(int_schema('id'), str_schema('g')), row(['id' => 1, 'g' => 'a'])),
     'empty' => rows(schema()),
 ];
 
@@ -87,7 +86,7 @@ datetime       frames-identical:yes
 containers     frames-identical:yes
 enum_json_xml  frames-identical:yes
 heterogeneous  frames-identical:yes
-partitioned    frames-identical:yes
+two_columns    frames-identical:yes
 empty          frames-identical:yes
 absent         frames-identical:yes
 Flow\Floe\Exception\ExtensionException: flow_php does not support values of type "mixed" in this build

@@ -12,14 +12,23 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Generator;
 
 /**
- * Counts readFrom() calls so a test can assert how many times a listed file is opened.
+ * Counts readFrom() and list() calls so a test can assert how many times a listed file is opened,
+ * and hands back streams that record their own close() so opens and closes can be compared.
  */
 final class CountingFilesystem implements Filesystem
 {
+    public int $listCalls = 0;
+
     public int $readFromCalls = 0;
+
+    /**
+     * @var list<ClosingSpySourceStream>
+     */
+    public array $openedStreams = [];
 
     public function __construct(
         private readonly Filesystem $inner,
@@ -35,8 +44,21 @@ final class CountingFilesystem implements Filesystem
         return $this->inner->getSystemTmpDir();
     }
 
+    public function closedStreams(): int
+    {
+        $closed = 0;
+
+        foreach ($this->openedStreams as $stream) {
+            $closed += $stream->closeCount > 0 ? 1 : 0;
+        }
+
+        return $closed;
+    }
+
     public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
+        $this->listCalls++;
+
         yield from $this->inner->list($path, $pathFilter);
     }
 
@@ -54,7 +76,7 @@ final class CountingFilesystem implements Filesystem
     {
         $this->readFromCalls++;
 
-        return $this->inner->readFrom($path);
+        return $this->openedStreams[] = new ClosingSpySourceStream($this->inner->readFrom($path));
     }
 
     public function rm(Path $path): bool

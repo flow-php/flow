@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
@@ -36,6 +37,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
     private readonly Filesystem $filesystem;
@@ -70,22 +72,21 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $baseSchema = $this->schema();
 
         $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
             $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
             $partitionValues = [];
 
-            foreach ($partitions as $partition) {
+            foreach ($stream->path()->partitions() as $partition) {
                 $partitionValues[$partition->name] = $partition->value;
             }
 
             $schema = $baseSchema;
 
-            $schema = $partitionColumns->declare($schema, $partitionNames);
+            $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
 
             $rawLines = [];
 
@@ -112,7 +113,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $hydrated = $hydrator->cast($batch, $schema);
 
                     foreach ($hydrated as $hydratedRow) {
-                        $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                         $this->incrementReturnedRows();
 
@@ -140,7 +141,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
             $hydrated = $hydrator->cast($batch, $schema);
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 $this->incrementReturnedRows();
 
@@ -157,7 +158,12 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $schema = $this->schema ?? schema(str_schema('text'));
 
-        return $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema;
+        $partitionColumns = new PartitionColumns($this->filesystem);
+
+        return $partitionColumns->declare(
+            $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema,
+            $this->partitionNames($partitionColumns, $this->path),
+        );
     }
 
     public function source(): Path

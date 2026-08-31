@@ -349,7 +349,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
     private static function statFor(Path $path, string $absolutePath): FileStatus
     {
         $isFile = is_file($absolutePath);
-        $mtime = filemtime($absolutePath);
+        $mtime = $isFile ? filemtime($absolutePath) : false;
 
         return new FileStatus(
             $path,

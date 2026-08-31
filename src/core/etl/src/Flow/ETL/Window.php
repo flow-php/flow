@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Window\FrameBound;
 use Flow\ETL\Window\PeerFrame;
 use Flow\ETL\Window\RowsFrame;
@@ -56,12 +57,9 @@ final class Window
         return new self($refs, $this->orderBy, $this->frame);
     }
 
-    /**
-     * @return array<Reference>
-     */
-    public function partitions(): array
+    public function partitions(): References
     {
-        return $this->partitions;
+        return References::init(...$this->partitions);
     }
 
     public function rowsBetween(FrameBound $start, FrameBound $end): self

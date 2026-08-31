@@ -184,7 +184,13 @@ final readonly class UnixPath
                 );
             }
 
-            $path = str_replace('{' . $placeholder . '}', $placeholderPartition->value, $path);
+            $path = str_replace(
+                '{' . $placeholder . '}',
+                $placeholderPartition->value === null
+                    ? Partition::NULL_VALUE
+                    : Partition::encode($placeholderPartition->value),
+                $path,
+            );
         }
 
         if (count($partitions) === 0) {
@@ -195,7 +201,7 @@ final readonly class UnixPath
         $dirname = $pathInfo['dirname'] ?? '';
         $basename = $pathInfo['basename'];
         $partitionsString = implode('/', array_map(
-            static fn(Partition $p) => $p->name . '=' . $p->value,
+            static fn(Partition $p): string => $p->segment(),
             array_values($partitions),
         ));
 
@@ -364,11 +370,12 @@ final readonly class UnixPath
         }
 
         $partitionsList = [];
-        $matches = [];
 
         foreach (explode('/', $this->path) as $part) {
-            if (preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
-                $partitionsList[] = new Partition($matches[1], $matches[2]);
+            $partition = Partition::fromSegment($part);
+
+            if ($partition !== null) {
+                $partitionsList[] = $partition;
             }
         }
 
@@ -391,7 +398,7 @@ final readonly class UnixPath
         foreach ($partitions as $partition) {
             $currentPartitionsList[] = $partition;
             $partitionsString = implode('/', array_map(
-                static fn(Partition $p) => $p->name . '=' . $p->value,
+                static fn(Partition $p): string => $p->segment(),
                 $currentPartitionsList,
             ));
 

@@ -76,7 +76,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 $batch[] = $values;
             }
 
-            return array_to_rows($batch, $context->hydrator(), $rows->partitions());
+            return array_to_rows($batch, $context->hydrator());
         }
 
         $schema = $rows->schema();

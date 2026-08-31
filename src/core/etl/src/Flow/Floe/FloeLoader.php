@@ -13,6 +13,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -25,8 +28,17 @@ use Throwable;
 
 use function sprintf;
 
-final class FloeLoader implements Closure, Discardable, FileLoader, Loader
+final class FloeLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
+    }
+
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
@@ -58,6 +70,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader
         }
 
         $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
     }
 
     public function saveMode(SaveMode $mode): static
@@ -106,11 +119,13 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader
                 $this->inferredSchema = $rows->schema();
             }
 
-            $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-                $rows->partitions()->toArray(),
-            );
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
 
-            ($this->writers[$stream->path()->uri()] ??= $this->openWriter($stream, $context))->write($rows);
+                ($this->writers[$stream->path()->uri()] ??= $this->openWriter($stream, $context))->write($group);
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

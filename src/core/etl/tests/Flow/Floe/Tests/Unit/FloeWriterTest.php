@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeWriter;
@@ -379,7 +377,6 @@ final class FloeWriterTest extends TestCase
         static::assertSame(0, $footer->totalRows);
         static::assertSame([], $footer->sections);
         static::assertSame([], $footer->schema);
-        static::assertSame([], $footer->partitions);
     }
 
     public function test_create_with_non_noop_codec_throws(): void
@@ -427,181 +424,6 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(schema(str_schema('data')), row(['data' => str_repeat('x', 70_000)])));
 
         static::assertGreaterThan(0, $filesystem->readFrom($path)->size());
-    }
-
-    public function test_partitioned_rows_write_partitions_frame_after_header(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://partitioned.floe');
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->close();
-
-        static::assertSame(
-            [Format::FRAME_PARTITIONS, Format::FRAME_ROW, Format::FRAME_FOOTER],
-            FloeStreamReaderContext::frameTypes($filesystem, $path),
-        );
-        static::assertSame([['country' => 'PL']], FloeStreamReaderContext::footer($filesystem, $path)->partitions);
-    }
-
-    public function test_a_partition_change_starts_a_new_section_with_its_own_partitions_id(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://multi-combination.floe');
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'US'])],
-            [new Partition('country', 'US')],
-        ));
-        $writer->close();
-
-        $footer = FloeStreamReaderContext::footer($filesystem, $path);
-
-        static::assertSame([['country' => 'PL'], ['country' => 'US']], $footer->partitions);
-        static::assertCount(2, $footer->sections);
-        static::assertSame(0, $footer->sections[0]->partitionsId);
-        static::assertSame(1, $footer->sections[1]->partitionsId);
-        static::assertSame(
-            [
-                Format::FRAME_PARTITIONS,
-                Format::FRAME_ROW,
-                Format::FRAME_PARTITIONS,
-                Format::FRAME_ROW,
-                Format::FRAME_FOOTER,
-            ],
-            FloeStreamReaderContext::frameTypes($filesystem, $path),
-        );
-    }
-
-    public function test_consecutive_writes_with_the_same_partition_reuse_the_id_and_emit_no_second_frame(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://same-combination.floe');
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->close();
-
-        $footer = FloeStreamReaderContext::footer($filesystem, $path);
-
-        static::assertSame([['country' => 'PL']], $footer->partitions);
-        static::assertCount(1, $footer->sections);
-        static::assertSame(
-            [
-                Format::FRAME_PARTITIONS,
-                Format::FRAME_ROW,
-                Format::FRAME_ROW,
-                Format::FRAME_FOOTER,
-            ],
-            FloeStreamReaderContext::frameTypes($filesystem, $path),
-        );
-    }
-
-    public function test_a_change_back_to_unpartitioned_emits_an_empty_partitions_frame(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://back-to-unpartitioned.floe');
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
-        $writer->close();
-
-        $footer = FloeStreamReaderContext::footer($filesystem, $path);
-
-        static::assertSame([['country' => 'PL'], []], $footer->partitions);
-        static::assertSame(0, $footer->sections[0]->partitionsId);
-        static::assertSame(1, $footer->sections[1]->partitionsId);
-        static::assertSame(
-            [
-                Format::FRAME_PARTITIONS,
-                Format::FRAME_ROW,
-                Format::FRAME_PARTITIONS,
-                Format::FRAME_ROW,
-                Format::FRAME_FOOTER,
-            ],
-            FloeStreamReaderContext::frameTypes($filesystem, $path),
-        );
-    }
-
-    public function test_empty_write_records_the_empty_combination_without_a_section(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://empty-partitioned.floe');
-
-        // a zero-row partitioned Rows collapses to empty-unpartitioned at the core level
-        // (Rows::partitioned drops partitions when there are no rows), so the write records
-        // only the empty combination and creates no section
-        $writer = new FloeWriter($filesystem, schema());
-        $writer->create($path);
-        $writer->write(Rows::partitioned(schema(), [], [new Partition('country', 'PL')]));
-        $writer->close();
-
-        $footer = FloeStreamReaderContext::footer($filesystem, $path);
-
-        static::assertSame([[]], $footer->partitions);
-        static::assertSame([], $footer->sections);
-        static::assertSame([Format::FRAME_FOOTER], FloeStreamReaderContext::frameTypes($filesystem, $path));
-    }
-
-    public function test_append_with_a_different_partition_preserves_both_combinations(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://append-partitions.floe');
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        ));
-        $writer->close();
-
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->append($path);
-        $writer->write(Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'US'])],
-            [new Partition('country', 'US')],
-        ));
-        $writer->close();
-
-        $footer = FloeStreamReaderContext::footer($filesystem, $path);
-
-        static::assertSame([['country' => 'PL'], ['country' => 'US']], $footer->partitions);
-        static::assertCount(2, $footer->sections);
-        static::assertSame(0, $footer->sections[0]->partitionsId);
-        static::assertSame(1, $footer->sections[1]->partitionsId);
     }
 
     public function test_within_batch_heterogeneous_rows_encode_under_one_union_schema(): void

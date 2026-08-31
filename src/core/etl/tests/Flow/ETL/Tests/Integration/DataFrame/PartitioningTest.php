@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use DateInterval;
 use DateTimeImmutable;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Partition;
 
 use function array_map;
-use function array_merge;
 use function file_exists;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
@@ -20,20 +17,17 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\Filesystem\DSL\partition;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
-use function range;
 use function rmdir;
 use function sort;
 use function str_replace;
@@ -42,27 +36,6 @@ use function usort;
 
 final class PartitioningTest extends FlowIntegrationTestCase
 {
-    public function test_dropping_partitions(): void
-    {
-        $rows = df()
-            ->read(from_rows(rows_partitioned(
-                schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                [
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
-                    row(['id' => 4, 'country' => 'PL', 'age' => 30]),
-                ],
-                [
-                    partition('country', 'PL'),
-                ],
-            )))
-            ->dropPartitions()
-            ->fetch();
-
-        static::assertFalse($rows->isPartitioned());
-    }
-
     public function test_overwrite_save_mode_not_dropping_old_partitions(): void
     {
         if (file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03')) {
@@ -80,8 +53,12 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['date' => '2024-04-03'],
                 ['date' => '2024-04-04'],
             ]))
-            ->partitionBy('date')
-            ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt')->saveMode(overwrite()))
+            ->write(
+                to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt')
+                    ->saveMode(overwrite())
+                    // the committed fixtures carry the date in the body, so this write must too
+                    ->partitionBy(partition_by('date')->writeColumns()),
+            )
             ->run();
 
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
@@ -138,95 +115,47 @@ final class PartitioningTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_partition_by(): void
+    public function test_repartition_groups_every_row_sharing_a_key_into_one_batch(): void
     {
-        $rows = df()
+        $batches = df()
             ->read(from_rows(rows(
                 schema(int_schema('id'), str_schema('country'), int_schema('age')),
                 row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
-                row(['id' => 4, 'country' => 'PL', 'age' => 30]),
                 row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
                 row(['id' => 6, 'country' => 'US', 'age' => 40]),
-                row(['id' => 7, 'country' => 'US', 'age' => 45]),
-                row(['id' => 9, 'country' => 'US', 'age' => 50]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
             )))
-            ->partitionBy(ref('country'))
+            ->repartition(ref('country'))
             ->get();
 
-        static::assertEquals(
-            [
-                rows_partitioned(
-                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                    [
-                        row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                        row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                        row(['id' => 3, 'country' => 'PL', 'age' => 25]),
-                        row(['id' => 4, 'country' => 'PL', 'age' => 30]),
-                    ],
-                    [
-                        partition('country', 'PL'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                    [
-                        row(['id' => 5, 'country' => 'US', 'age' => 40]),
-                        row(['id' => 6, 'country' => 'US', 'age' => 40]),
-                        row(['id' => 7, 'country' => 'US', 'age' => 45]),
-                        row(['id' => 9, 'country' => 'US', 'age' => 50]),
-                    ],
-                    [
-                        partition('country', 'US'),
-                    ],
-                ),
-            ],
-            iterator_to_array($rows),
+        $countries = array_map(static fn(Rows $batch): array => $batch->reduceToArray(ref(
+            'country',
+        )), iterator_to_array($batches));
+
+        usort(
+            $countries,
+            static fn(array $a, array $b): int => type_string()->assert($a[0]) <=> type_string()->assert($b[0]),
         );
+
+        static::assertSame([['PL', 'PL', 'PL'], ['US', 'US']], $countries);
     }
 
-    public function test_partition_by_partitions_order(): void
+    public function test_partition_directories_nest_in_declaration_order(): void
     {
+        $output = __DIR__ . '/Fixtures/Partitioning/declaration_order';
+
         df()
-            ->read(from_array(array_merge(...array_map(
-                static function (int $i): array {
-                    $data = [];
+            ->read(from_array([['text' => 'a', 'year' => '2024', 'month' => '03', 'day' => '01']]))
+            ->write(
+                to_text($output . '/out.txt')
+                    ->saveMode(overwrite())
+                    // order is chosen on purpose: the writer nests in the order it was given, not by name
+                    ->partitionBy(partition_by('year', 'day', 'month')),
+            )
+            ->run();
 
-                    $maxItems = generate_random_int(2, 10);
-
-                    for ($d = 0; $d < $maxItems; $d++) {
-                        $data[] = [
-                            'id' => generate_random_string(),
-                            'created_at' => (new DateTimeImmutable('2020-01-01'))->add(
-                                new DateInterval('P' . $i . 'D'),
-                            )->setTime(
-                                generate_random_int(0, 23),
-                                generate_random_int(0, 59),
-                                generate_random_int(0, 59),
-                            ),
-                            'value' => generate_random_int(1, 1000),
-                        ];
-                    }
-
-                    return $data;
-                },
-                range(1, 10),
-            ))))
-            ->withEntry('year', ref('created_at')->dateFormat('Y'))
-            ->withEntry('month', ref('created_at')->dateFormat('m'))
-            ->withEntry('day', ref('created_at')->dateFormat('d'))
-            ->partitionBy(ref('year'), ref('day'), ref('month'))
-            ->run(function (Rows $rows): void {
-                $this->assertSame(
-                    [
-                        'year',
-                        'day',
-                        'month', // order is changed on purpose
-                    ],
-                    array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
-                );
-            });
+        static::assertFileExists($output . '/year=2024/day=01/month=03/out.txt');
     }
 
     public function test_partitioning_by_path_placeholders_only(): void
@@ -239,9 +168,11 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'text' => 'order 2'],
                 ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'text' => 'order 3'],
             ]))
-            ->partitionBy('order-year', 'order-month', 'order-name')
-            ->drop('order-year', 'order-month', 'order-name')
-            ->write(to_text($output . '/{order-year}/{order-month}/{order-name}.txt')->saveMode(overwrite()))
+            ->write(
+                to_text($output . '/{order-year}/{order-month}/{order-name}.txt')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),
+            )
             ->run();
 
         static::assertFileExists($output . '/2024/03/123456-PL.txt');
@@ -250,14 +181,15 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
         df()->read(from_text($output
         . '/{order-year}/{order-month}/{order-name}.txt'))->run(function (Rows $rows): void {
+            // the placeholders put the values in the path, and the read takes them back from it
             $this->assertSame(
-                ['order-year', 'order-month', 'order-name'],
-                array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+                ['text', 'order-month', 'order-name', 'order-year'],
+                $rows->schema()->references()->names(),
             );
         });
 
         df()->read(from_text($output . '/**/*.txt'))->run(function (Rows $rows): void {
-            $this->assertFalse($rows->isPartitioned());
+            $this->assertSame(['text'], $rows->schema()->references()->names());
         });
 
         $prunedRows = df()

@@ -30,9 +30,9 @@ use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Repartition\RepartitionSteps;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -48,7 +48,6 @@ use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
-use Flow\ETL\Transformer\DropPartitionsTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -325,19 +324,6 @@ final class DataFrame
     public function dropDuplicates(string|Reference ...$entries): self
     {
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
-
-        return $this;
-    }
-
-    /**
-     * Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are
-     * also removed.
-     *
-     * @lazy
-     */
-    public function dropPartitions(bool $dropPartitionColumns = false): self
-    {
-        $this->pipeline->add(new DropPartitionsTransformer($dropPartitionColumns));
 
         return $this;
     }
@@ -671,12 +657,16 @@ final class DataFrame
 
     /**
      * @lazy
+     * Shuffles the stream so every row sharing the given columns arrives in one batch. It does not
+     * write directories - that is declared on the loader, `to_csv(...)->partitionBy('region')`.
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries): self
+    public function repartition(string|Reference $entry, string|Reference ...$entries): self
     {
         array_unshift($entries, $entry);
 
-        $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
+        foreach (RepartitionSteps::of(References::init(...$entries), $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }
@@ -925,10 +915,12 @@ final class DataFrame
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
         if ($reference instanceof WindowFunction) {
-            if (count($reference->window()->partitions())) {
-                $this->pipeline->add(
-                    new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order()),
-                );
+            if ($reference->window()->partitions()->count()) {
+                foreach (RepartitionSteps::of($reference->window()->partitions(), $this->context->config) as $step) {
+                    $this->pipeline->add($step);
+                }
+            } else {
+                $this->pipeline->add(new CollectingProcessor());
             }
 
             $this->pipeline->add(new WindowProcessor($entry, $reference));

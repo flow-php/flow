@@ -67,7 +67,6 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
                     'extension' => $extension === false ? null : $extension,
                 ],
                 $context->hydrator(),
-                [],
                 $this->schema(),
             );
 

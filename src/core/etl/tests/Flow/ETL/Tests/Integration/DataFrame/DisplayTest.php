@@ -190,7 +190,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 }
             })
             ->collect()
-            ->partitionBy(ref('group'));
+            ->repartition(ref('group'));
 
         self::assertCommandOutputIdentical(<<<'ASCIITABLE'
             +------+------------+-----+---------+----------------------+-------+
@@ -202,8 +202,6 @@ final class DisplayTest extends FlowIntegrationTestCase
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
             +------+------------+-----+---------+----------------------+-------+
-            Partitions:
-             - group=A
             5 rows
             +------+------------+-----+---------+----------------------+-------+
             |   id |      price | 100 | deleted |           created-at | group |
@@ -214,8 +212,6 @@ final class DisplayTest extends FlowIntegrationTestCase
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             +------+------------+-----+---------+----------------------+-------+
-            Partitions:
-             - group=B
             5 rows
 
             ASCIITABLE, $etl->display(10));

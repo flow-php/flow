@@ -40,29 +40,6 @@ final class FrameWriterTest extends TestCase
         static::assertSame(Format::FRAME_HEADER_LENGTH + 3, $writer->position());
     }
 
-    public function test_empty_combination_emits_count_zero_partitions_frame(): void
-    {
-        $sink = new StringDestinationStream(path('memory://frame.floe'));
-        $writer = new FrameWriter($sink, 0x00);
-
-        $writer->partitions([]);
-        $writer->flush();
-
-        static::assertSame(Format::frame(Format::FRAME_PARTITIONS, pack('V', 0)), $sink->content());
-    }
-
-    public function test_populated_combination_packs_name_and_value_pairs(): void
-    {
-        $sink = new StringDestinationStream(path('memory://frame.floe'));
-        $writer = new FrameWriter($sink, 0x00);
-
-        $writer->partitions(['country' => 'PL']);
-        $writer->flush();
-
-        $body = pack('V', 1) . pack('V', 7) . 'country' . pack('V', 2) . 'PL';
-        static::assertSame(Format::frame(Format::FRAME_PARTITIONS, $body), $sink->content());
-    }
-
     public function test_footer_appends_trailer_and_flushes(): void
     {
         $sink = new StringDestinationStream(path('memory://frame.floe'));

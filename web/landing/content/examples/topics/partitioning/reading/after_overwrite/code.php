@@ -16,8 +16,7 @@ data_frame()
             ['id' => 2, 'color' => 'blue', 'name' => 'Gadget'],
         ]
     ))
-    ->partitionBy(ref('color'))
-    ->write(to_csv($outputPath . '/products.csv')->saveMode(overwrite()))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(overwrite())->partitionBy(partition_by(ref('color'))))
     ->run();
 
 data_frame()

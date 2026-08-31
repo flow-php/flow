@@ -7,7 +7,6 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeReader;
@@ -392,35 +391,6 @@ final class FloeReaderTest extends TestCase
         static::assertSame([2, 3], $ids);
     }
 
-    public function test_offset_reattaches_partitions(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://offset-partitioned.floe');
-
-        $data = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'country' => 'PL']),
-                row(['id' => 3, 'country' => 'PL']),
-            ],
-            [new Partition('country', 'PL')],
-        );
-        $writer = new FloeWriter($filesystem, $data->schema());
-        $writer->create($path);
-        $writer->write($data);
-        $writer->close();
-
-        $batches = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(offset: 1),
-        );
-
-        static::assertSame([2, 3], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
-        static::assertEquals([new Partition('country', 'PL')], iterator_to_array($batches[0]->partitions()));
-    }
-
     public function test_corrupt_row_body_throws_wrapped_exception(): void
     {
         $filesystem = memory_filesystem();
@@ -638,100 +608,6 @@ final class FloeReaderTest extends TestCase
         $this->expectExceptionMessage('supports only the no-op codec, got codec 0x09');
 
         (new FloeReader($filesystem, new CodecStub(0x09)))->read($path);
-    }
-
-    public function test_partitions_are_reattached_to_batches(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://partitioned.floe');
-
-        $data = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        );
-        $writer = new FloeWriter($filesystem, $data->schema());
-        $writer->create($path);
-        $writer->write($data);
-        $writer->close();
-
-        $batches = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(),
-        );
-
-        static::assertCount(1, $batches);
-        static::assertEquals([new Partition('country', 'PL')], iterator_to_array($batches[0]->partitions()));
-    }
-
-    public function test_multi_combination_file_attaches_per_section_partitions(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://multi-combination.floe');
-
-        $batchPL = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        );
-        $batchUS = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'US'])],
-            [new Partition('country', 'US')],
-        );
-        $batchPlain = rows(schema(int_schema('id')), row(['id' => 3]));
-        // R6 refuses to merge batches whose schemas differ, so the file schema is stated as the union
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country', nullable: true)));
-        $writer->create($path);
-        $writer->write($batchPL);
-        $writer->write($batchUS);
-        $writer->write($batchPlain);
-        $writer->close();
-
-        $combos = [];
-        $ids = [];
-
-        foreach ((new FloeReader($filesystem))
-            ->read($path)
-            ->rows() as $batch) {
-            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-            $ids[] = array_map(static fn($row) => $row->get('id'), $batch->all());
-        }
-
-        static::assertSame([['PL'], ['US'], []], $combos);
-        static::assertSame([[1], [2], [3]], $ids);
-    }
-
-    public function test_offset_read_into_a_later_combination_primes_the_right_partitions(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://offset-multi-combination.floe');
-
-        $batchPL = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        );
-        $batchUS = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'US'])],
-            [new Partition('country', 'US')],
-        );
-        $writer = new FloeWriter($filesystem, schema(int_schema('id'), str_schema('country')));
-        $writer->create($path);
-        $writer->write($batchPL);
-        $writer->write($batchUS);
-        $writer->close();
-
-        $batches = iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(offset: 1),
-        );
-
-        static::assertSame([2], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
-        static::assertEquals([new Partition('country', 'US')], iterator_to_array($batches[0]->partitions()));
     }
 
     public function test_reader_with_mismatched_codec_flags_throws(): void

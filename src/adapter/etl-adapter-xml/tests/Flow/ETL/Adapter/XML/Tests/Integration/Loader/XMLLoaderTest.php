@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
@@ -42,8 +43,11 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
                 ],
             ))
             ->batchSize(1)
-            ->partitionBy('size', 'color')
-            ->write(to_xml(__DIR__ . '/var/test_partitioning_xml_file/products.xml')->saveMode(overwrite()))
+            ->write(
+                to_xml(__DIR__ . '/var/test_partitioning_xml_file/products.xml')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('size', 'color')),
+            )
             ->run();
 
         static::assertEquals(
@@ -51,8 +55,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             df()
                 ->read(from_xml(__DIR__ . '/var/test_partitioning_xml_file/**/*.xml')->withXMLNodePath('rows/row'))
                 ->withEntry('id', ref('node')->xpath('id')->domElementValue()->cast('int'))
-                ->withEntry('color', ref('node')->xpath('color')->domElementValue())
-                ->withEntry('size', ref('node')->xpath('size')->domElementValue())
+                // color and size are no longer in the body; the read takes them from the path
                 ->drop('node')
                 ->sortBy([ref('id')->asc()])
                 ->fetch()

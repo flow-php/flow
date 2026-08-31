@@ -83,15 +83,10 @@ final class CSVHydratorParityTest extends FlowTestCase
         ));
 
         $actual = [];
-        $partitions = [];
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
             foreach ($rows as $row) {
                 $actual[] = $row->toArray();
-            }
-
-            foreach ($rows->partitions() as $partition) {
-                $partitions[$partition->name] = true;
             }
         }
 
@@ -99,18 +94,17 @@ final class CSVHydratorParityTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['group' => 1, 'id' => 1, 'value' => 'a'],
-                ['group' => 1, 'id' => 2, 'value' => 'b'],
-                ['group' => 1, 'id' => 3, 'value' => 'c'],
-                ['group' => 1, 'id' => 4, 'value' => 'd'],
-                ['group' => 2, 'id' => 5, 'value' => 'e'],
-                ['group' => 2, 'id' => 6, 'value' => 'f'],
-                ['group' => 2, 'id' => 7, 'value' => 'g'],
-                ['group' => 2, 'id' => 8, 'value' => 'h'],
+                ['id' => 1, 'value' => 'a', 'group' => 1],
+                ['id' => 2, 'value' => 'b', 'group' => 1],
+                ['id' => 3, 'value' => 'c', 'group' => 1],
+                ['id' => 4, 'value' => 'd', 'group' => 1],
+                ['id' => 5, 'value' => 'e', 'group' => 2],
+                ['id' => 6, 'value' => 'f', 'group' => 2],
+                ['id' => 7, 'value' => 'g', 'group' => 2],
+                ['id' => 8, 'value' => 'h', 'group' => 2],
             ],
             $actual,
         );
-        static::assertArrayHasKey('group', $partitions);
     }
 
     public function test_appends_partition_columns_absent_from_the_schema(): void

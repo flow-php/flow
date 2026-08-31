@@ -29,7 +29,7 @@ final class PipelineExtractor implements Extractor
     {
         foreach ($this->pipeline->process($context) as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
+                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
             }
 
             $signal = yield $rows;

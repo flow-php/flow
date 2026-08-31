@@ -23,13 +23,10 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\Filesystem\DSL\partition;
-use function Flow\Filesystem\DSL\partitions;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -493,24 +490,6 @@ final class RowsTest extends FlowTestCase
         static::assertCount(0, $head);
     }
 
-    public function test_head_preserves_partitions(): void
-    {
-        $rows = rows_partitioned(
-            schema(int_schema('id'), str_schema('group')),
-            [
-                row(['id' => 1, 'group' => 'a']),
-                row(['id' => 2, 'group' => 'a']),
-                row(['id' => 3, 'group' => 'a']),
-            ],
-            [partition('group', 'a')],
-        );
-
-        $head = $rows->head(2);
-
-        static::assertEquals(partitions(partition('group', 'a')), $head->partitions());
-        static::assertCount(2, $head);
-    }
-
     public function test_head_with_count_larger_than_available(): void
     {
         $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
@@ -591,62 +570,6 @@ final class RowsTest extends FlowTestCase
         ));
     }
 
-    public function test_merge_empty_rows_with_partitioned_rows(): void
-    {
-        $rows1 = rows(schema(int_schema('id'), str_schema('group')), row(['id' => 1, 'group' => 'a']))->partitionBy(ref(
-            'group',
-        ))[0];
-        $rows2 = rows(schema());
-
-        static::assertEquals(partitions(partition('group', 'a')), $rows1->merge($rows2)->partitions());
-        static::assertCount(1, $rows1->merge($rows2));
-    }
-
-    public function test_merge_rows_from_different_partition(): void
-    {
-        $rows1 = rows(schema(int_schema('id'), str_schema('group')), row(['id' => 1, 'group' => 'a']))->partitionBy(ref(
-            'group',
-        ))[0];
-        $rows2 = rows(schema(int_schema('id'), str_schema('group')), row(['id' => 2, 'group' => 'b']))->partitionBy(ref(
-            'group',
-        ))[0];
-
-        static::assertEquals(partitions(), $rows1->merge($rows2)->partitions());
-        static::assertCount(2, $rows1->merge($rows2));
-    }
-
-    public function test_merge_rows_from_same_partition(): void
-    {
-        $rows1 = rows(schema(int_schema('id'), str_schema('group')), row(['id' => 1, 'group' => 'a']))->partitionBy(ref(
-            'group',
-        ))[0];
-        $rows2 = rows(schema(int_schema('id'), str_schema('group')), row(['id' => 2, 'group' => 'a']))->partitionBy(ref(
-            'group',
-        ))[0];
-
-        static::assertEquals(partitions(partition('group', 'a')), $rows1->merge($rows2)->partitions());
-        static::assertCount(2, $rows1->merge($rows2));
-    }
-
-    public function test_merge_rows_from_same_partitions(): void
-    {
-        $rows1 = rows(
-            schema(int_schema('id'), str_schema('group'), str_schema('sub_group')),
-            row(['id' => 1, 'group' => 'a', 'sub_group' => '1']),
-        )->partitionBy(ref('group'), ref('sub_group'))[0];
-
-        $rows2 = rows(
-            schema(int_schema('id'), str_schema('group'), str_schema('sub_group')),
-            row(['id' => 2, 'group' => 'a', 'sub_group' => '1']),
-        )->partitionBy(ref('sub_group'), ref('group'))[0];
-
-        static::assertEquals(
-            partitions(partition('group', 'a'), partition('sub_group', '1')),
-            $rows1->merge($rows2)->partitions(),
-        );
-        static::assertCount(2, $rows1->merge($rows2));
-    }
-
     public function test_merges_collection_together(): void
     {
         $rowsOne = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
@@ -684,187 +607,6 @@ final class RowsTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         rows(schema())[5];
-    }
-
-    public function test_partition_rows_by_multiple_duplicated_entries(): void
-    {
-        static::assertEquals(
-            [
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [
-                        row(['num' => 1, 'cat' => 'a']),
-                        row(['num' => 1, 'cat' => 'a']),
-                    ],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'a'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 1, 'cat' => 'b'])],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'b'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 3, 'cat' => 'a'])],
-                    [
-                        partition('num', '3'),
-                        partition('cat', 'a'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 2, 'cat' => 'b'])],
-                    [
-                        partition('num', '2'),
-                        partition('cat', 'b'),
-                    ],
-                ),
-            ],
-            rows(
-                schema(int_schema('num'), str_schema('cat')),
-                row(['num' => 1, 'cat' => 'a']),
-                row(['num' => 3, 'cat' => 'a']),
-                row(['num' => 1, 'cat' => 'b']),
-                row(['num' => 2, 'cat' => 'b']),
-                row(['num' => 1, 'cat' => 'a']),
-            )->partitionBy('num', 'num', 'cat'),
-        );
-    }
-
-    public function test_partition_rows_by_multiple_entries(): void
-    {
-        static::assertEquals(
-            [
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [
-                        row(['num' => 1, 'cat' => 'a']),
-                        row(['num' => 1, 'cat' => 'a']),
-                    ],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'a'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 1, 'cat' => 'b'])],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'b'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 3, 'cat' => 'a'])],
-                    [
-                        partition('num', '3'),
-                        partition('cat', 'a'),
-                    ],
-                ),
-                rows_partitioned(
-                    schema(int_schema('num'), str_schema('cat')),
-                    [row(['num' => 2, 'cat' => 'b'])],
-                    [
-                        partition('num', '2'),
-                        partition('cat', 'b'),
-                    ],
-                ),
-            ],
-            rows(
-                schema(int_schema('num'), str_schema('cat')),
-                row(['num' => 1, 'cat' => 'a']),
-                row(['num' => 3, 'cat' => 'a']),
-                row(['num' => 1, 'cat' => 'b']),
-                row(['num' => 2, 'cat' => 'b']),
-                row(['num' => 1, 'cat' => 'a']),
-            )->partitionBy('num', 'cat'),
-        );
-    }
-
-    public function test_partition_rows_by_non_existing_entry(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Schema definition for entry "test" not found');
-
-        rows(
-            schema(int_schema('number')),
-            row(['number' => 1]),
-            row(['number' => 1]),
-            row(['number' => 3]),
-            row(['number' => 2]),
-            row(['number' => 4]),
-        )->partitionBy('test');
-    }
-
-    public function test_partition_rows_by_single_entry(): void
-    {
-        static::assertEquals(
-            [
-                rows_partitioned(
-                    schema(int_schema('number')),
-                    [row(['number' => 1]), row(['number' => 1])],
-                    [partition('number', '1')],
-                ),
-                rows_partitioned(schema(int_schema('number')), [row(['number' => 3])], [partition('number', '3')]),
-                rows_partitioned(schema(int_schema('number')), [row(['number' => 2])], [partition('number', '2')]),
-                rows_partitioned(schema(int_schema('number')), [row(['number' => 4])], [partition('number', '4')]),
-            ],
-            rows(
-                schema(int_schema('number')),
-                row(['number' => 1]),
-                row(['number' => 1]),
-                row(['number' => 3]),
-                row(['number' => 2]),
-                row(['number' => 4]),
-            )->partitionBy('number'),
-        );
-    }
-
-    public function test_partition_rows_date_entry(): void
-    {
-        $first = new DateTimeImmutable('2023-01-01 00:00:00 UTC');
-        $second = new DateTimeImmutable('2023-01-02 00:00:00 UTC');
-
-        static::assertEquals(
-            [
-                rows_partitioned(
-                    schema(datetime_schema('date')),
-                    [row(['date' => $first])],
-                    partitions(partition('date', '2023-01-01')),
-                ),
-                rows_partitioned(
-                    schema(datetime_schema('date')),
-                    [row(['date' => $second]), row(['date' => $second])],
-                    partitions(partition('date', '2023-01-02')),
-                ),
-            ],
-            rows(
-                schema(datetime_schema('date')),
-                row(['date' => $first]),
-                row(['date' => $second]),
-                row(['date' => $second]),
-            )->partitionBy(ref('date')),
-        );
-    }
-
-    public function test_partitions(): void
-    {
-        $rows = rows(
-            schema(int_schema('number'), str_schema('group')),
-            row(['number' => 1, 'group' => 'a']),
-            row(['number' => 2, 'group' => 'a']),
-            row(['number' => 3, 'group' => 'a']),
-            row(['number' => 4, 'group' => 'a']),
-        )->partitionBy('group');
-
-        static::assertEquals(partitions(partition('group', 'a')), $rows[0]->partitions());
     }
 
     public function test_remove(): void
@@ -1158,24 +900,6 @@ final class RowsTest extends FlowTestCase
         $tail = rows(schema())->tail(5);
 
         static::assertCount(0, $tail);
-    }
-
-    public function test_tail_preserves_partitions(): void
-    {
-        $rows = rows_partitioned(
-            schema(int_schema('id'), str_schema('group')),
-            [
-                row(['id' => 1, 'group' => 'a']),
-                row(['id' => 2, 'group' => 'a']),
-                row(['id' => 3, 'group' => 'a']),
-            ],
-            [partition('group', 'a')],
-        );
-
-        $tail = $rows->tail(2);
-
-        static::assertEquals(partitions(partition('group', 'a')), $tail->partitions());
-        static::assertCount(2, $tail);
     }
 
     public function test_tail_with_count_larger_than_available(): void

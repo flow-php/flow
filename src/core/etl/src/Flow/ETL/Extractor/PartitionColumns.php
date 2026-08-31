@@ -12,7 +12,10 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 
 use function array_key_exists;
+use function array_keys;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\str_schema;
+use function ksort;
 
 final readonly class PartitionColumns
 {
@@ -47,21 +50,40 @@ final readonly class PartitionColumns
             $names[$name] = $count < $paths;
         }
 
+        ksort($names);
+
         return $names;
     }
 
     /**
+     * A partition column keeps the type its declared definition gives it, but never its body
+     * position: it is removed from wherever the file put it and re-appended in the partition block,
+     * so a declared read and an undeclared one emit the same column order.
+     *
      * @param array<string, bool> $names
      */
-    public function declare(Schema $schema, array $names): Schema
+    public function declare(Schema $schema, array $names, PartitionTypes $types = new PartitionTypes()): Schema
     {
-        foreach ($names as $name => $nullable) {
-            if ($schema->findDefinition($name) === null) {
-                $schema = $schema->add(str_schema($name, nullable: $nullable));
-            }
+        $types->assertEveryNameIsAPartition($names);
+
+        if ($names === []) {
+            return $schema;
         }
 
-        return $schema;
+        $definitions = [];
+
+        foreach ($names as $name => $nullable) {
+            // 1) a declared schema wins, 2) then a declared partition type, 3) then string
+            $definitions[] =
+                $schema->findDefinition($name)
+                ?? (
+                    $types->has($name)
+                        ? definition_from_type($name, $types->get($name), nullable: $nullable)
+                        : str_schema($name, nullable: $nullable)
+                );
+        }
+
+        return $schema->gracefulRemove(...array_keys($names))->add(...$definitions);
     }
 
     /**
@@ -71,24 +93,28 @@ final readonly class PartitionColumns
      *
      * @param array<string, bool> $names
      */
-    public function apply(Rows $rows, array $names): Rows
+    public function apply(Rows $rows, array $names, PartitionTypes $types = new PartitionTypes()): Rows
     {
-        $schema = $rows->schema();
+        $types->assertEveryNameIsAPartition($names);
 
-        foreach ($names as $name => $nullable) {
-            $definition = str_schema($name, nullable: $nullable);
-
-            $schema = $schema->findDefinition($name) === null
-                ? $schema->add($definition)
-                : $schema->replace($name, $definition);
+        if ($names === []) {
+            return $rows;
         }
 
-        return new Rows($schema, ...$rows->all());
+        $definitions = [];
+
+        foreach ($names as $name => $nullable) {
+            $definitions[] = $types->has($name)
+                ? definition_from_type($name, $types->get($name), nullable: $nullable)
+                : str_schema($name, nullable: $nullable);
+        }
+
+        return new Rows($rows->schema()->gracefulRemove(...array_keys($names))->add(...$definitions), ...$rows->all());
     }
 
     /**
      * @param array<string, bool> $names
-     * @param array<string, string> $values partition name => value, for the path this row came from
+     * @param array<string, null|string> $values partition name => value, for the path this row came from
      * @param array<string, mixed> $row
      *
      * @return array<string, mixed>

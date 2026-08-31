@@ -13,6 +13,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -24,8 +27,10 @@ use Throwable;
 use function implode;
 use function sprintf;
 
-final class TextLoader implements Closure, Discardable, FileLoader, Loader
+final class TextLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
@@ -51,7 +56,15 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader
         }
 
         $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
@@ -82,11 +95,11 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader
         ]);
 
         try {
-            $lines = implode('', $this->encoder()->encode($context->hydrator()->dehydrate($rows)));
-
-            ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))
-                ->writeTo($rows->partitions()->toArray())
-                ->append($lines);
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))
+                    ->writeTo($partitions->toArray())
+                    ->append(implode('', $this->encoder()->encode($context->hydrator()->dehydrate($group))));
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

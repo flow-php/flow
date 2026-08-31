@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Tests\Double\SpyHydrator;
 use PHPUnit\Framework\TestCase;
 
@@ -14,6 +12,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -109,20 +108,13 @@ final class FloeLoaderTest extends TestCase
         $memory = memory_filesystem();
         $base = path('memory://parts/data.floe');
 
-        $loader = to_floe($base, filesystem: $memory);
+        // one batch carrying both combinations: the loader routes it, B39
+        $loader = to_floe($base, filesystem: $memory)->partitionBy(partition_by('country'));
         $loader->load(
-            Rows::partitioned(
+            rows(
                 schema(int_schema('id'), str_schema('country')),
-                [row(['id' => 1, 'country' => 'PL'])],
-                [new Partition('country', 'PL')],
-            ),
-            $context,
-        );
-        $loader->load(
-            Rows::partitioned(
-                schema(int_schema('id'), str_schema('country')),
-                [row(['id' => 2, 'country' => 'US'])],
-                [new Partition('country', 'US')],
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 2, 'country' => 'US']),
             ),
             $context,
         );

@@ -33,7 +33,7 @@ final class RowsExtractor implements Extractor
     {
         foreach ($this->rows as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
+                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
             }
 
             $signal = yield $rows;

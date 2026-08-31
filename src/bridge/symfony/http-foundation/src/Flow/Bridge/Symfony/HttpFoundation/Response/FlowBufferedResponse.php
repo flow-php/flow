@@ -75,7 +75,6 @@ final class FlowBufferedResponse extends Response
         df($config)
             ->read($this->extractor)
             ->with($this->transformations)
-            ->dropPartitions()
             ->write($this->output->loader($bufferPath, $this->filesystem))
             ->run();
 

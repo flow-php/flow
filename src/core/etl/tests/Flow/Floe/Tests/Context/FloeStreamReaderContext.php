@@ -97,7 +97,7 @@ final class FloeStreamReaderContext
             }
         }
 
-        return $file->footer()->reconstructRows($rows);
+        return new Rows($file->footer()->schema(), ...$rows);
     }
 
     /**

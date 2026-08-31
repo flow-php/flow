@@ -12,25 +12,15 @@ final class FooterMother
     /**
      * @param array<array-key, mixed> $schema raw normalized schema, e.g. $schema->normalize()
      * @param array<int, \Flow\Floe\Section> $sections
-     * @param array<int, array<string, string>> $partitions
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $metadata
      */
     public static function footer(
         array $schema = [],
         array $sections = [],
-        array $partitions = [],
         int $totalRows = 0,
         array $metadata = [],
     ): Footer {
         /** @var array<int, array<string, mixed>> $schema */
-        return new Footer(
-            1,
-            'test-writer',
-            $schema,
-            $sections,
-            $partitions,
-            $totalRows,
-            Metadata::fromArray($metadata),
-        );
+        return new Footer(1, 'test-writer', $schema, $sections, $totalRows, Metadata::fromArray($metadata));
     }
 }

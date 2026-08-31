@@ -61,11 +61,13 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_handles_single_row_partition(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(
-            schema(str_schema('dept'), int_schema('salary')),
-            row(['dept' => 'IT', 'salary' => 5000]),
-            row(['dept' => 'HR', 'salary' => 4000]),
-        )));
+        // the shuffle is upstream of this processor now, so the test hands it what a shuffle produces:
+        // one Rows per partition key
+        $schema = schema(str_schema('dept'), int_schema('salary'));
+        $pipeline = new Pipeline(from_rows(
+            rows($schema, row(['dept' => 'IT', 'salary' => 5000])),
+            rows($schema, row(['dept' => 'HR', 'salary' => 4000])),
+        ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
 
@@ -81,13 +83,11 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_processes_multiple_partitions_separately(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(
-            schema(str_schema('dept'), int_schema('salary')),
-            row(['dept' => 'IT', 'salary' => 5000]),
-            row(['dept' => 'IT', 'salary' => 6000]),
-            row(['dept' => 'HR', 'salary' => 4000]),
-            row(['dept' => 'HR', 'salary' => 4500]),
-        )));
+        $schema = schema(str_schema('dept'), int_schema('salary'));
+        $pipeline = new Pipeline(from_rows(
+            rows($schema, row(['dept' => 'IT', 'salary' => 5000]), row(['dept' => 'IT', 'salary' => 6000])),
+            rows($schema, row(['dept' => 'HR', 'salary' => 4000]), row(['dept' => 'HR', 'salary' => 4500])),
+        ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
 

@@ -20,7 +20,11 @@ final class PartitionTest extends TestCase
     /**
      * @return array<array<string>>
      */
-    public static function provider_forbidden_characters_values(): array
+    /**
+     * Characters a Hive path reserves. They used to be refused; they are now percent-encoded, so the
+     * same list is the round-trip provider.
+     */
+    public static function provider_reserved_characters_values(): array
     {
         return [
             ['nam|e'],
@@ -33,7 +37,9 @@ final class PartitionTest extends TestCase
             ['nam?e'],
             ['nam{e'],
             ['nam}e'],
-            [''],
+            ['nam=e'],
+            ['nam e'],
+            ['zażółć gęślą jaźń'],
         ];
     }
 
@@ -70,11 +76,42 @@ final class PartitionTest extends TestCase
         Partition::fromValue('xml', type_xml(), '<xml></xml>');
     }
 
-    public function test_creating_partitions_from_uri_with_partition_with_forbidden_character(): void
+    public function test_creating_partitions_from_uri_decodes_an_encoded_value(): void
     {
-        $partitions = Partition::fromUri('/dataset/country=U|S/something');
+        $partitions = Partition::fromUri('/dataset/country=U%7CS/something');
 
-        static::assertCount(0, $partitions);
+        static::assertCount(1, $partitions);
+        static::assertEquals(new Partition('country', 'U|S'), $partitions[0]);
+    }
+
+    public function test_a_null_value_is_written_and_read_back_as_the_hive_sentinel(): void
+    {
+        static::assertSame('region=__HIVE_DEFAULT_PARTITION__', (new Partition('region', null))->segment());
+        static::assertEquals(
+            new Partition('region', null),
+            Partition::fromSegment('region=__HIVE_DEFAULT_PARTITION__'),
+        );
+    }
+
+    public function test_an_empty_value_is_still_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Partition value can't be empty");
+
+        new Partition('name', '');
+    }
+
+    public function test_an_empty_name_is_still_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Partition name can't be empty");
+
+        new Partition('', 'value');
+    }
+
+    public function test_a_segment_that_is_not_a_pair_is_not_a_partition(): void
+    {
+        static::assertNull(Partition::fromSegment('something'));
     }
 
     public function test_creating_partitions_from_uri_with_partitions(): void
@@ -98,19 +135,21 @@ final class PartitionTest extends TestCase
         static::assertCount(0, $partitions);
     }
 
-    #[DataProvider('provider_forbidden_characters_values')]
-    public function test_forbidden_names(string $value): void
+    #[DataProvider('provider_reserved_characters_values')]
+    public function test_a_reserved_character_in_the_name_survives_the_path(string $value): void
     {
-        $this->expectException(InvalidArgumentException::class);
-
-        new Partition($value, 'value');
+        static::assertEquals(
+            new Partition($value, 'value'),
+            Partition::fromSegment((new Partition($value, 'value'))->segment()),
+        );
     }
 
-    #[DataProvider('provider_forbidden_characters_values')]
-    public function test_forbidden_values(string $value): void
+    #[DataProvider('provider_reserved_characters_values')]
+    public function test_a_reserved_character_in_the_value_survives_the_path(string $value): void
     {
-        $this->expectException(InvalidArgumentException::class);
-
-        new Partition('name', $value);
+        static::assertEquals(
+            new Partition('name', $value),
+            Partition::fromSegment((new Partition('name', $value))->segment()),
+        );
     }
 }

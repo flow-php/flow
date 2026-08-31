@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 
@@ -174,5 +175,19 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             ],
             array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
         );
+    }
+
+    /**
+     * A cache entry that has not been written yet has no columns, which is an answer. Reaching into
+     * the FlowContext for a cache would make describing a source need a running pipeline.
+     */
+    public function test_schema_returns_empty_schema_on_cache_id_miss(): void
+    {
+        static::assertEquals(schema(), from_cache('non_existing_cache_key')->schema());
+    }
+
+    public function test_schema_returns_empty_schema_when_the_injected_cache_does_not_hold_the_id(): void
+    {
+        static::assertEquals(schema(), from_cache('non_existing_cache_key', cache: new InMemoryCache())->schema());
     }
 }

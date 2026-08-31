@@ -84,6 +84,51 @@ final class PartitionColumnsTest extends FlowTestCase
         );
     }
 
+    public function test_declare_moves_a_partition_column_out_of_its_body_position_and_keeps_its_type(): void
+    {
+        // the file's own header puts `group` first; the partition block is appended, so the declared
+        // int type survives but the position does not
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('value'), int_schema('group')),
+            (new PartitionColumns(new MemoryFilesystem()))->declare(
+                schema(int_schema('group'), int_schema('id'), str_schema('value')),
+                ['group' => false],
+            ),
+        );
+    }
+
+    public function test_apply_moves_a_partition_column_out_of_its_body_position(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('value'), str_schema('group')),
+            (new PartitionColumns(new MemoryFilesystem()))
+                ->apply(
+                    rows(
+                        schema(str_schema('group'), int_schema('id'), str_schema('value')),
+                        row(['group' => '1', 'id' => 1, 'value' => 'a']),
+                    ),
+                    ['group' => false],
+                )
+                ->schema(),
+        );
+    }
+
+    public function test_declare_leaves_a_schema_alone_when_nothing_was_discovered(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            (new PartitionColumns(new MemoryFilesystem()))->declare(schema(int_schema('id')), []),
+        );
+    }
+
+    public function test_apply_leaves_rows_alone_when_nothing_was_discovered(): void
+    {
+        static::assertEquals(
+            rows(schema(int_schema('id')), row(['id' => 1])),
+            (new PartitionColumns(new MemoryFilesystem()))->apply(rows(schema(int_schema('id')), row(['id' => 1])), []),
+        );
+    }
+
     public function test_fill_leaves_a_row_untouched_when_there_are_no_partition_columns(): void
     {
         static::assertSame(['id' => 1], (new PartitionColumns(new MemoryFilesystem()))->fill(['id' => 1], [], []));
@@ -121,6 +166,17 @@ final class PartitionColumnsTest extends FlowTestCase
         static::assertSame(
             ['date' => false],
             (new PartitionColumns($filesystem))->names(path('memory://all/*/*.csv'), new OnlyFiles()),
+        );
+    }
+
+    public function test_names_are_sorted_by_name_not_by_path_order(): void
+    {
+        $filesystem = new MemoryFilesystem();
+        $filesystem->appendTo(path('memory://sorted/year=2026/month=01/region=eu/data.csv'))->append('id')->close();
+
+        static::assertSame(
+            ['month' => false, 'region' => false, 'year' => false],
+            (new PartitionColumns($filesystem))->names(path('memory://sorted/*/*/*/*.csv'), new OnlyFiles()),
         );
     }
 

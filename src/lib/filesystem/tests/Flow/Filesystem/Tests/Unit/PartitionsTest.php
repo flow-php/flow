@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use PHPUnit\Framework\TestCase;
@@ -25,5 +26,13 @@ final class PartitionsTest extends TestCase
         static::assertSame($year, $partitions->get('year'));
         static::assertSame($month, $partitions->get('month'));
         static::assertSame($day, $partitions->get('day'));
+    }
+
+    public function test_duplicate_partition_name_throws_naming_the_column(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Partition "country" is declared more than once');
+
+        new Partitions(new Partition('country', 'PL'), new Partition('country', 'US'));
     }
 }

@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -150,8 +151,7 @@ final class CSVTest extends FlowTestCase
                 ['year' => '2024', 'name' => '789-DE', 'total' => 200],
                 ['year' => '2025', 'name' => '555-FR', 'total' => 300],
             ]))
-            ->partitionBy('year', 'name')
-            ->load(to_csv($dir . '/{name}.csv')->saveMode(overwrite()))
+            ->load(to_csv($dir . '/{name}.csv')->saveMode(overwrite())->partitionBy(partition_by('year', 'name')))
             ->run();
 
         static::assertFileExists($dir . '/year=2024/123456-PL.csv');
@@ -189,8 +189,11 @@ final class CSVTest extends FlowTestCase
                 ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'total' => 200],
                 ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'total' => 300],
             ]))
-            ->partitionBy('order-year', 'order-month', 'order-name')
-            ->load(to_csv($output . '/{order-name}.csv')->saveMode(overwrite()))
+            ->load(
+                to_csv($output . '/{order-name}.csv')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),
+            )
             ->run();
 
         static::assertFileExists($output . '/order-year=2024/order-month=03/123456-PL.csv');

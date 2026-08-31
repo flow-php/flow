@@ -35,8 +35,6 @@ final class Format
 
     public const int FRAME_ROW = 0x02;
 
-    public const int FRAME_PARTITIONS = 0x03;
-
     public const int FRAME_FOOTER = 0x06;
 
     public const int VALUE_NULL = 0x00;

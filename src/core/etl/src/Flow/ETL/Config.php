@@ -9,6 +9,7 @@ use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByConfig;
 use Flow\ETL\Config\Join\HashJoinConfig;
+use Flow\ETL\Config\Repartition\HashRepartitionConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
@@ -41,6 +42,7 @@ final readonly class Config
         public TelemetryConfig $telemetry,
         public HashGroupByConfig $grouping,
         public HashJoinConfig $join,
+        public HashRepartitionConfig $repartition,
         private int $extractorBatchSize = 1000,
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),

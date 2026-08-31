@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
+use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
 use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Processor\RepartitionProcessor;
+use Flow\ETL\Row\References;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\WrappingLoader;
 use Flow\ETL\Tests\FlowTestCase;
@@ -114,7 +117,7 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_is_for_pipeline_with_partitioning_processor(): void
     {
         $pipeline = new Pipeline(from_rows(rows(schema())));
-        $pipeline->add(new PartitioningProcessor([ref('group')]));
+        $pipeline->add(new RepartitionProcessor(References::init(ref('group')), new Buckets(new MemoryBuckets())));
 
         static::assertFalse((new BatchSizeOptimization(supportedLoaders: [SpyLoader::class]))->isFor(
             new SpyLoader(),

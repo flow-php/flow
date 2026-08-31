@@ -246,11 +246,15 @@ final class UnixPathTest extends PathTestCase
         static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/output/file.csv')));
     }
 
-    public function test_extract_placeholder_partitions_skips_invalid_partition_values(): void
+    public function test_extract_placeholder_partitions_keeps_a_value_carrying_a_reserved_character(): void
     {
         $pattern = new UnixPath('/output/{order-name}.csv');
+        $partitions = $pattern->extractPlaceholderPartitions(new UnixPath('/output/foo=bar.csv'));
 
-        static::assertCount(0, $pattern->extractPlaceholderPartitions(new UnixPath('/output/foo=bar.csv')));
+        // a reserved character used to make the value unusable; it is percent-encoded on the way out now
+        static::assertCount(1, $partitions);
+        static::assertSame('foo=bar', $partitions[0]->value);
+        static::assertSame('order-name=foo%3Dbar', $partitions[0]->segment());
     }
 
     public function test_extract_placeholder_partitions_with_conflicting_values_of_repeated_placeholder(): void

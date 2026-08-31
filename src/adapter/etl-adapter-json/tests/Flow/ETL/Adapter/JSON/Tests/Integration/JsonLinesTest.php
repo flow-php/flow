@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -130,8 +131,11 @@ final class JsonLinesTest extends FlowTestCase
                     ['id' => 12, 'color' => 'white', 'size' => 'large'],
                 ],
             ))
-            ->partitionBy('size', 'color')
-            ->write(to_json_lines(__DIR__ . '/var/test_partitioning_jsonl_file/products.jsonl')->saveMode(overwrite()))
+            ->write(
+                to_json_lines(__DIR__ . '/var/test_partitioning_jsonl_file/products.jsonl')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('size', 'color')),
+            )
             ->run();
 
         static::assertEquals(

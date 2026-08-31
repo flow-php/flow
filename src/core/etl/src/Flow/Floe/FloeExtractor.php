@@ -6,11 +6,13 @@ namespace Flow\Floe;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -35,9 +37,14 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
+    private ?Schema $derived = null;
+
     private ?int $offset = null;
+
+    private bool $unionByName = false;
 
     private readonly Filesystem $filesystem;
 
@@ -70,7 +77,17 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
         $fileOffset = $this->offset ?? 0;
         $promisedSchema = $this->schema === null ? null : $this->schema();
 
-        foreach ($this->readers($context->hydrator()) as [$reader, $uri]) {
+        $partitionColumns = new PartitionColumns($this->filesystem);
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+
+        foreach ($this->readers($context->hydrator()) as [$reader, $filePath]) {
+            $uri = $filePath->uri();
+            $partitionValues = [];
+
+            foreach ($filePath->partitions() as $partition) {
+                $partitionValues[$partition->name] = $partition->value;
+            }
+
             $fileRows = $reader->totalRows();
 
             if ($fileOffset >= $fileRows) {
@@ -90,8 +107,19 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
                     );
                 }
 
+                if ($partitionNames !== []) {
+                    $rows = $rows->map(
+                        $partitionColumns->declare($rows->schema(), $partitionNames, $this->declaredPartitionTypes()),
+                        static fn(Row $row): Row => new Row($partitionColumns->fill(
+                            $row->values(),
+                            $partitionNames,
+                            $partitionValues,
+                        )),
+                    );
+                }
+
                 if ($promisedSchema !== null) {
-                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $promisedSchema);
+                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $promisedSchema);
                 }
 
                 $signal = yield $rows;
@@ -110,18 +138,30 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     }
 
     /**
-     * Footer-only source schema (two ranged reads per file, no row scan).
+     * Footer-only source schema (two ranged reads per file, no row scan). One file unless
+     * unionByName() asks for the fold, and memoised, so repeated calls cost nothing.
      */
     public function schema(): Schema
     {
         $schema = $this->schema;
 
         if ($schema === null) {
-            $schema = new Schema();
+            if ($this->derived === null) {
+                $derived = new Schema();
 
-            foreach ($this->readers() as [$reader]) {
-                $schema = $schema->merge($reader->schema());
+                foreach ($this->readers() as [$reader]) {
+                    $derived = $derived->merge($reader->schema());
+                    $reader->close();
+
+                    if (!$this->unionByName) {
+                        break;
+                    }
+                }
+
+                $this->derived = $derived;
             }
+
+            $schema = $this->derived;
         }
 
         // extract() adds this column, so schema() must declare it or the two disagree.
@@ -129,7 +169,25 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
             $schema = $schema->add(str_schema('_input_file_uri'));
         }
 
-        return $schema;
+        $partitionColumns = new PartitionColumns($this->filesystem);
+
+        return $partitionColumns->declare(
+            $schema,
+            $this->partitionNames($partitionColumns, $this->path),
+            $this->declaredPartitionTypes(),
+        );
+    }
+
+    /**
+     * Reconcile every listed file's footer instead of trusting the first one. DuckDB's union_by_name,
+     * and the same trade: it has to open a reader per file to do it.
+     */
+    public function unionByName(bool $union = true): self
+    {
+        $this->unionByName = $union;
+        $this->derived = null;
+
+        return $this;
     }
 
     public function source(): Path
@@ -149,7 +207,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     }
 
     /**
-     * @return \Generator<int, array{FloeStreamReader, string}>
+     * @return \Generator<int, array{FloeStreamReader, Path}>
      */
     private function readers(?Hydrator $hydrator = null): Generator
     {
@@ -162,7 +220,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
                     hydrator: $hydrator,
                     engine: $this->engine,
                 ))->read($listedFile->path),
-                $listedFile->path->uri(),
+                $listedFile->path,
             ];
         }
     }

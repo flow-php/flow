@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\XML;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
@@ -44,6 +45,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
     private readonly Filesystem $filesystem;
@@ -100,7 +102,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         $baseSchema = $this->schema();
 
         $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $streamUri = $this->addMetadataColumns ? $listedFile->path->uri() : null;
@@ -113,7 +115,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
             $schema = $baseSchema;
 
-            $schema = $partitionColumns->declare($schema, $partitionNames);
+            $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
 
             $xmlReader = new XMLReader();
             $xmlReader->open($listedFile->path->path());
@@ -166,7 +168,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                             $hydrated = $hydrator->cast($batch, $schema);
 
                             foreach ($hydrated as $hydratedRow) {
-                                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                                 $this->incrementReturnedRows();
 
@@ -200,7 +202,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             $hydrated = $hydrator->cast($batch, $schema);
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 $this->incrementReturnedRows();
 
@@ -219,7 +221,12 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     {
         $schema = $this->schema ?? schema(xml_schema('node'));
 
-        return $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema;
+        $partitionColumns = new PartitionColumns($this->filesystem);
+
+        return $partitionColumns->declare(
+            $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema,
+            $this->partitionNames($partitionColumns, $this->path),
+        );
     }
 
     public function source(): Path

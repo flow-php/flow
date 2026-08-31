@@ -11,7 +11,6 @@ use DateTimeZone;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
-use Flow\Filesystem\Partition;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -48,6 +47,11 @@ use const PHP_INT_MIN;
 
 final class RowsMother
 {
+    public static function empty(): Rows
+    {
+        return rows(schema());
+    }
+
     public static function heterogeneous(): Rows
     {
         return rows(
@@ -56,18 +60,6 @@ final class RowsMother
             row(['a' => 2, 'b' => 'y']),
             row(['a' => 3, 'c' => 1.5]),
             row(['b' => 'z', 'a' => 4]),
-        );
-    }
-
-    public static function partitioned(): Rows
-    {
-        return Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'country' => 'PL']),
-            ],
-            [new Partition('country', 'PL'), new Partition('year', '2025')],
         );
     }
 

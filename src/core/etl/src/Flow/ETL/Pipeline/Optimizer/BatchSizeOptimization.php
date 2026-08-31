@@ -10,7 +10,7 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Transformer;
 
 use function in_array;
@@ -36,7 +36,7 @@ final class BatchSizeOptimization implements Optimization
     private array $batchingProcessors = [
         BatchingProcessor::class,
         CollectingProcessor::class,
-        PartitioningProcessor::class,
+        RepartitionProcessor::class,
     ];
 
     /**

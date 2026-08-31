@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
@@ -45,6 +46,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
     private bool $convertEmptyToNull = true;
@@ -101,23 +103,22 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $baseSchema = $this->schema === null ? null : $this->schema();
 
         $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
             $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
             $partitionValues = [];
 
-            foreach ($partitions as $partition) {
+            foreach ($stream->path()->partitions() as $partition) {
                 $partitionValues[$partition->name] = $partition->value;
             }
 
             $schema = $baseSchema;
 
             if ($schema !== null) {
-                $schema = $partitionColumns->declare($schema, $partitionNames);
+                $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
             }
 
             $encoder = new ExcelEncoder(withHeader: $this->withHeader, convertEmptyToNull: $this->convertEmptyToNull);
@@ -146,11 +147,15 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                     $hydrated = $hydrator->cast($batch, $schema);
 
                     if ($baseSchema === null) {
-                        $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                        $hydrated = $partitionColumns->apply(
+                            $hydrated,
+                            $partitionNames,
+                            $this->declaredPartitionTypes(),
+                        );
                     }
 
                     foreach ($hydrated as $hydratedRow) {
-                        $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                         $this->incrementReturnedRows();
 
@@ -180,11 +185,11 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             $hydrated = $hydrator->cast($batch, $schema);
 
             if ($baseSchema === null) {
-                $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                $hydrated = $partitionColumns->apply($hydrated, $partitionNames, $this->declaredPartitionTypes());
             }
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 $this->incrementReturnedRows();
 
@@ -205,11 +210,12 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             throw SchemaNotDerivableException::extractor(self::class);
         }
 
-        if ($this->addMetadataColumns) {
-            return $this->schema->add(str_schema('_input_file_uri'));
-        }
+        $partitionColumns = new PartitionColumns($this->filesystem);
 
-        return $this->schema;
+        return $partitionColumns->declare(
+            $this->addMetadataColumns ? $this->schema->add(str_schema('_input_file_uri')) : $this->schema,
+            $this->partitionNames($partitionColumns, $this->path),
+        );
     }
 
     public function source(): Path

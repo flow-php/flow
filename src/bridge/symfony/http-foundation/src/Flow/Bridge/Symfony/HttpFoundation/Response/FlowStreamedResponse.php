@@ -55,7 +55,6 @@ class FlowStreamedResponse extends StreamedResponse
         $report = df($this->config)
             ->read($this->extractor)
             ->with($this->transformations)
-            ->dropPartitions()
             ->write($this->output->loader($stdoutPath, $this->filesystem))
             ->run();
 

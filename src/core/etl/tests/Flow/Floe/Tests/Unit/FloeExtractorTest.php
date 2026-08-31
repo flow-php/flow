@@ -6,14 +6,12 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Floe\FloeWriter;
+use Flow\Floe\Tests\Context\FloeEngineContext;
 use PHPUnit\Framework\TestCase;
 
-use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
@@ -21,7 +19,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
@@ -142,37 +139,6 @@ final class FloeExtractorTest extends TestCase
         static::assertSame([1, 2], $ids);
     }
 
-    public function test_extract_yields_per_batch_partitions_on_a_multi_combination_file(): void
-    {
-        $context = flow_context(config());
-        $memory = memory_filesystem();
-        $path = path('memory://extract-multi-combination.floe');
-
-        $batchPL = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 1, 'country' => 'PL'])],
-            [new Partition('country', 'PL')],
-        );
-        $batchUS = Rows::partitioned(
-            schema(int_schema('id'), str_schema('country')),
-            [row(['id' => 2, 'country' => 'US'])],
-            [new Partition('country', 'US')],
-        );
-        $writer = new FloeWriter($memory, $batchPL->merge($batchUS)->schema());
-        $writer->create($path);
-        $writer->write($batchPL);
-        $writer->write($batchUS);
-        $writer->close();
-
-        $combos = [];
-
-        foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            $combos[] = array_map(static fn(Partition $p): string => $p->value, $batch->partitions()->toArray());
-        }
-
-        static::assertSame([['PL'], ['US']], $combos);
-    }
-
     public function test_extract_skips_whole_files_with_offset(): void
     {
         $context = flow_context(config());
@@ -272,6 +238,75 @@ final class FloeExtractorTest extends TestCase
         $schema = from_floe($path, filesystem: $memory)->schema();
 
         static::assertNotNull($schema->findDefinition('id'));
+    }
+
+    public function test_schema_declares_partition_columns_from_the_path(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        static::assertSame(
+            ['id', 'country'],
+            from_floe(path('memory://parts/*/*.floe'), filesystem: $memory)->schema()->references()->names(),
+        );
+    }
+
+    public function test_extract_fills_partition_columns_from_the_path(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $memory);
+        $values = [];
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            foreach ($rows as $row) {
+                $values[] = $row->toArray();
+            }
+        }
+
+        static::assertSame([['id' => 2, 'country' => 'DE'], ['id' => 1, 'country' => 'PL']], $values);
+    }
+
+    public function test_schema_opens_only_the_first_file(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->schema();
+
+        static::assertSame(1, $counting->readFromCalls);
+    }
+
+    public function test_schema_is_memoised(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting);
+
+        static::assertEquals($extractor->schema(), $extractor->schema());
+        static::assertSame(1, $counting->readFromCalls);
+    }
+
+    public function test_union_by_name_opens_every_file(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->unionByName()->schema();
+
+        static::assertSame(2, $counting->readFromCalls);
+    }
+
+    public function test_schema_closes_every_reader_it_opens(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->unionByName()->schema();
+
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
     }
 
     public function test_source_returns_path(): void

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Reader;
 
 use function array_keys;
@@ -117,6 +119,75 @@ final class ParquetExtractorTest extends FlowTestCase
                     ->definitions(),
             ),
         );
+    }
+
+    public function test_schema_declares_partition_columns_from_the_path(): void
+    {
+        static::assertSame(
+            ['id', 'name', 'date'],
+            from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'))
+                ->schema()
+                ->references()
+                ->names(),
+        );
+    }
+
+    public function test_extract_fills_partition_columns_from_the_path(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'));
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertSame(['id', 'name', 'date'], array_keys($rows->first()->toArray()));
+            static::assertSame('2024-01-01', $rows->first()->get('date'));
+            static::assertEquals($extractor->schema(), $rows->schema());
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_schema_opens_only_the_first_file(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'), filesystem: $filesystem)->schema();
+
+        static::assertSame(1, $filesystem->readFromCalls);
+    }
+
+    public function test_schema_is_memoised(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        );
+
+        static::assertEquals($extractor->schema(), $extractor->schema());
+        static::assertSame(1, $filesystem->readFromCalls);
+    }
+
+    public function test_union_by_name_opens_every_file(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'), filesystem: $filesystem)
+            ->unionByName()
+            ->schema();
+
+        static::assertSame(5, $filesystem->readFromCalls);
+    }
+
+    public function test_schema_closes_every_file_it_opens(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'), filesystem: $filesystem)
+            ->unionByName()
+            ->schema();
+
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
 
     public function test_signal_stop(): void

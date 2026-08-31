@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\Partition;
 
 final readonly class Body
 {
@@ -40,14 +39,6 @@ final readonly class Body
         }
 
         return $max;
-    }
-
-    /**
-     * @return array<Partition>
-     */
-    public function partitions(): array
-    {
-        return $this->rows->partitions()->toArray();
     }
 
     /**

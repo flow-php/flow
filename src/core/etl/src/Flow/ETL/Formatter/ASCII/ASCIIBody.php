@@ -6,7 +6,6 @@ namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-use function count;
 use function Flow\Types\DSL\type_string;
 use function max;
 use function str_repeat;
@@ -50,15 +49,6 @@ final readonly class ASCIIBody
             $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
             $buffer .= '-' . str_repeat('-', $length) . '-+';
-        }
-
-        if (count($this->body->partitions())) {
-            $buffer .= PHP_EOL;
-            $buffer .= 'Partitions:';
-
-            foreach ($this->body->partitions() as $partition) {
-                $buffer .= PHP_EOL . ' - ' . $partition->name . '=' . $partition->value;
-            }
         }
 
         return $buffer;

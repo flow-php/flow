@@ -9,7 +9,6 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Partition;
 use Override;
 
 use function Flow\ETL\DSL\int_schema;
@@ -67,23 +66,6 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         static::assertTrue($cache->has('rows'));
 
         static::assertEquals($rows, $cache->get('rows'));
-    }
-
-    public function test_caching_partitioned_rows(): void
-    {
-        $cache = $this->cache();
-
-        $cache->set(
-            'partitioned',
-            $rows = Rows::partitioned(
-                schema(int_schema('id'), str_schema('country')),
-                [row(['id' => 1, 'country' => 'PL'])],
-                [new Partition('country', 'PL')],
-            ),
-        );
-
-        static::assertTrue($cache->has('partitioned'));
-        static::assertEquals($rows, $cache->get('partitioned'));
     }
 
     public function test_caching_schema(): void

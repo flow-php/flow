@@ -10,11 +10,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_keys;
-use function array_map;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
 use function Flow\ETL\DSL\config;
@@ -269,10 +267,8 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_loading_data_from_all_partitions(): void
     {
         df()->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))->run(function (Rows $rows): void {
-            $this->assertSame(
-                ['group'],
-                array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
-            );
+            // the partition column comes back as a column, discovered from the path
+            $this->assertContains('group', $rows->schema()->references()->names());
         });
     }
 

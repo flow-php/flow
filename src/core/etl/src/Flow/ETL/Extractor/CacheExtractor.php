@@ -6,7 +6,6 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -39,12 +38,7 @@ final class CacheExtractor implements Extractor
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
                     if ($this->schema !== null) {
-                        $rows = array_to_rows(
-                            $rows->toArray(),
-                            $context->hydrator(),
-                            $rows->partitions(),
-                            $this->schema,
-                        );
+                        $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
                     }
 
                     $signal = yield $rows;
@@ -61,7 +55,7 @@ final class CacheExtractor implements Extractor
                 $rows = $cache->get($cacheKey);
 
                 if ($this->schema !== null) {
-                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
+                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
                 }
 
                 $signal = yield $rows;
@@ -117,7 +111,10 @@ final class CacheExtractor implements Extractor
             return $this->fallbackExtractor->schema();
         }
 
-        throw SchemaNotDerivableException::extractor(self::class);
+        // A cache entry that does not exist yet has no columns. That is an answer, not an
+        // unanswerable question, and threading a cache in from the FlowContext to look harder
+        // would break the rule the comment above states.
+        return new Schema();
     }
 
     public function withSchema(Schema $schema): static

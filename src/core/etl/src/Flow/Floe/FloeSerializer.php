@@ -71,7 +71,7 @@ final class FloeSerializer implements Serializer
                 ));
             }
 
-            return $footer->reconstructRows($rows);
+            return new Rows($footer->schema(), ...$rows);
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

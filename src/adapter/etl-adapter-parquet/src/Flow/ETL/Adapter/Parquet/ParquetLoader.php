@@ -14,6 +14,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\DestinationStream;
@@ -31,8 +34,10 @@ use Throwable;
 
 use function sprintf;
 
-final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
+final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
@@ -71,9 +76,17 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
         }
 
         $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->converter = new SchemaConverter();
         $this->options = Options::default();
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
@@ -108,13 +121,16 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
                 $this->inferSchema($rows);
             }
 
-            $encoded = $this->encoder()->encode($context->hydrator()->dehydrate($rows));
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
 
-            $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-                $rows->partitions()->toArray(),
-            );
-
-            ($this->writers[$stream->path()->uri()] ??= $this->openWriter($stream))->writeBatch($encoded);
+                ($this->writers[$stream->path()->uri()] ??=
+                    $this->openWriter($stream))->writeBatch($this->encoder()->encode(
+                    $context->hydrator()->dehydrate($group),
+                ));
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

@@ -6,11 +6,13 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -28,6 +30,7 @@ use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 use Generator;
 
+use function array_values;
 use function count;
 use function Flow\ETL\DSL\str_schema;
 use function max;
@@ -40,9 +43,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
     private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
+
+    private ?Schema $derived = null;
+
+    private bool $unionByName = false;
 
     /**
      * @var array<string>
@@ -93,6 +101,9 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $fileOffset = $this->offset ?? 0;
         $promisedSchema = $this->schema === null ? null : $this->schema();
 
+        $partitionColumns = new PartitionColumns($this->filesystem);
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+
         foreach ($this->readers() as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
 
@@ -114,6 +125,13 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 $flowSchema = $flowSchema->add(str_schema('_input_file_uri'));
             }
 
+            $flowSchema = $partitionColumns->declare($flowSchema, $partitionNames, $this->declaredPartitionTypes());
+            $partitionValues = [];
+
+            foreach ($fileData['stream']->path()->partitions() as $partition) {
+                $partitionValues[$partition->name] = $partition->value;
+            }
+
             $encoder = new ParquetEncoder($fileData['file']->schema());
 
             $rawBatch = [];
@@ -123,7 +141,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                     $row['_input_file_uri'] = $streamUri;
                 }
 
-                $rawBatch[] = $row;
+                $rawBatch[] = $partitionColumns->fill($row, $partitionNames, $partitionValues);
 
                 if (count($rawBatch) >= $batchSize) {
                     $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema);
@@ -159,28 +177,33 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
     public function schema(): Schema
     {
-        $schema = $this->schema;
-
-        if ($schema === null) {
-            $schema = new Schema();
-
-            foreach ($this->readers() as $fileData) {
-                $fileSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
-
-                if (count($this->columns)) {
-                    $fileSchema = $fileSchema->keep(...$this->columns);
-                }
-
-                $schema = $schema->merge($fileSchema);
-                $fileData['stream']->close();
-            }
-        }
+        $schema = $this->schema ?? ($this->derived ??= $this->unionByName
+            ? (new FileSchemas($this->schemaConverter))->union($this->readers(), array_values($this->columns))
+            : (new FileSchemas($this->schemaConverter))->first($this->readers(), array_values($this->columns)));
 
         if ($this->addMetadataColumns) {
             $schema = $schema->add(str_schema('_input_file_uri'));
         }
 
-        return $schema;
+        $partitionColumns = new PartitionColumns($this->filesystem);
+
+        return $partitionColumns->declare(
+            $schema,
+            $this->partitionNames($partitionColumns, $this->path),
+            $this->declaredPartitionTypes(),
+        );
+    }
+
+    /**
+     * Reconcile every listed file's schema instead of trusting the first one. DuckDB's union_by_name,
+     * and the same trade: it has to open a reader per file to do it.
+     */
+    public function unionByName(bool $union = true): self
+    {
+        $this->unionByName = $union;
+        $this->derived = null;
+
+        return $this;
     }
 
     public function source(): Path
@@ -201,6 +224,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function withColumns(array $columns): self
     {
         $this->columns = $columns;
+        $this->derived = null;
 
         return $this;
     }

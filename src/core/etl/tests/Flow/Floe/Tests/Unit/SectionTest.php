@@ -33,9 +33,9 @@ final class SectionTest extends TestCase
 
     public function test_normalize_round_trips(): void
     {
-        $section = new Section(6, 2, 100);
+        $section = new Section(6, 100);
 
         static::assertEquals($section, Section::fromArray($section->normalize()));
-        static::assertSame(['offset' => 6, 'partitionsId' => 2, 'rowCount' => 100], $section->normalize());
+        static::assertSame(['offset' => 6, 'rowCount' => 100], $section->normalize());
     }
 }

@@ -6,7 +6,6 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeSerializer;
 use Flow\Floe\Format;
@@ -36,15 +35,10 @@ final class FloeSerializerTest extends TestCase
         return [
             'single row' => [rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'John']))],
             'rows' => [rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))],
-            'partitioned rows' => [RowsMother::partitioned()],
             'heterogeneous rows' => [RowsMother::heterogeneous()],
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'empty rows' => [rows(schema())],
-            'empty partitioned rows' => [Rows::partitioned(
-                schema(str_schema('country')),
-                [],
-                [new Partition('country', 'PL')],
-            )],
+            'empty rows with a declared column' => [rows(schema(str_schema('country')))],
         ];
     }
 
@@ -79,9 +73,13 @@ final class FloeSerializerTest extends TestCase
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
     }
 
-    public function test_read_batch_smaller_than_a_partition_group_preserves_partitions(): void
+    public function test_cache_round_trip_preserves_rows_without_a_partition_table(): void
     {
-        $value = RowsMother::partitioned();
+        $value = rows(
+            schema(int_schema('id'), str_schema('country')),
+            row(['id' => 1, 'country' => 'PL']),
+            row(['id' => 2, 'country' => 'PL']),
+        );
 
         static::assertEquals($value, unserialize_from_string(
             new FloeSerializer(1),

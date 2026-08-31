@@ -16,7 +16,6 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Types\Type\TypeDetector;
 
-use function count;
 use function get_debug_type;
 use function is_bool;
 use function is_float;
@@ -36,22 +35,14 @@ final class FloeStreamWriter
      */
     private const string BATCH_MISMATCH = 'Floe write session schema is fixed and this batch does not fit it: %s.';
 
+    /**
+     * Sections exist to bound a seek, so they are cut by size. Nothing else breaks one.
+     */
+    private const int SECTION_MAX_ROWS = 100_000;
+
     private Metadata $metadata;
 
     private bool $open = false;
-
-    /**
-     * @var array<int, array<string, string>>
-     */
-    private array $partitions = [];
-
-    private ?int $lastSectionPartitionsId = null;
-
-    private ?int $sectionPartitionsId = null;
-
-    private ?int $pendingPartitionsId = null;
-
-    private bool $forcePartitionBreak = false;
 
     /**
      * @var array<int, Section>
@@ -111,8 +102,6 @@ final class FloeStreamWriter
     {
         $this->guardNotOpen();
 
-        $lastSection = $footer->sections === [] ? null : $footer->sections[count($footer->sections) - 1];
-
         $this->frameWriter = new FrameWriter(
             $stream,
             $this->options->codec->id(),
@@ -132,8 +121,6 @@ final class FloeStreamWriter
             }
         }
 
-        $this->lastSectionPartitionsId = $lastSection?->partitionsId;
-        $this->partitions = $footer->partitions;
         $this->totalRows = $footer->totalRows;
         $this->open = true;
     }
@@ -155,7 +142,6 @@ final class FloeStreamWriter
             self::writerVersion(),
             $schema,
             $this->sections,
-            $this->partitions,
             $this->totalRows,
             $this->metadata,
         ))->toJson();
@@ -174,8 +160,6 @@ final class FloeStreamWriter
         $this->guardOpen();
 
         if ($rows->count() === 0) {
-            $this->trackPartitions($rows);
-
             return;
         }
 
@@ -183,10 +167,7 @@ final class FloeStreamWriter
         $typed = $this->hydrator->dehydrate($rows);
         $this->assertBatchFitsSession($typed);
 
-        // nothing may mutate writer state before the batch is accepted
-        $this->trackPartitions($rows);
-
-        if (!$this->sectionOpen || $this->forcePartitionBreak) {
+        if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
             $this->startSection();
         }
 
@@ -293,44 +274,10 @@ final class FloeStreamWriter
     private function closeSection(): void
     {
         if ($this->sectionOpen) {
-            $this->sections[] = new Section(
-                $this->sectionOffset,
-                $this->sectionPartitionsId ?? throw new FloeException(
-                    'Floe writer has no active section partitions id',
-                ),
-                $this->sectionRowCount,
-            );
-            $this->lastSectionPartitionsId = $this->sectionPartitionsId;
+            $this->sections[] = new Section($this->sectionOffset, $this->sectionRowCount);
             $this->sectionOpen = false;
             $this->sectionRowCount = 0;
         }
-    }
-
-    private function trackPartitions(Rows $rows): void
-    {
-        $combo = [];
-
-        foreach ($rows->partitions() as $partition) {
-            $combo[$partition->name] = $partition->value;
-        }
-
-        $partitionsId = null;
-
-        foreach ($this->partitions as $id => $known) {
-            if ($known === $combo) {
-                $partitionsId = $id;
-
-                break;
-            }
-        }
-
-        if ($partitionsId === null) {
-            $partitionsId = count($this->partitions);
-            $this->partitions[] = $combo;
-        }
-
-        $this->pendingPartitionsId = $partitionsId;
-        $this->forcePartitionBreak = $partitionsId !== $this->sectionPartitionsId;
     }
 
     /**
@@ -360,29 +307,9 @@ final class FloeStreamWriter
     {
         $this->closeSection();
 
-        $partitionsId = $this->pendingPartitionsId ?? throw new FloeException(
-            'Floe writer starting a section before its partitions were tracked',
-        );
-
         $this->sectionOffset = $this->frameWriter()->position();
-
-        if ($this->partitionsFrameChanged($partitionsId)) {
-            $this->frameWriter()->partitions($this->partitions[$partitionsId]);
-        }
-
         $this->sectionOpen = true;
-        $this->sectionPartitionsId = $partitionsId;
         $this->sectionRowCount = 0;
-        $this->forcePartitionBreak = false;
-    }
-
-    private function partitionsFrameChanged(int $partitionsId): bool
-    {
-        if ($this->lastSectionPartitionsId === null) {
-            return $this->partitions[$partitionsId] !== [];
-        }
-
-        return $partitionsId !== $this->lastSectionPartitionsId;
     }
 
     /**

@@ -14,6 +14,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Row;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
@@ -30,8 +33,10 @@ use function array_keys;
 use function is_string;
 use function sprintf;
 
-final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
+final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
@@ -77,6 +82,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
         }
 
         $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
 
         if (!$path->isLocal()) {
             throw new InvalidArgumentException(
@@ -85,6 +91,13 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
         }
 
         $this->path = $path;
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
@@ -121,48 +134,55 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
         ]);
 
         try {
-            $dehydrated = $context->hydrator()->dehydrate($rows);
             $encoder = $this->encoder();
 
-            $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-                $rows->partitions()->toArray(),
-            );
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $dehydrated = $context->hydrator()->dehydrate($group);
 
-            $manager =
-                $this->workbook ??= new WorkbookManager(
-                    writerType: $this->resolveWriterType(),
-                    options: $this->writerOptions,
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
                 );
-            $manager->open($stream->path()->path());
 
-            foreach ($rows as $rowIndex => $row) {
-                $sheetName = $this->resolveSheetName($row);
-
-                $rowSchema = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
-                    ? $rows->schema()->gracefulRemove($this->sheetNameEntryName)
-                    : $rows->schema();
-
-                $typed = $dehydrated[$rowIndex];
-                $values = $typed->values;
-                $types = $typed->types;
-                $metadata = $typed->metadata;
-
-                if ($this->sheetNameEntryName !== null) {
-                    unset(
-                        $values[$this->sheetNameEntryName],
-                        $types[$this->sheetNameEntryName],
-                        $metadata[$this->sheetNameEntryName],
+                $manager =
+                    $this->workbook ??= new WorkbookManager(
+                        writerType: $this->resolveWriterType(),
+                        options: $this->writerOptions,
                     );
-                }
+                $manager->open($stream->path()->path());
 
-                if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
-                    $manager->writeHeader($sheetName, $encoder->encodeHeader(array_keys($values)), $this->headerStyle);
-                }
+                foreach ($group as $rowIndex => $row) {
+                    $sheetName = $this->resolveSheetName($row);
 
-                $styles = $this->resolveCellStyles($row, $rowSchema, $rowIndex, $sheetName);
-                /** @var array<int, null|bool|float|int|string> $cells */
-                $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
-                $manager->writeRow($sheetName, $cells, $styles);
+                    $rowSchema = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
+                        ? $group->schema()->gracefulRemove($this->sheetNameEntryName)
+                        : $group->schema();
+
+                    $typed = $dehydrated[$rowIndex];
+                    $values = $typed->values;
+                    $types = $typed->types;
+                    $metadata = $typed->metadata;
+
+                    if ($this->sheetNameEntryName !== null) {
+                        unset(
+                            $values[$this->sheetNameEntryName],
+                            $types[$this->sheetNameEntryName],
+                            $metadata[$this->sheetNameEntryName],
+                        );
+                    }
+
+                    if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
+                        $manager->writeHeader(
+                            $sheetName,
+                            $encoder->encodeHeader(array_keys($values)),
+                            $this->headerStyle,
+                        );
+                    }
+
+                    $styles = $this->resolveCellStyles($row, $rowSchema, $rowIndex, $sheetName);
+                    /** @var array<int, null|bool|float|int|string> $cells */
+                    $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
+                    $manager->writeRow($sheetName, $cells, $styles);
+                }
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

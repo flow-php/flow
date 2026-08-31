@@ -232,12 +232,12 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         static::assertSame([3, 2, 1, 0], array_column($spy->loadedRowsToArray(), 'id'));
     }
 
-    public function test_partition_by_inside_a_transformation_partitions_the_whole_stream(): void
+    public function test_repartition_inside_a_transformation_regroups_the_whole_stream(): void
     {
-        // Partitions are cut over the stream now, so each partition arrives as one chunk instead of one per
+        // Groups are cut over the stream, so each key arrives as one chunk instead of one per
         // incoming batch.
         $spy = new SpyLoader();
-        $partitionByGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->partitionBy(ref(
+        $partitionByGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->repartition(ref(
             'g',
         )));
 

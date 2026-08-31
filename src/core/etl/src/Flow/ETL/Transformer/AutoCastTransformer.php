@@ -26,11 +26,10 @@ final readonly class AutoCastTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = array_to_rows(
-                array_map(fn(Row $row): array => array_map($this->caster->cast(...), $row->values()), $rows->all()),
-                $context->hydrator(),
-                $rows->partitions(),
-            );
+            $result = array_to_rows(array_map(fn(Row $row): array => array_map(
+                $this->caster->cast(...),
+                $row->values(),
+            ), $rows->all()), $context->hydrator());
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

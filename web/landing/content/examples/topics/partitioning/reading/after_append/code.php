@@ -16,8 +16,7 @@ data_frame()
             ['id' => 2, 'color' => 'blue', 'name' => 'Gadget'],
         ]
     ))
-    ->partitionBy(ref('color'))
-    ->write(to_csv($outputPath . '/products.csv')->saveMode(append()))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(append())->partitionBy(partition_by(ref('color'))))
     ->run();
 
 data_frame()
@@ -27,8 +26,7 @@ data_frame()
             ['id' => 4, 'color' => 'blue', 'name' => 'Gear'],
         ]
     ))
-    ->partitionBy(ref('color'))
-    ->write(to_csv($outputPath . '/products.csv')->saveMode(append()))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(append())->partitionBy(partition_by(ref('color'))))
     ->run();
 
 data_frame()

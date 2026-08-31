@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeStreamWriter;
@@ -370,29 +368,6 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectExceptionMessage('new column "b"');
 
         $writer->write(rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2])));
-    }
-
-    public function test_rejected_batch_registers_no_partition_combination(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://rejected-partitions.floe');
-
-        $writer = new FloeStreamWriter(schema(int_schema('id')));
-        $writer->create($filesystem->writeTo($path));
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
-
-        try {
-            $writer->write(Rows::partitioned(
-                schema(str_schema('id')),
-                [row(['id' => 'AB-1'])],
-                [new Partition('g', 'x')],
-            ));
-        } catch (IncompatibleSchemaException) {
-        }
-
-        $writer->close();
-
-        static::assertSame([[]], FloeStreamReaderContext::footer($filesystem, $path)->partitions);
     }
 
     public function test_long_string_value_is_truncated_in_the_error_message(): void

@@ -32,7 +32,7 @@ final class MemoryExtractor implements Extractor
         $schema = $this->schema();
 
         foreach ($this->memory->dump() as $row) {
-            $signal = yield array_to_rows([$row], $context->hydrator(), [], $schema);
+            $signal = yield array_to_rows([$row], $context->hydrator(), $schema);
 
             if ($signal === Signal::STOP) {
                 return;

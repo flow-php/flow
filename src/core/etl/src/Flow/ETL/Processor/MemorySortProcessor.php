@@ -10,7 +10,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\Partitions;
 use Generator;
 
 use function max;
@@ -31,8 +30,6 @@ final readonly class MemorySortProcessor implements Processor
     {
         /** @var array<Row> $buffer */
         $buffer = [];
-        $partitions = null;
-        $partitionsId = null;
         $maxSize = 1;
 
         $schema = null;
@@ -45,20 +42,12 @@ final readonly class MemorySortProcessor implements Processor
 
             $maxSize = max($batch->count(), $maxSize);
 
-            if ($partitions === null) {
-                $partitions = $batch->partitions();
-                $partitionsId = $partitions->id();
-            } elseif ($partitionsId !== $batch->partitions()->id()) {
-                $partitions = new Partitions();
-                $partitionsId = $partitions->id();
-            }
-
             foreach ($batch->all() as $row) {
                 $buffer[] = $row;
             }
         }
 
-        yield from Rows::partitioned($schema ?? new Schema(), $buffer, $partitions ?? new Partitions())
+        yield from (new Rows($schema ?? new Schema(), ...$buffer))
             ->sortBy(...$this->refs->all())
             ->chunks($maxSize);
     }

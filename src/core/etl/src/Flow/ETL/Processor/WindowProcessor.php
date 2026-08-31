@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FrameAccumulating;
@@ -24,7 +23,6 @@ use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\rows;
-use function serialize;
 
 /**
  * Applies window functions over partitioned and ordered data.
@@ -43,22 +41,19 @@ final readonly class WindowProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $currentPartitionKey = null;
-        /** @var array<Row> $partitionRows */
-        $partitionRows = [];
         $bound = null;
         $definition = null;
         $schema = null;
         $outputSchema = null;
 
         foreach ($rows as $batch) {
+            if (!$batch->count()) {
+                continue;
+            }
+
             // Bind once per run, against the first non-empty batch's schema - one Definition for the
             // whole produced column, before any row is read.
             if ($bound === null || $definition === null) {
-                if (!$batch->count()) {
-                    continue;
-                }
-
                 $schema = $batch->schema();
                 $resolver = new ReferenceResolver();
                 /** @var WindowFunction $bound a window root is never a reference leaf */
@@ -74,40 +69,11 @@ final readonly class WindowProcessor implements Processor
                     : $schema->replace($definition->entry()->name(), $definition);
             }
 
-            foreach ($batch as $row) {
-                $partitionKey = $this->extractPartitionKey($bound, $row);
-
-                if (
-                    $currentPartitionKey !== null
-                    && $currentPartitionKey !== $partitionKey
-                    && $schema !== null
-                    && $outputSchema !== null
-                ) {
-                    yield $this->processPartition(
-                        $bound,
-                        $definition,
-                        $schema,
-                        $outputSchema,
-                        $partitionRows,
-                        $context,
-                    );
-
-                    $partitionRows = [];
-                }
-
-                $partitionRows[] = $row;
-                $currentPartitionKey = $partitionKey;
+            if ($schema !== null && $outputSchema !== null) {
+                // one incoming batch is one partition: RepartitionSteps put every row sharing the
+                // partition key into a single Rows before this processor ever sees it
+                yield $this->processPartition($bound, $definition, $schema, $outputSchema, $batch->all(), $context);
             }
-        }
-
-        if (
-            [] !== $partitionRows
-            && $bound !== null
-            && $definition !== null
-            && $schema !== null
-            && $outputSchema !== null
-        ) {
-            yield $this->processPartition($bound, $definition, $schema, $outputSchema, $partitionRows, $context);
         }
     }
 
@@ -121,32 +87,11 @@ final readonly class WindowProcessor implements Processor
     {
         $window = $function->window();
 
-        foreach ([...$window->partitions(), ...$window->order()] as $ref) {
+        foreach ([...$window->partitions()->all(), ...$window->order()] as $ref) {
             if ($schema->findDefinition($ref->to()) === null) {
                 throw SchemaDefinitionNotFoundException::withAvailable($ref->to(), ...$schema->references()->names());
             }
         }
-    }
-
-    private function extractPartitionKey(WindowFunction $function, Row $row): string
-    {
-        $partitions = $function->window()->partitions();
-
-        if ([] === $partitions) {
-            return '__single_partition__';
-        }
-
-        $keyParts = [];
-
-        foreach ($partitions as $partition) {
-            try {
-                $keyParts[] = $row->get($partition);
-            } catch (InvalidArgumentException) {
-                $keyParts[] = null;
-            }
-        }
-
-        return serialize($keyParts);
     }
 
     /**
@@ -225,7 +170,8 @@ final readonly class WindowProcessor implements Processor
     ): Rows {
         $window = $function->window();
         $orderBy = $window->order();
-        $partitionRows = rows($inputSchema, ...$rows)->sortBy(...$orderBy ?: $window->partitions());
+        $sortBy = $orderBy === [] ? $window->partitions()->all() : $orderBy;
+        $partitionRows = rows($inputSchema, ...$rows)->sortBy(...$sortBy);
 
         $frame = $window->frame();
         $processedRows = [];

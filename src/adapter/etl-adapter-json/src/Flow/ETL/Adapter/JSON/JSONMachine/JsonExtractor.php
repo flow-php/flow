@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\JSON\JSONEncoder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
@@ -36,6 +37,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     use MetadataColumns;
 
     use Limitable;
+    use DeclaresPartitionTypes;
     use PathFiltering;
 
     private ?string $pointer = null;
@@ -75,23 +77,22 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $baseSchema = $this->schema === null ? null : $this->schema();
 
         $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $partitionColumns->names($this->path, $this->filter());
+        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
             $stream = $this->filesystem->readFrom($listedFile->path);
 
             $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
             $partitionValues = [];
 
-            foreach ($partitions as $partition) {
+            foreach ($stream->path()->partitions() as $partition) {
                 $partitionValues[$partition->name] = $partition->value;
             }
 
             $schema = $baseSchema;
 
             if ($schema !== null) {
-                $schema = $partitionColumns->declare($schema, $partitionNames);
+                $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
             }
 
             $rawBatch = [];
@@ -122,11 +123,15 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
 
                     if ($baseSchema === null) {
-                        $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                        $hydrated = $partitionColumns->apply(
+                            $hydrated,
+                            $partitionNames,
+                            $this->declaredPartitionTypes(),
+                        );
                     }
 
                     foreach ($hydrated as $hydratedRow) {
-                        $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                         $this->incrementReturnedRows();
 
@@ -142,11 +147,11 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
             $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
 
             if ($baseSchema === null) {
-                $hydrated = $partitionColumns->apply($hydrated, $partitionNames);
+                $hydrated = $partitionColumns->apply($hydrated, $partitionNames, $this->declaredPartitionTypes());
             }
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::partitioned($hydrated->schema(), [$hydratedRow], $partitions);
+                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
 
                 $this->incrementReturnedRows();
 
@@ -165,11 +170,12 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
             throw SchemaNotDerivableException::extractor(self::class);
         }
 
-        if ($this->addMetadataColumns) {
-            return $this->schema->add(str_schema('_input_file_uri'));
-        }
+        $partitionColumns = new PartitionColumns($this->filesystem);
 
-        return $this->schema;
+        return $partitionColumns->declare(
+            $this->addMetadataColumns ? $this->schema->add(str_schema('_input_file_uri')) : $this->schema,
+            $this->partitionNames($partitionColumns, $this->path),
+        );
     }
 
     public function source(): Path

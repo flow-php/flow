@@ -28,7 +28,7 @@ final class DataFrameExtractor implements Extractor
     {
         foreach ($this->dataFrame->get() as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $rows->partitions(), $this->schema);
+                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
             }
 
             $signal = yield $rows;

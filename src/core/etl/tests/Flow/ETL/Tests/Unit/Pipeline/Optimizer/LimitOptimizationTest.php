@@ -12,7 +12,8 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Processor\RepartitionProcessor;
+use Flow\ETL\Row\References;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -37,9 +38,11 @@ final class LimitOptimizationTest extends FlowTestCase
 
         static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithGroupBy));
 
-        // Pipeline with PartitioningProcessor - should not optimize
+        // Pipeline with RepartitionProcessor - should not optimize
         $pipelineWithPartitioning = new Pipeline(from_csv(path_real('file.csv')));
-        $pipelineWithPartitioning->add(new PartitioningProcessor([ref('group')]));
+        $pipelineWithPartitioning->add(
+            new RepartitionProcessor(References::init(ref('group')), new Buckets(new MemoryBuckets())),
+        );
 
         static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithPartitioning));
 

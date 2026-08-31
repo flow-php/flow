@@ -519,18 +519,54 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
+    /**
+     * p3's divergence: the fixture's own header is `group,id,value`, so before D4 extract() emitted
+     * `group` first while schema() never mentioned it at all. Both now emit the partition block last.
+     */
+    public function test_schema_and_extract_agree_on_partition_columns(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
+            int_schema('group'),
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        static::assertSame(
+            ['id', 'value', 'group'],
+            array_map(static fn(Row\Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
+        );
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+        }
+    }
+
+    public function test_schema_lists_the_path_once_per_instance(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        static::assertEquals($extractor->schema(), $extractor->schema());
+        static::assertSame(
+            ['id', 'value', 'group'],
+            array_map(static fn(Row\Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
+        );
+    }
+
     public function test_loading_data_from_all_partitions(): void
     {
         static::assertSame(
             [
-                ['group' => '1', 'id' => 1, 'value' => 'a'],
-                ['group' => '1', 'id' => 2, 'value' => 'b'],
-                ['group' => '1', 'id' => 3, 'value' => 'c'],
-                ['group' => '1', 'id' => 4, 'value' => 'd'],
-                ['group' => '2', 'id' => 5, 'value' => 'e'],
-                ['group' => '2', 'id' => 6, 'value' => 'f'],
-                ['group' => '2', 'id' => 7, 'value' => 'g'],
-                ['group' => '2', 'id' => 8, 'value' => 'h'],
+                ['id' => 1, 'value' => 'a', 'group' => '1'],
+                ['id' => 2, 'value' => 'b', 'group' => '1'],
+                ['id' => 3, 'value' => 'c', 'group' => '1'],
+                ['id' => 4, 'value' => 'd', 'group' => '1'],
+                ['id' => 5, 'value' => 'e', 'group' => '2'],
+                ['id' => 6, 'value' => 'f', 'group' => '2'],
+                ['id' => 7, 'value' => 'g', 'group' => '2'],
+                ['id' => 8, 'value' => 'h', 'group' => '2'],
             ],
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))

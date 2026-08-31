@@ -13,6 +13,8 @@ use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
 use Flow\ETL\Config\Join\HashJoinBuilder;
 use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
+use Flow\ETL\Config\Repartition\HashRepartitionBuilder;
+use Flow\ETL\Config\Repartition\RepartitionAlgorithmBuilder;
 use Flow\ETL\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
@@ -53,6 +55,8 @@ final class ConfigBuilder
 
     private ?JoinAlgorithmBuilder $join;
 
+    private ?RepartitionAlgorithmBuilder $repartition;
+
     private ?string $id;
 
     private ?string $name;
@@ -85,6 +89,7 @@ final class ConfigBuilder
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
         $this->telemetryConfig = null;
+        $this->repartition = null;
         $this->version = PackageVersion::get('flow-php/etl') === 'unknown'
             ? PackageVersion::get('flow-php/flow')
             : PackageVersion::get('flow-php/etl');
@@ -126,6 +131,7 @@ final class ConfigBuilder
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
             ($this->groupBy ?? new HashGroupByBuilder())->build($cacheConfig->localFilesystemCacheDir),
             ($this->join ?? new HashJoinBuilder())->build($cacheConfig->localFilesystemCacheDir),
+            ($this->repartition ?? new HashRepartitionBuilder())->build($cacheConfig->localFilesystemCacheDir),
             $this->extractorBatchSize,
             randomValueGenerator: $this->randomValueGenerator,
         );
@@ -217,6 +223,13 @@ final class ConfigBuilder
     public function serializer(Serializer $serializer): self
     {
         $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    public function repartition(RepartitionAlgorithmBuilder $algorithm): self
+    {
+        $this->repartition = $algorithm;
 
         return $this;
     }
