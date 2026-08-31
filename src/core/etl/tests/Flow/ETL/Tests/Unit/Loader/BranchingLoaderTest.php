@@ -7,12 +7,12 @@ namespace Flow\ETL\Tests\Unit\Loader;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
+use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
@@ -265,10 +265,10 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config())->setErrorHandler(ignore_error_handler());
-        $throwOnDrain = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->map(
-            schema(int_schema('id')),
-            static fn(Row $row): Row => throw new RuntimeException('boom'),
-        ));
+        $throwOnDrain =
+            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+                new RuntimeException('boom'),
+            )));
         $loader = to_branch(lit(true), $spy)->withTransformation($throwOnDrain);
 
         $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);

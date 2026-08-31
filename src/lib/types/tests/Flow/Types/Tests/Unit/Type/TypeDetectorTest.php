@@ -10,6 +10,8 @@ use DateTimeZone;
 use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Tests\Double\InvokableObject;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -39,6 +41,7 @@ use stdClass;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
@@ -641,6 +644,14 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
+    public function test_closure_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Closure is not a supported value type.');
+
+        (new TypeDetector())->detectType(static fn(): int => 1);
+    }
+
     #[DataProvider('provide_detected_type_law_data')]
     public function test_detected_type_accepts_the_value_it_was_detected_from(mixed $data): void
     {
@@ -652,6 +663,14 @@ final class TypeDetectorTest extends TestCase
     public function test_enum_type(): void
     {
         static::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+    }
+
+    public function test_invokable_object_is_still_detected_as_instance_of(): void
+    {
+        static::assertEquals(
+            type_instance_of(InvokableObject::class),
+            (new TypeDetector())->detectType(new InvokableObject()),
+        );
     }
 
     #[RequiresPhp('>= 8.4.0')]

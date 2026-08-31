@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Closure;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\TypeDetector;
 
+use function array_walk_recursive;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
+use function is_array;
 
 final class Literal implements ScalarFunction
 {
@@ -18,7 +22,25 @@ final class Literal implements ScalarFunction
 
     public function __construct(
         private readonly mixed $value,
-    ) {}
+    ) {
+        if ($this->value instanceof Closure) {
+            throw new InvalidArgumentException(
+                'A Closure cannot be used as a literal value: pipeline objects must not hold executable state.',
+            );
+        }
+
+        if (is_array($this->value)) {
+            $value = $this->value;
+
+            array_walk_recursive($value, static function (mixed $leaf): void {
+                if ($leaf instanceof Closure) {
+                    throw new InvalidArgumentException(
+                        'A Closure cannot be used as a literal value: pipeline objects must not hold executable state.',
+                    );
+                }
+            });
+        }
+    }
 
     /**
      * @return list<ScalarFunction>

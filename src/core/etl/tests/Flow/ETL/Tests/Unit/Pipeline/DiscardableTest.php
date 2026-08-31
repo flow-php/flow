@@ -7,17 +7,15 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\Double\RecordingSink;
+use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowTestCase;
 use Throwable;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\write_with_retries;
@@ -113,13 +111,7 @@ final class DiscardableTest extends FlowTestCase
             data_frame()
                 ->read(from_array([['id' => 1], ['id' => 2]]))
                 ->batchSize(1)
-                ->map(schema(int_schema('id')), function (Row $row): Row {
-                    if ($row->get('id') === 2) {
-                        throw new RuntimeException('boom');
-                    }
-
-                    return $row;
-                })
+                ->with(new ThrowWhenRowMatches('id', 2, new RuntimeException('boom')))
                 ->write($loader)
                 ->run();
         } catch (Throwable) {

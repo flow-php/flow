@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\CallUserFunc;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Function\Fixtures\CallUserFunc\StaticCalculator;
@@ -13,6 +14,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\row_number;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -33,8 +35,24 @@ final class CallUserFuncTest extends FlowTestCase
 
     public function test_call_user_func_as_dsl(): void
     {
-        // @mago-ignore analysis:possibly-invalid-argument
-        static::assertIsInt(call('time', type_integer())->eval(row([]), flow_context()));
+        static::assertIsInt(call(lit('time'), type_integer())->eval(row([]), flow_context()));
+    }
+
+    public function test_a_non_scalar_function_cannot_replace_the_callable_child(): void
+    {
+        $function = new CallUserFunc(lit('count'), type_integer(), [lit([1, 2, 3])]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('CallUserFunc requires a ScalarFunction as its first child');
+
+        $function->withChildren([row_number(), lit([1, 2, 3])]);
+    }
+
+    public function test_call_user_func_with_array_callable(): void
+    {
+        static::assertSame(3, ref('list')
+            ->call(lit([new StaticCalculator(), 'count']), type_integer())
+            ->eval(row(['list' => [1, 2, 3]]), flow_context()));
     }
 
     public function test_call_user_func_with_native_function(): void
@@ -42,17 +60,6 @@ final class CallUserFuncTest extends FlowTestCase
         $row = row(['list' => [1, 2, 3]]);
 
         static::assertSame(3, ref('list')->call(lit('count'), type_integer())->eval($row, flow_context()));
-    }
-
-    public function test_call_user_func_with_object_method(): void
-    {
-        $row = row(['list' => [1, 2, 3]]);
-
-        $calculator = new StaticCalculator();
-
-        static::assertSame(3, ref('list')
-            ->call(lit($calculator->count(...)), type_integer())
-            ->eval($row, flow_context()));
     }
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments(): void

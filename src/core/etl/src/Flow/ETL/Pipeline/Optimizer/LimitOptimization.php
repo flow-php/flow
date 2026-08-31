@@ -13,7 +13,6 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\PruneEntriesTransformer;
@@ -42,7 +41,6 @@ final class LimitOptimization implements Optimization
      * @var array<int, class-string>
      */
     private array $nonExpandingTransformers = [
-        CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,
         SelectEntriesTransformer::class,
         PruneEntriesTransformer::class,

@@ -17,6 +17,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
+use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
@@ -46,8 +47,6 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_sort_by_name;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\to_callable;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function iterator_to_array;
 
@@ -55,6 +54,8 @@ final class DataFrameTest extends FlowTestCase
 {
     public function test_batch_size(): void
     {
+        $spy = new SpyLoader();
+
         df()
             ->read(from_array([
                 ['id' => '01', 'elements' => [['sub_id' => '01_01'], ['sub_id' => '01_02']]],
@@ -64,14 +65,14 @@ final class DataFrameTest extends FlowTestCase
                 ['id' => '05', 'elements' => [['sub_id' => '05_01'], ['sub_id' => '05_02'], ['sub_id' => '05_03']]],
             ]))
             ->batchSize(1)
-            ->load(to_callable(function (Rows $rows): void {
-                $this->assertCount(1, $rows);
-            }))
+            ->load($spy)
             ->withEntry('element', ref('elements')->expand())
             ->batchSize(3)
             ->run(function (Rows $rows): void {
                 $this->assertLessThanOrEqual(3, $rows->count());
             });
+
+        static::assertSame([1, 1, 1, 1, 1], $spy->loadedRowCounts());
     }
 
     public function test_collect_references(): void
@@ -351,7 +352,7 @@ final class DataFrameTest extends FlowTestCase
         );
     }
 
-    public function test_map(): void
+    public function test_deriving_a_boolean_entry_from_an_existing_column(): void
     {
         $rows = data_frame()
             ->extract(new class implements Extractor {
@@ -377,10 +378,7 @@ final class DataFrameTest extends FlowTestCase
                     }
                 }
             })
-            ->map(schema(int_schema('id'), bool_schema('odd')), static fn(Row $row): Row => row([
-                ...$row->values(),
-                'odd' => (type_integer()->assert($row->get('id')) % 2) === 0,
-            ]))
+            ->withEntry('odd', ref('id')->mod(lit(2))->equals(lit(0)))
             ->fetch();
 
         static::assertCount(10, $rows);

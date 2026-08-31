@@ -80,7 +80,7 @@ Each partition column creates an additional nesting level in the directory hiera
 $dataFrame = data_frame()
     ->read($extractor)
     ->partitionBy('date')
-    ->map($transformation)
+    ->with($transformation)
     ->dropPartitions() // Remove partition information but keep data
     ->write($loader)
     ->run();

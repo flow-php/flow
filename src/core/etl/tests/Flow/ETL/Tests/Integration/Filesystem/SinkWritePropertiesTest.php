@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row;
+use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use Throwable;
@@ -19,9 +19,7 @@ use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
 use function iterator_to_array;
@@ -63,13 +61,7 @@ final class SinkWritePropertiesTest extends FlowIntegrationTestCase
             df()
                 ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
                 ->batchSize(1)
-                ->map(schema(int_schema('id')), function (Row $row): Row {
-                    if ($row->get('id') === 3) {
-                        throw new RuntimeException('aborted');
-                    }
-
-                    return $row;
-                })
+                ->with(new ThrowWhenRowMatches('id', 3, new RuntimeException('aborted')))
                 ->write($sink)
                 ->run();
             static::fail('The run was expected to fail');

@@ -7,13 +7,14 @@ namespace Flow\ETL\Tests\Integration\Filesystem;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\InlineLoader;
+use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\to_callable;
 use function Flow\Floe\DSL\floe_options;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
@@ -35,7 +36,7 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
                 ->read(from_array($rows))
                 ->batchSize(10)
                 ->write(to_floe($destination, options: floe_options(buffer_size: 64)))
-                ->write(to_callable(static function (Rows $rows, FlowContext $context): void {
+                ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
                     if ($rows->first()->get('id') === 101) {
                         throw new RuntimeException('aborted mid run');
                     }
@@ -72,9 +73,7 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
             data_frame($config)
                 ->read(from_array([['id' => 1]]))
                 ->write($sink)
-                ->write(to_callable(static function (Rows $rows, FlowContext $context): void {
-                    throw new RuntimeException('aborted');
-                }))
+                ->write(new ThrowingLoader(new RuntimeException('aborted')))
                 ->run();
             static::fail('The first run was expected to fail');
         } catch (RuntimeException $e) {

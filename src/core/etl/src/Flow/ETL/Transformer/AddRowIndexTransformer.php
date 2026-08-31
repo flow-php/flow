@@ -8,25 +8,21 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer;
 use Throwable;
 
-final class CallbackRowTransformer implements Transformer
-{
-    /**
-     * @var callable(Row) : Row
-     */
-    private $callable;
+use function Flow\ETL\DSL\int_schema;
 
-    /**
-     * @param callable(Row) : Row $callable
-     */
+final class AddRowIndexTransformer implements Transformer
+{
+    private int $index;
+
     public function __construct(
-        private readonly Schema $schema,
-        callable $callable,
+        private readonly string $indexColumn,
+        StartFrom $startFrom,
     ) {
-        $this->callable = $callable;
+        $this->index = $startFrom === StartFrom::ZERO ? 0 : 1;
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -34,7 +30,12 @@ final class CallbackRowTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map($this->schema, $this->callable);
+            $result = $rows->map($rows->schema()->add(int_schema($this->indexColumn)), function (Row $row): Row {
+                $row = new Row([...$row->values(), $this->indexColumn => $this->index]);
+                $this->index++;
+
+                return $row;
+            });
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

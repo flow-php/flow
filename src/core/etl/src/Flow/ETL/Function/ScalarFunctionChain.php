@@ -171,7 +171,7 @@ trait ScalarFunctionChain
      * @param Type<mixed> $returnType
      */
     public function call(
-        ScalarFunction|callable $callable,
+        ScalarFunction $callable,
         Type $returnType,
         array $arguments = [],
         string|int $refAlias = 0,

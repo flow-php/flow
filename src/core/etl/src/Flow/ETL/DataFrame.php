@@ -44,8 +44,7 @@ use Flow\ETL\Schema\SortingStrategy\TypeStrategy;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Transformer\AutoCastTransformer;
-use Flow\ETL\Transformer\CallbackRowsTransformer;
-use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
@@ -225,13 +224,7 @@ final class DataFrame
      */
     public function collectRefs(References $references): self
     {
-        $this->with(new CallbackRowsTransformer(static function (Rows $rows) use ($references): Rows {
-            foreach ($rows->schema()->references() as $reference) {
-                $references->add($reference);
-            }
-
-            return $rows;
-        }));
+        $this->with(new CollectReferencesTransformer($references));
 
         return $this;
     }
@@ -625,18 +618,6 @@ final class DataFrame
     public function load(Loader $loader): self
     {
         $this->pipeline = $this->context->config->optimizer()->optimize($loader, $this->pipeline);
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @param callable(Row $row) : Row $callback
-     */
-    public function map(Schema $schema, callable $callback): self
-    {
-        $this->pipeline->add(new CallbackRowTransformer($schema, $callback));
 
         return $this;
     }

@@ -8,12 +8,13 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
+use Flow\ETL\Tests\Double\ThrowingTransformer;
+use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
@@ -51,9 +52,8 @@ final class TransformerLoaderTest extends FlowTestCase
     {
         $context = flow_context(config())->setErrorHandler(ignore_error_handler());
         $spy = new SpyLoader();
-        $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-            schema(int_schema('id')),
-            static fn(Row $row): Row => $row->get('id') === 1 ? throw new RuntimeException('boom') : $row,
+        $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->with(
+            new ThrowWhenRowMatches('id', 1, new RuntimeException('boom')),
         )), $spy);
 
         $thrown = null;
@@ -82,9 +82,8 @@ final class TransformerLoaderTest extends FlowTestCase
         $failed = flow_context(config());
         $next = flow_context(config());
         $spy = new SpyLoader();
-        $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-            schema(int_schema('id')),
-            static fn(Row $row): Row => $row->get('id') === 1 ? throw new RuntimeException('boom') : $row,
+        $loader = to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->with(
+            new ThrowWhenRowMatches('id', 1, new RuntimeException('boom')),
         )), $spy);
 
         $thrown = null;
@@ -167,10 +166,9 @@ final class TransformerLoaderTest extends FlowTestCase
         $context = flow_context(config())->setErrorHandler(ignore_error_handler());
         $spy = new SpyLoader();
         $loader = to_transformation(
-            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->map(
-                schema(int_schema('id')),
-                static fn(Row $row): Row => throw new RuntimeException('boom'),
-            )),
+            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+                new RuntimeException('boom'),
+            ))),
             $spy,
         );
 
@@ -255,10 +253,7 @@ final class TransformerLoaderTest extends FlowTestCase
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
             ->batchSize(1)
             ->onError(skip_rows_handler())
-            ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-                schema(int_schema('id')),
-                static fn(Row $row): Row => $row->get('id') === 2 ? throw new RuntimeException('boom') : $row,
-            )), new SpyLoader()))
+            ->write(to_transformation(new ThrowWhenRowMatches('id', 2, new RuntimeException('boom')), new SpyLoader()))
             ->write($tail)
             ->run();
 
@@ -276,10 +271,7 @@ final class TransformerLoaderTest extends FlowTestCase
         try {
             df()
                 ->read(from_array([['id' => 1], ['id' => 2]]))
-                ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->map(
-                    schema(int_schema('id')),
-                    static fn(Row $row): Row => throw new RuntimeException('boom'),
-                )), $spy))
+                ->write(to_transformation(new ThrowingTransformer(new RuntimeException('boom')), $spy))
                 ->run();
         } catch (RuntimeException $e) {
             $thrown = $e;

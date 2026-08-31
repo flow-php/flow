@@ -36,7 +36,10 @@ final class MatchCasesTest extends FlowTestCase
             ->read(from_rows($rows))
             ->withEntry('string', match_cases([
                 match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
-                match_condition(ref('string')->call('is_numeric', type_boolean()), ref('string')->cast(type_integer())),
+                match_condition(
+                    ref('string')->call(lit('is_numeric'), type_boolean()),
+                    ref('string')->cast(type_integer()),
+                ),
                 match_condition(ref('string')->endsWith('%'), ref('string')->strReplace('%', '')->cast(type_integer())),
                 match_condition(
                     ref('string')->startsWith('+'),

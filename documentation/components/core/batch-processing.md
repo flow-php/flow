@@ -18,7 +18,7 @@ use function Flow\ETL\DSL\{data_frame, from_array, to_output};
 $dataFrame = data_frame()
     ->read(from_array($largeDataset))
     ->batchSize(1000) // Process in batches of 1000 rows
-    ->map($expensiveTransformation)
+    ->with($expensiveTransformation)
     ->write(to_output())
     ->run();
 ```
@@ -87,7 +87,7 @@ use function Flow\ETL\DSL\analyze;
 $report = data_frame()
     ->read($extractor)
     ->batchSize(1000)
-    ->map($transformation)
+    ->with($transformation)
     ->write($loader)
     ->run(analyze: analzyze());
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
+use Closure;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
@@ -130,6 +131,10 @@ final class TypeDetector
         }
 
         if (is_object($value)) {
+            if ($value instanceof Closure) {
+                throw new InvalidArgumentException('Closure is not a supported value type.');
+            }
+
             foreach (['Ramsey\Uuid\UuidInterface', 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
                 if (is_a($value, $uuidClass, true)) {
                     return type_uuid();

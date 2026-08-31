@@ -30,7 +30,7 @@ DataFrame methods fall into two categories based on when they execute:
 
 These methods build the processing pipeline without executing it immediately:
 
-- **Transformations**: `filter()`, `map()`, `withEntry()`, `select()`, `drop()`, `rename()`
+- **Transformations**: `filter()`, `withEntry()`, `select()`, `drop()`, `rename()`, `with()`
 - **Memory-intensive**: `collect()`, `sortBy()`, `groupBy()`, `join()`, `cache()`
 - **Processing control**: `batchSize()`, `limit()`, `offset()`, `partitionBy()`
 
@@ -90,7 +90,6 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Transformations](/documentation/components/core/transformations.md)** - Reusable DataFrame transformations and the Transformation interface
 - **[Select/Drop](/documentation/components/core/select-drop.md)** - Column selection and removal
 - **[Rename](/documentation/components/core/rename.md)** - Column renaming strategies
-- **[Map](/documentation/components/core/map.md)** - Row transformations and data mapping
 - **[Filter](/documentation/components/core/filter.md)** - Row filtering and conditions
 - **[Save Mode](/documentation/components/core/save-mode.md)** - configure how flow is saving files
 

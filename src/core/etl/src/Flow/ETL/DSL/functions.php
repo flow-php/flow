@@ -136,7 +136,6 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\ArrayLoader;
 use Flow\ETL\Loader\BranchingLoader;
-use Flow\ETL\Loader\CallbackLoader;
 use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Loader\RetryLoader;
 use Flow\ETL\Loader\StreamLoader;
@@ -468,12 +467,6 @@ function from_sequence_number(
     int|float $step = 1,
 ): SequenceExtractor {
     return new SequenceExtractor(new NumberSequenceGenerator($start, $end, $step), $entry_name);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_callable(callable $callable): CallbackLoader
-{
-    return new CallbackLoader($callable);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
@@ -922,12 +915,11 @@ function count(?Reference $function = null): Count
 /**
  * Calls a user-defined function with the given parameters.
  *
- * @param callable|ScalarFunction $callable
  * @param Type<mixed> $return_type
  * @param array<mixed> $parameters
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function call(ScalarFunction|callable $callable, Type $return_type, array $parameters = []): CallUserFunc
+function call(ScalarFunction $callable, Type $return_type, array $parameters = []): CallUserFunc
 {
     return new CallUserFunc($callable, $return_type, $parameters);
 }

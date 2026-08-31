@@ -45,8 +45,8 @@ constant memory regardless of input size.
 Every Flow pipeline has three stages:
 
 - **Extract** - `->read(...)` pulls rows from a source (file, API, database).
-- **Transform** - `->filter()`, `->withEntry()`, `->map()`, `->join()`,
-  `->groupBy()`, `->window()`, and friends shape the rows.
+- **Transform** - `->filter()`, `->withEntry()`, `->join()`, `->groupBy()`,
+  `->window()`, and friends shape the rows.
 - **Load** - `->write(...)` streams the result into a sink; `->run()` executes
   the whole thing.
 
@@ -63,8 +63,8 @@ batch carries the schema that types its columns.
 
 **Learn the API**
 
-- [Data Frame](/documentation/components/core/core) - the core: filter, map,
-  join, group by, window, partition, sort, limit.
+- [Data Frame](/documentation/components/core/core) - the core: filter, join,
+  group by, window, partition, sort, limit.
 - [DSL Reference](/documentation/dsl/core) - every function in the DSL, with
   signatures and examples.
 

@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\coalesce;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
-final class MapTest extends FlowIntegrationTestCase
+final class ReplaceNullsTest extends FlowIntegrationTestCase
 {
-    public function test_using_map_to_replace_nullable_lists(): void
+    public function test_replacing_null_lists_with_an_empty_list(): void
     {
         $rows = df()
             ->read(from_array([
@@ -27,10 +27,7 @@ final class MapTest extends FlowIntegrationTestCase
                 ['id' => 2, 'tags' => null],
                 ['id' => 3, 'tags' => ['D']],
             ])->withSchema(schema(int_schema('id'), list_schema('tags', type_list(type_string()), true))))
-            ->map(
-                schema(int_schema('id'), list_schema('tags', type_list(type_string()))),
-                static fn(Row $row): Row => row(['id' => $row->get('id'), 'tags' => $row->get('tags') ?? []]),
-            )
+            ->withEntry('tags', coalesce(ref('tags'), lit([])))
             ->fetch();
 
         static::assertEquals(
@@ -43,7 +40,7 @@ final class MapTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_using_map_to_replace_nulls(): void
+    public function test_replacing_null_strings_with_a_default(): void
     {
         $rows = df()
             ->read(from_array([
@@ -51,10 +48,7 @@ final class MapTest extends FlowIntegrationTestCase
                 ['id' => 2, 'name' => null],
                 ['id' => 3, 'name' => 'Doe'],
             ]))
-            ->map(schema(int_schema('id'), str_schema('name')), static fn(Row $row): Row => row([
-                'id' => $row->get('id'),
-                'name' => $row->get('name') ?? 'N/A',
-            ]))
+            ->withEntry('name', coalesce(ref('name'), lit('N/A')))
             ->fetch();
 
         static::assertEquals(

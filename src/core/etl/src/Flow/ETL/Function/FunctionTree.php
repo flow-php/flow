@@ -8,7 +8,7 @@ interface FunctionTree
 {
     /**
      * Every operand of this node that is an expression, in constructor order.
-     * Raw scalars, enums, Types, callables and scope-introducing bodies are fields, not children.
+     * Raw scalars, enums, Types and scope-introducing bodies are fields, not children.
      *
      * @return list<FunctionTree>
      */

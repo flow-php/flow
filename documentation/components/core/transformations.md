@@ -268,7 +268,7 @@ loader. Three groups:
 |----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`                                                         |
 | Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                                                     |
-| Constant                               | `select()`, `withEntry()`, `map()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()` |
+| Constant                               | `select()`, `withEntry()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()`          |
 
 The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
 `offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
@@ -298,7 +298,7 @@ The handler is **not** inherited by the nested pipeline, which always propagates
 transformation's own steps recoverable, set the handler inside it:
 
 ```php
-$dataFrame->onError(ignore_error_handler())->map(/* ... */);
+$dataFrame->onError(ignore_error_handler())->with(/* ... */);
 ```
 
 None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point

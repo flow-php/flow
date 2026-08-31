@@ -12,6 +12,7 @@ use Flow\Types\Type;
 use function array_combine;
 use function array_keys;
 use function array_map;
+use function array_shift;
 use function array_values;
 use function call_user_func;
 use function Flow\ETL\DSL\lit;
@@ -22,25 +23,18 @@ final class CallUserFunc implements ScalarFunction
     use ScalarFunctionChain;
 
     /**
-     * @var callable|ScalarFunction
-     */
-    private $callable;
-
-    /**
      * @var array<array-key, ScalarFunction>
      */
     private readonly array $parameters;
 
     /**
-     * @param callable|ScalarFunction $callable
      * @param array<mixed> $parameters
      */
     public function __construct(
-        ScalarFunction|callable $callable,
+        private readonly ScalarFunction $callable,
         private readonly Type $returnType,
         array $parameters,
     ) {
-        $this->callable = $callable;
         $this->parameters = array_map(static fn(mixed $parameter): ScalarFunction => $parameter
             instanceof ScalarFunction
                 ? $parameter
@@ -52,19 +46,24 @@ final class CallUserFunc implements ScalarFunction
      */
     public function children(): array
     {
-        return array_values($this->parameters);
+        return [$this->callable, ...array_values($this->parameters)];
     }
 
     /**
-     * String keys in the bag become PHP named arguments at call time, so the key list is
-     * carried as a field and restored here
+     * The callable leads the child list; string keys in the parameter bag become PHP named
+     * arguments at call time, so the key list is carried as a field and restored here
      *
      * @param list<FunctionTree> $children
      */
     public function withChildren(array $children): static
     {
-        /** @var list<ScalarFunction> $children */
-        return new self($this->callable, $this->returnType, array_combine(array_keys($this->parameters), $children));
+        $callable = array_shift($children);
+
+        if (!$callable instanceof ScalarFunction) {
+            throw new InvalidArgumentException('CallUserFunc requires a ScalarFunction as its first child');
+        }
+
+        return new self($callable, $this->returnType, array_combine(array_keys($this->parameters), $children));
     }
 
     /**

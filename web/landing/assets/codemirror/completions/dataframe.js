@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 51
+ * DataFrame methods: 50
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","offset","onError","partitionBy","rename","renameEach","reorderEntries","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","partitionBy","rename","renameEach","reorderEntries","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -528,24 +528,6 @@ const dataframeMethods = [
         apply: snippet("load(" + "$" + "{" + "1:loader" + "}" + ")"),
         boost: 10
     },        {
-        label: "map",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">callable</span> <span class=\"fn-param\">$callback</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param callable(Row $row) : Row $callback
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("map(" + "$" + "{" + "1:callback" + "}" + ")"),
-        boost: 10
-    },        {
         label: "match",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -694,12 +676,12 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">reorderEntries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Comparator</span> <span class=\"fn-param\">$comparator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Transformer\\OrderEntries\\TypeComparator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">reorderEntries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SortingStrategy</span> <span class=\"fn-param\">$strategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\SortingStrategy\\TypeStrategy::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("reorderEntries(" + "$" + "{" + "1:comparator" + "}" + ")"),
+        apply: snippet("reorderEntries(" + "$" + "{" + "1:strategy" + "}" + ")"),
         boost: 10
     },        {
         label: "rows",
