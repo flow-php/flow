@@ -78,7 +78,7 @@ final class GroupByTest extends FlowTestCase
             ],
             $result->toArray(),
         );
-        static::assertEquals(schema(str_schema('type', true), float_schema('id_sum', true)), $result->schema());
+        static::assertEquals(schema(str_schema('type'), float_schema('id_sum', true)), $result->schema());
     }
 
     public function test_output_schema_declares_one_definition_per_aggregate(): void
@@ -89,7 +89,7 @@ final class GroupByTest extends FlowTestCase
         $input = schema(str_schema('country'), int_schema('age'));
 
         static::assertEquals(
-            schema(str_schema('country', true), float_schema('age_sum', true), int_schema('age_count')),
+            schema(str_schema('country'), float_schema('age_sum', true), int_schema('age_count')),
             $groupBy->outputSchema($input, $groupBy->aggregations()->resolved($input)),
         );
     }
@@ -184,6 +184,51 @@ final class GroupByTest extends FlowTestCase
             $groupBy,
             flow_context(config()),
             rows(schema(str_schema('type')), row(['type' => 'a']), row(['type' => 'b'])),
+        );
+    }
+
+    public function test_a_not_null_group_key_stays_not_null_in_the_output_schema(): void
+    {
+        $groupBy = new GroupBy('country');
+        $groupBy->aggregate(count());
+
+        $input = schema(str_schema('country'), int_schema('age'));
+
+        static::assertEquals(
+            schema(str_schema('country'), int_schema('_count')),
+            $groupBy->outputSchema($input, $groupBy->aggregations()->resolved($input)),
+        );
+    }
+
+    public function test_a_nullable_group_key_stays_nullable_in_the_output_schema(): void
+    {
+        $groupBy = new GroupBy('country');
+        $groupBy->aggregate(count());
+
+        $input = schema(str_schema('country', nullable: true), int_schema('age'));
+
+        static::assertEquals(
+            schema(str_schema('country', nullable: true), int_schema('_count')),
+            $groupBy->outputSchema($input, $groupBy->aggregations()->resolved($input)),
+        );
+    }
+
+    public function test_key_values_throws_when_a_row_lacks_a_not_null_key(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "country" does not exist. Did you mean one of the following? ["age"]');
+
+        (new GroupBy('country'))->keyValues(row(['age' => 20]), schema(str_schema('country'), int_schema('age')));
+    }
+
+    public function test_key_values_substitutes_null_when_a_row_lacks_a_nullable_key(): void
+    {
+        static::assertSame(
+            ['country' => null],
+            iterator_to_array((new GroupBy('country'))->keyValues(
+                row(['age' => 20]),
+                schema(str_schema('country', nullable: true), int_schema('age')),
+            )),
         );
     }
 }

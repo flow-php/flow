@@ -30,7 +30,6 @@ final class HashBucketing implements BucketingStrategy
         private readonly Hasher $hasher,
         private readonly RandomValueGenerator $random,
         private readonly string $namespace = 'bucket',
-        bool $nullOnMissing = false,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -38,7 +37,7 @@ final class HashBucketing implements BucketingStrategy
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
 
-        $this->keyValues = new KeyValues($by, $nullOnMissing);
+        $this->keyValues = new KeyValues($by);
     }
 
     /**

@@ -59,7 +59,6 @@ final readonly class GroupBySteps
                 new NativeHasher(),
                 $config->randomValueGenerator(),
                 'group-by',
-                nullOnMissing: true,
             ),
             $buckets,
         );

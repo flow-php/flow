@@ -85,9 +85,9 @@ final class GroupBy
 
     /**
      * The aggregate operator's declared output schema, computed once per run. Group-key definitions
-     * come from the input schema and are made nullable, because keyValues() substitutes null for a
-     * ref the row lacks. A key the batch schema does not declare refuses at bind - inventing a
-     * column would put a value in row storage that no schema-driven reader can see.
+     * come from the input schema unchanged: a key is null only when the input column was already
+     * nullable. A key the batch schema does not declare refuses at bind - inventing a column would
+     * put a value in row storage that no schema-driven reader can see.
      */
     public function outputSchema(Schema $input, Aggregators $bound): Schema
     {
@@ -100,7 +100,7 @@ final class GroupBy
                 throw SchemaDefinitionNotFoundException::withAvailable($ref->name(), ...$input->references()->names());
             }
 
-            $definitions[] = $definition->makeNullable();
+            $definitions[] = $definition;
         }
 
         foreach ($bound as $aggregator) {
@@ -110,12 +110,14 @@ final class GroupBy
         return new Schema(...$definitions);
     }
 
-    public function keyValues(Row $row): GroupKey
+    public function keyValues(Row $row, Schema $input): GroupKey
     {
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[$ref->name()] = $row->has($ref) ? $row->get($ref) : null;
+            // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
+            // row-shape violation, and Row::get() already names it and lists the available columns.
+            $values[$ref->name()] = !$row->has($ref) && $input->get($ref)->isNullable() ? null : $row->get($ref);
         }
 
         return new GroupKey($values);

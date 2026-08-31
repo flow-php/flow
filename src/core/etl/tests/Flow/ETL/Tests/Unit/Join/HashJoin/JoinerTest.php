@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Any;
@@ -484,5 +485,178 @@ final class JoinerTest extends FlowTestCase
             ],
             $joined,
         );
+    }
+
+    public function test_left_join_emits_a_schema_declaring_the_right_side_nullable(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        $emitted = iterator_to_array(
+            $joiner->join(
+                $batches(rows(
+                    schema(int_schema('id'), int_schema('amount')),
+                    row(['id' => 1, 'amount' => 100]),
+                    row(['id' => 404, 'amount' => 200]),
+                )),
+                $batches(rows(
+                    schema(int_schema('user_id'), str_schema('name')),
+                    row(['user_id' => 1, 'name' => 'Alice']),
+                )),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertEquals(
+            schema(
+                int_schema('id'),
+                int_schema('amount'),
+                int_schema('user_id', nullable: true),
+                str_schema('name', nullable: true),
+            ),
+            $emitted[0]->schema(),
+        );
+    }
+
+    public function test_right_join_emits_a_schema_declaring_the_left_side_nullable(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
+
+        $emitted = iterator_to_array(
+            $joiner->join(
+                $batches(rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]))),
+                $batches(rows(
+                    schema(int_schema('user_id'), str_schema('name')),
+                    row(['user_id' => 1, 'name' => 'Alice']),
+                    row(['user_id' => 404, 'name' => 'Bob']),
+                )),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertEquals(
+            schema(
+                int_schema('id', nullable: true),
+                int_schema('amount', nullable: true),
+                int_schema('user_id'),
+                str_schema('name'),
+            ),
+            $emitted[0]->schema(),
+        );
+    }
+
+    public function test_every_batch_of_a_multi_batch_left_side_shares_one_output_schema(): void
+    {
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        $emitted = iterator_to_array(
+            $joiner->join(
+                (static function (): Generator {
+                    yield rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]));
+                    yield rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 404, 'amount' => 200]));
+                })(),
+                (static function (): Generator {
+                    yield rows(
+                        schema(int_schema('user_id'), str_schema('name')),
+                        row(['user_id' => 1, 'name' => 'Alice']),
+                    );
+                })(),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertCount(2, $emitted);
+        static::assertEquals($emitted[0]->schema(), $emitted[1]->schema());
+    }
+
+    public function test_a_padded_row_covers_a_right_column_no_source_row_carried(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        $joined = [];
+
+        foreach ($joiner->join(
+            $batches(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 404]))),
+            $batches(rows(
+                schema(int_schema('user_id'), str_schema('name'), str_schema('nickname', nullable: true)),
+                row(['user_id' => 1, 'name' => 'Alice']),
+            )),
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'user_id' => 1, 'name' => 'Alice'],
+                ['id' => 404, 'user_id' => null, 'name' => null, 'nickname' => null],
+            ],
+            $joined,
+        );
+    }
+
+    /**
+     * An unknown key matches nothing in SQL rather than aborting the join: the null keys into a bucket
+     * and no comparison in it succeeds, so the row falls out unmatched.
+     */
+    public function test_a_row_omitting_a_nullable_join_key_is_unmatched_rather_than_refused(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        $joined = [];
+
+        foreach ($joiner->join(
+            $batches(rows(
+                schema(int_schema('id', nullable: true), str_schema('l')),
+                row(['id' => 1, 'l' => 'has-key']),
+                row(['l' => 'no-key']),
+            )),
+            $batches(rows(schema(int_schema('user_id'), str_schema('r')), row(['user_id' => 1, 'r' => 'Alice']))),
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'l' => 'has-key', 'user_id' => 1, 'r' => 'Alice'],
+                ['l' => 'no-key', 'user_id' => null, 'r' => null],
+            ],
+            $joined,
+        );
+    }
+
+    public function test_a_row_omitting_a_not_null_join_key_is_refused(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "id" does not exist');
+
+        iterator_to_array($joiner->join(
+            $batches(rows(schema(int_schema('id'), str_schema('l')), row(['l' => 'no-key']))),
+            $batches(rows(schema(int_schema('user_id'), str_schema('r')), row(['user_id' => 1, 'r' => 'Alice']))),
+        ));
     }
 }

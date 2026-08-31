@@ -70,10 +70,14 @@ the column name, its [Flow Type](/documentation/components/libs/types.md), nulla
 | Structure | `structure_schema()` | [StructureDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StructureDefinition.php) |
 | Time | `time_schema()` | [TimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeDefinition.php) |
 | Time Zone | `time_zone_schema()` | [TimeZoneDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeZoneDefinition.php) |
-| Union | `union_schema()` | [UnionDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UnionDefinition.php) |
+| Union | `union_schema()` | resolves to the single member's Definition - see below |
 | Uuid | `uuid_schema()` | [UuidDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UuidDefinition.php) |
 | XML | `xml_schema()` | [XMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLDefinition.php) |
 | XML Element | `xml_element_schema()` | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLElementDefinition.php) |
+
+A column holds exactly one type, so `union_schema()` accepts only `null|T` - a nullable column - and
+refuses every other union. Declare the widest common type with `str_schema()`, or `json_schema()` when the
+shape is genuinely dynamic.
 
 When no schema is given up front - as in the `array_to_rows()` example above - a
 [Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) infers one from the whole batch and turns the raw

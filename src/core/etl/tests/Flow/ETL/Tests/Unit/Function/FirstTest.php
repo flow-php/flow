@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 
 final class FirstTest extends FlowTestCase
 {
@@ -49,5 +52,16 @@ final class FirstTest extends FlowTestCase
 
         static::assertNotSame($aggregate, $rebuilt);
         static::assertEquals([ref('b')], $rebuilt->references());
+    }
+
+    public function test_first_over_an_int_column_declares_optional_integer(): void
+    {
+        static::assertSame(
+            '?integer',
+            (new ReferenceResolver())
+                ->resolve(first(ref('v')), schema(int_schema('v')))
+                ->returns()
+                ->toString(),
+        );
     }
 }

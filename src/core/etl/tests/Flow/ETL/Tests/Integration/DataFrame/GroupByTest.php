@@ -92,7 +92,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(json_schema('array', true), float_schema('score_sum', true), float_schema('score_avg', true)),
+            schema(json_schema('array'), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         static::assertEquals(
@@ -125,7 +125,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(datetime_schema('date', true), float_schema('score_sum', true), float_schema('score_avg', true)),
+            schema(datetime_schema('date'), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         /** @var list<array{date: DateTimeImmutable, score_sum: int, score_avg: float}> $aggregated */
@@ -207,7 +207,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             $rows->toArray(),
         );
         static::assertEquals(
-            schema(str_schema('country', true), str_schema('gender', true), float_schema('age_avg', true)),
+            schema(str_schema('country'), str_schema('gender'), float_schema('age_avg', true)),
             $rows->schema(),
         );
     }
@@ -246,7 +246,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             $rows->sortBy(ref('gender'), ref('country'))->toArray(),
         );
         static::assertEquals(
-            schema(str_schema('country', true), str_schema('gender', true), float_schema('age_avg', true)),
+            schema(str_schema('country'), str_schema('gender', true), float_schema('age_avg', true)),
             $rows->schema(),
         );
     }
@@ -330,7 +330,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
-        static::assertEquals(schema(str_schema('country', true), float_schema('age_avg', true)), $rows->schema());
+        static::assertEquals(schema(str_schema('country'), float_schema('age_avg', true)), $rows->schema());
     }
 
     public function test_group_by_twice(): void
@@ -390,7 +390,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            schema(uuid_schema('uuid', true), float_schema('score_sum', true), float_schema('score_avg', true)),
+            schema(uuid_schema('uuid'), float_schema('score_sum', true), float_schema('score_avg', true)),
             $rows->schema(),
         );
         static::assertEquals(
@@ -637,7 +637,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(min(ref('value')))
             ->fetch();
 
-        static::assertEquals(schema(str_schema('group', true), float_schema('value_min', true)), $rows->schema());
+        static::assertEquals(schema(str_schema('group'), float_schema('value_min', true)), $rows->schema());
         static::assertSame(
             [
                 ['group' => 'a', 'value_min' => 10.0],

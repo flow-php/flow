@@ -86,4 +86,21 @@ final class SelectEntriesTransformerTest extends FlowTestCase
             $result->toArray(),
         );
     }
+
+    public function test_select_carries_a_not_null_definition_through_unchanged(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            (new SelectEntriesTransformer('id'))
+                ->transform(
+                    rows(
+                        schema(int_schema('id'), str_schema('name')),
+                        row(['id' => 1, 'name' => 'Alice']),
+                        row(['id' => 2, 'name' => 'Bob']),
+                    ),
+                    flow_context(config()),
+                )
+                ->schema(),
+        );
+    }
 }

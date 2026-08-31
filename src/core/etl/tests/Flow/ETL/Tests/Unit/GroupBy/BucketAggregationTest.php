@@ -194,4 +194,31 @@ final class BucketAggregationTest extends FlowTestCase
         static::assertCount(2, $mins);
         static::assertEquals([float_schema('v_min', true)], array_unique($definitions, SORT_REGULAR));
     }
+
+    /**
+     * A group that accumulates nothing is the reachable twin of the never-aggregated instance: the
+     * rows carry the key but omit the aggregated column, so min() emits null under its nullable
+     * definition instead of the definition being widened after the fact.
+     */
+    public function test_a_group_whose_aggregated_column_is_absent_emits_null_under_a_nullable_definition(): void
+    {
+        $groupBy = new GroupBy(ref('k'));
+        $groupBy->aggregate(min(ref('v')));
+
+        $batches = (static function () {
+            yield rows(
+                schema(str_schema('k'), float_schema('v', nullable: true)),
+                row(['k' => 'a']),
+                row(['k' => 'a']),
+            );
+        })();
+
+        $result = iterator_to_array(
+            (new BucketAggregation())->aggregate($batches, flow_context(), $groupBy),
+            preserve_keys: false,
+        );
+
+        static::assertSame([['k' => 'a', 'v_min' => null]], $result[0]->toArray());
+        static::assertEquals(float_schema('v_min', true), $result[0]->schema()->get('v_min'));
+    }
 }

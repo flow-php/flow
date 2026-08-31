@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_datetime;
 
 final class MaxTest extends FlowTestCase
@@ -96,5 +99,16 @@ final class MaxTest extends FlowTestCase
     public function test_max_of_nothing_is_null(): void
     {
         static::assertNull(max(ref('int'))->value());
+    }
+
+    public function test_max_over_an_int_column_declares_optional_integer(): void
+    {
+        static::assertSame(
+            '?integer',
+            (new ReferenceResolver())
+                ->resolve(max(ref('int')), schema(int_schema('int')))
+                ->returns()
+                ->toString(),
+        );
     }
 }

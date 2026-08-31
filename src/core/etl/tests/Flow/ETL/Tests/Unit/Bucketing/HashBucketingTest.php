@@ -163,15 +163,9 @@ final class HashBucketingTest extends FlowTestCase
         static::assertCount(3, BucketsStorageContext::rows($storage->get($buckets[0]->id)));
     }
 
-    public function test_null_on_missing_buckets_rows_missing_the_key_column_as_null(): void
+    public function test_missing_key_column_is_bucketed_as_null_when_the_schema_allows_it(): void
     {
-        $strategy = new HashBucketing(
-            [ref('id')],
-            4,
-            new NativeHasher(),
-            new NativePHPRandomValueGenerator(),
-            nullOnMissing: true,
-        );
+        $strategy = new HashBucketing([ref('id')], 4, new NativeHasher(), new NativePHPRandomValueGenerator());
         $storage = new MemoryBuckets();
 
         $generator = (static function () {

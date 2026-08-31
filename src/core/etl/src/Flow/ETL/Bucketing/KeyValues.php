@@ -7,6 +7,7 @@ namespace Flow\ETL\Bucketing;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 
 /**
  * Extracts bucket-key values positionally, in reference order - position, not column name, defines
@@ -19,7 +20,6 @@ final readonly class KeyValues
      */
     public function __construct(
         private array $refs,
-        private bool $nullOnMissing = false,
     ) {}
 
     /**
@@ -28,9 +28,10 @@ final readonly class KeyValues
     public function of(Rows $rows): array
     {
         $values = [];
+        $schema = $rows->schema();
 
         foreach ($rows as $row) {
-            $values[] = $this->ofRow($row);
+            $values[] = $this->ofRow($row, $schema);
         }
 
         return $values;
@@ -39,12 +40,15 @@ final readonly class KeyValues
     /**
      * @return list<mixed>
      */
-    public function ofRow(Row $row): array
+    public function ofRow(Row $row, Schema $schema): array
     {
         $values = [];
 
         foreach ($this->refs as $ref) {
-            $values[] = $this->nullOnMissing && !$row->has($ref) ? null : $row->get($ref);
+            // absent under a nullable declaration is a legitimate null - it keys into a bucket that
+            // no comparison will match, which is what SQL says an unknown key does. Absent under NOT
+            // NULL is a row-shape violation, and Row::get() names it and lists the available columns.
+            $values[] = !$row->has($ref) && $schema->get($ref)->isNullable() ? null : $row->get($ref);
         }
 
         return $values;

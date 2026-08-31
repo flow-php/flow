@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_datetime;
 
 final class MinTest extends FlowTestCase
@@ -105,5 +108,16 @@ final class MinTest extends FlowTestCase
     public function test_min_of_nothing_is_null(): void
     {
         static::assertNull(min(ref('int'))->value());
+    }
+
+    public function test_min_over_an_int_column_declares_optional_integer(): void
+    {
+        static::assertSame(
+            '?integer',
+            (new ReferenceResolver())
+                ->resolve(min(ref('int')), schema(int_schema('int')))
+                ->returns()
+                ->toString(),
+        );
     }
 }

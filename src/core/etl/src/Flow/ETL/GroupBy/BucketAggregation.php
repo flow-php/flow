@@ -36,24 +36,25 @@ final readonly class BucketAggregation
         /** @var array<string, Group> $groups */
         $groups = [];
         $aggregations = $groupBy->aggregations();
+        $input = null;
         $bound = null;
         $output = null;
 
         foreach ($rows as $batch) {
             // Bind once per run, against the first non-empty batch's schema - an empty batch has no
             // schema to bind against.
-            if ($bound === null) {
+            if ($input === null || $bound === null || $output === null) {
                 if (!$batch->count()) {
                     continue;
                 }
 
-                $schema = $batch->schema();
-                $bound = $aggregations->resolved($schema);
-                $output = $groupBy->outputSchema($schema, $bound);
+                $input = $batch->schema();
+                $bound = $aggregations->resolved($input);
+                $output = $groupBy->outputSchema($input, $bound);
             }
 
             foreach ($batch as $row) {
-                $key = $groupBy->keyValues($row);
+                $key = $groupBy->keyValues($row, $input);
                 $group = $groups[(string) $key] ??= new Group($key, $bound->cloned());
                 $group->aggregators->aggregate($row, $context);
             }
