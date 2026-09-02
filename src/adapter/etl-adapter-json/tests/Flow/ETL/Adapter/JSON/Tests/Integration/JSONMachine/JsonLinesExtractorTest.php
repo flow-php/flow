@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_keys;
@@ -129,8 +128,8 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $rows->each(function (Row $row): void {
-                $this->assertSame(
+            foreach ($rows->all() as $row) {
+                static::assertSame(
                     [
                         'timezones',
                         'latlng',
@@ -140,7 +139,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     ],
                     array_keys($row->toArray()),
                 );
-            });
+            }
             $total += $rows->count();
         }
 

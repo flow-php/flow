@@ -40,7 +40,6 @@ function from_floe(
 
 /**
  * @param Path|string $path
- * @param Options $options see floe_options() - validateData gates the per-value type check
  */
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::LOADER)]
 function to_floe(
@@ -53,15 +52,10 @@ function to_floe(
     return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $engine, $filesystem);
 }
 
-/**
- * @param bool $validate_data gates the per-value type check on write. The column-set check -
- *                            a row carrying a column the session schema does not declare -
- *                            always runs. Mirrors parquet-java's ParquetWriter::withValidation().
- */
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::HELPER)]
-function floe_options(bool $validate_data = true, int $buffer_size = 65536, Codec $codec = new NoopCodec()): Options
+function floe_options(int $buffer_size = 65536, Codec $codec = new NoopCodec()): Options
 {
-    return new Options($validate_data, $buffer_size, $codec);
+    return new Options($buffer_size, $codec);
 }
 
 /**

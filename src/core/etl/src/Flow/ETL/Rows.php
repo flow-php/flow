@@ -7,12 +7,15 @@ namespace Flow\ETL;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
+use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\RowMerger;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
@@ -21,8 +24,6 @@ use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\SortingStrategy;
-use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 use Flow\ETL\Serializer\DomValueCodec;
 use Flow\ETL\Sort\ValuesSorter;
 use Flow\Types\Exception\InvalidTypeException;
@@ -32,19 +33,15 @@ use IteratorAggregate;
 
 use function array_key_exists;
 use function array_map;
-use function array_merge;
-use function array_reduce;
 use function array_reverse;
 use function array_slice;
 use function array_values;
 use function count;
 use function Flow\Types\DSL\type_integer;
 use function implode;
-use function is_array;
 use function is_int;
 use function iterator_to_array;
 use function sprintf;
-use function usort;
 
 /**
  * @implements \ArrayAccess<int, Row>
@@ -57,11 +54,40 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     private array $rows;
 
+    /**
+     * @throws SchemaMismatchException
+     */
     public function __construct(
         private Schema $schema,
         Row ...$rows,
     ) {
-        $this->rows = array_values($rows);
+        $this->rows = [];
+
+        foreach ($rows as $row) {
+            try {
+                $this->rows[] = $row->matchTo($schema);
+            } catch (ColumnMismatchException $e) {
+                throw new SchemaMismatchException(count($this->rows), $e);
+            }
+        }
+    }
+
+    /**
+     * Skips the shape check the constructor performs. The caller vouches that every row already
+     * satisfies $schema and stores its columns in the Schema's order - which holds when the same
+     * operation produced the schema and the rows, or when the rows are a subset or a permutation of
+     * a batch that already passed.
+     *
+     * @internal engine paths only
+     *
+     * @param array<int, Row> $rows re-indexed here - first(), last(), chunks() and offsetGet() read by position
+     */
+    public static function trusted(Schema $schema, array $rows): self
+    {
+        $instance = new self($schema);
+        $instance->rows = array_values($rows);
+
+        return $instance;
     }
 
     /**
@@ -123,12 +149,25 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = new Row($values);
         }
 
-        $this->rows = $rows;
+        $this->rows = (new self($this->schema, ...$rows))->rows;
     }
 
+    /**
+     * @throws SchemaMismatchException
+     */
     public function add(Row ...$rows): self
     {
-        return new self($this->schema, ...$this->rows, ...$rows);
+        $matched = $this->rows;
+
+        foreach ($rows as $row) {
+            try {
+                $matched[] = $row->matchTo($this->schema);
+            } catch (ColumnMismatchException $e) {
+                throw new SchemaMismatchException(count($matched), $e);
+            }
+        }
+
+        return self::trusted($this->schema, $matched);
     }
 
     /**
@@ -147,11 +186,19 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function chunks(int $size): Generator
     {
         foreach (array_chunk($this->rows, $size) as $chunk) {
-            $rows = new self($this->schema);
-            $rows->rows = $chunk;
-
-            yield $rows;
+            yield self::trusted($this->schema, $chunk);
         }
+    }
+
+    /**
+     * Re-checks the batch against a different Schema and adopts it - the door the constructor opens,
+     * for rows already gathered into a batch.
+     *
+     * @throws SchemaMismatchException
+     */
+    public function matchTo(Schema $schema): self
+    {
+        return new self($schema, ...$this->rows);
     }
 
     public function count(): int
@@ -180,7 +227,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return new self($this->schema, ...$differentRows);
+        return self::trusted($this->schema, $differentRows);
     }
 
     public function diffRight(self $rows): self
@@ -204,7 +251,8 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return new self($this->schema, ...$differentRows);
+        // the surviving rows come from the right side, so the right side's schema describes them
+        return self::trusted($rows->schema, $differentRows);
     }
 
     public function drop(int $size): self
@@ -213,7 +261,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return $this;
         }
 
-        return new self($this->schema, ...array_slice($this->rows, $size));
+        return self::trusted($this->schema, array_slice($this->rows, $size));
     }
 
     public function dropRight(int $size): self
@@ -222,17 +270,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return $this;
         }
 
-        return new self($this->schema, ...array_slice($this->rows, 0, -$size));
-    }
-
-    /**
-     * @param callable(Row) : void $callable
-     */
-    public function each(callable $callable): void
-    {
-        foreach ($this->rows as $row) {
-            $callable($row);
-        }
+        return self::trusted($this->schema, array_slice($this->rows, 0, -$size));
     }
 
     public function empty(): bool
@@ -240,67 +278,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         return $this->count() === 0;
     }
 
-    /**
-     * @param callable(Row) : bool $callable
-     */
-    public function filter(callable $callable): self
-    {
-        $results = [];
-
-        foreach ($this->rows as $row) {
-            if ($callable($row)) {
-                $results[] = $row;
-            }
-        }
-
-        return new self($this->schema, ...$results);
-    }
-
-    public function find(callable $callable): self
-    {
-        if (0 === $this->count()) {
-            return new self($this->schema);
-        }
-
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            if ($callable($row)) {
-                $rows[] = $row;
-            }
-        }
-
-        return new self($this->schema, ...$rows);
-    }
-
-    public function findOne(callable $callable): ?Row
-    {
-        foreach ($this->rows as $row) {
-            if ($callable($row)) {
-                return $row;
-            }
-        }
-
-        return null;
-    }
-
     public function first(): Row
     {
         return $this->rows[0] ?? throw new RuntimeException('First row does not exist in empty collection');
-    }
-
-    /**
-     * @param callable(Row) : array<Row> $callable
-     */
-    public function flatMap(Schema $schema, callable $callable): self
-    {
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            $rows[] = $callable($row);
-        }
-
-        return new self($schema, ...array_merge(...$rows));
     }
 
     /**
@@ -336,10 +316,10 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         if ($count === 0) {
-            return new self($this->schema);
+            return self::trusted($this->schema, []);
         }
 
-        return new self($this->schema, ...array_slice($this->rows, 0, $count));
+        return self::trusted($this->schema, array_slice($this->rows, 0, $count));
     }
 
     public function joinCross(self $right, string $joinPrefix = 'joined_'): self
@@ -354,11 +334,11 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         // nothing was merged, so the surviving side keeps its own schema - pairing the cross schema
         // with unjoined rows would hand back a batch whose schema does not describe its rows
         if ($right->count() === 0) {
-            return new self($this->schema, ...$this->rows);
+            return self::trusted($this->schema, $this->rows);
         }
 
         if ($this->count() === 0) {
-            return new self($right->schema, ...$right->rows);
+            return self::trusted($right->schema, $right->rows);
         }
 
         $merger = new RowMerger($joinPrefix);
@@ -424,7 +404,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
          */
         $joined = [];
 
-        foreach ($joiner->join($single($this), $single($right)) as $batch) {
+        foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {
             foreach ($batch as $row) {
                 $joined[] = $row;
             }
@@ -440,20 +420,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         return $this->rows[count($this->rows) - 1];
-    }
-
-    /**
-     * @param callable(Row) : Row $callable
-     */
-    public function map(Schema $schema, callable $callable): self
-    {
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            $rows[] = $callable($row);
-        }
-
-        return new self($schema, ...$rows);
     }
 
     public function merge(self $rows): self
@@ -485,7 +451,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             ));
         }
 
-        return new self($this->schema, ...$this->rows, ...$rows->rows);
+        return self::trusted($this->schema, [...$this->rows, ...$rows->rows]);
     }
 
     /**
@@ -541,32 +507,34 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      * @return array<Rows>
      */
     /**
-     * @param callable(mixed, Row) : mixed $callable
-     * @param null|mixed $input
-     *
-     * @return null|mixed
-     */
-    public function reduce(callable $callable, mixed $input = null)
-    {
-        return array_reduce($this->rows, $callable, $input);
-    }
-
-    /**
      * @return array<mixed>
      */
+    /**
+     * Drops the columns $schema does not declare and adopts it. Widening or retyping the batch is
+     * not a projection - that goes through matchTo().
+     *
+     * @throws SchemaMismatchException
+     */
+    public function project(Schema $schema): self
+    {
+        $projected = [];
+
+        foreach ($this->rows as $row) {
+            $projected[] = $row->project($schema);
+        }
+
+        return new self($schema, ...$projected);
+    }
+
     public function reduceToArray(string|Reference $reference): array
     {
-        // @mago-ignore analysis:mixed-assignment
-        $result = $this->reduce(static function (mixed $ids, Row $row) use ($reference): array {
-            if (!is_array($ids)) {
-                $ids = [];
-            }
+        $ids = [];
+
+        foreach ($this->rows as $row) {
             $ids[] = $row->get($reference);
+        }
 
-            return $ids;
-        }, []);
-
-        return is_array($result) ? $result : [];
+        return $ids;
     }
 
     public function remove(int $offset): self
@@ -578,28 +546,17 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         $rows = iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 
-        return new self($this->schema, ...$rows);
+        return self::trusted($this->schema, array_values($rows));
     }
 
     public function reverse(): self
     {
-        return new self($this->schema, ...array_reverse($this->rows));
+        return self::trusted($this->schema, array_reverse($this->rows));
     }
 
     public function schema(): Schema
     {
         return $this->schema;
-    }
-
-    /**
-     * @param callable(mixed, mixed) : int $callback
-     */
-    public function sort(callable $callback): self
-    {
-        $rows = $this->rows;
-        usort($rows, $callback);
-
-        return new self($this->schema, ...$rows);
     }
 
     /**
@@ -619,7 +576,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $this->rows[$index];
         }
 
-        return new self($this->schema, ...$rows);
+        return self::trusted($this->schema, $rows);
     }
 
     /**
@@ -653,12 +610,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $rows[] = $this->rows[$index];
         }
 
-        return new self($this->schema, ...$rows);
-    }
-
-    public function sortEntries(SortingStrategy $strategy = new AlphabeticalStrategy()): self
-    {
-        return new self($this->schema->sort($strategy), ...$this->rows);
+        return self::trusted($this->schema, $rows);
     }
 
     /**
@@ -675,26 +627,26 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         if ($count === 0) {
-            return new self($this->schema);
+            return self::trusted($this->schema, []);
         }
 
         $rowsCount = count($this->rows);
 
         if ($count >= $rowsCount) {
-            return new self($this->schema, ...$this->rows);
+            return self::trusted($this->schema, $this->rows);
         }
 
-        return new self($this->schema, ...array_slice($this->rows, -$count));
+        return self::trusted($this->schema, array_slice($this->rows, -$count));
     }
 
     public function take(int $size): self
     {
-        return new self($this->schema, ...array_slice($this->rows, 0, $size));
+        return self::trusted($this->schema, array_slice($this->rows, 0, $size));
     }
 
     public function takeRight(int $size): self
     {
-        return new self($this->schema, ...array_reverse(array_slice($this->rows, -$size, $size)));
+        return self::trusted($this->schema, array_reverse(array_slice($this->rows, -$size, $size)));
     }
 
     /**
@@ -734,6 +686,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        return new self($this->schema, ...$uniqueRows);
+        return self::trusted($this->schema, array_values($uniqueRows));
     }
 }

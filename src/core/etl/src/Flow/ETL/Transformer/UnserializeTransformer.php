@@ -9,24 +9,21 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\Serializer\Base64Serializer;
-use Flow\Serializer\Exception\SerializationException;
 use Throwable;
 
 use function Flow\ETL\DSL\ref;
-use function Flow\Serializer\DSL\unserialize_from_string;
-use function is_string;
 
 final readonly class UnserializeTransformer implements Transformer
 {
     /**
-     * @param Reference|string $source
-     * @param bool $merge
      * @param string $mergePrefix - used only when merge is set to true
      */
     public function __construct(
         private Reference|string $source,
+        private Schema $target,
         private bool $merge = true,
         private string $mergePrefix = '',
     ) {}
@@ -40,41 +37,32 @@ final readonly class UnserializeTransformer implements Transformer
             // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
-            $result = $rows->map($rows->schema(), function (Row $row) use ($source, $serializer): Row {
-                if (!$row->has($source->name())) {
-                    return $row;
-                }
+            // a payload that fails to decode still has to produce the declared shape, so every declared
+            // column is nullable - the same rule from_json follows
+            $declared = [];
+            $outputSchema = $this->merge ? $rows->schema() : new Schema();
 
-                $serialized = $row->get($source->name());
+            foreach ($this->target->makeNullable()->definitions() as $definition) {
+                $payloadName = $definition->entry()->name();
+                $name = $this->merge ? $this->mergePrefix . $payloadName : $payloadName;
+                $declared[$name] = $payloadName;
 
-                if (!is_string($serialized)) {
-                    return $row;
-                }
+                $outputSchema = $outputSchema->findDefinition($name) === null
+                    ? $outputSchema->add($definition->rename($name))
+                    : $outputSchema->replace($name, $definition->rename($name));
+            }
 
-                try {
-                    $decoded = unserialize_from_string($serializer, $serialized);
-                } catch (SerializationException) {
-                    return $row;
-                }
+            $decoder = SerializedPayloadDecoder::of($source, $serializer, $declared);
+            $unserialized = [];
 
-                // a payload that did not round-trip to a single Row is treated as a soft failure
-                if ($decoded->count() !== 1) {
-                    return $row;
-                }
+            foreach ($rows->all() as $row) {
+                $unserialized[] = new Row([
+                    ...($this->merge ? $row->values() : []),
+                    ...$decoder->decode($row),
+                ]);
+            }
 
-                if (!$this->merge) {
-                    return $decoded->first();
-                }
-
-                $values = $row->values();
-
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($decoded->first()->values() as $name => $value) {
-                    $values[$this->mergePrefix . $name] = $value;
-                }
-
-                return new Row($values);
-            });
+            $result = new Rows($outputSchema, ...$unserialized);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

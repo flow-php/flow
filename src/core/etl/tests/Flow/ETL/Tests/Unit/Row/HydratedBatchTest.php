@@ -31,10 +31,10 @@ final class HydratedBatchTest extends FlowTestCase
         );
     }
 
-    public function test_a_missing_column_stays_absent_when_not_filling(): void
+    public function test_a_missing_nullable_column_is_padded_by_the_batch_door(): void
     {
         static::assertSame(
-            ['id'],
+            ['id', 'name'],
             (new HydratedBatch())
                 ->of(
                     [new RawRowValues(['id' => 1])],
@@ -91,7 +91,7 @@ final class HydratedBatchTest extends FlowTestCase
             (new HydratedBatch())
                 ->of(
                     [new RawRowValues([], ['0' => Metadata::fromArray(['k' => 'v'])])],
-                    schema(int_schema('0')),
+                    schema(int_schema('0', nullable: true)),
                     static fn(mixed $value, Definition $definition): mixed => $value,
                     false,
                 )

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\batched_by;
@@ -16,10 +18,37 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class BatchByExtractorTest extends TestCase
 {
+    public function test_a_group_spanning_child_batches_answers_to_the_first_batch_schema(): void
+    {
+        $child = new VaryingBatchesExtractor(
+            rows(schema(int_schema('g'), str_schema('name', nullable: true)), row(['g' => 1, 'name' => 'a'])),
+            rows(schema(int_schema('g')), row(['g' => 1])),
+        );
+
+        $batches = iterator_to_array(batched_by($child, ref('g'))->extract(flow_context(config())), false);
+
+        static::assertCount(1, $batches);
+        static::assertSame([['g' => 1, 'name' => 'a'], ['g' => 1, 'name' => null]], $batches[0]->toArray());
+    }
+
+    public function test_a_later_child_batch_that_widens_the_shape_is_refused(): void
+    {
+        $child = new VaryingBatchesExtractor(
+            rows(schema(int_schema('g')), row(['g' => 1])),
+            rows(schema(int_schema('g'), str_schema('extra')), row(['g' => 1, 'extra' => 'x'])),
+        );
+
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "extra" (row 0) is not declared by the schema');
+
+        iterator_to_array(batched_by($child, ref('g'))->extract(flow_context(config())), false);
+    }
+
     public function test_grouping_by_column_with_min_size(): void
     {
         $extractor = batched_by(
@@ -131,5 +160,23 @@ final class BatchByExtractorTest extends TestCase
         $this->expectExceptionMessage('Minimum batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
         batched_by(from_rows(rows(schema())), ref('order_id'), 0);
+    }
+
+    public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
+    {
+        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+
+        iterator_to_array(
+            batched_by($child, ref('id'))
+                ->withSchema(schema(int_schema('id'), str_schema('name', nullable: true)))
+                ->extract(flow_context()),
+            false,
+        );
+
+        static::assertTrue($child->schema()->isSame(schema(int_schema('id'))));
+        static::assertSame(
+            [['id' => 1]],
+            iterator_to_array(batched_by($child, ref('id'))->extract(flow_context()), false)[0]->toArray(),
+        );
     }
 }

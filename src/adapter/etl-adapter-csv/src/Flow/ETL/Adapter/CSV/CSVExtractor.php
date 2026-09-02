@@ -159,7 +159,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     }
 
                     foreach ($hydrated as $hydratedRow) {
-                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                         $this->incrementReturnedRows();
 
@@ -193,7 +193,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             }
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                 $this->incrementReturnedRows();
 

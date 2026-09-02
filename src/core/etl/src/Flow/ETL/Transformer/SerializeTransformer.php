@@ -6,7 +6,6 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -46,15 +45,17 @@ final readonly class SerializeTransformer implements Transformer
                         : $inputSchema->replace($target->name(), $column)
                 );
 
-            $result = $rows->map($outputSchema, function (Row $row) use ($target, $serializer, $inputSchema): Row {
-                $serialized = serialize_to_string($serializer, rows($inputSchema, $row));
+            $serialized = [];
 
-                return (
-                    $this->standalone
-                        ? row([$target->name() => $serialized])
-                        : row([...$row->values(), $target->name() => $serialized])
-                );
-            });
+            foreach ($rows->all() as $row) {
+                $payload = serialize_to_string($serializer, rows($inputSchema, $row));
+
+                $serialized[] = $this->standalone
+                    ? row([$target->name() => $payload])
+                    : row([...$row->values(), $target->name() => $payload]);
+            }
+
+            $result = new Rows($outputSchema, ...$serialized);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

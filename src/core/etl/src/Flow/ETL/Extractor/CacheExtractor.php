@@ -12,8 +12,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_rows;
-
 final class CacheExtractor implements Extractor
 {
     private ?Schema $schema = null;
@@ -33,15 +31,15 @@ final class CacheExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         $cache = $this->cache ?? $context->cache();
+        // A declared schema describes both arms. Without one, schema() answers from whichever source
+        // it can reach - the fallback when no cache was handed in - and the fallback's shape says
+        // nothing about what a hit holds, because the cache is normally written after transformations.
+        $declared = $this->schema;
 
         if (!$cache->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
-                    if ($this->schema !== null) {
-                        $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
-                    }
-
-                    $signal = yield $rows;
+                    $signal = yield $declared === null ? $rows : $rows->matchTo($declared);
 
                     if ($signal === Signal::STOP) {
                         return;
@@ -50,15 +48,11 @@ final class CacheExtractor implements Extractor
             }
         } else {
             $index = CacheIndex::fromRows($this->id, $cache->get($this->id));
+            $folded = $declared ?? ($this->cache === null ? null : $this->schema());
 
             foreach ($index->values() as $cacheKey) {
-                $rows = $cache->get($cacheKey);
-
-                if ($this->schema !== null) {
-                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
-                }
-
-                $signal = yield $rows;
+                $cached = $cache->get($cacheKey);
+                $signal = yield $folded === null ? $cached : $cached->matchTo($folded);
 
                 if ($signal === Signal::STOP) {
                     return;

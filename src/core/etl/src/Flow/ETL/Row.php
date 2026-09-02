@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
@@ -13,6 +14,7 @@ use Flow\Types\Value\Json;
 
 use function array_key_exists;
 use function array_keys;
+use function count;
 use function implode;
 
 final readonly class Row
@@ -23,6 +25,67 @@ final readonly class Row
     public function __construct(
         private array $values,
     ) {}
+
+    /**
+     * Rewrites the storage to satisfy $schema: columns take the Schema's order and a declared
+     * nullable column the row omits is padded with null. The row does not know its position in a
+     * batch - Rows places the violation with SchemaMismatchException.
+     *
+     * @throws ColumnMismatchException
+     */
+    public function matchTo(Schema $schema): self
+    {
+        $definitions = $schema->definitions();
+        $matched = [];
+        $taken = 0;
+
+        foreach ($definitions as $name => $definition) {
+            if (!array_key_exists($name, $this->values)) {
+                if (!$definition->isNullable()) {
+                    throw ColumnMismatchException::missingColumn($definition);
+                }
+
+                $matched[$name] = null;
+
+                continue;
+            }
+
+            $taken++;
+
+            if (!$definition->matches($this->values[$name])) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+            }
+
+            $matched[$name] = $this->values[$name];
+        }
+
+        if ($taken !== count($this->values)) {
+            foreach ($this->values as $name => $_) {
+                if (!array_key_exists($name, $definitions)) {
+                    throw ColumnMismatchException::unexpectedColumn($name);
+                }
+            }
+        }
+
+        return new self($matched);
+    }
+
+    /**
+     * Drops the columns $schema does not declare and carries its order into the row. Unlike
+     * matchTo() it validates nothing - the caller is changing the shape, not checking it.
+     */
+    public function project(Schema $schema): self
+    {
+        $projected = [];
+
+        foreach ($schema->definitions() as $name => $_) {
+            if (array_key_exists($name, $this->values)) {
+                $projected[$name] = $this->values[$name];
+            }
+        }
+
+        return new self($projected);
+    }
 
     /**
      * @throws InvalidArgumentException

@@ -88,8 +88,8 @@ final class NativeRowHydratorTest extends FlowTestCase
             ],
         ];
 
-        yield 'null on a non-nullable column across rows' => [
-            schema(int_schema('id'), str_schema('name')),
+        yield 'null values across rows' => [
+            schema(int_schema('id'), str_schema('name', nullable: true)),
             [
                 new RawRowValues(['id' => 1, 'name' => null]),
                 new RawRowValues(['id' => 2, 'name' => null]),
@@ -112,8 +112,8 @@ final class NativeRowHydratorTest extends FlowTestCase
             ],
         ];
 
-        yield 'per-value metadata together with a null non-nullable value' => [
-            schema(int_schema('id')),
+        yield 'per-value metadata together with a null value' => [
+            schema(int_schema('id', nullable: true)),
             [new RawRowValues(['id' => null], ['id' => Metadata::fromArray(['k' => 'v'])])],
         ];
 
@@ -145,7 +145,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'enum values including a null variant' => [
-            schema(enum_schema('s', ParitySuit::class)),
+            schema(enum_schema('s', ParitySuit::class, nullable: true)),
             [
                 new RawRowValues(['s' => ParitySuit::Hearts]),
                 new RawRowValues(['s' => ParitySuit::Spades]),
@@ -193,7 +193,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'scalar columns from raw strings and coercion edges' => [
-            schema(int_schema('id'), float_schema('price'), bool_schema('active'), str_schema('name')),
+            schema(int_schema('id'), float_schema('price'), bool_schema('active'), str_schema('name', nullable: true)),
             [
                 new RawRowValues(['id' => '42', 'price' => '3.14', 'active' => 'yes', 'name' => 7]),
                 new RawRowValues(['id' => ' 7', 'price' => '1e3', 'active' => 'OFF', 'name' => 1.5]),
@@ -251,7 +251,7 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'uuid and json columns from raw values' => [
-            schema(uuid_schema('u'), json_schema('j')),
+            schema(uuid_schema('u', nullable: true), json_schema('j')),
             [
                 new RawRowValues(['u' => '01234567-89ab-4def-8123-456789abcdef', 'j' => '["a","b"]']),
                 new RawRowValues(['u' => new Uuid('01234567-89ab-4def-8123-456789abcdef'), 'j' => '{"a":1}']),
@@ -315,7 +315,11 @@ final class NativeRowHydratorTest extends FlowTestCase
         ];
 
         yield 'metadata variants fill-missing and extra raw keys' => [
-            schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('flag')),
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                bool_schema('flag', nullable: true),
+            ),
             [
                 new RawRowValues(['id' => '1'], ['id' => Metadata::fromArray(['k' => 'v1'])]),
                 new RawRowValues([]),
@@ -355,6 +359,12 @@ final class NativeRowHydratorTest extends FlowTestCase
     {
         /** @var UnionType<mixed, mixed> $unmatchable */
         $unmatchable = type_union(type_uuid(), type_datetime());
+
+        // the row gate refuses this one, so it is the case that reaches NativeRowHydrator::unwrap()
+        yield 'null in a not null column' => [
+            schema(int_schema('id'), str_schema('name')),
+            [new RawRowValues(['id' => 1, 'name' => null])],
+        ];
 
         yield 'union column with a value outside every member' => [
             schema(new UnionDefinition('a', $unmatchable)),
@@ -486,6 +496,57 @@ final class NativeRowHydratorTest extends FlowTestCase
             serialize((new PhpRowHydrator())->cast($batch, $schema)),
             serialize((new NativeRowHydrator())->cast($batch, $schema)),
         );
+    }
+
+    /**
+     * @param list<RawRowValues> $batch
+     */
+    /**
+     * @return Generator<string, array{Schema, list<RawRowValues>}>
+     */
+    public static function throwing_hydrate_datasets(): Generator
+    {
+        yield 'null in a not null column' => [
+            schema(int_schema('id'), str_schema('name')),
+            [new RawRowValues(['id' => 1, 'name' => null])],
+        ];
+
+        yield 'a not null column the row does not carry' => [
+            schema(int_schema('id'), str_schema('name')),
+            [new RawRowValues(['id' => 1])],
+        ];
+    }
+
+    /**
+     * @param list<RawRowValues> $batch
+     */
+    #[DataProvider('throwing_hydrate_datasets')]
+    public function test_native_hydrate_exception_parity(Schema $schema, array $batch): void
+    {
+        if (!NativeRowHydrator::isSupported()) {
+            static::markTestSkipped('flow_php extension with the native hydrator is not loaded.');
+        }
+
+        $phpException = null;
+
+        try {
+            (new PhpRowHydrator())->hydrate($batch, $schema);
+        } catch (Throwable $e) {
+            $phpException = $e;
+        }
+
+        $nativeException = null;
+
+        try {
+            (new NativeRowHydrator())->hydrate($batch, $schema);
+        } catch (Throwable $e) {
+            $nativeException = $e;
+        }
+
+        static::assertNotNull($phpException);
+        static::assertNotNull($nativeException);
+        static::assertSame($phpException::class, $nativeException::class);
+        static::assertSame($phpException->getMessage(), $nativeException->getMessage());
     }
 
     /**

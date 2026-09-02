@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\CallUserFunc;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Function\Fixtures\CallUserFunc\StaticCalculator;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
 use function Flow\ETL\DSL\call;
 use function Flow\ETL\DSL\flow_context;
@@ -15,6 +16,9 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
@@ -93,5 +97,23 @@ final class CallUserFuncTest extends FlowTestCase
         static::assertSame(3, ref('list')
             ->call(lit(StaticCalculator::class . '::count'), type_integer())
             ->eval($row, flow_context()));
+    }
+
+    public function test_a_callable_that_can_return_null_declares_a_nullable_column(): void
+    {
+        static::assertSame('?string', (new CallUserFunc(lit('strtoupper'), type_string(), [ref(
+            'name',
+        )]))->returns()->toString());
+    }
+
+    public function test_a_null_return_lands_in_a_nullable_column(): void
+    {
+        $result = (new ScalarFunctionTransformer(
+            'out',
+            new CallUserFunc(lit([StaticCalculator::class, 'alwaysNull']), type_string(), []),
+        ))->transform(rows(schema(str_schema('name')), row(['name' => 'a'])), flow_context());
+
+        static::assertTrue($result->schema()->get('out')->isNullable());
+        static::assertNull($result->first()->get('out'));
     }
 }

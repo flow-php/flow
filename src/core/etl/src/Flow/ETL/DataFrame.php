@@ -39,8 +39,6 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
-use Flow\ETL\Schema\SortingStrategy;
-use Flow\ETL\Schema\SortingStrategy\TypeStrategy;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Transformer\AutoCastTransformer;
@@ -51,7 +49,6 @@ use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\OrderEntriesTransformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Flow\ETL\Transformer\RenameEachEntryTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
@@ -714,13 +711,6 @@ final class DataFrame
     public function renameEach(RenameEntryStrategy ...$strategies): self
     {
         $this->pipeline->add(new RenameEachEntryTransformer(...$strategies));
-
-        return $this;
-    }
-
-    public function reorderEntries(SortingStrategy $strategy = new TypeStrategy()): self
-    {
-        $this->pipeline->add(new OrderEntriesTransformer($strategy));
 
         return $this;
     }

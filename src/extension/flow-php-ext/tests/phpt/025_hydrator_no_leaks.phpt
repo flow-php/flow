@@ -33,7 +33,7 @@ use Flow\ETL\Schema\Metadata;
 
 $schema = schema(
     int_schema('id'),
-    str_schema('name'),                       // non-nullable - null values force makeNullable
+    str_schema('name', nullable: true),       // the batch carries nulls, so the declaration admits them
     float_schema('price'),
     bool_schema('active'),
     datetime_schema('created_at'),
@@ -51,8 +51,8 @@ for ($i = 1; $i <= 100; $i++) {
     $batch[] = new RawRowValues(
         [
             'id' => $i,
-            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // exercises the makeNullable path
-            'price' => $i / 100,
+            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // null values under a nullable declaration
+            'price' => (float) $i / 100,
             'active' => $i % 3 === 0,
             'created_at' => new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw')),
             'duration' => new DateInterval('PT1H2M3S'),

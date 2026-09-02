@@ -16,12 +16,7 @@ use function str_repeat;
 
 final class FrameReaderTest extends TestCase
 {
-    public function test_empty_stream_in_lenient_mode_yields_nothing(): void
-    {
-        static::assertSame([], iterator_to_array(FrameReaderMother::overBytes('')->frames(lenient: true)));
-    }
-
-    public function test_empty_stream_in_strict_mode_throws(): void
+    public function test_empty_stream_throws(): void
     {
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('header is incomplete');
@@ -73,14 +68,6 @@ final class FrameReaderTest extends TestCase
         );
     }
 
-    public function test_invalid_magic_throws_even_in_lenient_mode(): void
-    {
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('magic');
-
-        iterator_to_array(FrameReaderMother::overBytes('NOPE' . "\x01\x00")->frames(lenient: true));
-    }
-
     public function test_stream_ending_at_frame_boundary_ends_cleanly(): void
     {
         $bytes = Format::header(0x00) . Format::frame(Format::FRAME_ROW, 'row');
@@ -88,22 +75,7 @@ final class FrameReaderTest extends TestCase
         static::assertCount(1, iterator_to_array(FrameReaderMother::overBytes($bytes)->frames()));
     }
 
-    public function test_truncated_frame_body_in_lenient_mode_salvages_previous_frames(): void
-    {
-        $bytes =
-            Format::header(0x00)
-            . Format::frame(Format::FRAME_ROW, 'complete')
-            . chr(Format::FRAME_ROW)
-            . pack('V', 100)
-            . 'short';
-
-        static::assertSame(
-            [[Format::FRAME_ROW, 'complete']],
-            iterator_to_array(FrameReaderMother::overBytes($bytes)->frames(lenient: true)),
-        );
-    }
-
-    public function test_truncated_frame_body_in_strict_mode_throws(): void
+    public function test_truncated_frame_body_throws(): void
     {
         $bytes = Format::header(0x00) . chr(Format::FRAME_ROW) . pack('V', 100) . 'short';
 
@@ -113,7 +85,7 @@ final class FrameReaderTest extends TestCase
         iterator_to_array(FrameReaderMother::overBytes($bytes)->frames());
     }
 
-    public function test_truncated_frame_header_in_strict_mode_throws(): void
+    public function test_truncated_frame_header_throws(): void
     {
         $bytes = Format::header(0x00) . chr(Format::FRAME_ROW) . 'xy';
 

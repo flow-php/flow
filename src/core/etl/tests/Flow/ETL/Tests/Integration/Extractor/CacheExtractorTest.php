@@ -16,9 +16,11 @@ use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -189,5 +191,23 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
     public function test_schema_returns_empty_schema_when_the_injected_cache_does_not_hold_the_id(): void
     {
         static::assertEquals(schema(), from_cache('non_existing_cache_key', cache: new InMemoryCache())->schema());
+    }
+
+    public function test_a_cache_hit_is_not_matched_to_the_fallback_extractors_schema(): void
+    {
+        // the cache is normally written after transformations, so the fallback's shape says nothing
+        // about what a hit holds
+        $input = [['a' => 1, 'b' => 'x'], ['a' => 2, 'b' => 'y']];
+        $cache = new InMemoryCache();
+
+        df(config_builder()->cache($cache))->read(from_array($input))->drop(ref('b'))->cache('hit-vs-fallback')->run();
+
+        static::assertSame(
+            [['a' => 1], ['a' => 2]],
+            df(config_builder()->cache($cache))
+                ->read(from_cache('hit-vs-fallback', from_array($input)))
+                ->fetch()
+                ->toArray(),
+        );
     }
 }

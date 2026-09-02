@@ -15,7 +15,6 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -160,12 +159,12 @@ final class FloeStreamWriterTest extends TestCase
         static::assertCount(1, $footer->sections);
     }
 
-    public function test_subset_column_batch_is_accepted_and_round_trips(): void
+    public function test_batch_omitting_a_nullable_session_column_is_accepted_and_round_trips(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://subset.floe');
 
-        $first = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a']));
+        $first = rows(schema(int_schema('id'), str_schema('name', nullable: true)), row(['id' => 1, 'name' => 'a']));
 
         $writer = new FloeStreamWriter($first->schema());
         $writer->create($filesystem->writeTo($path));
@@ -177,6 +176,24 @@ final class FloeStreamWriterTest extends TestCase
         static::assertSame(2, $footer->totalRows);
         static::assertNotSame([], $footer->schema);
         static::assertCount(2, FloeStreamReaderContext::readAll($filesystem, $path)->all());
+    }
+
+    /**
+     * b57, writer half: the old check walked the row's own values, so a column the row simply
+     * omitted was never looked at and was encoded as VALUE_ABSENT under a NOT NULL declaration.
+     */
+    public function test_batch_omitting_a_not_null_session_column_is_refused(): void
+    {
+        $first = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a']));
+
+        $writer = new FloeStreamWriter($first->schema());
+        $writer->create(memory_filesystem()->writeTo(path('memory://subset-not-null.floe')));
+        $writer->write($first);
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('Missing Definitions');
+
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
     }
 
     public function test_batch_introducing_a_new_column_throws_naming_the_column(): void
@@ -198,7 +215,7 @@ final class FloeStreamWriterTest extends TestCase
         $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessage('column "id"');
+        $this->expectExceptionMessage('expected: id<integer>, given: id<string>');
 
         $writer->write(rows(schema(str_schema('id')), row(['id' => 'x'])));
     }
@@ -266,32 +283,7 @@ final class FloeStreamWriterTest extends TestCase
         $writer->close();
     }
 
-    public function test_validation_off_is_byte_identical_to_validation_on_for_a_fitting_batch(): void
-    {
-        $filesystem = memory_filesystem();
-        $on = path('memory://validate-on.floe');
-        $off = path('memory://validate-off.floe');
-        $data = rows(
-            schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'a']),
-            row(['id' => 2, 'name' => 'b']),
-        );
-        $schema = $data->schema();
-
-        $onWriter = new FloeStreamWriter($schema);
-        $onWriter->create($filesystem->writeTo($on));
-        $onWriter->write($data);
-        $onWriter->close();
-
-        $offWriter = new FloeStreamWriter($schema, new Options(validateData: false));
-        $offWriter->create($filesystem->writeTo($off));
-        $offWriter->write($data);
-        $offWriter->close();
-
-        static::assertSame($filesystem->readFrom($on)->content(), $filesystem->readFrom($off)->content());
-    }
-
-    public function test_validation_off_multi_batch_is_byte_identical_to_single_batch(): void
+    public function test_multi_batch_is_byte_identical_to_single_batch(): void
     {
         $filesystem = memory_filesystem();
         $multi = path('memory://off-multi.floe');
@@ -303,13 +295,13 @@ final class FloeStreamWriterTest extends TestCase
         );
         $schema = $data->schema();
 
-        $multiWriter = new FloeStreamWriter($schema, new Options(validateData: false));
+        $multiWriter = new FloeStreamWriter($schema);
         $multiWriter->create($filesystem->writeTo($multi));
         $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
         $multiWriter->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 2, 'name' => 'b'])));
         $multiWriter->close();
 
-        $singleWriter = new FloeStreamWriter($schema, new Options(validateData: false));
+        $singleWriter = new FloeStreamWriter($schema);
         $singleWriter->create($filesystem->writeTo($single));
         $singleWriter->write($data);
         $singleWriter->close();
@@ -317,25 +309,21 @@ final class FloeStreamWriterTest extends TestCase
         static::assertSame($filesystem->readFrom($single)->content(), $filesystem->readFrom($multi)->content());
     }
 
-    public function test_validation_off_encodes_a_later_null_into_a_non_nullable_session_column(): void
+    public function test_a_later_null_into_a_non_nullable_session_column_is_rejected(): void
     {
-        $filesystem = memory_filesystem();
-        $path = path('memory://off-present-then-null.floe');
         $first = rows(schema(int_schema('id'), str_schema('opt')), row(['id' => 1, 'opt' => 'present']));
 
-        $writer = new FloeStreamWriter($first->schema(), new Options(validateData: false));
-        $writer->create($filesystem->writeTo($path));
+        $writer = new FloeStreamWriter($first->schema());
+        $writer->create(memory_filesystem()->writeTo(path('memory://off-present-then-null.floe')));
         $writer->write($first);
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('expected: opt<string>, given: opt<?string>');
+
         $writer->write(rows(
             schema(int_schema('id'), str_schema('opt', nullable: true)),
             row(['id' => 2, 'opt' => null]),
         ));
-        $writer->close();
-
-        static::assertSame(
-            [['id' => 1, 'opt' => 'present'], ['id' => 2, 'opt' => null]],
-            FloeStreamReaderContext::readAll($filesystem, $path)->toArray(),
-        );
     }
 
     public function test_validation_on_rejects_a_later_null_into_a_non_nullable_session_column(): void
@@ -359,36 +347,14 @@ final class FloeStreamWriterTest extends TestCase
      * column becomes legal, this test states the rule that has to change - a mandatory column
      * must still be rejected.
      */
-    public function test_column_absent_from_the_session_schema_throws_even_with_validation_off(): void
+    public function test_column_absent_from_the_session_schema_throws(): void
     {
-        $writer = new FloeStreamWriter(schema(int_schema('a')), new Options(validateData: false));
+        $writer = new FloeStreamWriter(schema(int_schema('a')));
         $writer->create(memory_filesystem()->writeTo(path('memory://off-new-column.floe')));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('new column "b"');
 
         $writer->write(rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2])));
-    }
-
-    public function test_long_string_value_is_truncated_in_the_error_message(): void
-    {
-        $writer = new FloeStreamWriter(schema(int_schema('id')));
-        $writer->create(memory_filesystem()->writeTo(path('memory://truncated.floe')));
-
-        $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessage("could not convert '" . str_repeat('x', 32) . "...' (string) to integer");
-
-        $writer->write(rows(schema(str_schema('id')), row(['id' => str_repeat('x', 40)])));
-    }
-
-    public function test_boolean_value_is_rendered_unquoted_in_the_error_message(): void
-    {
-        $writer = new FloeStreamWriter(schema(int_schema('id')));
-        $writer->create(memory_filesystem()->writeTo(path('memory://bool-message.floe')));
-
-        $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessage('could not convert true (boolean) to integer');
-
-        $writer->write(rows(schema(bool_schema('id')), row(['id' => true])));
     }
 }

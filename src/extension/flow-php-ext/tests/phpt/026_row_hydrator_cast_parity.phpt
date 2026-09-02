@@ -47,7 +47,7 @@ $shared = new DateTimeImmutable('2025-01-01 12:00:00.123456', new DateTimeZone('
 
 $datasets = [
     'scalars' => [
-        schema(int_schema('id'), float_schema('p'), bool_schema('a'), str_schema('n')),
+        schema(int_schema('id'), float_schema('p'), bool_schema('a'), str_schema('n', nullable: true)),
         [
             new RawRowValues(['id' => '42', 'p' => '3.14', 'a' => 'yes', 'n' => 7]),
             new RawRowValues(['id' => ' 7', 'p' => '1e3', 'a' => 'OFF', 'n' => 1.5]),
@@ -76,7 +76,7 @@ $datasets = [
         ],
     ],
     'uuid_json' => [
-        schema(uuid_schema('u'), json_schema('j')),
+        schema(uuid_schema('u', nullable: true), json_schema('j')),
         [
             new RawRowValues(['u' => '01234567-89ab-4def-8123-456789abcdef', 'j' => '["a","b"]']),
             new RawRowValues(['u' => new Flow\Types\Value\Uuid('01234567-89ab-4def-8123-456789abcdef'), 'j' => '{"a":1}']),
@@ -111,7 +111,7 @@ $datasets = [
         ],
     ],
     'fill_and_metadata' => [
-        schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('flag')),
+        schema(int_schema('id', nullable: true), str_schema('name', nullable: true), bool_schema('flag', nullable: true)),
         [
             new RawRowValues(['id' => '1'], ['id' => Metadata::fromArray(['k' => 'v1'])]),
             new RawRowValues([]),
@@ -145,7 +145,8 @@ $mutated = schema(int_schema('id'));
 $php->cast([new RawRowValues(['id' => '1'])], $mutated);
 $native->cast([new RawRowValues(['id' => '1'])], $mutated);
 $mutated->add(str_schema('name', nullable: true))->makeNullable();
-$batch = [new RawRowValues(['id' => null, 'name' => 7])];
+// Schema is immutable, so $mutated never gained "name" - the column is simply not cast
+$batch = [new RawRowValues(['id' => '1', 'name' => 7])];
 printf(
     "%-16s cast:%s\n",
     'schema_mutation',

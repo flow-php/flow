@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\Tests\Double\SpyHydrator;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\row;
@@ -157,5 +160,26 @@ final class FloeLoaderTest extends TestCase
         }
 
         static::assertSame([1, 2, 3], $ids);
+    }
+
+    /**
+     * The loader strips only what partitionBy() moved into the path. A declared column the rows do
+     * not carry stays declared, and refusing it is the writer's job.
+     */
+    public function test_a_declared_column_the_rows_do_not_carry_is_refused_not_dropped(): void
+    {
+        $filesystem = memory_filesystem();
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('Missing Definitions');
+
+        data_frame()
+            ->read(from_array([['id' => 1, 'name' => 'a']]))
+            ->write(to_floe(path('memory://declared-missing.floe'), filesystem: $filesystem)->withSchema(schema(
+                int_schema('id'),
+                str_schema('name'),
+                str_schema('missing_col'),
+            )))
+            ->run();
     }
 }

@@ -49,7 +49,7 @@ $datasets = [
         ],
     ],
     'null_nonnullable' => [
-        schema(int_schema('id'), str_schema('name')),
+        schema(int_schema('id'), str_schema('name', nullable: true)),
         [new RawRowValues(['id' => 1, 'name' => null]), new RawRowValues(['id' => 2, 'name' => null])],
     ],
     'absent' => [
@@ -89,7 +89,7 @@ $datasets = [
         ])],
     ],
     'enum_and_null' => [
-        schema(enum_schema('s', PhptSuit::class), null_schema('n')),
+        schema(enum_schema('s', PhptSuit::class, nullable: true), null_schema('n')),
         [new RawRowValues(['s' => PhptSuit::Hearts, 'n' => null]), new RawRowValues(['s' => null, 'n' => null])],
     ],
     'empty' => [schema(int_schema('id')), []],
@@ -109,7 +109,8 @@ $mutated = schema(int_schema('id'));
 $php->hydrate([new RawRowValues(['id' => 1])], $mutated);
 $native->hydrate([new RawRowValues(['id' => 1])], $mutated);
 $mutated->add(str_schema('name', nullable: true))->makeNullable();
-$batch = [new RawRowValues(['id' => null, 'name' => 'x'])];
+// Schema is immutable, so $mutated never gained "name" - the column is simply not hydrated
+$batch = [new RawRowValues(['id' => 1, 'name' => 'x'])];
 printf(
     "%-16s hydrate:%s\n",
     'schema_mutation',

@@ -128,11 +128,10 @@ final class PostgreSqlLoader implements Loader
 
     private function insertRows(Rows $rows, FlowContext $context): void
     {
-        $sorted = $rows->sortEntries();
         $builder = new InsertQueryBuilder($this->table, $this->typesMap);
-        $values = $this->encoder()->encode($context->hydrator()->dehydrate($sorted));
+        $values = $this->encoder()->encode($context->hydrator()->dehydrate($rows));
 
-        [$query, $params] = $builder->build($values, $sorted->schema(), $this->insertOptions);
+        [$query, $params] = $builder->build($values, $rows->schema(), $this->insertOptions);
         $this->client->execute($query, $params);
     }
 

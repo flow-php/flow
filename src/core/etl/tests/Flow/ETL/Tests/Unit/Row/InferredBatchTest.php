@@ -67,19 +67,18 @@ final class InferredBatchTest extends FlowTestCase
         );
     }
 
-    public function test_widening_folds_int_and_string_into_one_column(): void
+    /**
+     * Widening derives one column type from values of two, so the values follow the schema it just
+     * derived - otherwise the batch would contradict its own declaration at the door.
+     */
+    public function test_widening_folds_int_and_string_into_one_column_and_converts_the_values(): void
     {
-        static::assertSame(
-            'string',
-            (new InferredBatch())
-                ->of([
-                    new RawRowValues(['v' => 1]),
-                    new RawRowValues(['v' => 'text']),
-                ])
-                ->schema()
-                ->get('v')
-                ->type()
-                ->toString(),
-        );
+        $rows = (new InferredBatch())->of([
+            new RawRowValues(['v' => 1]),
+            new RawRowValues(['v' => 'text']),
+        ]);
+
+        static::assertSame('string', $rows->schema()->get('v')->type()->toString());
+        static::assertSame([['v' => '1'], ['v' => 'text']], $rows->toArray());
     }
 }

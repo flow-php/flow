@@ -29,16 +29,15 @@ final class ChainExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context): Generator
     {
-        // Every child is told the folded shape, so each yields the union rather than only the
-        // columns its own source happens to carry. A child that cannot describe itself makes the
-        // chain unable to promise one shape, so the fold is allowed to throw.
+        // Every child's batches are projected onto the folded shape, so each yields the union
+        // rather than only the columns its own source happens to carry. A child that cannot
+        // describe itself makes the chain unable to promise one shape, so the fold is allowed to
+        // throw.
         $schema = $this->schema();
 
         foreach ($this->extractors as $extractor) {
-            $extractor->withSchema($schema);
-
             foreach ($extractor->extract($context) as $rows) {
-                $signal = yield $rows;
+                $signal = yield $rows->matchTo($schema);
 
                 if ($signal === Signal::STOP) {
                     return;

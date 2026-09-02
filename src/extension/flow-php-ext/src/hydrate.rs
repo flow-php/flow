@@ -18,7 +18,7 @@ use crate::ctx::{
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
 use crate::format::{
-    Reader, VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
+    Reader, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
 use crate::plan::Plan;
 use crate::values::decode_value;
@@ -80,10 +80,6 @@ pub fn decode_row_values(
 
     for column in &plan.columns {
         let flag = reader.u8("row value flag")?;
-
-        if flag == VALUE_ABSENT {
-            continue;
-        }
 
         let value = match flag {
             VALUE_PRESENT => decode_value(&column.decoder, reader, ctx)?,
@@ -223,9 +219,11 @@ fn dehydrate_row(
     for column in columns {
         let key = column.key();
 
-        // Floe keeps absent and null distinct, so a column the row does not carry is omitted
         let Some(value) = ht_find_key(values_ht, &key) else {
-            continue;
+            return Err(ext_exception(format!(
+                "flow_php found a row that does not carry the declared column \"{}\"",
+                column.name_zv.str().unwrap_or("?")
+            )));
         };
 
         ht_insert_key(&mut values_ht_out, &key, value.shallow_clone());

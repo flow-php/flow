@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\Logger;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -30,11 +29,9 @@ final readonly class PsrLoggerLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $loader = function (Row $row): void {
+            foreach ($rows->all() as $row) {
                 $this->logger->log($this->logLevel, $this->message, $row->toArray());
-            };
-
-            $rows->each($loader);
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

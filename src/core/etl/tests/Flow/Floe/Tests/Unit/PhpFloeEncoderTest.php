@@ -64,6 +64,21 @@ final class PhpFloeEncoderTest extends TestCase
         );
     }
 
+    public function test_encode_refuses_a_row_that_does_not_carry_a_declared_column(): void
+    {
+        // a row always carries every column its schema declares, so absence is a broken contract,
+        // not a value the format can express - VALUE_ABSENT is a structure-element flag only
+        $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody(schema(
+            int_schema('id'),
+            str_schema('name'),
+        ))));
+
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe found a row that does not carry the declared column "name"');
+
+        $encoder->encode([new TypedRowValues(['id' => 4], ['id' => type_integer()])]);
+    }
+
     public function test_encode_decode_round_trip_preserves_flags(): void
     {
         $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
@@ -75,7 +90,6 @@ final class PhpFloeEncoderTest extends TestCase
             new TypedRowValues(['id' => 1, 'name' => 'flow'], $types),
             new TypedRowValues(['id' => 2, 'name' => null], $types),
             new TypedRowValues(['id' => 3, 'name' => null], $types, ['name' => Metadata::fromArray(['tag' => 'x'])]),
-            new TypedRowValues(['id' => 4], ['id' => type_integer()]),
         ];
 
         $decoded = $encoder->decode($encoder->encode($encoded));
@@ -85,12 +99,10 @@ final class PhpFloeEncoderTest extends TestCase
                 new RawRowValues(['id' => 1, 'name' => 'flow']),
                 new RawRowValues(['id' => 2, 'name' => null]),
                 new RawRowValues(['id' => 3, 'name' => null], ['name' => Metadata::fromArray(['tag' => 'x'])]),
-                new RawRowValues(['id' => 4]),
             ],
             $decoded,
         );
         static::assertSame('x', $decoded[2]->metadata['name']->get('tag'));
-        static::assertArrayNotHasKey('name', $decoded[3]->values);
     }
 
     public function test_encode_decode_round_trip_preserves_arbitrary_metadata(): void
@@ -137,8 +149,8 @@ final class PhpFloeEncoderTest extends TestCase
 
         $encoder = new PhpFloeEncoder($schema);
         $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'flow']),
         )))[0];
 
         $this->expectException(FloeException::class);

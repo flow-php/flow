@@ -54,7 +54,7 @@ $datasets = [
     'datetime' => rows(schema(datetime_schema('at'), date_schema('d'), time_schema('t'), uuid_schema('u')), row(['at' => new DateTimeImmutable('2025-01-01 12:00:00.123456', new DateTimeZone('Europe/Warsaw')), 'd' => new DateTimeImmutable('2025-03-01'), 't' => new DateInterval('PT2H30M5S'), 'u' => type_uuid()->cast('01234567-89ab-4def-8123-456789abcdef')])),
     'containers' => rows(schema(list_schema('ints', type_list(type_integer())), map_schema('m', type_map(type_string(), type_float())), map_schema('mi', type_map(type_integer(), type_string())), structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])), structure_schema('st_interleaved', type_structure(['z' => type_integer(), 'a' => structure_element('a', type_string(), optional: true), 'b' => type_string()])), list_schema('opt', type_list(type_optional(type_integer())))), row(['ints' => [1, 2, 3], 'm' => ['cpu' => 1.5], 'mi' => [7 => 'a', -1 => 'b'], 'st' => ['a' => 1], 'st_interleaved' => ['z' => 1, 'b' => 'x'], 'opt' => [1, null]])),
     'enum_json_xml' => rows(schema(enum_schema('en', PhptColor::class), json_schema('j'), xml_schema('x')), row(['en' => PhptColor::Red, 'j' => type_json()->cast(['a' => 1]), 'x' => type_xml()->cast('<root a="1"><i>v</i></root>')])),
-    'heterogeneous' => rows(schema(int_schema('id'), str_schema('n')), row(['id' => 1]), row(['id' => 2, 'n' => 'x']), row(['n' => 'y', 'id' => 3])),
+    'heterogeneous' => rows(schema(int_schema('id'), str_schema('n', nullable: true)), row(['id' => 1]), row(['id' => 2, 'n' => 'x']), row(['n' => 'y', 'id' => 3])),
     'two_columns'  => rows(schema(int_schema('id'), str_schema('g')), row(['id' => 1, 'g' => 'a'])),
     'empty' => rows(schema()),
 ];
@@ -63,8 +63,9 @@ foreach ($datasets as $label => $data) {
     printf("%-14s frames-identical:%s\n", $label, php_frames($data) === ext_frames($data) ? 'yes' : 'NO');
 }
 
-// A row narrower than the primed plan must emit VALUE_ABSENT (0x03) for the
-// missing column, byte-identical to PhpFloeEncoder.
+// A row that does not carry a column the plan declares is a broken contract, not a
+// value the format can express: VALUE_ABSENT (0x03) is a structure-element flag only.
+// Both encoders must refuse it.
 $wideBody = json_encode(schema(int_schema('a'), str_schema('b'), float_schema('c'))->normalize(), JSON_THROW_ON_ERROR);
 
 $hydrator = new PhpRowHydrator();
@@ -72,7 +73,15 @@ $narrowTyped = $hydrator->dehydrate(new Rows(schema(int_schema('a'), float_schem
 
 $php = new PhpFloeEncoder(schema_from_json($wideBody));
 $ext = new RustFloeEncoderNative();
-printf("%-14s frames-identical:%s\n", 'absent', $php->encode($narrowTyped) === $ext->encode($narrowTyped, $wideBody) ? 'yes' : 'NO');
+
+foreach (['php' => fn() => $php->encode($narrowTyped), 'ext' => fn() => $ext->encode($narrowTyped, $wideBody)] as $side => $encode) {
+    try {
+        $encode();
+        printf("%-14s %s\n", 'absent-' . $side, 'NO EXCEPTION');
+    } catch (Throwable $e) {
+        printf("%-14s %s\n", 'absent-' . $side, $e->getMessage());
+    }
+}
 
 $badSchema = schema(list_schema('bad', type_list(type_mixed())));
 $badTyped = $hydrator->dehydrate(new Rows($badSchema, row(['bad' => [new SplStack()]])));
@@ -88,5 +97,6 @@ enum_json_xml  frames-identical:yes
 heterogeneous  frames-identical:yes
 two_columns    frames-identical:yes
 empty          frames-identical:yes
-absent         frames-identical:yes
+absent-php     Floe found a row that does not carry the declared column "b"
+absent-ext     flow_php found a row that does not carry the declared column "b"
 Flow\Floe\Exception\ExtensionException: flow_php does not support values of type "mixed" in this build

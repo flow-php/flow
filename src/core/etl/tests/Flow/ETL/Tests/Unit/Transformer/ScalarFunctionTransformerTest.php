@@ -139,26 +139,26 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         static::assertTrue($result->schema()->get('xpath')->isNullable());
     }
 
-    public function test_a_widened_batch_definition_coerces_the_value(): void
+    public function test_a_declared_output_definition_coerces_the_produced_value(): void
     {
-        $result = (new ScalarFunctionTransformer('out', ref('v')))->transform(
-            rows(schema(str_schema('v')), row(['v' => 1]), row(['v' => 'a'])),
+        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(
+            rows(schema(int_schema('v')), row(['v' => 1]), row(['v' => 2])),
             flow_context(config()),
         );
 
         static::assertSame(
             [
                 ['v' => 1, 'out' => '1'],
-                ['v' => 'a', 'out' => 'a'],
+                ['v' => 2, 'out' => '2'],
             ],
             $result->toArray(),
         );
     }
 
-    public function test_a_heterogeneous_batch_yields_one_definition_for_the_produced_column(): void
+    public function test_the_produced_column_takes_the_declared_definition(): void
     {
-        $result = (new ScalarFunctionTransformer('out', ref('v')))->transform(
-            rows(schema(str_schema('v')), row(['v' => 1]), row(['v' => 'a'])),
+        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(
+            rows(schema(int_schema('v')), row(['v' => 1]), row(['v' => 2])),
             flow_context(config()),
         );
 

@@ -16,6 +16,7 @@ use function array_shift;
 use function array_values;
 use function call_user_func;
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_optional;
 use function is_callable;
 
 final class CallUserFunc implements ScalarFunction
@@ -67,11 +68,14 @@ final class CallUserFunc implements ScalarFunction
     }
 
     /**
+     * An opaque callable can always answer null, so the declared type has to admit it - the same
+     * rule Spark applies to an untyped UDF.
+     *
      * @return Type<mixed>
      */
     public function returns(): Type
     {
-        return $this->returnType;
+        return type_optional($this->returnType);
     }
 
     public function eval(Row $row, FlowContext $context): mixed

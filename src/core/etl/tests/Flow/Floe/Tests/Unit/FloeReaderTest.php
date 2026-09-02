@@ -478,7 +478,7 @@ final class FloeReaderTest extends TestCase
         static::assertCount(0, $reader->schema()->definitions());
     }
 
-    public function test_evolved_file_rows_conform_to_merged_schema(): void
+    public function test_evolved_file_rows_match_merged_schema(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://evolved.floe');

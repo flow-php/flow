@@ -36,8 +36,6 @@ final class FloeStreamReader
 
     private readonly Hydrator $hydrator;
 
-    private readonly SchemaDecoder $schemaDecoder;
-
     /**
      * @param null|Hydrator $hydrator null uses the adaptive hydrator
      *
@@ -51,7 +49,6 @@ final class FloeStreamReader
         private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder());
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
     }
 
@@ -90,13 +87,12 @@ final class FloeStreamReader
      * stops the read after that many rows.
      *
      * @param int<1, max> $batchSize
-     * @param bool $conform pad/reorder every batch to the merged file schema (default); false yields rows verbatim per section (the raw read used by spill buckets)
      *
      * @throws FloeException
      *
-     * @return \Generator<int, Rows> every batch conforms to the merged file schema unless $conform is false
+     * @return \Generator<int, Rows> every batch matches the merged file schema - Rows::__construct sees to that
      */
-    public function rows(int $batchSize = 1000, int $offset = 0, ?int $limit = null, bool $conform = true): Generator
+    public function rows(int $batchSize = 1000, int $offset = 0, ?int $limit = null): Generator
     {
         if ($offset < 0) {
             throw new FloeException('Floe offset must be greater or equal to 0');
@@ -107,7 +103,7 @@ final class FloeStreamReader
         }
 
         if ($offset > 0) {
-            yield from $this->rowsFromOffset($batchSize, $offset, $limit, $conform);
+            yield from $this->rowsFromOffset($batchSize, $offset, $limit);
 
             return;
         }
@@ -137,17 +133,7 @@ final class FloeStreamReader
             ));
         }
 
-        yield from $this->walk(
-            $chunks,
-            $buffer,
-            Format::HEADER_LENGTH,
-            $fileSchema,
-            0,
-            $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
-            $fileSchema->count(),
-            $batchSize,
-            $limit,
-        );
+        yield from $this->walk($chunks, $buffer, Format::HEADER_LENGTH, $fileSchema, 0, $batchSize, $limit);
     }
 
     /**
@@ -205,8 +191,6 @@ final class FloeStreamReader
         int $position,
         Schema $schema,
         int $skip,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         int $batchSize,
         ?int $limit,
     ): Generator {
@@ -247,8 +231,6 @@ final class FloeStreamReader
                         foreach ($this->emitBatch(
                             $schema,
                             $pending,
-                            $padding,
-                            $fileSchemaCount,
                             $batch,
                             $batchSize,
                             $limit,
@@ -280,8 +262,6 @@ final class FloeStreamReader
                 foreach ($this->emitBatch(
                     $schema,
                     $pending,
-                    $padding,
-                    $fileSchemaCount,
                     $batch,
                     $batchSize,
                     $limit,
@@ -306,7 +286,7 @@ final class FloeStreamReader
     }
 
     /**
-     * Applies the per-row skip / padding / batch-yield / limit logic to a hydrated
+     * Applies the per-row skip / batch-yield / limit logic to a hydrated
      * batch of row frame bodies; $batch, $yielded, $stop and $skip are updated by reference.
      *
      * @param list<string> $pending
@@ -318,8 +298,6 @@ final class FloeStreamReader
     private function emitBatch(
         Schema $schema,
         array $pending,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         array &$batch,
         int $batchSize,
         ?int $limit,
@@ -329,8 +307,6 @@ final class FloeStreamReader
     ): array {
         return $this->emitRows(
             $this->hydrator->hydrate($this->encoder($schema)->decode($pending), $schema)->all(),
-            $padding,
-            $fileSchemaCount,
             $batch,
             $batchSize,
             $limit,
@@ -341,10 +317,8 @@ final class FloeStreamReader
     }
 
     /**
-     * Per-row skip / padding / batch-yield / limit logic over already-hydrated
-     * rows; $batch, $yielded, $stop and $skip are updated by reference. A null
-     * $padding yields rows verbatim (per-section, unpadded) - the raw read used
-     * by external-sort/join/group-by buckets.
+     * Per-row skip / batch-yield / limit logic over already-hydrated rows;
+     * $batch, $yielded, $stop and $skip are updated by reference.
      *
      * @param array<array-key, Row> $rows
      * @param array<int, Row> $batch
@@ -354,8 +328,6 @@ final class FloeStreamReader
      */
     private function emitRows(
         array $rows,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         array &$batch,
         int $batchSize,
         ?int $limit,
@@ -372,7 +344,7 @@ final class FloeStreamReader
                 continue;
             }
 
-            $batch[] = $padding === null || count($row->values()) === $fileSchemaCount ? $row : $padding->apply($row);
+            $batch[] = $row;
 
             if ($limit !== null && ++$yielded >= $limit) {
                 $ready[] = $this->batch($batch);
@@ -446,7 +418,7 @@ final class FloeStreamReader
      *
      * @return \Generator<int, Rows>
      */
-    private function rowsFromOffset(int $batchSize, int $offset, ?int $limit, bool $conform = true): Generator
+    private function rowsFromOffset(int $batchSize, int $offset, ?int $limit): Generator
     {
         $footer = $this->footer();
         $fileSchema = $footer->schema();
@@ -483,8 +455,6 @@ final class FloeStreamReader
             0,
             $fileSchema,
             $offset - $cumulative,
-            $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
-            $fileSchema->count(),
             $batchSize,
             $limit,
         );

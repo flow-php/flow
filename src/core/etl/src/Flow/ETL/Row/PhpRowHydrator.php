@@ -39,11 +39,6 @@ final class PhpRowHydrator implements Hydrator
             foreach ($rows->schema()->definitions() as $definition) {
                 $name = $definition->entry()->name();
 
-                // Floe keeps absent and null distinct, so a column the row does not carry is omitted
-                if (!$row->has($name)) {
-                    continue;
-                }
-
                 $values[$name] = $row->get($name);
                 $types[$name] = $definition->type();
 

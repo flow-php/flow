@@ -51,7 +51,7 @@ final class FrameReader
      *
      * @return \Generator<int, array{0: int, 1: string}> frame type and frame body
      */
-    public function frames(bool $lenient = false): Generator
+    public function frames(): Generator
     {
         /** @var int<1, max> $chunkSize */
         $chunkSize = $this->chunkSize;
@@ -62,10 +62,6 @@ final class FrameReader
         $fill = self::chunkFiller($buffer, $position, $chunks);
 
         if (!$fill(Format::HEADER_LENGTH)) {
-            if (strlen($buffer) === 0 && $lenient) {
-                return;
-            }
-
             throw new FloeException('Floe stream is truncated, header is incomplete');
         }
 
@@ -83,7 +79,7 @@ final class FrameReader
 
         while (true) {
             if (!$fill(Format::FRAME_HEADER_LENGTH)) {
-                if ((strlen($buffer) - $position) === 0 || $lenient) {
+                if ((strlen($buffer) - $position) === 0) {
                     return;
                 }
 
@@ -94,10 +90,6 @@ final class FrameReader
             $frameLength = unpack('V', $buffer, $position + 1)[1];
 
             if (!$fill(Format::FRAME_HEADER_LENGTH + $frameLength)) {
-                if ($lenient) {
-                    return;
-                }
-
                 throw new FloeException('Floe stream is truncated, frame body is incomplete');
             }
 

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Integration;
 
 use Flow\ETL\Adapter\GoogleSheet\Tests\GoogleSheetsContext;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
@@ -39,14 +40,18 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         }
     }
 
-    public function test_extract_puts_null_in_not_matching_schema_rows(): void
+    public function test_extract_puts_null_in_a_declared_nullable_column_the_sheet_lacks(): void
     {
         $rows = df()
             ->extract(from_google_sheet(
                 $this->context->sheets(__DIR__ . '/../Fixtures/extra-empty-rows.json'),
                 '1234567890',
                 'Sheet',
-            )->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), int_schema('id'))))
+            )->withSchema(schema(
+                string_schema('Header 1'),
+                string_schema('Header 2'),
+                int_schema('id', nullable: true),
+            )))
             ->fetch()
             ->toArray();
 
@@ -55,6 +60,24 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             static::assertArrayNotHasKey('Header 3', $row);
             static::assertNull($row['id']);
         }
+    }
+
+    /**
+     * b57: the sheet has no such column, so every row would carry a null under a NOT NULL
+     * declaration. Declare the column nullable if that is what the data is.
+     */
+    public function test_extract_refuses_a_not_null_column_the_sheet_lacks(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 0): could not convert null to integer, column is not nullable');
+
+        df()
+            ->extract(from_google_sheet(
+                $this->context->sheets(__DIR__ . '/../Fixtures/extra-empty-rows.json'),
+                '1234567890',
+                'Sheet',
+            )->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), int_schema('id'))))
+            ->fetch();
     }
 
     public function test_extract_skip_extra_empty_rows(): void

@@ -411,12 +411,12 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $rows->each(function (Row $row): void {
-                $this->assertSame(
+            foreach ($rows->all() as $row) {
+                static::assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
                     array_keys($row->toArray()),
                 );
-            });
+            }
             $total += $rows->count();
         }
 
@@ -437,9 +437,9 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $rows->each(function (Row $row): void {
-                $this->assertSame(['id', 'name'], array_keys($row->toArray()));
-            });
+            foreach ($rows->all() as $row) {
+                static::assertSame(['id', 'name'], array_keys($row->toArray()));
+            }
             $total += $rows->count();
         }
 
@@ -453,9 +453,9 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $rows->each(function (Row $row): void {
-                $this->assertSame(['id', 'name', 'active'], array_keys($row->toArray()));
-            });
+            foreach ($rows->all() as $row) {
+                static::assertSame(['id', 'name', 'active'], array_keys($row->toArray()));
+            }
             $total += $rows->count();
         }
 

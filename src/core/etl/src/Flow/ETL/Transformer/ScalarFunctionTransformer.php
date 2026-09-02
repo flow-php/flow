@@ -16,7 +16,6 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
@@ -94,25 +93,34 @@ final readonly class ScalarFunctionTransformer implements Transformer
             : $schema->replace($name, $definition);
 
         if ($function instanceof ExpandResults) {
-            return $rows->flatMap($output, static fn(Row $r): array => array_map(
-                static fn(mixed $val): Row => new Row([
-                    ...$r->values(),
-                    $name => $val === null ? null : $definition->type()->cast($val),
-                ]),
-                // @mago-ignore analysis:mixed-argument
-                $function->eval($r, $context),
-            ));
+            $expanded = [];
+
+            foreach ($rows->all() as $r) {
+                // @mago-ignore analysis:mixed-assignment
+                foreach (type_array()->assert($function->eval($r, $context)) as $val) {
+                    $expanded[] = new Row([
+                        ...$r->values(),
+                        $name => $val === null ? null : $definition->type()->cast($val),
+                    ]);
+                }
+            }
+
+            return new Rows($output, ...$expanded);
         }
 
-        return $rows->map($output, static function (Row $r) use ($function, $definition, $name, $context): Row {
+        $mapped = [];
+
+        foreach ($rows->all() as $r) {
             // @mago-ignore analysis:mixed-assignment
             $value = $function->eval($r, $context);
 
-            return new Row([
+            $mapped[] = new Row([
                 ...$r->values(),
                 $name => $value === null ? null : $definition->type()->cast($value),
             ]);
-        });
+        }
+
+        return new Rows($output, ...$mapped);
     }
 
     private function entryName(): string

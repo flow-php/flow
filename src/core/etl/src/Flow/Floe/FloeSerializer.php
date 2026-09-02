@@ -39,7 +39,7 @@ final class FloeSerializer implements Serializer
     {
         try {
             // validation stays on until an upstream mechanism guarantees Rows match their schema
-            $writer = new FloeStreamWriter($rows->schema(), new Options(validateData: true), hydrator: $this->hydrator);
+            $writer = new FloeStreamWriter($rows->schema(), new Options(), hydrator: $this->hydrator);
             $writer->create($destination);
             $writer->write($rows);
             $writer->close();
@@ -57,7 +57,7 @@ final class FloeSerializer implements Serializer
 
             $rows = [];
 
-            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+            foreach ($reader->rows($this->batchSize) as $batch) {
                 foreach ($batch->all() as $row) {
                     $rows[] = $row;
                 }

@@ -38,7 +38,7 @@ enum LeakSuit: string
 
 $schema = schema(
     int_schema('id'),
-    str_schema('name'),                       // non-nullable - null values force makeNullable
+    str_schema('name', nullable: true),       // the batch carries nulls, so the declaration admits them
     float_schema('price'),
     bool_schema('active'),
     datetime_schema('created_at'),
@@ -57,7 +57,7 @@ for ($i = 1; $i <= 100; $i++) {
     $batch[] = new RawRowValues(
         [
             'id' => (string) $i,
-            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // exercises the makeNullable path
+            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // null values under a nullable declaration
             'price' => \sprintf('%d.%02d', $i, $i % 100),
             'active' => $i % 2 === 0 ? 'yes' : 'off',
             'created_at' => \sprintf('2024-03-%02d 10:20:%02d', 1 + $i % 28, $i % 60),

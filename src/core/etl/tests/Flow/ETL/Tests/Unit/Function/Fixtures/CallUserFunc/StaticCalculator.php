@@ -15,4 +15,9 @@ final class StaticCalculator
     {
         return count($array);
     }
+
+    public static function alwaysNull(): ?string
+    {
+        return null;
+    }
 }

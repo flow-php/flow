@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
@@ -165,14 +166,14 @@ final class ExcelExtractorTest extends FlowTestCase
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_puts_null_in_not_matching_schema_rows(string $fixtureName): void
+    public function test_extract_excel_puts_null_in_a_declared_nullable_column_the_sheet_lacks(string $fixtureName): void
     {
         $rows = df()
             ->extract(from_excel($fixtureName)->withSchema(schema(
                 int_schema('id'),
                 string_schema('name'),
-                string_schema('email'),
-                string_schema('missing'),
+                string_schema('email', nullable: true),
+                string_schema('missing', nullable: true),
             )))
             ->fetch()
             ->toArray();
@@ -181,6 +182,28 @@ final class ExcelExtractorTest extends FlowTestCase
             static::assertNotSame([], $row);
             static::assertNull($row['missing']);
         }
+    }
+
+    /**
+     * b57: the sheet has no such column, so every row would carry a null under a NOT NULL
+     * declaration. Declare the column nullable if that is what the data is.
+     */
+    #[DataProvider('provide_fixtures')]
+    public function test_extract_excel_refuses_a_not_null_column_the_sheet_lacks(string $fixtureName): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'column "missing" (row 0): could not convert null to string, column is not nullable',
+        );
+
+        df()
+            ->extract(from_excel($fixtureName)->withSchema(schema(
+                int_schema('id'),
+                string_schema('name'),
+                string_schema('email'),
+                string_schema('missing'),
+            )))
+            ->fetch();
     }
 
     public function test_extract_with_explicit_ods_reader(): void

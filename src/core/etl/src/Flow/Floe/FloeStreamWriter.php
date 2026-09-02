@@ -11,19 +11,13 @@ use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\DestinationStream;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
-use Flow\Types\Type\TypeDetector;
 
-use function get_debug_type;
-use function is_bool;
-use function is_float;
-use function is_int;
-use function is_string;
+use function array_key_exists;
 use function sprintf;
-use function strlen;
-use function substr;
 
 final class FloeStreamWriter
 {
@@ -113,8 +107,8 @@ final class FloeStreamWriter
 
         if ($footer->schema !== []) {
             // A batch carrying the same columns or struct fields in a different order must append,
-            // not throw - conform the order instead of loosening the guard below.
-            $this->sessionSchema = $this->sessionSchema->conformOrderTo($footer->schema());
+            // not throw - match the order instead of loosening the guard below.
+            $this->sessionSchema = $this->sessionSchema->matchOrderTo($footer->schema());
 
             if ($this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
                 throw new IncompatibleSchemaException('Floe append schema does not match the existing file schema.');
@@ -164,8 +158,11 @@ final class FloeStreamWriter
         }
 
         $this->openSession();
-        $typed = $this->hydrator->dehydrate($rows);
-        $this->assertBatchFitsSession($typed);
+        $this->assertBatchFitsSession($rows->schema());
+
+        // the session schema is the file's contract - a batch narrower than it goes through the gate,
+        // which pads the columns it declares nullable, so every row reaches the encoder complete
+        $typed = $this->hydrator->dehydrate($rows->matchTo($this->sessionSchema));
 
         if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
             $this->startSection();
@@ -194,67 +191,25 @@ final class FloeStreamWriter
     }
 
     /**
-     * @param list<\Flow\ETL\Row\TypedRowValues> $typed
-     *
      * @throws IncompatibleSchemaException
      */
-    private function assertBatchFitsSession(array $typed): void
+    private function assertBatchFitsSession(Schema $batch): void
     {
         $definitions = $this->sessionSchema->definitions();
 
-        foreach ($typed as $index => $rowValues) {
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($rowValues->values as $name => $value) {
-                $definition = $definitions[$name] ?? null;
-
-                if ($definition === null) {
-                    throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
-                        'new column "%s"',
-                        $name,
-                    )));
-                }
-
-                if (!$this->options->validateData) {
-                    continue;
-                }
-
-                if ($value === null) {
-                    if (!$definition->isNullable()) {
-                        throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
-                            'column "%s" (row %d): could not convert null to %s, column is not nullable',
-                            $name,
-                            $index,
-                            $definition->type()->toString(),
-                        )));
-                    }
-
-                    continue;
-                }
-
-                if (!$definition->type()->isValid($value)) {
-                    throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf(
-                        'column "%s" (row %d): could not convert %s (%s) to %s',
-                        $name,
-                        $index,
-                        self::describeValue($value),
-                        (new TypeDetector())
-                            ->detectType($value)
-                            ->toString(),
-                        $definition->type()->toString(),
-                    )));
-                }
+        // unconditional, and before the validator: EvolvingValidator admits a nullable extra column,
+        // which the session encoder would then drop - silent column loss is not unlockable here
+        foreach ($batch->definitions() as $name => $_) {
+            if (!array_key_exists($name, $definitions)) {
+                throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf('new column "%s"', $name)));
             }
         }
-    }
 
-    private static function describeValue(mixed $value): string
-    {
-        return match (true) {
-            is_string($value) => "'" . (strlen($value) > 32 ? substr($value, 0, 32) . '...' : $value) . "'",
-            is_bool($value) => $value ? 'true' : 'false',
-            is_int($value), is_float($value) => (string) $value,
-            default => get_debug_type($value),
-        };
+        $validation = (new EvolvingValidator())->validate($this->sessionSchema, $batch);
+
+        if (!$validation->isValid()) {
+            throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, $validation->toString()));
+        }
     }
 
     /**

@@ -9,7 +9,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Throwable;
@@ -56,8 +55,16 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
                 ));
             }
 
-            // @mago-ignore analysis:mixed-operand
-            $result = $rows->filter(static fn(Row $r): bool => (bool) $function->eval($r, $context));
+            $kept = [];
+
+            foreach ($rows->all() as $r) {
+                // @mago-ignore analysis:mixed-operand
+                if ((bool) $function->eval($r, $context)) {
+                    $kept[] = $r;
+                }
+            }
+
+            $result = Rows::trusted($rows->schema(), $kept);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

@@ -16,7 +16,6 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
-use Flow\Types\Type\FieldOrderConformer;
 
 use function array_key_exists;
 use function array_keys;
@@ -171,13 +170,12 @@ final readonly class Schema implements Countable
     }
 
     /**
-     * Columns present in both schemas are emitted in $authority's order with each definition's type
-     * reordered through FieldOrderConformer; columns only in $this are appended unchanged. Nothing
-     * is added, nothing is dropped, no type is widened.
+     * Columns present in both schemas are emitted in $authority's order; columns only in $this are
+     * appended unchanged. Nothing is added, dropped or widened, and no type is rewritten - a column
+     * whose type orders its own elements differently is a different type, not a reorderable one.
      */
-    public function conformOrderTo(self $authority): self
+    public function matchOrderTo(self $authority): self
     {
-        $conformer = new FieldOrderConformer();
         $definitions = [];
 
         foreach ($authority->definitions() as $authorityDefinition) {
@@ -187,16 +185,7 @@ final readonly class Schema implements Countable
                 continue;
             }
 
-            $conformed = $conformer->conform($definition->type(), $authorityDefinition->type());
-
-            $definitions[] = $conformed === $definition->type()
-                ? $definition
-                : definition_from_type(
-                    $definition->entry(),
-                    $conformed,
-                    $definition->isNullable(),
-                    $definition->metadata(),
-                );
+            $definitions[] = $definition;
         }
 
         foreach ($this->definitions as $definition) {
@@ -296,17 +285,17 @@ final readonly class Schema implements Countable
         return new self(...$definitionsList);
     }
 
+    /**
+     * Column order is part of a Schema's identity - two schemas holding the same columns in a
+     * different order describe two different row shapes, and a row is stored in Schema order.
+     */
     public function isSame(self $schema): bool
     {
-        if (count($this->definitions) !== count($schema->definitions)) {
+        if (array_keys($this->definitions) !== array_keys($schema->definitions)) {
             return false;
         }
 
         foreach ($this->definitions as $entry => $definition) {
-            if (!array_key_exists($entry, $schema->definitions)) {
-                return false;
-            }
-
             if (!$definition->isSame($schema->definitions[$entry])) {
                 return false;
             }

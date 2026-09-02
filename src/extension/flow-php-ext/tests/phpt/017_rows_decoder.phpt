@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\str_schema;
 
 use Flow\Floe\RustFloeEncoderNative;
 
-$rows = rows(schema(int_schema('id'), str_schema('name', nullable: true), float_schema('price'), datetime_schema('at')), row(['id' => 1, 'name' => 'a']), row(['id' => 2, 'name' => null]), row(['id' => 3, 'price' => 1.5]), row(['id' => 4, 'at' => new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw'))]));
+$rows = rows(schema(int_schema('id'), str_schema('name', nullable: true), float_schema('price', nullable: true), datetime_schema('at', nullable: true)), row(['id' => 1, 'name' => 'a']), row(['id' => 2, 'name' => null]), row(['id' => 3, 'price' => 1.5]), row(['id' => 4, 'at' => new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw'))]));
 
 $frames = php_frames($rows);
 $decoded = ext_decode_frames($frames);

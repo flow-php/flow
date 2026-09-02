@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Floe\Exception\ExtensionException;
 use RuntimeException;
+use Throwable;
 
 use function class_exists;
 use function extension_loaded;
@@ -39,7 +42,11 @@ final class NativeRowHydrator implements Hydrator
             return $this->php->cast($batch, null);
         }
 
-        return $this->native->cast($batch, $schema);
+        try {
+            return $this->native->cast($batch, $schema);
+        } catch (ExtensionException $e) {
+            throw self::unwrap($e);
+        }
     }
 
     public function dehydrate(Rows $rows): array
@@ -55,6 +62,22 @@ final class NativeRowHydrator implements Hydrator
             );
         }
 
-        return $this->native->hydrate($batch, $schema);
+        try {
+            return $this->native->hydrate($batch, $schema);
+        } catch (ExtensionException $e) {
+            throw self::unwrap($e);
+        }
+    }
+
+    /**
+     * The extension turns any PHP exception raised inside it into an ExtensionException carrying the
+     * original as previous. A batch refused by the row gate must reach the caller as the same
+     * exception both hydrators throw, or the two disagree on nothing but the type.
+     */
+    private static function unwrap(ExtensionException $exception): Throwable
+    {
+        $previous = $exception->getPrevious();
+
+        return $previous instanceof SchemaMismatchException ? $previous : $exception;
     }
 }

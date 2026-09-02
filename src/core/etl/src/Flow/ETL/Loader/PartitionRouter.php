@@ -16,6 +16,7 @@ use Generator;
 
 use function array_diff_key;
 use function array_flip;
+use function array_keys;
 use function array_values;
 use function implode;
 use function sprintf;
@@ -35,6 +36,14 @@ final class PartitionRouter
     ) {
         $this->rowPartitions = new RowPartitions($partitioning->by);
         $this->dropped = $partitioning->writeColumns ? [] : array_flip($partitioning->by->names());
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function droppedNames(): array
+    {
+        return array_keys($this->dropped);
     }
 
     /**
@@ -64,17 +73,19 @@ final class PartitionRouter
         $stripped = $this->dropped === [] ? $schema : $schema->gracefulRemove(...$this->partitioning->by->names());
 
         foreach ($groups as [$partitions, $rowsOfGroup]) {
-            $group = new Rows($schema, ...$rowsOfGroup);
+            if ($this->dropped === []) {
+                yield [$partitions, new Rows($schema, ...$rowsOfGroup)];
 
-            yield [
-                $partitions,
-                $this->dropped === []
-                    ? $group
-                    : $group->map(
-                        $stripped,
-                        fn(Row $row): Row => new Row(array_diff_key($row->values(), $this->dropped)),
-                    ),
-            ];
+                continue;
+            }
+
+            $strippedRows = [];
+
+            foreach ($rowsOfGroup as $row) {
+                $strippedRows[] = new Row(array_diff_key($row->values(), $this->dropped));
+            }
+
+            yield [$partitions, new Rows($stripped, ...$strippedRows)];
         }
     }
 

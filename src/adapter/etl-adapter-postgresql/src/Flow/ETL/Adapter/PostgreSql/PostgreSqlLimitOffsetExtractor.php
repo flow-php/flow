@@ -79,7 +79,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
             $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                 $totalFetched++;
 

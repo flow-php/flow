@@ -30,12 +30,14 @@ final class AddRowIndexTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map($rows->schema()->add(int_schema($this->indexColumn)), function (Row $row): Row {
-                $row = new Row([...$row->values(), $this->indexColumn => $this->index]);
-                $this->index++;
+            $indexed = [];
 
-                return $row;
-            });
+            foreach ($rows->all() as $row) {
+                $indexed[] = new Row([...$row->values(), $this->indexColumn => $this->index]);
+                $this->index++;
+            }
+
+            $result = new Rows($rows->schema()->add(int_schema($this->indexColumn)), ...$indexed);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

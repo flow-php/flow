@@ -52,7 +52,7 @@ final class FilesystemBuckets implements BucketsStorage
     public function append(string $bucketId, Rows $rows): void
     {
         if (!isset($this->writers[$bucketId])) {
-            $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: true));
+            $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
             $writer->append($this->keyPath($bucketId));
             $this->writers[$bucketId] = $writer;
         }
@@ -75,7 +75,7 @@ final class FilesystemBuckets implements BucketsStorage
         // finally, not a trailing close(): PHP runs it on generator destruction too, and a KWayMerge cursor is
         // destroyed rather than exhausted when a merge throws
         try {
-            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+            foreach ($reader->rows($this->batchSize) as $batch) {
                 yield $batch;
             }
         } finally {
@@ -96,7 +96,7 @@ final class FilesystemBuckets implements BucketsStorage
         $this->closeWriter($bucketId);
 
         // validation stays on until an upstream mechanism guarantees Rows match their schema
-        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options(validateData: true));
+        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
         $writer->create($this->keyPath($bucketId));
         $writer->write($rows);
         $writer->close();

@@ -62,6 +62,12 @@ final class SchemaTest extends FlowTestCase
 
     public static function provide_is_same_cases(): Generator
     {
+        yield 'same columns in a different order' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(str_schema('name'), int_schema('id')),
+            false,
+        ];
+
         yield 'identical simple schemas' => [
             schema(int_schema('id'), str_schema('name')),
             schema(int_schema('id'), str_schema('name')),
@@ -888,7 +894,7 @@ final class SchemaTest extends FlowTestCase
         static::assertSame([], array_keys(schema()->sort()->definitions()));
     }
 
-    public function test_conform_order_to_reorders_columns_and_structure_fields(): void
+    public function test_match_order_to_reorders_columns_but_not_the_fields_inside_a_type(): void
     {
         $schema = schema(
             structure_schema('s', type_structure(['b' => type_string(), 'a' => type_integer()])),
@@ -899,28 +905,28 @@ final class SchemaTest extends FlowTestCase
             structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_string()])),
         );
 
-        $conformed = $schema->conformOrderTo($authority);
+        $matched = $schema->matchOrderTo($authority);
 
-        static::assertSame(['id', 's'], array_keys($conformed->definitions()));
-        static::assertSame('structure{a: integer, b: string}', $conformed->get('s')->type()->toString());
+        static::assertSame(['id', 's'], array_keys($matched->definitions()));
+        static::assertSame('structure{b: string, a: integer}', $matched->get('s')->type()->toString());
     }
 
-    public function test_conform_order_to_appends_columns_the_authority_does_not_know(): void
+    public function test_match_order_to_appends_columns_the_authority_does_not_know(): void
     {
         static::assertSame(
             ['id', 'extra'],
             array_keys(
-                schema(int_schema('id'), str_schema('extra'))->conformOrderTo(schema(int_schema('id')))->definitions(),
+                schema(int_schema('id'), str_schema('extra'))->matchOrderTo(schema(int_schema('id')))->definitions(),
             ),
         );
     }
 
-    public function test_conform_order_to_adds_and_drops_nothing(): void
+    public function test_match_order_to_adds_and_drops_nothing(): void
     {
         static::assertSame(
             ['id'],
             array_keys(
-                schema(int_schema('id'))->conformOrderTo(schema(int_schema('id'), str_schema('name')))->definitions(),
+                schema(int_schema('id'))->matchOrderTo(schema(int_schema('id'), str_schema('name')))->definitions(),
             ),
         );
     }

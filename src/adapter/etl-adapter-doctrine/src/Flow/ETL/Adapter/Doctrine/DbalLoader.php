@@ -81,15 +81,13 @@ final class DbalLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $sortedRows = $rows->sortEntries();
-
             // @mago-expect analysis:string-member-selector
             $this->bulk()->{$this->operation}(
                 $this->connection(),
                 $this->tableName,
                 new BulkData(
-                    $this->encoder()->encode($context->hydrator()->dehydrate($sortedRows)),
-                    $this->typesMap()->flowSchemaTypes($sortedRows->schema()),
+                    $this->encoder()->encode($context->hydrator()->dehydrate($rows)),
+                    $this->typesMap()->flowSchemaTypes($rows->schema()),
                 ),
                 $this->operationOptions,
             );

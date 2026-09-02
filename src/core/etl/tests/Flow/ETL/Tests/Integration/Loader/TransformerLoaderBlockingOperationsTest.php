@@ -262,8 +262,8 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_pivot_inside_a_transformation_pivots_the_whole_stream(): void
     {
-        // A6 - one pivoted set for the stream. The key order differs per group because each group's own column is
-        // filled first and the missing one is appended as null.
+        // A6 - one pivoted set for the stream. Every row carries both pivoted columns in Schema order,
+        // the group's own value and null for the other.
         $spy = new SpyLoader();
         $pivotGroupSums = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df
             ->groupBy([ref('g')])
@@ -277,7 +277,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
         static::assertSame([2], $spy->loadedRowCounts());
         static::assertSame(
-            [['g' => 'a', 'a' => 6.0, 'b' => null], ['g' => 'b', 'b' => 60.0, 'a' => null]],
+            [['g' => 'a', 'a' => 6.0, 'b' => null], ['g' => 'b', 'a' => null, 'b' => 60.0]],
             $spy->loadedRowsToArray(),
         );
     }

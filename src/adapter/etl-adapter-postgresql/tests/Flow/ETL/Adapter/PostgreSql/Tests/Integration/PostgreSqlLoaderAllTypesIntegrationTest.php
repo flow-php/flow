@@ -57,6 +57,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
 use function is_string;
 use function json_decode;
 use function sprintf;
@@ -98,7 +99,7 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         $date = new DateTimeImmutable('2024-01-15');
         $dateTime = new DateTimeImmutable('2024-01-15 10:30:00+00:00');
         $time = new DateInterval('PT10H30M15S');
-        $uuid = '550e8400-e29b-41d4-a716-446655440000';
+        $uuid = type_uuid()->cast('550e8400-e29b-41d4-a716-446655440000');
 
         $xmlDoc = new DOMDocument();
         $xmlDoc->loadXML('<root><item>test</item></root>');
@@ -187,7 +188,7 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                 ? sprintf('%02d:%02d:%02d', $row['col_time']->h, $row['col_time']->i, $row['col_time']->s)
                 : $row['col_time'],
         );
-        static::assertSame($uuid, $row['col_uuid']);
+        static::assertSame($uuid->toString(), $row['col_uuid']);
         static::assertEquals(
             ['key' => 'value', 'number' => 123],
             is_string($row['col_json']) ? json_decode($row['col_json'], true) : $row['col_json'],

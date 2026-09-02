@@ -145,7 +145,7 @@ final class SchemaTest extends FlowIntegrationTestCase
 
     /**
      * The batch carries one Schema derived over every row, so limit() selects rows out of a shape it
-     * cannot narrow - the first 50 rows hold only ints in "union", but the column stays string.
+     * cannot narrow - the first 50 rows hold only nulls in "union", but the column stays ?string.
      */
     public function test_limit_does_not_narrow_the_schema(): void
     {
@@ -155,7 +155,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                     'id' => $i,
                     'name' => 'name_' . $i,
                     'active' => ($i % 2) === 0,
-                    'union' => $i > 50 ? 'string' : 1,
+                    'union' => $i > 50 ? 'string' : null,
                 ],
                 range(1, 100),
             ),
@@ -163,7 +163,7 @@ final class SchemaTest extends FlowIntegrationTestCase
         );
 
         static::assertEquals(
-            schema(int_schema('id'), str_schema('name'), bool_schema('active'), str_schema('union')),
+            schema(int_schema('id'), str_schema('name'), bool_schema('active'), str_schema('union', nullable: true)),
             df()->read(from_rows($rows))->autoCast()->limit(50)->schema(),
         );
         static::assertEquals(

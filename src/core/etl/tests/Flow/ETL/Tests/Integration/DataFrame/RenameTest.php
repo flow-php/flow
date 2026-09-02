@@ -148,8 +148,8 @@ final class RenameTest extends FlowIntegrationTestCase
 
         static::assertEquals(
             [
-                ['OSMY' => 8],
-                ['DZIEWIATY' => 9],
+                ['OSMY' => 8, 'DZIEWIATY' => null],
+                ['OSMY' => null, 'DZIEWIATY' => 9],
             ],
             iterator_to_array($ds),
         );
@@ -293,8 +293,8 @@ final class RenameTest extends FlowIntegrationTestCase
 
         static::assertEquals(
             [
-                ['Ósmy' => 8],
-                ['Dziewiąty' => 9],
+                ['Ósmy' => 8, 'Dziewiąty' => null],
+                ['Ósmy' => null, 'Dziewiąty' => 9],
             ],
             iterator_to_array($ds),
         );
@@ -394,9 +394,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
         static::assertEquals(
             [
-                ['osmy' => 8],
-                ['dziewiaty' => 9],
-                ['osmy-i-dziewiaty' => 89],
+                ['osmy' => 8, 'dziewiaty' => null, 'osmy-i-dziewiaty' => null],
+                ['osmy' => null, 'dziewiaty' => 9, 'osmy-i-dziewiaty' => null],
+                ['osmy' => null, 'dziewiaty' => null, 'osmy-i-dziewiaty' => 89],
             ],
             iterator_to_array($ds),
         );

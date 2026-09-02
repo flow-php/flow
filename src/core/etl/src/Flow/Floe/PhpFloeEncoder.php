@@ -58,10 +58,6 @@ final class PhpFloeEncoder implements Encoder
             foreach ($decodePlan as $column) {
                 $flag = ord($body[$position++]);
 
-                if ($flag === Format::VALUE_ABSENT) {
-                    continue;
-                }
-
                 if ($flag === Format::VALUE_PRESENT) {
                     $values[$column->name] = $column->decoder->decode($body, $position);
                 } elseif ($flag === Format::VALUE_NULL) {
@@ -98,9 +94,10 @@ final class PhpFloeEncoder implements Encoder
 
             foreach ($this->schema->definitions() as $name => $definition) {
                 if (!array_key_exists($name, $rowValues->values)) {
-                    $body .= Format::VALUE_ABSENT_BYTE;
-
-                    continue;
+                    throw new FloeException(sprintf(
+                        'Floe found a row that does not carry the declared column "%s"',
+                        $name,
+                    ));
                 }
 
                 // @mago-ignore analysis:mixed-assignment

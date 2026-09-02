@@ -69,9 +69,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', rows(schema(int_schema('amount')), row(['amount' => 1])));
 
         $this->expectException(IncompatibleSchemaException::class);
-        $this->expectExceptionMessageMatches(
-            '/column "amount" \(row 0\): could not convert 1\.5 \(float\) to integer/',
-        );
+        $this->expectExceptionMessageMatches('/expected: amount<integer>, given: amount<float>/');
 
         $storage->append('bucket', rows(schema(float_schema('amount')), row(['amount' => 1.5])));
     }
@@ -219,17 +217,21 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
             ...$input,
         ));
 
-        // one write session = one schema: rows keep their own columns (unpadded) but column
-        // types widen to the batch union, so compare values rather than exact definitions
+        // one write session = one schema, and every row now carries every column the schema declares -
+        // a column a row omitted comes back as the null its nullable declaration allows
         static::assertSame(
-            array_map(static fn(Row $r): array => $r->toArray(), $input),
+            [
+                ['id' => 1, 'name' => null],
+                ['id' => 2, 'name' => 'John'],
+                ['id' => null, 'name' => 'Jane'],
+            ],
             array_map(static fn(Row $r): array => $r->toArray(), BucketsStorageContext::rows($storage->get('bucket'))),
         );
 
         $this->fs()->rm($cacheDir);
     }
 
-    public function test_append_with_reordered_structure_keys_conforms_and_keeps_every_row(): void
+    public function test_append_with_reordered_structure_keys_matches_and_keeps_every_row(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_append_struct_order');
         $this->fs()->rm($cacheDir);
@@ -265,7 +267,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->fs()->rm($cacheDir);
     }
 
-    public function test_append_with_reordered_columns_conforms_and_keeps_every_row(): void
+    public function test_append_with_reordered_columns_matches_and_keeps_every_row(): void
     {
         $cacheDir = path(__DIR__ . '/var/buckets_append_col_order');
         $this->fs()->rm($cacheDir);

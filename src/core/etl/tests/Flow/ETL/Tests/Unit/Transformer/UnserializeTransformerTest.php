@@ -46,7 +46,7 @@ final class UnserializeTransformerTest extends FlowTestCase
             )]),
         );
 
-        $transformer = new UnserializeTransformer('serialized');
+        $transformer = new UnserializeTransformer('serialized', $rowSchema);
 
         $transformedRows = $transformer->transform($rows, flow_context());
 
@@ -81,32 +81,36 @@ final class UnserializeTransformerTest extends FlowTestCase
     {
         $rows = rows(schema(str_schema('serialized')), row(['serialized' => 'not-serialized']));
 
-        $transformer = new UnserializeTransformer('serialized');
+        $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')));
 
-        $transformedRows = $transformer->transform($rows, flow_context());
-
-        static::assertEquals($rows, $transformedRows);
+        static::assertSame(
+            [['serialized' => 'not-serialized', 'id' => null]],
+            $transformer->transform($rows, flow_context())->toArray(),
+        );
     }
 
-    public function test_unserializing_row_without_source_column_is_unchanged(): void
+    public function test_unserializing_row_without_source_column_emits_the_declared_shape(): void
     {
         $rows = rows(schema(int_schema('id')), row(['id' => 1]));
 
-        $transformer = new UnserializeTransformer('serialized');
+        $transformer = new UnserializeTransformer('serialized', schema(str_schema('name')));
 
-        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+        static::assertSame([['id' => 1, 'name' => null]], $transformer->transform($rows, flow_context())->toArray());
     }
 
-    public function test_unserializing_non_string_value_is_unchanged(): void
+    public function test_unserializing_non_string_value_emits_the_declared_shape(): void
     {
         $rows = rows(schema(int_schema('serialized')), row(['serialized' => 123]));
 
-        $transformer = new UnserializeTransformer('serialized');
+        $transformer = new UnserializeTransformer('serialized', schema(str_schema('name')));
 
-        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+        static::assertSame(
+            [['serialized' => 123, 'name' => null]],
+            $transformer->transform($rows, flow_context())->toArray(),
+        );
     }
 
-    public function test_unserializing_multi_row_payload_returns_row_unchanged(): void
+    public function test_unserializing_multi_row_payload_emits_the_declared_shape(): void
     {
         $payload = serialize_to_string(
             new Base64Serializer(new FloeSerializer()),
@@ -114,9 +118,29 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
         $rows = rows(schema(str_schema('serialized')), row(['serialized' => $payload]));
 
-        $transformer = new UnserializeTransformer('serialized');
+        $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')));
 
-        static::assertEquals($rows, $transformer->transform($rows, flow_context()));
+        static::assertSame(
+            [['serialized' => $payload, 'id' => null]],
+            $transformer->transform($rows, flow_context())->toArray(),
+        );
+    }
+
+    public function test_the_declared_columns_land_under_the_merge_prefix(): void
+    {
+        $payload = serialize_to_string(
+            new Base64Serializer(new FloeSerializer()),
+            rows(schema(int_schema('id')), row(['id' => 7])),
+        );
+
+        $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')), mergePrefix: 'payload_');
+
+        static::assertSame(
+            [['serialized' => $payload, 'payload_id' => 7]],
+            $transformer
+                ->transform(rows(schema(str_schema('serialized')), row(['serialized' => $payload])), flow_context())
+                ->toArray(),
+        );
     }
 
     public function test_unserializing_without_merge(): void
@@ -142,7 +166,7 @@ final class UnserializeTransformerTest extends FlowTestCase
             )]),
         );
 
-        $transformer = new UnserializeTransformer('serialized', false);
+        $transformer = new UnserializeTransformer('serialized', $rowSchema, false);
 
         $transformedRows = $transformer->transform($rows, flow_context());
 
@@ -162,6 +186,42 @@ final class UnserializeTransformerTest extends FlowTestCase
                 ],
             ],
             $transformedRows->toArray(),
+        );
+    }
+
+    public function test_a_declared_column_replaces_an_input_column_of_the_same_name(): void
+    {
+        $payload = serialize_to_string(
+            new Base64Serializer(new FloeSerializer()),
+            rows(schema(int_schema('id')), row(['id' => 7])),
+        );
+
+        static::assertSame(
+            [['serialized' => $payload, 'id' => 7]],
+            (new UnserializeTransformer('serialized', schema(int_schema('id'))))
+                ->transform(
+                    rows(
+                        schema(str_schema('serialized'), int_schema('id')),
+                        row(['serialized' => $payload, 'id' => 1]),
+                    ),
+                    flow_context(),
+                )
+                ->toArray(),
+        );
+    }
+
+    public function test_a_declared_column_the_payload_does_not_carry_is_null(): void
+    {
+        $payload = serialize_to_string(
+            new Base64Serializer(new FloeSerializer()),
+            rows(schema(int_schema('id')), row(['id' => 7])),
+        );
+
+        static::assertSame(
+            [['serialized' => $payload, 'id' => 7, 'absent' => null]],
+            (new UnserializeTransformer('serialized', schema(int_schema('id'), str_schema('absent'))))
+                ->transform(rows(schema(str_schema('serialized')), row(['serialized' => $payload])), flow_context())
+                ->toArray(),
         );
     }
 }

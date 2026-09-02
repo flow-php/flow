@@ -25,7 +25,7 @@ final class CSVHydratorParityTest extends FlowTestCase
             ->withSchema(schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true),
-                bool_schema('active'),
+                bool_schema('active', nullable: true),
             ))
             ->withMetadataColumns(true);
 
@@ -52,7 +52,7 @@ final class CSVHydratorParityTest extends FlowTestCase
             ->withSchema(schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true),
-                bool_schema('active'),
+                bool_schema('active', nullable: true),
             ));
 
         $actual = [];

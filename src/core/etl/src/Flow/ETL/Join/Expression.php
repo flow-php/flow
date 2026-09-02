@@ -9,11 +9,8 @@ use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\RowProjection;
 
-use function array_diff;
 use function array_slice;
-use function array_values;
 use function gettype;
 use function is_array;
 use function is_string;
@@ -74,48 +71,6 @@ final readonly class Expression
     public function comparison(): Comparison
     {
         return $this->comparison;
-    }
-
-    public function dropDuplicateLeftEntries(Row $left): Row
-    {
-        if ($this->joinPrefix !== '') {
-            return $left;
-        }
-
-        $dropLeft = [];
-
-        foreach ($this->left() as $leftReference) {
-            foreach ($this->right() as $rightReference) {
-                if ($leftReference->name() === $rightReference->name()) {
-                    $dropLeft[] = $leftReference->name();
-
-                    continue 2;
-                }
-            }
-        }
-
-        return (new RowProjection())->keep($left, array_values(array_diff($left->names(), $dropLeft)));
-    }
-
-    public function dropDuplicateRightEntries(Row $right): Row
-    {
-        if ($this->joinPrefix !== '') {
-            return $right;
-        }
-
-        $dropRight = [];
-
-        foreach ($this->right() as $rightReference) {
-            foreach ($this->left() as $leftReference) {
-                if ($rightReference->name() === $leftReference->name()) {
-                    $dropRight[] = $rightReference->name();
-
-                    continue 2;
-                }
-            }
-        }
-
-        return (new RowProjection())->keep($right, array_values(array_diff($right->names(), $dropRight)));
     }
 
     /**

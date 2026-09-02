@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
@@ -28,14 +27,20 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        return $rows->map($rows->schema(), fn(Row $row): Row => row([
-            ...$row->values(),
-            $this->entryName => sprintf(
-                '%s%s%s',
-                type_string()->assert($row->get($this->entryName)),
-                $this->divider,
-                $this->stamp,
-            ),
-        ]));
+        $stamped = [];
+
+        foreach ($rows->all() as $row) {
+            $stamped[] = row([
+                ...$row->values(),
+                $this->entryName => sprintf(
+                    '%s%s%s',
+                    type_string()->assert($row->get($this->entryName)),
+                    $this->divider,
+                    $this->stamp,
+                ),
+            ]);
+        }
+
+        return new Rows($rows->schema(), ...$stamped);
     }
 }

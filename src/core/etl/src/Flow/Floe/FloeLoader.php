@@ -145,11 +145,18 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     private function openWriter(DestinationStream $stream, FlowContext $context): FloeWriter
     {
-        $writer = new FloeWriter(
-            $this->filesystem,
+        $declared =
             $this->schema ?? $this->inferredSchema ?? throw new FloeException(
                 'Floe loader has no schema to write with',
-            ),
+            );
+
+        // partitionBy() keeps the partition columns in the path rather than the body, so the file
+        // schema must not declare them either. Every other declared column stays - a batch that does
+        // not carry one is the writer's to refuse.
+
+        $writer = new FloeWriter(
+            $this->filesystem,
+            $declared->gracefulRemove(...$this->router->droppedNames()),
             $this->options,
             hydrator: $context->hydrator(),
             engine: $this->engine,

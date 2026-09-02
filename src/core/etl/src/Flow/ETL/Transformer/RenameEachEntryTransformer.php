@@ -7,8 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\RowProjection;
+use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
@@ -53,9 +52,14 @@ final readonly class RenameEachEntryTransformer implements Transformer
                 }
             }
 
-            $projection = new RowProjection();
+            $renaming = RowRenaming::of($renames);
+            $renamed = [];
 
-            $result = $rows->map($schema, static fn(Row $row): Row => $projection->rename($row, $renames));
+            foreach ($rows->all() as $row) {
+                $renamed[] = $renaming->apply($row);
+            }
+
+            $result = new Rows($schema, ...$renamed);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

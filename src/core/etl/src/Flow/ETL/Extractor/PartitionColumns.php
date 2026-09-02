@@ -122,6 +122,9 @@ final readonly class PartitionColumns
     public function fill(array $row, array $names, array $values): array
     {
         foreach ($names as $name => $_) {
+            // declare() re-appends every partition column in the partition block, so a column the
+            // file data also carries must leave its body position here or the two disagree
+            unset($row[$name]);
             $row[$name] = array_key_exists($name, $values) ? $values[$name] : null;
         }
 

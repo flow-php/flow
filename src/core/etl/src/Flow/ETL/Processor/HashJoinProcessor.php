@@ -18,11 +18,11 @@ use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
+use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -105,10 +105,12 @@ final readonly class HashJoinProcessor implements Processor
                 $rightBucket = $this->rightBuckets->all()[0] ?? null;
 
                 yield from $joiner->join(
-                    $leftRows,
-                    $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
-                    null,
-                    $nullRightRow,
+                    JoinSide::of($leftRows),
+                    JoinSide::of(
+                        $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
+                        $nullRightRow,
+                        $rightSchema,
+                    ),
                 );
 
                 return;
@@ -123,11 +125,18 @@ final readonly class HashJoinProcessor implements Processor
                 : null;
 
             foreach ($this->bucketPairs() as [$leftBucket, $rightBucket]) {
+                // a bucket pair is a slice of each side; the output shape is the whole side's
                 $joinedBatches = $joiner->join(
-                    $leftBucket === null ? self::noRows() : $this->leftBuckets->rows($leftBucket->id),
-                    $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
-                    $nullLeftRow,
-                    $nullRightRow,
+                    JoinSide::of(
+                        $leftBucket === null ? self::noRows() : $this->leftBuckets->rows($leftBucket->id),
+                        $nullLeftRow,
+                        $leftSchema,
+                    ),
+                    JoinSide::of(
+                        $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
+                        $nullRightRow,
+                        $rightSchema,
+                    ),
                     buildLeft: ($leftBucket->totalRows ?? 0) < ($rightBucket->totalRows ?? 0),
                 );
 
@@ -216,15 +225,19 @@ final readonly class HashJoinProcessor implements Processor
             $schema ??= $batch->schema();
 
             if ($dropNullKeyRefs !== null) {
-                $batch = $batch->filter(static function (Row $row) use ($dropNullKeyRefs): bool {
+                $kept = [];
+
+                foreach ($batch->all() as $row) {
                     foreach ($dropNullKeyRefs as $ref) {
                         if ($row->get($ref) === null) {
-                            return false;
+                            continue 2;
                         }
                     }
 
-                    return true;
-                });
+                    $kept[] = $row;
+                }
+
+                $batch = Rows::trusted($batch->schema(), $kept);
 
                 if ($batch->empty()) {
                     continue;

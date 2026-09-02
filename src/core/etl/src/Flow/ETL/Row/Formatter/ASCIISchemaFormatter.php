@@ -15,12 +15,14 @@ use Flow\Types\Type\Logical\StructureType;
 
 use function array_merge;
 use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function implode;
+use function json_encode;
 use function ksort;
 use function str_repeat;
+
+use const JSON_THROW_ON_ERROR;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
@@ -62,7 +64,8 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             ];
 
             if ($this->withMetadata) {
-                $values['metadata'] = $definition->metadata()->normalize();
+                // a json column holds a Json value, not a raw array, and the table only prints it
+                $values['metadata'] = json_encode($definition->metadata()->normalize(), JSON_THROW_ON_ERROR);
             }
 
             $rows[] = new Row($values);
@@ -71,7 +74,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
         $columns = [str_schema('name'), str_schema('type'), bool_schema('nullable')];
 
         if ($this->withMetadata) {
-            $columns[] = json_schema('metadata');
+            $columns[] = str_schema('metadata');
         }
 
         return new Rows(schema(...$columns), ...$rows);

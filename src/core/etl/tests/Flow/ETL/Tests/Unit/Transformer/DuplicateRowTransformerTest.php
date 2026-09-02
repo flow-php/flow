@@ -73,6 +73,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                     'amount' => 100,
                     'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => null,
+                    'date_updated' => null,
                 ],
                 [
                     'id' => 2,
@@ -80,6 +81,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                     'amount' => 100,
                     'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => new DateTimeImmutable('2025-01-03'),
+                    'date_updated' => null,
                 ],
                 [
                     'id' => 3,
@@ -87,6 +89,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                     'amount' => 100,
                     'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => null,
+                    'date_updated' => null,
                 ],
                 [
                     'id' => 2,

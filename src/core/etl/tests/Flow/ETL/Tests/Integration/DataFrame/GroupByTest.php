@@ -513,8 +513,8 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-01',
                     'type' => 'contributor',
-                    'stloyd' => 4.0,
                     'norberttech' => null,
+                    'stloyd' => 4.0,
                 ],
                 [
                     'date' => '2023-11-02',
@@ -525,8 +525,8 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-02',
                     'type' => 'contributor',
-                    'stloyd' => 6.0,
                     'norberttech' => null,
+                    'stloyd' => 6.0,
                 ],
                 [
                     'date' => '2023-11-03',
@@ -537,8 +537,8 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-03',
                     'type' => 'contributor',
-                    'stloyd' => 7.0,
                     'norberttech' => null,
+                    'stloyd' => 7.0,
                 ],
                 [
                     'date' => '2023-11-04',
@@ -549,8 +549,8 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-04',
                     'type' => 'contributor',
-                    'stloyd' => 5.0,
                     'norberttech' => null,
+                    'stloyd' => 5.0,
                 ],
                 [
                     'date' => '2023-11-05',
@@ -561,8 +561,8 @@ final class GroupByTest extends FlowIntegrationTestCase
                 [
                     'date' => '2023-11-05',
                     'type' => 'contributor',
-                    'stloyd' => 11.0,
                     'norberttech' => null,
+                    'stloyd' => 11.0,
                 ],
             ],
             $rows->toArray(),

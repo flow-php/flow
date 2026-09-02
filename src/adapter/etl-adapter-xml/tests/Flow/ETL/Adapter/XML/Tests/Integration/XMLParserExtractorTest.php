@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use Flow\ETL\Config;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -190,7 +191,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $rows = df()
             ->extract(from_xml(__DIR__ . '/../Fixtures/simple_items.xml')->withSchema(schema(
                 xml_schema('node'),
-                xml_schema('missing'),
+                xml_schema('missing', nullable: true),
             )))
             ->fetch()
             ->toArray();
@@ -200,6 +201,25 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             static::assertNotNull($row['node']);
             static::assertNull($row['missing']);
         }
+    }
+
+    /**
+     * b57: the document has no such node, so every row would carry a null under a NOT NULL
+     * declaration.
+     */
+    public function test_reading_xml_refuses_a_not_null_column_the_document_lacks(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'column "missing" (row 0): could not convert null to xml, column is not nullable',
+        );
+
+        df()
+            ->extract(from_xml(__DIR__ . '/../Fixtures/simple_items.xml')->withSchema(schema(
+                xml_schema('node'),
+                xml_schema('missing'),
+            )))
+            ->fetch();
     }
 
     public function test_reading_xml_with_shadowed_namespace_declaration(): void

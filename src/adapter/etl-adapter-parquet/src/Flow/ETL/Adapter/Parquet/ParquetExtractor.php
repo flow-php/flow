@@ -148,7 +148,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
                     foreach ($hydrated as $hydratedRow) {
                         $this->incrementReturnedRows();
-                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
                             return;
@@ -163,7 +163,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
             foreach ($hydrated as $hydratedRow) {
                 $this->incrementReturnedRows();
-                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     return;

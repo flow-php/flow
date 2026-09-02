@@ -263,7 +263,7 @@ final class ScalarFunctionFixtures
                     type_string(),
                     [ref('string')],
                 ),
-                'returns' => type_string(),
+                'returns' => type_optional(type_string()),
             ],
             Function\Capitalize::class => [
                 'factory' => static fn(): ScalarFunction => new Function\Capitalize(ref('string')),

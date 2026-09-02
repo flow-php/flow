@@ -10,8 +10,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Row\RowProjection;
+use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -44,7 +43,6 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\schema_sort_by_name;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_json;
@@ -399,21 +397,6 @@ final class DataFrameTest extends FlowTestCase
         );
     }
 
-    public function test_order_entries(): void
-    {
-        $dataset1 = [
-            ['id' => 1, 'name' => 'test', 'active' => false],
-            ['id' => 1, 'name' => 'test', 'active' => false],
-            ['id' => 1, 'name' => 'test', 'active' => false],
-            ['id' => 1, 'name' => 'test', 'active' => false],
-        ];
-
-        $df = df()->read(from_array($dataset1))->autoCast()->reorderEntries(schema_sort_by_name(SortOrder::DESC));
-
-        // R10: reorderEntries sorts the SCHEMA; row storage is never rekeyed
-        static::assertSame(['name', 'id', 'active'], $df->fetch()->schema()->references()->names());
-    }
-
     public function test_pipeline(): void
     {
         $extractor = new class implements Extractor {
@@ -469,10 +452,13 @@ final class DataFrameTest extends FlowTestCase
         $addStampStringEntry = new class implements Transformer {
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                return $rows->map($rows->schema()->add(str_schema('stamp')), static fn(Row $row): Row => row([
-                    ...$row->values(),
-                    'stamp' => 'zero',
-                ]));
+                $stamped = [];
+
+                foreach ($rows->all() as $row) {
+                    $stamped[] = row([...$row->values(), 'stamp' => 'zero']);
+                }
+
+                return new Rows($rows->schema()->add(str_schema('stamp')), ...$stamped);
             }
         };
 
@@ -749,10 +735,13 @@ final class DataFrameTest extends FlowTestCase
             ->with(new class implements Transformer {
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    return $rows->map(
-                        $rows->schema()->rename('id', 'new_id'),
-                        static fn(Row $row): Row => (new RowProjection())->rename($row, ['id' => 'new_id']),
-                    );
+                    $renamed = [];
+
+                    foreach ($rows->all() as $row) {
+                        $renamed[] = RowRenaming::of(['id' => 'new_id'])->apply($row);
+                    }
+
+                    return new Rows($rows->schema()->rename('id', 'new_id'), ...$renamed);
                 }
             })
             ->batchSize(2)
@@ -794,10 +783,13 @@ final class DataFrameTest extends FlowTestCase
             ->with(new class implements Transformer {
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    return $rows->map(
-                        $rows->schema()->rename('id', 'new_id'),
-                        static fn(Row $row): Row => (new RowProjection())->rename($row, ['id' => 'new_id']),
-                    );
+                    $renamed = [];
+
+                    foreach ($rows->all() as $row) {
+                        $renamed[] = RowRenaming::of(['id' => 'new_id'])->apply($row);
+                    }
+
+                    return new Rows($rows->schema()->rename('id', 'new_id'), ...$renamed);
                 }
             })
             ->collect()

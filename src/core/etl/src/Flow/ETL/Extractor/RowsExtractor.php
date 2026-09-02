@@ -10,8 +10,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_rows;
-
 final class RowsExtractor implements Extractor
 {
     private ?Schema $schema = null;
@@ -31,12 +29,10 @@ final class RowsExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
-        foreach ($this->rows as $rows) {
-            if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $context->hydrator(), $this->schema);
-            }
+        $schema = $this->schema();
 
-            $signal = yield $rows;
+        foreach ($this->rows as $rows) {
+            $signal = yield $rows->matchTo($schema);
 
             if ($signal === Signal::STOP) {
                 return;

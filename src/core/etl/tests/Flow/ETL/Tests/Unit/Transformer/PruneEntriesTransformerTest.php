@@ -33,10 +33,10 @@ final class PruneEntriesTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_entry_missing_from_a_row_stays_absent(): void
+    public function test_entry_missing_from_a_row_is_padded_from_its_nullable_declaration(): void
     {
         static::assertSame(
-            [['id' => 1, 'name' => 'a'], ['id' => 2]],
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
             (new PruneEntriesTransformer(ref('id'), ref('name')))
                 ->transform(
                     rows(

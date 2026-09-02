@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 
+use function array_keys;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -189,6 +190,20 @@ final class PartitionColumnsTest extends FlowTestCase
         static::assertSame(
             ['date' => true],
             (new PartitionColumns($filesystem))->names(path('memory://mixed/*/*.csv'), new OnlyFiles()),
+        );
+    }
+
+    public function test_fill_moves_a_colliding_body_column_into_the_partition_block(): void
+    {
+        // declare() re-appends every partition column at the tail, so fill() has to do the same or
+        // schema() and extract() disagree for a file that also carries a column of that name
+        static::assertSame(
+            ['id', 'date'],
+            array_keys((new PartitionColumns(new MemoryFilesystem()))->fill(
+                ['date' => '1999-01-01', 'id' => 1],
+                ['date' => false],
+                ['date' => '2024-01-01'],
+            )),
         );
     }
 }

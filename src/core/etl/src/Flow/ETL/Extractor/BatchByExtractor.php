@@ -39,17 +39,16 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context): Generator
     {
-        if ($this->schema !== null) {
-            $this->extractor->withSchema($this->schema);
-        }
+        // pinned from the declaration or the first child batch, then every later batch is matched to
+        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
+        $schema = $this->schema;
 
         $buffer = [];
         $currentGroupValue = null;
 
-        $schema = null;
-
         foreach ($this->extractor->extract($context) as $rows) {
             $schema ??= $rows->schema();
+            $rows = $rows->matchTo($schema);
 
             foreach ($rows->all() as $row) {
                 $groupValue = $row->get($this->column);
@@ -58,7 +57,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        $signal = yield new Rows($schema, ...$buffer);
+                        $signal = yield Rows::trusted($schema, $buffer);
 
                         if ($signal === Signal::STOP) {
                             return;
@@ -75,7 +74,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
         }
 
         if (count($buffer) > 0) {
-            yield new Rows($schema ?? $this->schema(), ...$buffer);
+            yield Rows::trusted($schema ?? $this->schema(), $buffer);
         }
     }
 

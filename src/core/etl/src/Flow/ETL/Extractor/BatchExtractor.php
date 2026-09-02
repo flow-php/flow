@@ -10,6 +10,8 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
+use function count;
+
 final class BatchExtractor implements Extractor, OverridingExtractor
 {
     private ?Schema $schema = null;
@@ -27,44 +29,33 @@ final class BatchExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context): Generator
     {
-        if ($this->schema !== null) {
-            $this->extractor->withSchema($this->schema);
-        }
+        // pinned from the declaration or the first child batch, then every later batch is matched to
+        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
+        $schema = $this->schema;
 
-        $chunk = null;
-        $chunkSize = 0;
+        $buffer = [];
 
         foreach ($this->extractor->extract($context) as $rows) {
-            $chunk ??= new Rows($rows->schema());
+            $schema ??= $rows->schema();
+            $rows = $rows->matchTo($schema);
 
             foreach ($rows->all() as $row) {
-                $chunk = $chunk->add($row);
-                $chunkSize++;
+                $buffer[] = $row;
 
-                if ($chunkSize === $this->chunkSize) {
-                    $signal = yield $chunk;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-                    $chunkSize = 0;
-                    $chunk = new Rows($rows->schema());
-                }
-
-                if ($chunkSize > $this->chunkSize) {
-                    $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+                if (count($buffer) === $this->chunkSize) {
+                    $signal = yield Rows::trusted($schema, $buffer);
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
-                    $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
-                    $chunkSize = $chunk->count();
+
+                    $buffer = [];
                 }
             }
         }
 
-        if ($chunkSize && $chunk !== null) {
-            yield $chunk;
+        if ($buffer !== []) {
+            yield Rows::trusted($schema ?? $this->schema(), $buffer);
         }
     }
 

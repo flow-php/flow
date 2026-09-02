@@ -121,7 +121,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor, Metad
                     $hydrated = $hydrator->cast($batch, $schema);
 
                     foreach ($hydrated as $hydratedRow) {
-                        $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                         $this->incrementReturnedRows();
 
@@ -149,7 +149,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor, Metad
         $hydrated = $hydrator->cast($batch, $schema);
 
         foreach ($hydrated as $hydratedRow) {
-            $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+            $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
             $this->incrementReturnedRows();
 

@@ -72,9 +72,7 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
         $read = [];
         $reader = FloeEngineContext::phpReader($this->fs())->read(FloeGoldenContext::path($name));
 
-        // conform: false keeps an absent column absent instead of padding it with null, which is the
-        // distinction the bytes actually encode and the one a format golden has to pin
-        foreach ($reader->rows(conform: false) as $batch) {
+        foreach ($reader->rows() as $batch) {
             foreach ($batch as $row) {
                 $read[] = $row;
             }

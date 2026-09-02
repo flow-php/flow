@@ -35,16 +35,18 @@ use function sort;
 final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
 {
     /**
-     * The declared nullable set: 22 unconditional + 7 composed + 25 null-propagating predicates.
-     * Aggregate counts alone are satisfied by any 54 - these 54 are the ones a worker gets wrong.
+     * The declared nullable set: 23 unconditional + 7 composed + 25 null-propagating predicates.
+     * Aggregate counts alone are satisfied by any 55 - these 55 are the ones a worker gets wrong.
      *
      * @return list<class-string<ScalarFunction>>
      */
     public static function declared_nullable_classes(): array
     {
         return [
-            // unconditionally nullable (22)
+            // unconditionally nullable (23)
             Function\Optional::class,
+            // an opaque callable can always answer null, so its declaration has to admit it
+            Function\CallUserFunc::class,
             Function\StringMatch::class,
             Function\Regex::class,
             Function\RegexAll::class,
@@ -201,25 +203,25 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         static::assertNotSame(count($children), count($rebuilt->children()));
     }
 
-    public function test_exactly_54_of_the_134_declare_themselves_nullable(): void
+    public function test_exactly_55_of_the_134_declare_themselves_nullable(): void
     {
         [$nullable, $notNull, $unavailable] = ScalarFunctionFixtures::nullabilitySplit();
 
         static::assertCount(134, ScalarFunctionClasses::declaring());
-        static::assertCount(54, self::declared_nullable_classes());
+        static::assertCount(55, self::declared_nullable_classes());
         static::assertCount(
-            54,
+            55,
             [...$nullable, ...array_intersect($unavailable, self::declared_nullable_classes())],
             'nullable set drifted: ' . implode(', ', array_diff($nullable, self::declared_nullable_classes())),
         );
-        static::assertCount(80, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
+        static::assertCount(79, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
     }
 
     /**
      * @param class-string<ScalarFunction> $class
      */
     #[DataProvider('declared_nullable_provider')]
-    public function test_the_nullable_set_is_exactly_the_declared_54(string $class): void
+    public function test_the_nullable_set_is_exactly_the_declared_55(string $class): void
     {
         try {
             $function = ScalarFunctionFixtures::instance($class);

@@ -18,6 +18,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
@@ -26,7 +27,6 @@ use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
@@ -75,6 +75,8 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function extract(FlowContext $context): Generator
     {
         $fileOffset = $this->offset ?? 0;
+        // schema() opens a footer, so it is asked only when a schema was declared - an undeclared
+        // read is gated batch by batch by the checked door below instead
         $promisedSchema = $this->schema === null ? null : $this->schema();
 
         $partitionColumns = new PartitionColumns($this->filesystem);
@@ -101,25 +103,34 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
 
             foreach ($reader->rows(1000, $fileOffset, $remaining) as $rows) {
                 if ($this->addMetadataColumns) {
-                    $rows = $rows->map(
-                        $rows->schema()->add(str_schema('_input_file_uri')),
-                        static fn(Row $row): Row => new Row([...$row->values(), '_input_file_uri' => $uri]),
-                    );
+                    $stamped = [];
+
+                    foreach ($rows->all() as $row) {
+                        $stamped[] = new Row([...$row->values(), '_input_file_uri' => $uri]);
+                    }
+
+                    $rows = new Rows($rows->schema()->add(str_schema('_input_file_uri')), ...$stamped);
                 }
 
                 if ($partitionNames !== []) {
-                    $rows = $rows->map(
-                        $partitionColumns->declare($rows->schema(), $partitionNames, $this->declaredPartitionTypes()),
-                        static fn(Row $row): Row => new Row($partitionColumns->fill(
+                    $partitioned = [];
+
+                    foreach ($rows->all() as $row) {
+                        $partitioned[] = new Row($partitionColumns->fill(
                             $row->values(),
                             $partitionNames,
                             $partitionValues,
-                        )),
+                        ));
+                    }
+
+                    $rows = new Rows(
+                        $partitionColumns->declare($rows->schema(), $partitionNames, $this->declaredPartitionTypes()),
+                        ...$partitioned,
                     );
                 }
 
                 if ($promisedSchema !== null) {
-                    $rows = array_to_rows($rows->toArray(), $context->hydrator(), $promisedSchema);
+                    $rows = $rows->matchTo($promisedSchema);
                 }
 
                 $signal = yield $rows;

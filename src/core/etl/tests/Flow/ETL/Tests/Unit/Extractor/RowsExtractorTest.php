@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -38,5 +39,17 @@ final class RowsExtractorTest extends FlowTestCase
             ],
             $extractor,
         );
+    }
+
+    public function test_extract_yields_batches_matching_schema(): void
+    {
+        $extractor = from_rows(
+            rows(schema(int_schema('number')), row(['number' => 1])),
+            rows(schema(int_schema('number'), str_schema('name')), row(['number' => 2, 'name' => 'two'])),
+        );
+
+        foreach ($extractor->extract(flow_context()) as $batch) {
+            static::assertTrue($batch->schema()->isSame($extractor->schema()));
+        }
     }
 }

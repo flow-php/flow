@@ -37,22 +37,22 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
             'string into int' => [
                 schema(int_schema('id')),
                 rows(schema(str_schema('id')), row(['id' => 'AB-1'])),
-                "could not convert 'AB-1' (string) to integer",
+                'expected: id<integer>, given: id<string>',
             ],
             'float into int' => [
                 schema(int_schema('id')),
                 rows(schema(float_schema('id')), row(['id' => 1.5])),
-                'could not convert 1.5 (float) to integer',
+                'expected: id<integer>, given: id<float>',
             ],
             'int into string' => [
                 schema(str_schema('name')),
                 rows(schema(int_schema('name')), row(['name' => 1000])),
-                'could not convert 1000 (integer) to string',
+                'expected: name<string>, given: name<integer>',
             ],
             'null into non nullable' => [
                 schema(str_schema('name')),
                 rows(schema(str_schema('name', nullable: true)), row(['name' => null])),
-                'could not convert null to string, column is not nullable',
+                'expected: name<string>, given: name<?string>',
             ],
             'undeclared column' => [
                 schema(int_schema('id')),
@@ -77,7 +77,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
 
             $name = $engine->value;
             $path = $this->cacheDir->suffix('contract-' . $name . '-' . md5($expectedMessage) . '.floe');
-            $writer = new FloeWriter($this->fs(), $schema, new Options(validateData: true), null, $engine);
+            $writer = new FloeWriter($this->fs(), $schema, new Options(), null, $engine);
             $writer->create($path);
 
             try {
@@ -118,7 +118,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         }
 
         $path = $this->cacheDir->suffix('contract-survivor-' . $engine->value . '.floe');
-        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options(validateData: true), null, $engine);
+        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options(), null, $engine);
         $writer->create($path);
         $writer->write(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
 
@@ -139,7 +139,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
      * is rejected as a new column. Once append supports adding an optional column, that case
      * belongs here too.
      */
-    public function test_absent_column_is_not_null_and_still_writes(FloeEngine $engine): void
+    public function test_a_batch_omitting_a_nullable_column_still_writes(FloeEngine $engine): void
     {
         if ($engine === FloeEngine::native && !NativeFloeEncoder::isSupported()) {
             static::markTestSkipped('flow_php extension is not loaded.');
@@ -148,13 +148,16 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('contract-absent-' . $engine->value . '.floe');
         $writer = new FloeWriter(
             $this->fs(),
-            schema(int_schema('id'), str_schema('name')),
-            new Options(validateData: true),
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            new Options(),
             null,
             $engine,
         );
         $writer->create($path);
-        $writer->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+        $writer->write(rows(
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            row(['id' => 1, 'name' => 'a']),
+        ));
         $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
         $writer->close();
 
@@ -162,5 +165,33 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
             [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
             FloeStreamReaderContext::readAll($this->fs(), $path)->toArray(),
         );
+    }
+
+    /**
+     * b57's writer half: the old check walked the row's own values, so a NOT NULL column the batch
+     * simply omitted was never looked at and was encoded as VALUE_ABSENT.
+     */
+    #[DataProvider('engines')]
+    public function test_a_batch_omitting_a_not_null_column_is_refused(FloeEngine $engine): void
+    {
+        if ($engine === FloeEngine::native && !NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension is not loaded.');
+        }
+
+        $path = $this->cacheDir->suffix('contract-absent-not-null-' . $engine->value . '.floe');
+        $writer = new FloeWriter(
+            $this->fs(),
+            schema(int_schema('id'), str_schema('name')),
+            new Options(),
+            null,
+            $engine,
+        );
+        $writer->create($path);
+        $writer->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('Missing Definitions');
+
+        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
     }
 }

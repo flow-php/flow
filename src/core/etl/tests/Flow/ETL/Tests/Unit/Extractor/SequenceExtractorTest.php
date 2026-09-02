@@ -99,13 +99,13 @@ final class SequenceExtractorTest extends FlowTestCase
         self::assertExtractedRowsEquals(
             rows(
                 schema(float_schema('num')),
-                row(['num' => 0]),
+                row(['num' => 0.0]),
                 row(['num' => 1.5]),
-                row(['num' => 3]),
+                row(['num' => 3.0]),
                 row(['num' => 4.5]),
-                row(['num' => 6]),
+                row(['num' => 6.0]),
                 row(['num' => 7.5]),
-                row(['num' => 9]),
+                row(['num' => 9.0]),
             ),
             $extractor,
         );

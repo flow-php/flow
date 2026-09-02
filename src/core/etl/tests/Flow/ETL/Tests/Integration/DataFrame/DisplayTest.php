@@ -299,14 +299,16 @@ final class DisplayTest extends FlowIntegrationTestCase
             ->printRows();
         $output = ob_get_clean() ?: '';
 
+        // from_rows() folds its batches into one shape and matches each batch to it, so the first
+        // batch carries the nullable "salary" column the second one introduced
         self::assertCommandOutputContains(<<<'ASCII'
-            +----+---------+-----+
-            | id | country | age |
-            +----+---------+-----+
-            |  1 |      PL |  20 |
-            |  2 |      PL |  20 |
-            |  3 |      PL |  25 |
-            +----+---------+-----+
+            +----+---------+-----+--------+
+            | id | country | age | salary |
+            +----+---------+-----+--------+
+            |  1 |      PL |  20 |        |
+            |  2 |      PL |  20 |        |
+            |  3 |      PL |  25 |        |
+            +----+---------+-----+--------+
             3 rows
             +----+---------+-----+--------+
             | id | country | age | salary |
@@ -343,11 +345,13 @@ final class DisplayTest extends FlowIntegrationTestCase
             ->printSchema();
         $output = ob_get_clean() ?: '';
 
+        // from_rows() folds its batches into one shape, so both batches report it
         self::assertCommandOutputContains(<<<'ASCII'
             schema
             |-- id: integer
             |-- country: string
             |-- age: integer
+            |-- salary: ?integer
             schema
             |-- id: integer
             |-- country: string

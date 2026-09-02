@@ -27,7 +27,6 @@ final readonly class InferredBatch
     public function of(array $batch): Rows
     {
         $schema = new Schema();
-        $rows = [];
 
         foreach ($batch as $rowValues) {
             $definitions = [];
@@ -44,7 +43,23 @@ final readonly class InferredBatch
             }
 
             $schema = $schema->merge(new Schema(...$definitions));
-            $rows[] = new Row($rowValues->values);
+        }
+
+        $rows = [];
+
+        // the fold widens a column typed from one row's value to cover every row's - so a value the
+        // widened definition no longer accepts follows the schema this method just derived
+        foreach ($batch as $rowValues) {
+            $values = [];
+
+            /** @var mixed $value */
+            foreach ($rowValues->values as $name => $value) {
+                $definition = $schema->get($name);
+
+                $values[$name] = $definition->matches($value) ? $value : $definition->type()->cast($value);
+            }
+
+            $rows[] = new Row($values);
         }
 
         return new Rows($schema, ...$rows);

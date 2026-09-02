@@ -291,9 +291,10 @@ pub fn encode_typed_row(
 
     for column in &plan.columns {
         let Some(value) = ht_find(values_ht, &column.name) else {
-            out.push(VALUE_ABSENT);
-
-            continue;
+            return Err(ext_exception(format!(
+                "flow_php found a row that does not carry the declared column \"{}\"",
+                String::from_utf8_lossy(&column.name)
+            )));
         };
 
         let (diverges, entry_metadata_json) = typed_metadata(column, metadata_ht, ctx)?;

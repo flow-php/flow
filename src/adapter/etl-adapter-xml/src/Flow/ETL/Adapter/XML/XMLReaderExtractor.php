@@ -168,7 +168,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                             $hydrated = $hydrator->cast($batch, $schema);
 
                             foreach ($hydrated as $hydratedRow) {
-                                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                                 $this->incrementReturnedRows();
 
@@ -202,7 +202,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             $hydrated = $hydrator->cast($batch, $schema);
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield new Rows($hydrated->schema(), $hydratedRow);
+                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
                 $this->incrementReturnedRows();
 

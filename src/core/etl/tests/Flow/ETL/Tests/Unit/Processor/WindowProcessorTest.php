@@ -349,14 +349,15 @@ final class WindowProcessorTest extends FlowTestCase
 
     /**
      * The window invariant: a running sum over [1, 2.5, 3] used to produce IntegerEntry, FloatEntry,
-     * FloatEntry in one Rows - the column now carries one Definition for the whole run.
+     * FloatEntry in one Rows - the column now carries one Definition for the whole run. The input
+     * column is declared float because a batch can no longer hold two numeric types under one name.
      */
     public function test_a_running_sum_over_mixed_numerics_yields_one_definition(): void
     {
         $batches = WindowProcessorContext::batches(
             'total',
             sum(ref('value'))->over(window()->orderBy(ref('value'))),
-            rows(schema(int_schema('value')), row(['value' => 1]), row(['value' => 2.5]), row(['value' => 3])),
+            rows(schema(float_schema('value')), row(['value' => 1.0]), row(['value' => 2.5]), row(['value' => 3.0])),
         );
 
         $definitions = [];

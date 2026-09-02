@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row;
 
 use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\TypedRowValues;
@@ -174,19 +175,19 @@ final class PhpRowHydratorTest extends FlowTestCase
 
     /**
      * EntryFactory::makeNullable() used to widen the REPORTED schema when a null landed in a
-     * non-nullable column. The batch now carries one declared schema, so the declaration stands and
-     * the row is simply inconsistent with it.
+     * non-nullable column, and 05 replaced that with a batch whose row simply contradicted its
+     * declaration. The batch door now refuses the contradiction outright.
      */
-    public function test_null_value_in_a_non_nullable_column_leaves_the_declaration_alone(): void
+    public function test_null_value_in_a_non_nullable_column_is_refused(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "name" (row 0): could not convert null to string, '
+        . 'column is not nullable');
+
+        (new PhpRowHydrator())->cast(
             [new RawRowValues(['id' => 1, 'name' => null])],
             schema(int_schema('id'), str_schema('name')),
         );
-
-        static::assertNull($rows->first()->get('name'));
-        static::assertFalse($rows->schema()->get('name')->isNullable());
-        static::assertFalse($rows->schema()->get('id')->isNullable());
     }
 
     public function test_null_value_keeps_the_schema_definition(): void
@@ -267,7 +268,7 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertSame(['city' => 'NYC', 'zip' => 10001], $rows->first()->get('address'));
     }
 
-    public function test_hydrate_skips_columns_absent_from_the_values(): void
+    public function test_hydrate_pads_a_nullable_column_absent_from_the_values(): void
     {
         $rows = (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => 1])],
@@ -275,18 +276,20 @@ final class PhpRowHydratorTest extends FlowTestCase
         );
 
         static::assertTrue($rows->first()->has('id'));
-        static::assertFalse($rows->first()->has('name'));
+        static::assertTrue($rows->first()->has('name'));
+        static::assertNull($rows->first()->get('name'));
     }
 
-    public function test_hydrate_present_null_leaves_the_declaration_alone(): void
+    public function test_hydrate_present_null_in_a_non_nullable_column_is_refused(): void
     {
-        $rows = (new PhpRowHydrator())->hydrate(
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "name" (row 0): could not convert null to string, '
+        . 'column is not nullable');
+
+        (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => 1, 'name' => null])],
             schema(int_schema('id'), str_schema('name')),
         );
-
-        static::assertNull($rows->first()->get('name'));
-        static::assertFalse($rows->schema()->get('name')->isNullable());
     }
 
     public function test_hydrate_matches_cast_for_native_values(): void

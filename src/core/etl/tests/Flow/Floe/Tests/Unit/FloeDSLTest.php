@@ -53,7 +53,7 @@ final class FloeDSLTest extends TestCase
     public function test_to_floe_accepts_options(): void
     {
         $memory = memory_filesystem();
-        $loader = to_floe(path('memory://opts.floe'), options: floe_options(validate_data: false), filesystem: $memory);
+        $loader = to_floe(path('memory://opts.floe'), options: floe_options(), filesystem: $memory);
 
         static::assertInstanceOf(FloeLoader::class, $loader);
         static::assertSame('memory://opts.floe', $loader->destination()->uri());
@@ -63,16 +63,14 @@ final class FloeDSLTest extends TestCase
     {
         $options = floe_options();
 
-        static::assertTrue($options->validateData);
         static::assertSame(65_536, $options->bufferSize);
     }
 
     public function test_floe_options_with_custom_values(): void
     {
         $codec = new CodecStub(0x00);
-        $options = floe_options(validate_data: false, buffer_size: 4_096, codec: $codec);
+        $options = floe_options(buffer_size: 4_096, codec: $codec);
 
-        static::assertFalse($options->validateData);
         static::assertSame(4_096, $options->bufferSize);
         static::assertSame($codec, $options->codec);
     }

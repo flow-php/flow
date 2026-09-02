@@ -20,13 +20,15 @@ final class CollectingExtractor implements Extractor, OverridingExtractor
 
     public function extract(FlowContext $context): Generator
     {
-        if ($this->schema !== null) {
-            $this->extractor->withSchema($this->schema);
-        }
+        $schema = $this->schema;
 
         $collectedRows = null;
 
         foreach ($this->extractor->extract($context) as $rows) {
+            if ($schema !== null) {
+                $rows = $rows->matchTo($schema);
+            }
+
             $collectedRows = $collectedRows === null ? $rows : $collectedRows->merge($rows);
         }
 
