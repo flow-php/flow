@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
 
 use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_datetime;
 use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
@@ -188,6 +195,134 @@ final class ParquetExtractorTest extends FlowTestCase
             ->schema();
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_declared_partition_types_reach_the_rows(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'))
+            ->partitionTypes(partition_types(date: type_datetime()));
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+            static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->first()->get('date'));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_extract_closes_the_reader_when_the_generator_is_abandoned(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $generator = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        )->extract(flow_context(config()));
+        $generator->current();
+        unset($generator);
+
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_extract_closes_every_reader_it_opens(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        foreach (from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        )->extract(flow_context(config())) as $rows) {
+            continue;
+        }
+
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_extract_closes_the_reader_it_skips_for_the_offset(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        foreach (from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'), filesystem: $filesystem)
+            ->withOffset(2500)
+            ->extract(flow_context(config())) as $rows) {
+            continue;
+        }
+
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_extract_closes_the_reader_when_the_pipeline_stops(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $generator = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        )->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_schema_forgets_the_fold_when_the_byte_order_changes(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        );
+        $extractor->schema();
+        // the same value: the point is that the setter clears the memo, not that the value differs
+        $extractor->withByteOrder(ByteOrder::LITTLE_ENDIAN)->schema();
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
+    public function test_schema_forgets_the_fold_when_the_engine_changes(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        );
+        $extractor->schema();
+        $extractor->withEngine(new PhpParquetEngine())->schema();
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
+    public function test_schema_forgets_the_fold_when_the_options_change(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        );
+        $extractor->schema();
+        $extractor->withOptions(Options::default())->schema();
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
+    public function test_schema_forgets_the_fold_when_the_path_filter_narrows(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
+            filesystem: $filesystem,
+        );
+        $extractor->schema();
+        $extractor->withPathFilter(new OnlyFiles())->schema();
+
+        static::assertSame(2, $filesystem->readFromCalls);
     }
 
     public function test_signal_stop(): void

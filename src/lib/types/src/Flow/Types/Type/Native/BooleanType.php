@@ -50,10 +50,15 @@ final readonly class BooleanType implements Type
                 if (in_array(mb_strtolower($value), ['false', '0', 'no', 'off'], true)) {
                     return false;
                 }
+
+                throw new CastingException($value, $this);
             }
 
-            // @mago-ignore analysis:mixed-operand
-            return (bool) $value;
+            if (is_scalar($value)) {
+                return (bool) $value;
+            }
+
+            throw new CastingException($value, $this);
         } catch (Throwable) {
             throw new CastingException($value, $this);
         }

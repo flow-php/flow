@@ -25,7 +25,6 @@ use function array_splice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_array;
-use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\schema;
 use function implode;
 use function is_array;

@@ -11,7 +11,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\RowRenaming;
-use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;

@@ -11,9 +11,9 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
-use function is_array;
+use function is_bool;
 use function is_float;
-use function is_scalar;
+use function is_numeric;
 
 /**
  * @template T of float
@@ -53,8 +53,12 @@ final readonly class FloatType implements Type
             return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
         }
 
-        if (is_scalar($value) || null === $value || is_array($value)) {
+        if (is_numeric($value)) {
             return (float) $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 1.0 : 0.0;
         }
 
         throw new CastingException($value, $this);

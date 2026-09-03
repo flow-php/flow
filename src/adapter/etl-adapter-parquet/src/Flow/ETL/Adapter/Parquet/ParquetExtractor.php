@@ -6,33 +6,26 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
-use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 use Generator;
 
 use function array_values;
 use function count;
-use function Flow\ETL\DSL\str_schema;
 use function max;
 use function sprintf;
 
@@ -40,15 +33,10 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 {
     private ?Schema $schema = null;
 
-    use MetadataColumns;
-
     use Limitable;
-    use DeclaresPartitionTypes;
-    use PathFiltering;
+    use FileReading;
 
     private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
-
-    private ?Schema $derived = null;
 
     private bool $unionByName = false;
 
@@ -101,96 +89,69 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $fileOffset = $this->offset ?? 0;
         $promisedSchema = $this->schema === null ? null : $this->schema();
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->readers() as $fileData) {
-            $fileRows = $fileData['file']->metadata()->rowsNumber();
+        foreach ($this->files() as $file) {
+            // finally, not a close() per exit: the limit/STOP returns below and an abandoned
+            // generator have to release the handle too (b73)
+            try {
+                $fileRows = $file->file->metadata()->rowsNumber();
 
-            if ($fileOffset > $fileRows) {
-                $fileData['stream']->close();
-                $fileOffset -= $fileRows;
+                if ($fileOffset > $fileRows) {
+                    $fileOffset -= $fileRows;
 
-                continue;
-            }
-
-            $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
-            $streamUri = $this->addMetadataColumns ? $fileData['stream']->path()->uri() : null;
-
-            if (count($this->columns)) {
-                $flowSchema = $flowSchema->keep(...$this->columns);
-            }
-
-            if ($streamUri !== null) {
-                $flowSchema = $flowSchema->add(str_schema('_input_file_uri'));
-            }
-
-            $flowSchema = $partitionColumns->declare($flowSchema, $partitionNames, $this->declaredPartitionTypes());
-            $partitionValues = [];
-
-            foreach ($fileData['stream']->path()->partitions() as $partition) {
-                $partitionValues[$partition->name] = $partition->value;
-            }
-
-            $encoder = new ParquetEncoder($fileData['file']->schema());
-
-            $rawBatch = [];
-
-            foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
-                if ($streamUri !== null) {
-                    $row['_input_file_uri'] = $streamUri;
+                    continue;
                 }
 
-                $rawBatch[] = $partitionColumns->fill($row, $partitionNames, $partitionValues);
+                // R6: over the FILE's schema, never over schema()'s output
+                $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
+                $constants = $fileColumns->forFile($file->source(), $fileSchema);
 
-                if (count($rawBatch) >= $batchSize) {
-                    $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema);
+                $encoder = new ParquetEncoder($file->file->schema());
 
-                    foreach ($hydrated as $hydratedRow) {
-                        $this->incrementReturnedRows();
-                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                $rawBatch = [];
 
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            return;
+                foreach ($file->file->values($this->columns, $this->limit(), $fileOffset) as $row) {
+                    $rawBatch[] = $constants->fill($row);
+
+                    if (count($rawBatch) >= $batchSize) {
+                        $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+
+                        foreach ($hydrated as $hydratedRow) {
+                            $this->incrementReturnedRows();
+                            $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+
+                            if ($signal === Signal::STOP || $this->reachedLimit()) {
+                                return;
+                            }
                         }
+
+                        $rawBatch = [];
                     }
-
-                    $rawBatch = [];
                 }
-            }
 
-            $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $flowSchema);
+                $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
 
-            foreach ($hydrated as $hydratedRow) {
-                $this->incrementReturnedRows();
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                foreach ($hydrated as $hydratedRow) {
+                    $this->incrementReturnedRows();
+                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
 
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
+                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                        return;
+                    }
                 }
-            }
 
-            $fileOffset = max($fileOffset - $fileRows, 0);
-            $fileData['stream']->close();
+                $fileOffset = max($fileOffset - $fileRows, 0);
+            } finally {
+                $file->close();
+            }
         }
     }
 
     public function schema(): Schema
     {
-        $schema = $this->schema ?? ($this->derived ??= $this->unionByName
-            ? (new FileSchemas($this->schemaConverter))->union($this->readers(), array_values($this->columns))
-            : (new FileSchemas($this->schemaConverter))->first($this->readers(), array_values($this->columns)));
-
-        if ($this->addMetadataColumns) {
-            $schema = $schema->add(str_schema('_input_file_uri'));
-        }
-
-        $partitionColumns = new PartitionColumns($this->filesystem);
-
-        return $partitionColumns->declare(
-            $schema,
-            $this->partitionNames($partitionColumns, $this->path),
-            $this->declaredPartitionTypes(),
+        return $this->fileColumns($this->filesystem, $this->path)->declare(
+            $this->schema ?? $this->derivedSchema($this->files(), $this->unionByName),
         );
     }
 
@@ -201,7 +162,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function unionByName(bool $union = true): self
     {
         $this->unionByName = $union;
-        $this->derived = null;
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -214,6 +175,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function withByteOrder(ByteOrder $byteOrder): self
     {
         $this->byteOrder = $byteOrder;
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -224,7 +186,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function withColumns(array $columns): self
     {
         $this->columns = $columns;
-        $this->derived = null;
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -232,6 +194,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function withEngine(?ParquetEngine $engine): self
     {
         $this->engine = $engine;
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -250,26 +213,28 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function withOptions(Options $options): self
     {
         $this->options = $options;
+        $this->derivedSchema = null;
 
         return $this;
     }
 
     /**
-     * @return \Generator<int, array{file: ParquetFile, stream: SourceStream}>
+     * @return Generator<int, ParquetSourceFile>
      */
-    private function readers(): Generator
+    private function files(): Generator
     {
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            $stream = $this->filesystem->readFrom($listedFile->path);
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $stream = $this->filesystem->readFrom($source->path);
 
-            yield [
-                'file' => (new Reader(
-                    byteOrder: $this->byteOrder,
-                    options: $this->options,
-                    engine: $this->engine,
-                ))->readStream($stream),
-                'stream' => $stream,
-            ];
+            yield new ParquetSourceFile(
+                (new Reader(byteOrder: $this->byteOrder, options: $this->options, engine: $this->engine))->readStream(
+                    $stream,
+                ),
+                $stream,
+                $source,
+                $this->schemaConverter,
+                array_values($this->columns),
+            );
         }
     }
 

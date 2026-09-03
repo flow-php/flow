@@ -6,41 +6,31 @@ namespace Flow\Floe;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
-use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
 final class FloeExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
     private ?Schema $schema = null;
 
-    use MetadataColumns;
-
     use Limitable;
-    use DeclaresPartitionTypes;
-    use PathFiltering;
-
-    private ?Schema $derived = null;
+    use FileReading;
 
     private ?int $offset = null;
 
@@ -79,72 +69,59 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
         // read is gated batch by batch by the checked door below instead
         $promisedSchema = $this->schema === null ? null : $this->schema();
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->readers($context->hydrator()) as [$reader, $filePath]) {
-            $uri = $filePath->uri();
-            $partitionValues = [];
+        foreach ($this->files($context->hydrator()) as $file) {
+            // finally, not a close() per exit: the offset-skip continue, the STOP/limit return
+            // below and an abandoned generator all have to release the handle (b73)
+            try {
+                $fileRows = $file->reader->totalRows();
 
-            foreach ($filePath->partitions() as $partition) {
-                $partitionValues[$partition->name] = $partition->value;
-            }
+                if ($fileOffset >= $fileRows) {
+                    $fileOffset -= $fileRows;
 
-            $fileRows = $reader->totalRows();
+                    continue;
+                }
 
-            if ($fileOffset >= $fileRows) {
-                $fileOffset -= $fileRows;
+                // R6: over the FILE's schema, never over schema()'s output
+                $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
+                $constants = $fileColumns->forFile($file->source(), $fileSchema);
 
-                continue;
-            }
+                $limit = $this->limit();
+                $remaining = $limit === null ? null : $limit - $this->yieldedRows;
 
-            $limit = $this->limit();
-            $remaining = $limit === null ? null : $limit - $this->yieldedRows;
-
-            foreach ($reader->rows(1000, $fileOffset, $remaining) as $rows) {
-                if ($this->addMetadataColumns) {
-                    $stamped = [];
+                foreach ($file->reader->rows(1000, $fileOffset, $remaining) as $rows) {
+                    // R7: the stamp stays post-hydration - FloeStreamReader::rows() yields hydrated Rows and
+                    // must not learn about paths - but the constants are the shared ones, already typed
+                    $filled = [];
 
                     foreach ($rows->all() as $row) {
-                        $stamped[] = new Row([...$row->values(), '_input_file_uri' => $uri]);
+                        $filled[] = new Row($constants->fill($row->values()));
                     }
 
-                    $rows = new Rows($rows->schema()->add(str_schema('_input_file_uri')), ...$stamped);
-                }
+                    // the reader already matched every row against the footer schema, and the tail is
+                    // written in the order declare() emits it, so a second full check buys nothing
+                    $rows = Rows::trusted($fileSchema, $filled);
 
-                if ($partitionNames !== []) {
-                    $partitioned = [];
-
-                    foreach ($rows->all() as $row) {
-                        $partitioned[] = new Row($partitionColumns->fill(
-                            $row->values(),
-                            $partitionNames,
-                            $partitionValues,
-                        ));
+                    if ($promisedSchema !== null) {
+                        $rows = $rows->matchTo($promisedSchema);
                     }
 
-                    $rows = new Rows(
-                        $partitionColumns->declare($rows->schema(), $partitionNames, $this->declaredPartitionTypes()),
-                        ...$partitioned,
-                    );
+                    $signal = yield $rows;
+
+                    foreach ($rows as $row) {
+                        $this->incrementReturnedRows();
+                    }
+
+                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                        return;
+                    }
                 }
 
-                if ($promisedSchema !== null) {
-                    $rows = $rows->matchTo($promisedSchema);
-                }
-
-                $signal = yield $rows;
-
-                foreach ($rows as $row) {
-                    $this->incrementReturnedRows();
-                }
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
-                }
+                $fileOffset = 0;
+            } finally {
+                $file->close();
             }
-
-            $fileOffset = 0;
         }
     }
 
@@ -154,38 +131,8 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function schema(): Schema
     {
-        $schema = $this->schema;
-
-        if ($schema === null) {
-            if ($this->derived === null) {
-                $derived = new Schema();
-
-                foreach ($this->readers() as [$reader]) {
-                    $derived = $derived->merge($reader->schema());
-                    $reader->close();
-
-                    if (!$this->unionByName) {
-                        break;
-                    }
-                }
-
-                $this->derived = $derived;
-            }
-
-            $schema = $this->derived;
-        }
-
-        // extract() adds this column, so schema() must declare it or the two disagree.
-        if ($this->addMetadataColumns) {
-            $schema = $schema->add(str_schema('_input_file_uri'));
-        }
-
-        $partitionColumns = new PartitionColumns($this->filesystem);
-
-        return $partitionColumns->declare(
-            $schema,
-            $this->partitionNames($partitionColumns, $this->path),
-            $this->declaredPartitionTypes(),
+        return $this->fileColumns($this->filesystem, $this->path)->declare(
+            $this->schema ?? $this->derivedSchema($this->files(), $this->unionByName),
         );
     }
 
@@ -196,7 +143,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function unionByName(bool $union = true): self
     {
         $this->unionByName = $union;
-        $this->derived = null;
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -218,21 +165,21 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     }
 
     /**
-     * @return \Generator<int, array{FloeStreamReader, Path}>
+     * @return Generator<int, FloeSourceFile>
      */
-    private function readers(?Hydrator $hydrator = null): Generator
+    private function files(?Hydrator $hydrator = null): Generator
     {
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            yield [
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            yield new FloeSourceFile(
                 (new FloeReader(
                     $this->filesystem,
                     $this->codec,
                     $this->chunkSize,
                     hydrator: $hydrator,
                     engine: $this->engine,
-                ))->read($listedFile->path),
-                $listedFile->path,
-            ];
+                ))->read($source->path),
+                $source,
+            );
         }
     }
 

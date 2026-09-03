@@ -34,6 +34,8 @@ final class FloeStreamReader
 
     private ?Footer $footer = null;
 
+    private ?Schema $schema = null;
+
     private readonly Hydrator $hydrator;
 
     /**
@@ -368,7 +370,7 @@ final class FloeStreamReader
      */
     public function schema(): Schema
     {
-        return $this->footer()->schema();
+        return $this->schema ??= $this->footer()->schema();
     }
 
     /**
@@ -384,7 +386,7 @@ final class FloeStreamReader
      */
     private function batch(array $rows): Rows
     {
-        return new Rows($this->footer()->schema(), ...$rows);
+        return new Rows($this->schema(), ...$rows);
     }
 
     /**

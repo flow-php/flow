@@ -51,7 +51,7 @@ $datasets = [
         [
             new RawRowValues(['id' => '42', 'p' => '3.14', 'a' => 'yes', 'n' => 7]),
             new RawRowValues(['id' => ' 7', 'p' => '1e3', 'a' => 'OFF', 'n' => 1.5]),
-            new RawRowValues(['id' => 'abc', 'p' => '0x1A', 'a' => 'weird', 'n' => true]),
+            new RawRowValues(['id' => '007', 'p' => '.5', 'a' => 'ON', 'n' => true]),
             new RawRowValues(['id' => '9223372036854775808', 'p' => true, 'a' => 3.5, 'n' => null]),
             new RawRowValues(['id' => 5, 'p' => 2.5, 'a' => true, 'n' => 'text']),
         ],

@@ -197,8 +197,8 @@ final class NativeRowHydratorTest extends FlowTestCase
             [
                 new RawRowValues(['id' => '42', 'price' => '3.14', 'active' => 'yes', 'name' => 7]),
                 new RawRowValues(['id' => ' 7', 'price' => '1e3', 'active' => 'OFF', 'name' => 1.5]),
-                new RawRowValues(['id' => 'abc', 'price' => '0x1A', 'active' => 'weird', 'name' => true]),
-                new RawRowValues(['id' => '12abc', 'price' => true, 'active' => 0, 'name' => false]),
+                new RawRowValues(['id' => '007', 'price' => '.5', 'active' => 'ON', 'name' => true]),
+                new RawRowValues(['id' => '1e2', 'price' => true, 'active' => 0, 'name' => false]),
                 new RawRowValues(['id' => '9223372036854775808', 'price' => 7, 'active' => 3.5, 'name' => null]),
                 new RawRowValues(['id' => 5, 'price' => 2.5, 'active' => true, 'name' => 'text']),
             ],
@@ -369,6 +369,31 @@ final class NativeRowHydratorTest extends FlowTestCase
         yield 'union column with a value outside every member' => [
             schema(new UnionDefinition('a', $unmatchable)),
             [new RawRowValues(['a' => [1, 2]])],
+        ];
+
+        yield 'non numeric string in an integer column' => [
+            schema(int_schema('id')),
+            [new RawRowValues(['id' => 'abc'])],
+        ];
+
+        yield 'trailing garbage after digits in an integer column' => [
+            schema(int_schema('id')),
+            [new RawRowValues(['id' => '12abc'])],
+        ];
+
+        yield 'hex string in a float column' => [
+            schema(float_schema('price')),
+            [new RawRowValues(['price' => '0x1A'])],
+        ];
+
+        yield 'unrecognised word in a boolean column' => [
+            schema(bool_schema('active')),
+            [new RawRowValues(['active' => 'weird'])],
+        ];
+
+        yield 'array in an integer column' => [
+            schema(int_schema('id')),
+            [new RawRowValues(['id' => [1, 2, 3]])],
         ];
 
         yield 'invalid uuid string' => [

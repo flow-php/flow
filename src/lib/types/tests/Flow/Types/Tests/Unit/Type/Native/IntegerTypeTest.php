@@ -78,7 +78,13 @@ final class IntegerTypeTest extends TestCase
     {
         yield 'string' => [
             'value' => 'string',
-            'expected' => 0,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'numeric string keeps its leading zeros' => [
+            'value' => '01234',
+            'expected' => 1234,
             'exceptionClass' => null,
         ];
 
@@ -100,10 +106,22 @@ final class IntegerTypeTest extends TestCase
             'exceptionClass' => null,
         ];
 
+        yield 'bool false' => [
+            'value' => false,
+            'expected' => 0,
+            'exceptionClass' => null,
+        ];
+
         yield 'array' => [
             'value' => [1, 2, 3],
-            'expected' => 1,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'null' => [
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'stdClass' => [

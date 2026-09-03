@@ -8,19 +8,15 @@ use Flow\ETL\Adapter\JSON\JSONEncoder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -29,17 +25,13 @@ use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
 use function count;
-use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 use function sprintf;
 
 final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
-    use MetadataColumns;
-
     use Limitable;
-    use DeclaresPartitionTypes;
-    use PathFiltering;
+    use FileReading;
 
     private ?string $pointer = null;
 
@@ -75,7 +67,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new JSONEncoder();
-        $baseSchema = $this->schema === null ? null : $this->schema();
+        $baseSchema = $this->schema;
 
         // JSONL iterator modes
         $lineIterator = match ($this->pointer) {
@@ -90,24 +82,14 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
             ),
         };
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $declared = $fileColumns->declare($baseSchema ?? new Schema());
+        $schema = $baseSchema === null ? null : $declared;
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            $stream = $this->filesystem->readFrom($listedFile->path);
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $stream = $this->filesystem->readFrom($source->path);
 
-            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitionValues = [];
-
-            foreach ($stream->path()->partitions() as $partition) {
-                $partitionValues[$partition->name] = $partition->value;
-            }
-
-            $schema = $baseSchema;
-
-            if ($schema !== null) {
-                $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
-            }
+            $constants = $fileColumns->forFile($source, $declared);
 
             $rawBatch = [];
 
@@ -126,11 +108,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                         continue;
                     }
 
-                    if ($streamUri !== null) {
-                        $row['_input_file_uri'] = $streamUri;
-                    }
-
-                    $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
+                    $row = $constants->fill($row);
 
                     $rawBatch[] = $row;
 
@@ -138,11 +116,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                         $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
 
                         if ($baseSchema === null) {
-                            $hydrated = $partitionColumns->apply(
-                                $hydrated,
-                                $partitionNames,
-                                $this->declaredPartitionTypes(),
-                            );
+                            $hydrated = $fileColumns->apply($hydrated);
                         }
 
                         foreach ($hydrated as $hydratedRow) {
@@ -163,7 +137,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
             $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
 
             if ($baseSchema === null) {
-                $hydrated = $partitionColumns->apply($hydrated, $partitionNames, $this->declaredPartitionTypes());
+                $hydrated = $fileColumns->apply($hydrated);
             }
 
             foreach ($hydrated as $hydratedRow) {
@@ -182,16 +156,13 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
+        $schema = $this->schema;
+
+        if ($schema === null) {
             throw SchemaNotDerivableException::extractor(self::class);
         }
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-
-        return $partitionColumns->declare(
-            $this->addMetadataColumns ? $this->schema->add(str_schema('_input_file_uri')) : $this->schema,
-            $this->partitionNames($partitionColumns, $this->path),
-        );
+        return $this->fileColumns($this->filesystem, $this->path)->declare($schema);
     }
 
     public function source(): Path

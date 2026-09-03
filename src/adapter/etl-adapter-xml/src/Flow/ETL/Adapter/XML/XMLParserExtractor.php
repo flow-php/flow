@@ -7,20 +7,16 @@ namespace Flow\ETL\Adapter\XML;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -30,17 +26,13 @@ use XMLWriter;
 
 use function count;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function sprintf;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
-    use MetadataColumns;
-
     use Limitable;
-    use DeclaresPartitionTypes;
-    use PathFiltering;
+    use FileReading;
 
     /**
      * @var int<1, max>
@@ -141,24 +133,15 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new XMLEncoder();
 
-        $baseSchema = $this->schema();
+        $baseSchema = $this->schema ?? schema(xml_schema('node'));
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $fileColumns->declare($baseSchema);
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            $stream = $this->filesystem->readFrom($listedFile->path);
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $stream = $this->filesystem->readFrom($source->path);
 
-            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitionValues = [];
-
-            foreach ($stream->path()->partitions() as $partition) {
-                $partitionValues[$partition->name] = $partition->value;
-            }
-
-            $schema = $baseSchema;
-
-            $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
+            $constants = $fileColumns->forFile($source, $schema);
 
             $rawNodes = [];
 
@@ -178,15 +161,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                         $batch = [];
 
                         foreach ($encoder->decode($rawNodes) as $rowValues) {
-                            $rowData = $rowValues->values;
-
-                            if ($streamUri !== null) {
-                                $rowData['_input_file_uri'] = $streamUri;
-                            }
-
-                            $rowData = $partitionColumns->fill($rowData, $partitionNames, $partitionValues);
-
-                            $batch[] = new RawRowValues($rowData);
+                            $batch[] = new RawRowValues($constants->fill($rowValues->values));
                         }
 
                         $rawNodes = [];
@@ -213,15 +188,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
             $batch = [];
 
             foreach ($encoder->decode($rawNodes) as $rowValues) {
-                $rowData = $rowValues->values;
-
-                if ($streamUri !== null) {
-                    $rowData['_input_file_uri'] = $streamUri;
-                }
-
-                $rowData = $partitionColumns->fill($rowData, $partitionNames, $partitionValues);
-
-                $batch[] = new RawRowValues($rowData);
+                $batch[] = new RawRowValues($constants->fill($rowValues->values));
             }
 
             $hydrated = $hydrator->cast($batch, $schema);
@@ -246,14 +213,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     public function schema(): Schema
     {
-        $schema = $this->schema ?? schema(xml_schema('node'));
-
-        $partitionColumns = new PartitionColumns($this->filesystem);
-
-        return $partitionColumns->declare(
-            $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema,
-            $this->partitionNames($partitionColumns, $this->path),
-        );
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->schema ?? schema(xml_schema('node')));
     }
 
     public function source(): Path

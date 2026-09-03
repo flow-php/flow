@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DOMDocument;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,7 +51,19 @@ final class BooleanTypeTest extends TestCase
     {
         yield 'string' => [
             'value' => 'string',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'recognised truthy string' => [
+            'value' => 'yes',
             'expected' => true,
+            'exceptionClass' => null,
+        ];
+
+        yield 'recognised falsy string' => [
+            'value' => 'off',
+            'expected' => false,
             'exceptionClass' => null,
         ];
 
@@ -122,26 +135,26 @@ final class BooleanTypeTest extends TestCase
 
         yield 'array' => [
             'value' => [1, 2, 3],
-            'expected' => true,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DateTimeInterface' => [
             'value' => new DateTimeImmutable('2021-01-01 00:00:00'),
-            'expected' => true,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DateInterval' => [
             'value' => new DateInterval('P1D'),
-            'expected' => true,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DOMDocument' => [
             'value' => new DOMDocument(),
-            'expected' => true,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DOMElement - true' => [

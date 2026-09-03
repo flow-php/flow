@@ -64,6 +64,23 @@ final class FloeEngineContext
     }
 
     /**
+     * The same tree with a numerically-valued partition, so a declared partition type has something
+     * to convert - `country=PL` is already a string and would prove nothing.
+     */
+    public static function writeYearPartitionedFiles(Filesystem $filesystem, string $root = 'memory://years'): void
+    {
+        $schema = schema(int_schema('id'));
+
+        foreach (['2024' => 1, '2025' => 2] as $year => $id) {
+            self::writeAll(
+                self::phpWriter($filesystem, $schema),
+                path($root . '/year=' . $year . '/data.floe'),
+                [rows($schema, row(['id' => $id]))],
+            );
+        }
+    }
+
+    /**
      * @param array<int, Rows> $batches
      */
     public static function writeAll(FloeWriter $writer, Path $path, array $batches): void

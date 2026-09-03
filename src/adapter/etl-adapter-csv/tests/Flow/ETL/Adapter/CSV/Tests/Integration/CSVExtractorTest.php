@@ -17,22 +17,80 @@ use RuntimeException;
 use function array_keys;
 use function array_map;
 use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
+use function sort;
 
 final class CSVExtractorTest extends FlowTestCase
 {
     use OperatingSystem;
+
+    public function test_a_hive_null_partition_value_reads_back_as_null(): void
+    {
+        $dir = __DIR__ . '/var/test_a_hive_null_partition_value_reads_back_as_null';
+
+        df()
+            ->read(from_array(
+                [['id' => 1, 'year' => null], ['id' => 2, 'year' => '2024']],
+                schema(int_schema('id'), str_schema('year', nullable: true)),
+            ))
+            ->write(to_csv($dir . '/data.csv')->saveMode(overwrite())->partitionBy(partition_by('year')))
+            ->run();
+
+        $rows = df()->read(from_csv($dir . '/*/*.csv')->withSchema(schema(int_schema('id'))))->fetch();
+
+        $years = array_map(static fn(Row $row): mixed => $row->get('year'), $rows->all());
+        sort($years);
+
+        static::assertSame([null, '2024'], $years);
+    }
+
+    public function test_declared_partition_types_reach_the_rows(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')
+            ->withSchema(schema(int_schema('id'), str_schema('value')))
+            ->partitionTypes(partition_types(group: type_integer()));
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+            static::assertSame(1, $rows->first()->get('group'));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_partition_columns_are_typed_without_a_declared_schema(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')->partitionTypes(
+            partition_types(group: type_integer()),
+        );
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertSame(1, $rows->first()->get('group'));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
 
     public function test_a_source_column_named_input_file_uri_throws_instead_of_being_overwritten(): void
     {

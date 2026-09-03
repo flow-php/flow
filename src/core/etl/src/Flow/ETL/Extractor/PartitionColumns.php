@@ -25,7 +25,8 @@ final readonly class PartitionColumns
 
     /**
      * One read yields one Schema, so a partition column that only some paths under the listing carry
-     * still has to be declared for all of them - and it is nullable exactly when some path lacks it.
+     * still has to be declared for all of them - and it is nullable when some path lacks it, or when
+     * some path carries the Hive null sentinel, which is a value the column has to be able to hold.
      * Partition values live in the path, so both the union and its nullability are known without
      * opening a single file.
      *
@@ -34,6 +35,7 @@ final readonly class PartitionColumns
     public function names(Path $path, Filter $filter): array
     {
         $counts = [];
+        $nullable = [];
         $paths = 0;
 
         foreach ((new FileListing($this->filesystem))->list($path, $filter) as $status) {
@@ -41,13 +43,17 @@ final readonly class PartitionColumns
 
             foreach ($status->path->partitions() as $partition) {
                 $counts[$partition->name] = ($counts[$partition->name] ?? 0) + 1;
+
+                if ($partition->value === null) {
+                    $nullable[$partition->name] = true;
+                }
             }
         }
 
         $names = [];
 
         foreach ($counts as $name => $count) {
-            $names[$name] = $count < $paths;
+            $names[$name] = $count < $paths || array_key_exists($name, $nullable);
         }
 
         ksort($names);
@@ -114,7 +120,7 @@ final readonly class PartitionColumns
 
     /**
      * @param array<string, bool> $names
-     * @param array<string, null|string> $values partition name => value, for the path this row came from
+     * @param array<string, mixed> $values partition name => value, for the path this row came from
      * @param array<string, mixed> $row
      *
      * @return array<string, mixed>

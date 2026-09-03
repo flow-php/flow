@@ -12,10 +12,10 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Throwable;
 
-use function is_array;
+use function is_bool;
 use function is_int;
+use function is_numeric;
 use function is_object;
-use function is_scalar;
 
 /**
  * @template T of int
@@ -59,8 +59,12 @@ final readonly class IntegerType implements Type
                 throw new CastingException($value, $this);
             }
 
-            if (is_scalar($value) || null === $value || is_array($value)) {
+            if (is_numeric($value)) {
                 return (int) $value;
+            }
+
+            if (is_bool($value)) {
+                return $value ? 1 : 0;
             }
 
             throw new CastingException($value, $this);

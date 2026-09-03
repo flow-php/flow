@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -23,6 +24,7 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function Flow\Types\DSL\type_integer;
 use function iterator_to_array;
 
 final class FloeExtractorTest extends TestCase
@@ -307,6 +309,109 @@ final class FloeExtractorTest extends TestCase
         from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->unionByName()->schema();
 
         static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_declared_partition_types_reach_the_rows(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeYearPartitionedFiles($memory);
+
+        $extractor = from_floe(path('memory://years/*/*.floe'), filesystem: $memory)->partitionTypes(
+            partition_types(year: type_integer()),
+        );
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+            static::assertSame(2024, $rows->first()->get('year'));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_a_declared_schema_may_name_the_partition_column(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeYearPartitionedFiles($memory);
+
+        $extractor = from_floe(path('memory://years/*/*.floe'), filesystem: $memory)->withSchema(schema(
+            int_schema('id'),
+            int_schema('year'),
+        ));
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertSame(2024, $rows->first()->get('year'));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_extract_closes_the_reader_when_the_generator_is_abandoned(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        $generator = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(flow_context(config()));
+        $generator->current();
+        unset($generator);
+
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_extract_closes_every_reader_it_opens(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
+            flow_context(config()),
+        ) as $rows) {
+            continue;
+        }
+
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_extract_closes_the_reader_it_skips_for_the_offset(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)
+            ->withOffset(1)
+            ->extract(flow_context(config())) as $rows) {
+            continue;
+        }
+
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_extract_closes_the_reader_when_the_pipeline_stops(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        $generator = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_schema_forgets_the_fold_when_the_path_filter_narrows(): void
+    {
+        $counting = new CountingFilesystem($memory = memory_filesystem());
+        FloeEngineContext::writePartitionedFiles($memory);
+
+        $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting);
+        $extractor->schema();
+        $extractor->withPathFilter(new OnlyFiles())->schema();
+
+        static::assertSame(2, $counting->readFromCalls);
     }
 
     public function test_source_returns_path(): void

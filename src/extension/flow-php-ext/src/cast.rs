@@ -1,3 +1,5 @@
+use std::os::raw::{c_char, c_int};
+
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::DataType;
@@ -19,6 +21,15 @@ extern "C" {
     fn zval_get_long_func(op: *const Zval, is_strict: bool) -> i64;
     fn zval_get_double_func(op: *const Zval) -> f64;
     fn zval_get_string_func(op: *mut Zval) -> *mut ZendStr;
+    fn _is_numeric_string_ex(
+        str: *const c_char,
+        length: usize,
+        lval: *mut i64,
+        dval: *mut f64,
+        allow_errors: bool,
+        oflow_info: *mut c_int,
+        trailing_data: *mut bool,
+    ) -> u8;
 }
 
 pub(crate) enum MapKeyKind {
@@ -336,8 +347,30 @@ fn null_zval() -> Zval {
     zv
 }
 
-fn coercible_scalar(value: &Zval) -> bool {
-    value.is_string() || value.is_bool() || value.is_null()
+/// PHP's own `is_numeric()`, so the native path accepts exactly the strings
+/// `IntegerType`/`FloatType::cast` accept and bails on the rest instead of
+/// reproducing the grammar and drifting from it.
+fn is_numeric_str(bytes: &[u8]) -> bool {
+    unsafe {
+        _is_numeric_string_ex(
+            bytes.as_ptr().cast::<c_char>(),
+            bytes.len(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            false,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        ) != 0
+    }
+}
+
+/// A string the numeric casts can take: anything else is refused by the PHP
+/// implementation, so the fast path hands it back rather than guessing.
+fn numeric_scalar(value: &Zval) -> bool {
+    match value.zend_str() {
+        Some(string) => is_numeric_str(string.as_bytes()),
+        None => value.is_bool(),
+    }
 }
 
 /// Casts one value natively; `Ok(None)` bails the WHOLE column value to the
@@ -350,7 +383,7 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
         CastKind::Integer => {
             if value.is_long() {
                 Some(value.shallow_clone())
-            } else if value.is_double() || coercible_scalar(value) {
+            } else if value.is_double() || numeric_scalar(value) {
                 Some(zval_long(engine_long(value)))
             } else {
                 None
@@ -363,7 +396,7 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
         CastKind::Float => {
             if value.is_double() {
                 Some(value.shallow_clone())
-            } else if value.is_long() || coercible_scalar(value) {
+            } else if value.is_long() || numeric_scalar(value) {
                 let mut zv = Zval::new();
                 zv.set_double(engine_double(value));
                 Some(zv)
@@ -375,9 +408,12 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
             if value.is_bool() {
                 Some(value.shallow_clone())
             } else if let Some(string) = value.zend_str() {
-                let mut zv = Zval::new();
-                zv.set_bool(bool_from_str(string.as_bytes()).unwrap_or_else(|| value.coerce_to_bool()));
-                Some(zv)
+                // an unrecognised word is refused by BooleanType::cast, so bail instead of coercing
+                bool_from_str(string.as_bytes()).map(|parsed| {
+                    let mut zv = Zval::new();
+                    zv.set_bool(parsed);
+                    zv
+                })
             } else if value.is_long() || value.is_double() || value.is_null() {
                 let mut zv = Zval::new();
                 zv.set_bool(value.coerce_to_bool());

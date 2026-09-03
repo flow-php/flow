@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
@@ -17,7 +16,6 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;

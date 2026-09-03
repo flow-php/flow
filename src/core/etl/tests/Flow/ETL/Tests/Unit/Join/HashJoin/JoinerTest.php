@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Join\Comparison\Equal;

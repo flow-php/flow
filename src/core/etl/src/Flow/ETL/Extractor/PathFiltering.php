@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Generator;
 
 trait PathFiltering
 {
+    /**
+     * Every setter that changes what the fold would read has to clear this.
+     */
+    private ?Schema $derivedSchema = null;
+
     private ?Filter $filter = null;
 
     /**
@@ -21,6 +28,35 @@ trait PathFiltering
      * @var null|array<string, bool>
      */
     private ?array $partitionNames = null;
+
+    /**
+     * Schema::merge() returns its argument on an empty receiver, so first-file-only is this same fold
+     * with a break.
+     *
+     * @param Generator<int, SelfDescribingFile> $files an unstarted generator
+     */
+    private function derivedSchema(Generator $files, bool $unionByName): Schema
+    {
+        if ($this->derivedSchema !== null) {
+            return $this->derivedSchema;
+        }
+
+        $schema = new Schema();
+
+        foreach ($files as $file) {
+            try {
+                $schema = $schema->merge($file->schema());
+            } finally {
+                $file->close();
+            }
+
+            if (!$unionByName) {
+                break;
+            }
+        }
+
+        return $this->derivedSchema = $schema;
+    }
 
     public function filter(): Filter
     {
@@ -38,6 +74,7 @@ trait PathFiltering
     public function withPathFilter(Filter $filter): static
     {
         $this->partitionNames = null;
+        $this->derivedSchema = null;
 
         if ($this->filter === null) {
             $this->filter = $filter;

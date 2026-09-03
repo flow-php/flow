@@ -6,7 +6,10 @@ native cast propagates the exact PHP cast exceptions and aborts the batch
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
@@ -24,6 +27,10 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 
 $throwing = [
+    'integer from a non numeric string' => [schema(int_schema('id')), [new RawRowValues(['id' => 'abc'])]],
+    'float from a hex string' => [schema(float_schema('p')), [new RawRowValues(['p' => '0x1A'])]],
+    'boolean from an unrecognised word' => [schema(bool_schema('a')), [new RawRowValues(['a' => 'weird'])]],
+    'integer from an array' => [schema(int_schema('id')), [new RawRowValues(['id' => [1, 2, 3]])]],
     'uuid invalid' => [schema(uuid_schema('u')), [new RawRowValues(['u' => 'not-a-uuid'])]],
     'uuid uppercase' => [schema(uuid_schema('u')), [new RawRowValues(['u' => '01234567-89AB-4DEF-8123-456789ABCDEF'])]],
     'json scalar' => [schema(json_schema('j')), [new RawRowValues(['j' => 5])]],
@@ -80,6 +87,10 @@ foreach ($throwing as $label => [$s, $batch]) {
 }
 ?>
 --EXPECT--
+integer from a non numeric string exception:match aborted:yes
+float from a hex string     exception:match aborted:yes
+boolean from an unrecognised word exception:match aborted:yes
+integer from an array       exception:match aborted:yes
 uuid invalid                exception:match aborted:yes
 uuid uppercase              exception:match aborted:yes
 json scalar                 exception:match aborted:yes

@@ -6,20 +6,16 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\DeclaresPartitionTypes;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -34,11 +30,8 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 {
     private ?Schema $schema = null;
 
-    use MetadataColumns;
-
     use Limitable;
-    use DeclaresPartitionTypes;
-    use PathFiltering;
+    use FileReading;
 
     private readonly Filesystem $filesystem;
 
@@ -69,24 +62,15 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $batchSize = $context->config->extractorBatchSize();
         $encoder = new TextEncoder();
 
-        $baseSchema = $this->schema();
+        $baseSchema = $this->schema ?? schema(str_schema('text'));
 
-        $partitionColumns = new PartitionColumns($this->filesystem);
-        $partitionNames = $this->partitionNames($partitionColumns, $this->path);
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $fileColumns->declare($baseSchema);
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $listedFile) {
-            $stream = $this->filesystem->readFrom($listedFile->path);
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $stream = $this->filesystem->readFrom($source->path);
 
-            $streamUri = $this->addMetadataColumns ? $stream->path()->uri() : null;
-            $partitionValues = [];
-
-            foreach ($stream->path()->partitions() as $partition) {
-                $partitionValues[$partition->name] = $partition->value;
-            }
-
-            $schema = $baseSchema;
-
-            $schema = $partitionColumns->declare($schema, $partitionNames, $this->declaredPartitionTypes());
+            $constants = $fileColumns->forFile($source, $schema);
 
             $rawLines = [];
 
@@ -97,15 +81,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $batch = [];
 
                     foreach ($encoder->decode($rawLines) as $rowValues) {
-                        $row = $rowValues->values;
-
-                        if ($streamUri !== null) {
-                            $row['_input_file_uri'] = $streamUri;
-                        }
-
-                        $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
-
-                        $batch[] = new RawRowValues($row);
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
                     }
 
                     $rawLines = [];
@@ -127,15 +103,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
             $batch = [];
 
             foreach ($encoder->decode($rawLines) as $rowValues) {
-                $row = $rowValues->values;
-
-                if ($streamUri !== null) {
-                    $row['_input_file_uri'] = $streamUri;
-                }
-
-                $row = $partitionColumns->fill($row, $partitionNames, $partitionValues);
-
-                $batch[] = new RawRowValues($row);
+                $batch[] = new RawRowValues($constants->fill($rowValues->values));
             }
 
             $hydrated = $hydrator->cast($batch, $schema);
@@ -156,14 +124,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
     public function schema(): Schema
     {
-        $schema = $this->schema ?? schema(str_schema('text'));
-
-        $partitionColumns = new PartitionColumns($this->filesystem);
-
-        return $partitionColumns->declare(
-            $this->addMetadataColumns ? $schema->add(str_schema('_input_file_uri')) : $schema,
-            $this->partitionNames($partitionColumns, $this->path),
-        );
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->schema ?? schema(str_schema('text')));
     }
 
     public function source(): Path
