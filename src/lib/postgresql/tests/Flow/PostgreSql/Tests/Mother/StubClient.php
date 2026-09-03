@@ -12,6 +12,7 @@ use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 
@@ -42,6 +43,14 @@ final class StubClient implements Client
     }
 
     public function cursor(Sql|string $sql, array $parameters = []): Cursor
+    {
+        throw new RuntimeException('StubClient is inert');
+    }
+
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
     {
         throw new RuntimeException('StubClient is inert');
     }

@@ -176,6 +176,55 @@ The HTTP extractors accept a schema the same way - see
 Self-descriptive formats carry their schema in the file itself, so their extractors read it from there and have no
 `withSchema()` - Parquet and Floe in this repository.
 
+### PostgreSQL sources describe themselves, and keep `withSchema()`
+
+The `from_pgsql_cursor()`, `from_pgsql_limit_offset()` and `from_pgsql_key_set()` extractors derive their schema from
+the database. Unlike a file format, a driver's type mapping is lossy, so these sources keep `withSchema()` as an
+override that always wins:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\ETL\DSL\{data_frame, float_schema, int_schema, schema, to_output};
+
+// Derived: one zero-row probe of your own query, memoised for the whole read.
+data_frame()
+    ->read(from_pgsql_cursor($client, 'SELECT id, amount FROM orders ORDER BY id'))
+    ->write(to_output())
+    ->run();
+
+// Declared: withSchema() short-circuits the probe entirely and costs no query.
+data_frame()
+    ->read(
+        from_pgsql_cursor($client, 'SELECT id, amount FROM orders ORDER BY id')
+            ->withSchema(schema(int_schema('id'), float_schema('amount'))),
+    )
+    ->write(to_output())
+    ->run();
+```
+
+How the derivation behaves:
+
+- It **executes a zero-row probe** of your query (`SELECT * FROM (<your sql>) flow_describe LIMIT 0`) and reads the
+  result's column metadata. It describes the *result*, never the catalog, so a view, an alias and a computed column
+  all describe correctly.
+- A **parameterised query describes normally**. The probe binds `null` at every parameter position, so it never sees
+  the values you passed.
+- **Every derived column is nullable.** Result metadata cannot prove that a column is `NOT NULL` - an outer join or an
+  expression column can always produce `null`.
+- The schema is derived **once per read**, before the first row, and every batch conforms to it.
+
+A query that cannot be described **does not read at all**; it throws `SchemaNotDerivableException` with the reason.
+That happens for exactly two things:
+
+1. a query shape that cannot be wrapped in a zero-row `SELECT` - multi-statement, a data-modifying CTE, or
+   `INSERT ... RETURNING`;
+2. a column whose PostgreSQL type Flow has no type for - after type mapping that is only `record` and the geometric
+   types (`point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`).
+
+In both cases `->withSchema(...)` is the escape hatch, and it skips the probe.
+
 ## Automatic Casting
 
 `DataFrame::autoCast()` detects every value in the pipeline: strings are narrowed to `null`, `boolean`, `integer`,

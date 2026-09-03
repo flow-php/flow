@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -26,6 +25,8 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
     private ?int $maximum = null;
 
     private int $pageSize = 1000;
+
+    private ?Schema $derivedSchema = null;
 
     private ?Schema $schema = null;
 
@@ -50,6 +51,8 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
                 'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results',
             );
         }
+
+        $schema = $this->schema();
 
         $total = $this->maximum ?? $this->countTotal($sql);
 
@@ -76,7 +79,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
             $cursor->free();
 
-            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
+            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -96,11 +99,14 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
-        }
-
-        return $this->schema;
+        return (
+            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->query,
+                $this->parameters,
+                self::class,
+            ))
+        );
     }
 
     public function withMaximum(int $maximum): self

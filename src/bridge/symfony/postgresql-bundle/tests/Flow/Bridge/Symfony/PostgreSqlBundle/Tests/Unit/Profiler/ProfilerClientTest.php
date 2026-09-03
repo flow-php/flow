@@ -72,8 +72,9 @@ final class ProfilerClientTest extends TestCase
         $client->fetchSingle('SELECT 1');
         $client->fetchSingleInto($mapper, 'SELECT 1');
         $client->cursor('SELECT 1');
+        $client->describe('SELECT 1');
 
-        static::assertCount(16, $recorder->queries());
+        static::assertCount(17, $recorder->queries());
     }
 
     public function test_failed_cursor_records_failure_and_rethrows(): void

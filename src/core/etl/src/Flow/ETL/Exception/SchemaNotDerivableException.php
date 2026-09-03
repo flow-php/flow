@@ -8,12 +8,21 @@ use function sprintf;
 
 final class SchemaNotDerivableException extends InvalidArgumentException
 {
-    public static function extractor(string $extractor): self
+    public static function extractor(string $extractor, ?string $reason = null): self
     {
+        if ($reason === null) {
+            return new self(sprintf(
+                '%s cannot describe what it will produce before producing it. Declare the schema with '
+                . '->withSchema(), or read from a source that describes itself.',
+                $extractor,
+            ));
+        }
+
         return new self(sprintf(
-            '%s cannot describe what it will produce before producing it. Declare the schema with '
-            . '->withSchema(), or read from a source that describes itself.',
+            '%s cannot describe what it will produce before producing it: %s. Declare the schema with '
+            . '->withSchema().',
             $extractor,
+            $reason,
         ));
     }
 

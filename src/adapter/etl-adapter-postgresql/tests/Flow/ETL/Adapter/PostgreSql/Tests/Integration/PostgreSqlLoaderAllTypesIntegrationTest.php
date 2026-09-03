@@ -10,6 +10,7 @@ use DateTimeInterface;
 use DOMDocument;
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
@@ -188,19 +189,22 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                 ? sprintf('%02d:%02d:%02d', $row['col_time']->h, $row['col_time']->i, $row['col_time']->s)
                 : $row['col_time'],
         );
-        static::assertSame($uuid->toString(), $row['col_uuid']);
+        // The derived schema types a uuid column, so the read hands back a Uuid, not a string.
+        static::assertInstanceOf(Uuid::class, $row['col_uuid']);
+        static::assertSame($uuid->toString(), $row['col_uuid']->toString());
         static::assertEquals(
             ['key' => 'value', 'number' => 123],
             is_string($row['col_json']) ? json_decode($row['col_json'], true) : $row['col_json'],
         );
         // @mago-expect analysis:mixed-assignment
         $colXml = $row['col_xml'];
-        static::assertIsString($colXml);
-        static::assertStringContainsString('<root><item>test</item></root>', $colXml);
+        // The derived schema types an xml column, so the read hands back a parsed document.
+        static::assertInstanceOf(DOMDocument::class, $colXml);
+        static::assertStringContainsString('<root><item>test</item></root>', (string) $colXml->saveXML());
         // @mago-expect analysis:mixed-assignment
         $colXmlElement = $row['col_xml_element'];
-        static::assertIsString($colXmlElement);
-        static::assertStringContainsString('<item id="elem">element</item>', $colXmlElement);
+        static::assertInstanceOf(DOMDocument::class, $colXmlElement);
+        static::assertStringContainsString('<item id="elem">element</item>', (string) $colXmlElement->saveXML());
         static::assertSame('<p>HTML content</p>', $row['col_html']);
         static::assertSame('<span>element</span>', $row['col_html_element']);
         static::assertSame('one', $row['col_enum']);

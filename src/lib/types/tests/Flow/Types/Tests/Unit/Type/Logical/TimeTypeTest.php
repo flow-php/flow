@@ -92,6 +92,57 @@ final class TimeTypeTest extends TestCase
             'expected' => new DateInterval('PT10S'),
             'exceptionClass' => null,
         ];
+
+        yield 'clock time to time' => [
+            'value' => '12:34:56',
+            'expected' => new DateInterval('PT12H34M56S'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'zero clock time to time' => [
+            'value' => '00:00:00',
+            'expected' => new DateInterval('PT0H0M0S'),
+            'exceptionClass' => null,
+        ];
+
+        // PostgreSQL's time is not clamped to a 24h clock; 99:59:59 is a legal value.
+        yield 'clock time beyond a day to time' => [
+            'value' => '99:59:59',
+            'expected' => new DateInterval('PT99H59M59S'),
+            'exceptionClass' => null,
+        ];
+
+        $fractional = new DateInterval('PT12H34M56S');
+        // @mago-ignore analysis:invalid-property-write
+        $fractional->f = 0.123456;
+
+        yield 'fractional clock time to time' => [
+            'value' => '12:34:56.123456',
+            'expected' => $fractional,
+            'exceptionClass' => null,
+        ];
+
+        $tenth = new DateInterval('PT12H34M56S');
+        // @mago-ignore analysis:invalid-property-write
+        $tenth->f = 0.5;
+
+        yield 'a one digit fraction is not scaled' => [
+            'value' => '12:34:56.5',
+            'expected' => $tenth,
+            'exceptionClass' => null,
+        ];
+
+        yield 'clock time with an out of range minute' => [
+            'value' => '25:99:99',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'not a time at all' => [
+            'value' => 'not a time',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
     public static function is_valid_data_provider(): Generator

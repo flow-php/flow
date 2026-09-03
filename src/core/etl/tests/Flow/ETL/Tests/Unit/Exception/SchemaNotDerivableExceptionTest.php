@@ -18,6 +18,18 @@ final class SchemaNotDerivableExceptionTest extends FlowTestCase
         );
     }
 
+    public function test_extractor_with_a_reason_names_it_in_the_message(): void
+    {
+        static::assertSame(
+            'PostgreSqlCursorExtractor cannot describe what it will produce before producing it: column "location" '
+            . 'has PostgreSQL type "point", which Flow has no type for. Declare the schema with ->withSchema().',
+            SchemaNotDerivableException::extractor(
+                'PostgreSqlCursorExtractor',
+                'column "location" has PostgreSQL type "point", which Flow has no type for',
+            )->getMessage(),
+        );
+    }
+
     public function test_function_names_the_function_and_the_reason(): void
     {
         static::assertSame(

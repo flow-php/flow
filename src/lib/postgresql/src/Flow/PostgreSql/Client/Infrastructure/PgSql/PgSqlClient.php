@@ -10,6 +10,7 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Context as ClientContext;
 use Flow\PostgreSql\Client\Cursor;
+use Flow\PostgreSql\Client\DescribeQuery;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Exception\NoResultException;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
@@ -30,21 +31,23 @@ use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use InvalidArgumentException;
 use PgSql\Connection;
 use PgSql\Result;
 use Throwable;
 
-use function array_combine;
+use function array_fill;
 use function array_key_exists;
-use function array_keys;
 use function array_map;
 use function array_values;
+use function count;
 use function error_clear_last;
 use function error_get_last;
 use function extension_loaded;
 use function Flow\PostgreSql\DSL\begin;
+use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\commit;
 use function Flow\PostgreSql\DSL\listen;
 use function Flow\PostgreSql\DSL\release_savepoint;
@@ -202,6 +205,23 @@ final class PgSqlClient implements Client
         $result = $this->query($sql, $parameters);
 
         return new PgSqlCursor($result, $this->buildContext($sql, $parameters));
+    }
+
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        $result = $this->query((new DescribeQuery())->of($sql), array_fill(0, count($parameters), null));
+
+        try {
+            return array_map(static fn(array $column): array => [
+                'name' => $column['name'],
+                'type' => column_type_from_string($column['type']),
+            ], (new ResultColumns())->of($result));
+        } finally {
+            pg_free_result($result);
+        }
     }
 
     public function execute(Sql|string $sql, array $parameters = []): int
@@ -618,28 +638,24 @@ final class PgSqlClient implements Client
      */
     private function convertRow(Result $result, array $row): array
     {
+        // By name, last wins, exactly as pg_fetch_all() collapses duplicate output names. A
+        // positional lookup applies the wrong column's type to the surviving value: for
+        // SELECT id AS a, label AS a it casts the text through int8 and yields 0.
+        $types = [];
+
+        foreach ((new ResultColumns())->of($result) as $column) {
+            $types[$column['name']] = $column['type'];
+        }
+
         $keys = array_map(strval(...), array_keys($row));
-        $values = array_values($row);
-        $converted = array_map(
-            fn(int $i, mixed $value): mixed => $this->convertColumnValue($result, $i, $value),
-            array_keys($values),
-            $values,
-        );
 
-        return array_combine($keys, $converted);
-    }
-
-    private function convertColumnValue(Result $result, int $columnIndex, mixed $value): mixed
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        if (is_string($value)) {
-            return $this->resultCaster->cast($value, pg_field_type($result, $columnIndex));
-        }
-
-        return $value;
+        return array_combine($keys, array_map(
+            fn(string $key, mixed $value): mixed => is_string($value)
+                ? $this->resultCaster->cast($value, $types[$key] ?? null)
+                : $value,
+            $keys,
+            array_values($row),
+        ));
     }
 
     /**

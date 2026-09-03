@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function array_fill;
+use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -115,6 +116,17 @@ final class TraceableClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertArrayNotHasKey(SemConvAttributes::SERVER_PORT, $spans[0]->attributes());
+    }
+
+    public function test_describe_delegates_and_logs_the_probe(): void
+    {
+        $columns = [['name' => 'id', 'type' => column_type_from_string('int8')]];
+        $mockClient = $this->createMockClient();
+        $mockClient->method('describe')->willReturn($columns);
+
+        $client = traceable_postgresql_client($mockClient, $this->createConfig(memory_span_processor(void_exporter())));
+
+        static::assertSame($columns, $client->describe('SELECT id FROM users WHERE id > $1', [1]));
     }
 
     public function test_execute_creates_span_with_correct_attributes(): void

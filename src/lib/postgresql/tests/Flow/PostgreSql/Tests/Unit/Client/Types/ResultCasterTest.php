@@ -35,6 +35,25 @@ final class ResultCasterTest extends TestCase
     }
 
     /**
+     * pg hands these to PHP as text and the schema types them as strings, so the caster must
+     * leave them exactly as they arrive.
+     *
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function provide_text_remainder_types(): Generator
+    {
+        yield 'money' => ['money', '$12.50'];
+        yield 'interval' => ['interval', '2 years 3 mons'];
+        yield 'inet' => ['inet', '192.168.1.1'];
+        yield 'cidr' => ['cidr', '10.0.0.0/8'];
+        yield 'macaddr' => ['macaddr', '08:00:2b:01:02:03'];
+        yield 'int4range' => ['int4range', '[1,10)'];
+        yield 'numrange' => ['numrange', '[1.5,2.5)'];
+        yield 'daterange' => ['daterange', '[2026-01-01,2026-02-01)'];
+        yield 'a pg enum reports its own type name' => ['mood', 'happy'];
+    }
+
+    /**
      * @return \Generator<string, array{string}>
      */
     public static function provide_string_types(): Generator
@@ -47,8 +66,6 @@ final class ResultCasterTest extends TestCase
         yield 'date' => ['date'];
         yield 'timestamptz' => ['timestamptz'];
         yield 'time' => ['time'];
-        yield 'timetz' => ['timetz'];
-        yield 'interval' => ['interval'];
         yield 'numeric' => ['numeric'];
         yield 'money' => ['money'];
         yield 'inet' => ['inet'];
@@ -68,6 +85,23 @@ final class ResultCasterTest extends TestCase
     public function test_bool_true(): void
     {
         static::assertTrue($this->caster->cast('t', 'bool'));
+    }
+
+    public function test_an_array_element_null_stays_null(): void
+    {
+        static::assertSame([null, 'a'], $this->caster->cast('{NULL,a}', '_text'));
+    }
+
+    public function test_an_array_type_is_parsed_into_a_php_array(): void
+    {
+        static::assertSame([1, 2], $this->caster->cast('{1,2}', '_int4'));
+        static::assertSame(['a', 'b'], $this->caster->cast('{a,b}', '_text'));
+        static::assertSame([true, false], $this->caster->cast('{t,f}', '_bool'));
+    }
+
+    public function test_a_nested_array_is_cast_element_wise(): void
+    {
+        static::assertSame([[1, 2], [3]], $this->caster->cast('{{1,2},{3}}', '_int4'));
     }
 
     public function test_bytea_decodes_hex(): void
@@ -129,6 +163,23 @@ final class ResultCasterTest extends TestCase
     {
         $value = 'test string value';
         static::assertSame($value, $this->caster->cast($value, $type));
+    }
+
+    #[DataProvider('provide_text_remainder_types')]
+    public function test_text_remainder_types_stay_strings(string $type, string $value): void
+    {
+        static::assertSame($value, $this->caster->cast($value, $type));
+    }
+
+    public function test_oid_is_cast_to_integer(): void
+    {
+        static::assertSame(42, $this->caster->cast('42', 'oid'));
+    }
+
+    public function test_timetz_keeps_the_clock_time_and_drops_the_offset(): void
+    {
+        static::assertSame('12:34:56', $this->caster->cast('12:34:56+02', 'timetz'));
+        static::assertSame('12:34:56', $this->caster->cast('12:34:56-05:30', 'timetz'));
     }
 
     public function test_timestamp_is_marked_as_utc(): void

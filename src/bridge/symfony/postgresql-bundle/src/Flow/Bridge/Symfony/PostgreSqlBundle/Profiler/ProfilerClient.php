@@ -12,6 +12,7 @@ use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Throwable;
 
@@ -83,6 +84,15 @@ final class ProfilerClient implements Client
         );
 
         return $cursor;
+    }
+
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        // A zero-row probe has no row count to record, exactly as explain() has none.
+        return $this->record($sql, $parameters, fn(): array => $this->client->describe($sql, $parameters), null);
     }
 
     public function execute(Sql|string $sql, array $parameters = []): int

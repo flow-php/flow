@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateInterval;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\Date;
@@ -22,6 +23,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_intersection;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\types;
 
 final class IntersectionTypeTest extends TestCase
@@ -246,6 +248,17 @@ final class IntersectionTypeTest extends TestCase
         } else {
             static::assertEquals($expected, $type->cast($value));
         }
+    }
+
+    public function test_cast_of_clock_time_reaches_the_time_member(): void
+    {
+        // Deliberate behaviour change: TimeType::cast() learned HH:MM:SS, so the left member now
+        // produces a DateInterval the right member accepts. Before, both members threw on this
+        // string and the intersection threw with them.
+        static::assertEquals(
+            new DateInterval('PT12H34M56S'),
+            type_intersection(type_time(), type_instance_of(DateInterval::class))->cast('12:34:56'),
+        );
     }
 
     public function test_intersection_with_mixed_type_as_left(): void

@@ -12,6 +12,7 @@ use Flow\PostgreSql\Client\Exception\TooManyRowsException;
 use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface Client
@@ -53,6 +54,20 @@ interface Client
      * @throws QueryException
      */
     public function cursor(Sql|string $sql, array $parameters = []): Cursor;
+
+    /**
+     * Describe the columns a query would produce, by executing a zero-row probe of it.
+     * Column order is the query's select order. Duplicate output names are returned as many
+     * times as the query projects them - see pg_fetch_assoc(), which collapses them last-wins.
+     *
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param list<mixed> $parameters Only the count is used
+     *
+     * @throws QueryException
+     *
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array;
 
     /**
      * Execute a statement that modifies data (INSERT, UPDATE, DELETE).

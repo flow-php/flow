@@ -36,10 +36,15 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
+use function str_starts_with;
+use function substr;
 
 /**
  * Maps between Flow ETL types and PostgreSQL types.
@@ -139,20 +144,68 @@ final readonly class EntryTypesMap
      */
     public function toFlowType(ColumnType $columnType): Type
     {
-        $name = $columnType->normalize()['name'];
+        return $this->resolve($columnType->normalize()['name'], floorUnrecognised: false);
+    }
+
+    /**
+     * Same mapping, except that a name this map does not recognise takes the text floor instead of
+     * throwing. Only the result route may use it: there the caster leaves an unrecognised type as
+     * text, so schema and data agree. The catalog route has no such pairing and must keep refusing.
+     *
+     * @return Type<mixed>
+     */
+    public function toFlowTypeWithTextFloor(ColumnType $columnType): Type
+    {
+        return $this->resolve($columnType->normalize()['name'], floorUnrecognised: true);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    private function resolve(string $name, bool $floorUnrecognised): Type
+    {
+        if (str_starts_with($name, '_')) {
+            // pg carries no dimensionality: int4[] and int4[][] are both _int4, so the schema takes
+            // the one-dimensional reading. The element is nullable because a pg array may hold SQL
+            // NULLs, which the caster preserves and a non-nullable element type would destroy.
+            return type_list(type_union($this->resolve(substr($name, 1), $floorUnrecognised), type_null()));
+        }
 
         return match ($name) {
-            'int2', 'int4', 'int8', 'smallserial', 'serial', 'bigserial' => type_integer(),
+            'int2', 'int4', 'int8', 'smallserial', 'serial', 'bigserial', 'oid' => type_integer(),
             'float4', 'float8', 'numeric' => type_float(),
             'bool' => type_boolean(),
             'text', 'varchar', 'bpchar', 'bytea' => type_string(),
             'date' => type_date(),
-            'time' => type_time(),
+            'time', 'timetz' => type_time(),
             'timestamp', 'timestamptz' => type_datetime(),
             'uuid' => type_uuid(),
             'json', 'jsonb' => type_json(),
             'xml' => type_xml(),
-            default => throw TypeMappingException::unsupportedColumnType($name),
+            // pg transmits all of these as text and Flow has no closer type for them.
+            'inet',
+            'cidr',
+            'macaddr',
+            'money',
+            'int4range',
+            'int8range',
+            'numrange',
+            'tsrange',
+            'tstzrange',
+            'daterange',
+                => type_string(),
+            // A composite has no columns to describe and a geometric value is structured, so a
+            // string floor would misrepresent either one.
+            'record',
+            'point',
+            'line',
+            'lseg',
+            'box',
+            'path',
+            'polygon',
+            'circle',
+                => throw TypeMappingException::unsupportedColumnType($name),
+            default => $floorUnrecognised ? type_string() : throw TypeMappingException::unsupportedColumnType($name),
         };
     }
 

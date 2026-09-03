@@ -8,7 +8,6 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -36,6 +35,8 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     private int $pageSize = 1000;
 
+    private ?Schema $derivedSchema = null;
+
     private ?Schema $schema = null;
 
     /**
@@ -54,6 +55,8 @@ final class PostgreSqlKeySetExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
+
+        $schema = $this->schema();
 
         $encoder = new PostgreSqlEncoder();
         $totalFetched = 0;
@@ -76,7 +79,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
             $cursor->free();
 
-            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
+            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -102,11 +105,14 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
-        }
-
-        return $this->schema;
+        return (
+            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->query,
+                $this->parameters,
+                self::class,
+            ))
+        );
     }
 
     public function withMaximum(int $maximum): self

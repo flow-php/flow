@@ -16,6 +16,7 @@ use Flow\PostgreSql\Explain\Plan\Cost;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 
@@ -30,6 +31,9 @@ final class FakeClient implements Client
 {
     /** @var list<string> */
     public array $delegated = [];
+
+    /** @var list<array{name: string, type: ColumnType}> */
+    public array $describeReturn = [];
 
     public int $executeReturn = 1;
 
@@ -83,6 +87,16 @@ final class FakeClient implements Client
         }
 
         return $this->cursor;
+    }
+
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        $this->guard();
+
+        return $this->describeReturn;
     }
 
     public function execute(Sql|string $sql, array $parameters = []): int

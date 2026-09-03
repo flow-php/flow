@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -38,6 +37,8 @@ final class PostgreSqlCursorExtractor implements Extractor
 
     private ?int $maximum = null;
 
+    private ?Schema $derivedSchema = null;
+
     private ?Schema $schema = null;
 
     /**
@@ -56,6 +57,8 @@ final class PostgreSqlCursorExtractor implements Extractor
     {
         $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
+
+        $schema = $this->schema();
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
 
@@ -86,7 +89,7 @@ final class PostgreSqlCursorExtractor implements Extractor
 
                 $cursor->free();
 
-                $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
+                $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $schema);
 
                 foreach ($hydrated as $hydratedRow) {
                     $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -117,11 +120,14 @@ final class PostgreSqlCursorExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
-        }
-
-        return $this->schema;
+        return (
+            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->query,
+                $this->parameters,
+                self::class,
+            ))
+        );
     }
 
     public function withCursorName(string $cursorName): self

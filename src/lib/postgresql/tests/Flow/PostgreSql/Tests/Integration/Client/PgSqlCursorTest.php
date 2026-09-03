@@ -7,8 +7,10 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
 use function Flow\PostgreSql\DSL\cast;
+use function Flow\PostgreSql\DSL\column_type_bigint;
 use function Flow\PostgreSql\DSL\column_type_boolean;
 use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\constructor_mapper;
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\is_true;
@@ -137,6 +139,39 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
         static::assertNotNull($row);
         static::assertSame(42, $row['num']);
         static::assertTrue($row['flag']);
+    }
+
+    public function test_duplicate_output_names_are_cast_by_name_not_position(): void
+    {
+        // pg_fetch_assoc() collapses duplicate output names last-wins, so a positional type lookup
+        // applies the wrong column's type to the surviving value and corrupts it in both directions.
+        static::assertSame(
+            [['a' => 'x']],
+            iterator_to_array(
+                $this
+                    ->pgsqlContext()
+                    ->client()
+                    ->cursor(select(
+                        cast(literal(1), column_type_bigint())->as('a'),
+                        cast(literal('x'), column_type_text())->as('a'),
+                    ))
+                    ->iterate(),
+            ),
+        );
+
+        static::assertSame(
+            [['a' => 1]],
+            iterator_to_array(
+                $this
+                    ->pgsqlContext()
+                    ->client()
+                    ->cursor(select(
+                        cast(literal('x'), column_type_text())->as('a'),
+                        cast(literal(1), column_type_bigint())->as('a'),
+                    ))
+                    ->iterate(),
+            ),
+        );
     }
 
     public function test_empty_cursor(): void
