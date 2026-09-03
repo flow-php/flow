@@ -8,7 +8,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -21,6 +20,8 @@ final class DbalQueryExtractor implements Extractor
     private ParametersSet $parametersSet;
 
     private ?Schema $schema = null;
+
+    private ?Schema $derived = null;
 
     /**
      * @var array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type>
@@ -62,6 +63,7 @@ final class DbalQueryExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
+        $schema = $this->schema();
         $hydrator = $context->hydrator();
         $encoder = new DbalEncoder();
 
@@ -72,7 +74,7 @@ final class DbalQueryExtractor implements Extractor
                 $rawBatch[] = $row;
             }
 
-            $hydrated = $hydrator->cast($encoder->decode($rawBatch), $this->schema);
+            $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -86,11 +88,15 @@ final class DbalQueryExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
-        }
-
-        return $this->schema;
+        // The SQL - and so the result shape - is identical for every parameter set, so the first
+        // one is a representative binding; its values are nulled by the probe anyway.
+        return (
+            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
+                $this->connection,
+                $this->query,
+                self::class,
+            ))
+        );
     }
 
     public function withParameters(ParametersSet $parametersSet): self

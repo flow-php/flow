@@ -79,14 +79,14 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
-                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
-                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
-                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
-                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
-                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
-                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
-                ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
+                ['id' => '1', 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => '2', 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => '3', 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => '4', 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => '5', 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => '6', 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => '7', 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => '8', 'name' => 'name_8', 'description' => 'description_8'],
             ],
             $data->toArray(),
         );
@@ -264,11 +264,11 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
         static::assertCount(5, $rows);
         static::assertSame(
             [
-                ['id' => 1, 'created_at' => $createdAt, 'name' => 'name_1'],
-                ['id' => 2, 'created_at' => $createdAt, 'name' => 'name_2'],
-                ['id' => 3, 'created_at' => $createdAt, 'name' => 'name_3'],
-                ['id' => 4, 'created_at' => $createdAt, 'name' => 'name_4'],
-                ['id' => 5, 'created_at' => $createdAt, 'name' => 'name_5'],
+                ['id' => '1', 'created_at' => $createdAt, 'name' => 'name_1'],
+                ['id' => '2', 'created_at' => $createdAt, 'name' => 'name_2'],
+                ['id' => '3', 'created_at' => $createdAt, 'name' => 'name_3'],
+                ['id' => '4', 'created_at' => $createdAt, 'name' => 'name_4'],
+                ['id' => '5', 'created_at' => $createdAt, 'name' => 'name_5'],
             ],
             $rows,
         );

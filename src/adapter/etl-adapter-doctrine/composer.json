@@ -18,6 +18,10 @@
         "flow-php/doctrine-dbal-bulk": "self.version",
         "flow-php/etl": "self.version"
     },
+    "suggest": {
+        "ext-mysqli": "Required to derive a schema from a MySQL connection (Extractor::schema())",
+        "ext-pgsql": "Required to derive a schema from a PostgreSQL connection (Extractor::schema())"
+    },
     "autoload": {
         "psr-4": {
             "Flow\\": [

@@ -262,13 +262,13 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ->toArray();
 
         static::assertCount(5, $rows);
-        static::assertSame(
+        static::assertEquals(
             [
-                ['id' => 1, 'created_at' => $createdAt, 'name' => 'name_1'],
-                ['id' => 2, 'created_at' => $createdAt, 'name' => 'name_2'],
-                ['id' => 3, 'created_at' => $createdAt, 'name' => 'name_3'],
-                ['id' => 4, 'created_at' => $createdAt, 'name' => 'name_4'],
-                ['id' => 5, 'created_at' => $createdAt, 'name' => 'name_5'],
+                ['id' => 1, 'created_at' => new DateTimeImmutable($createdAt), 'name' => 'name_1'],
+                ['id' => 2, 'created_at' => new DateTimeImmutable($createdAt), 'name' => 'name_2'],
+                ['id' => 3, 'created_at' => new DateTimeImmutable($createdAt), 'name' => 'name_3'],
+                ['id' => 4, 'created_at' => new DateTimeImmutable($createdAt), 'name' => 'name_4'],
+                ['id' => 5, 'created_at' => new DateTimeImmutable($createdAt), 'name' => 'name_5'],
             ],
             $rows,
         );

@@ -55,14 +55,14 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
-                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
-                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
-                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
-                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
-                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
-                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
-                ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
+                ['id' => '1', 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => '2', 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => '3', 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => '4', 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => '5', 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => '6', 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => '7', 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => '8', 'name' => 'name_8', 'description' => 'description_8'],
             ],
             $data->toArray(),
         );
@@ -99,14 +99,14 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
-                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
-                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
-                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
-                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
-                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
-                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
-                ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
+                ['id' => '1', 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => '2', 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => '3', 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => '4', 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => '5', 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => '6', 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => '7', 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => '8', 'name' => 'name_8', 'description' => 'description_8'],
             ],
             $data->toArray(),
         );
@@ -342,16 +342,16 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['type' => 'group_01', 'COUNT(id)' => 1],
-                ['type' => 'group_02', 'COUNT(id)' => 1],
-                ['type' => 'group_03', 'COUNT(id)' => 1],
-                ['type' => 'group_04', 'COUNT(id)' => 1],
-                ['type' => 'group_05', 'COUNT(id)' => 1],
-                ['type' => 'group_06', 'COUNT(id)' => 1],
-                ['type' => 'group_07', 'COUNT(id)' => 1],
-                ['type' => 'group_08', 'COUNT(id)' => 1],
-                ['type' => 'group_09', 'COUNT(id)' => 1],
-                ['type' => 'group_10', 'COUNT(id)' => 1],
+                ['type' => 'group_01', 'COUNT(id)' => '1'],
+                ['type' => 'group_02', 'COUNT(id)' => '1'],
+                ['type' => 'group_03', 'COUNT(id)' => '1'],
+                ['type' => 'group_04', 'COUNT(id)' => '1'],
+                ['type' => 'group_05', 'COUNT(id)' => '1'],
+                ['type' => 'group_06', 'COUNT(id)' => '1'],
+                ['type' => 'group_07', 'COUNT(id)' => '1'],
+                ['type' => 'group_08', 'COUNT(id)' => '1'],
+                ['type' => 'group_09', 'COUNT(id)' => '1'],
+                ['type' => 'group_10', 'COUNT(id)' => '1'],
             ],
             $data->toArray(),
         );
@@ -385,13 +385,13 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
-                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
-                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
-                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
-                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
-                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
-                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => '1', 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => '2', 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => '3', 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => '4', 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => '5', 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => '6', 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => '7', 'name' => 'name_7', 'description' => 'description_7'],
             ],
             $data->toArray(),
         );

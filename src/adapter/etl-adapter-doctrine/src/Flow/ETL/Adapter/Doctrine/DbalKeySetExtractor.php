@@ -10,7 +10,6 @@ use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -40,6 +39,8 @@ final class DbalKeySetExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    private ?Schema $derived = null;
+
     public function __construct(
         private readonly Connection $connection,
         private readonly QueryBuilder $queryBuilder,
@@ -63,6 +64,7 @@ final class DbalKeySetExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
+        $schema = $this->schema();
         $totalFetched = 0;
         $lastRow = null;
         $encoder = new DbalEncoder();
@@ -147,7 +149,7 @@ final class DbalKeySetExtractor implements Extractor
                 $rawBatch[] = $row;
             }
 
-            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $this->schema);
+            $hydrated = $context->hydrator()->cast($encoder->decode($rawBatch), $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -171,11 +173,14 @@ final class DbalKeySetExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
-        }
-
-        return $this->schema;
+        // The base builder, never the page SQL: the key_<sha1> alias lives on a per-page clone.
+        return (
+            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
+                $this->connection,
+                $this->queryBuilder->getSQL(),
+                self::class,
+            ))
+        );
     }
 
     public function withKeyAliasSuffix(string $keyAliasSuffix): self

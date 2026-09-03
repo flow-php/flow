@@ -225,6 +225,67 @@ That happens for exactly two things:
 
 In both cases `->withSchema(...)` is the escape hatch, and it skips the probe.
 
+### Doctrine DBAL sources describe themselves, and keep `withSchema()`
+
+`from_dbal_query()`, `from_dbal_queries()`, `from_dbal_limit_offset()`, `from_dbal_limit_offset_qb()` and
+`from_dbal_key_set_qb()` derive their schema from a probe of the extractor's own SQL, memoised for the whole
+read, describing the *result* and never the catalog - so a view, an alias and a computed column describe
+correctly, and a query builder's paging is never part of what is described. `withSchema()` stays as an override
+that always wins and costs no query.
+
+How the probe runs depends on what the driver can answer:
+
+- **MySQL** prepares your SQL as written and reads the statement's own metadata. Nothing is executed.
+- **PostgreSQL** and **SQLite** run a zero-row query, `SELECT * FROM (<your sql>) flow_describe WHERE 1=0`.
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
+use function Flow\ETL\DSL\{data_frame, float_schema, int_schema, schema, to_output};
+
+// Derived: the column names come through DBAL, the column types from the driver's own metadata.
+data_frame()
+    ->read(from_dbal_query($connection, 'SELECT id, amount * 2 AS total FROM orders WHERE id > :min', ['min' => 10]))
+    ->write(to_output())
+    ->run();
+
+// Declared: withSchema() short-circuits the probe entirely.
+data_frame()
+    ->read(
+        from_dbal_query($connection, 'SELECT id, amount * 2 AS total FROM orders')
+            ->withSchema(schema(int_schema('id'), float_schema('total'))),
+    )
+    ->write(to_output())
+    ->run();
+```
+
+What each driver answers:
+
+- **PostgreSQL (`pgsql`)** and **MySQL (`mysqli`)** report real column types, mapped to Flow types; every derived
+  column is nullable. MySQL types are read off a prepared statement, so its type probe executes nothing.
+- **SQLite (`sqlite3`, `pdo_sqlite`)** has no per-column result types, so every column describes as nullable
+  `string` and the read casts its values to match - the same model DuckDB uses for `sqlite_query()`.
+- A **parameterised query describes normally**: DBAL's `:name` and `?` placeholders are rewritten to the driver's own
+  dialect and the probe binds `null` at every position (an empty list for an array-typed parameter), so it never
+  sees the values you passed.
+- **Duplicate output column names** - `SELECT * FROM a JOIN b ON a.id = b.id` where both tables have `id` - collapse
+  to the last one on PostgreSQL and MySQL, exactly as the row itself collapses them. On SQLite the zero-row probe
+  makes the driver rename the second to `id:1`, so the schema carries a column the rows do not; alias the columns
+  apart, or declare the schema, when a SQLite query selects a name twice.
+
+A query that cannot be described **does not read at all**; it throws `SchemaNotDerivableException` with the reason.
+That happens for exactly three things:
+
+1. a query shape that cannot be wrapped in a zero-row `SELECT` - multi-statement, a data-modifying CTE, or
+   `INSERT ... RETURNING`;
+2. a driver this adapter has no result-type probe for - `pdo_pgsql` and `pdo_mysql` hand out a plain `PDO`, which
+   has no arm yet, so they are refused by name; use the native `pgsql://` or `mysqli://` DSN, or `withSchema()`;
+3. a column whose driver type Flow has no type for - on PostgreSQL that includes arrays, `money`, `inet`, ranges and
+   `interval` on this route (the PostgreSQL adapter above maps more of them); on MySQL `BIT` and `GEOMETRY`.
+
+In all three cases `->withSchema(...)` is the escape hatch, and it skips the probe.
+
 ## Automatic Casting
 
 `DataFrame::autoCast()` detects every value in the pipeline: strings are narrowed to `null`, `boolean`, `integer`,

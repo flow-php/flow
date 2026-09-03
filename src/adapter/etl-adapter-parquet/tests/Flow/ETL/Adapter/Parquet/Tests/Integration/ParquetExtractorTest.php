@@ -233,8 +233,7 @@ final class ParquetExtractorTest extends FlowTestCase
         foreach (from_parquet(
             path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
             filesystem: $filesystem,
-        )->extract(flow_context(config())) as $rows) {
-            continue;
+        )->extract(flow_context(config())) as $_rows) {
         }
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
@@ -246,8 +245,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         foreach (from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'), filesystem: $filesystem)
             ->withOffset(2500)
-            ->extract(flow_context(config())) as $rows) {
-            continue;
+            ->extract(flow_context(config())) as $_rows) {
         }
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());

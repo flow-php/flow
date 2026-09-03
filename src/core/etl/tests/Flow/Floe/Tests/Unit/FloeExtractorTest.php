@@ -368,8 +368,7 @@ final class FloeExtractorTest extends TestCase
 
         foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
             flow_context(config()),
-        ) as $rows) {
-            continue;
+        ) as $_rows) {
         }
 
         static::assertSame($counting->readFromCalls, $counting->closedStreams());
@@ -382,8 +381,7 @@ final class FloeExtractorTest extends TestCase
 
         foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)
             ->withOffset(1)
-            ->extract(flow_context(config())) as $rows) {
-            continue;
+            ->extract(flow_context(config())) as $_rows) {
         }
 
         static::assertSame($counting->readFromCalls, $counting->closedStreams());
