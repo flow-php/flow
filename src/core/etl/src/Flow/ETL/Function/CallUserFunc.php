@@ -68,8 +68,7 @@ final class CallUserFunc implements ScalarFunction
     }
 
     /**
-     * An opaque callable can always answer null, so the declared type has to admit it - the same
-     * rule Spark applies to an untyped UDF.
+     * An opaque callable can always answer null, so the declared type has to admit it
      *
      * @return Type<mixed>
      */

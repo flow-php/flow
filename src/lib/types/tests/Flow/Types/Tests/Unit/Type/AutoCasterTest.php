@@ -54,4 +54,11 @@ final class AutoCasterTest extends TestCase
     {
         static::assertEquals(new DateTimeZone('UTC'), (new AutoCaster())->cast('UTC'));
     }
+
+    public function test_digit_strings_cast_to_integer_not_date(): void
+    {
+        static::assertSame(20240101, (new AutoCaster())->cast('20240101'));
+        static::assertSame(19991231, (new AutoCaster())->cast('19991231'));
+        static::assertSame(1012024, (new AutoCaster())->cast('1012024'));
+    }
 }

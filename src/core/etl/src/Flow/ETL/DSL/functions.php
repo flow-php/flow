@@ -194,6 +194,7 @@ use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPFormatter\TypeFormatter;
 use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\SortingStrategy;
@@ -1715,6 +1716,12 @@ function definition_from_type(
         // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function infer_schema(): SchemaInferenceBuilder
+{
+    return new SchemaInferenceBuilder();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]

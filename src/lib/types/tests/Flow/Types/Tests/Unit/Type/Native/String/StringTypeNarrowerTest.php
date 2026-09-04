@@ -56,6 +56,10 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_datetime(), $narrower->narrow('Thursday, 02-Jun-22 16:58:35 UTC'));
         static::assertEquals(type_datetime(), $narrower->narrow('Thu, 02 Jun 22 16:58:35 +0000'));
         static::assertEquals(type_datetime(), $narrower->narrow('Thu, 02 Jun 2022 16:58:35 +0000'));
+        static::assertEquals(type_string(), $narrower->narrow('2024-01'));
+        static::assertEquals(type_date(), $narrower->narrow('12/31/2024'));
+        static::assertEquals(type_date(), $narrower->narrow('2024-01-01'));
+        static::assertEquals(type_datetime(), $narrower->narrow('2024-01-01 10:00'));
     }
 
     public function test_detecting_float(): void
@@ -92,6 +96,9 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_float(), $narrower->narrow('1.0'));
         static::assertEquals(type_integer(), $narrower->narrow('112312312'));
         static::assertEquals(type_string(), $narrower->narrow('11_2312_312'));
+        static::assertEquals(type_integer(), $narrower->narrow('20240101'));
+        static::assertEquals(type_integer(), $narrower->narrow('19991231'));
+        static::assertEquals(type_integer(), $narrower->narrow('1012024'));
     }
 
     public function test_detecting_json(): void
@@ -155,5 +162,39 @@ final class StringTypeNarrowerTest extends TestCase
         $narrower = new StringTypeNarrower();
         static::assertEquals(type_xml(), $narrower->narrow('<foo>bar</foo>'));
         static::assertEquals(type_string(), $narrower->narrow('not xml'));
+        static::assertEquals(type_string(), $narrower->narrow('<unclosed'));
+    }
+
+    public function test_a_non_string_value_is_a_string_column(): void
+    {
+        $narrower = new StringTypeNarrower();
+
+        static::assertEquals(type_string(), $narrower->narrow(1));
+        static::assertEquals(type_string(), $narrower->narrow(null));
+        static::assertEquals(type_string(), $narrower->narrow([1, 2]));
+    }
+
+    public function test_a_rung_outside_the_emitted_types_is_skipped(): void
+    {
+        $narrower = new StringTypeNarrower([type_integer(), type_string()]);
+        static::assertEquals(type_string(), $narrower->narrow('<a><b>1</b></a>'));
+        static::assertEquals(type_string(), $narrower->narrow('<div>x</div>'));
+        static::assertEquals(
+            type_string(),
+            $narrower->narrow(
+                '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            ),
+        );
+        static::assertEquals(type_xml(), (new StringTypeNarrower())->narrow('<a><b>1</b></a>'));
+    }
+
+    public function test_time_zone_identifiers_are_matched_after_the_cache_is_warm(): void
+    {
+        foreach ([new StringTypeNarrower(), new StringTypeNarrower()] as $narrower) {
+            static::assertEquals(type_time_zone(), $narrower->narrow('Europe/Warsaw'));
+            static::assertEquals(type_time_zone(), $narrower->narrow('UTC'));
+            static::assertEquals(type_time_zone(), $narrower->narrow('+02:00'));
+            static::assertEquals(type_string(), $narrower->narrow('Europe/Nowhere'));
+        }
     }
 }

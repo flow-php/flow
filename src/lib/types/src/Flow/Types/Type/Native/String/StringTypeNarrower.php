@@ -13,8 +13,8 @@ use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 
-use function checkdate;
-use function date_parse;
+use function array_fill_keys;
+use function array_key_exists;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -28,7 +28,6 @@ use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function in_array;
-use function is_array;
 use function is_numeric;
 use function is_string;
 use function libxml_clear_errors;
@@ -41,6 +40,48 @@ use function trim;
 
 final class StringTypeNarrower implements TypeNarrower
 {
+    /**
+     * DateTimeZone::listIdentifiers() is 419 entries and was rebuilt on every cell that reached the rung.
+     * Static because AutoCaster::castToString() constructs a narrower per value.
+     *
+     * @var null|array<string, true>
+     */
+    private static ?array $timeZoneIdentifiers = null;
+
+    /**
+     * @var null|array<class-string<Type<mixed>>, true>
+     */
+    private readonly ?array $emits;
+
+    /**
+     * @param null|list<Type<mixed>> $emits - the types this narrower may return; null runs every rung.
+     *                                        A rung whose type is not listed never evaluates its predicate.
+     */
+    public function __construct(?array $emits = null)
+    {
+        if ($emits === null) {
+            $this->emits = null;
+
+            return;
+        }
+
+        $classes = [];
+
+        foreach ($emits as $type) {
+            $classes[$type::class] = true;
+        }
+
+        $this->emits = $classes;
+    }
+
+    /**
+     * @param Type<mixed> $type
+     */
+    public function emitsType(Type $type): bool
+    {
+        return $this->emits === null || array_key_exists($type::class, $this->emits);
+    }
+
     /**
      * @return Type<mixed>
      */
@@ -56,18 +97,24 @@ final class StringTypeNarrower implements TypeNarrower
             return type_string();
         }
 
+        // a rung that cannot produce a candidate is skipped, so its predicate never runs - that is where
+        // all-strings mode gets its speed, and why isXML() no longer builds a DOMDocument per cell
+        $temporal = $this->emitsType(type_datetime()) || $this->emitsType(type_date())
+            ? StringTemporalParts::from($value)
+            : new StringTemporalParts(false, false, false);
+
         return match (true) {
             $this->isNull($value) => type_null(),
-            $this->isJson($value) => type_json(),
-            $this->isUuid($value) => type_uuid(),
-            $this->isHTML($value) => type_html(),
-            $this->isXML($value) => type_xml(),
-            $this->isDateTime($value) => type_datetime(),
-            $this->isDate($value) => type_date(),
-            $this->isBoolean($value) => type_boolean(),
-            $this->isFloat($value) => type_float(),
-            $this->isInteger($value) => type_integer(),
-            $this->isTimeZone($value) => type_time_zone(),
+            $this->emitsType(type_json()) && $this->isJson($value) => type_json(),
+            $this->emitsType(type_uuid()) && $this->isUuid($value) => type_uuid(),
+            $this->emitsType(type_html()) && $this->isHTML($value) => type_html(),
+            $this->emitsType(type_xml()) && $this->isXML($value) => type_xml(),
+            $this->emitsType(type_float()) && $this->isFloat($value) => type_float(),
+            $this->emitsType(type_integer()) && $this->isInteger($value) => type_integer(),
+            $this->emitsType(type_datetime()) && $temporal->isDateTime() => type_datetime(),
+            $this->emitsType(type_date()) && $temporal->isDate() => type_date(),
+            $this->emitsType(type_boolean()) && $this->isBoolean($value) => type_boolean(),
+            $this->emitsType(type_time_zone()) && $this->isTimeZone($value) => type_time_zone(),
             default => type_string(),
         };
     }
@@ -78,103 +125,6 @@ final class StringTypeNarrower implements TypeNarrower
     private function isBoolean(string $value): bool
     {
         return in_array(strtolower($value), ['true', 'false'], true);
-    }
-
-    /**
-     * @param non-empty-string $value
-     */
-    private function isDate(string $value): bool
-    {
-        $dateParts = date_parse($value);
-
-        if (type_integer()->assert($dateParts['error_count']) > 0) {
-            return false;
-        }
-
-        if ($dateParts['year'] === false) {
-            return false;
-        }
-
-        if ($dateParts['month'] === false) {
-            return false;
-        }
-
-        if ($dateParts['day'] === false) {
-            return false;
-        }
-
-        if (!checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
-            return false;
-        }
-
-        if (($dateParts['hour'] ?? false) !== false) {
-            return false;
-        }
-
-        if (($dateParts['minute'] ?? false) !== false) {
-            return false;
-        }
-
-        if (($dateParts['second'] ?? false) !== false) {
-            return false;
-        }
-
-        if (($dateParts['fraction'] ?? false) !== false) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @param non-empty-string $value
-     */
-    private function isDateTime(string $value): bool
-    {
-        $dateParts = date_parse($value);
-
-        if (type_integer()->assert($dateParts['error_count']) > 0) {
-            return false;
-        }
-
-        if ($dateParts['year'] === false) {
-            return false;
-        }
-
-        if ($dateParts['month'] === false) {
-            return false;
-        }
-
-        if ($dateParts['day'] === false) {
-            return false;
-        }
-
-        if (!checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
-            return false;
-        }
-
-        $hasDirectTime =
-            ($dateParts['hour'] ?? false) !== false
-            || ($dateParts['minute'] ?? false) !== false
-            || ($dateParts['second'] ?? false) !== false
-            || ($dateParts['fraction'] ?? false) !== false;
-
-        if ($hasDirectTime) {
-            return true;
-        }
-
-        if (is_array($dateParts['relative'] ?? false)) {
-            // @mago-ignore analysis:mixed-assignment
-            $relative = $dateParts['relative'];
-
-            return (
-                ($relative['hour'] ?? 0) !== 0
-                || ($relative['minute'] ?? 0) !== 0
-                || ($relative['second'] ?? 0) !== 0
-            );
-        }
-
-        return false;
     }
 
     /**
@@ -239,7 +189,9 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isTimeZone(string $value): bool
     {
-        if (in_array($value, DateTimeZone::listIdentifiers(), true)) {
+        self::$timeZoneIdentifiers ??= array_fill_keys(DateTimeZone::listIdentifiers(), true);
+
+        if (array_key_exists($value, self::$timeZoneIdentifiers)) {
             return true;
         }
 
