@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Exception\CastingException;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -54,7 +54,8 @@ final class AdaptiveRowHydratorTest extends FlowTestCase
 
     public function test_cast_throws_on_missing_required_structure_element(): void
     {
-        $this->expectException(CastingException::class);
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "data" (row 0)');
 
         (new AdaptiveRowHydrator())->cast([new RawRowValues(['data' => [
             'id' => 1,

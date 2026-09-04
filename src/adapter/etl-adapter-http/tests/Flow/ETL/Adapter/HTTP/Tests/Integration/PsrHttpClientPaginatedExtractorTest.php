@@ -6,8 +6,8 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Exception\CastingException;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -391,7 +391,8 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
         $client = new Client(new Psr17Factory());
         $client->addResponse(PaginationMother::jsonResponse(['login' => 'flow-php']));
 
-        $this->expectException(CastingException::class);
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "response_body" (row 0)');
 
         iterator_to_array(from_http_paginated(
             $client,

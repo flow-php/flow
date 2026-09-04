@@ -344,15 +344,15 @@ pub fn call_handle_on(
     Ok(retval)
 }
 
-/// [`call_handle`] that surfaces a PHP exception thrown by the callee as the
-/// ORIGINAL exception object instead of wrapping it in an `ExtensionException` -
-/// the cast paths either propagate it verbatim (`Type::cast` fallback) or
-/// discard it and bail (mirroring the `catch (Throwable)` in the PHP casts).
-pub fn call_handle_transparent(
+/// [`call_handle`] that hands a PHP exception thrown by the callee back to the
+/// caller as the exception OBJECT, so the caller can surface it verbatim or
+/// replace it with one of its own. Taking it also clears the pending exception,
+/// leaving the engine ready for the next call.
+pub fn call_handle_catching(
     func: &Function,
     object: Option<&ZendObject>,
     args: &mut [Zval],
-) -> Result<Zval, PhpException> {
+) -> Result<Zval, ZBox<ZendObject>> {
     let mut retval = Zval::new();
 
     let (object_ptr, called_scope) = match object {
@@ -372,14 +372,32 @@ pub fn call_handle_transparent(
         );
     }
 
-    if let Some(mut exception) = ExecutorGlobals::take_exception() {
-        let mut zv = Zval::new();
-        zv.set_object(&mut exception);
-
-        return Err(PhpException::default(String::new()).with_object(zv));
+    match ExecutorGlobals::take_exception() {
+        Some(exception) => Err(exception),
+        None => Ok(retval),
     }
+}
 
-    Ok(retval)
+/// Surfaces a PHP exception object as ITSELF rather than wrapped in an
+/// `ExtensionException`, so the class and message PHP sees are the ones thrown.
+pub fn transparent_exception(exception: &mut ZendObject) -> PhpException {
+    let mut zv = Zval::new();
+    zv.set_object(exception);
+
+    PhpException::default(String::new()).with_object(zv)
+}
+
+/// [`call_handle_catching`] with the exception object already re-raised as
+/// itself, ready to propagate via `?` or to discard with `let Ok(x) = .. else`.
+/// Callers that only need the bail branch can use [`call_handle_catching`]
+/// directly instead.
+pub fn call_handle_transparent(
+    func: &Function,
+    object: Option<&ZendObject>,
+    args: &mut [Zval],
+) -> Result<Zval, PhpException> {
+    call_handle_catching(func, object, args)
+        .map_err(|mut exception| transparent_exception(&mut exception))
 }
 
 /// Calls a pre-resolved function handle. Argument zvals stay caller-owned

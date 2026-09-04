@@ -15,12 +15,14 @@ use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Throwable;
 
@@ -472,6 +474,23 @@ final class NativeRowHydratorTest extends FlowTestCase
                 'name' => structure_element('name', type_string(), optional: true),
             ]))),
             [new RawRowValues(['data' => ['id' => 1, 'name' => null]])],
+        ];
+
+        // the refusal is placed at the batch position, so a constant row index would diverge here
+        yield 'non numeric string in the second row of an integer column' => [
+            schema(int_schema('id')),
+            [new RawRowValues(['id' => '1']), new RawRowValues(['id' => 'x'])],
+        ];
+
+        // an exception the types package did not raise is not a refusal, so neither engine wraps it
+        yield 'a type raising an exception outside the types package' => [
+            schema(
+                new UnionDefinition('a', type_union(
+                    new ThrowingType(new LogicException('stub type refuses everything')),
+                    type_string(),
+                )),
+            ),
+            [new RawRowValues(['a' => [1, 2]])],
         ];
     }
 

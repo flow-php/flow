@@ -340,10 +340,16 @@ pub fn dehydrate_rows(
 }
 
 /// The `Row`/`Rows` class entries used to assemble a hydrated `Rows` through
-/// the canonical PHP constructors.
+/// the canonical PHP constructors, plus the handles the cast path re-raises a
+/// refused value through.
 pub struct AssemblyClasses {
     pub row_ce: &'static ClassEntry,
     pub rows_ce: &'static ClassEntry,
+    pub schema_mismatch_ce: &'static ClassEntry,
+    /// the base `PhpRowHydrator`'s guard catches, so a refusal is recognised on
+    /// both paths by the same rule and anything else stays the caller's exception
+    pub types_exception_ce: &'static ClassEntry,
+    pub value_does_not_match: &'static Function,
 }
 
 impl AssemblyClasses {
@@ -351,6 +357,12 @@ impl AssemblyClasses {
         Ok(Self {
             row_ce: find_class("Flow\\ETL\\Row")?,
             rows_ce: find_class("Flow\\ETL\\Rows")?,
+            schema_mismatch_ce: find_class("Flow\\ETL\\Exception\\SchemaMismatchException")?,
+            types_exception_ce: find_class("Flow\\Types\\Exception\\Exception")?,
+            value_does_not_match: ce_method_ref(
+                find_class("Flow\\ETL\\Exception\\ColumnMismatchException")?,
+                "valueDoesNotMatch",
+            )?,
         })
     }
 }

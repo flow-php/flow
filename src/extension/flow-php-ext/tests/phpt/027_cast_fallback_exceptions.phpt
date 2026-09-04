@@ -21,7 +21,10 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_positive_integer;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
+use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
@@ -54,6 +57,17 @@ $throwing = [
     'positive int list negative' => [
         schema(list_schema('l', type_list(type_positive_integer()))),
         [new RawRowValues(['l' => [-3]])],
+    ],
+    'row index is 1' => [
+        schema(int_schema('i')),
+        [new RawRowValues(['i' => '1']), new RawRowValues(['i' => 'x'])],
+    ],
+    'exception outside the types package' => [
+        schema(new UnionDefinition('a', type_union(
+            new ThrowingType(new LogicException('stub type refuses everything')),
+            type_string(),
+        ))),
+        [new RawRowValues(['a' => [1, 2]])],
     ],
 ];
 
@@ -103,3 +117,5 @@ string map int keys         exception:match aborted:yes
 list bad keys               exception:match aborted:yes
 positive int list string    exception:match aborted:yes
 positive int list negative  exception:match aborted:yes
+row index is 1              exception:match aborted:yes
+exception outside the types package exception:match aborted:yes

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\HydratedBatch;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use LogicException;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -44,6 +46,66 @@ final class HydratedBatchTest extends FlowTestCase
                 )
                 ->first()
                 ->names(),
+        );
+    }
+
+    public function test_a_refused_value_in_the_first_row_reports_row_zero(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'Rows do not match their schema: column "i" (row 0): could not convert \'abc\' (string) to integer',
+        );
+
+        (new HydratedBatch())->of(
+            [new RawRowValues(['i' => 'abc'])],
+            schema(int_schema('i')),
+            static fn(mixed $value, Definition $definition): mixed => $definition->type()->cast($value),
+            false,
+        );
+    }
+
+    public function test_a_value_the_identity_prepare_lets_through_is_still_refused_by_the_rows_gate(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'Rows do not match their schema: column "i" (row 1): could not convert \'abc\' (string) to integer',
+        );
+
+        (new HydratedBatch())->of(
+            [new RawRowValues(['i' => 1]), new RawRowValues(['i' => 'abc'])],
+            schema(int_schema('i')),
+            static fn(mixed $value, Definition $definition): mixed => $value,
+            false,
+        );
+    }
+
+    public function test_a_value_the_prepare_callback_refuses_is_reported_with_its_column_and_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'Rows do not match their schema: column "i" (row 1): could not convert \'n/a\' (string) to integer',
+        );
+
+        (new HydratedBatch())->of(
+            [new RawRowValues(['i' => 1]), new RawRowValues(['i' => 'n/a']), new RawRowValues(['i' => 3])],
+            schema(int_schema('i')),
+            static fn(mixed $value, Definition $definition): mixed => $definition->type()->cast($value),
+            false,
+        );
+    }
+
+    public function test_a_value_the_prepare_callback_refuses_with_a_non_types_exception_is_not_wrapped(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('not a casting failure');
+
+        (new HydratedBatch())->of(
+            [new RawRowValues(['i' => 1])],
+            schema(int_schema('i')),
+            static function (mixed $value, Definition $definition): mixed {
+                throw new LogicException('not a casting failure');
+            },
+            false,
         );
     }
 

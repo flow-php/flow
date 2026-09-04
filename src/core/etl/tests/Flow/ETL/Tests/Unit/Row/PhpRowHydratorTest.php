@@ -10,8 +10,9 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\TypedRowValues;
+use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Exception\CastingException;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
@@ -19,6 +20,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Uuid;
+use LogicException;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -35,6 +37,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
 use function serialize;
 
 final class PhpRowHydratorTest extends FlowTestCase
@@ -52,9 +55,21 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertSame(['id' => 1, 'name' => null], $rows->first()->toArray());
     }
 
+    public function test_cast_does_not_wrap_an_exception_the_types_package_did_not_raise(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('stub type refuses everything');
+
+        (new PhpRowHydrator())->cast([new RawRowValues(['a' => [
+            1,
+            2,
+        ]])], schema(new UnionDefinition('a', type_union(new ThrowingType(new LogicException('stub type refuses everything')), type_string()))));
+    }
+
     public function test_cast_throws_on_missing_required_structure_element(): void
     {
-        $this->expectException(CastingException::class);
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "data" (row 0)');
 
         (new PhpRowHydrator())->cast([new RawRowValues(['data' => [
             'id' => 1,

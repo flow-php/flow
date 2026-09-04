@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Exception\CastingException;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -135,7 +135,8 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
         $client = new Client($factory);
         $client->addResponse(new Response(200, ['Content-Type' => 'application/json'], '{}'));
 
-        $this->expectException(CastingException::class);
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "response_body" (row 0)');
 
         from_static_http_requests(
             $client,
@@ -157,7 +158,8 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             'login' => 'norberttech',
         ], JSON_THROW_ON_ERROR)));
 
-        $this->expectException(CastingException::class);
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('Rows do not match their schema: column "response_body" (row 0)');
 
         from_static_http_requests(
             $client,

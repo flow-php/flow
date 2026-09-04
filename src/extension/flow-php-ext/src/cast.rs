@@ -7,9 +7,9 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::Function;
 
 use crate::ctx::{
-    array_key_index, call_handle, call_handle_on, call_handle_transparent, ce_method_ref,
-    construct_with_zvals, ht_find_key, ht_insert, ht_insert_key, write_slot, zval_long, zval_str,
-    Ctx, HtKey,
+    array_key_index, call_handle, call_handle_catching, call_handle_on, call_handle_transparent,
+    ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key,
+    transparent_exception, write_slot, zval_long, zval_str, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
@@ -747,7 +747,7 @@ pub fn cast_rows(
     let mut rows_args: Vec<Zval> = Vec::with_capacity(batch_ht.len() + 1);
     rows_args.push(fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?);
 
-    ht_for_each(batch_ht, |_, _, rv_zv| {
+    ht_for_each(batch_ht, |_, row_index, rv_zv| {
         let rv = expect_object(rv_zv, "a RawRowValues")?;
         let values_ht = read_slot(rv, raw_class.values_slot)
             .array()
@@ -770,11 +770,35 @@ pub fn cast_rows(
                             .object()
                             .ok_or_else(|| ext_exception("flow_php expected a Type object"))?;
 
-                        call_handle_transparent(
+                        match call_handle_catching(
                             cast_column.cast_fn,
                             Some(type_obj),
                             &mut [value.shallow_clone()],
-                        )?
+                        ) {
+                            Ok(casted) => casted,
+                            Err(mut refusal) => {
+                                if !refusal.instance_of(assembly.types_exception_ce) {
+                                    return Err(transparent_exception(&mut refusal));
+                                }
+
+                                // The declared type refused the value. Its own exception is dropped
+                                // rather than chained, exactly as HydratedBatch's guard drops it -
+                                // 027 compares the two hydrators' class and message byte for byte.
+                                let cause = call_handle_transparent(
+                                    assembly.value_does_not_match,
+                                    None,
+                                    &mut [column.base_def.shallow_clone(), value.shallow_clone()],
+                                )?;
+
+                                let mut wrapped = construct_with_zvals(
+                                    assembly.schema_mismatch_ce,
+                                    &mut [zval_long(row_index as i64), cause],
+                                    "a SchemaMismatchException",
+                                )?;
+
+                                return Err(transparent_exception(&mut wrapped));
+                            }
+                        }
                     }
                 },
             };
