@@ -122,4 +122,41 @@ final class FileColumnsTest extends FlowTestCase
                 ->fill(['name' => 'Norbert']),
         );
     }
+
+    public function test_without_tail_ignores_names_the_schema_does_not_carry(): void
+    {
+        static::assertTrue(schema(int_schema('id'), str_schema('name'))->isSame(FileColumnsContext::discovering(names: [
+            'group' => false,
+        ])->withoutTail(schema(int_schema('id'), str_schema('name')))));
+    }
+
+    public function test_without_tail_is_an_identity_copy_when_there_is_no_tail(): void
+    {
+        static::assertTrue(schema(int_schema('id'), str_schema('name'))->isSame(FileColumnsContext::discovering(
+            names: [],
+            metadataColumns: false,
+        )->withoutTail(schema(int_schema('id'), str_schema('name')))));
+    }
+
+    public function test_without_tail_removes_a_partition_named_body_column(): void
+    {
+        static::assertTrue(
+            schema(int_schema('id'))
+                ->isSame(FileColumnsContext::discovering(names: ['group' => false])->withoutTail(schema(
+                    str_schema('group'),
+                    int_schema('id'),
+                ))),
+        );
+    }
+
+    public function test_without_tail_removes_the_metadata_column(): void
+    {
+        static::assertTrue(
+            schema(str_schema('name'))
+                ->isSame(FileColumnsContext::discovering(names: [], metadataColumns: true)->withoutTail(schema(
+                    str_schema('_input_file_uri'),
+                    str_schema('name'),
+                ))),
+        );
+    }
 }

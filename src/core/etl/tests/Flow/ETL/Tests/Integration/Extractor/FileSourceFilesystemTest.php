@@ -198,7 +198,7 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
             ->write(to_array($paired))
             ->run();
 
-        static::assertSame(['1', '2'], array_column($paired, 'id'));
+        static::assertSame([1, 2], array_column($paired, 'id'));
 
         $unpaired = [];
         df()
@@ -237,8 +237,12 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
             ->write(to_array($rows))
             ->run();
 
-        static::assertSame(['1', '2'], array_column($rows, 'id'));
-        static::assertSame(1, $counting->readFromCalls, 'the source read through the filesystem it was given');
+        static::assertSame([1, 2], array_column($rows, 'id'));
+        static::assertSame(
+            3,
+            $counting->readFromCalls,
+            'header() + the sample pass + the read, all through the filesystem it was given',
+        );
     }
 
     public function test_the_files_source_lists_through_the_given_filesystem(): void

@@ -176,19 +176,40 @@ Options:
 
 Example: 
 
+CSV is inferred, so `--auto-cast` is no longer needed to get types:
+
+```shell
+$ flow schema orders.csv --table
++------------+----------+----------+----------+
+|       name |     type | nullable | metadata |
++------------+----------+----------+----------+
+|   order_id |     uuid |     true |       [] |
+| created_at | datetime |     true |       [] |
+| updated_at | datetime |     true |       [] |
+|   discount |    float |     true |       [] |
+|    address |     json |     true |       [] |
+|      notes |     json |     true |       [] |
+|      items |     json |     true |       [] |
++------------+----------+----------+----------+
+7 rows
+```
+
+Every inferred column is nullable - inference never claims a column cannot be null. `--auto-cast` still runs on top
+and narrows further, per value, at the cost of dropping that guarantee:
+
 ```shell
 $ flow schema orders.csv --table --auto-cast
-+------------+----------+----------+-------------+----------+
-|       name |     type | nullable | scalar_type | metadata |
-+------------+----------+----------+-------------+----------+
-|   order_id |     uuid |    false |             |       [] |
-| created_at | datetime |    false |             |       [] |
-| updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |      string |       [] |
-|    address |     json |    false |             |       [] |
-|      notes |     json |    false |             |       [] |
-|      items |     json |    false |             |       [] |
-+------------+----------+----------+-------------+----------+
++------------+--------------+----------+----------+
+|       name |         type | nullable | metadata |
++------------+--------------+----------+----------+
+|   order_id |         uuid |    false |       [] |
+| created_at |     datetime |    false |       [] |
+| updated_at |     datetime |    false |       [] |
+|   discount |        float |     true |       [] |
+|    address | structure_v2 |    false |       [] |
+|      notes |         list |    false |       [] |
+|      items |         list |    false |       [] |
++------------+--------------+----------+----------+
 7 rows
 ```
 

@@ -53,8 +53,18 @@ that `json` throws away, and adapters can map them onto native nested types.
 
 ## Schema Inference
 
-When no schema is declared, every value gets its type detected as rows are created, and each batch carries its own
-schema. `DataFrame::schema()` runs the pipeline and merges the per-batch schemas into one; `printSchema()` prints them.
+Sources fall into two groups when no schema is declared.
+
+**Sources that infer one.** CSV samples the file before the first row is read, decides one schema, and every batch it
+yields carries exactly that schema - `from_csv(...)->schema()` answers without running the pipeline. Tune the sample
+with `->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`.
+`types()` restricts which types inference may produce (`allStrings()` is sugar for `types(type_string())`), and
+`unionByName()` reads sources with differing column sets as one wider schema instead of rejecting them. Every
+inferred column is nullable, and where narrowing is not safe the column floors to `string`.
+
+**Sources that do not.** For the rest, every value still gets its type detected as rows are created and each batch
+carries its own schema; `DataFrame::schema()` runs the pipeline and merges the per-batch schemas into one.
+`printSchema()` prints either.
 
 ```php
 <?php
@@ -290,16 +300,17 @@ In all three cases `->withSchema(...)` is the escape hatch, and it skips the pro
 
 `DataFrame::autoCast()` detects every value in the pipeline: strings are narrowed to `null`, `boolean`, `integer`,
 `float`, `datetime`, `date`, `uuid`, `json` or `xml` (and `html` on PHP 8.4+) when they parse as one, and arrays
-mixing integers with floats are unified to floats. Use it when the source has no schema to declare - typically text formats:
+mixing integers with floats are unified to floats. Use it when the source has no schema to declare and does not infer
+one either - CSV does infer one, so it no longer needs `autoCast()` to be typed:
 
 ```php
 <?php
 
-use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
 
 data_frame()
-    ->read(from_csv(__DIR__ . '/orders.csv'))
+    ->read(from_array([['id' => '1', 'customer' => 'Norbert', 'total' => '10.5', 'paid' => 'true']]))
     ->autoCast()
     ->printSchema();
 

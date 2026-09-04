@@ -140,6 +140,17 @@ final class CSVEncoder implements Encoder
     }
 
     /**
+     * Null before the first decoded line: a 0-byte source resolves no header, which is not the same as a
+     * header of zero columns.
+     *
+     * @return null|list<string>
+     */
+    public function headers(): ?array
+    {
+        return $this->headers;
+    }
+
+    /**
      * @return list<string>
      */
     private function generateAutoHeaders(int $count): array

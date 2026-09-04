@@ -159,4 +159,33 @@ final class CSVEncoderTest extends FlowTestCase
             ]),
         );
     }
+
+    public function test_headers_are_null_before_any_line_is_decoded(): void
+    {
+        static::assertNull((new CSVEncoder())->headers());
+    }
+
+    public function test_the_generated_headers_are_exposed_without_a_header_line(): void
+    {
+        $encoder = new CSVEncoder(withHeader: false);
+        $encoder->decode(['1,a']);
+
+        static::assertSame(['e00', 'e01'], $encoder->headers());
+    }
+
+    public function test_the_resolved_headers_are_exposed(): void
+    {
+        $encoder = new CSVEncoder();
+
+        static::assertSame([], $encoder->decode(['id,name']));
+        static::assertSame(['id', 'name'], $encoder->headers());
+    }
+
+    public function test_an_empty_header_cell_is_named_by_position(): void
+    {
+        $encoder = new CSVEncoder();
+        $encoder->decode([',name']);
+
+        static::assertSame(['e00', 'name'], $encoder->headers());
+    }
 }

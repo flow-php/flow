@@ -10,6 +10,7 @@ use Flow\ETL\Schema;
 use Throwable;
 
 use function array_key_exists;
+use function array_values;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
@@ -60,7 +61,6 @@ final readonly class FileColumns
                 continue;
             }
 
-            // R13: cast() alone reports neither the file nor the column, and this runs inside a listing walk
             try {
                 $values[$name] = $definition->type()->cast($value);
             } catch (Throwable $e) {
@@ -84,5 +84,21 @@ final readonly class FileColumns
             $this->partitionNames,
             $values,
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function tail(): array
+    {
+        return array_values($this->declare(new Schema())->references()->names());
+    }
+
+    /**
+     * So a source carrying a partition-named column in its body does not get it typed from the data.
+     */
+    public function withoutTail(Schema $inferred): Schema
+    {
+        return $inferred->gracefulRemove(...$this->tail());
     }
 }

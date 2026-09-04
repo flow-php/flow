@@ -22,7 +22,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            [{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"string"},"nullable":false,"metadata":[]}]
+            [{"ref":"order_id","type":{"type":"uuid"},"nullable":true,"metadata":[]},{"ref":"created_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"updated_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"discount","type":{"type":"float"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":true,"metadata":[]}]
 
             OUTPUT, $tester->getDisplay());
     }
@@ -37,13 +37,13 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
-            |-- order_id: string
-            |-- created_at: string
-            |-- updated_at: string
-            |-- discount: ?string
-            |-- address: string
-            |-- notes: string
-            |-- items: string
+            |-- order_id: ?uuid
+            |-- created_at: ?datetime
+            |-- updated_at: ?datetime
+            |-- discount: ?float
+            |-- address: ?json
+            |-- notes: ?json
+            |-- items: ?json
 
             OUTPUT, $tester->getDisplay());
     }
@@ -79,13 +79,13 @@ final class FileSchemaCommandTest extends TestCase
         // Schema should be the same regardless of offset since schema is inferred from structure
         self::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
-            |-- order_id: string
-            |-- created_at: string
-            |-- updated_at: string
-            |-- discount: ?string
-            |-- address: string
-            |-- notes: string
-            |-- items: string
+            |-- order_id: ?uuid
+            |-- created_at: ?datetime
+            |-- updated_at: ?datetime
+            |-- discount: ?float
+            |-- address: ?json
+            |-- notes: ?json
+            |-- items: ?json
 
             OUTPUT, $tester->getDisplay());
     }
@@ -105,17 +105,17 @@ final class FileSchemaCommandTest extends TestCase
 
         // Schema should be the same even with offset and limit
         self::assertCommandOutputEquals(<<<'OUTPUT'
-            +------------+--------+----------+----------+
-            |       name |   type | nullable | metadata |
-            +------------+--------+----------+----------+
-            |   order_id | string |    false |       [] |
-            | created_at | string |    false |       [] |
-            | updated_at | string |    false |       [] |
-            |   discount | string |     true |       [] |
-            |    address | string |    false |       [] |
-            |      notes | string |    false |       [] |
-            |      items | string |    false |       [] |
-            +------------+--------+----------+----------+
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |     true |       [] |
+            | created_at | datetime |     true |       [] |
+            | updated_at | datetime |     true |       [] |
+            |   discount |    float |     true |       [] |
+            |    address |     json |     true |       [] |
+            |      notes |     json |     true |       [] |
+            |      items |     json |     true |       [] |
+            +------------+----------+----------+----------+
             7 rows
 
             OUTPUT, $tester->getDisplay());
@@ -131,13 +131,13 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
             \Flow\ETL\DSL\schema(
-                \Flow\ETL\DSL\string_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-                \Flow\ETL\DSL\string_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\uuid_schema("order_id", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\datetime_schema("created_at", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\datetime_schema("updated_at", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\float_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\json_schema("address", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\json_schema("notes", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\json_schema("items", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
             );
 
             OUTPUT, $tester->getDisplay());
@@ -156,31 +156,31 @@ final class FileSchemaCommandTest extends TestCase
                 {
                     "ref": "order_id",
                     "type": {
-                        "type": "string"
+                        "type": "uuid"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 },
                 {
                     "ref": "created_at",
                     "type": {
-                        "type": "string"
+                        "type": "datetime"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 },
                 {
                     "ref": "updated_at",
                     "type": {
-                        "type": "string"
+                        "type": "datetime"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 },
                 {
                     "ref": "discount",
                     "type": {
-                        "type": "string"
+                        "type": "float"
                     },
                     "nullable": true,
                     "metadata": []
@@ -188,25 +188,25 @@ final class FileSchemaCommandTest extends TestCase
                 {
                     "ref": "address",
                     "type": {
-                        "type": "string"
+                        "type": "json"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 },
                 {
                     "ref": "notes",
                     "type": {
-                        "type": "string"
+                        "type": "json"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 },
                 {
                     "ref": "items",
                     "type": {
-                        "type": "string"
+                        "type": "json"
                     },
-                    "nullable": false,
+                    "nullable": true,
                     "metadata": []
                 }
             ]
@@ -223,17 +223,17 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputEquals(<<<'OUTPUT'
-            +------------+--------+----------+----------+
-            |       name |   type | nullable | metadata |
-            +------------+--------+----------+----------+
-            |   order_id | string |    false |       [] |
-            | created_at | string |    false |       [] |
-            | updated_at | string |    false |       [] |
-            |   discount | string |     true |       [] |
-            |    address | string |    false |       [] |
-            |      notes | string |    false |       [] |
-            |      items | string |    false |       [] |
-            +------------+--------+----------+----------+
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |     true |       [] |
+            | created_at | datetime |     true |       [] |
+            | updated_at | datetime |     true |       [] |
+            |   discount |    float |     true |       [] |
+            |    address |     json |     true |       [] |
+            |      notes |     json |     true |       [] |
+            |      items |     json |     true |       [] |
+            +------------+----------+----------+----------+
             7 rows
 
             OUTPUT, $tester->getDisplay());
@@ -252,17 +252,17 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +------------+----------+----------+----------+
-            |       name |     type | nullable | metadata |
-            +------------+----------+----------+----------+
-            |   order_id |     uuid |    false |       [] |
-            | created_at | datetime |    false |       [] |
-            | updated_at | datetime |    false |       [] |
-            |   discount |    float |     true |       [] |
-            |    address |     json |    false |       [] |
-            |      notes |     json |    false |       [] |
-            |      items |     json |    false |       [] |
-            +------------+----------+----------+----------+
+            +------------+--------------+----------+----------+
+            |       name |         type | nullable | metadata |
+            +------------+--------------+----------+----------+
+            |   order_id |         uuid |    false |       [] |
+            | created_at |     datetime |    false |       [] |
+            | updated_at |     datetime |    false |       [] |
+            |   discount |        float |     true |       [] |
+            |    address | structure_v2 |    false |       [] |
+            |      notes |         list |    false |       [] |
+            |      items |         list |    false |       [] |
+            +------------+--------------+----------+----------+
             7 rows
 
             OUTPUT, $tester->getDisplay());
@@ -282,17 +282,17 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +------------+----------+----------+----------+
-            |       name |     type | nullable | metadata |
-            +------------+----------+----------+----------+
-            |   order_id |     uuid |    false |       [] |
-            | created_at | datetime |    false |       [] |
-            | updated_at | datetime |    false |       [] |
-            |   discount |    float |     true |       [] |
-            |    address |     json |    false |       [] |
-            |      notes |     json |    false |       [] |
-            |      items |     json |    false |       [] |
-            +------------+----------+----------+----------+
+            +------------+--------------+----------+----------+
+            |       name |         type | nullable | metadata |
+            +------------+--------------+----------+----------+
+            |   order_id |         uuid |    false |       [] |
+            | created_at |     datetime |    false |       [] |
+            | updated_at |     datetime |    false |       [] |
+            |   discount |        float |     true |       [] |
+            |    address | structure_v2 |    false |       [] |
+            |      notes |         list |    false |       [] |
+            |      items |         list |    false |       [] |
+            +------------+--------------+----------+----------+
             7 rows
 
             OUTPUT, $tester->getDisplay());
@@ -450,13 +450,13 @@ final class FileSchemaCommandTest extends TestCase
         // Zero offset should behave same as no offset
         self::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
-            |-- order_id: string
-            |-- created_at: string
-            |-- updated_at: string
-            |-- discount: ?string
-            |-- address: string
-            |-- notes: string
-            |-- items: string
+            |-- order_id: ?uuid
+            |-- created_at: ?datetime
+            |-- updated_at: ?datetime
+            |-- discount: ?float
+            |-- address: ?json
+            |-- notes: ?json
+            |-- items: ?json
 
             OUTPUT, $tester->getDisplay());
     }
