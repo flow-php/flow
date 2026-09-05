@@ -53,20 +53,26 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
         };
 
         if ($sink === null || $source === null) {
-            // OpenSpout drives ZipArchive, which takes a local path and cannot read a memory:// stream
-            $localUri = path($this->cacheDir->path() . '/family-excel.xlsx');
+            // OpenSpout drives ZipArchive, which takes a local path and cannot read a memory:// stream, so the
+            // read itself never crosses the Filesystem. The one call that does is the format sniff, and only an
+            // extension-less path needs it - a *.xlsx path is typed by its extension and opens nothing.
+            $written = path($this->cacheDir->path() . '/family-excel.xlsx');
+            $sniffed = path($this->cacheDir->path() . '/family-excel');
             $counting = new CountingFilesystem($this->fs);
 
             df()
                 ->read(from_array([['id' => 'a']]))
-                ->write(to_excel($localUri))
+                ->write(to_excel($written))
                 ->run();
 
+            $this->fs->mv($written, $sniffed);
+
             $rows = [];
-            df()->read(from_excel($localUri, filesystem: $counting))->write(to_array($rows))->run();
+            df()->read(from_excel($sniffed, filesystem: $counting))->write(to_array($rows))->run();
 
             static::assertSame(['a'], array_column($rows, 'id'));
-            static::assertSame(1, $counting->readFromCalls);
+            // twice: an undeclared read sniffs the format once for the schema sample and once for the read loop
+            static::assertSame(2, $counting->readFromCalls);
 
             return;
         }

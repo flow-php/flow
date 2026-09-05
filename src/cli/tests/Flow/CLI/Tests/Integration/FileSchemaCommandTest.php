@@ -310,13 +310,13 @@ final class FileSchemaCommandTest extends TestCase
             +------------+--------+----------+----------+
             |       name |   type | nullable | metadata |
             +------------+--------+----------+----------+
-            |   order_id | string |    false |       [] |
-            | created_at | string |    false |       [] |
-            | updated_at | string |    false |       [] |
+            |   order_id |   uuid |     true |       [] |
+            | created_at | string |     true |       [] |
+            | updated_at | string |     true |       [] |
             |   discount | string |     true |       [] |
-            |    address | string |    false |       [] |
-            |      notes | string |    false |       [] |
-            |      items | string |    false |       [] |
+            |    address |   json |     true |       [] |
+            |      notes |   json |     true |       [] |
+            |      items |   json |     true |       [] |
             +------------+--------+----------+----------+
             7 rows
 

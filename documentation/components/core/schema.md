@@ -55,14 +55,15 @@ that `json` throws away, and adapters can map them onto native nested types.
 
 Sources fall into two groups when no schema is declared.
 
-**Sources that infer one.** CSV, JSON and JSON lines sample the file before the first row is read, decide one schema,
-and every batch they yield carries exactly that schema - `from_csv(...)->schema()`, `from_json(...)->schema()` and
-`from_json_lines(...)->schema()` answer without running the pipeline. Tune the sample
+**Sources that infer one.** CSV, Excel, JSON and JSON lines sample the file before the first row is read, decide one
+schema, and every batch they yield carries exactly that schema - `from_csv(...)->schema()`, `from_excel(...)->schema()`,
+`from_json(...)->schema()` and `from_json_lines(...)->schema()` answer without running the pipeline. Tune the sample
 with `->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`.
 `types()` restricts which types inference may produce (`allStrings()` is sugar for `types(type_string())`), and
-`unionByName()` reads sources with differing column sets as one wider schema, instead of rejecting them (CSV, which
-checks the column set) or dropping the columns a later source introduces (JSON, which has no header to check). Every
-inferred column is nullable, and where narrowing is not safe the column floors to `string`.
+`unionByName()` reads sources with differing column sets as one wider schema, instead of rejecting them (CSV and
+Excel, which check the column set against the header) or dropping the columns a later source introduces (JSON, which
+has no header to check). Every inferred column is nullable, and where narrowing is not safe the column floors to
+`string`.
 
 **Sources that do not.** For the rest, every value still gets its type detected as rows are created and each batch
 carries its own schema; `DataFrame::schema()` runs the pipeline and merges the per-batch schemas into one.

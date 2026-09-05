@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
+use Closure;
+use Flow\ETL\Adapter\Excel\ExcelExtractor;
+use Flow\ETL\Adapter\Excel\ExcelReader;
+use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\ETL\DSL\infer_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
@@ -59,12 +67,12 @@ final class ExcelExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_schema_is_refused_when_it_was_not_declared(): void
+    public function test_source_is_the_path_it_was_given(): void
     {
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessage('cannot describe what it will produce before producing it');
-
-        from_excel(__DIR__ . '/../Fixtures/unknown')->schema();
+        static::assertEquals(
+            ExcelFixtureContext::path('fixture.xlsx'),
+            from_excel(ExcelFixtureContext::file('fixture.xlsx'))->source(),
+        );
     }
 
     public function test_schema_is_the_declared_one(): void

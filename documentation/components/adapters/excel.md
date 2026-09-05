@@ -62,8 +62,69 @@ $rows = data_frame()
 $rows = data_frame()
     ->read(
         from_excel('path/to/your/excel.xlsx')
-            ->withHeaders(false)
+            ->withHeader(false)
             ->withOffset(5)
+    )
+    ->fetch();
+```
+
+Row numbers count from 1 and include the header row, so `->withOffset(5)` on a sheet with a header skips rows 2-4
+and starts at row 5.
+
+### Schema
+
+Without a declared schema, `from_excel()` samples the workbook before the first row is read, decides one schema, and
+every batch it yields carries exactly that schema. `schema()` answers without running the pipeline:
+
+```php
+<?php
+
+from_excel('path/to/your/excel.xlsx')->schema();
+```
+
+The default sample is the first `20 480` rows of up to `10` files. Every inferred column is nullable, and where
+narrowing is not safe the column floors to `string`.
+
+A workbook has its own cell types, so inference reads those first: a numeric cell is `integer` or `float`, a boolean
+cell is `boolean`, a date-formatted cell is `date` or `datetime`. A cell holding **text** stays `string` even when the
+text looks like something else - `TRUE`, `12.9` and `2023-10-02` are all text a spreadsheet author chose not to type.
+
+The exception is types a cell cannot hold at all. There is no uuid, json or timezone cell, so text is the only way to
+write one and text is narrowed for exactly those three:
+
+```
+254d61c5-22c8-4407-83a2-76f1cab53af2   ->  uuid
+{"street":"Main St"}                   ->  json
+America/New_York                       ->  timezone
+TRUE / 12.9 / 2023-10-02               ->  string
+```
+
+Tune the sample, or floor it:
+
+```php
+<?php
+
+$rows = data_frame()
+    ->read(
+        from_excel('path/to/your/*.xlsx')
+            ->inferSchema(infer_schema()->sampleSize(1_000)->filesToSniff(1)->allStrings())
+    )
+    ->fetch();
+```
+
+Reading a glob whose files carry different headers raises `InferredSchemaException`, naming the file that diverged and
+the file the schema came from. Declare the schema with `->withSchema(...)`, or read the files as one wider schema with
+`->inferSchema(infer_schema()->unionByName())`.
+
+Declare the schema instead whenever it is known - a declared schema is never sampled for:
+
+```php
+<?php
+
+$rows = data_frame()
+    ->read(
+        from_excel('path/to/your/excel.xlsx')
+            ->withSchema(schema(int_schema('id'), string_schema('name')))
     )
     ->fetch();
 ```
@@ -228,7 +289,10 @@ data_frame()
 
 ### Custom Date/Time Formats
 
-Control how date, datetime, and time values are formatted in the output:
+Dates and datetimes are written as real date cells, so they read back as `date` / `datetime` rather than as text.
+`withDateFormat()` and `withDateTimeFormat()` take an **Excel number format** - they control how the cell is
+displayed, never the value. `withTimeFormat()` still takes a PHP `DateInterval::format()` string, because a workbook
+has no cell type that reads back as `time`.
 
 ```php
 <?php
@@ -237,15 +301,15 @@ data_frame()
     ->read($extractor)
     ->write(
         to_excel('path/to/output.xlsx')
-            ->withDateFormat('d/m/Y')
-            ->withDateTimeFormat('d/m/Y H:i')
+            ->withDateFormat('dd/mm/yyyy')
+            ->withDateTimeFormat('dd/mm/yyyy hh:mm')
             ->withTimeFormat('%H:%I')
     )
     ->run();
 ```
 
 Default formats:
-- Date: `Y-m-d`
-- DateTime: `Y-m-d H:i:s`
-- Time: `H:i:s`
+- Date: `yyyy-mm-dd` (Excel number format)
+- DateTime: `yyyy-mm-dd hh:mm:ss` (Excel number format)
+- Time: `%H:%I:%S` (PHP `DateInterval::format()`)
 

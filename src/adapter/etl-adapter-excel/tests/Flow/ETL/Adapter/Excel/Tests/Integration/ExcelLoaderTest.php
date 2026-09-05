@@ -156,18 +156,18 @@ final class ExcelLoaderTest extends FlowTestCase
                 row(['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => $time]),
             )))
             ->write(
-                to_excel($outputPath)->saveMode(overwrite())->withDateTimeFormat('d/m/Y H:i')->withTimeFormat('%H:%I'),
+                to_excel($outputPath)
+                    ->saveMode(overwrite())
+                    ->withDateTimeFormat('dd/mm/yyyy hh:mm')
+                    ->withTimeFormat('%H:%I'),
             )
             ->run();
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
 
-        static::assertEquals(
-            [
-                ['date_val' => '2024-06-15', 'datetime_val' => '15/06/2024 14:30', 'time_val' => '14:30'],
-            ],
-            $rows,
-        );
+        // the number format is how Excel DISPLAYS the cell; the value round-trips whole. time has no cell type,
+        // so it stays text and keeps its PHP format.
+        static::assertEquals([['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => '14:30']], $rows);
     }
 
     #[DataProvider('provide_writers')]
@@ -190,6 +190,49 @@ final class ExcelLoaderTest extends FlowTestCase
         );
     }
 
+    public function test_round_trip_preserves_every_type_a_workbook_can_carry(): void
+    {
+        $outputPath = __DIR__ . '/var/output_round_trip_types.xlsx';
+        $uuid = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+        df()
+            ->read(from_rows(rows(
+                schema(
+                    int_schema('i'),
+                    float_schema('f'),
+                    bool_schema('b'),
+                    date_schema('d'),
+                    datetime_schema('dt'),
+                    uuid_schema('u'),
+                    json_schema('j'),
+                ),
+                row([
+                    'i' => 1,
+                    'f' => 1.5,
+                    'b' => true,
+                    'd' => new DateTimeImmutable('2024-06-15'),
+                    'dt' => new DateTimeImmutable('2024-06-15 14:30:00'),
+                    'u' => type_uuid()->cast($uuid),
+                    'j' => type_json()->cast(['key' => 'value']),
+                ]),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            schema(
+                int_schema('i', nullable: true),
+                float_schema('f', nullable: true),
+                bool_schema('b', nullable: true),
+                date_schema('d', nullable: true),
+                datetime_schema('dt', nullable: true),
+                uuid_schema('u', nullable: true),
+                json_schema('j', nullable: true),
+            ),
+            from_excel($outputPath)->schema(),
+        );
+    }
+
     public function test_round_trip_with_datetime_xlsx(): void
     {
         $outputPath = __DIR__ . '/var/output_datetime.xlsx';
@@ -206,11 +249,10 @@ final class ExcelLoaderTest extends FlowTestCase
 
         $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
 
+        static::assertEquals([['date_val' => $date, 'datetime_val' => $datetime]], $rows);
         static::assertEquals(
-            [
-                ['date_val' => '2024-06-15', 'datetime_val' => '2024-06-15 14:30:00'],
-            ],
-            $rows,
+            schema(date_schema('date_val', nullable: true), datetime_schema('datetime_val', nullable: true)),
+            from_excel($outputPath)->schema(),
         );
     }
 
@@ -313,8 +355,8 @@ final class ExcelLoaderTest extends FlowTestCase
                     'float_val' => 3.14,
                     'bool_val' => true,
                     'string_val' => 'hello',
-                    'uuid_val' => $uuidString,
-                    'json_val' => '{"key":"value"}',
+                    'uuid_val' => type_uuid()->cast($uuidString),
+                    'json_val' => ['key' => 'value'],
                 ],
             ],
             $rows,

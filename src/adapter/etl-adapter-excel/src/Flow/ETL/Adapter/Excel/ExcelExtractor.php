@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
-use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
@@ -19,39 +17,30 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
+use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\SourceStream;
 use Generator;
-use OpenSpout\Common\Entity\Cell;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Reader\ODS\Reader as OdsReader;
-use OpenSpout\Reader\XLSX\Reader as XlsxReader;
-use Throwable;
-use ZipArchive;
 
-use function array_map;
+use function array_diff;
+use function array_values;
 use function count;
+use function iterator_to_array;
 use function sprintf;
-use function str_starts_with;
 
 final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
     use FileReading;
 
-    private bool $convertEmptyToNull = true;
+    private SchemaInference $inference;
 
-    private ?int $offset = null;
-
-    private XlsxReader|OdsReader|null $reader = null;
+    private ExcelReadOptions $readOptions;
 
     private ?Schema $schema = null;
-
-    private ?string $sheetName = null;
-
-    private bool $withHeader = true;
 
     private readonly Filesystem $filesystem;
 
@@ -79,50 +68,88 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             );
         }
 
+        $this->inference = new SchemaInference();
+        $this->readOptions = new ExcelReadOptions();
         $this->resetLimit();
     }
 
     /**
-     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
-        // Offset must be a positive number
-        $offset = $this->offset ?? 1;
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
-
-        $baseSchema = $this->schema;
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $declared = $fileColumns->declare($baseSchema ?? new Schema());
-        $schema = $baseSchema === null ? null : $declared;
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
+        $inferredFrom = '';
 
-        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
-            $stream = $this->filesystem->readFrom($source->path);
+        if ($this->schema !== null) {
+            $base = $this->schema;
+        } else {
+            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+            $derived = $this->derivedSchema;
 
-            $constants = $fileColumns->forFile($source, $declared);
+            if ($derived === null) {
+                $sampler = new WorkbookSampler($workbook, $sources);
 
-            $encoder = new ExcelEncoder(withHeader: $this->withHeader, convertEmptyToNull: $this->convertEmptyToNull);
-            $rawCells = [];
+                try {
+                    // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
+                    $header = $sampler->header();
+                    $inferredFrom = $header->source ?? '';
 
-            foreach ($this->extractRows($stream, $offset) as $cells) {
-                $rawCells[] = $cells;
+                    $derived =
+                        $this->derivedSchema = (new SchemaInferrer(
+                            $this->inference,
+                            new CellTypeNarrower($this->inference->candidates()),
+                        ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+                } finally {
+                    $sampler->close();
+                }
+            }
 
-                if (count($rawCells) >= $batchSize) {
-                    $batch = [];
+            $base = $fileColumns->withoutTail($derived);
+        }
 
-                    foreach ($encoder->decode($rawCells) as $rowValues) {
-                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
+        $schema = $fileColumns->declare($base);
+        $tail = $fileColumns->tail();
+        $expected = $base->references()->names();
+
+        foreach ($sources as $source) {
+            $sheet = $workbook->sheet($source);
+
+            try {
+                if ($this->schema === null && !$this->inference->unionByName) {
+                    $columns = array_values(array_diff($sheet->columns(), $tail));
+
+                    if (
+                        $columns !== []
+                        && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
+                    ) {
+                        throw InferredSchemaException::columnsDiverge(
+                            $source->uri(),
+                            $inferredFrom,
+                            $base,
+                            $columns,
+                            $this->inference,
+                        );
                     }
+                }
 
-                    $rawCells = [];
+                // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
+                $constants = $fileColumns->forFile($source, $schema);
+                $batch = [];
+
+                foreach ($sheet->rows() as $rowValues) {
+                    $batch[] = new RawRowValues($constants->fill($rowValues->values));
+
+                    if (count($batch) < $batchSize) {
+                        continue;
+                    }
 
                     $hydrated = $hydrator->cast($batch, $schema);
-
-                    if ($baseSchema === null) {
-                        $hydrated = $fileColumns->apply($hydrated);
-                    }
+                    $batch = [];
 
                     foreach ($hydrated as $hydratedRow) {
                         $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -130,51 +157,69 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                         $this->incrementReturnedRows();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $stream->close();
-
                             return;
                         }
                     }
                 }
-            }
 
-            $batch = [];
-
-            foreach ($encoder->decode($rawCells) as $rowValues) {
-                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-            }
-
-            $hydrated = $hydrator->cast($batch, $schema);
-
-            if ($baseSchema === null) {
-                $hydrated = $fileColumns->apply($hydrated);
-            }
-
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $stream->close();
-
-                    return;
+                if ($batch === []) {
+                    continue;
                 }
-            }
 
-            $stream->close();
+                $hydrated = $hydrator->cast($batch, $schema);
+
+                foreach ($hydrated as $hydratedRow) {
+                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+
+                    $this->incrementReturnedRows();
+
+                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                        return;
+                    }
+                }
+            } finally {
+                $sheet->close();
+            }
         }
+    }
+
+    public function inferSchema(SchemaInferenceBuilder $builder): static
+    {
+        $this->inference = $builder->build();
+        $this->derivedSchema = null;
+
+        return $this;
     }
 
     public function schema(): Schema
     {
-        $schema = $this->schema;
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        if ($schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
+        if ($this->schema !== null) {
+            return $fileColumns->declare($this->schema);
         }
 
-        return $this->fileColumns($this->filesystem, $this->path)->declare($schema);
+        // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+        $derived = $this->derivedSchema;
+
+        if ($derived === null) {
+            $sampler = new WorkbookSampler(
+                new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem)),
+                iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
+            );
+
+            try {
+                $derived =
+                    $this->derivedSchema = (new SchemaInferrer(
+                        $this->inference,
+                        new CellTypeNarrower($this->inference->candidates()),
+                    ))->infer($sampler->header()->names, $sampler->samples($this->inference->sampleSize));
+            } finally {
+                $sampler->close();
+            }
+        }
+
+        return $fileColumns->declare($fileColumns->withoutTail($derived));
     }
 
     public function source(): Path
@@ -184,35 +229,32 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function withConvertEmptyToNull(bool $convertEmptyToNull): self
     {
-        $this->convertEmptyToNull = $convertEmptyToNull;
+        $this->readOptions = $this->readOptions->withConvertEmptyToNull($convertEmptyToNull);
+        $this->derivedSchema = null;
 
         return $this;
     }
 
     public function withHeader(bool $withHeader): self
     {
-        $this->withHeader = $withHeader;
+        $this->readOptions = $this->readOptions->withHeader($withHeader);
+        $this->derivedSchema = null;
 
         return $this;
     }
 
     public function withOffset(int $offset): self
     {
-        if ($offset < 1) {
-            throw new InvalidArgumentException('Offset must be greater or equal to 1');
-        }
-
-        $this->offset = $offset;
+        $this->readOptions = $this->readOptions->withOffset($offset);
+        $this->derivedSchema = null;
 
         return $this;
     }
 
     public function withReader(ExcelReader $reader): self
     {
-        $this->reader = match ($reader) {
-            ExcelReader::XLSX => new XlsxReader(),
-            ExcelReader::ODS => new OdsReader(),
-        };
+        $this->readOptions = $this->readOptions->withFormat($reader);
+        $this->derivedSchema = null;
 
         return $this;
     }
@@ -226,114 +268,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function withSheetName(string $sheetName): self
     {
-        SheetNameAssertion::assert($sheetName);
-
-        $this->sheetName = $sheetName;
+        $this->readOptions = $this->readOptions->withSheetName($sheetName);
+        $this->derivedSchema = null;
 
         return $this;
-    }
-
-    /**
-     * @return array<int, mixed>
-     */
-    private function createRowsFromCells(Row $row, int $previousRowDataCount = 0): array
-    {
-        $rowData = array_map(static fn(Cell $cell) => $cell->getValue(), $row->cells);
-
-        // Expand columns to the size of the previous row
-        for ($i = count($rowData); $i < $previousRowDataCount; $i++) {
-            $rowData[$i] = null;
-        }
-
-        return $rowData;
-    }
-
-    /**
-     * @return Generator<int, array<int, mixed>>
-     */
-    private function extractRows(SourceStream $stream, int $offset): Generator
-    {
-        $reader = $this->reader($stream);
-
-        try {
-            $reader->open($stream->path()->path());
-
-            $manager = new SheetsManager($reader->getSheetIterator());
-
-            $previousRowDataCount = 0;
-
-            $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
-
-            $rowIndex = 0;
-
-            foreach ($sheet->getRowIterator() as $sheetRow) {
-                $rowIndex++;
-
-                if (1 === $rowIndex && $this->withHeader) {
-                    yield $this->createRowsFromCells($sheetRow);
-
-                    continue;
-                }
-
-                // Skip till offset is reach
-                if ($offset > $rowIndex) {
-                    continue;
-                }
-
-                // ODS format reader skips empty cells when reading rows
-                $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
-                $previousRowDataCount = count($row);
-
-                yield $row;
-            }
-
-            $reader->close();
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
-        }
-    }
-
-    private function reader(SourceStream $stream): XlsxReader|OdsReader
-    {
-        if (null === $this->reader) {
-            $this->reader = match ($stream->path()->extension()) {
-                'xlsx' => new XlsxReader(),
-                'ods' => new OdsReader(),
-                default => null,
-            };
-
-            if (null === $this->reader) {
-                $line = $stream->read(8, 0);
-
-                // XLS signature: D0 CF 11 E0 A1 B1 1A E1
-                if (str_starts_with($line, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
-                    return $this->reader = new XlsxReader();
-                }
-
-                // ZIP signature: 50 4B 03 04
-                if (str_starts_with($line, "\x50\x4B\x03\x04")) {
-                    $zip = new ZipArchive();
-
-                    if ($zip->open($stream->path()->path())) {
-                        $mimetype = $zip->getFromName('mimetype');
-                        $zip->close();
-
-                        $this->reader = match ($mimetype) {
-                            'application/vnd.oasis.opendocument.spreadsheet' => new OdsReader(),
-                            // Other zip-based file formats
-                            default => new XlsxReader(),
-                        };
-                    }
-                }
-            }
-
-            if (!$this->reader) {
-                throw new InvalidArgumentException(
-                    'Unsupported file format: ' . ($stream->path()->extension() ?: 'n/a'),
-                );
-            }
-        }
-
-        return $this->reader;
     }
 }

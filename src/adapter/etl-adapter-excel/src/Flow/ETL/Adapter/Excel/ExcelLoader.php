@@ -21,9 +21,12 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
@@ -47,9 +50,9 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
 
     private ?CellStyler $cellStyler = null;
 
-    private string $dateFormat = 'Y-m-d';
+    private string $dateFormat = 'yyyy-mm-dd';
 
-    private string $dateTimeFormat = 'Y-m-d H:i:s';
+    private string $dateTimeFormat = 'yyyy-mm-dd hh:mm:ss';
 
     private ?ExcelEncoder $encoder = null;
 
@@ -286,13 +289,24 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
         return $this;
     }
 
+    /**
+     * A date cell carries no type of its own - the reader decides from the number format, so a column written
+     * without one comes back as a number.
+     *
+     * @param Definition<mixed> $definition
+     */
+    private function temporalStyle(Definition $definition): ?Style
+    {
+        return match ($definition->type()::class) {
+            DateTimeType::class => (new Style())->withFormat($this->dateTimeFormat),
+            DateType::class => (new Style())->withFormat($this->dateFormat),
+            default => null,
+        };
+    }
+
     private function encoder(): ExcelEncoder
     {
-        return $this->encoder ??= new ExcelEncoder(
-            dateTimeFormat: $this->dateTimeFormat,
-            dateFormat: $this->dateFormat,
-            timeFormat: $this->timeFormat,
-        );
+        return $this->encoder ??= new ExcelEncoder(timeFormat: $this->timeFormat);
     }
 
     /**
@@ -300,21 +314,17 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
      */
     private function resolveCellStyles(Row $row, Schema $schema, int $rowIndex, string $sheetName): ?array
     {
-        if ($this->cellStyler === null) {
-            return null;
-        }
-
         $styles = [];
         $columnIndex = 0;
 
         foreach ($schema->definitions() as $definition) {
-            $styles[$columnIndex] = $this->cellStyler->style(
+            $styles[$columnIndex] = $this->cellStyler?->style(
                 $row->get($definition->entry()->name()),
                 $definition,
                 $rowIndex + 1,
                 $columnIndex,
                 $sheetName,
-            );
+            ) ?? $this->temporalStyle($definition);
             $columnIndex++;
         }
 

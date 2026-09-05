@@ -57,6 +57,9 @@ final class ExcelHydratorParityTest extends FlowTestCase
         foreach ($extractor->extract(
             flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
         ) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+            static::assertEquals(type_integer(), $rows->schema()->get('id')->type());
+
             $count += $rows->count();
         }
 
