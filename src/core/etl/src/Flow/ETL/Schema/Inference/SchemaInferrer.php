@@ -48,9 +48,7 @@ final readonly class SchemaInferrer
                     $source,
                     $this->inference->sampleSize === -1 ? -1 : max(0, $this->inference->sampleSize - $columns->rows()),
                 ),
-                // the first source always establishes the column set - with no header there is nothing to
-                // establish it from - and only later sources are held to it
-                $opened === 1 || $this->inference->unionByName,
+                $columns->rows() === 0 || $this->inference->unionByName,
             );
         }
 
@@ -58,9 +56,6 @@ final readonly class SchemaInferrer
     }
 
     /**
-     * Returns the PRE-FLOOR partial: partials from several sources have to merge before TypeFloor, which is lossy.
-     * It opens nothing and closes nothing.
-     *
      * @param list<string> $names - columns known before any row; [] when the format carries none (JSON)
      * @param iterable<int, RawRowValues> $source - one source's rows, unstarted
      * @param int<0, max>|-1 $rowBudget - rows to observe, 0 for none, -1 for all of them

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use Flow\ETL\Adapter\JSON\JSONEncoder;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
@@ -15,22 +13,27 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
+use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
-use JsonMachine\Items;
-use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
-use function count;
+use function iterator_to_array;
 use function sprintf;
 
 final class JsonExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
     use FileReading;
+
+    private SchemaInference $inference;
 
     private ?string $pointer = null;
 
@@ -55,6 +58,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         }
 
         $this->filesystem = $filesystem;
+        $this->inference = new SchemaInference();
         $this->resetLimit();
     }
 
@@ -65,88 +69,97 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $hydrator = $context->hydrator();
         $batchSize = $context->config->extractorBatchSize();
-        $encoder = new JSONEncoder();
-        $baseSchema = $this->schema;
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $declared = $fileColumns->declare($baseSchema ?? new Schema());
-        $schema = $baseSchema === null ? null : $declared;
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $reader = new JsonFileReader(
+            $this->filesystem,
+            JsonFormat::Document,
+            $this->pointer,
+            $this->pointerToEntryName,
+            $sources,
+        );
 
-        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
-            $stream = $this->filesystem->readFrom($source->path);
+        if ($this->schema !== null) {
+            $base = $this->schema;
+        } else {
+            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+            $derived = $this->derivedSchema;
 
-            $constants = $fileColumns->forFile($source, $declared);
-
-            $rawBatch = [];
-
-            /**
-             * @var array<string, mixed> $rowData
-             */
-            foreach ((new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator() as $rowData) {
-                $row = $rowData;
-
-                if ($this->pointer !== null && $this->pointerToEntryName) {
-                    $row = [$this->pointer => $row];
-                }
-
-                if (!count($row)) {
-                    continue;
-                }
-
-                $row = $constants->fill($row);
-
-                $rawBatch[] = $row;
-
-                if (count($rawBatch) >= $batchSize) {
-                    $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
-
-                    if ($baseSchema === null) {
-                        $hydrated = $fileColumns->apply($hydrated);
-                    }
-
-                    foreach ($hydrated as $hydratedRow) {
-                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                        $this->incrementReturnedRows();
-
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            return;
-                        }
-                    }
-
-                    $rawBatch = [];
-                }
+            if ($derived === null) {
+                $derived =
+                    $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
+                        [],
+                        $reader->samples($this->inference->sampleSize),
+                    );
             }
 
-            $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
-
-            if ($baseSchema === null) {
-                $hydrated = $fileColumns->apply($hydrated);
-            }
-
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
-                }
-            }
-
-            $stream->close();
+            $base = $fileColumns->withoutTail($derived);
         }
+
+        $schema = $fileColumns->declare($base);
+
+        foreach ($sources as $source) {
+            // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
+            $constants = $fileColumns->forFile($source, $schema);
+
+            foreach ($reader->batches($source, $batchSize) as $rawBatch) {
+                $batch = [];
+
+                foreach ($rawBatch as $values) {
+                    $batch[] = new RawRowValues($constants->fill($values->values));
+                }
+
+                $hydrated = $hydrator->cast($batch, $schema);
+
+                foreach ($hydrated as $hydratedRow) {
+                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+
+                    $this->incrementReturnedRows();
+
+                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    public function inferSchema(SchemaInferenceBuilder $builder): static
+    {
+        $this->inference = $builder->build();
+        $this->derivedSchema = null;
+
+        return $this;
     }
 
     public function schema(): Schema
     {
-        $schema = $this->schema;
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        if ($schema === null) {
-            throw SchemaNotDerivableException::extractor(self::class);
+        if ($this->schema !== null) {
+            return $fileColumns->declare($this->schema);
         }
 
-        return $this->fileColumns($this->filesystem, $this->path)->declare($schema);
+        // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+        $derived = $this->derivedSchema;
+
+        if ($derived === null) {
+            $reader = new JsonFileReader(
+                $this->filesystem,
+                JsonFormat::Document,
+                $this->pointer,
+                $this->pointerToEntryName,
+                iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
+            );
+
+            $derived =
+                $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
+                    [],
+                    $reader->samples($this->inference->sampleSize),
+                );
+        }
+
+        return $fileColumns->declare($fileColumns->withoutTail($derived));
     }
 
     public function source(): Path
@@ -160,6 +173,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function withPointer(string $pointer, bool $pointerToEntryName = false): self
     {
+        $this->derivedSchema = null;
         $this->pointer = $pointer;
         $this->pointerToEntryName = $pointerToEntryName;
 
@@ -171,21 +185,5 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->schema = $schema;
 
         return $this;
-    }
-
-    /**
-     * @return array{pointer?: string, decoder: ExtJsonDecoder}
-     */
-    private function readerOptions(): array
-    {
-        $options = [
-            'decoder' => new ExtJsonDecoder(true),
-        ];
-
-        if ($this->pointer !== null) {
-            $options['pointer'] = $this->pointer;
-        }
-
-        return $options;
     }
 }

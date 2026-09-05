@@ -63,4 +63,34 @@ final class JsonLinesHydratorParityTest extends FlowTestCase
             $actual,
         );
     }
+
+    public function test_honours_a_hydrator_configured_on_the_context_without_a_declared_schema(): void
+    {
+        $default = [];
+
+        foreach (from_json_lines(path_real(__DIR__ . '/../../Fixtures/parity_people.jsonl'))
+            ->extract(flow_context(Config::builder()->build())) as $rows) {
+            foreach ($rows as $row) {
+                $default[] = $row->toArray();
+            }
+        }
+
+        $adaptive = [];
+
+        foreach (from_json_lines(path_real(__DIR__ . '/../../Fixtures/parity_people.jsonl'))
+            ->extract(flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build())) as $rows) {
+            foreach ($rows as $row) {
+                $adaptive[] = $row->toArray();
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'name' => 'Alice', 'active' => true],
+                ['id' => 2, 'name' => null, 'active' => false],
+            ],
+            $default,
+        );
+        static::assertSame($default, $adaptive);
+    }
 }
