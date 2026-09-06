@@ -1,0 +1,27 @@
+{
+  "range": "Sheet!A1:Z20",
+  "majorDimension": "ROWS",
+  "values": [
+    [
+      "id",
+      "price",
+      "active",
+      "day",
+      "note"
+    ],
+    [
+      "1",
+      "1.5",
+      "TRUE",
+      "2024-01-01",
+      ""
+    ],
+    [
+      "2",
+      "2.5",
+      "FALSE",
+      "2024-01-02",
+      "x"
+    ]
+  ]
+}

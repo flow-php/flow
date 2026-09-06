@@ -4,19 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
-use Closure;
-use Flow\ETL\Adapter\Excel\ExcelExtractor;
-use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
-use Generator;
-use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
-use function Flow\ETL\DSL\infer_schema;
-use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;

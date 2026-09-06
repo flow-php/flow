@@ -11,6 +11,7 @@ use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Execution\StatisticsCollector;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
@@ -364,7 +365,22 @@ final class DataFrame
             throw $e;
         }
 
-        return $rows ?? new Rows($this->schema());
+        if ($rows !== null) {
+            return $rows;
+        }
+
+        // schema() answers by executing the pipeline again, so asking it here reads every source a second time and
+        // still merges nothing. The source knows its own schema - but only with no step between it and here, since
+        // a step may add, drop or retype columns.
+        if ($this->pipeline->segments()->steps() === []) {
+            try {
+                return new Rows($this->pipeline->extractor()->schema());
+            } catch (SchemaNotDerivableException) {
+                return new Rows(new Schema());
+            }
+        }
+
+        return new Rows(new Schema());
     }
 
     /**

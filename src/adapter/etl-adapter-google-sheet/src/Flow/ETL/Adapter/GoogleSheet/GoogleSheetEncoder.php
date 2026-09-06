@@ -10,6 +10,8 @@ use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\RawRowValues;
 
 use function array_combine;
+use function array_keys;
+use function array_map;
 use function array_slice;
 use function count;
 use function str_pad;
@@ -20,7 +22,7 @@ use function str_pad;
 final class GoogleSheetEncoder implements Encoder
 {
     /**
-     * @var array<string>
+     * @var list<string>
      */
     private array $headers = [];
 
@@ -29,6 +31,7 @@ final class GoogleSheetEncoder implements Encoder
     public function __construct(
         private readonly bool $withHeader = true,
         private readonly bool $dropExtraColumns = true,
+        private readonly bool $emptyToNull = true,
     ) {}
 
     public function decode(array $batch): array
@@ -44,8 +47,11 @@ final class GoogleSheetEncoder implements Encoder
                         continue;
                     }
 
-                    /** @var array<string> $rowData */
-                    $this->headers = $rowData;
+                    /** @var list<bool|float|int|string> $rowData */
+                    $this->headers = array_map(
+                        static fn(bool|float|int|string $header): string => (string) $header,
+                        $rowData,
+                    );
                     $this->headersCount = $rowDataCount;
 
                     continue;
@@ -70,6 +76,14 @@ final class GoogleSheetEncoder implements Encoder
                 $rowData = array_slice($rowData, 0, $this->headersCount);
             }
 
+            if ($this->emptyToNull) {
+                foreach (array_keys($rowData) as $i) {
+                    if ($rowData[$i] === '') {
+                        $rowData[$i] = null;
+                    }
+                }
+            }
+
             $maps[] = new RawRowValues(array_combine(
                 $this->withHeader ? $this->headers : $this->generateAutoHeaders(count($rowData)),
                 $rowData,
@@ -84,6 +98,17 @@ final class GoogleSheetEncoder implements Encoder
         throw new RuntimeException(
             'Google Sheet adapter is read-only, encoding rows back to sheet values is not supported',
         );
+    }
+
+    /**
+     * The header the first decoded row consumed, or the generated `e00`... names under withHeader(false);
+     * [] before any row.
+     *
+     * @return list<string>
+     */
+    public function headers(): array
+    {
+        return $this->withHeader ? $this->headers : $this->generateAutoHeaders($this->headersCount);
     }
 
     /**

@@ -15,7 +15,9 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
+use Flow\ETL\Tests\Double\RowLessExtractor;
 use Flow\ETL\Tests\Double\SpyLoader;
+use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
@@ -799,5 +801,47 @@ final class DataFrameTest extends FlowTestCase
                 }
             })
             ->run();
+    }
+
+    public function test_fetch_carries_the_source_schema_when_the_source_yields_no_rows(): void
+    {
+        $extractor = new RowLessExtractor(schema(int_schema('id', true), str_schema('name', true)));
+
+        $rows = data_frame()->extract($extractor)->fetch();
+
+        static::assertCount(0, $rows);
+        static::assertTrue($rows->schema()->isSame(schema(int_schema('id', true), str_schema('name', true))));
+    }
+
+    public function test_fetch_does_not_run_the_pipeline_twice_when_the_source_yields_no_rows(): void
+    {
+        $extractor = new RowLessExtractor(schema(int_schema('id', true)));
+
+        data_frame()->extract($extractor)->fetch();
+
+        static::assertSame(1, $extractor->extractCalls);
+    }
+
+    public function test_fetch_is_empty_when_a_row_less_source_cannot_describe_itself(): void
+    {
+        $rows = data_frame()->extract(new UndescribableRowLessExtractor())->fetch();
+
+        static::assertCount(0, $rows);
+        static::assertCount(0, $rows->schema()->definitions());
+    }
+
+    /**
+     * A step may add, drop or retype columns, so the source schema is no longer the output schema. Answering this
+     * case needs the output schema computed without executing, which is not built yet.
+     */
+    public function test_fetch_does_not_claim_the_source_schema_when_a_step_reshapes_the_rows(): void
+    {
+        $rows = data_frame()
+            ->extract(new RowLessExtractor(schema(int_schema('id', true))))
+            ->drop('id')
+            ->fetch();
+
+        static::assertCount(0, $rows);
+        static::assertCount(0, $rows->schema()->definitions());
     }
 }
