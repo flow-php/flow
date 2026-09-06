@@ -81,7 +81,11 @@ final readonly class DuplicateRowTransformer implements Transformer
                     );
                 }
 
-                $rows = $rows->merge($duplicatedRows);
+                $rows = new Rows(
+                    $rows->schema()->merge($duplicatedRows->schema()),
+                    ...$rows->all(),
+                    ...$duplicatedRows->all(),
+                );
             }
 
             $context->telemetry()->transformationCompleted($this, [

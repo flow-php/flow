@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
 
+use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -23,6 +24,50 @@ use function Flow\Types\DSL\type_date;
 
 final class DuplicateRowTransformerTest extends FlowTestCase
 {
+    public function test_a_transformation_that_adds_a_column_conforms_the_untouched_rows(): void
+    {
+        $transformed = (new DuplicateRowTransformer(
+            ref('status')->equals(lit('inactive')),
+            with_entry('flag', lit(true)),
+        ))->transform(
+            rows(
+                schema(int_schema('id'), string_schema('status')),
+                row(['id' => 1, 'status' => 'active']),
+                row(['id' => 2, 'status' => 'inactive']),
+            ),
+            flow_context(config()),
+        );
+
+        static::assertSame(['id', 'status', 'flag'], $transformed->schema()->references()->names());
+        static::assertSame(
+            [
+                ['id' => 1, 'status' => 'active', 'flag' => null],
+                ['id' => 2, 'status' => 'inactive', 'flag' => null],
+                ['id' => 2, 'status' => 'inactive', 'flag' => true],
+            ],
+            $transformed->toArray(),
+        );
+    }
+
+    public function test_a_transformation_that_narrows_a_column_widens_it_back(): void
+    {
+        $transformed = (new DuplicateRowTransformer(
+            ref('status')->equals(lit('inactive')),
+            with_entry('amount', ref('amount')->multiply(lit(-1))),
+        ))->transform(
+            rows(
+                schema(int_schema('id'), string_schema('status'), int_schema('amount', nullable: true)),
+                row(['id' => 1, 'status' => 'active', 'amount' => 100]),
+                row(['id' => 2, 'status' => 'inactive', 'amount' => 100]),
+            ),
+            flow_context(config()),
+        );
+
+        // Multiply::returns() strips nullability, so the duplicated batch declares a narrower column than
+        // the source; the emitted batch must describe both.
+        static::assertTrue($transformed->schema()->get('amount')->isNullable());
+    }
+
     public function test_applying_two_transformations(): void
     {
         $rows = rows(

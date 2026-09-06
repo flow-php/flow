@@ -174,13 +174,13 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertSame(2, $report->statistics()->totalRows());
         static::assertEquals(
             schema(
-                str_schema('Index'),
-                str_schema('Date'),
-                str_schema('Close'),
-                str_schema('Volume'),
-                str_schema('Open'),
-                str_schema('High'),
-                str_schema('Low'),
+                str_schema('Index', true),
+                str_schema('Date', true),
+                str_schema('Close', true),
+                str_schema('Volume', true),
+                str_schema('Open', true),
+                str_schema('High', true),
+                str_schema('Low', true),
             ),
             $report->schema(),
         );

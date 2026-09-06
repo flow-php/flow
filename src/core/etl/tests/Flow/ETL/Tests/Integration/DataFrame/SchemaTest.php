@@ -22,14 +22,11 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
-use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_structure;
 use function range;
 
@@ -79,13 +76,16 @@ final class SchemaTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
-        static::assertEquals(schema(int_schema('id'), str_schema('name'), null_schema('active')), $rows->schema());
+        static::assertEquals(
+            schema(int_schema('id', true), str_schema('name', true), str_schema('active', true)),
+            $rows->schema(),
+        );
     }
 
     public function test_getting_schema_of_a_column_holding_both_an_empty_array_and_a_structure(): void
     {
         static::assertEquals(
-            schema(json_schema('a')),
+            schema(json_schema('a', true)),
             df()->read(from_array([['a' => []], ['a' => ['x' => 1]]]))->schema(),
         );
     }
@@ -93,11 +93,14 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema_of_a_structure_with_a_nested_empty_array(): void
     {
         static::assertEquals(
-            // [] detects as list<null>: an empty array is a container with no observed element
-            schema(structure_schema('body', type_structure([
-                'data' => type_list(type_null()),
-                'id' => type_integer(),
-            ]))),
+            schema(structure_schema(
+                'body',
+                type_structure([
+                    'data' => type_json(),
+                    'id' => type_integer(),
+                ]),
+                true,
+            )),
             df()->read(from_array([['body' => ['data' => [], 'id' => 1]]]))->schema(),
         );
     }
@@ -105,14 +108,17 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema_of_a_structure_with_a_nested_heterogeneous_array(): void
     {
         static::assertEquals(
-            schema(structure_schema('body', type_structure(['data' => type_json(), 'id' => type_integer()]))),
+            schema(structure_schema('body', type_structure(['data' => type_json(), 'id' => type_integer()]), true)),
             df()->read(from_array([['body' => ['data' => [1, 'a'], 'id' => 1]]]))->schema(),
         );
     }
 
     public function test_getting_schema_of_a_column_holding_unrelated_types(): void
     {
-        static::assertEquals(schema(str_schema('a')), df()->read(from_array([['a' => 1], ['a' => true]]))->schema());
+        static::assertEquals(
+            schema(str_schema('a', true)),
+            df()->read(from_array([['a' => 1], ['a' => true]]))->schema(),
+        );
     }
 
     public function test_getting_schema_of_enum_column_with_null_values(): void

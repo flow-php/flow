@@ -44,9 +44,9 @@ final class PipelineRunCommandTest extends TestCase
             ┌────────┬─────────┬──────────┬──────────┐
             │ Name   │ Type    │ Nullable │ Metadata │
             ├────────┼─────────┼──────────┼──────────┤
-            │ id     │ integer │ false    │ {}       │
-            │ name   │ string  │ false    │ {}       │
-            │ active │ boolean │ false    │ {}       │
+            │ id     │ integer │ true     │ {}       │
+            │ name   │ string  │ true     │ {}       │
+            │ active │ boolean │ true     │ {}       │
             └────────┴─────────┴──────────┴──────────┘
 
             Columns

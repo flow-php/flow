@@ -129,8 +129,9 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $rows = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
-        // NOT NULL declaration.
-        static::assertFalse($rows->schema()->get('body')->isNullable());
+        // Nullable, and round-tripped as such: from_array infers it, and 08c R2 makes every inferred
+        // column nullable - NOT NULL is a declaration, never an inference.
+        static::assertTrue($rows->schema()->get('body')->isNullable());
 
         $first = $rows[0]->get('body');
         static::assertIsArray($first);

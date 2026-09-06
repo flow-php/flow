@@ -12,12 +12,14 @@ use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\UnionType;
+use UnitEnum;
 
 use function array_key_exists;
 use function array_values;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
@@ -76,6 +78,11 @@ final readonly class InferredTypes
     /**
      * Every rung but html and xml: no engine infers markup, HTMLType::cast() throws below PHP 8.4, and isXML()
      * builds a DOMDocument per cell.
+     *
+     * type_enum(UnitEnum::class) is the family marker, not a rung: no text source ever climbs to an enum, but a
+     * value-typed source reads one straight off the value (InstanceOfTypeNarrower), and without the entry
+     * TypeFloor would floor it to string - which StringType::cast() then refuses, making an enum column
+     * unreadable. An explicit ->types(...) set that omits it still floors enums, which is what allStrings() is.
      */
     public static function default(): self
     {
@@ -88,6 +95,7 @@ final readonly class InferredTypes
             type_date(),
             type_boolean(),
             type_time_zone(),
+            type_enum(UnitEnum::class),
             type_string(),
         );
     }

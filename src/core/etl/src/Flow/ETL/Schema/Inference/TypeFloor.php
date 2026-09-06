@@ -78,7 +78,14 @@ final readonly class TypeFloor
         $elements = [];
 
         foreach ($type->elements() as $element) {
-            $elements[] = structure_element($element->name, $this->floor($element->type), $element->optional);
+            // A column observed only as null floors to string and is then made nullable by the column rule
+            // - every inferred column is nullable. A structure element has no such rule above it, so the floor
+            // has to carry the nullability here, or the schema rejects the rows it was inferred from.
+            $elements[] = structure_element(
+                $element->name,
+                $element->type instanceof NullType ? type_optional(type_string()) : $this->floor($element->type),
+                $element->optional,
+            );
         }
 
         return new StructureType($elements, $type->allowsExtra());

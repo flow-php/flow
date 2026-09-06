@@ -16,6 +16,8 @@ final class RecordingDestinationStream implements DestinationStream
 
     public function append(string $data): self
     {
+        $this->filesystem->record('append');
+
         $this->stream->append($data);
 
         return $this;

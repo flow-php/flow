@@ -29,6 +29,13 @@ foreach ($dataFrame->get() as $rows) {
 }
 ```
 
+When `$largeDataset` is not an array - a generator, or any other one-shot iterable - `from_array()` reads
+it once and writes every row to a temporary file before the first batch is produced, so that the schema it
+reports is exact. Memory stays constant, but the dataset is on disk for as long as the extractor lives -
+which is what lets you call `get()`, `run()` or `schema()` on it more than once, exactly as you can with an
+array. Declare the schema up front with `from_array($largeDataset)->withSchema($schema)` to skip the spill
+entirely; a declared schema streams the source directly and can therefore be read only once.
+
 ### getEach() - Retrieve individual Rows
 
 ```php

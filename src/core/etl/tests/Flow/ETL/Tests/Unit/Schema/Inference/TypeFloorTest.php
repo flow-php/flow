@@ -116,7 +116,7 @@ final class TypeFloorTest extends FlowTestCase
             'list<array<mixed>>' => [type_list(type_array()), type_list(type_string()), ListDefinition::class],
             'structure{a: null}' => [
                 type_structure(['a' => type_null()]),
-                type_structure(['a' => type_string()]),
+                type_structure(['a' => type_optional(type_string())]),
                 StructureDefinition::class,
             ],
             'structure{a: list<null>}' => [
@@ -185,7 +185,7 @@ final class TypeFloorTest extends FlowTestCase
             'list<array<mixed>>' => [type_list(type_array()), type_list(type_json()), ListDefinition::class],
             'structure{a: null}' => [
                 type_structure(['a' => type_null()]),
-                type_structure(['a' => type_string()]),
+                type_structure(['a' => type_optional(type_string())]),
                 StructureDefinition::class,
             ],
             'structure{a: list<null>}' => [

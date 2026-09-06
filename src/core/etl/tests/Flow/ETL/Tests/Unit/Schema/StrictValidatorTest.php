@@ -25,6 +25,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
@@ -152,7 +153,7 @@ final class StrictValidatorTest extends FlowTestCase
     {
         static::assertTrue(
             schema_validate(
-                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                expected: schema(integer_schema('id', true), definition_from_type('a', type_optional(type_array()))),
                 given: data_frame()
                     ->read(from_array([['id' => 1, 'a' => [1, 'x']], ['id' => 2, 'a' => [2, 'y']]]))
                     ->schema(),
@@ -162,15 +163,15 @@ final class StrictValidatorTest extends FlowTestCase
     }
 
     /**
-     * Pins current behaviour, it does not assert it is desirable: a column of nothing but empty
-     * arrays now infers as list<null>, the bottom, which does not satisfy a declared json column
-     * the way NullDefinition satisfies a declared scalar one.
+     * Inverted by 08c R4's floor: a column of nothing but empty arrays used to infer as list<null>, the
+     * bottom, which no declared json column accepted. It now floors to json, which a declared array
+     * column projects onto, so the two agree.
      */
-    public function test_given_schema_inferred_from_empty_arrays_does_not_satisfy_a_declared_array_type(): void
+    public function test_given_schema_inferred_from_empty_arrays_satisfies_a_declared_array_type(): void
     {
-        static::assertFalse(
+        static::assertTrue(
             schema_validate(
-                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                expected: schema(integer_schema('id', true), definition_from_type('a', type_optional(type_array()))),
                 given: data_frame()->read(from_array([['id' => 1, 'a' => []], ['id' => 2, 'a' => []]]))->schema(),
                 validator: schema_strict_validator(),
             )->isValid(),

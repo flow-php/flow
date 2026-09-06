@@ -75,6 +75,9 @@ final class InferredTypesTest extends FlowTestCase
         static::assertTrue($types->allows(type_integer()));
         static::assertTrue($types->allows(type_date()));
         static::assertTrue($types->allows(type_time_zone()));
+        // no text source climbs to an enum, but a value-typed source reads one off the value, and
+        // without the rung TypeFloor would floor it to a string StringType::cast() then refuses
+        static::assertTrue($types->allows(type_enum(BackedStringEnum::class)));
         static::assertFalse($types->allows(type_html()));
         static::assertFalse($types->allows(type_xml()));
     }

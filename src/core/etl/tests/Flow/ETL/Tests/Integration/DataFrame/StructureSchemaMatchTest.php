@@ -114,7 +114,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         try {
             data_frame()
                 ->read(from_array([['user' => $value]]))
-                ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+                ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
                 ->run();
         } catch (SchemaValidationException) {
             $matched = false;
@@ -132,7 +132,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 2]]]]))
             ->match(
-                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema(structure_schema('user', type_structure(['data' => type_array()]), true)),
                 schema_selective_validator(),
             )
             ->run();
@@ -145,7 +145,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 'a']]]]))
             ->match(
-                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema(structure_schema('user', type_structure(['data' => type_array()]), true)),
                 schema_selective_validator(),
             )
             ->run();
@@ -163,7 +163,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['user' => ['data' => []]]]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
     }
 
@@ -180,7 +180,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 'a']]]]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
     }
 
@@ -197,7 +197,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
                 ['user' => ['id' => 1, 'email' => 'a@b.c', 'nickname' => 'norbert']],
                 ['user' => ['id' => 2, 'email' => 'c@d.e']],
             ]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
 
         static::assertSame(

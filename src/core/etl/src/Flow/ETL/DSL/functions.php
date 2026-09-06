@@ -333,13 +333,19 @@ function from_path_partitions(
 /**
  * @param iterable<array<mixed>> $array
  * @param null|Schema $schema - @deprecated use withSchema() method instead
+ * @param null|Path $spillRoot - where a non-array $array is spilled while it is described; null resolves to
+ *                          $filesystem->getSystemTmpDir() and only on that path
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'array')]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-function from_array(iterable $array, ?Schema $schema = null): ArrayExtractor
-{
-    $extractor = new ArrayExtractor($array);
+function from_array(
+    iterable $array,
+    ?Schema $schema = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+    ?Path $spillRoot = null,
+): ArrayExtractor {
+    $extractor = new ArrayExtractor($array, $filesystem, $spillRoot);
 
     if ($schema !== null) {
         $extractor->withSchema($schema);
