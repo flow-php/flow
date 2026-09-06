@@ -59,12 +59,19 @@ final readonly class StringTemporalParts
      *
      * A month paired with a time ('2024-01 10:00') still reaches three groups; per-column format detection, which
      * is how DuckDB settles this, is recorded as debt rather than approximated further here.
+     *
+     * Compact ISO ('20240305') is one group and a real calendar date; from()'s checkdate() gate keeps '12345678'
+     * and friends out, so the widening is exactly that one form.
      */
     public static function hasExplicitDay(string $value): bool
     {
         $numericGroups = (int) preg_match_all('/\d+/', $value);
 
         if ($numericGroups >= 3) {
+            return true;
+        }
+
+        if ($numericGroups === 1 && preg_match('/^\d{8}$/', $value) === 1) {
             return true;
         }
 

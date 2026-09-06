@@ -43,7 +43,7 @@ $schemaBody = json_encode($schema->normalize(), JSON_THROW_ON_ERROR);
 $hydrator = new PhpRowHydrator();
 
 $encoder = new RustFloeEncoderNative();
-$bodies = $encoder->encode($hydrator->dehydrate(new Rows($schema, ...$sourceRows)), $schemaBody);
+$bodies = $encoder->encode($hydrator->dehydrate(new Rows($schema, ...$sourceRows)), $schemaBody, $schema);
 
 $decoded = $hydrator->hydrate((new RustFloeEncoderNative())->decode($bodies, $schemaBody), schema_from_json($schemaBody));
 
@@ -51,7 +51,7 @@ var_dump($decoded instanceof Rows);
 var_dump($decoded->count());
 
 $reEncoder = new RustFloeEncoderNative();
-$reBodies = $reEncoder->encode($hydrator->dehydrate($decoded), $schemaBody);
+$reBodies = $reEncoder->encode($hydrator->dehydrate($decoded), $schemaBody, $schema);
 var_dump($bodies === $reBodies);
 
 $frames = array_merge(

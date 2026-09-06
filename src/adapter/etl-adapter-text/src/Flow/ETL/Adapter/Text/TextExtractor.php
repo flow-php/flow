@@ -86,7 +86,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
                     $rawLines = [];
 
-                    $hydrated = $hydrator->cast($batch, $schema);
+                    $hydrated = $hydrator->hydrate($batch, $schema);
 
                     foreach ($hydrated as $hydratedRow) {
                         $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
@@ -106,7 +106,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                 $batch[] = new RawRowValues($constants->fill($rowValues->values));
             }
 
-            $hydrated = $hydrator->cast($batch, $schema);
+            $hydrated = $hydrator->hydrate($batch, $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);

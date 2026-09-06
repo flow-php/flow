@@ -56,7 +56,7 @@ final class ParquetHydratorParityTest extends FlowTestCase
         $decodedRows = $encoder->decode($rawRows);
 
         $trusted = (new AdaptiveRowHydrator())->hydrate($decodedRows, $flowSchema);
-        $cast = (new AdaptiveRowHydrator())->cast(
+        $cast = (new AdaptiveRowHydrator())->hydrate(
             array_map(static fn(array $values): RawRowValues => new RawRowValues($values), $rawRows),
             $flowSchema,
         );

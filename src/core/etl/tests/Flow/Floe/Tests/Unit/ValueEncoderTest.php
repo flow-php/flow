@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use DateTime;
-use DateTimeImmutable;
 use DOMElement;
 use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\CustomDateTime;
 use Flow\Floe\Encoding\DateTimeEncoder;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Format;
 use Flow\Floe\ValueEncoder;
 use PHPUnit\Framework\TestCase;
 
@@ -31,7 +28,6 @@ use function Flow\Types\DSL\type_non_empty_string;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
-use function ord;
 use function pack;
 
 use const PHP_INT_MAX;
@@ -39,17 +35,6 @@ use const PHP_INT_MIN;
 
 final class ValueEncoderTest extends TestCase
 {
-    public function test_encoding_datetime_heads_are_immutable_and_mutable_only(): void
-    {
-        $encoder = new DateTimeEncoder();
-
-        static::assertSame(
-            Format::DATETIME_IMMUTABLE,
-            ord($encoder->encode(new DateTimeImmutable('2025-01-01 00:00:00 UTC'))[0]),
-        );
-        static::assertSame(Format::DATETIME_MUTABLE, ord($encoder->encode(new DateTime('2025-01-01 00:00:00 UTC'))[0]));
-    }
-
     public function test_encoding_datetime_of_custom_class_throws(): void
     {
         $this->expectException(FloeException::class);

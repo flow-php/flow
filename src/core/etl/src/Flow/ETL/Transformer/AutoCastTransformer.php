@@ -7,13 +7,15 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\InferredBatch;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Types\Type\AutoCaster;
 use Throwable;
 
 use function array_map;
-use function Flow\ETL\DSL\array_to_rows;
+use function array_values;
 
 final readonly class AutoCastTransformer implements Transformer
 {
@@ -26,10 +28,10 @@ final readonly class AutoCastTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = array_to_rows(array_map(fn(Row $row): array => array_map(
-                $this->caster->cast(...),
-                $row->values(),
-            ), $rows->all()), $context->hydrator());
+            $result = (new InferredBatch())->of(array_values(array_map(
+                static fn(array $values): RawRowValues => new RawRowValues($values),
+                array_map(fn(Row $row): array => array_map($this->caster->cast(...), $row->values()), $rows->all()),
+            )));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

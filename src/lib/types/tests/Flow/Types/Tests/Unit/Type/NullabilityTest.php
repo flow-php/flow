@@ -61,6 +61,46 @@ final class NullabilityTest extends TestCase
         }
     }
 
+    public function test_any_reads_both_spellings_of_null_and_the_null_type_itself(): void
+    {
+        static::assertSame('?boolean', (new Nullability())->any(type_boolean(), type_null())->toString());
+        static::assertSame(
+            '?boolean',
+            (new Nullability())->any(type_boolean(), type_union(type_null(), type_string()))->toString(),
+        );
+        static::assertSame(
+            '?boolean',
+            (new Nullability())->any(type_boolean(), type_optional(type_integer()))->toString(),
+        );
+
+        static::assertSame('boolean', (new Nullability())->any(type_boolean(), type_integer())->toString());
+        static::assertSame(
+            'boolean',
+            (new Nullability())->any(type_boolean(), type_list(type_optional(type_integer())))->toString(),
+        );
+    }
+
+    public function test_any_wraps_when_an_operand_is_the_null_type_itself(): void
+    {
+        static::assertSame(
+            '?boolean',
+            (new Nullability())->any(type_boolean(), type_null(), type_integer())->toString(),
+        );
+    }
+
+    public function test_all_counts_the_null_type_itself_as_nullable(): void
+    {
+        // a genuinely null operand must not REMOVE nullability: coalesce(?int, null) can return null
+        static::assertSame(
+            '?integer',
+            (new Nullability())->all(type_integer(), type_optional(type_integer()), type_null())->toString(),
+        );
+        static::assertSame(
+            'integer',
+            (new Nullability())->all(type_integer(), type_optional(type_integer()), type_string())->toString(),
+        );
+    }
+
     public function test_is_recognises_both_spellings(): void
     {
         static::assertTrue((new Nullability())->is(type_optional(type_integer())));

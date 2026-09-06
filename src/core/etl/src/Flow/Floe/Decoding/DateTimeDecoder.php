@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Decoding;
 
-use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Format;
 
-use function ord;
 use function sprintf;
 use function str_pad;
+use function strlen;
 use function substr;
 use function unpack;
 
@@ -26,23 +24,22 @@ final class DateTimeDecoder implements ValueDecoder
 
     public function decode(string $data, int &$position): DateTimeInterface
     {
-        $classFlag = ord($data[$position++]);
-
-        if ($classFlag === Format::DATETIME_IMMUTABLE) {
-            $class = DateTimeImmutable::class;
-        } elseif ($classFlag === Format::DATETIME_MUTABLE) {
-            $class = DateTime::class;
-        } else {
-            throw new FloeException(sprintf('Floe found unknown datetime flag 0x%02X', $classFlag));
+        // unpack() raises a ValueError past the end of the buffer, which is not a Floe error
+        if (strlen($data) < ($position + 16)) {
+            throw new FloeException('Floe found a truncated datetime value');
         }
 
         $timestamp = unpack('P', $data, $position)[1];
         $microseconds = unpack('V', $data, $position + 8)[1];
         $timezoneLength = unpack('V', $data, $position + 12)[1];
+        if (strlen($data) < ($position + 16 + $timezoneLength)) {
+            throw new FloeException('Floe found a truncated datetime value');
+        }
+
         $timezoneName = substr($data, $position + 16, $timezoneLength);
         $position += 16 + $timezoneLength;
 
-        $value = $class::createFromFormat(
+        $value = DateTimeImmutable::createFromFormat(
             'U.u',
             $timestamp . '.' . str_pad((string) $microseconds, 6, '0', STR_PAD_LEFT),
         );

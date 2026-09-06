@@ -33,6 +33,11 @@ final readonly class InferredBatch
 
             /** @var mixed $value */
             foreach ($rowValues->values as $name => $value) {
+                // RawRowValues::$values is declared array<string, mixed>, but PHP hands a numeric
+                // column name back as an INT key - a pivot names its columns by their own values.
+                // definition_from_type() takes Reference|string, so the cast is not redundant at runtime.
+                // @mago-ignore analysis:redundant-cast
+                $name = (string) $name;
                 $definition = definition_from_type($name, $this->typeDetector->detectType($value), $value === null);
 
                 if (array_key_exists($name, $rowValues->metadata)) {
@@ -54,6 +59,9 @@ final readonly class InferredBatch
 
             /** @var mixed $value */
             foreach ($rowValues->values as $name => $value) {
+                // see above - an int key here would miss the column the schema declares as "5"
+                // @mago-ignore analysis:redundant-cast
+                $name = (string) $name;
                 $definition = $schema->get($name);
 
                 $values[$name] = $definition->matches($value) ? $value : $definition->type()->cast($value);

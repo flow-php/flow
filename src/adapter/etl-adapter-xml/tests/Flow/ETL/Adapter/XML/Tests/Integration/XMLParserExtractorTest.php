@@ -210,9 +210,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_reading_xml_refuses_a_not_null_column_the_document_lacks(): void
     {
         $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage(
-            'column "missing" (row 0): could not convert null to xml, column is not nullable',
-        );
+        $this->expectExceptionMessage('column "missing" (row 0) declared by the schema is missing from the row');
 
         df()
             ->extract(from_xml(__DIR__ . '/../Fixtures/simple_items.xml')->withSchema(schema(

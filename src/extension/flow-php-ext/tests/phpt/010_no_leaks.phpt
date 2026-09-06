@@ -91,7 +91,7 @@ $cycle = static function () use ($schemaBody, $decodeSchema, $rowBodies, $schema
     }
 
     $encoder = new RustFloeEncoderNative();
-    $encoder->encode($hydrator->dehydrate(new Rows($schema, ...$sourceRows)), $schemaBody);
+    $encoder->encode($hydrator->dehydrate(new Rows($schema, ...$sourceRows)), $schemaBody, $schema);
 };
 
 for ($i = 0; $i < 10; $i++) {

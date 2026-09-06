@@ -66,8 +66,8 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
                     // type, so the absence is spelled null rather than a boolean in a string column.
                     'extension' => $extension === false ? null : $extension,
                 ],
-                $context->hydrator(),
                 $this->schema(),
+                $context->hydrator(),
             );
 
             $this->incrementReturnedRows();

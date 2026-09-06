@@ -11,12 +11,13 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
+use Flow\ETL\Row\InferredBatch;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 
@@ -60,7 +61,10 @@ final readonly class ScalarFunctionTransformer implements Transformer
         }
 
         // N columns whose names come from runtime array keys cannot be declared before rows flow -
-        // ArrayUnpack::returns() throws SchemaNotDerivableException by design.
+        // ArrayUnpack::returns() throws SchemaNotDerivableException by design. This is the one
+        // PERMANENT schemaless producer (AutoCastTransformer is the other caller until task 10 deletes
+        // it). Spark takes the opposite position - unresolved means invalid, not unknown - but Spark
+        // has no array_unpack, and both from_json and explode demand a declared schema.
         if ($this->function instanceof UnpackResults) {
             $batch = [];
 
@@ -72,10 +76,10 @@ final readonly class ScalarFunctionTransformer implements Transformer
                     $values[$this->entryName() . '.' . $key] = $val;
                 }
 
-                $batch[] = $values;
+                $batch[] = new RawRowValues($values);
             }
 
-            return array_to_rows($batch, $context->hydrator());
+            return (new InferredBatch())->of($batch);
         }
 
         $schema = $rows->schema();

@@ -25,7 +25,7 @@ $typed = (new PhpRowHydrator())->dehydrate(
 
 $encoder = new RustFloeEncoderNative();
 
-expect_exception(fn() => $encoder->encode($typed, json_encode($schema->normalize(), JSON_THROW_ON_ERROR)));
+expect_exception(fn() => $encoder->encode($typed, json_encode($schema->normalize(), JSON_THROW_ON_ERROR), $schema));
 ?>
 --EXPECT--
 Flow\Floe\Exception\ExtensionException: Floe supports only DateTime and DateTimeImmutable, got PhptCustomDateTime - convert custom datetime instances before writing

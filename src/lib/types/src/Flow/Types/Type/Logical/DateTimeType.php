@@ -12,6 +12,7 @@ use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\String\StringTemporalParts;
 use Throwable;
 
 use function is_bool;
@@ -50,6 +51,14 @@ final readonly class DateTimeType implements Type
 
         try {
             if (is_string($value)) {
+                $parts = StringTemporalParts::from($value);
+
+                if (!$parts->isDate() && !$parts->isDateTime()) {
+                    // DateTimeImmutable resolves '', 'now' and '+12' against the wall clock, so the
+                    // same input written twice would produce two different values
+                    throw new CastingException($value, $this, reason: 'value is not a calendar date');
+                }
+
                 return new DateTimeImmutable($value);
             }
 

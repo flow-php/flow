@@ -81,7 +81,12 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_encode_decode_round_trip_preserves_flags(): void
     {
-        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
+        // the column carries nulls, so the declaration admits them - a null on a NOT NULL column is
+        // refused by the encoder
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(
+            int_schema('id'),
+            str_schema('name', nullable: true),
+        )));
 
         $encoder = new PhpFloeEncoder($schema);
 
@@ -129,7 +134,10 @@ final class PhpFloeEncoderTest extends TestCase
 
     public function test_null_entry_in_a_typed_column_encodes_as_a_plain_null(): void
     {
-        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(
+            int_schema('id'),
+            str_schema('name', nullable: true),
+        )));
 
         $encoder = new PhpFloeEncoder($schema);
         $body = $encoder->encode((new PhpRowHydrator())->dehydrate(rows(

@@ -101,6 +101,7 @@ pub struct NormalizedDefinition {
     pub name: String,
     #[serde(rename = "type")]
     pub type_: TypeJson,
+    pub nullable: bool,
 }
 
 pub fn parse_schema_json(schema_json: &[u8]) -> Result<Vec<NormalizedDefinition>, PhpException> {

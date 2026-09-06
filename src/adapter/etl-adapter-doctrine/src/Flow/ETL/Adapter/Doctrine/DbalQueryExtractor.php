@@ -74,7 +74,7 @@ final class DbalQueryExtractor implements Extractor
                 $rawBatch[] = $row;
             }
 
-            $hydrated = $hydrator->cast($encoder->decode($rawBatch), $schema);
+            $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $schema);
 
             foreach ($hydrated as $hydratedRow) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);

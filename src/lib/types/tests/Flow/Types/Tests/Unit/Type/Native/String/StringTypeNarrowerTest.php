@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native\String;
 
+use DateTimeInterface;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
@@ -62,6 +63,30 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_datetime(), $narrower->narrow('2024-01-01 10:00'));
     }
 
+    public function test_every_string_the_ladder_types_temporal_is_castable_by_that_type(): void
+    {
+        $narrower = new StringTypeNarrower();
+
+        foreach ([
+            '12/31/2024',
+            '2024-01-01',
+            '2023-01-01',
+            '2023-01-01 +10 hours',
+            'Thursday, 02-Jun-2022 16:58:35 UTC',
+            '2022-06-02T16:58:35+0000',
+            '2022-06-02T16:58:35+00:00',
+            'Thu, 02 Jun 22 16:58:35 +0000',
+            'Thursday, 02-Jun-22 16:58:35 UTC',
+            'Thu, 02 Jun 2022 16:58:35 +0000',
+            '2024-01-01 10:00',
+        ] as $literal) {
+            $narrowed = $narrower->narrow($literal);
+
+            static::assertContains($narrowed->toString(), ['date', 'datetime'], $literal);
+            static::assertInstanceOf(DateTimeInterface::class, $narrowed->cast($literal), $literal);
+        }
+    }
+
     public function test_detecting_float(): void
     {
         $narrower = new StringTypeNarrower();
@@ -72,6 +97,13 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_string(), $narrower->narrow('not float'));
         static::assertEquals(type_integer(), $narrower->narrow('1'));
         static::assertEquals(type_string(), $narrower->narrow('1.0.0'));
+    }
+
+    public function test_compact_iso_still_narrows_to_integer(): void
+    {
+        // StringTemporalParts recognises '20240305' as a date so type_date() can cast it, but the
+        // ladder runs its isInteger rung above the temporal ones and must keep doing so
+        static::assertEquals(type_integer(), (new StringTypeNarrower())->narrow('20240305'));
     }
 
     #[RequiresPhp('>= 8.4.0')]

@@ -37,13 +37,20 @@ The same can be achieved using the following code:
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
-$rows = array_to_rows([
-    ['id' => 1, 'name' => 'user_01', 'active' => true],
-    ['id' => 2, 'name' => 'user_02', 'active' => false],
-    ['id' => 3, 'name' => 'user_03', 'active' => true],
-    ['id' => 4, 'name' => 'user_04', 'active' => false],
-]);
+$rows = array_to_rows(
+    [
+        ['id' => 1, 'name' => 'user_01', 'active' => true],
+        ['id' => 2, 'name' => 'user_02', 'active' => false],
+        ['id' => 3, 'name' => 'user_03', 'active' => true],
+        ['id' => 4, 'name' => 'user_04', 'active' => false],
+    ],
+    schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+);
 ```
 
 ## Column Types
@@ -79,7 +86,10 @@ A column holds exactly one type, so `union_schema()` accepts only `null|T` - a n
 refuses every other union. Declare the widest common type with `str_schema()`, or `json_schema()` when the
 shape is genuinely dynamic.
 
-When no schema is given up front - as in the `array_to_rows()` example above - a
-[Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) infers one from the whole batch and turns the raw
-values into `Rows`. Inference looks at every row of the batch, not at a single value, so one column always
-ends up with one type.
+The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and a
+[Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) turns the raw values into `Rows` against it,
+casting each one to the type its column declares. A value the declared type refuses aborts the batch
+with a `SchemaMismatchException` naming the column and its row.
+
+Schema *inference* belongs to the readers, which sample a source and derive a schema from it before any
+row flows - see [Schema](/documentation/components/core/schema.md).

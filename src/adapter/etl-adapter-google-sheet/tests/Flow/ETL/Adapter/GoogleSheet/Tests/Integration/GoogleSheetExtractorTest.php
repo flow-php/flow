@@ -88,7 +88,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public function test_extract_refuses_a_not_null_column_the_sheet_lacks(): void
     {
         $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage('column "id" (row 0): could not convert null to integer, column is not nullable');
+        $this->expectExceptionMessage('column "id" (row 0) declared by the schema is missing from the row');
 
         df()
             ->extract(from_google_sheet(

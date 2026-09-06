@@ -75,7 +75,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
             );
 
             if ($this->schema !== null) {
-                $batch = array_to_rows($batch->toArray(), $context->hydrator(), $this->schema);
+                $batch = array_to_rows($batch->toArray(), $this->schema, $context->hydrator());
             }
 
             $signal = yield $batch;

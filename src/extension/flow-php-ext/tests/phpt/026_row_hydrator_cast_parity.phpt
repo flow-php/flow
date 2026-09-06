@@ -52,7 +52,7 @@ $datasets = [
             new RawRowValues(['id' => '42', 'p' => '3.14', 'a' => 'yes', 'n' => 7]),
             new RawRowValues(['id' => ' 7', 'p' => '1e3', 'a' => 'OFF', 'n' => 1.5]),
             new RawRowValues(['id' => '007', 'p' => '.5', 'a' => 'ON', 'n' => true]),
-            new RawRowValues(['id' => '9223372036854775808', 'p' => true, 'a' => 3.5, 'n' => null]),
+            new RawRowValues(['id' => '9223372036854775807', 'p' => true, 'a' => 3.5, 'n' => null]),
             new RawRowValues(['id' => 5, 'p' => 2.5, 'a' => true, 'n' => 'text']),
         ],
     ],
@@ -137,42 +137,34 @@ $php = new PhpRowHydrator();
 $native = new NativeRowHydrator();
 
 foreach ($datasets as $label => [$s, $batch]) {
-    $castOk = serialize($php->cast($batch, $s)) === serialize($native->cast($batch, $s));
-    printf("%-16s cast:%s\n", $label, $castOk ? 'yes' : 'NO');
+    $hydrateOk = serialize($php->hydrate($batch, $s)) === serialize($native->hydrate($batch, $s));
+    printf("%-16s hydrate:%s\n", $label, $hydrateOk ? 'yes' : 'NO');
 }
 
 $mutated = schema(int_schema('id'));
-$php->cast([new RawRowValues(['id' => '1'])], $mutated);
-$native->cast([new RawRowValues(['id' => '1'])], $mutated);
+$php->hydrate([new RawRowValues(['id' => '1'])], $mutated);
+$native->hydrate([new RawRowValues(['id' => '1'])], $mutated);
 $mutated->add(str_schema('name', nullable: true))->makeNullable();
 // Schema is immutable, so $mutated never gained "name" - the column is simply not cast
 $batch = [new RawRowValues(['id' => '1', 'name' => 7])];
 printf(
-    "%-16s cast:%s\n",
+    "%-16s hydrate:%s\n",
     'schema_mutation',
-    serialize($php->cast($batch, $mutated)) === serialize($native->cast($batch, $mutated)) ? 'yes' : 'NO',
-);
-
-$inferBatch = [new RawRowValues(['id' => 1, 'name' => null])];
-printf(
-    "%-16s cast:%s\n",
-    'null_schema',
-    serialize($php->cast($inferBatch)) === serialize($native->cast($inferBatch)) ? 'yes' : 'NO',
+    serialize($php->hydrate($batch, $mutated)) === serialize($native->hydrate($batch, $mutated)) ? 'yes' : 'NO',
 );
 
 printf("native class registered:%s\n", class_exists(RustRowHydratorNative::class, false) ? 'yes' : 'NO');
 ?>
 --EXPECT--
-scalars          cast:yes
-nested_families  cast:yes
-temporal         cast:yes
-uuid_json        cast:yes
-containers       cast:yes
-exotic_fallback  cast:yes
-fill_and_metadata cast:yes
-all_optional_st  cast:yes
-interleaved_st   cast:yes
-empty            cast:yes
-schema_mutation  cast:yes
-null_schema      cast:yes
+scalars          hydrate:yes
+nested_families  hydrate:yes
+temporal         hydrate:yes
+uuid_json        hydrate:yes
+containers       hydrate:yes
+exotic_fallback  hydrate:yes
+fill_and_metadata hydrate:yes
+all_optional_st  hydrate:yes
+interleaved_st   hydrate:yes
+empty            hydrate:yes
+schema_mutation  hydrate:yes
 native class registered:yes

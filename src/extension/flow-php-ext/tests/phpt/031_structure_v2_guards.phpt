@@ -14,7 +14,8 @@ use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\Floe\RustFloeEncoderNative;
 
-$typed = (new PhpRowHydrator())->dehydrate(new Rows(schema(int_schema('id')), row(['id' => 1])));
+$schema = schema(int_schema('id'));
+$typed = (new PhpRowHydrator())->dehydrate(new Rows($schema, row(['id' => 1])));
 
 // direction 2 of the skew guard: a new binary reading the legacy two-bucket shape
 // has no "structure" arm and rejects the unknown tag.
@@ -30,7 +31,7 @@ $legacy = json_encode([[
     'metadata' => [],
 ]], JSON_THROW_ON_ERROR);
 
-expect_exception(fn() => (new RustFloeEncoderNative())->encode($typed, $legacy));
+expect_exception(fn() => (new RustFloeEncoderNative())->encode($typed, $legacy, $schema));
 
 // the belt: a structure_v2 whose fields deserialized empty for any other reason.
 $emptyFields = json_encode([[
@@ -44,7 +45,7 @@ $emptyFields = json_encode([[
     'metadata' => [],
 ]], JSON_THROW_ON_ERROR);
 
-expect_exception(fn() => (new RustFloeEncoderNative())->encode($typed, $emptyFields));
+expect_exception(fn() => (new RustFloeEncoderNative())->encode($typed, $emptyFields, $schema));
 ?>
 --EXPECT--
 Flow\Floe\Exception\ExtensionException: flow_php does not support values of type "structure" in this build

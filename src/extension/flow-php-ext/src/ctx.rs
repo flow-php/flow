@@ -145,6 +145,30 @@ pub fn zval_long(value: i64) -> Zval {
     zv
 }
 
+pub fn null_zval() -> Zval {
+    let mut zv = Zval::new();
+    zv.set_null();
+    zv
+}
+
+/// `throw new SchemaMismatchException($rowIndex, <cause>)`, where the cause comes from a
+/// `ColumnMismatchException` factory - the PHP side authors every schema-mismatch message.
+pub fn schema_mismatch(
+    schema_mismatch_ce: &'static ClassEntry,
+    factory: &'static Function,
+    row_index: u64,
+    args: &mut [Zval],
+) -> Result<PhpException, PhpException> {
+    let cause = call_handle_transparent(factory, None, args)?;
+    let mut wrapped = construct_with_zvals(
+        schema_mismatch_ce,
+        &mut [zval_long(row_index as i64), cause],
+        "a SchemaMismatchException",
+    )?;
+
+    Ok(transparent_exception(&mut wrapped))
+}
+
 pub fn find_class(name: &str) -> Result<&'static ClassEntry, PhpException> {
     ClassEntry::try_find(name).ok_or_else(|| {
         ext_exception(format!(

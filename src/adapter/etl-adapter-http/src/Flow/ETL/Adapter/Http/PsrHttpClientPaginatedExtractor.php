@@ -67,7 +67,7 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
 
             $raw = $encoder->decode([new HttpExchange($request, $response)]);
 
-            $hydrated = $hydrator->cast($raw, $this->schema());
+            $hydrated = $hydrator->hydrate($raw, $this->schema());
 
             foreach ($hydrated as $row) {
                 $signal = yield Rows::trusted($hydrated->schema(), [$row]);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row;
 
 use DateTimeImmutable;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
@@ -16,9 +15,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
-use Flow\Types\Type\Native\IntegerType;
-use Flow\Types\Type\Native\NullType;
-use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Uuid;
 use LogicException;
 
@@ -44,7 +40,7 @@ final class PhpRowHydratorTest extends FlowTestCase
 {
     public function test_absent_schema_column_is_filled_with_typed_null(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $rows = (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => '1'])],
             schema(int_schema('id'), str_schema('name', nullable: true)),
         );
@@ -55,30 +51,30 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertSame(['id' => 1, 'name' => null], $rows->first()->toArray());
     }
 
-    public function test_cast_does_not_wrap_an_exception_the_types_package_did_not_raise(): void
+    public function test_hydrate_does_not_wrap_an_exception_the_types_package_did_not_raise(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('stub type refuses everything');
 
-        (new PhpRowHydrator())->cast([new RawRowValues(['a' => [
+        (new PhpRowHydrator())->hydrate([new RawRowValues(['a' => [
             1,
             2,
         ]])], schema(new UnionDefinition('a', type_union(new ThrowingType(new LogicException('stub type refuses everything')), type_string()))));
     }
 
-    public function test_cast_throws_on_missing_required_structure_element(): void
+    public function test_hydrate_throws_on_missing_required_structure_element(): void
     {
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('Rows do not match their schema: column "data" (row 0)');
 
-        (new PhpRowHydrator())->cast([new RawRowValues(['data' => [
+        (new PhpRowHydrator())->hydrate([new RawRowValues(['data' => [
             'id' => 1,
         ]])], schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))));
     }
 
     public function test_casts_datetime_and_uuid_strings(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $rows = (new PhpRowHydrator())->hydrate(
             [new RawRowValues([
                 'created_at' => '2024-01-01 12:00:00 UTC',
                 'uuid' => 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -95,7 +91,7 @@ final class PhpRowHydratorTest extends FlowTestCase
 
     public function test_casts_raw_scalar_strings_to_schema_types(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $rows = (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => '1', 'price' => '9.99', 'active' => 'true', 'name' => 'Alice'])],
             schema(int_schema('id'), float_schema('price'), bool_schema('active'), str_schema('name')),
         );
@@ -108,7 +104,7 @@ final class PhpRowHydratorTest extends FlowTestCase
 
     public function test_columns_absent_from_the_schema_are_dropped(): void
     {
-        $rows = (new PhpRowHydrator())->cast([new RawRowValues([
+        $rows = (new PhpRowHydrator())->hydrate([new RawRowValues([
             'id' => '1',
             'extra' => 'raw',
         ])], schema(int_schema('id')));
@@ -132,18 +128,18 @@ final class PhpRowHydratorTest extends FlowTestCase
                 new TypedRowValues(['id' => 1, 'name' => 'Alice'], ['id' => type_integer(), 'name' => type_string()]),
                 new TypedRowValues(['id' => 2, 'name' => null], ['id' => type_integer(), 'name' => type_string()]),
             ],
-            $hydrator->dehydrate($hydrator->cast($batch, $schema)),
+            $hydrator->dehydrate($hydrator->hydrate($batch, $schema)),
         );
     }
 
     public function test_empty_batch_produces_empty_rows(): void
     {
-        static::assertCount(0, (new PhpRowHydrator())->cast([], schema(int_schema('id'))));
+        static::assertCount(0, (new PhpRowHydrator())->hydrate([], schema(int_schema('id'))));
     }
 
-    public function test_cast_keeps_native_typed_values(): void
+    public function test_hydrate_keeps_native_typed_values(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $rows = (new PhpRowHydrator())->hydrate(
             [
                 new RawRowValues(['id' => 1, 'name' => 'Alice']),
                 new RawRowValues(['id' => 2, 'name' => 'Bob']),
@@ -160,9 +156,9 @@ final class PhpRowHydratorTest extends FlowTestCase
         );
     }
 
-    public function test_cast_keeps_native_uuid_value_objects(): void
+    public function test_hydrate_keeps_native_uuid_value_objects(): void
     {
-        $rows = (new PhpRowHydrator())->cast([new RawRowValues([
+        $rows = (new PhpRowHydrator())->hydrate([new RawRowValues([
             'id' => new Uuid('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
         ])], schema(uuid_schema('id')));
 
@@ -172,34 +168,13 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertSame('f47ac10b-58cc-4372-a567-0e02b2c3d479', $value->toString());
     }
 
-    public function test_cast_with_null_schema_infers_each_entry(): void
-    {
-        $rows = (new PhpRowHydrator())->cast([new RawRowValues([
-            'id' => 1,
-            'name' => 'Alice',
-            'missing' => null,
-        ])]);
-
-        // inference types the COLUMN now, not the cell
-        static::assertInstanceOf(IntegerType::class, $rows->schema()->get('id')->type());
-        static::assertInstanceOf(StringType::class, $rows->schema()->get('name')->type());
-        static::assertInstanceOf(NullType::class, $rows->schema()->get('missing')->type());
-        static::assertNull($rows->first()->get('missing'));
-        static::assertSame(['id' => 1, 'name' => 'Alice', 'missing' => null], $rows->first()->toArray());
-    }
-
-    /**
-     * EntryFactory::makeNullable() used to widen the REPORTED schema when a null landed in a
-     * non-nullable column, and 05 replaced that with a batch whose row simply contradicted its
-     * declaration. The batch door now refuses the contradiction outright.
-     */
     public function test_null_value_in_a_non_nullable_column_is_refused(): void
     {
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('Rows do not match their schema: column "name" (row 0): could not convert null to string, '
         . 'column is not nullable');
 
-        (new PhpRowHydrator())->cast(
+        (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => 1, 'name' => null])],
             schema(int_schema('id'), str_schema('name')),
         );
@@ -207,7 +182,7 @@ final class PhpRowHydratorTest extends FlowTestCase
 
     public function test_null_value_keeps_the_schema_definition(): void
     {
-        $rows = (new PhpRowHydrator())->cast(
+        $rows = (new PhpRowHydrator())->hydrate(
             [new RawRowValues(['id' => 1, 'name' => null])],
             schema(int_schema('id'), str_schema('name', nullable: true)),
         );
@@ -220,8 +195,8 @@ final class PhpRowHydratorTest extends FlowTestCase
     {
         $hydrator = new PhpRowHydrator();
 
-        $ids = $hydrator->cast([new RawRowValues(['id' => '1'])], schema(int_schema('id')));
-        $prices = $hydrator->cast([new RawRowValues(['id' => '1'])], schema(float_schema('id')));
+        $ids = $hydrator->hydrate([new RawRowValues(['id' => '1'])], schema(int_schema('id')));
+        $prices = $hydrator->hydrate([new RawRowValues(['id' => '1'])], schema(float_schema('id')));
 
         static::assertSame(['id' => 1], $ids->first()->toArray());
         static::assertSame(['id' => 1.0], $prices->first()->toArray());
@@ -231,20 +206,12 @@ final class PhpRowHydratorTest extends FlowTestCase
     {
         $schema = schema(int_schema('id'));
 
-        $rows = (new PhpRowHydrator())->cast([
+        $rows = (new PhpRowHydrator())->hydrate([
             new RawRowValues(['id' => 1]),
             new RawRowValues(['id' => 2]),
         ], $schema);
 
         static::assertSame($schema, $rows->schema());
-    }
-
-    public function test_hydrate_requires_a_schema(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('PhpRowHydrator::hydrate() requires a schema');
-
-        (new PhpRowHydrator())->hydrate([new RawRowValues(['id' => 1])]);
     }
 
     public function test_hydrate_does_not_cast_native_values(): void
@@ -295,32 +262,19 @@ final class PhpRowHydratorTest extends FlowTestCase
         static::assertNull($rows->first()->get('name'));
     }
 
-    public function test_hydrate_present_null_in_a_non_nullable_column_is_refused(): void
-    {
-        $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage('Rows do not match their schema: column "name" (row 0): could not convert null to string, '
-        . 'column is not nullable');
-
-        (new PhpRowHydrator())->hydrate(
-            [new RawRowValues(['id' => 1, 'name' => null])],
-            schema(int_schema('id'), str_schema('name')),
-        );
-    }
-
-    public function test_hydrate_matches_cast_for_native_values(): void
+    public function test_hydrating_already_typed_values_is_idempotent(): void
     {
         $schema = schema(int_schema('id'), str_schema('name'), datetime_schema('created_at'));
-        $values = new RawRowValues([
+        $hydrator = new PhpRowHydrator();
+        $rows = $hydrator->hydrate([new RawRowValues([
             'id' => 1,
             'name' => 'Alice',
             'created_at' => new DateTimeImmutable('2024-01-01 00:00:00 UTC'),
-        ]);
-
-        $hydrator = new PhpRowHydrator();
+        ])], $schema);
 
         static::assertSame(
-            serialize($hydrator->cast([$values], $schema)),
-            serialize($hydrator->hydrate([$values], $schema)),
+            serialize($rows),
+            serialize($hydrator->hydrate([new RawRowValues($rows->first()->values())], $schema)),
         );
     }
 }

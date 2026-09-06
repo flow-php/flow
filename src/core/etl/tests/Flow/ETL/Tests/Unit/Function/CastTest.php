@@ -74,7 +74,6 @@ final class CastTest extends FlowTestCase
             'string' => [1, 'string', '1'],
             'bool' => ['1', 'bool', true],
             'boolean' => ['1', 'boolean', true],
-            'array' => ['1', 'array', ['1']],
             'json' => [[1], 'json', new Json('[1]')],
             'xml_to_array' => [
                 $xml,
@@ -121,6 +120,16 @@ final class CastTest extends FlowTestCase
             static::assertSame($expected, $resultRefCast);
             static::assertSame($expected, $resultCastRef);
         }
+    }
+
+    public function test_casting_a_scalar_to_array_names_the_remedy(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Cast function failed: Can\'t cast "string" into "array<mixed>" type: wrap the value first, e.g. type_list(type_string())',
+        );
+
+        ref('value')->cast('array')->eval(row(['value' => '1']), flow_context());
     }
 
     public function test_casting_integer_to_timezone(): void

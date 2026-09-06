@@ -34,7 +34,7 @@ $batch = [new RawRowValues(['st' => [0 => '1', 'b' => 2]])];
 
 printf(
     "cast-parity:%s\n",
-    serialize((new PhpRowHydrator())->cast($batch, $schema)) === serialize((new NativeRowHydrator())->cast($batch, $schema)) ? 'yes' : 'NO',
+    serialize((new PhpRowHydrator())->hydrate($batch, $schema)) === serialize((new NativeRowHydrator())->hydrate($batch, $schema)) ? 'yes' : 'NO',
 );
 ?>
 --EXPECT--

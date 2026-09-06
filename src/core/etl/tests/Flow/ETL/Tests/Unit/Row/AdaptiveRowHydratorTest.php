@@ -44,20 +44,12 @@ final class AdaptiveRowHydratorTest extends FlowTestCase
         static::assertSame(['id' => 1, 'name' => 'flow'], $dehydrated[0]->values);
     }
 
-    public function test_cast_infers_rows_without_a_schema(): void
-    {
-        $rows = (new AdaptiveRowHydrator())->cast([new RawRowValues(['id' => 1, 'name' => 'x'])]);
-
-        static::assertSame(1, $rows->first()->get('id'));
-        static::assertSame('x', $rows->first()->get('name'));
-    }
-
-    public function test_cast_throws_on_missing_required_structure_element(): void
+    public function test_hydrate_throws_on_missing_required_structure_element(): void
     {
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('Rows do not match their schema: column "data" (row 0)');
 
-        (new AdaptiveRowHydrator())->cast([new RawRowValues(['data' => [
+        (new AdaptiveRowHydrator())->hydrate([new RawRowValues(['data' => [
             'id' => 1,
         ]])], schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))));
     }

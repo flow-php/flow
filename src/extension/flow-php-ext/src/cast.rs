@@ -8,8 +8,8 @@ use ext_php_rs::zend::Function;
 
 use crate::ctx::{
     array_key_index, call_handle, call_handle_catching, call_handle_on, call_handle_transparent,
-    ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key,
-    transparent_exception, write_slot, zval_long, zval_str, Ctx, HtKey,
+    ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key, null_zval,
+    schema_mismatch, transparent_exception, write_slot, zval_long, zval_str, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
@@ -196,8 +196,8 @@ fn build_cast_plan(schema: &Zval, ctx: &mut Ctx) -> Result<CastPlan, PhpExceptio
     Ok(CastPlan { hydrate, columns })
 }
 
-/// Same invalidation as `ensure_hydrate_plan`: the Schema `definitions` array
-/// address identifies the definition set; retaining it prevents address reuse.
+/// The Schema `definitions` array address identifies the definition set;
+/// retaining it (refcount++) prevents address reuse.
 fn ensure_cast_plan(
     plan: &mut Option<CastPlan>,
     schema: &Zval,
@@ -341,34 +341,66 @@ fn json_object_from(bytes: &[u8], ctx: &mut Ctx) -> Result<Zval, PhpException> {
     Ok(zv)
 }
 
-fn null_zval() -> Zval {
-    let mut zv = Zval::new();
-    zv.set_null();
-    zv
-}
+/// `IS_LONG` / `IS_DOUBLE` from zend_types.h - the codes `_is_numeric_string_ex` returns.
+const IS_LONG: u8 = 4;
+const IS_DOUBLE: u8 = 5;
 
 /// PHP's own `is_numeric()`, so the native path accepts exactly the strings
 /// `IntegerType`/`FloatType::cast` accept and bails on the rest instead of
-/// reproducing the grammar and drifting from it.
-fn is_numeric_str(bytes: &[u8]) -> bool {
-    unsafe {
+/// reproducing the grammar and drifting from it. Yields the type code together
+/// with the value `_is_numeric_string_ex` already computed, so the integer cast
+/// reads one parse instead of parsing the same bytes a second time.
+fn is_numeric_str(bytes: &[u8]) -> (u8, i64, f64) {
+    let mut lval: i64 = 0;
+    let mut dval: f64 = 0.0;
+
+    let code = unsafe {
         _is_numeric_string_ex(
             bytes.as_ptr().cast::<c_char>(),
             bytes.len(),
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
+            &mut lval,
+            &mut dval,
             false,
             std::ptr::null_mut(),
             std::ptr::null_mut(),
-        ) != 0
-    }
+        )
+    };
+
+    (code, lval, dval)
+}
+
+/// `IntegerType::cast`'s integer-shaped-text test. Text of this shape that
+/// `_is_numeric_string_ex` had to widen to a double is text that does not fit
+/// an i64, which PHP's round-trip branch refuses - the two spellings differ:
+/// `'-9223372036854775809'` throws, `'-9.223372036854776e18'` casts.
+fn integer_shaped(bytes: &[u8]) -> bool {
+    let body = bytes
+        .iter()
+        .position(|b| !b.is_ascii_whitespace())
+        .map_or(&[][..], |start| {
+            let end = bytes.iter().rposition(|b| !b.is_ascii_whitespace()).unwrap_or(start);
+            &bytes[start..=end]
+        });
+
+    let digits = match body.first() {
+        Some(b'+' | b'-') => &body[1..],
+        _ => body,
+    };
+
+    !digits.is_empty() && digits.iter().all(u8::is_ascii_digit)
+}
+
+/// `IntegerType::cast`'s range check: a double outside i64 yields `0` under a
+/// plain cast rather than failing, so it is refused instead.
+fn fits_i64(value: f64) -> bool {
+    value.is_finite() && (-9223372036854775808.0..9223372036854775808.0).contains(&value)
 }
 
 /// A string the numeric casts can take: anything else is refused by the PHP
 /// implementation, so the fast path hands it back rather than guessing.
 fn numeric_scalar(value: &Zval) -> bool {
     match value.zend_str() {
-        Some(string) => is_numeric_str(string.as_bytes()),
+        Some(string) => is_numeric_str(string.as_bytes()).0 != 0,
         None => value.is_bool(),
     }
 }
@@ -383,7 +415,24 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
         CastKind::Integer => {
             if value.is_long() {
                 Some(value.shallow_clone())
-            } else if value.is_double() || numeric_scalar(value) {
+            } else if value.is_double() {
+                let double = engine_double(value);
+
+                if fits_i64(double) {
+                    Some(zval_long(double as i64))
+                } else {
+                    None
+                }
+            } else if let Some(string) = value.zend_str() {
+                let bytes = string.as_bytes();
+
+                match is_numeric_str(bytes) {
+                    (IS_LONG, long, _) => Some(zval_long(long)),
+                    (IS_DOUBLE, _, _) if integer_shaped(bytes) => None,
+                    (IS_DOUBLE, _, double) if fits_i64(double) => Some(zval_long(double as i64)),
+                    _ => None,
+                }
+            } else if value.is_bool() {
                 Some(zval_long(engine_long(value)))
             } else {
                 None
@@ -431,8 +480,6 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 Some(zv)
             } else if value.is_true() || value.is_false() {
                 Some(ctx.bool_str(value.is_true())?.shallow_clone())
-            } else if value.is_null() {
-                Some(zval_str(b""))
             } else {
                 None
             }
@@ -460,8 +507,10 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 } else {
                     None
                 }
-            } else if let Some(string) = value.zend_str() {
-                date_from_free_form(string.as_bytes(), ctx)?
+            } else if value.is_string() {
+                // DateTimeType::cast gates a string on StringTemporalParts, whose recogniser is a PHP
+                // class; a format whitelist here would be a second grammar, so the string bails whole
+                None
             } else if value.is_long() || value.is_double() {
                 date_from_free_form(&timestamp_string(value)?, ctx)?
             } else {
@@ -501,14 +550,11 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
             };
 
             let mut out = ZendHashTable::with_capacity(values.len() as u32);
-            let mut expected = 0u64;
 
-            for (string_key, index, item) in ht_entries(values) {
-                if string_key.is_some() || index != expected {
+            for (expected, (string_key, index, item)) in ht_entries(values).enumerate() {
+                if string_key.is_some() || index != expected as u64 {
                     return Ok(None);
                 }
-
-                expected += 1;
 
                 let Some(casted) = cast_value(inner, item, ctx)? else {
                     return Ok(None);
@@ -635,9 +681,12 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
         return set_midnight(set_time, object);
     }
 
-    let parsed = if let Some(string) = value.zend_str() {
-        date_from_free_form(string.as_bytes(), ctx)?
-    } else if value.is_long() || value.is_double() {
+    if value.is_string() {
+        // see CastKind::DateTime above - the string gate lives in PHP
+        return Ok(None);
+    }
+
+    let parsed = if value.is_long() || value.is_double() {
         date_from_free_form(&timestamp_string(value)?, ctx)?
     } else {
         None
@@ -724,11 +773,11 @@ fn cast_json(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
     Ok(None)
 }
 
-/// Native `PhpRowHydrator::cast`: raw scalars cast against a `Schema` and
+/// Native `PhpRowHydrator::hydrate`: raw scalars cast against a `Schema` and
 /// assembled into `Flow\ETL\Rows` in one pass. Column values cast natively
 /// where proven identical, otherwise per value through the retained PHP
-/// `Type::cast`; a null value or an absent column yields a typed-null entry
-/// (fill-missing), mirroring `instantiate(..., $prepare, fillMissing: true)`.
+/// `Type::cast`; a null under a nullable declaration passes through, and both an
+/// absence and a present null under NOT NULL are refused - each with its own cause.
 pub fn cast_rows(
     batch: &Zval,
     schema: &Zval,
@@ -758,11 +807,31 @@ pub fn cast_rows(
         for (column, cast_column) in plan.hydrate.columns.iter().zip(&plan.columns) {
             let key = column.key();
 
-            // fill-missing: an absent column becomes a declared null
-            let casted = match ht_find_key(values_ht, &key) {
-                None => null_zval(),
-                Some(value) if value.is_null() => null_zval(),
-                Some(value) => match cast_value(&cast_column.kind, value, ctx)? {
+            // An absent column is simply not inserted, mirroring HydratedBatch's `continue`:
+            // Rows::__construct runs Row::matchTo(), which pads a declared-nullable absence and
+            // raises missingColumn for a NOT-NULL one. Re-implementing that here instead would
+            // refuse the absence mid-row, so a later cast refusal in the same batch would be
+            // reported by PHP and pre-empted by native - the two paths would name different
+            // columns and different rows for the same input.
+            let Some(value) = ht_find_key(values_ht, &key) else {
+                continue;
+            };
+
+            // a present null is a DIFFERENT refusal from an absence: valueDoesNotMatch, not
+            // missingColumn, and 027 pins the two messages apart
+            if value.is_null() && !column.nullable {
+                return Err(schema_mismatch(
+                    assembly.schema_mismatch_ce,
+                    assembly.value_does_not_match,
+                    row_index,
+                    &mut [column.base_def.shallow_clone(), null_zval()],
+                )?);
+            }
+
+            let casted = if value.is_null() {
+                null_zval()
+            } else {
+                match cast_value(&cast_column.kind, value, ctx)? {
                     Some(casted) => casted,
                     None => {
                         let type_obj = cast_column
@@ -784,23 +853,16 @@ pub fn cast_rows(
                                 // The declared type refused the value. Its own exception is dropped
                                 // rather than chained, exactly as HydratedBatch's guard drops it -
                                 // 027 compares the two hydrators' class and message byte for byte.
-                                let cause = call_handle_transparent(
-                                    assembly.value_does_not_match,
-                                    None,
-                                    &mut [column.base_def.shallow_clone(), value.shallow_clone()],
-                                )?;
-
-                                let mut wrapped = construct_with_zvals(
+                                return Err(schema_mismatch(
                                     assembly.schema_mismatch_ce,
-                                    &mut [zval_long(row_index as i64), cause],
-                                    "a SchemaMismatchException",
-                                )?;
-
-                                return Err(transparent_exception(&mut wrapped));
+                                    assembly.value_does_not_match,
+                                    row_index,
+                                    &mut [column.base_def.shallow_clone(), value.shallow_clone()],
+                                )?);
                             }
                         }
                     }
-                },
+                }
             };
 
             ht_insert_key(&mut row_values, &key, casted);

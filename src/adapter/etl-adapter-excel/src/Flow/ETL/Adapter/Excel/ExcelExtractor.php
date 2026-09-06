@@ -148,7 +148,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                         continue;
                     }
 
-                    $hydrated = $hydrator->cast($batch, $schema);
+                    $hydrated = $hydrator->hydrate($batch, $schema);
                     $batch = [];
 
                     foreach ($hydrated as $hydratedRow) {
@@ -166,7 +166,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                     continue;
                 }
 
-                $hydrated = $hydrator->cast($batch, $schema);
+                $hydrated = $hydrator->hydrate($batch, $schema);
 
                 foreach ($hydrated as $hydratedRow) {
                     $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);

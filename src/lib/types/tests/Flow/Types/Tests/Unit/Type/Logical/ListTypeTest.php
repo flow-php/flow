@@ -124,11 +124,18 @@ final class ListTypeTest extends TestCase
             'exceptionClass' => CastingException::class,
         ];
 
-        yield 'scalar into single-item list stays' => [
+        yield 'scalar is not wrapped into a single-item list' => [
             'value' => 'hello',
             'listType' => type_list(type_string()),
-            'expected' => ['hello'],
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'null element' => [
+            'value' => [null],
+            'listType' => type_list(type_string()),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
     }
 
@@ -209,6 +216,14 @@ final class ListTypeTest extends TestCase
         } else {
             static::assertSame($expected, $listType->cast($value));
         }
+    }
+
+    public function test_a_scalar_is_not_wrapped_into_a_container(): void
+    {
+        $this->expectException(CastingException::class);
+        $this->expectExceptionMessage('wrap the value first, e.g. type_list(type_string())');
+
+        type_list(type_integer())->cast(5);
     }
 
     public function test_cast_element_failure_chains_previous(): void

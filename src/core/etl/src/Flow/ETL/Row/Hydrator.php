@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
 interface Hydrator
 {
-    /**
-     * @param list<RawRowValues> $batch
-     */
-    public function cast(array $batch, ?Schema $schema = null): Rows;
-
     /**
      * @return list<TypedRowValues>
      */
@@ -21,6 +17,8 @@ interface Hydrator
 
     /**
      * @param list<RawRowValues> $batch
+     *
+     * @throws SchemaMismatchException
      */
-    public function hydrate(array $batch, ?Schema $schema = null): Rows;
+    public function hydrate(array $batch, Schema $schema): Rows;
 }

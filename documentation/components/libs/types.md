@@ -96,6 +96,29 @@ $variable = $input->get('some-input');
 $string = type_string()->cast($variable); 
 ```
 
+The rule is *parse the text as a number, then narrow*: a value is refused only when the target cannot
+represent it at all, never merely because precision is lost. **Losing precision is not a refusal** -
+`type_integer()->cast(1.5)` is `1`, `type_integer()->cast('12.9')` is `12`, `type_integer()->cast('1e5')`
+is `100000`, and `type_boolean()->cast('on')` is `true`. What `cast()` refuses is a conversion that
+would substitute a *different* value:
+
+- an integer literal that does not fit - `type_integer()->cast('9223372036854775808')` and
+  `type_integer()->cast(1e300)` throw instead of saturating to `PHP_INT_MAX` or collapsing to `0`.
+  The boundaries themselves still cast: `'9223372036854775807'`, `'-9223372036854775808'`
+- a date string that is not a calendar date - `type_date()->cast('')`, `type_datetime()->cast('now')`
+  and `type_datetime()->cast('+12')` throw instead of resolving against the wall clock, which would
+  make the same input produce a different value on every run. A date-only string still casts under
+  `type_datetime()`, landing at midnight, and 8-digit compact ISO (`'20240305'`) is accepted. Numeric
+  Unix timestamps are unaffected: `type_datetime()->cast(1700000000)` still works
+- `null` into a string - `type_string()->cast(null)` throws instead of returning `''`
+- a scalar into a container - `type_array()->cast('abc')` and `type_list(type_integer())->cast(5)`
+  throw, and the message names the remedy (`wrap the value first, e.g. type_list(type_string())`).
+  `type_array()->cast(null)` throws too, rather than fabricating an empty array
+
+`DateTimeInterface` and `DateInterval` convert to `int`/`float` in **seconds**, so they round-trip
+with `type_datetime()->cast(<int>)`. `float` keeps the sub-second fraction; `int` floors to whole
+seconds.
+
 Casting structures, lists and maps:
 
 - a structure element that is absent, or present with `null`, throws `CastingException` when the element's type does
@@ -103,7 +126,11 @@ Casting structures, lists and maps:
   failing element
 - elements whose type accepts `null` (`type_optional(...)`, `type_union(..., type_null())`) cast `null` to `null`;
   an absent optional element stays absent from the output
+- a `null` **element** inside a list or map whose element type rejects `null` throws `CastingException` -
+  `type_list(type_string())->cast([null])` used to produce `['']`
 - `type_list(...)->cast(null)` and `type_map(...)->cast(null)` throw `CastingException`
+- a scalar is never wrapped into a single-item list: `type_list(type_string())->cast('hello')` throws
+  rather than returning `['hello']`
 - a JSON string payload is decoded and cast element-wise, exactly like an array payload
 
 ### Complex Types 

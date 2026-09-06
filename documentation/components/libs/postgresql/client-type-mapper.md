@@ -160,7 +160,10 @@ $row['created_at'];                          // \DateTimeImmutable
 $row['created_at']->format('Y-m-d H:i:s');   // '2026-01-01 14:30:00'
 ```
 
-`type_datetime()->cast(...)` accepts strings, numeric Unix timestamps, `\DateTime`, `\DateTimeImmutable`, and `\DateInterval`.
+`type_datetime()->cast(...)` accepts calendar date and datetime strings, numeric Unix timestamps,
+`\DateTime`, `\DateTimeImmutable`, and `\DateInterval`. A **string** has to be a real calendar date -
+a date-only string lands at midnight, while a wall-clock expression such as `''`, `'now'` or `'+12'`
+is refused, so the same input never produces a different value on a different run.
 
 ### String → Date
 

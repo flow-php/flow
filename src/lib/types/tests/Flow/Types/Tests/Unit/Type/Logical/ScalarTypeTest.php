@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\TypeFactory;
 use Generator;
@@ -92,8 +93,8 @@ final class ScalarTypeTest extends TestCase
 
         yield 'null' => [
             'value' => null,
-            'expected' => '',
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'array' => [

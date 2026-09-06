@@ -70,7 +70,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->hydrator(), schema: $schema);
+            yield array_to_rows($row, $schema, $context->hydrator());
         }
     }
 
@@ -134,7 +134,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, hydrator: $hydrator, schema: $schema));
+            $rows = $rows->merge(array_to_rows($row, $schema, $hydrator));
         }
 
         return $rows;

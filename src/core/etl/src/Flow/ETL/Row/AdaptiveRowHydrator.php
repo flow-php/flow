@@ -16,17 +16,12 @@ final class AdaptiveRowHydrator implements Hydrator
         $this->delegate = NativeRowHydrator::isSupported() ? new NativeRowHydrator() : new PhpRowHydrator();
     }
 
-    public function cast(array $batch, ?Schema $schema = null): Rows
-    {
-        return $this->delegate->cast($batch, $schema);
-    }
-
     public function dehydrate(Rows $rows): array
     {
         return $this->delegate->dehydrate($rows);
     }
 
-    public function hydrate(array $batch, ?Schema $schema = null): Rows
+    public function hydrate(array $batch, Schema $schema): Rows
     {
         return $this->delegate->hydrate($batch, $schema);
     }

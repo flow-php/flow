@@ -44,6 +44,24 @@ final class InferredBatchTest extends FlowTestCase
         );
     }
 
+    public function test_a_numeric_column_name_is_a_string_column(): void
+    {
+        // PHP hands a numeric array key back as an int, and definition_from_type() takes
+        // Reference|string - a pivot names its columns by their own values, so this is reachable
+        $values = [];
+
+        foreach ([0, 7] as $pivotValue) {
+            $values[(string) $pivotValue] = $pivotValue + 1;
+        }
+
+        // PHP cannot hold '0' as a string key, which is precisely the shape under test
+        // @mago-ignore analysis:possibly-invalid-argument
+        $inferred = (new InferredBatch())->of([new RawRowValues($values)]);
+
+        static::assertSame(['0', '7'], $inferred->schema()->references()->names());
+        static::assertSame([['0' => 1, '7' => 8]], $inferred->toArray());
+    }
+
     public function test_metadata_travels_from_the_raw_values_onto_the_definition(): void
     {
         static::assertSame(

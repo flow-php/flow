@@ -74,7 +74,7 @@ $narrowTyped = $hydrator->dehydrate(new Rows(schema(int_schema('a'), float_schem
 $php = new PhpFloeEncoder(schema_from_json($wideBody));
 $ext = new RustFloeEncoderNative();
 
-foreach (['php' => fn() => $php->encode($narrowTyped), 'ext' => fn() => $ext->encode($narrowTyped, $wideBody)] as $side => $encode) {
+foreach (['php' => fn() => $php->encode($narrowTyped), 'ext' => fn() => $ext->encode($narrowTyped, $wideBody, schema_from_json($wideBody))] as $side => $encode) {
     try {
         $encode();
         printf("%-14s %s\n", 'absent-' . $side, 'NO EXCEPTION');
@@ -86,7 +86,7 @@ foreach (['php' => fn() => $php->encode($narrowTyped), 'ext' => fn() => $ext->en
 $badSchema = schema(list_schema('bad', type_list(type_mixed())));
 $badTyped = $hydrator->dehydrate(new Rows($badSchema, row(['bad' => [new SplStack()]])));
 $badExt = new RustFloeEncoderNative();
-expect_exception(fn() => $badExt->encode($badTyped, json_encode($badSchema->normalize(), JSON_THROW_ON_ERROR)));
+expect_exception(fn() => $badExt->encode($badTyped, json_encode($badSchema->normalize(), JSON_THROW_ON_ERROR), $badSchema));
 ?>
 --EXPECT--
 scalar         frames-identical:yes

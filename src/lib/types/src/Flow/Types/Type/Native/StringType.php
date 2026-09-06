@@ -96,10 +96,6 @@ final readonly class StringType implements Type
                 return $value->innerHTML;
             }
 
-            if (null === $value) {
-                return '';
-            }
-
             if (is_scalar($value) || is_object($value) && method_exists($value, '__toString')) {
                 return (string) $value;
             }

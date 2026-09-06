@@ -10,12 +10,14 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\GroupBy\Aggregators;
 use Flow\ETL\GroupBy\GroupKey;
+use Flow\ETL\GroupBy\PivotSchema;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Generator;
 
 use function array_filter;
 use function array_key_exists;
+use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
@@ -153,7 +155,11 @@ final class GroupBy
         /** @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>> $pivotedTable */
         $pivotedTable = [];
 
+        $input = null;
+
         foreach ($rows as $batch) {
+            $input ??= $batch->schema();
+
             foreach ($batch as $row) {
                 try {
                     $pivotColumns[] = $row->get($pivot);
@@ -198,20 +204,31 @@ final class GroupBy
             }
         }
 
-        $pivotColumns = array_values(array_filter(array_unique($pivotColumns)));
+        // filter only NULL, which is exactly what the fold above skips: a falsy-but-present pivot
+        // value ('0', 0, '', false) does get a column in $pivotedTable, so the schema has to declare
+        // it or HydratedBatch drops the value it holds
+        $pivotColumns = array_values(array_map(
+            static fn(mixed $column): int|string => type_union(type_string(), type_integer())->assert($column),
+            array_filter(array_unique($pivotColumns), static fn(mixed $column): bool => $column !== null),
+        ));
+
+        // nothing was read, so there is no input schema to declare a pivot against
+        if ($input === null) {
+            return;
+        }
+
+        $pivotSchema = (new PivotSchema())->of($input, $this->refs, $pivotColumns, $aggregation);
 
         $buffer = [];
 
-        foreach ($pivotedTable as $index => $columns) {
-            $row = [$this->refs->first()->name() => $index];
+        foreach ($pivotedTable as $columns) {
+            $row = [];
 
             foreach ($columns as $rowIndex => $value) {
                 $row[$rowIndex] = $value instanceof AggregatingFunction ? $value->value() : $value;
             }
 
             foreach ($pivotColumns as $column) {
-                $column = type_union(type_string(), type_integer())->assert($column);
-
                 if (!array_key_exists($column, $row)) {
                     $row[$column] = null;
                 }
@@ -220,13 +237,13 @@ final class GroupBy
             $buffer[] = $row;
 
             if (count($buffer) >= $batchSize) {
-                yield array_to_rows($buffer, $context->hydrator());
+                yield array_to_rows($buffer, $pivotSchema, $context->hydrator());
                 $buffer = [];
             }
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $context->hydrator());
+            yield array_to_rows($buffer, $pivotSchema, $context->hydrator());
         }
     }
 

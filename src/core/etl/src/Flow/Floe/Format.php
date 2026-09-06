@@ -57,10 +57,6 @@ final class Format
 
     public const string VALUE_PRESENT_WITH_META_BYTE = "\x04";
 
-    public const int DATETIME_IMMUTABLE = 0x00;
-
-    public const int DATETIME_MUTABLE = 0x01;
-
     public static function frame(int $type, string $body): string
     {
         return chr($type) . pack('V', strlen($body)) . $body;

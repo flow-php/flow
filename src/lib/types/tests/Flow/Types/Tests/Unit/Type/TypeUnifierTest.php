@@ -335,12 +335,30 @@ final class TypeUnifierTest extends TestCase
         );
     }
 
-    public function test_unify_all_is_blind_to_the_second_nullability_spelling(): void
+    public function test_unify_all_reads_both_nullability_spellings(): void
     {
+        // the TYPE fold absorbs NullType as its identity (null u T = T); the NULLABILITY axis reads
+        // it from the unstripped operands, so the two spellings of the same information agree
         static::assertSame(
             '?string',
             (new PromotingUnifier())
                 ->unifyAll(NullabilityRule::ANY, type_union(type_null(), type_string()), type_integer())
+                ?->toString(),
+        );
+        static::assertSame(
+            '?integer',
+            (new PromotingUnifier())
+                ->unifyAll(NullabilityRule::ANY, type_null(), type_integer())
+                ?->toString(),
+        );
+    }
+
+    public function test_unify_all_under_all_does_not_let_a_null_operand_remove_nullability(): void
+    {
+        static::assertSame(
+            '?integer',
+            (new PromotingUnifier())
+                ->unifyAll(NullabilityRule::ALL, type_optional(type_integer()), type_null())
                 ?->toString(),
         );
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
@@ -89,7 +91,7 @@ final class PhpFloeEncoder implements Encoder
 
         $bodies = [];
 
-        foreach ($batch as $rowValues) {
+        foreach ($batch as $rowIndex => $rowValues) {
             $body = '';
 
             foreach ($this->schema->definitions() as $name => $definition) {
@@ -109,6 +111,13 @@ final class PhpFloeEncoder implements Encoder
                     : !$metadata->isEqual($columnMetadata);
 
                 if ($value === null) {
+                    if (!$definition->isNullable()) {
+                        throw new SchemaMismatchException($rowIndex, ColumnMismatchException::valueDoesNotMatch(
+                            $definition,
+                            null,
+                        ));
+                    }
+
                     $body .= $diverges
                         ? Format::VALUE_NULL_WITH_META_BYTE . Format::metadataBytes($metadata)
                         : Format::VALUE_NULL_BYTE;

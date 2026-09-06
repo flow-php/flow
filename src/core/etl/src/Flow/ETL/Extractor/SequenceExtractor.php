@@ -35,7 +35,7 @@ final class SequenceExtractor implements Extractor
 
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {
-            $signal = yield array_to_rows([[$this->entryName => $item]], $context->hydrator(), $schema);
+            $signal = yield array_to_rows([[$this->entryName => $item]], $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;

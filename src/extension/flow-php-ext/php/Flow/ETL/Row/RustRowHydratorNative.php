@@ -24,15 +24,7 @@ final class RustRowHydratorNative
     /**
      * @param list<RawRowValues> $batch
      */
-    public function cast(array $batch, Schema $schema): Rows
-    {
-        throw new RuntimeException('flow_php extension is not loaded');
-    }
-
-    /**
-     * @param list<RawRowValues> $batch
-     */
-    public function hydrate(array $batch, ?Schema $schema = null): Rows
+    public function hydrate(array $batch, Schema $schema): Rows
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

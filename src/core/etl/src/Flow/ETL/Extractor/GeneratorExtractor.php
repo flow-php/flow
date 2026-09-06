@@ -39,7 +39,7 @@ final class GeneratorExtractor implements Extractor
             }
 
             if ($this->schema !== null) {
-                $row = array_to_rows($row->toArray(), $context->hydrator(), $this->schema);
+                $row = array_to_rows($row->toArray(), $this->schema, $context->hydrator());
             }
 
             $signal = yield $row;

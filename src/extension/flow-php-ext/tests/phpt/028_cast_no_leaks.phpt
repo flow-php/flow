@@ -47,6 +47,7 @@ $schema = schema(
     list_schema('ints', type_list(type_optional(type_integer()))),
     map_schema('metrics', type_map(type_string(), type_integer())),
     structure_schema('nested', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])),
+    list_schema('names', type_list(type_string())),
     json_schema('json'),
     enum_schema('suit', LeakSuit::class),     // exotic - per-value PHP fallback
 );
@@ -66,6 +67,7 @@ for ($i = 1; $i <= 100; $i++) {
             'ints' => [(string) $i, null, $i],
             'metrics' => ['cpu' => (string) $i, 'mem' => $i],
             'nested' => ['a' => (string) $i, 'b' => $i],
+            'names' => ['a', 'b'],
             'json' => '["a","b"]',
             'suit' => 'h',
         ],
@@ -73,16 +75,30 @@ for ($i = 1; $i <= 100; $i++) {
     );
 }
 
-$throwingBatch = [new RawRowValues(['id' => 1]), new RawRowValues(['uuid' => 'not-a-uuid', 'id' => 2])];
+// a container column carrying a null element is the only way the deleted CastKind::String null arm
+// is reachable, so the leak check has to exercise the List/Map recursion too
+$throwingBatch = [
+    new RawRowValues(['id' => 1]),
+    new RawRowValues(['uuid' => 'not-a-uuid', 'id' => 2, 'names' => ['a', null]]),
+];
 
-$cycle = static function () use ($batch, $throwingBatch, $schema): void {
+// an absent NOT-NULL column aborts before any row_values insertion - a different leak path
+$missingBatch = [new RawRowValues(['name' => 'no id here'])];
+
+$cycle = static function () use ($batch, $throwingBatch, $missingBatch, $schema): void {
     $native = new RustRowHydratorNative();
-    $native->cast($batch, $schema);
+    $native->hydrate($batch, $schema);
 
     try {
-        $native->cast($throwingBatch, $schema);
+        $native->hydrate($throwingBatch, $schema);
     } catch (Throwable) {
         // the aborted batch must not leak its partially built rows
+    }
+
+    try {
+        $native->hydrate($missingBatch, $schema);
+    } catch (Throwable) {
+        // the same, aborted before the first insertion
     }
 };
 

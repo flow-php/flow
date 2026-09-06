@@ -73,7 +73,10 @@ final readonly class Nullability
     }
 
     /**
-     * $result, made nullable iff ANY operand is
+     * $result, made nullable iff ANY operand carries a null.
+     *
+     * A bare NullType is not a nullable SPELLING - is() answers false, because bare() has no
+     * non-null part to return - but on this axis it counts, so the two spellings of a null agree.
      *
      * @param Type<mixed> $result
      * @param Type<mixed> ...$operands
@@ -83,7 +86,7 @@ final readonly class Nullability
     public function any(Type $result, Type ...$operands): Type
     {
         foreach ($operands as $operand) {
-            if ($this->is($operand)) {
+            if ($operand instanceof NullType || $this->is($operand)) {
                 return type_optional($result);
             }
         }
@@ -92,7 +95,7 @@ final readonly class Nullability
     }
 
     /**
-     * $result, made nullable iff EVERY operand is AND there is at least one
+     * $result, made nullable iff EVERY operand carries a null AND there is at least one.
      *
      * @param Type<mixed> $result
      * @param Type<mixed> ...$operands
@@ -106,7 +109,7 @@ final readonly class Nullability
         }
 
         foreach ($operands as $operand) {
-            if (!$this->is($operand)) {
+            if (!($operand instanceof NullType || $this->is($operand))) {
                 return $result;
             }
         }

@@ -40,7 +40,7 @@ final class ArrayExtractor implements Extractor
         $schema = $this->schema();
 
         foreach ($this->dataset as $row) {
-            $signal = yield array_to_rows([$row], $context->hydrator(), $schema);
+            $signal = yield array_to_rows([$row], $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;

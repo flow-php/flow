@@ -55,7 +55,7 @@ fn ensure_plan<P>(
     bound: &mut Option<BoundPlan<P>>,
     ctx: &mut Ctx,
     schema: &[u8],
-    build: fn(&[u8], &mut Ctx) -> PhpResult<P>,
+    build: impl FnOnce(&[u8], &mut Ctx) -> PhpResult<P>,
 ) -> PhpResult<()> {
     if bound.as_ref().is_some_and(|b| b.schema == schema) {
         return Ok(());
@@ -95,12 +95,17 @@ impl RustFloeEncoderNative {
 
     /// Encodes a list of `Flow\ETL\Row\TypedRowValues` into a list of bare ROW
     /// frame bodies against the plan bound to `schema_body`.
-    pub fn encode(&mut self, batch: &Zval, schema_body: BinarySlice<u8>) -> PhpResult<Zval> {
+    pub fn encode(
+        &mut self,
+        batch: &Zval,
+        schema_body: BinarySlice<u8>,
+        schema: &Zval,
+    ) -> PhpResult<Zval> {
         ensure_plan(
             &mut self.encode_bound,
             &mut self.ctx,
             &schema_body,
-            build_encode_plan,
+            |body, ctx| build_encode_plan(body, schema, ctx),
         )?;
 
         let batch_ht = batch
@@ -114,7 +119,7 @@ impl RustFloeEncoderNative {
 
         let mut encoded = ZendHashTable::with_capacity(batch_ht.len() as u32);
 
-        ht_for_each(batch_ht, |_, _, item_zv| {
+        ht_for_each(batch_ht, |_, row_index, item_zv| {
             let typed = expect_object(item_zv, "a TypedRowValues")?;
 
             let values_ht = read_slot(typed, values_slot).array().ok_or_else(|| {
@@ -124,7 +129,7 @@ impl RustFloeEncoderNative {
                 ext_exception("flow_php expected TypedRowValues::metadata to be an array")
             })?;
 
-            let body = encode_typed_row(plan, values_ht, metadata_ht, ctx)?;
+            let body = encode_typed_row(plan, row_index, values_ht, metadata_ht, ctx)?;
 
             encoded.push(zval_str(&body)).map_err(|e| {
                 ext_exception(format!("flow_php failed to collect a row body: {e:?}"))
@@ -189,8 +194,7 @@ impl RustFloeEncoderNative {
 }
 
 /// Native counterpart of `PhpRowHydrator`: `hydrate` builds `Flow\ETL\Rows` from
-/// a trusted list of `RawRowValues` against a `Schema` object (values moved
-/// verbatim); `cast` does the same from RAW scalars, casting each value against
+/// a list of `RawRowValues` against a `Schema` object, casting each value against
 /// the schema first; `dehydrate` turns `Rows` into a list of `TypedRowValues`.
 #[php_class]
 #[php(name = "Flow\\ETL\\Row\\RustRowHydratorNative")]
@@ -201,7 +205,6 @@ pub struct RustRowHydratorNative {
     raw_row_values_class: hydrate::RowValuesClass,
     assembly: hydrate::AssemblyClasses,
     def_dehydrate_fns: hydrate::DefFnCache,
-    hydrate_plan: Option<hydrate::HydratePlan>,
     cast_plan: Option<cast::CastPlan>,
 }
 
@@ -215,30 +218,17 @@ impl RustRowHydratorNative {
             raw_row_values_class: hydrate::RowValuesClass::resolve()?,
             assembly: hydrate::AssemblyClasses::resolve()?,
             def_dehydrate_fns: hydrate::DefFnCache::new(),
-            hydrate_plan: None,
             cast_plan: None,
         })
     }
 
     /// Casts a list of raw-scalar `RawRowValues` against a `Schema` and builds
     /// a `Flow\ETL\Rows` in a single pass.
-    pub fn cast(&mut self, batch: &Zval, schema: &Zval) -> PhpResult<Zval> {
+    pub fn hydrate(&mut self, batch: &Zval, schema: &Zval) -> PhpResult<Zval> {
         cast::cast_rows(
             batch,
             schema,
             &mut self.cast_plan,
-            &self.raw_row_values_class,
-            &self.assembly,
-            &mut self.ctx,
-        )
-    }
-
-    /// Builds a `Flow\ETL\Rows` from a trusted list of `RawRowValues` against a `Schema`.
-    pub fn hydrate(&mut self, batch: &Zval, schema: &Zval) -> PhpResult<Zval> {
-        hydrate::hydrate_rows(
-            batch,
-            schema,
-            &mut self.hydrate_plan,
             &self.raw_row_values_class,
             &self.assembly,
             &mut self.ctx,

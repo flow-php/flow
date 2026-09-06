@@ -1151,14 +1151,13 @@ function number_format(
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|Partitions $partitions
- * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_row(
     array $data,
+    Schema $schema,
     Hydrator $hydrator = new AdaptiveRowHydrator(),
     array|Partitions $partitions = [],
-    ?Schema $schema = null,
 ): Row {
     $map = [];
 
@@ -1173,15 +1172,14 @@ function array_to_row(
         }
     }
 
-    return $hydrator->cast([new RawRowValues($map)], $schema)->first();
+    return $hydrator->hydrate([new RawRowValues($map)], $schema)->first();
 }
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(array $data, Hydrator $hydrator = new AdaptiveRowHydrator(), ?Schema $schema = null): Rows
+function array_to_rows(array $data, Schema $schema, Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
 {
     $isRows = true;
 
@@ -1206,7 +1204,7 @@ function array_to_rows(array $data, Hydrator $hydrator = new AdaptiveRowHydrator
         foreach ($row as $key => $value) {
             // PHP gives back a numeric-string column name as an int key, which the positional rule
             // would rename to eNN. A declared schema naming that column settles which one it is.
-            $declared = $schema?->findDefinition((string) $key);
+            $declared = $schema->findDefinition((string) $key);
 
             $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
         }
@@ -1214,7 +1212,7 @@ function array_to_rows(array $data, Hydrator $hydrator = new AdaptiveRowHydrator
         $maps[] = new RawRowValues($map);
     }
 
-    return $hydrator->cast($maps, $schema);
+    return $hydrator->hydrate($maps, $schema);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]

@@ -15,9 +15,6 @@ pub const VALUE_NULL_WITH_META: u8 = 0x02;
 pub const VALUE_ABSENT: u8 = 0x03;
 pub const VALUE_PRESENT_WITH_META: u8 = 0x04;
 
-pub const DATETIME_IMMUTABLE: u8 = 0x00;
-pub const DATETIME_MUTABLE: u8 = 0x01;
-
 pub struct Reader<'a> {
     data: &'a [u8],
     pos: usize,

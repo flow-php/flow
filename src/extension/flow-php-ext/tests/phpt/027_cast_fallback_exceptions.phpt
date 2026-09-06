@@ -62,6 +62,17 @@ $throwing = [
         schema(int_schema('i')),
         [new RawRowValues(['i' => '1']), new RawRowValues(['i' => 'x'])],
     ],
+    'integer overflow' => [schema(int_schema('id')), [new RawRowValues(['id' => '9223372036854775808'])]],
+    'date from an empty string' => [schema(date_schema('d')), [new RawRowValues(['d' => ''])]],
+    'datetime from a relative word' => [schema(datetime_schema('at')), [new RawRowValues(['at' => 'now'])]],
+    'string from null' => [
+        schema(list_schema('l', type_list(type_string()))),
+        [new RawRowValues(['l' => ['a', null]])],
+    ],
+    'list from a scalar' => [
+        schema(list_schema('l', type_list(type_integer()))),
+        [new RawRowValues(['l' => 5])],
+    ],
     'exception outside the types package' => [
         schema(new UnionDefinition('a', type_union(
             new ThrowingType(new LogicException('stub type refuses everything')),
@@ -78,7 +89,7 @@ foreach ($throwing as $label => [$s, $batch]) {
     $phpException = null;
 
     try {
-        $php->cast($batch, $s);
+        $php->hydrate($batch, $s);
     } catch (Throwable $e) {
         $phpException = $e::class . '|' . $e->getMessage();
     }
@@ -87,7 +98,7 @@ foreach ($throwing as $label => [$s, $batch]) {
     $nativeResult = null;
 
     try {
-        $nativeResult = $native->cast($batch, $s);
+        $nativeResult = $native->hydrate($batch, $s);
     } catch (Throwable $e) {
         $nativeException = $e::class . '|' . $e->getMessage();
     }
@@ -118,4 +129,9 @@ list bad keys               exception:match aborted:yes
 positive int list string    exception:match aborted:yes
 positive int list negative  exception:match aborted:yes
 row index is 1              exception:match aborted:yes
+integer overflow            exception:match aborted:yes
+date from an empty string   exception:match aborted:yes
+datetime from a relative word exception:match aborted:yes
+string from null            exception:match aborted:yes
+list from a scalar          exception:match aborted:yes
 exception outside the types package exception:match aborted:yes

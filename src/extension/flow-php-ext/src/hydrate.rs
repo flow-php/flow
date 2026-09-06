@@ -12,7 +12,7 @@ use ext_php_rs::zend::{ClassEntry, Function};
 
 use crate::ctx::{
     array_key_index, call_handle, call_handle_on, ce_method_ref,
-    construct_with_zvals, find_class, ht_add, ht_find_key, ht_insert, ht_insert_key,
+    find_class, ht_add, ht_find_key, ht_insert, ht_insert_key,
     property_offset, write_slot, zval_str, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
@@ -374,6 +374,8 @@ pub(crate) struct HydrateColumn {
     pub(crate) name_zv: Zval,
     /// retained (refcount++) so the cast plan can read `type()` once per column
     pub(crate) base_def: Zval,
+    /// `Definition::isNullable()`, read once at plan build - never per row
+    pub(crate) nullable: bool,
 }
 
 impl HydrateColumn {
@@ -439,10 +441,20 @@ pub(crate) fn build_hydrate_plan(schema: &Zval) -> Result<HydratePlan, PhpExcept
                 .as_bytes(),
         );
 
+        let nullable = call_handle_on(
+            ce_method_ref(def_ce, "isNullable")?,
+            def_obj,
+            &mut [],
+            "read a definition nullability",
+        )?
+        .bool()
+        .ok_or_else(|| ext_exception("flow_php expected Definition::isNullable to return a bool"))?;
+
         columns.push(HydrateColumn {
             numeric_key,
             name_zv,
             base_def: def_zv.shallow_clone(),
+            nullable,
         });
 
         Ok(())
@@ -453,27 +465,6 @@ pub(crate) fn build_hydrate_plan(schema: &Zval) -> Result<HydratePlan, PhpExcept
         definitions_retained: definitions,
         columns,
     })
-}
-
-pub(crate) fn ensure_hydrate_plan(
-    plan: &mut Option<HydratePlan>,
-    schema: &Zval,
-) -> Result<(), PhpException> {
-    let schema_obj = expect_object(schema, "a Schema")?;
-
-    let current = plan.as_ref().and_then(|p| {
-        read_slot(schema_obj, p.definitions_slot)
-            .array()
-            .zip(p.definitions_retained.array())
-    });
-
-    if current.is_some_and(|(definitions, retained)| std::ptr::eq(definitions, retained)) {
-        return Ok(());
-    }
-
-    *plan = Some(build_hydrate_plan(schema)?);
-
-    Ok(())
 }
 
 /// `HydratedBatch` folds `RawRowValues::metadata` into the batch Schema before building rows, so a
@@ -537,61 +528,4 @@ pub fn fold_metadata_into_schema(
     }
 
     Ok(current)
-}
-
-/// Native `PhpRowHydrator::hydrate`: builds `Rows` from a trusted list of
-/// `RawRowValues` against a `Schema`. Storage is name-keyed values, so a row is
-/// one hashtable insert per declared column; the Schema is handed to `Rows` whole.
-pub fn hydrate_rows(
-    batch: &Zval,
-    schema: &Zval,
-    plan_slot: &mut Option<HydratePlan>,
-    raw_class: &RowValuesClass,
-    assembly: &AssemblyClasses,
-    ctx: &mut Ctx,
-) -> Result<Zval, PhpException> {
-    ensure_hydrate_plan(plan_slot, schema)?;
-    let plan = plan_slot.as_ref().expect("plan built above");
-
-    let batch_ht = batch
-        .array()
-        .ok_or_else(|| ext_exception("flow_php expected a list of raw row values"))?;
-
-    let mut rows_args: Vec<Zval> = Vec::with_capacity(batch_ht.len() + 1);
-    rows_args.push(fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?);
-
-    ht_for_each(batch_ht, |_, _, rv_zv| {
-        let rv = expect_object(rv_zv, "a RawRowValues")?;
-        let values_ht = read_slot(rv, raw_class.values_slot)
-            .array()
-            .ok_or_else(|| ext_exception("flow_php expected RawRowValues::values to be an array"))?;
-
-        let mut row_values = ZendHashTable::with_capacity(plan.columns.len() as u32);
-
-        for column in &plan.columns {
-            let key = column.key();
-
-            let Some(value) = ht_find_key(values_ht, &key) else {
-                continue;
-            };
-
-            ht_insert_key(&mut row_values, &key, value.shallow_clone());
-        }
-
-        let mut values_zv = Zval::new();
-        values_zv.set_hashtable(row_values);
-
-        let mut row = construct_with_zvals(assembly.row_ce, &mut [values_zv], "a Row")?;
-        let mut row_zv = Zval::new();
-        row_zv.set_object(&mut row);
-        rows_args.push(row_zv);
-
-        Ok(())
-    })?;
-
-    let mut rows = construct_with_zvals(assembly.rows_ce, &mut rows_args, "Rows")?;
-    let mut zv = Zval::new();
-    zv.set_object(&mut rows);
-
-    Ok(zv)
 }

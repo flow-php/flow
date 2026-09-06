@@ -20,6 +20,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
@@ -36,9 +37,21 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [['id' => 1], ['id' => 2]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_02', array_to_rows(
+            [['id' => 3], ['id' => 4]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_03', array_to_rows(
+            [['id' => 5]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
 
         $cache->set('key', $index->toRows());
 
@@ -62,9 +75,21 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [['id' => 1], ['id' => 2]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_02', array_to_rows(
+            [['id' => 3], ['id' => 4]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_03', array_to_rows(
+            [['id' => 5]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
 
         $cache->set('key', $index->toRows());
 
@@ -87,13 +112,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index = new CacheIndex($cacheKey = 'key');
         $index->add('rows_01');
 
-        $cache->set('rows_01', array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
         $cache->set('key', $index->toRows());
 
         $extractor = from_cache($cacheKey);
@@ -117,13 +146,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index = new CacheIndex($cacheKey = 'key');
         $index->add('rows_01');
 
-        $cache->set('rows_01', array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
         $cache->set('key', $index->toRows());
 
         $generator = from_cache($cacheKey)

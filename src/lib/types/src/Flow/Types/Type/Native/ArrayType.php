@@ -48,6 +48,15 @@ final readonly class ArrayType implements Type
             return $value;
         }
 
+        // hoisted above the try: the catch below re-wraps without the reason
+        if (
+            !is_array($value)
+            && !is_object($value)
+            && !(is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '[')))
+        ) {
+            throw new CastingException($value, $this, reason: 'wrap the value first, e.g. type_list(type_string())');
+        }
+
         try {
             if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
                 // @mago-ignore analysis:mixed-assignment
@@ -67,8 +76,7 @@ final readonly class ArrayType implements Type
                 return is_array($encoded) ? $encoded : throw new CastingException($value, $this);
             }
 
-            // @mago-ignore analysis:invalid-type-cast
-            return (array) $value;
+            throw new CastingException($value, $this);
         } catch (Throwable) {
             throw new CastingException($value, $this);
         }

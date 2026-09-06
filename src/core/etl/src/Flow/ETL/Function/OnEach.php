@@ -5,19 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 
 use function Flow\ETL\DSL\array_to_row;
-use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_list;
@@ -36,6 +32,7 @@ final class OnEach implements ScalarFunction
         ScalarFunction|array $array,
         private readonly ScalarFunction $function,
         private readonly bool $preserveKeys = true,
+        private readonly OnEachElementSchema $elementSchema = new OnEachElementSchema(),
     ) {
         $this->array = $array instanceof ScalarFunction ? $array : lit($array);
     }
@@ -66,17 +63,7 @@ final class OnEach implements ScalarFunction
     public function returns(): Type
     {
         $arrayType = type_bare($this->array->returns());
-        $element = match (true) {
-            $arrayType instanceof ListType => $arrayType->element(),
-            $arrayType instanceof MapType => $arrayType->value(),
-            $arrayType instanceof StructureType => StructureValues::type('on_each', $arrayType),
-            default => throw SchemaNotDerivableException::function(
-                'on_each',
-                'the array operand declares "' . $arrayType->toString() . '", which has no element type',
-            ),
-        };
-
-        $inner = schema(definition_from_type('element', $element));
+        $inner = $this->elementSchema->of($arrayType);
 
         $body = (new ReferenceResolver())->resolve($this->function, $inner);
 
@@ -113,17 +100,20 @@ final class OnEach implements ScalarFunction
         $output = [];
 
         $hydrator = $context->hydrator();
+        // hoisted: array_to_row() runs per element, and the schema is the same for every one of them
+        $elementSchema = $this->elementSchema->of(type_bare($this->array->returns()));
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
+            $result = (new Parameter($this->function))->eval(
+                array_to_row(['element' => $item], $elementSchema, $hydrator),
+                $context,
+            );
+
             if ($this->preserveKeys) {
-                $output[$key] = (new Parameter($this->function))->eval(array_to_row([
-                    'element' => $item,
-                ], $hydrator), $context);
+                $output[$key] = $result;
             } else {
-                $output[] = (new Parameter($this->function))->eval(array_to_row([
-                    'element' => $item,
-                ], $hydrator), $context);
+                $output[] = $result;
             }
         }
 

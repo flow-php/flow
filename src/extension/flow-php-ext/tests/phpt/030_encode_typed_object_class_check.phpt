@@ -29,14 +29,15 @@ foreach ([type_uuid(), type_json()] as $columnType) {
     $columnSchema = schema(definition_from_type('v', $columnType));
     $typed = [new TypedRowValues(['v' => 'not-an-object-of-that-class'], ['v' => $columnType])];
 
-    expect_exception(fn() => $encoder->encode($typed, json_encode($columnSchema->normalize(), JSON_THROW_ON_ERROR)));
+    expect_exception(fn() => $encoder->encode($typed, json_encode($columnSchema->normalize(), JSON_THROW_ON_ERROR), $columnSchema));
 }
 
 $typedObject = (new PhpRowHydrator())->dehydrate(
     new Rows(schema(datetime_schema('v')), row(['v' => new DateTimeImmutable('2020-01-01 00:00:00 UTC')])),
 );
 
-expect_exception(fn() => $encoder->encode($typedObject, json_encode(schema(uuid_schema('v'))->normalize(), JSON_THROW_ON_ERROR)));
+$uuidSchema = schema(uuid_schema('v'));
+expect_exception(fn() => $encoder->encode($typedObject, json_encode($uuidSchema->normalize(), JSON_THROW_ON_ERROR), $uuidSchema));
 ?>
 --EXPECT--
 Flow\Floe\Exception\ExtensionException: flow_php expected a uuid value to be an object

@@ -70,7 +70,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->hydrator(), schema: $schema);
+            yield array_to_rows($row, $schema, $context->hydrator());
         }
     }
 

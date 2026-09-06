@@ -205,15 +205,15 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_extract_excel_refuses_a_not_null_column_the_sheet_lacks(string $fixtureName): void
     {
         $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage(
-            'column "missing" (row 0): could not convert null to string, column is not nullable',
-        );
+        $this->expectExceptionMessage('column "missing" (row 0) declared by the schema is missing from the row');
 
         df()
             ->extract(from_excel($fixtureName)->withSchema(schema(
                 int_schema('id'),
                 string_schema('name'),
-                string_schema('email'),
+                // the fixture carries a null email in its last row; declaring it nullable leaves the
+                // absent column as the only violation, which is what this test is named for
+                string_schema('email', nullable: true),
                 string_schema('missing'),
             )))
             ->fetch();

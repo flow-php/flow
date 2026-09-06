@@ -10,9 +10,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -149,6 +151,35 @@ final class DateTimeTypeTest extends TestCase
         } else {
             static::assertInstanceOf(DateTimeInterface::class, type_datetime()->assert($value));
         }
+    }
+
+    #[TestWith([''])]
+    #[TestWith(['t'])]
+    #[TestWith(['+12'])]
+    #[TestWith(['now'])]
+    #[TestWith(['yesterday'])]
+    #[TestWith(['12.9'])]
+    #[TestWith(['2024-01'])]
+    #[TestWith(['2024-001'])]
+    #[TestWith(['@1609459200'])]
+    #[TestWith(['10:00:00'])]
+    public function test_a_wall_clock_string_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
+    }
+
+    #[TestWith(['2024-01-01'])]
+    #[TestWith(['02-Jun-2022'])]
+    public function test_a_date_only_string_lands_at_midnight(string $value): void
+    {
+        static::assertSame('00:00:00', type_datetime()->cast($value)->format('H:i:s'));
+    }
+
+    public function test_a_compact_iso_date_casts(): void
+    {
+        static::assertSame('2024-03-05', type_datetime()->cast('20240305')->format('Y-m-d'));
     }
 
     /**

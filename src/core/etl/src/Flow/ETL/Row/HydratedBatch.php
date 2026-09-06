@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\Exception as TypesException;
 
 use function array_key_exists;
@@ -22,12 +23,20 @@ final readonly class HydratedBatch
 {
     /**
      * @param list<RawRowValues> $batch
-     * @param callable(mixed, Definition<mixed>): mixed $prepare
      *
      * @throws SchemaMismatchException
      */
-    public function of(array $batch, Schema $schema, callable $prepare, bool $fillMissing): Rows
+    public function of(array $batch, Schema $schema): Rows
     {
+        // Nullability is a Definition flag, never a property of a Type: definition_from_type()
+        // unwraps OptionalType into nullable: true over a BARE type, so $definition->type() is
+        // non-nullable even for a nullable column and would refuse every legitimate null.
+        $prepare = static fn(mixed $value, Definition $definition): mixed => (
+            $value === null
+                ? ($definition->isNullable() ? null : throw new CastingException(null, $definition->type()))
+                : $definition->type()->cast($value)
+        );
+
         foreach ($batch as $rowValues) {
             foreach ($rowValues->metadata as $name => $metadata) {
                 // PHP casts a numeric array key to int, column names are always strings
@@ -49,10 +58,8 @@ final readonly class HydratedBatch
                 $name = $definition->entry()->name();
 
                 if (!array_key_exists($name, $rowValues->values)) {
-                    if ($fillMissing) {
-                        $values[$name] = null;
-                    }
-
+                    // never fill: Rows::__construct runs Row::matchTo(), which pads a declared-nullable
+                    // absence and refuses a NOT-NULL one as a missing column rather than as a null value
                     continue;
                 }
 

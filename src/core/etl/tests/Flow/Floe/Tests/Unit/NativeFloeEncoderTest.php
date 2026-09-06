@@ -64,7 +64,10 @@ final class NativeFloeEncoderTest extends TestCase
 
     public function test_native_metadata_bearing_frames_match_the_php_engine(): void
     {
-        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
+        $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(
+            int_schema('id'),
+            str_schema('name', nullable: true),
+        )));
 
         $encoded = [new TypedRowValues(
             ['id' => 2, 'name' => null],

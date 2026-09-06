@@ -11,9 +11,7 @@ use crate::ctx::{
     write_slot, zval_long, zval_str, Ctx,
 };
 use crate::exception::ext_exception;
-use crate::format::{
-    Reader, DATETIME_IMMUTABLE, DATETIME_MUTABLE, VALUE_ABSENT, VALUE_NULL, VALUE_PRESENT,
-};
+use crate::format::{Reader, VALUE_ABSENT, VALUE_NULL, VALUE_PRESENT};
 use crate::plan::{Decoder, MapKey};
 
 extern "C" {
@@ -207,27 +205,13 @@ fn decode_structure(
 
 /// Mirrors `ValueDecoder::decodeDateTime`.
 fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpException> {
-    let class_flag = reader.u8("datetime value")?;
+    let timestamp = reader.i64("datetime value")?;
+    let microseconds = reader.u32("datetime value")?;
+    let timezone_length = reader.u32("datetime value")? as usize;
+    let timezone_name = reader.bytes(timezone_length, "datetime value")?;
 
-    let timestamp;
-    let microseconds;
-    let timezone_name;
-
-    let fns = match class_flag {
-        DATETIME_IMMUTABLE | DATETIME_MUTABLE => {
-            timestamp = reader.i64("datetime value")?;
-            microseconds = reader.u32("datetime value")?;
-            let timezone_length = reader.u32("datetime value")? as usize;
-            timezone_name = reader.bytes(timezone_length, "datetime value")?;
-
-            ctx.datetime_fns(class_flag == DATETIME_MUTABLE)?
-        }
-        other => {
-            return Err(ext_exception(format!(
-                "flow_php found unknown datetime flag 0x{other:02X}"
-            )));
-        }
-    };
+    // the class is not stored: a datetime column always hydrates to DateTimeImmutable
+    let fns = ctx.datetime_fns(false)?;
 
     let ce = fns.ce;
     let set_timezone = fns.set_timezone;

@@ -4,13 +4,15 @@
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::zend_ulong;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::ClassEntry;
+use ext_php_rs::zend::{ClassEntry, Function};
 
-use crate::ctx::{call_handle, call_handle_on, read_property, zval_str, Ctx};
+use crate::ctx::{
+    call_handle, call_handle_on, ce_method_ref, find_class, null_zval, read_property,
+    schema_mismatch, zval_str, Ctx,
+};
 use crate::exception::ext_exception;
 use crate::format::{
-    write_u32, DATETIME_IMMUTABLE, DATETIME_MUTABLE, VALUE_ABSENT, VALUE_NULL,
-    VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
+    write_u32, VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
 use crate::plan::{parse_schema_json, TypeJson};
 
@@ -141,6 +143,11 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
 pub(crate) struct EncodeColumn {
     pub(crate) name: Vec<u8>,
     encoder: Encoder,
+    /// `Definition::isNullable()`, read once at plan build - never per row
+    nullable: bool,
+    /// retained (refcount++) so a refusal can be raised through the PHP factory,
+    /// which is the only place a schema-mismatch message is ever authored
+    base_def: Zval,
     /// Canonical PHP `json_encode` of this column's section-schema metadata - the
     /// divergence reference. An entry whose metadata JSON differs rides its own
     /// metadata beside the value.
@@ -150,6 +157,8 @@ pub(crate) struct EncodeColumn {
 
 pub struct EncodePlan {
     pub(crate) columns: Vec<EncodeColumn>,
+    schema_mismatch_ce: &'static ClassEntry,
+    value_does_not_match: &'static Function,
 }
 
 /// `HASH_FLAG_PACKED` from zend_types.h.
@@ -213,8 +222,13 @@ fn write_len_prefixed(out: &mut Vec<u8>, bytes: &[u8]) {
 /// `SchemaEncoder` emits). Each column's section-schema metadata is captured as
 /// its canonical PHP `json_encode` so a diverging entry can be detected without
 /// re-parsing the schema per row.
-pub fn build_encode_plan(schema_json: &[u8], ctx: &mut Ctx) -> Result<EncodePlan, PhpException> {
+pub fn build_encode_plan(
+    schema_json: &[u8],
+    schema: &Zval,
+    ctx: &mut Ctx,
+) -> Result<EncodePlan, PhpException> {
     let definitions = parse_schema_json(schema_json)?;
+    let base_defs = schema_definitions(schema)?;
 
     let mut assoc_zv = Zval::new();
     assoc_zv.set_bool(true);
@@ -236,15 +250,29 @@ pub fn build_encode_plan(schema_json: &[u8], ctx: &mut Ctx) -> Result<EncodePlan
     for (index, definition) in definitions.iter().enumerate() {
         let plan_metadata_json = column_metadata_json(decoded_ht, index, ctx)?;
 
+        let base_def = base_defs
+            .get(index)
+            .ok_or_else(|| ext_exception("flow_php expected a Definition for every schema column"))?
+            .shallow_clone();
+
         columns.push(EncodeColumn {
             name: definition.name.clone().into_bytes(),
             encoder: build_encoder(&definition.type_)?,
+            nullable: definition.nullable,
+            base_def,
             plan_metadata_empty: plan_metadata_json == b"[]",
             plan_metadata_json,
         });
     }
 
-    Ok(EncodePlan { columns })
+    Ok(EncodePlan {
+        columns,
+        schema_mismatch_ce: find_class("Flow\\ETL\\Exception\\SchemaMismatchException")?,
+        value_does_not_match: ce_method_ref(
+            find_class("Flow\\ETL\\Exception\\ColumnMismatchException")?,
+            "valueDoesNotMatch",
+        )?,
+    })
 }
 
 /// Canonical PHP `json_encode` of the `metadata` map of the `index`th decoded
@@ -278,11 +306,40 @@ fn column_metadata_json(
         .ok_or_else(|| ext_exception("flow_php expected json_encode to return a string"))
 }
 
+/// The `Schema`'s own `Definition` objects in declaration order - the same walk
+/// `build_hydrate_plan` does, and the same order `parse_schema_json` yields.
+/// Runs once per schema rebind, never per row.
+fn schema_definitions(schema: &Zval) -> Result<Vec<Zval>, PhpException> {
+    let schema_obj = expect_object(schema, "a Schema")?;
+    let schema_ce = unsafe { schema_obj.ce.as_ref() }
+        .ok_or_else(|| ext_exception("flow_php failed to resolve the Schema class"))?;
+    let definitions = call_handle_on(
+        ce_method_ref(schema_ce, "definitions")?,
+        schema_obj,
+        &mut [],
+        "read schema definitions",
+    )?;
+    let definitions_ht = definitions
+        .array()
+        .ok_or_else(|| ext_exception("flow_php expected Schema::definitions to return an array"))?;
+
+    let mut base_defs = Vec::with_capacity(definitions_ht.len());
+
+    ht_for_each(definitions_ht, |_, _, def_zv| {
+        base_defs.push(def_zv.shallow_clone());
+
+        Ok(())
+    })?;
+
+    Ok(base_defs)
+}
+
 /// Encodes one `Flow\ETL\Row\TypedRowValues` (its `values` + `metadata` maps)
 /// into a bare ROW frame body (no length prefix, no frame type). Byte-identical
 /// to `Flow\Floe\PhpFloeEncoder::encode` for the same row.
 pub fn encode_typed_row(
     plan: &EncodePlan,
+    row_index: u64,
     values_ht: &ZendHashTable,
     metadata_ht: &ZendHashTable,
     ctx: &mut Ctx,
@@ -300,6 +357,15 @@ pub fn encode_typed_row(
         let (diverges, entry_metadata_json) = typed_metadata(column, metadata_ht, ctx)?;
 
         if value.is_null() {
+            if !column.nullable {
+                return Err(schema_mismatch(
+                    plan.schema_mismatch_ce,
+                    plan.value_does_not_match,
+                    row_index,
+                    &mut [column.base_def.shallow_clone(), null_zval()],
+                )?);
+            }
+
             if diverges {
                 out.push(VALUE_NULL_WITH_META);
                 write_len_prefixed(&mut out, &entry_metadata_json);
@@ -570,11 +636,9 @@ fn encode_datetime(
     let immutable_ce = std::ptr::from_ref(ctx.datetime_fns(false)?.ce);
     let mutable_ce = std::ptr::from_ref(ctx.datetime_fns(true)?.ce);
 
-    if std::ptr::eq(ce, immutable_ce) {
-        out.push(DATETIME_IMMUTABLE);
-    } else if std::ptr::eq(ce, mutable_ce) {
-        out.push(DATETIME_MUTABLE);
-    } else {
+    // the class is not stored - a datetime column always hydrates to DateTimeImmutable - but a
+    // custom subclass is still refused, because its extra state would be dropped silently
+    if !std::ptr::eq(ce, immutable_ce) && !std::ptr::eq(ce, mutable_ce) {
         let class = unsafe { ce.as_ref() }
             .and_then(ClassEntry::name)
             .ok_or_else(|| ext_exception("flow_php failed to resolve a datetime class"))?;

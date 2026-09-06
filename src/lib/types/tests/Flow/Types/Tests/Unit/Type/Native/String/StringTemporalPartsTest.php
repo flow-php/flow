@@ -21,6 +21,9 @@ final class StringTemporalPartsTest extends TestCase
             'spelled-out month' => ['Thursday, 02-Jun-2022', true],
             'month precision' => ['2024-01', false],
             'year only' => ['2024', false],
+            'compact ISO' => ['20240305', true],
+            'eight digits that are not a date' => ['12345678', true],
+            'nine digits' => ['202403050', false],
         ];
     }
 
@@ -33,6 +36,22 @@ final class StringTemporalPartsTest extends TestCase
     public function test_a_month_precision_cell_is_neither_a_date_nor_a_datetime(): void
     {
         $parts = StringTemporalParts::from('2024-01');
+
+        static::assertFalse($parts->isDate());
+        static::assertFalse($parts->isDateTime());
+    }
+
+    public function test_a_compact_iso_date_is_a_date(): void
+    {
+        $parts = StringTemporalParts::from('20240305');
+
+        static::assertTrue($parts->isDate());
+        static::assertFalse($parts->isDateTime());
+    }
+
+    public function test_eight_digits_that_are_not_a_calendar_date_are_neither(): void
+    {
+        $parts = StringTemporalParts::from('12345678');
 
         static::assertFalse($parts->isDate());
         static::assertFalse($parts->isDateTime());

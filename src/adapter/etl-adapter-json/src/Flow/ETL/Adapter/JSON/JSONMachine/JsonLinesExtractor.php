@@ -109,7 +109,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                     $batch[] = new RawRowValues($constants->fill($values->values));
                 }
 
-                $hydrated = $hydrator->cast($batch, $schema);
+                $hydrated = $hydrator->hydrate($batch, $schema);
 
                 foreach ($hydrated as $hydratedRow) {
                     $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);

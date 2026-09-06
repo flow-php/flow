@@ -23,10 +23,14 @@ final class ArrayToRowsTest extends FlowTestCase
 {
     public function test_building_array_to_rows_with_entry_that_is_list_of_strings(): void
     {
-        $rows = array_to_rows([
-            ['data' => ['a', 'b', 'c', 'd']],
-            ['data' => ['e', 'f', 'g', 'd']],
-        ], flow_context(config())->hydrator());
+        $rows = array_to_rows(
+            [
+                ['data' => ['a', 'b', 'c', 'd']],
+                ['data' => ['e', 'f', 'g', 'd']],
+            ],
+            schema(list_schema('data', type_list(type_string()))),
+            flow_context(config())->hydrator(),
+        );
 
         static::assertEquals(
             rows(
@@ -40,9 +44,13 @@ final class ArrayToRowsTest extends FlowTestCase
 
     public function test_building_array_to_rows_with_entry_that_is_list_of_strings_with_one_row(): void
     {
-        $rows = array_to_rows([
-            ['data' => ['e', 'f', 'g', 'd']],
-        ], flow_context(config())->hydrator());
+        $rows = array_to_rows(
+            [
+                ['data' => ['e', 'f', 'g', 'd']],
+            ],
+            schema(list_schema('data', type_list(type_string()))),
+            flow_context(config())->hydrator(),
+        );
 
         static::assertEquals(
             rows(schema(list_schema('data', type_list(type_string()))), row(['data' => ['e', 'f', 'g', 'd']])),
@@ -54,8 +62,8 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
+            schema(int_schema('id'), bool_schema('deleted')),
             flow_context(config())->hydrator(),
-            schema: schema(int_schema('id'), bool_schema('deleted')),
         );
 
         static::assertEquals(
@@ -68,8 +76,8 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false],
+            schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
             flow_context(config())->hydrator(),
-            schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
         );
 
         static::assertEquals(
@@ -83,10 +91,14 @@ final class ArrayToRowsTest extends FlowTestCase
 
     public function test_building_rows_from_array(): void
     {
-        $rows = array_to_rows([
-            ['id' => 1234, 'deleted' => false, 'phase' => null],
-            ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
-        ], flow_context(config())->hydrator());
+        $rows = array_to_rows(
+            [
+                ['id' => 1234, 'deleted' => false, 'phase' => null],
+                ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
+            ],
+            schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', nullable: true)),
+            flow_context(config())->hydrator(),
+        );
 
         static::assertEquals(
             rows(
@@ -105,8 +117,8 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
+            schema(int_schema('id'), bool_schema('deleted')),
             flow_context(config())->hydrator(),
-            schema: schema(int_schema('id'), bool_schema('deleted')),
         );
 
         static::assertEquals(
@@ -126,8 +138,8 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false],
                 ['id' => 4321, 'deleted' => true],
             ],
+            schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
             flow_context(config())->hydrator(),
-            schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
         );
 
         static::assertEquals(

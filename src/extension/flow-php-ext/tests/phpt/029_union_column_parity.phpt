@@ -24,7 +24,7 @@ use Flow\ETL\Schema\Definition\UnionDefinition;
 $union = type_union(type_string(), type_integer());
 $unmatchable = type_union(type_uuid(), type_datetime());
 
-// hydrate() trusts the caller and never casts, so only member-conforming values belong here.
+// values that already conform to a union member: hydrate() has nothing to convert.
 $conforming = [
     'members' => [
         schema(int_schema('id'), new UnionDefinition('a', $union, true)),
@@ -44,6 +44,7 @@ $conforming = [
     ],
 ];
 
+// values a union member accepts only after a cast
 $castOnly = [
     'castable' => [
         schema(new UnionDefinition('a', $union, true)),
@@ -58,25 +59,16 @@ $castOnly = [
 $php = new PhpRowHydrator();
 $native = new NativeRowHydrator();
 
-foreach ($conforming as $label => [$s, $batch]) {
+foreach ([...$conforming, ...$castOnly] as $label => [$s, $batch]) {
     printf(
-        "%-9s hydrate:%s cast:%s\n",
+        "%-9s hydrate:%s\n",
         $label,
         serialize($php->hydrate($batch, $s)) === serialize($native->hydrate($batch, $s)) ? 'yes' : 'NO',
-        serialize($php->cast($batch, $s)) === serialize($native->cast($batch, $s)) ? 'yes' : 'NO',
-    );
-}
-
-foreach ($castOnly as $label => [$s, $batch]) {
-    printf(
-        "%-9s cast:%s\n",
-        $label,
-        serialize($php->cast($batch, $s)) === serialize($native->cast($batch, $s)) ? 'yes' : 'NO',
     );
 }
 
 $resolved = static fn(mixed $value): string => get_debug_type(
-    $native->cast([new RawRowValues(['id' => 1, 'a' => $value])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
+    $native->hydrate([new RawRowValues(['id' => 1, 'a' => $value])], schema(int_schema('id'), new UnionDefinition('a', $union, true)))
         ->first()
         ->get('a'),
 );
@@ -90,7 +82,7 @@ $outsideSchema = schema(new UnionDefinition('a', $unmatchable));
 $phpError = null;
 
 try {
-    $php->cast($outside, $outsideSchema);
+    $php->hydrate($outside, $outsideSchema);
 } catch (Throwable $e) {
     $phpError = $e;
 }
@@ -98,7 +90,7 @@ try {
 $nativeError = null;
 
 try {
-    $native->cast($outside, $outsideSchema);
+    $native->hydrate($outside, $outsideSchema);
 } catch (Throwable $e) {
     $nativeError = $e;
 }
@@ -111,9 +103,9 @@ printf(
 );
 ?>
 --EXPECT--
-members   hydrate:yes cast:yes
-metadata  hydrate:yes cast:yes
-castable  cast:yes
+members   hydrate:yes
+metadata  hydrate:yes
+castable  hydrate:yes
 int value type:int
 string value type:string
 outside member exception parity:yes

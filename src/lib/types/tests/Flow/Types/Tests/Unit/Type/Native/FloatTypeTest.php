@@ -146,13 +146,13 @@ final class FloatTypeTest extends TestCase
 
         yield 'DateTimeInterface' => [
             'value' => new DateTimeImmutable('2021-01-01 00:00:00'),
-            'expected' => 1609459200000000.0,
+            'expected' => 1609459200.0,
             'exceptionClass' => null,
         ];
 
         yield 'DateInterval' => [
             'value' => new DateInterval('P1D'),
-            'expected' => 86400000000.0,
+            'expected' => 86400.0,
             'exceptionClass' => null,
         ];
 

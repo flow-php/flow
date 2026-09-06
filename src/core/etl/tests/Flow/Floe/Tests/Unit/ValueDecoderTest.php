@@ -10,13 +10,11 @@ use DateTimeZone;
 use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Tests\Mother\DateTimeDecoderMother;
 use Flow\Floe\ValueDecoder;
 use Flow\Floe\ValueEncoder;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\TestCase;
 
-use function chr;
 use function class_exists;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
@@ -37,27 +35,6 @@ use const PHP_INT_MIN;
 
 final class ValueDecoderTest extends TestCase
 {
-    public function test_decoding_datetime_with_legacy_class_flag_throws(): void
-    {
-        $encoded = chr(0x02) . pack('V', 11) . 'NoSuchClass' . pack('P', 0) . pack('V', 0) . pack('V', 3) . 'UTC';
-        $position = 0;
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe found unknown datetime flag 0x02');
-
-        DateTimeDecoderMother::create()->decode($encoded, $position);
-    }
-
-    public function test_decoding_datetime_with_unknown_flag_throws(): void
-    {
-        $position = 0;
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('unknown datetime flag 0xEE');
-
-        DateTimeDecoderMother::create()->decode("\xEE", $position);
-    }
-
     public function test_decoding_enum_of_unknown_case_throws(): void
     {
         $class = BackedStringEnum::class;

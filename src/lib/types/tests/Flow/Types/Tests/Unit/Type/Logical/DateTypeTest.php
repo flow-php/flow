@@ -10,9 +10,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -149,6 +151,28 @@ final class DateTypeTest extends TestCase
         } else {
             static::assertInstanceOf(DateTimeInterface::class, type_date()->assert($value));
         }
+    }
+
+    #[TestWith([''])]
+    #[TestWith(['t'])]
+    #[TestWith(['+12'])]
+    #[TestWith(['now'])]
+    #[TestWith(['yesterday'])]
+    #[TestWith(['12.9'])]
+    #[TestWith(['2024-01'])]
+    #[TestWith(['2024-001'])]
+    #[TestWith(['@1609459200'])]
+    #[TestWith(['10:00:00'])]
+    public function test_a_wall_clock_string_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_date()->cast($value);
+    }
+
+    public function test_a_compact_iso_date_casts(): void
+    {
+        static::assertSame('2024-03-05', type_date()->cast('20240305')->format('Y-m-d'));
     }
 
     /**
