@@ -14,7 +14,7 @@ use Generator;
 
 use function count;
 
-final class BatchByExtractor implements Extractor, OverridingExtractor
+final class BatchByExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -32,6 +32,11 @@ final class BatchByExtractor implements Extractor, OverridingExtractor
         if ($this->minSize !== null && $this->minSize <= 0) {
             throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $this->minSize);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

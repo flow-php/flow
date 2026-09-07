@@ -19,6 +19,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\not;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 
 final readonly class Github
@@ -53,7 +55,10 @@ final readonly class Github
                 ->withEntry('unpacked', ref('response_body')->jsonDecode())
                 ->select('unpacked')
                 ->withEntry('data', ref('unpacked')->expand())
-                ->withEntry('data', ref('data')->unpack())
+                ->withEntry(
+                    'data',
+                    ref('data')->unpack(schema(str_schema('login'), str_schema('avatar_url'), str_schema('html_url'))),
+                )
                 ->renameEach(rename_replace('data.', ''))
                 ->drop('unpacked', 'data')
                 ->filter(not(ref('login')->endsWith(lit('[bot]'))))

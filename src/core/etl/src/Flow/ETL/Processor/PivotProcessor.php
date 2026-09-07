@@ -7,8 +7,13 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
+use Flow\ETL\GroupBy\Pivot;
+use Flow\ETL\GroupBy\PivotSchema;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -21,6 +26,7 @@ final readonly class PivotProcessor implements Processor
      */
     public function __construct(
         private GroupBy $groupBy,
+        private Pivot $pivot,
         private int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -30,6 +36,16 @@ final readonly class PivotProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, (new PivotSchema())->of(
+            $input,
+            References::init(...$this->groupBy->references()),
+            $this->pivot->values->all(),
+            $this->groupBy->aggregations()->first(),
+        ));
+    }
+
     /**
      * @param Generator<Rows> $rows
      *
@@ -37,6 +53,6 @@ final readonly class PivotProcessor implements Processor
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        yield from $this->groupBy->pivotResult($rows, $context, $this->batchSize);
+        yield from $this->groupBy->pivotResult($rows, $context, $this->pivot, $this->batchSize);
     }
 }

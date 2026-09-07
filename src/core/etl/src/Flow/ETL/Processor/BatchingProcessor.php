@@ -6,6 +6,7 @@ namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -34,6 +35,11 @@ final readonly class BatchingProcessor implements Processor
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 
     public function process(Generator $rows, FlowContext $context): Generator

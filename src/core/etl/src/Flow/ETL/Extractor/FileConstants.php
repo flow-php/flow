@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-/**
- * DuckDB's constant_map (multi_file_reader.cpp:349-410): a column whose value is fixed for the whole
- * file is resolved once, with its declared type, never per row.
- */
 final readonly class FileConstants
 {
     /**

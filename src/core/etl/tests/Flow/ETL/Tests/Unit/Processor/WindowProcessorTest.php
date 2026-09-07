@@ -37,6 +37,26 @@ use function Flow\Types\DSL\type_optional;
 
 final class WindowProcessorTest extends FlowTestCase
 {
+    public function test_bind_adds_the_window_function_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('group'), int_schema('value'), int_schema('rn')),
+            (new WindowProcessor('rn', row_number()->over(window()->partitionBy(ref('group')))))->bind(schema(
+                str_schema('group'),
+                int_schema('value'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_refuses_a_partition_column_missing_from_the_input(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new WindowProcessor('rn', row_number()->over(window()->partitionBy(ref('missing')))))->bind(schema(int_schema(
+            'value',
+        )));
+    }
+
     public function test_constant_frame_accumulates_once_per_partition(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
@@ -410,24 +430,26 @@ final class WindowProcessorTest extends FlowTestCase
         static::assertCount(2, $groupB);
     }
 
-    public function test_a_leading_empty_batch_defers_the_bind_to_the_first_data_batch(): void
+    public function test_a_leading_empty_batch_is_yielded_under_the_bound_schema(): void
     {
         $processor = new WindowProcessor('row_number', row_number()->over(window()->orderBy(ref('value'))));
 
         $generator = (static function () {
-            yield rows(schema());
+            yield rows(schema(int_schema('value')));
             yield rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]));
         })();
 
+        /** @var list<Rows> $batches */
+        $batches = iterator_to_array($processor->process($generator, flow_context()), preserve_keys: false);
         $values = [];
 
-        /** @var Rows $batch */
-        foreach ($processor->process($generator, flow_context()) as $batch) {
-            foreach ($batch as $row) {
-                $values[] = $row->get('row_number');
-            }
+        foreach ($batches[1] as $row) {
+            $values[] = $row->get('row_number');
         }
 
+        static::assertCount(2, $batches);
+        static::assertCount(0, $batches[0]);
+        static::assertSame(['value', 'row_number'], $batches[0]->schema()->references()->names());
         static::assertSame([1, 2], $values);
     }
 }

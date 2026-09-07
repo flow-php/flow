@@ -5,31 +5,59 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
-use Flow\ETL\Row\InferredBatch;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
+use Flow\Types\Type\Logical\StructureType;
 use Throwable;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
+use function sprintf;
 
 final readonly class ScalarFunctionTransformer implements Transformer
 {
     /**
      * @param Definition<mixed>|string $entry
+     * @param null|ScalarFunction $resolved the function resolved against the bound schema
+     * @param null|Definition<mixed> $derived the column this step declares
+     * @param null|Schema $output the schema this step declares
      */
     public function __construct(
         private string|Definition $entry,
         public ScalarFunction $function,
+        private ?ScalarFunction $resolved = null,
+        private ?Definition $derived = null,
+        private ?Schema $output = null,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        // unpack declares its own columns, so the check comes first - a Definition passed to
+        // withEntry() cannot describe an N-column result
+        if ($this->function instanceof UnpackResults) {
+            $resolved = $this->resolve($input);
+            $output = (new UnpackedColumns())->of($input, $this->entryName() . '.', $this->unpacked($resolved));
+
+            return new BoundStep(new self($this->entry, $this->function, $resolved, null, $output), $output);
+        }
+
+        $resolved = $this->resolve($input);
+        $derived = $this->derived($resolved);
+        $output = $this->declare($input, $derived);
+
+        return new BoundStep(new self($this->entry, $this->function, $resolved, $derived, $output), $output);
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
@@ -38,7 +66,9 @@ final readonly class ScalarFunctionTransformer implements Transformer
         ]);
 
         try {
-            $result = $this->doTransform($rows, $context);
+            $result = $this->function instanceof UnpackResults
+                ? $this->unpack($rows, $context)
+                : $this->map($rows, $context);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
@@ -53,80 +83,128 @@ final readonly class ScalarFunctionTransformer implements Transformer
         }
     }
 
-    private function doTransform(Rows $rows, FlowContext $context): Rows
+    /**
+     * @param Definition<mixed> $derived
+     */
+    private function declare(Schema $input, Definition $derived): Schema
     {
-        // An empty batch has no schema to bind against.
-        if (!$rows->count()) {
-            return $rows;
-        }
+        $name = $derived->entry()->name();
 
-        // N columns whose names come from runtime array keys cannot be declared before rows flow -
-        // ArrayUnpack::returns() throws SchemaNotDerivableException by design. This is the one
-        // PERMANENT schemaless producer.
-        if ($this->function instanceof UnpackResults) {
-            $batch = [];
+        return $input->findDefinition($name) === null ? $input->add($derived) : $input->replace($name, $derived);
+    }
 
-            foreach ($rows as $r) {
-                $values = $r->values();
-
-                // @mago-ignore analysis:mixed-assignment
-                foreach (type_array()->assert($this->function->eval($r, $context)) as $key => $val) {
-                    $values[$this->entryName() . '.' . $key] = $val;
-                }
-
-                $batch[] = new RawRowValues($values);
-            }
-
-            return (new InferredBatch())->of($batch);
-        }
-
-        $schema = $rows->schema();
-        $resolver = new ReferenceResolver();
-        $function = $resolver->resolve($this->function, $schema);
-        $resolver->assertResolved($function, $schema);
-
-        $definition = $this->entry instanceof Definition
+    /**
+     * @return Definition<mixed>
+     */
+    private function derived(ScalarFunction $resolved): Definition
+    {
+        return $this->entry instanceof Definition
             ? $this->entry
-            : definition_from_type($this->entryName(), $function->returns());
+            : definition_from_type($this->entryName(), $resolved->returns());
+    }
 
-        $name = $definition->entry()->name();
-        $output = $schema->findDefinition($name) === null
-            ? $schema->add($definition)
-            : $schema->replace($name, $definition);
+    /**
+     * @throws SchemaDefinitionNotFoundException
+     */
+    private function resolve(Schema $input): ScalarFunction
+    {
+        $resolver = new ReferenceResolver();
+        $resolved = $resolver->resolve($this->function, $input);
+        $resolver->assertResolved($resolved, $input);
 
-        if ($function instanceof ExpandResults) {
-            $expanded = [];
+        return $resolved;
+    }
 
-            foreach ($rows->all() as $r) {
-                // @mago-ignore analysis:mixed-assignment
-                foreach (type_array()->assert($function->eval($r, $context)) as $val) {
-                    $expanded[] = new Row([
-                        ...$r->values(),
-                        $name => $val === null ? null : $definition->type()->cast($val),
-                    ]);
-                }
-            }
+    private function entryName(): string
+    {
+        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
+    }
 
-            return new Rows($output, ...$expanded);
-        }
-
+    private function map(Rows $rows, FlowContext $context): Rows
+    {
+        $function = $this->resolved ?? $this->resolve($rows->schema());
+        $derived = $this->derived ?? $this->derived($function);
+        $output = $this->output ?? $this->declare($rows->schema(), $derived);
+        $name = $derived->entry()->name();
         $mapped = [];
 
         foreach ($rows->all() as $r) {
+            if ($function instanceof ExpandResults) {
+                // @mago-ignore analysis:mixed-assignment
+                foreach (type_array()->assert($function->eval($r, $context)) as $val) {
+                    $mapped[] = new Row([
+                        ...$r->values(),
+                        $name => $val === null ? null : $derived->type()->cast($val),
+                    ]);
+                }
+
+                continue;
+            }
+
             // @mago-ignore analysis:mixed-assignment
             $value = $function->eval($r, $context);
 
             $mapped[] = new Row([
                 ...$r->values(),
-                $name => $value === null ? null : $definition->type()->cast($value),
+                $name => $value === null ? null : $derived->type()->cast($value),
             ]);
         }
 
         return new Rows($output, ...$mapped);
     }
 
-    private function entryName(): string
+    /**
+     * The columns unpack declares, read off returns() - the contract every ScalarFunction has.
+     *
+     * @throws InvalidLogicException
+     */
+    private function unpacked(ScalarFunction $resolved): Schema
     {
-        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
+        $returns = $resolved->returns();
+
+        if (!$returns instanceof StructureType) {
+            throw new InvalidLogicException(sprintf(
+                '%s unpacks into N columns, so returns() must be a StructureType, got "%s".',
+                $resolved::class,
+                $returns->toString(),
+            ));
+        }
+
+        $definitions = [];
+
+        foreach ($returns->elements() as $element) {
+            $definitions[] = definition_from_type((string) $element->name, $element->type);
+        }
+
+        return new Schema(...$definitions);
+    }
+
+    private function unpack(Rows $rows, FlowContext $context): Rows
+    {
+        /** @var UnpackResults $function */
+        $function = $this->resolved ?? $this->resolve($rows->schema());
+        $declared = $this->unpacked($function)->definitions();
+        $output = $this->output ?? (new UnpackedColumns())->of(
+            $rows->schema(),
+            $this->entryName() . '.',
+            $this->unpacked($function),
+        );
+        $unpacked = [];
+
+        foreach ($rows->all() as $r) {
+            $values = $r->values();
+            $payload = $function->eval($r, $context);
+
+            foreach ($declared as $name => $definition) {
+                // an undeclared payload key is dropped, a declared but absent one is null
+                // @mago-ignore analysis:mixed-assignment
+                $value = $payload[$name] ?? null;
+                $values[$this->entryName() . '.' . $name] = $value === null ? null : $definition->type()->cast($value);
+            }
+
+            $unpacked[] = new Row($values);
+        }
+
+        return new Rows($output, ...$unpacked);
     }
 }

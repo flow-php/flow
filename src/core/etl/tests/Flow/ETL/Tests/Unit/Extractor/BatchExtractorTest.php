@@ -81,4 +81,9 @@ final class BatchExtractorTest extends FlowTestCase
             iterator_to_array(batches($child, 1)->extract(flow_context()), false)[0]->toArray(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(batches(new FakeExtractor(10), 5)->isRepeatable());
+    }
 }

@@ -13,8 +13,7 @@ use function implode;
 use function sprintf;
 
 /**
- * Types for partition columns discovered from a path. The path owns the value, this owns the type -
- * DuckDB's hive_types, and the same refusal when a name is not a partition at all.
+ * Types for partition columns discovered from a path.
  */
 final readonly class PartitionTypes
 {

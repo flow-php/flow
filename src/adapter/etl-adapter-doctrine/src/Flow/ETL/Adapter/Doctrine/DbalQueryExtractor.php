@@ -9,13 +9,14 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-final class DbalQueryExtractor implements Extractor
+final class DbalQueryExtractor implements Extractor, RewindableExtractor
 {
     private ParametersSet $parametersSet;
 
@@ -33,6 +34,11 @@ final class DbalQueryExtractor implements Extractor
         private readonly string $query,
     ) {
         $this->parametersSet = new ParametersSet([]);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

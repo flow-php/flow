@@ -8,8 +8,10 @@ use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\BucketingStrategy;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -34,5 +36,10 @@ final class BucketingProcessor implements Processor
 
             yield new Rows(Bucket::schema(), $bucket->toRow());
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 }

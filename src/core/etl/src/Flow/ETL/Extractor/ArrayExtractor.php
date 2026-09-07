@@ -20,7 +20,7 @@ use Generator;
 use function Flow\ETL\DSL\array_to_rows;
 use function is_array;
 
-final class ArrayExtractor implements Extractor, InfersSchema
+final class ArrayExtractor implements Extractor, InfersSchema, RewindableExtractor
 {
     private ?Schema $derivedSchema = null;
 
@@ -50,6 +50,11 @@ final class ArrayExtractor implements Extractor, InfersSchema
         $this->filesystem = $filesystem;
         $this->spillRoot = $spillRoot;
         $this->inference = new SchemaInference(sampleSize: -1);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

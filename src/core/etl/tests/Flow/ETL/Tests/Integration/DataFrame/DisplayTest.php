@@ -14,6 +14,7 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
+use function array_map;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
@@ -42,6 +43,7 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_xml;
 use function ob_get_clean;
 use function ob_start;
+use function range;
 
 final class DisplayTest extends FlowIntegrationTestCase
 {
@@ -320,6 +322,19 @@ final class DisplayTest extends FlowIntegrationTestCase
             ASCII, $output);
     }
 
+    public function test_print_schema_leaves_the_frame_unchanged(): void
+    {
+        // printSchema() used to limit the plan to 20 rows on its way to reading the schema, so the
+        // frame it printed was not the frame the caller went on to run
+        $df = df()->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 25))));
+
+        ob_start();
+        $df->printSchema();
+        ob_get_clean();
+
+        static::assertCount(25, $df->fetch());
+    }
+
     public function test_print_schema(): void
     {
         ob_start();
@@ -345,13 +360,9 @@ final class DisplayTest extends FlowIntegrationTestCase
             ->printSchema();
         $output = ob_get_clean() ?: '';
 
-        // from_rows() folds its batches into one shape, so both batches report it
+        // printSchema() formats the plan's schema once and runs nothing, so the batch count is
+        // no longer visible in the output
         self::assertCommandOutputContains(<<<'ASCII'
-            schema
-            |-- id: integer
-            |-- country: string
-            |-- age: integer
-            |-- salary: ?integer
             schema
             |-- id: integer
             |-- country: string

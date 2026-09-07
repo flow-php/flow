@@ -1120,6 +1120,11 @@ final class CSVExtractorTest extends FlowTestCase
         );
     }
 
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_csv(CSVFixtureContext::path('two_rows.csv'))->isRepeatable());
+    }
+
     private function ensureBOMExists(string $path, string $BOM): bool
     {
         $handle = fopen($path, 'rb');

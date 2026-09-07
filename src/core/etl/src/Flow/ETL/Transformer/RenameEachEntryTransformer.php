@@ -7,8 +7,10 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Throwable;
@@ -30,6 +32,19 @@ final readonly class RenameEachEntryTransformer implements Transformer
         }
 
         $this->strategies = $strategies;
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        $output = $input;
+
+        foreach ($this->strategies as $strategy) {
+            foreach ($strategy->renames($output) as $from => $to) {
+                $output = $output->rename($from, $to);
+            }
+        }
+
+        return new BoundStep($this, $output);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

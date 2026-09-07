@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -29,7 +30,7 @@ use function is_int;
 use function is_string;
 use function sprintf;
 
-final class PostgreSqlKeySetExtractor implements Extractor
+final class PostgreSqlKeySetExtractor implements Extractor, RewindableExtractor
 {
     private ?int $maximum = null;
 
@@ -101,6 +102,11 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
             $cursorValues = $this->extractCursorValues($lastRow);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function schema(): Schema

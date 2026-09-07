@@ -14,9 +14,17 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class BatchingProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'), str_schema('name'));
+
+        static::assertEquals($input, (new BatchingProcessor(2))->bind($input)->output);
+    }
+
     public function test_handles_empty_input(): void
     {
         $processor = new BatchingProcessor(2);

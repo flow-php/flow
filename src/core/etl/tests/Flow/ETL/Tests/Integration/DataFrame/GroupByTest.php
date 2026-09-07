@@ -25,6 +25,7 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
+use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -441,7 +442,7 @@ final class GroupByTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_all(from_array($dataset1), from_array($dataset2)))
             ->groupBy([ref('date')])
-            ->pivot(ref('user'))
+            ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
@@ -498,7 +499,7 @@ final class GroupByTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_all(from_array($dataset1), from_array($dataset2)))
             ->groupBy([ref('date'), ref('type')])
-            ->pivot(ref('user'))
+            ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 

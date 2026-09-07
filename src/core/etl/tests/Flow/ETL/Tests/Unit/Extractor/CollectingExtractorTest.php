@@ -51,4 +51,11 @@ final class CollectingExtractorTest extends FlowTestCase
         static::assertTrue($child->schema()->isSame(schema(int_schema('id'))));
         static::assertSame([['id' => 1]], $rerun[0]->toArray());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            (new CollectingExtractor(from_rows(rows(schema(int_schema('id')), row(['id' => 1])))))->isRepeatable(),
+        );
+    }
 }

@@ -150,4 +150,16 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
 
         static::assertSame([['id' => '1', 'name' => 'name_1', 'amount' => '1.5']], $rows);
     }
+
+    public function test_is_repeatable(): void
+    {
+        $connection = InMemorySqlite::connection();
+
+        static::assertTrue(
+            (new DbalLimitOffsetExtractor(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from('users'),
+            ))->isRepeatable(),
+        );
+    }
 }

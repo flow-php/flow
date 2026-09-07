@@ -18,6 +18,38 @@ use function Flow\ETL\DSL\schema;
 
 final class MemorySortProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema_and_declares_it_on_the_rebound_step(): void
+    {
+        $refs = refs(ref('id'));
+        $input = schema(int_schema('id'));
+        $bound = (new MemorySortProcessor($refs))->bind($input);
+
+        static::assertEquals($input, $bound->output);
+        static::assertEquals(new MemorySortProcessor($refs, $input), $bound->step);
+    }
+
+    /**
+     * A buffer with no rows yields no batch at all, so the declared schema is observable only on a
+     * batch that carries rows - there it still wins over the schema the batch arrived with.
+     */
+    public function test_the_declared_schema_wins_over_the_batch_schema(): void
+    {
+        $declared = schema(int_schema('id', nullable: true));
+
+        $generator = (static function () {
+            yield rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 1]));
+        })();
+
+        /** @var list<Rows> $result */
+        $result = iterator_to_array((new MemorySortProcessor(refs(ref('id')), $declared))->process(
+            $generator,
+            flow_context(),
+        ));
+
+        static::assertCount(1, $result);
+        static::assertEquals($declared, $result[0]->schema());
+    }
+
     public function test_handles_empty_input(): void
     {
         $processor = new MemorySortProcessor(refs(ref('id')));

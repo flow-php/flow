@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -25,7 +26,12 @@ use Generator;
 
 use function sprintf;
 
-final class FloeExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class FloeExtractor implements
+    Extractor,
+    FileExtractor,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -57,6 +63,11 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
 
         $this->filesystem = $filesystem;
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -137,8 +148,7 @@ final class FloeExtractor implements Extractor, FileExtractor, LimitableExtracto
     }
 
     /**
-     * Reconcile every listed file's footer instead of trusting the first one. DuckDB's union_by_name,
-     * and the same trade: it has to open a reader per file to do it.
+     * Reconcile every listed file's footer instead of trusting the first one.
      */
     public function unionByName(bool $union = true): self
     {

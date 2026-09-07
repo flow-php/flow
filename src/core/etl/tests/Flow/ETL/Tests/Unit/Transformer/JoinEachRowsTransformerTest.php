@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
+use Flow\ETL\Exception\DataDependentSchemaException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
@@ -22,6 +23,23 @@ use function Flow\ETL\DSL\str_schema;
 
 final class JoinEachRowsTransformerTest extends FlowTestCase
 {
+    public function test_bind_refuses_to_derive_a_data_dependent_schema(): void
+    {
+        $right = new class implements DataFrameFactory {
+            public function from(Rows $rows): DataFrame
+            {
+                return data_frame()->process($rows);
+            }
+        };
+
+        $this->expectException(DataDependentSchemaException::class);
+        $this->expectExceptionMessage(
+            "cannot describe its output before rows flow: its right side is built from each left batch's row values",
+        );
+
+        JoinEachRowsTransformer::inner($right, Expression::on(['id' => 'id']))->bind(schema(int_schema('id')));
+    }
+
     public function test_inner_join_rows(): void
     {
         $left = rows(

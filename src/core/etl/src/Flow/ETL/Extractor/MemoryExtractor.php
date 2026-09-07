@@ -16,7 +16,7 @@ use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
-final class MemoryExtractor implements Extractor, InfersSchema
+final class MemoryExtractor implements Extractor, InfersSchema, RewindableExtractor
 {
     private ?Schema $derivedSchema = null;
 
@@ -29,6 +29,11 @@ final class MemoryExtractor implements Extractor, InfersSchema
     ) {
         // -1: Memory::dump() returns an array, so it re-reads for free and an exact fold costs nothing.
         $this->inference = new SchemaInference(sampleSize: -1);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

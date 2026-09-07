@@ -6,9 +6,11 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Pipeline\Segments;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 use Generator;
@@ -273,6 +275,11 @@ final class SegmentsTest extends FlowTestCase
     private function createStubProcessor(): Processor
     {
         return new class implements Processor {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function process(Generator $rows, FlowContext $context): Generator
             {
                 yield from $rows;
@@ -283,6 +290,11 @@ final class SegmentsTest extends FlowTestCase
     private function createStubTransformer(): Transformer
     {
         return new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 return $rows;

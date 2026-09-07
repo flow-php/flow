@@ -21,6 +21,26 @@ use function Flow\Types\DSL\type_json;
 
 final class SelectEntriesTransformerTest extends FlowTestCase
 {
+    public function test_bind_projects_and_reorders_to_the_selected_columns(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), int_schema('id')),
+            (new SelectEntriesTransformer('name', 'id'))->bind(schema(
+                int_schema('id'),
+                str_schema('name'),
+                json_schema('array'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_refuses_a_column_missing_from_the_input(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "not_existing" not found');
+
+        (new SelectEntriesTransformer('not_existing'))->bind(schema(int_schema('id')));
+    }
+
     public function test_selecting_entries(): void
     {
         $rows = rows(

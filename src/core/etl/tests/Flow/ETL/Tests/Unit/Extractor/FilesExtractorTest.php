@@ -59,4 +59,9 @@ final class FilesExtractorTest extends FlowTestCase
         self::assertExtractedRowsCount(2, $extractor);
         self::assertExtractedBatchesSize(1, $extractor);
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(files(__DIR__ . '/Fixtures/FileListExtractor/*')->isRepeatable());
+    }
 }

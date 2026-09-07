@@ -20,6 +20,13 @@ use function iterator_to_array;
 
 final class BatchingByProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(str_schema('group'), int_schema('id'));
+
+        static::assertEquals($input, (new BatchingByProcessor(ref('group')))->bind($input)->output);
+    }
+
     public function test_groups_rows_by_column_value(): void
     {
         $processor = new BatchingByProcessor(ref('group'));

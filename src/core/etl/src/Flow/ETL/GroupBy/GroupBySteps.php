@@ -33,9 +33,10 @@ final readonly class GroupBySteps
     public static function of(GroupBy $groupBy, Config $config, ?GroupByAlgorithmBuilder $algorithm = null): array
     {
         $grouping = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->grouping;
+        $pivot = $groupBy->pivotedBy();
 
-        if ($groupBy->isPivot()) {
-            return [new PivotProcessor($groupBy, $grouping->bucketing->batchSize)];
+        if ($pivot !== null) {
+            return [new PivotProcessor($groupBy, $pivot, $grouping->bucketing->batchSize)];
         }
 
         $steps = [];

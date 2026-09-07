@@ -9,17 +9,16 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\GroupBy\Aggregators;
+use Flow\ETL\GroupBy\DeclaredPivotValues;
 use Flow\ETL\GroupBy\GroupKey;
+use Flow\ETL\GroupBy\Pivot;
 use Flow\ETL\GroupBy\PivotSchema;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Generator;
 
-use function array_filter;
 use function array_key_exists;
-use function array_map;
 use function array_unique;
-use function array_values;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\definition_from_type;
@@ -31,7 +30,7 @@ final class GroupBy
 {
     private Aggregators $aggregations;
 
-    private ?Reference $pivot = null;
+    private ?Pivot $pivot = null;
 
     private readonly References $refs;
 
@@ -125,9 +124,14 @@ final class GroupBy
         return new GroupKey($values);
     }
 
-    public function pivot(Reference $ref): void
+    public function pivot(Reference $ref, DeclaredPivotValues $values): void
     {
-        $this->pivot = $ref;
+        $this->pivot = new Pivot($ref, $values);
+    }
+
+    public function pivotedBy(): ?Pivot
+    {
+        return $this->pivot;
     }
 
     /**
@@ -136,22 +140,15 @@ final class GroupBy
      *
      * @return Generator<Rows>
      */
-    public function pivotResult(Generator $rows, FlowContext $context, int $batchSize = 1000): Generator
+    public function pivotResult(Generator $rows, FlowContext $context, Pivot $pivot, int $batchSize = 1000): Generator
     {
-        $pivot = $this->pivot;
-
-        if ($pivot === null) {
-            throw new RuntimeException('pivotResult() called without a pivot reference');
-        }
-
         if ($this->aggregations->count() === 0) {
             throw new RuntimeException('Pivot requires exactly one aggregation');
         }
 
         $aggregation = $this->aggregations->first();
+        $pivotColumns = $pivot->values->all();
 
-        /** @var array<int, null|array<array-key, mixed>|bool|float|int|object|string> $pivotColumns */
-        $pivotColumns = [];
         /** @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>> $pivotedTable */
         $pivotedTable = [];
 
@@ -161,14 +158,6 @@ final class GroupBy
             $input ??= $batch->schema();
 
             foreach ($batch as $row) {
-                try {
-                    $pivotColumns[] = $row->get($pivot);
-                } catch (InvalidArgumentException) {
-                    $pivotColumns[] = null;
-                }
-            }
-
-            foreach ($batch as $row) {
                 $values = [];
 
                 foreach ($this->refs as $ref) {
@@ -176,7 +165,7 @@ final class GroupBy
                 }
 
                 $indexValue = (string) new GroupKey($values);
-                $pivotValue = $row->get($pivot);
+                $pivotValue = $row->get($pivot->column);
 
                 if (!array_key_exists($indexValue, $pivotedTable)) {
                     $pivotedTable[$indexValue] = [];
@@ -203,14 +192,6 @@ final class GroupBy
                 }
             }
         }
-
-        // filter only NULL, which is exactly what the fold above skips: a falsy-but-present pivot
-        // value ('0', 0, '', false) does get a column in $pivotedTable, so the schema has to declare
-        // it or HydratedBatch drops the value it holds
-        $pivotColumns = array_values(array_map(
-            static fn(mixed $column): int|string => type_union(type_string(), type_integer())->assert($column),
-            array_filter(array_unique($pivotColumns), static fn(mixed $column): bool => $column !== null),
-        ));
 
         // nothing was read, so there is no input schema to declare a pivot against
         if ($input === null) {

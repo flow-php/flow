@@ -23,6 +23,46 @@ use function Flow\Types\DSL\type_string;
 
 final class UnserializeTransformerTest extends FlowTestCase
 {
+    public function test_bind_expands_the_declared_target_into_nullable_columns(): void
+    {
+        static::assertEquals(
+            schema(str_schema('serialized'), int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            (new UnserializeTransformer('serialized', schema(
+                int_schema('id'),
+                str_schema('name'),
+            )))->bind(schema(str_schema('serialized')))->output,
+        );
+    }
+
+    public function test_bind_prefixes_the_expanded_columns_with_the_merge_prefix(): void
+    {
+        static::assertEquals(
+            schema(
+                str_schema('serialized'),
+                int_schema('row_id', nullable: true),
+                str_schema('row_name', nullable: true),
+            ),
+            (new UnserializeTransformer(
+                'serialized',
+                schema(int_schema('id'), str_schema('name')),
+                true,
+                'row_',
+            ))->bind(schema(str_schema('serialized')))->output,
+        );
+    }
+
+    public function test_bind_without_merging_keeps_only_the_declared_target(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            (new UnserializeTransformer(
+                'serialized',
+                schema(int_schema('id'), str_schema('name')),
+                false,
+            ))->bind(schema(str_schema('serialized')))->output,
+        );
+    }
+
     public function test_unserializing_row_from_entry(): void
     {
         $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]);

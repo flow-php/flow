@@ -15,7 +15,7 @@ use function Flow\Types\DSL\type_xml;
 
 final class SchemaInferenceTest extends FlowTestCase
 {
-    public function test_defaults_follow_duckdb(): void
+    public function test_defaults(): void
     {
         $inference = new SchemaInference();
 

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 
 use function Flow\ETL\DSL\row;
@@ -19,6 +21,11 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         private string $stamp,
         private string $divider,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
+    }
 
     public static function divideBySemicolon(string $entryName, string $stamp): self
     {

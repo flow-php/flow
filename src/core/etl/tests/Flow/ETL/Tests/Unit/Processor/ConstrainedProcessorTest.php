@@ -21,6 +21,13 @@ use function Flow\ETL\DSL\schema;
 
 final class ConstrainedProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'));
+
+        static::assertEquals($input, (new ConstrainedProcessor([]))->bind($input)->output);
+    }
+
     public function test_handles_empty_constraints(): void
     {
         $processor = new ConstrainedProcessor([]);

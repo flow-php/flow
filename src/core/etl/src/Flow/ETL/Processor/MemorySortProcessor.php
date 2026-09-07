@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\References;
@@ -24,6 +25,7 @@ final readonly class MemorySortProcessor implements Processor
 {
     public function __construct(
         private References $refs,
+        private ?Schema $declared = null,
     ) {}
 
     public function process(Generator $rows, FlowContext $context): Generator
@@ -47,8 +49,13 @@ final readonly class MemorySortProcessor implements Processor
             }
         }
 
-        yield from (new Rows($schema ?? new Schema(), ...$buffer))
+        yield from (new Rows($this->declared ?? $schema ?? new Schema(), ...$buffer))
             ->sortBy(...$this->refs->all())
             ->chunks($maxSize);
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep(new self($this->refs, $input), $input);
     }
 }

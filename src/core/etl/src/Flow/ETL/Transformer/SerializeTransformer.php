@@ -6,8 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\Serializer\Base64Serializer;
 use Throwable;
@@ -25,6 +27,21 @@ final readonly class SerializeTransformer implements Transformer
         private Reference|string $target,
         private bool $standalone = false,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        $name = $this->target instanceof Reference ? $this->target->name() : $this->target;
+        $column = str_schema($name);
+
+        if ($this->standalone) {
+            return new BoundStep($this, schema($column));
+        }
+
+        return new BoundStep(
+            $this,
+            $input->findDefinition($name) === null ? $input->add($column) : $input->replace($name, $column),
+        );
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {

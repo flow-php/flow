@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use DateTimeImmutable;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -149,6 +151,27 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
     }
 
+    public function test_bind_declares_a_column_added_only_to_the_matched_rows_as_nullable(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), string_schema('status'), bool_schema('flag', nullable: true)),
+            (new DuplicateRowTransformer(
+                ref('status')->equals(lit('inactive')),
+                with_entry('flag', lit(true)),
+            ))->bind(schema(int_schema('id'), string_schema('status')))->output,
+        );
+    }
+
+    public function test_bind_refuses_a_condition_referencing_a_column_missing_from_the_input(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new DuplicateRowTransformer(
+            ref('missing')->equals(lit('x')),
+            with_entry('flag', lit(true)),
+        ))->bind(schema(int_schema('id')));
+    }
+
     public function test_doing_nothing_when_condition_is_not_satisfied(): void
     {
         $rows = rows(
@@ -202,13 +225,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_an_empty_batch_is_returned_without_binding(): void
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
     {
-        $empty = rows(schema());
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        static::assertSame($empty, (new DuplicateRowTransformer(ref('missing')->equals(lit(1))))->transform(
-            $empty,
-            flow_context(),
-        ));
+        (new DuplicateRowTransformer(ref('missing')->equals(lit(1))))->transform(rows(schema()), flow_context());
     }
 }

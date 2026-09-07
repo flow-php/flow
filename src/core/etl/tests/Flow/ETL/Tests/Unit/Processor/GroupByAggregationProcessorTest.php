@@ -10,6 +10,7 @@ use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
@@ -17,6 +18,7 @@ use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -132,6 +134,33 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         ksort($aggregated);
 
         static::assertSame(['a' => 30.0, 'b' => 15.0], $aggregated);
+    }
+
+    public function test_bind_derives_the_group_by_columns_followed_by_the_aggregations(): void
+    {
+        $groupBy = new GroupBy(ref('category'));
+        $groupBy->aggregate(sum(ref('amount')));
+
+        static::assertEquals(
+            schema(str_schema('category'), float_schema('amount_sum', nullable: true)),
+            (new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets())))->bind(schema(
+                str_schema('category'),
+                int_schema('amount'),
+                str_schema('dropped'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_refuses_a_group_by_column_missing_from_the_input(): void
+    {
+        $groupBy = new GroupBy(ref('missing'));
+        $groupBy->aggregate(sum(ref('amount')));
+
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets())))->bind(schema(int_schema(
+            'amount',
+        )));
     }
 
     public function test_clears_storage_after_the_last_bucket(): void

@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-final class RowsExtractor implements Extractor
+final class RowsExtractor implements Extractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -22,6 +22,11 @@ final class RowsExtractor implements Extractor
     public function __construct(Rows ...$rows)
     {
         $this->rows = $rows;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

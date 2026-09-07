@@ -10,7 +10,9 @@ use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -23,9 +25,18 @@ final class UntilTransformer implements Transformer
 {
     private bool $limitReached = false;
 
+    /**
+     * @param null|ScalarFunction $resolved the predicate resolved against the bound schema; only bind() sets it
+     */
     public function __construct(
         private readonly ScalarFunction $function,
+        private ?ScalarFunction $resolved = null,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep(new self($this->function, $this->resolve($input)), $input);
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
@@ -41,36 +52,13 @@ final class UntilTransformer implements Transformer
                 throw new LimitReachedException(0);
             }
 
-            // An empty batch has no schema to bind against.
-            if (!$rows->count()) {
-                $context->telemetry()->transformationCompleted($this, [
-                    TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => 0,
-                    TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
-                ]);
-
-                return $rows;
-            }
-
-            $schema = $rows->schema();
-            $resolver = new ReferenceResolver();
-            $function = $resolver->resolve($this->function, $schema);
-            $resolver->assertResolved($function, $schema);
-
-            // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
-            // ?boolean, and an evaluated null stops the stream like false does.
-            if (!type_equals(type_bare($function->returns()), type_boolean())) {
-                throw new InvalidArgumentException(sprintf(
-                    'until() requires a predicate returning boolean, "%s" returns "%s". '
-                    . 'Use an explicit comparison, e.g. ->notEquals(lit(0)).',
-                    $function::class,
-                    $function->returns()->toString(),
-                ));
-            }
-
+            // the unbound path has no plan to hold the resolved predicate, so it is memoised here -
+            // until() stops the whole stream, not one batch
+            $this->resolved ??= $this->resolve($rows->schema());
             $nextRows = [];
 
             foreach ($rows as $row) {
-                if (!$function->eval($row, $context)) {
+                if (!$this->resolved->eval($row, $context)) {
                     $this->limitReached = true;
                 } else {
                     $nextRows[] = $row;
@@ -92,5 +80,28 @@ final class UntilTransformer implements Transformer
 
             throw $e;
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function resolve(Schema $input): ScalarFunction
+    {
+        $resolver = new ReferenceResolver();
+        $resolved = $resolver->resolve($this->function, $input);
+        $resolver->assertResolved($resolved, $input);
+
+        // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
+        // ?boolean, and an evaluated null stops the stream like false does.
+        if (!type_equals(type_bare($resolved->returns()), type_boolean())) {
+            throw new InvalidArgumentException(sprintf(
+                'until() requires a predicate returning boolean, "%s" returns "%s". '
+                . 'Use an explicit comparison, e.g. ->notEquals(lit(0)).',
+                $resolved::class,
+                $resolved->returns()->toString(),
+            ));
+        }
+
+        return $resolved;
     }
 }

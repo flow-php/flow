@@ -331,16 +331,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
          */
         $joined = [];
 
-        // nothing was merged, so the surviving side keeps its own schema - pairing the cross schema
-        // with unjoined rows would hand back a batch whose schema does not describe its rows
-        if ($right->count() === 0) {
-            return self::trusted($this->schema, $this->rows);
-        }
-
-        if ($this->count() === 0) {
-            return self::trusted($right->schema, $right->rows);
-        }
-
         $merger = new RowMerger($joinPrefix);
 
         foreach ($this->rows as $leftRow) {

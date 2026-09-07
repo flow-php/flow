@@ -30,6 +30,14 @@ use function usort;
 
 final class RepartitionProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(str_schema('k'), int_schema('v'));
+        $processor = new RepartitionProcessor(refs(ref('k')), new Buckets(new MemoryBuckets()));
+
+        static::assertEquals($input, $processor->bind($input)->output);
+    }
+
     /**
      * One bucket proves the grouping is the processor's own work; 64 proves a key is never split
      * across buckets, which is what makes the downstream window contiguous.

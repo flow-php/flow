@@ -12,7 +12,7 @@ use Generator;
 
 use function count;
 
-final class BatchExtractor implements Extractor, OverridingExtractor
+final class BatchExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -57,6 +57,11 @@ final class BatchExtractor implements Extractor, OverridingExtractor
         if ($buffer !== []) {
             yield Rows::trusted($schema ?? $this->schema(), $buffer);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function extractors(): array

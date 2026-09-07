@@ -10,7 +10,6 @@ use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
@@ -29,6 +28,23 @@ use function usort;
 
 final class HashJoinProcessorTest extends FlowTestCase
 {
+    public function test_bind_derives_the_joined_schema_from_both_sides(): void
+    {
+        $processor = HashJoinProcessorMother::resident(
+            df()->read(from_rows(rows(
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'Alice']),
+            ))),
+            Expression::on(['id' => 'id']),
+            Join::inner,
+        );
+
+        static::assertEquals(
+            schema(int_schema('id'), int_schema('amount'), str_schema('name')),
+            $processor->bind(schema(int_schema('id'), int_schema('amount')))->output,
+        );
+    }
+
     public function test_builds_hash_table_from_the_smaller_side_without_changing_results(): void
     {
         $bigger = rows(
@@ -52,7 +68,6 @@ final class HashJoinProcessorTest extends FlowTestCase
             yield $bigger;
         })();
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -111,7 +126,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
             $joined = [];
 
-            /** @var list<Rows> $batches */
             $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
             foreach ($batches as $batch) {
@@ -165,7 +179,6 @@ final class HashJoinProcessorTest extends FlowTestCase
             yield rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]));
         })();
 
-        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()), false);
         $allRows = [];
 
@@ -199,7 +212,6 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
-        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()), false);
         /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
@@ -259,7 +271,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -291,7 +302,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -317,7 +327,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -348,7 +357,6 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
-        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()), false);
         /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
@@ -383,7 +391,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -421,7 +428,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -453,7 +459,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -490,7 +495,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {
@@ -528,7 +532,6 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $joined = [];
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         foreach ($batches as $batch) {

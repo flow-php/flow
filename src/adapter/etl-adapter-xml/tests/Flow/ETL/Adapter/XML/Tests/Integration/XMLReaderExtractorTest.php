@@ -162,4 +162,12 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            // @mago-ignore analysis:deprecated-class
+            (new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row'))->isRepeatable(),
+        );
+    }
 }

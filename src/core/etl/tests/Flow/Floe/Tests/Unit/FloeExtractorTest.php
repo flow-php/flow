@@ -428,4 +428,9 @@ final class FloeExtractorTest extends TestCase
 
         static::assertInstanceOf(Filters::class, $extractor->filter());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->isRepeatable());
+    }
 }

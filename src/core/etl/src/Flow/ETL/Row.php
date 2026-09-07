@@ -9,11 +9,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\SimilarNames;
 use Flow\Types\Type\TypedValueFormatter;
 use Flow\Types\Value\Json;
 
 use function array_key_exists;
 use function array_keys;
+use function array_map;
+use function array_values;
 use function count;
 use function implode;
 
@@ -97,10 +100,20 @@ final readonly class Row
         $name = $reference instanceof Reference ? $reference->base() : $reference;
 
         if (!array_key_exists($name, $this->values)) {
+            $suggestions = (new SimilarNames())->closestTo(
+                $name,
+                array_values(array_map(
+                    static fn(int|string $column): string => (string) $column,
+                    array_keys($this->values),
+                )),
+            );
+
             throw new InvalidArgumentException(
-                "Column \"{$name}\" does not exist. Did you mean one of the following? [\""
-                . implode('", "', array_keys($this->values))
-                . '"]',
+                $suggestions === []
+                    ? "Column \"{$name}\" does not exist."
+                    : "Column \"{$name}\" does not exist. Did you mean one of the following? [\""
+                    . implode('", "', $suggestions)
+                    . '"]',
             );
         }
 

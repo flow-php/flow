@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -29,7 +30,7 @@ use function sha1;
  * and sort orders for pagination. The key columns must be non-null and provide a unique
  * ordering to ensure correct pagination.
  */
-final class DbalKeySetExtractor implements Extractor
+final class DbalKeySetExtractor implements Extractor, RewindableExtractor
 {
     private string $keyAliasSuffix = '_previous';
 
@@ -57,6 +58,11 @@ final class DbalKeySetExtractor implements Extractor
         if (empty($this->keySet->keys)) {
             throw new InvalidArgumentException('KeySet must contain at least one key for pagination');
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

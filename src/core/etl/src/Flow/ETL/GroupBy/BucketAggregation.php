@@ -7,7 +7,6 @@ namespace Flow\ETL\GroupBy;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
 use Generator;
 
@@ -27,53 +26,50 @@ final readonly class BucketAggregation
     }
 
     /**
+     * Reached only when the plan could not bind, so the shape comes from the first batch that carries rows.
+     *
      * @param Generator<Rows> $rows
      *
      * @return Generator<Rows>
      */
     public function aggregate(Generator $rows, FlowContext $context, GroupBy $groupBy): Generator
     {
-        /** @var array<string, Group> $groups */
-        $groups = [];
-        $aggregations = $groupBy->aggregations();
-        $input = null;
-        $bound = null;
-        $output = null;
+        $groups = null;
 
         foreach ($rows as $batch) {
-            // Bind once per run, against the first non-empty batch's schema - an empty batch has no
-            // schema to bind against.
-            if ($input === null || $bound === null || $output === null) {
+            if ($groups === null) {
                 if (!$batch->count()) {
                     continue;
                 }
 
-                $input = $batch->schema();
-                $bound = $aggregations->resolved($input);
-                $output = $groupBy->outputSchema($input, $bound);
+                $groups = new AggregatedGroups($groupBy, GroupByShape::of($groupBy, $batch->schema()));
             }
 
-            foreach ($batch as $row) {
-                $key = $groupBy->keyValues($row, $input);
-                $group = $groups[(string) $key] ??= new Group($key, $bound->cloned());
-                $group->aggregators->aggregate($row, $context);
-            }
+            $groups->accumulate($batch, $context);
         }
 
-        if ($bound === null || $output === null) {
-            return;
+        if ($groups !== null) {
+            yield from $groups->flush($this->batchSize);
+        }
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
+    public function aggregateBound(
+        Generator $rows,
+        FlowContext $context,
+        GroupBy $groupBy,
+        GroupByShape $shape,
+    ): Generator {
+        $groups = new AggregatedGroups($groupBy, $shape);
+
+        foreach ($rows as $batch) {
+            $groups->accumulate($batch, $context);
         }
 
-        $buffer = new RowsBuffer($output, $this->batchSize);
-
-        foreach ($groups as $group) {
-            if (null !== ($batch = $buffer->add($groupBy->aggregatedRow($group->key, $group->aggregators, $output)))) {
-                yield $batch;
-            }
-        }
-
-        if (null !== ($batch = $buffer->flush())) {
-            yield $batch;
-        }
+        yield from $groups->flush($this->batchSize);
     }
 }

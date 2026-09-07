@@ -6,7 +6,7 @@ namespace Flow\ETL\Exception;
 
 use function sprintf;
 
-final class SchemaNotDerivableException extends InvalidArgumentException
+class SchemaNotDerivableException extends InvalidArgumentException
 {
     public static function extractor(string $extractor, ?string $reason = null): self
     {

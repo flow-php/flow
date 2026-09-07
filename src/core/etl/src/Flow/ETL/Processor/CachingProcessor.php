@@ -7,7 +7,9 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
+use Flow\ETL\Schema;
 use Generator;
 
 use function bin2hex;
@@ -51,5 +53,10 @@ final readonly class CachingProcessor implements Processor
         }
 
         $cache->set($id, $index->toRows());
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 }

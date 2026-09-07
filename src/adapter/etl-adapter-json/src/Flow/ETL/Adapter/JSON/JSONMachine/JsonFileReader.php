@@ -85,7 +85,7 @@ final readonly class JsonFileReader implements SchemaSampler
     }
 
     /**
-     * A 0-byte stream is no JSON text and yields nothing - DuckDB reads it as 0 rows.
+     * A 0-byte stream is no JSON text and yields nothing
      *
      * A member is `mixed`, not an array: a document whose elements are scalars decodes to scalars, which reach
      * count() in sample() and raise a TypeError - bug b79.

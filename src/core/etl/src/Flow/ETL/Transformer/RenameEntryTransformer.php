@@ -6,8 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -17,6 +19,15 @@ final readonly class RenameEntryTransformer implements Transformer
         private string $from,
         private string $to,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        if ($this->from === $this->to) {
+            return new BoundStep($this, $input);
+        }
+
+        return new BoundStep($this, $input->rename($this->from, $this->to));
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {

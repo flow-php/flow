@@ -195,4 +195,9 @@ final class SequenceExtractorTest extends FlowTestCase
             ),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_sequence_number('num', 1, 3)->isRepeatable());
+    }
 }

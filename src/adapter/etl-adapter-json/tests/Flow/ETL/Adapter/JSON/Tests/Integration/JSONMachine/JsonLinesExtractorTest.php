@@ -564,4 +564,9 @@ final class JsonLinesExtractorTest extends FlowTestCase
         );
         static::assertSame($cold, $counting->readFromCalls);
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->isRepeatable());
+    }
 }

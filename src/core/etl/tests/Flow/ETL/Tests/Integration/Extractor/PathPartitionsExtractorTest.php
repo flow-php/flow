@@ -94,4 +94,11 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
             $actualData,
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            from_path_partitions(path_real(__DIR__ . '/Fixtures/multi_partitioned/**/*'))->isRepeatable(),
+        );
+    }
 }

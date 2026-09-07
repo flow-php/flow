@@ -52,4 +52,9 @@ final class RowsExtractorTest extends FlowTestCase
             static::assertTrue($batch->schema()->isSame($extractor->schema()));
         }
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_rows(rows(schema(int_schema('number')), row(['number' => 1])))->isRepeatable());
+    }
 }

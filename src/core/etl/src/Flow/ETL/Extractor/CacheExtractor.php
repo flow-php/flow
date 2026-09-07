@@ -12,7 +12,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-final class CacheExtractor implements Extractor
+final class CacheExtractor implements Extractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -67,6 +67,11 @@ final class CacheExtractor implements Extractor
         if ($this->clear && $cache->has($this->id)) {
             $cache->delete($this->id);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return !$this->clear;
     }
 
     public function withClearOnFinish(bool $clear): self

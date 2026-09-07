@@ -57,9 +57,6 @@ final readonly class StringTemporalParts
      * alone and a month-precision column would be typed date with a fabricated day. The day has to be read back
      * out of the input: three numeric groups, or two plus a spelled-out month ('02-Jun-2022').
      *
-     * A month paired with a time ('2024-01 10:00') still reaches three groups; per-column format detection, which
-     * is how DuckDB settles this, is recorded as debt rather than approximated further here.
-     *
      * Compact ISO ('20240305') is one group and a real calendar date; from()'s checkdate() gate keeps '12345678'
      * and friends out, so the widening is exactly that one form.
      */

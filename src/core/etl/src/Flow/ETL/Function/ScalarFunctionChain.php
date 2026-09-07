@@ -14,6 +14,7 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
+use Flow\ETL\Schema;
 use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
 use Normalizer;
@@ -838,14 +839,9 @@ trait ScalarFunctionChain
      *   | 2|     |     |    4|    5|    6|
      *   +--+-----+-----+-----+-----+-----+
      */
-    /**
-     * @param ScalarFunction|array<array-key, mixed> $skipKeys
-     */
-    public function unpack(
-        ScalarFunction|array $skipKeys = [],
-        ScalarFunction|string|null $entryPrefix = null,
-    ): ArrayUnpack {
-        return new ArrayUnpack($this, $skipKeys, $entryPrefix);
+    public function unpack(Schema $schema): ArrayUnpack
+    {
+        return new ArrayUnpack($this, $schema);
     }
 
     public function upper(): ToUpper

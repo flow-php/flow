@@ -60,7 +60,9 @@ final class ValueComparatorTest extends TestCase
         $types = [type_boolean(), type_integer(), type_string()];
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't compare '(integer === boolean)' due to data type mismatch.");
+        $this->expectExceptionMessage(
+            "Can't compare '(integer === boolean)' due to data type mismatch - an explicit cast is required.",
+        );
 
         $comparator->assertAllTypesComparable($types, Operator::IDENTICAL);
     }
@@ -89,7 +91,9 @@ final class ValueComparatorTest extends TestCase
         $types = [type_boolean(), type_string(), type_integer()];
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't compare '(string == boolean)' due to data type mismatch.");
+        $this->expectExceptionMessage(
+            "Can't compare '(string == boolean)' due to data type mismatch - an explicit cast is required.",
+        );
 
         $comparator->assertAllTypesComparable($types, Operator::EQUAL);
     }
@@ -118,7 +122,9 @@ final class ValueComparatorTest extends TestCase
         $types = [type_boolean(), type_integer()];
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't compare '(integer != boolean)' due to data type mismatch.");
+        $this->expectExceptionMessage(
+            "Can't compare '(integer != boolean)' due to data type mismatch - an explicit cast is required.",
+        );
 
         $comparator->assertAllTypesComparable($types, '!=');
     }
@@ -145,7 +151,7 @@ final class ValueComparatorTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(sprintf(
-            "Can't compare '(%s %s %s)' due to data type mismatch.",
+            "Can't compare '(%s %s %s)' due to data type mismatch - an explicit cast is required.",
             $left->toString(),
             $operator->value,
             $right->toString(),
@@ -174,7 +180,7 @@ final class ValueComparatorTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(sprintf(
-            "Can't compare '(%s %s %s)' due to data type mismatch.",
+            "Can't compare '(%s %s %s)' due to data type mismatch - an explicit cast is required.",
             $left->toString(),
             Operator::EQUAL->value,
             $right->toString(),

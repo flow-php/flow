@@ -20,7 +20,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class FilesExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class FilesExtractor implements Extractor, FileExtractor, LimitableExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -44,6 +44,11 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
         }
 
         $this->filesystem = $filesystem;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

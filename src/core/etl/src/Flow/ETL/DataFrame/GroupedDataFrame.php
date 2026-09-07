@@ -8,7 +8,7 @@ use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\GroupBy;
-use Flow\ETL\GroupBy\GroupBySteps;
+use Flow\ETL\GroupBy\PivotValues;
 use Flow\ETL\Row\Reference;
 
 final readonly class GroupedDataFrame
@@ -22,23 +22,16 @@ final readonly class GroupedDataFrame
     public function aggregate(AggregatingFunction ...$aggregations): DataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
-
-        $register = function (GroupBy $groupBy, ?GroupByAlgorithmBuilder $algorithm): void {
-            // @mago-ignore analysis:non-existent-property,null-property-access,null-argument
-            foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
-                // @mago-ignore analysis:non-existent-property,method-access-on-null
-                $this->pipeline->add($step);
-            }
-        };
-
-        $register->bindTo($this->df, $this->df)($this->groupBy, $this->algorithm);
+        $this->df->registerGroupBy($this->groupBy, $this->algorithm);
 
         return $this->df;
     }
 
-    public function pivot(Reference $ref): self
+    public function pivot(Reference $ref, PivotValues $values): self
     {
-        $this->groupBy->pivot($ref);
+        // a discovering form scans here, above the plan and over this frame, so the processor only
+        // ever holds concrete literals
+        $this->groupBy->pivot($ref, $values->resolve($this->df, $ref));
 
         return $this;
     }

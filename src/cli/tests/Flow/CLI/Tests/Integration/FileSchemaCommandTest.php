@@ -6,8 +6,6 @@ namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileSchemaCommand;
 use Flow\CLI\Tests\Context\SchemaInferenceFixtureContext;
-use Flow\ETL\Exception\InferredSchemaException;
-use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -104,18 +102,20 @@ final class FileSchemaCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_a_sample_size_the_file_outgrows_fails(): void
+    public function test_run_schema_with_a_sample_size_the_file_outgrows_reports_the_sampled_schema(): void
     {
+        // schema() answers from the plan and reads no row, so the value the sample does not fit
+        // ('xyz' against ?integer) is never hydrated here - `flow read` is where it still fails
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
-
-        $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage("could not convert 'xyz' (string) to integer");
 
         $tester->execute([
             'input-file' => SchemaInferenceFixtureContext::outgrownPath(),
             '--output-ascii' => true,
             '--schema-sample-size' => 1,
         ]);
+
+        $tester->assertCommandIsSuccessful();
+        self::assertCommandOutputIdentical("schema\n|-- a: ?integer\n", $tester->getDisplay());
     }
 
     public function test_run_schema_with_all_strings(): void
@@ -214,8 +214,18 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        // With large offset, no data is processed, so schema should be minimal
-        self::assertCommandOutputIdentical("schema\n\n", $tester->getDisplay());
+        // the schema comes from the source, not from the rows an offset happens to leave, so it no
+        // longer depends on --input-file-offset
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- order_id: ?uuid
+            |-- created_at: ?datetime
+            |-- updated_at: ?datetime
+            |-- discount: ?float
+            |-- address: ?json
+            |-- notes: ?json
+            |-- items: ?json
+            OUTPUT . "\n", $tester->getDisplay());
     }
 
     public function test_run_schema_with_offset(): void
@@ -621,16 +631,18 @@ final class FileSchemaCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_without_union_by_name_refuses_differing_column_sets(): void
+    public function test_run_schema_without_union_by_name_reports_the_sniffed_columns(): void
     {
+        // columnsDiverge() fires while rows are read, and schema() reads none - the divergence
+        // refusal is still raised by `flow read` over the same glob
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
-
-        $this->expectException(InferredSchemaException::class);
-        $this->expectExceptionMessage('unexpected [c], missing [b]');
 
         $tester->execute([
             'input-file' => SchemaInferenceFixtureContext::unionGlob(),
             '--output-ascii' => true,
         ]);
+
+        $tester->assertCommandIsSuccessful();
+        self::assertCommandOutputIdentical("schema\n|-- a: ?integer\n|-- b: ?integer\n", $tester->getDisplay());
     }
 }

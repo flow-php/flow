@@ -89,12 +89,28 @@ final class PartitioningTest extends FlowIntegrationTestCase
     public function test_a_partition_filter_with_an_incomparable_literal_is_refused_at_bind(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't compare '(string == date)' due to data type mismatch.");
+        $this->expectExceptionMessage(
+            "Can't compare '(string == date)' due to data type mismatch - an explicit cast is required.",
+        );
 
         df()
             ->read(from_text(__DIR__
             . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
             ->filterPartitions(ref('year')->equals(lit(new DateTimeImmutable('2024-01-01'))));
+    }
+
+    public function test_filter_partitions_rebinds(): void
+    {
+        // "tier" is nullable while both paths are listed - only one of them carries it - and becomes
+        // NOT NULL once the filter leaves only the path that does
+        $df = df()->read(from_text(__DIR__ . '/Fixtures/Partitioning/rebind/**/*.txt'));
+
+        static::assertTrue($df->schema()->get('tier')->isNullable());
+
+        $df->filterPartitions(ref('region')->equals(lit('eu')));
+
+        static::assertFalse($df->schema()->get('tier')->isNullable());
+        static::assertEquals($df->schema(), $df->fetch()->schema());
     }
 
     public function test_overwrite_save_mode_not_dropping_old_partitions(): void

@@ -129,6 +129,8 @@ use Flow\ETL\Function\ToUpper;
 use Flow\ETL\Function\Ulid;
 use Flow\ETL\Function\Uuid;
 use Flow\ETL\Function\When;
+use Flow\ETL\GroupBy\DeclaredPivotValues;
+use Flow\ETL\GroupBy\DiscoveredPivotValues;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\Comparison;
@@ -949,15 +951,11 @@ function call(ScalarFunction $callable, Type $return_type, array $parameters = [
  */
 /**
  * @param array<array-key, mixed>|ScalarFunction $array
- * @param array<array-key, mixed>|ScalarFunction $skip_keys
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_unpack(
-    ScalarFunction|array $array,
-    ScalarFunction|array $skip_keys = [],
-    ScalarFunction|string|null $entry_prefix = null,
-): ArrayUnpack {
-    return new ArrayUnpack($array, $skip_keys, $entry_prefix);
+function array_unpack(ScalarFunction|array $array, Schema $schema): ArrayUnpack
+{
+    return new ArrayUnpack($array, $schema);
 }
 
 /**
@@ -1780,6 +1778,25 @@ function hash_group_by(): HashGroupByBuilder
 function hash_repartition(): HashRepartitionBuilder
 {
     return new HashRepartitionBuilder();
+}
+
+/**
+ * Declares the pivot columns a groupBy()->pivot() produces, so the plan can name them before a row flows.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function pivot_values(int|string ...$values): DeclaredPivotValues
+{
+    return new DeclaredPivotValues(...$values);
+}
+
+/**
+ * Reads the pivot column once at build time and turns what it finds into declared values. Refuses a
+ * source that cannot be read twice.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function discover_pivot_values(int $maxValues = 10_000): DiscoveredPivotValues
+{
+    return new DiscoveredPivotValues($maxValues);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]

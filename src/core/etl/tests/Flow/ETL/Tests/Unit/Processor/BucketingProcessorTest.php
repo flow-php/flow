@@ -25,10 +25,22 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class BucketingProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'), str_schema('name'));
+        $processor = new BucketingProcessor(
+            new HashBucketing([ref('id')], 2, new NativeHasher(), new NativePHPRandomValueGenerator()),
+            new Buckets(new MemoryBuckets()),
+        );
+
+        static::assertEquals($input, $processor->bind($input)->output);
+    }
+
     public function test_empty_input_registers_no_buckets_and_yields_nothing(): void
     {
         $buckets = new Buckets(new MemoryBuckets());

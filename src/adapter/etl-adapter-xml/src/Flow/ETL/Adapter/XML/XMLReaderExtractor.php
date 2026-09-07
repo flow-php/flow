@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -33,7 +34,12 @@ use function sprintf;
 /**
  * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
  */
-final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class XMLReaderExtractor implements
+    Extractor,
+    FileExtractor,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -80,6 +86,11 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
             );
         }
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

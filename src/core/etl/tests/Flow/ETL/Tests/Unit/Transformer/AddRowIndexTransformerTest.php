@@ -28,6 +28,14 @@ final class AddRowIndexTransformerTest extends FlowTestCase
         );
     }
 
+    public function test_bind_adds_an_int_index_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), int_schema('idx')),
+            (new AddRowIndexTransformer('idx', StartFrom::ZERO))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
     public function test_index_keeps_incrementing_across_batches(): void
     {
         $transformer = new AddRowIndexTransformer('idx', StartFrom::ZERO);

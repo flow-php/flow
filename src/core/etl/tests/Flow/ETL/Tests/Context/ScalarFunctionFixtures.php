@@ -36,6 +36,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -238,8 +239,11 @@ final class ScalarFunctionFixtures
                 'returns' => type_list(type_string()),
             ],
             Function\ArrayUnpack::class => [
-                'factory' => static fn(): ScalarFunction => new Function\ArrayUnpack(ref('json')),
-                'returns' => null,
+                'factory' => static fn(): ScalarFunction => new Function\ArrayUnpack(
+                    ref('json'),
+                    schema(str_schema('a')),
+                ),
+                'returns' => type_structure(['a' => structure_element('a', type_optional(type_string()))]),
             ],
             Function\ArrayValues::class => [
                 'factory' => static fn(): ScalarFunction => new Function\ArrayValues(ref('list')),

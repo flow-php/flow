@@ -59,36 +59,26 @@ final class RowsJoinTest extends FlowTestCase
             row(['id' => 4, 'country' => 'FR']),
         );
 
-        $joined = $left->joinCross(rows(schema()));
-
-        static::assertEquals(
-            [
-                ['id' => 1, 'country' => 'PL'],
-                ['id' => 2, 'country' => 'PL'],
-                ['id' => 3, 'country' => 'US'],
-                ['id' => 4, 'country' => 'FR'],
-            ],
-            $joined->toArray(),
-        );
+        // n x 0 = 0, and a zero-row batch fits the cross schema vacuously
+        static::assertSame([], $left->joinCross(rows(schema()))->toArray());
     }
 
-    public function test_cross_join_with_an_empty_side_keeps_each_side_self_describing(): void
+    public function test_cross_join_with_an_empty_side_yields_no_rows_under_the_cross_schema(): void
     {
-        // nothing is merged, so the surviving side keeps its OWN schema - handing back the cross
-        // schema would describe columns the rows do not carry, and every schema-driven reader
-        // (hash, serialize, compare) would read them as null
+        // a cross join with an empty side produces zero rows, and the batch still declares both
+        // sides' columns - the schema describes the plan, not the cardinality
         $emptyRight = rows(
             schema(int_schema('id'), str_schema('country')),
             row(['id' => 1, 'country' => 'PL']),
         )->joinCross(rows(schema(str_schema('code'))));
 
-        static::assertSame(['id', 'country'], $emptyRight->schema()->references()->names());
-        static::assertSame([['id' => 1, 'country' => 'PL']], $emptyRight->toArray());
+        static::assertSame(['id', 'country', 'joined_code'], $emptyRight->schema()->references()->names());
+        static::assertSame([], $emptyRight->toArray());
 
         $emptyLeft = rows(schema(int_schema('id')))->joinCross(rows(schema(str_schema('code')), row(['code' => 'PL'])));
 
-        static::assertSame(['code'], $emptyLeft->schema()->references()->names());
-        static::assertSame([['code' => 'PL']], $emptyLeft->toArray());
+        static::assertSame(['id', 'joined_code'], $emptyLeft->schema()->references()->names());
+        static::assertSame([], $emptyLeft->toArray());
     }
 
     public function test_cross_join_left_empty(): void
@@ -103,15 +93,7 @@ final class RowsJoinTest extends FlowTestCase
             row(['id' => 4, 'country' => 'FR']),
         ));
 
-        static::assertEquals(
-            [
-                ['id' => 1, 'country' => 'PL'],
-                ['id' => 2, 'country' => 'PL'],
-                ['id' => 3, 'country' => 'US'],
-                ['id' => 4, 'country' => 'FR'],
-            ],
-            $joined->toArray(),
-        );
+        static::assertSame([], $joined->toArray());
     }
 
     public function test_cross_join_left_with_name_conflict(): void

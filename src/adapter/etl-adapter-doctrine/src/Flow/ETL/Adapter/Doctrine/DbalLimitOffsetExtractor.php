@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -17,7 +18,7 @@ use Generator;
 use function count;
 use function is_numeric;
 
-final class DbalLimitOffsetExtractor implements Extractor
+final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
 {
     private ?int $maximum = null;
 
@@ -53,6 +54,11 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
 
         return new self($connection, $queryBuilder);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

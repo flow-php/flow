@@ -28,7 +28,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
-final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -52,6 +52,11 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
         }
 
         $this->filesystem = $filesystem;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

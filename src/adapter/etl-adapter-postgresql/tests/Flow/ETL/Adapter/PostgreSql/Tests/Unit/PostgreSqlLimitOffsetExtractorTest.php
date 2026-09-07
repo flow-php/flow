@@ -184,4 +184,9 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
 
         from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withPageSize(0);
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->isRepeatable());
+    }
 }

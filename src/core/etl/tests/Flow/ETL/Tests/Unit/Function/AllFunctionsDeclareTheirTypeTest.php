@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 use ErrorException;
 use Flow\ETL\Adapter\Excel\Function\IsValidExcelSheetName;
 use Flow\ETL\Exception\RequiredPHPVersionException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
@@ -154,10 +153,6 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         }
 
         $resolved = (new ReferenceResolver())->resolve($function, ScalarFunctionFixtures::schema());
-
-        if ($class === Function\ArrayUnpack::class) {
-            $this->expectException(SchemaNotDerivableException::class);
-        }
 
         $returns = $resolved->returns();
 

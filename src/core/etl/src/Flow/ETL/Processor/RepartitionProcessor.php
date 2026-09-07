@@ -11,9 +11,11 @@ use Flow\ETL\Bucketing\KeyGrouping;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function Flow\Types\DSL\type_string;
@@ -54,5 +56,10 @@ final readonly class RepartitionProcessor implements Processor
         } finally {
             $this->buckets->clear();
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 }

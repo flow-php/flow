@@ -4,27 +4,68 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Pipeline\BoundPlan;
+use Flow\ETL\Pipeline\PlanBinder;
 use Flow\ETL\Pipeline\Segments;
 use Generator;
 
 /**
  * @internal
  */
-final readonly class Pipeline
+final class Pipeline
 {
-    private Segments $segments;
+    private ?SchemaNotDerivableException $bindRefusal = null;
+
+    private ?BoundPlan $bound = null;
+
+    private readonly Segments $segments;
 
     public function __construct(
-        private Extractor $extractor,
+        private readonly Extractor $extractor,
     ) {
         $this->segments = new Segments();
     }
 
     public function add(Transformer|Loader|Processor $step): self
     {
+        $this->invalidateBind();
         $this->segments->add($step);
 
         return $this;
+    }
+
+    /**
+     * Walk the plan once and memoise the result, refusal included.
+     *
+     * @throws SchemaNotDerivableException
+     */
+    public function bind(): BoundPlan
+    {
+        if ($this->bindRefusal !== null) {
+            throw $this->bindRefusal;
+        }
+
+        if ($this->bound !== null) {
+            return $this->bound;
+        }
+
+        try {
+            return $this->bound = (new PlanBinder())->bind($this->extractor, $this->segments);
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->bindRefusal = $refusal;
+
+            throw $refusal;
+        }
+    }
+
+    public function boundOrNull(): ?BoundPlan
+    {
+        try {
+            return $this->bind();
+        } catch (SchemaNotDerivableException) {
+            return null;
+        }
     }
 
     /**
@@ -46,6 +87,16 @@ final readonly class Pipeline
     }
 
     /**
+     * Drop the memo. Call after any mutation of the plan or of its extractor - both change what the
+     * walk would compute.
+     */
+    public function invalidateBind(): void
+    {
+        $this->bound = null;
+        $this->bindRefusal = null;
+    }
+
+    /**
      * Process the pipeline and yield Rows batches.
      *
      * @return \Generator<int, Rows>
@@ -54,7 +105,7 @@ final readonly class Pipeline
     {
         $generator = $this->extractor->extract($context);
 
-        foreach ($this->segments->all() as $segment) {
+        foreach (($this->boundOrNull()?->segments() ?? $this->segments)->all() as $segment) {
             $generator = $segment->execute($generator, $context);
 
             $processor = $segment->processor();

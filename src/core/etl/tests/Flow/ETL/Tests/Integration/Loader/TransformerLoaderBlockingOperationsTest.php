@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
@@ -267,7 +268,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         $spy = new SpyLoader();
         $pivotGroupSums = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df
             ->groupBy([ref('g')])
-            ->pivot(ref('g'))
+            ->pivot(ref('g'), pivot_values('a', 'b'))
             ->aggregate(sum(ref('v'))));
 
         df()

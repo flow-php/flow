@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -26,5 +28,10 @@ final readonly class ThrowWhenRowMatches implements Transformer
         }
 
         return $rows;
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 }

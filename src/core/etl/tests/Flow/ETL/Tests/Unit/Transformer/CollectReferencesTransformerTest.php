@@ -18,6 +18,13 @@ use function Flow\ETL\DSL\str_schema;
 
 final class CollectReferencesTransformerTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'), str_schema('name'));
+
+        static::assertEquals($input, (new CollectReferencesTransformer(refs()))->bind($input)->output);
+    }
+
     public function test_collecting_references_from_the_batch_schema(): void
     {
         $references = refs();

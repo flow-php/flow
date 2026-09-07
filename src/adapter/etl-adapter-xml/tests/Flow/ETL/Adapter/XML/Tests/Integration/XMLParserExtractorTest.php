@@ -292,4 +292,9 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row')->isRepeatable());
+    }
 }

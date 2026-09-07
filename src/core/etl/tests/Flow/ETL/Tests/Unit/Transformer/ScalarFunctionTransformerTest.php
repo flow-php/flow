@@ -8,6 +8,7 @@ use DOMDocument;
 use DOMNodeList;
 use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Function\ArrayExpand;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Tests\FlowTestCase;
@@ -31,6 +32,33 @@ use function Flow\Types\DSL\type_xml_element;
 
 final class ScalarFunctionTransformerTest extends FlowTestCase
 {
+    public function test_bind_adds_the_derived_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('a'), str_schema('b')),
+            (new ScalarFunctionTransformer('b', lit('x')))->bind(schema(int_schema('a')))->output,
+        );
+    }
+
+    public function test_bind_declares_one_prefixed_nullable_column_per_unpacked_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), int_schema('data.a', nullable: true), str_schema('data.b', nullable: true)),
+            (new ScalarFunctionTransformer(
+                'data',
+                new ArrayUnpack(lit(['a' => 1, 'b' => 'x']), schema(int_schema('a'), str_schema('b'))),
+            ))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
+    public function test_bind_replaces_an_existing_column_with_the_derived_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('a')),
+            (new ScalarFunctionTransformer('a', lit('x')))->bind(schema(int_schema('a')))->output,
+        );
+    }
+
     public function test_expand_results(): void
     {
         static::assertEquals(
@@ -67,12 +95,12 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_plus_expression_on_empty_rows(): void
+    public function test_plus_expression_on_an_empty_batch_that_declares_its_columns(): void
     {
         static::assertEquals(
             [],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
-                ->transform(rows(schema()), flow_context(config()))
+                ->transform(rows(schema(int_schema('num'), int_schema('num1'))), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -95,7 +123,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     public function test_plus_expression_on_non_existing_rows(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Schema definition for entry "num" not found. Available columns: [a].');
+        $this->expectExceptionMessage('Schema definition for entry "num" not found.');
 
         static::assertEquals(
             [
@@ -107,15 +135,34 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_unpack_results(): void
+    public function test_an_undeclared_payload_key_is_dropped(): void
     {
         static::assertEquals(
             [
-                ['array.id' => 1, 'array.name' => 'Norbert'],
+                ['array.id' => 1],
             ],
-            (new ScalarFunctionTransformer('array', new ArrayUnpack(lit(['id' => 1, 'name' => 'Norbert']))))
+            (new ScalarFunctionTransformer(
+                'array',
+                new ArrayUnpack(lit(['id' => 1, 'secret' => 'dropped']), schema(int_schema('id'))),
+            ))
                 ->transform(rows(schema(), row([])), flow_context(config()))
                 ->toArray(),
+        );
+    }
+
+    public function test_unpack_results_ignores_a_definition_passed_to_with_entry(): void
+    {
+        // a Definition passed to withEntry() cannot describe an N-column result, so unpack's own
+        // declared Schema is what names and types the produced columns
+        $result = (new ScalarFunctionTransformer(
+            str_schema('array'),
+            new ArrayUnpack(lit(['id' => 1, 'name' => 'Norbert']), schema(int_schema('id'), str_schema('name'))),
+        ))->transform(rows(schema(), row([])), flow_context(config()));
+
+        static::assertEquals([['array.id' => 1, 'array.name' => 'Norbert']], $result->toArray());
+        static::assertEquals(
+            schema(int_schema('array.id', nullable: true), str_schema('array.name', nullable: true)),
+            $result->schema(),
         );
     }
 
@@ -181,13 +228,13 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         static::assertEquals($wholeBatch->toArray(), $single->toArray());
     }
 
-    public function test_an_empty_batch_is_returned_without_binding(): void
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
     {
-        $empty = rows(schema());
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        static::assertSame($empty, (new ScalarFunctionTransformer('out', ref('missing')->upper()))->transform(
-            $empty,
+        (new ScalarFunctionTransformer('out', ref('missing')->upper()))->transform(
+            rows(schema()),
             flow_context(config()),
-        ));
+        );
     }
 }

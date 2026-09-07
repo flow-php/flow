@@ -7,7 +7,10 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\DataFrame;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Join\JoinSchema;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -19,6 +22,11 @@ final class CrossJoinRowsTransformer implements Transformer
         private readonly DataFrame $dataFrame,
         private readonly string $prefix = '',
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, (new JoinSchema($this->prefix))->cross($input, $this->dataFrame->schema()));
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {

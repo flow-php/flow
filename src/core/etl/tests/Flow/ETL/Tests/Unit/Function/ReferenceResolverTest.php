@@ -109,9 +109,7 @@ final class ReferenceResolverTest extends FlowTestCase
     public function test_assert_resolved_names_the_column_and_the_available_ones(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage(
-            'Schema definition for entry "scoree" not found. Available columns: [id, score].',
-        );
+        $this->expectExceptionMessage('Schema definition for entry "scoree" not found. Did you mean one of: [score]?');
 
         $schema = schema(int_schema('id'), int_schema('score'));
 

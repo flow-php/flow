@@ -370,4 +370,9 @@ final class ArrayExtractorTest extends FlowTestCase
                 ->toString(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_array([['id' => 1]])->isRepeatable());
+    }
 }

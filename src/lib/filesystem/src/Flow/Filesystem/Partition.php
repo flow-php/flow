@@ -49,10 +49,6 @@ final class Partition
         }
     }
 
-    /**
-     * Percent-encoding over RFC 3986's unreserved set - `A-Za-z0-9_-.~`, which is the set DuckDB uses -
-     * so a value carrying `/` or `=` becomes a directory name instead of being refused outright.
-     */
     public static function decode(string $segment): string
     {
         return rawurldecode($segment);

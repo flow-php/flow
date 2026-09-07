@@ -236,7 +236,10 @@ final readonly class Schema implements Countable
      */
     public function get(string|Reference $ref): Definition
     {
-        return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
+        return (
+            $this->findDefinition($ref)
+            ?: throw SchemaDefinitionNotFoundException::withAvailable((string) $ref, ...$this->references()->names())
+        );
     }
 
     /**
@@ -314,7 +317,10 @@ final readonly class Schema implements Countable
 
         foreach ($entries as $entry) {
             if (!$this->findDefinition($entry)) {
-                throw new SchemaDefinitionNotFoundException((string) $entry);
+                throw SchemaDefinitionNotFoundException::withAvailable(
+                    (string) $entry,
+                    ...$this->references()->names(),
+                );
             }
         }
 
@@ -481,7 +487,10 @@ final readonly class Schema implements Countable
 
         foreach ($entries as $entry) {
             if (!$this->findDefinition($entry)) {
-                throw new SchemaDefinitionNotFoundException((string) $entry);
+                throw SchemaDefinitionNotFoundException::withAvailable(
+                    (string) $entry,
+                    ...$this->references()->names(),
+                );
             }
         }
 
@@ -502,7 +511,7 @@ final readonly class Schema implements Countable
         $definitions = [];
 
         if (!$this->findDefinition($entry)) {
-            throw new SchemaDefinitionNotFoundException((string) $entry);
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
@@ -530,7 +539,8 @@ final readonly class Schema implements Countable
         $reordered = [];
 
         foreach ($names as $name) {
-            $definition = $this->findDefinition($name) ?: throw new SchemaDefinitionNotFoundException((string) $name);
+            $definition = $this->findDefinition($name)
+            ?: throw SchemaDefinitionNotFoundException::withAvailable((string) $name, ...$this->references()->names());
             $key = $definition->entry()->name();
 
             if (array_key_exists($key, $reordered)) {
@@ -560,7 +570,7 @@ final readonly class Schema implements Countable
         $definitions = [];
 
         if (!$this->findDefinition($entry)) {
-            throw new SchemaDefinitionNotFoundException((string) $entry);
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
@@ -603,7 +613,10 @@ final readonly class Schema implements Countable
         $index = array_search(UnresolvedReference::init($reference)->name(), array_keys($this->definitions), true);
 
         if ($index === false) {
-            throw new SchemaDefinitionNotFoundException((string) $reference);
+            throw SchemaDefinitionNotFoundException::withAvailable(
+                (string) $reference,
+                ...$this->references()->names(),
+            );
         }
 
         return $index;
@@ -615,7 +628,10 @@ final readonly class Schema implements Countable
         $referenceName = UnresolvedReference::init($reference)->name();
 
         if (!$this->findDefinition($reference)) {
-            throw new SchemaDefinitionNotFoundException((string) $reference);
+            throw SchemaDefinitionNotFoundException::withAvailable(
+                (string) $reference,
+                ...$this->references()->names(),
+            );
         }
 
         if (UnresolvedReference::init($name)->name() === $referenceName) {

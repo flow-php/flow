@@ -96,9 +96,7 @@ final class DataFrame
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
-            $this->pipeline->add($step);
-        }
+        $this->registerGroupBy($groupBy, $algorithm);
 
         return $this;
     }
@@ -360,18 +358,9 @@ final class DataFrame
             return $rows;
         }
 
-        // schema() answers by executing the pipeline again, so asking it here reads every source a second time and
-        // still merges nothing. The source knows its own schema - but only with no step between it and here, since
-        // a step may add, drop or retype columns.
-        if ($this->pipeline->segments()->steps() === []) {
-            try {
-                return new Rows($this->pipeline->extractor()->schema());
-            } catch (SchemaNotDerivableException) {
-                return new Rows(new Schema());
-            }
-        }
-
-        return new Rows(new Schema());
+        // the plan already describes what it would have produced; only a plan the bind refused has
+        // nothing to answer with
+        return new Rows($this->pipeline->boundOrNull()->schema ?? new Schema());
     }
 
     /**
@@ -382,6 +371,14 @@ final class DataFrame
         $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
 
         return $this;
+    }
+
+    /**
+     * @internal engine paths only - a build-time scan has to know whether the source can be read twice
+     */
+    public function extractor(): Extractor
+    {
+        return $this->pipeline->extractor();
     }
 
     /**
@@ -401,6 +398,7 @@ final class DataFrame
 
         if ($filter instanceof Filter) {
             $extractor->withPathFilter($filter);
+            $this->pipeline->invalidateBind();
 
             return $this;
         }
@@ -409,6 +407,7 @@ final class DataFrame
         // RuntimeException above - and before withPathFilter(), which nulls the listing caches.
         // The filter's constructor runs the comparability gate.
         $extractor->withPathFilter(new ScalarFunctionFilter($filter, $extractor->schema(), $this->context));
+        $this->pipeline->invalidateBind();
 
         return $this;
     }
@@ -696,16 +695,23 @@ final class DataFrame
     }
 
     /**
-     * @trigger
+     * @lazy
+     *
+     * @throws SchemaNotDerivableException
      */
-    public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()): void
+    public function printSchema(SchemaFormatter $formatter = new ASCIISchemaFormatter()): void
     {
-        if ($limit !== null) {
-            $this->limit($limit);
-        }
-        $this->load(to_output(false, Output::schema, schemaFormatter: $formatter));
+        echo $formatter->format($this->schema());
+    }
 
-        $this->run();
+    /**
+     * @internal engine paths only - GroupedDataFrame builds its steps against this frame's plan
+     */
+    public function registerGroupBy(GroupBy $groupBy, ?GroupByAlgorithmBuilder $algorithm = null): void
+    {
+        foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
+            $this->pipeline->add($step);
+        }
     }
 
     /**
@@ -775,26 +781,13 @@ final class DataFrame
     }
 
     /**
-     * @trigger
+     * @lazy
      *
-     * @return Schema
+     * @throws SchemaNotDerivableException
      */
     public function schema(): Schema
     {
-        $schema = new Schema();
-
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                $schema = $schema->merge($rows->schema());
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
-        }
-
-        return $schema;
+        return $this->pipeline->bind()->schema;
     }
 
     /**

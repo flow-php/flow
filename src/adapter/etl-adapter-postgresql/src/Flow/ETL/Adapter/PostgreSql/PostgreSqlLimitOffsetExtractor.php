@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -20,7 +21,7 @@ use function Flow\PostgreSql\DSL\sql_query_order_by;
 use function Flow\PostgreSql\DSL\sql_to_count_query;
 use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 
-final class PostgreSqlLimitOffsetExtractor implements Extractor
+final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtractor
 {
     private ?int $maximum = null;
 
@@ -95,6 +96,11 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
                 }
             }
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function schema(): Schema

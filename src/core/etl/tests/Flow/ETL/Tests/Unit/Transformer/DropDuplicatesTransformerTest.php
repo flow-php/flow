@@ -18,6 +18,13 @@ use function Flow\ETL\DSL\str_schema;
 
 final class DropDuplicatesTransformerTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'), str_schema('name'));
+
+        static::assertEquals($input, (new DropDuplicatesTransformer('id'))->bind($input)->output);
+    }
+
     public function test_drop_duplicates_without_providing_entries(): void
     {
         $this->expectException(InvalidArgumentException::class);

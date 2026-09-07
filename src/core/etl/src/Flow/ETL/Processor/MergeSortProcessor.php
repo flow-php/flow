@@ -10,9 +10,11 @@ use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\References;
+use Flow\ETL\Schema;
 use Flow\ETL\Sort\Merge\KWayMerge;
 use Generator;
 
@@ -45,6 +47,11 @@ final class MergeSortProcessor implements Processor
         if ($this->batchSize < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 
     public function process(Generator $rows, FlowContext $context): Generator

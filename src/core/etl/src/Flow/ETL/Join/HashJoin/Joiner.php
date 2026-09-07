@@ -13,6 +13,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
+use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Row;
 use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
@@ -54,30 +55,9 @@ final class Joiner
         $this->leftValues = new KeyValues($this->keys?->leftRefs() ?? []);
         $this->rightValues = new KeyValues($this->keys?->rightRefs() ?? []);
 
-        $duplicates = [];
-
-        if ($expression->prefix() === '') {
-            foreach ($expression->left() as $leftRef) {
-                foreach ($expression->right() as $rightRef) {
-                    if ($leftRef->name() === $rightRef->name()) {
-                        $duplicates[] = $leftRef->name();
-
-                        continue 2;
-                    }
-                }
-            }
-        }
-
-        $this->merger = new RowMerger(
-            $expression->prefix(),
-            $this->type === Join::right ? $duplicates : [],
-            $this->type === Join::right ? [] : $duplicates,
-        );
-        $this->joinSchema = new JoinSchema(
-            $expression->prefix(),
-            $this->type === Join::right ? $duplicates : [],
-            $this->type === Join::right ? [] : $duplicates,
-        );
+        $shape = JoinShape::of($expression, $type);
+        $this->merger = $shape->merger();
+        $this->joinSchema = $shape->schema();
     }
 
     /**

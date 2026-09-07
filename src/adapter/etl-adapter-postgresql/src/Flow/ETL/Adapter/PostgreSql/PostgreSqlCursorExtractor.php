@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -29,7 +30,7 @@ use function random_bytes;
  *
  * Note: Requires a transaction context (auto-started if not in one).
  */
-final class PostgreSqlCursorExtractor implements Extractor
+final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
 {
     private ?string $cursorName = null;
 
@@ -116,6 +117,11 @@ final class PostgreSqlCursorExtractor implements Extractor
                 $this->client->commit();
             }
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function schema(): Schema

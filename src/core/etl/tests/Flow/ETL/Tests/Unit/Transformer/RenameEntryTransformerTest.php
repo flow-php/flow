@@ -23,6 +23,24 @@ use function Flow\Types\DSL\type_json;
 
 final class RenameEntryTransformerTest extends FlowTestCase
 {
+    public function test_bind_renames_the_column_in_place(): void
+    {
+        static::assertEquals(
+            schema(integer_schema('new_int'), string_schema('status')),
+            (new RenameEntryTransformer('old_int', 'new_int'))->bind(schema(
+                integer_schema('old_int'),
+                string_schema('status'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_renaming_a_column_to_its_own_name_returns_the_input_schema(): void
+    {
+        $input = schema(integer_schema('id'));
+
+        static::assertEquals($input, (new RenameEntryTransformer('id', 'id'))->bind($input)->output);
+    }
+
     public function test_renaming_entries(): void
     {
         $context = flow_context(config());

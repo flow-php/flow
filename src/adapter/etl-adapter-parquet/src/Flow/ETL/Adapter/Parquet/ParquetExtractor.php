@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -29,7 +30,12 @@ use function count;
 use function max;
 use function sprintf;
 
-final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class ParquetExtractor implements
+    Extractor,
+    FileExtractor,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -76,6 +82,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
         $this->options = Options::default();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -156,8 +167,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     }
 
     /**
-     * Reconcile every listed file's schema instead of trusting the first one. DuckDB's union_by_name,
-     * and the same trade: it has to open a reader per file to do it.
+     * Reconcile every listed file's schema instead of trusting the first one.
      */
     public function unionByName(bool $union = true): self
     {

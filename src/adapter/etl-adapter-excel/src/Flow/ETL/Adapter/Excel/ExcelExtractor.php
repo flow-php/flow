@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -37,7 +38,8 @@ final class ExcelExtractor implements
     FileExtractor,
     InfersSchema,
     LimitableExtractor,
-    MetadataColumnsExtractor
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     use Limitable;
     use FileReading;
@@ -77,6 +79,11 @@ final class ExcelExtractor implements
         $this->inference = new SchemaInference();
         $this->readOptions = new ExcelReadOptions();
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

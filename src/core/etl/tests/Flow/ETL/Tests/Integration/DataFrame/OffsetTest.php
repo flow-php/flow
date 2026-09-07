@@ -16,6 +16,7 @@ use function array_map;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
@@ -125,7 +126,7 @@ final class OffsetTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -168,7 +169,7 @@ final class OffsetTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -208,7 +209,12 @@ final class OffsetTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(list_schema(
+                        'ids',
+                        type_list(type_structure([
+                            'id' => type_integer(),
+                        ])),
+                    ));
                 }
 
                 /**
@@ -239,7 +245,7 @@ final class OffsetTest extends FlowIntegrationTestCase
             })
             ->withEntries([
                 'expanded' => ref('ids')->expand(),
-                'element' => ref('expanded')->unpack(),
+                'element' => ref('expanded')->unpack(schema(int_schema('id'))),
             ])
             ->rename('element.id', 'id')
             ->drop('expanded', 'ids', 'element')
@@ -285,7 +291,7 @@ final class OffsetTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**

@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -26,7 +27,12 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class TextExtractor implements
+    Extractor,
+    FileExtractor,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -51,6 +57,11 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
         $this->filesystem = $filesystem;
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

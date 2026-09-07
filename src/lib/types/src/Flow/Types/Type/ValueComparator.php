@@ -29,7 +29,7 @@ final readonly class ValueComparator
                 foreach ($types as $baseType) {
                     if (!$this->comparator->comparable($baseType, $nextType)) {
                         throw new InvalidArgumentException(sprintf(
-                            "Can't compare '(%s %s %s)' due to data type mismatch.",
+                            "Can't compare '(%s %s %s)' due to data type mismatch - an explicit cast is required.",
                             $baseType->toString(),
                             $operator->value,
                             $nextType->toString(),
@@ -50,7 +50,7 @@ final readonly class ValueComparator
 
         if (!$this->comparator->comparable($left, $right)) {
             throw new InvalidArgumentException(sprintf(
-                "Can't compare '(%s %s %s)' due to data type mismatch.",
+                "Can't compare '(%s %s %s)' due to data type mismatch - an explicit cast is required.",
                 $left->toString(),
                 $operator->value,
                 $right->toString(),

@@ -67,8 +67,14 @@ which check the column set against the header) or dropping the columns a later s
 header to check). Every inferred column is nullable, and where narrowing is not safe the column floors to `string`.
 
 **Sources that do not.** For the rest, every value still gets its type detected as rows are created and each batch
-carries its own schema; `DataFrame::schema()` runs the pipeline and merges the per-batch schemas into one.
-`printSchema()` prints either.
+carries its own schema.
+
+**`DataFrame::schema()` describes the plan, not the data.** It walks the pipeline's steps once, threading each
+step's output schema into the next, starting from the source's own `schema()` - so it may do the I/O that source
+needs to describe itself (a CSV sniff, a Parquet footer), but it never reads a row. A column a step cannot name
+before rows flow is a build error, raised there rather than mid-run: `select('nope')` and `ref('a')->greaterThan(ref('b'))`
+over incomparable types both refuse at the first trigger. `printSchema()` formats that same answer and runs
+nothing. A plan containing `joinEach()` cannot be described this way and refuses.
 
 ```php
 <?php

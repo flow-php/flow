@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -35,7 +36,7 @@ final class GroupByStepsTest extends FlowTestCase
     public function test_pivot_group_by_is_a_single_pivot_processor(): void
     {
         $groupBy = new GroupBy(ref('date'));
-        $groupBy->pivot(ref('user'));
+        $groupBy->pivot(ref('user'), pivot_values('norbert'));
         $groupBy->aggregate(sum(ref('contributions')));
 
         $steps = GroupBySteps::of($groupBy, config());

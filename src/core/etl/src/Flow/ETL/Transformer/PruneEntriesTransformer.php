@@ -6,9 +6,11 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -28,6 +30,19 @@ final readonly class PruneEntriesTransformer implements Transformer
     public function __construct(string|Reference ...$refs)
     {
         $this->refs = References::init(...$refs);
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        $present = [];
+
+        foreach ($this->refs as $ref) {
+            if ($input->findDefinition($ref) !== null) {
+                $present[] = $ref;
+            }
+        }
+
+        return new BoundStep($this, $input->keep(...$present)->reorder(...$present));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

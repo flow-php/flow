@@ -179,4 +179,11 @@ final class BatchByExtractorTest extends TestCase
             iterator_to_array(batched_by($child, ref('id'))->extract(flow_context()), false)[0]->toArray(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            batched_by(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))), ref('id'))->isRepeatable(),
+        );
+    }
 }

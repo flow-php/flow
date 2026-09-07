@@ -81,4 +81,9 @@ final class ChainExtractorTest extends FlowTestCase
             iterator_to_array(from_all($child)->extract(flow_context()), false)[0]->toArray(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_all(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))))->isRepeatable());
+    }
 }

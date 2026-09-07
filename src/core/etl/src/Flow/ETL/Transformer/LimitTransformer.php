@@ -8,7 +8,9 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -24,6 +26,11 @@ final class LimitTransformer implements Transformer
         if ($this->limit <= 0) {
             throw new InvalidArgumentException("Limit can't be lower or equal zero, given: " . $this->limit);
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

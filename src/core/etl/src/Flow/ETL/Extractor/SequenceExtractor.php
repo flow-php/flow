@@ -17,7 +17,7 @@ use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
-final class SequenceExtractor implements Extractor, InfersSchema
+final class SequenceExtractor implements Extractor, InfersSchema, RewindableExtractor
 {
     private ?Schema $derivedSchema = null;
 
@@ -30,6 +30,11 @@ final class SequenceExtractor implements Extractor, InfersSchema
         private readonly string $entryName = 'entry',
     ) {
         $this->inference = new SchemaInference(sampleSize: -1);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

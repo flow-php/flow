@@ -26,13 +26,12 @@ final class WindowFunctionPipelineTest extends TestCase
 {
     public function test_handles_empty_input(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(schema())));
+        $pipeline = new Pipeline(from_rows(rows(schema(int_schema('id')))));
 
         $window = window()->orderBy(ref('id'));
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
-        $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(0, $result);
     }

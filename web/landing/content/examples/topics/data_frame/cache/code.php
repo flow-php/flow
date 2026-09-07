@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{config_builder, data_frame, filesystem_cache, from_cache, ref, rename_replace, to_output};
+use function Flow\ETL\DSL\{config_builder, data_frame, datetime_schema, filesystem_cache, from_cache, int_schema, ref, rename_replace, schema, str_schema, to_output};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
@@ -40,7 +40,15 @@ data_frame(config_builder()->cache(filesystem_cache(__DIR__ . '/output/cache')))
     ->cache('github_api')
     ->withEntry('unpacked', ref('response_body')->jsonDecode())
     ->select('unpacked')
-    ->withEntry('unpacked', ref('unpacked')->unpack())
+    ->withEntry('unpacked', ref('unpacked')->unpack(schema(
+        str_schema('name'),
+        str_schema('html_url'),
+        str_schema('blog'),
+        str_schema('login'),
+        int_schema('public_repos'),
+        int_schema('followers'),
+        datetime_schema('created_at'),
+    )))
     ->renameEach(rename_replace('unpacked.', ''))
     ->drop('unpacked')
     ->select('name', 'html_url', 'blog', 'login', 'public_repos', 'followers', 'created_at')

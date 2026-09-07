@@ -35,6 +35,20 @@ use function range;
 
 final class MergeSortProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $storage = new MemoryBuckets();
+        $input = schema(int_schema('id'));
+        $processor = new MergeSortProcessor(
+            refs(ref('id')),
+            new Buckets($storage),
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+        );
+
+        static::assertEquals($input, $processor->bind($input)->output);
+    }
+
     public function test_descending_single_column(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());

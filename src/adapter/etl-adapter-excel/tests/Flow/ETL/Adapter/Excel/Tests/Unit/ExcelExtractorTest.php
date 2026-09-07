@@ -74,4 +74,9 @@ final class ExcelExtractorTest extends FlowTestCase
             from_excel(__DIR__ . '/../Fixtures/unknown')->withSchema(schema(str_schema('name')))->schema(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_excel(ExcelFixtureContext::file('fixture.xlsx'))->isRepeatable());
+    }
 }

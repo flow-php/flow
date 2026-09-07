@@ -11,7 +11,7 @@ use function Flow\Types\DSL\type_string;
 /**
  * SQLite has no per-column type: SQLite3Result::columnType() describes the value, not the column,
  * and sqlite3_column_decltype() is not bound in PHP. An all-string schema is a true statement about
- * it rather than a floor, and the read casts values to match. This is DuckDB's sqlite_query() model.
+ * it rather than a floor, and the read casts values to match.
  */
 final readonly class SqliteTypes implements NativeTypes
 {

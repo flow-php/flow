@@ -39,8 +39,10 @@ These methods build the processing pipeline without executing it immediately:
 These methods execute the entire pipeline and return results:
 
 - **Data retrieval**: `get()`, `getEach()`, `fetch()`, `count()`
-- **Output operations**: `run()`, `forEach()`, `printRows()`, `printSchema()`
-- **Schema inspection**: `schema()`, `display()`
+- **Output operations**: `run()`, `forEach()`, `printRows()`
+- **Schema inspection**: `display()`
+
+`schema()` and `printSchema()` are **not** triggers - they answer from the plan without reading a row.
 
 > **Important**: Build your complete pipeline with lazy operations, then execute once with a trigger operation for optimal performance.
 

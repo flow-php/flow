@@ -74,6 +74,7 @@ final class LimitOptimization implements Optimization
 
         if ($element instanceof LimitTransformer && !count($pipeline->segments()->steps())) {
             $extractor->changeLimit($element->limit);
+            $pipeline->invalidateBind();
 
             return $pipeline;
         }
@@ -91,6 +92,7 @@ final class LimitOptimization implements Optimization
 
             if ($element instanceof LimitTransformer) {
                 $extractor->changeLimit($element->limit);
+                $pipeline->invalidateBind();
 
                 return $pipeline;
             }

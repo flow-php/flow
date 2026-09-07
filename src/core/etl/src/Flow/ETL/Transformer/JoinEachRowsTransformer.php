@@ -6,11 +6,14 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\DataFrameFactory;
+use Flow\ETL\Exception\DataDependentSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -21,6 +24,14 @@ final readonly class JoinEachRowsTransformer implements Transformer
         private Expression $expression,
         private Join $type,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        throw DataDependentSchemaException::step(
+            self::class,
+            "its right side is built from each left batch's row values",
+        );
+    }
 
     public static function inner(DataFrameFactory $right, Expression $condition): self
     {

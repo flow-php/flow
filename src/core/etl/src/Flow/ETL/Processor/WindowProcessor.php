@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FrameAccumulating;
 use Flow\ETL\Function\PartitionRanking;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -29,52 +31,95 @@ use function Flow\ETL\DSL\rows;
  *
  * @internal
  */
-final readonly class WindowProcessor implements Processor
+final class WindowProcessor implements Processor
 {
+    /**
+     * The resolved function and the schemas this step declares. Only bind() sets them; the unbound
+     * path derives them from the first batch.
+     *
+     * @var null|Definition<mixed>
+     */
+    private ?Definition $derived = null;
+
+    private ?WindowFunction $resolved = null;
+
+    private ?Schema $input = null;
+
+    private ?Schema $output = null;
+
     /**
      * @param Definition<mixed>|string $entry
      */
     public function __construct(
-        private string|Definition $entry,
-        private WindowFunction $function,
+        private readonly string|Definition $entry,
+        private readonly WindowFunction $function,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        $bound = $this->boundTo($input);
+
+        return new BoundStep($bound, $bound->declares());
+    }
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $bound = null;
-        $definition = null;
-        $schema = null;
-        $outputSchema = null;
+        $bound = $this->output === null ? null : $this;
 
         foreach ($rows as $batch) {
+            $bound ??= $this->boundTo($batch->schema());
+            $resolved = $bound->resolved;
+            $derived = $bound->derived;
+            $input = $bound->input;
+            $output = $bound->declares();
+
+            if ($resolved === null || $derived === null || $input === null) {
+                throw new RuntimeException('WindowProcessor was not bound');
+            }
+
             if (!$batch->count()) {
+                yield new Rows($output);
+
                 continue;
             }
 
-            // Bind once per run, against the first non-empty batch's schema - one Definition for the
-            // whole produced column, before any row is read.
-            if ($bound === null || $definition === null) {
-                $schema = $batch->schema();
-                $resolver = new ReferenceResolver();
-                /** @var WindowFunction $bound a window root is never a reference leaf */
-                $bound = $resolver->resolve($this->function, $schema);
-                $resolver->assertResolved($bound, $schema);
-                $this->assertWindowReferences($bound, $schema);
-
-                $definition = $this->entry instanceof Definition
-                    ? $this->entry
-                    : definition_from_type($this->entry, $bound->returns());
-                $outputSchema = $schema->findDefinition($definition->entry()->name()) === null
-                    ? $schema->add($definition)
-                    : $schema->replace($definition->entry()->name(), $definition);
-            }
-
-            if ($schema !== null && $outputSchema !== null) {
-                // one incoming batch is one partition: RepartitionSteps put every row sharing the
-                // partition key into a single Rows before this processor ever sees it
-                yield $this->processPartition($bound, $definition, $schema, $outputSchema, $batch->all(), $context);
-            }
+            // one incoming batch is one partition: RepartitionSteps put every row sharing the
+            // partition key into a single Rows before this processor ever sees it
+            yield $this->processPartition($resolved, $derived, $input, $output, $batch->all(), $context);
         }
+    }
+
+    private function declares(): Schema
+    {
+        return $this->output ?? throw new RuntimeException('WindowProcessor was not bound');
+    }
+
+    /**
+     * @throws SchemaDefinitionNotFoundException
+     */
+    private function boundTo(Schema $input): self
+    {
+        $resolver = new ReferenceResolver();
+        /** @var WindowFunction $resolved a window root is never a reference leaf */
+        $resolved = $resolver->resolve($this->function, $input);
+        $resolver->assertResolved($resolved, $input);
+        self::assertWindowReferences($resolved, $input);
+
+        $derived = $this->entry instanceof Definition
+            ? $this->entry
+            : definition_from_type($this->entry, $resolved->returns());
+
+        $name = $derived->entry()->name();
+
+        $bound = new self($this->entry, $this->function);
+        $bound->resolved = $resolved;
+        $bound->derived = $derived;
+        $bound->input = $input;
+        $bound->output = $input->findDefinition($name) === null
+            ? $input->add($derived)
+            : $input->replace($name, $derived);
+
+        return $bound;
     }
 
     /**
@@ -83,7 +128,7 @@ final readonly class WindowProcessor implements Processor
      * extractPartitionKey() substitutes null for a missing entry. This check makes both refuse
      * identically, one batch earlier, with the gate's message.
      */
-    private function assertWindowReferences(WindowFunction $function, Schema $schema): void
+    private static function assertWindowReferences(WindowFunction $function, Schema $schema): void
     {
         $window = $function->window();
 
@@ -154,32 +199,29 @@ final readonly class WindowProcessor implements Processor
     }
 
     /**
-     * Both call sites guarantee a non-empty partition - one is guarded by `[] !== $partitionRows`, the
-     * other by a non-null current partition key, which is only set after a row has been appended.
-     *
-     * @param Definition<mixed> $definition
-     * @param array<Row> $rows
+     * @param Definition<mixed> $derived
+     * @param array<Row> $rows - never empty; process() answers a zero-row batch from the bound schema
      */
     private function processPartition(
-        WindowFunction $function,
-        Definition $definition,
-        Schema $inputSchema,
-        Schema $outputSchema,
+        WindowFunction $resolved,
+        Definition $derived,
+        Schema $input,
+        Schema $output,
         array $rows,
         FlowContext $context,
     ): Rows {
-        $window = $function->window();
+        $window = $resolved->window();
         $orderBy = $window->order();
         $sortBy = $orderBy === [] ? $window->partitions()->all() : $orderBy;
-        $partitionRows = rows($inputSchema, ...$rows)->sortBy(...$sortBy);
+        $partitionRows = rows($input, ...$rows)->sortBy(...$sortBy);
 
         $frame = $window->frame();
         $processedRows = [];
 
         $values = match (true) {
-            $function instanceof PartitionRanking => $function->rankPartition($partitionRows),
-            $function instanceof FrameAccumulating => $this->accumulateValues(
-                $function,
+            $resolved instanceof PartitionRanking => $resolved->rankPartition($partitionRows),
+            $resolved instanceof FrameAccumulating => $this->accumulateValues(
+                $resolved,
                 $frame,
                 $partitionRows,
                 $context,
@@ -189,15 +231,15 @@ final readonly class WindowProcessor implements Processor
 
         foreach ($partitionRows as $index => $row) {
             $value = $values === null
-                ? $function->apply(new WindowContext($row, $index, $partitionRows, $frame, $context))
+                ? $resolved->apply(new WindowContext($row, $index, $partitionRows, $frame, $context))
                 : $values[$index];
 
             $processedRows[] = new Row([
                 ...$row->values(),
-                $definition->entry()->name() => $value === null ? null : $definition->type()->cast($value),
+                $derived->entry()->name() => $value === null ? null : $derived->type()->cast($value),
             ]);
         }
 
-        return rows($outputSchema, ...$processedRows);
+        return rows($output, ...$processedRows);
     }
 }

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
@@ -74,6 +75,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 throw new RuntimeException('Transformer Exception');
@@ -145,6 +151,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 throw new RuntimeException('Transformer Exception');
@@ -231,6 +242,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 if ($rows->first()->get('id') === 101) {

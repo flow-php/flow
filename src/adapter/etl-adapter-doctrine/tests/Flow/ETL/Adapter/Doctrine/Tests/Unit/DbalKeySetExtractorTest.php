@@ -63,4 +63,17 @@ final class DbalKeySetExtractorTest extends FlowTestCase
 
         static::assertEquals(schema(int_schema('id')), $extractor->withSchema(schema(int_schema('id')))->schema());
     }
+
+    public function test_is_repeatable(): void
+    {
+        $connection = InMemorySqlite::connection();
+
+        static::assertTrue(
+            (new DbalKeySetExtractor(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from('users'),
+                pagination_key_set(pagination_key_asc('id')),
+            ))->isRepeatable(),
+        );
+    }
 }

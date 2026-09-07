@@ -335,4 +335,9 @@ final class ParquetExtractorTest extends FlowTestCase
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->isRepeatable());
+    }
 }

@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -29,7 +30,12 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\xml_schema;
 use function sprintf;
 
-final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class XMLParserExtractor implements
+    Extractor,
+    FileExtractor,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     use Limitable;
     use FileReading;
@@ -97,6 +103,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         $this->filesystem = $filesystem;
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function characterDataHandler(XMLParser $parser, string $data): void

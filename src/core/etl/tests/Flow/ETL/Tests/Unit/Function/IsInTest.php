@@ -68,7 +68,9 @@ final class IsInTest extends FlowTestCase
     public function test_is_in_refuses_an_incomparable_element_type(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't compare '(string == date)' due to data type mismatch.");
+        $this->expectExceptionMessage(
+            "Can't compare '(string == date)' due to data type mismatch - an explicit cast is required.",
+        );
 
         lit('a')->isIn(lit([new DateTimeImmutable('2024-01-01')]))->returns();
     }

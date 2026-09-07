@@ -161,4 +161,9 @@ final class MemoryExtractorTest extends FlowTestCase
             iterator_to_array($warm->extract(flow_context(config()))),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_memory(new ArrayMemory([['number' => 1]]))->isRepeatable());
+    }
 }

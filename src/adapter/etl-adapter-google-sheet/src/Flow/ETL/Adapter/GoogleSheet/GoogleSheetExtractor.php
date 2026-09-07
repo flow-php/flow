@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -32,13 +33,18 @@ use function sprintf;
 /**
  * @import-type GoogleSheetOptions from GoogleSheetReadOptions
  */
-final class GoogleSheetExtractor implements Extractor, InfersSchema, LimitableExtractor, MetadataColumnsExtractor
+final class GoogleSheetExtractor implements
+    Extractor,
+    InfersSchema,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     use Limitable;
     use MetadataColumns;
 
     /**
-     * Core defaults to 20 480, a number DuckDB picked for a cheap local prefix read. A sheet range is an HTTP
+     * Core defaults to 20 480. A sheet range is an HTTP
      * request and the range clamps to the grid, so that default samples the WHOLE sheet for anything under
      * ~20 000 rows - and the read then fetches it again. Polars' 100 keeps the sample proportionally small.
      * Widen it per read with ->inferSchema(infer_schema()->sampleSize(...)), or -1 for the whole sheet.
@@ -63,6 +69,11 @@ final class GoogleSheetExtractor implements Extractor, InfersSchema, LimitableEx
         $this->inference = new SchemaInference(sampleSize: self::SAMPLE_ROWS);
         $this->readOptions = new GoogleSheetReadOptions();
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

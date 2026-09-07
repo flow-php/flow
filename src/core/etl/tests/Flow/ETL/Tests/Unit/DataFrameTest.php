@@ -10,6 +10,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -212,7 +213,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -362,7 +363,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -408,7 +409,12 @@ final class DataFrameTest extends FlowTestCase
 
             public function schema(): Schema
             {
-                return new Schema();
+                return schema(
+                    int_schema('id'),
+                    bool_schema('deleted'),
+                    datetime_schema('expiration-date'),
+                    str_schema('phase', nullable: true),
+                );
             }
 
             /**
@@ -451,6 +457,11 @@ final class DataFrameTest extends FlowTestCase
         };
 
         $addStampStringEntry = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input->add(str_schema('stamp')));
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 $stamped = [];
@@ -478,6 +489,11 @@ final class DataFrameTest extends FlowTestCase
             ->onError(new IgnoreError())
             ->rows($addStampStringEntry)
             ->rows(new class implements Transformer {
+                public function bind(Schema $input): BoundStep
+                {
+                    return new BoundStep($this, $input);
+                }
+
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
                     throw new RuntimeException('Unexpected exception');
@@ -694,7 +710,8 @@ final class DataFrameTest extends FlowTestCase
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        static::assertEquals(rows(schema()), $rows);
+        // void() drops rows, not columns - the batch it yields carries the plan's declared schema
+        static::assertEquals(rows(schema(float_schema('average_age', nullable: true))), $rows);
     }
 
     public function test_with_batch_size(): void
@@ -708,7 +725,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -734,6 +751,11 @@ final class DataFrameTest extends FlowTestCase
                 }
             })
             ->with(new class implements Transformer {
+                public function bind(Schema $input): BoundStep
+                {
+                    return new BoundStep($this, $input->rename('id', 'new_id'));
+                }
+
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
                     $renamed = [];
@@ -766,7 +788,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -782,6 +804,11 @@ final class DataFrameTest extends FlowTestCase
                 }
             })
             ->with(new class implements Transformer {
+                public function bind(Schema $input): BoundStep
+                {
+                    return new BoundStep($this, $input->rename('id', 'new_id'));
+                }
+
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
                     $renamed = [];

@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -33,7 +34,13 @@ use function array_values;
 use function iterator_to_array;
 use function sprintf;
 
-final class CSVExtractor implements Extractor, FileExtractor, InfersSchema, LimitableExtractor, MetadataColumnsExtractor
+final class CSVExtractor implements
+    Extractor,
+    FileExtractor,
+    InfersSchema,
+    LimitableExtractor,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
     use Limitable;
     use FileReading;
@@ -64,6 +71,11 @@ final class CSVExtractor implements Extractor, FileExtractor, InfersSchema, Limi
         $this->inference = new SchemaInference();
         $this->readOptions = new CSVReadOptions();
         $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**

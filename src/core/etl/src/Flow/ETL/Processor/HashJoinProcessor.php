@@ -15,12 +15,15 @@ use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
 use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\JoinShape;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\Reference;
@@ -34,21 +37,29 @@ use function array_keys;
 /**
  * @internal
  */
-final readonly class HashJoinProcessor implements Processor
+final class HashJoinProcessor implements Processor
 {
+    /**
+     * The schemas this step declares. Only bind() sets them; the unbound path discovers each side
+     * from the rows that flow.
+     */
+    private ?Schema $left = null;
+
+    private ?Schema $declaredRight = null;
+
     /**
      * @param int<1, max> $bucketsCount
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private DataFrame $right,
-        private Expression $expression,
-        private Join $type,
-        private Buckets $leftBuckets,
-        private Buckets $rightBuckets,
-        private RandomValueGenerator $random,
-        private int $bucketsCount = 64,
-        private int $batchSize = 1000,
+        private readonly DataFrame $right,
+        private readonly Expression $expression,
+        private readonly Join $type,
+        private readonly Buckets $leftBuckets,
+        private readonly Buckets $rightBuckets,
+        private readonly RandomValueGenerator $random,
+        private readonly int $bucketsCount = 64,
+        private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -63,15 +74,55 @@ final readonly class HashJoinProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        $right = $this->right->schema();
+
+        $bound = new self(
+            $this->right,
+            $this->expression,
+            $this->type,
+            $this->leftBuckets,
+            $this->rightBuckets,
+            $this->random,
+            $this->bucketsCount,
+            $this->batchSize,
+        );
+        $bound->left = $input;
+        $bound->declaredRight = $right;
+
+        return new BoundStep($bound, JoinShape::of($this->expression, $this->type)->schema()->of(
+            $this->type,
+            $input,
+            $right,
+        ));
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
+        $leftSchema = $this->left;
+        $rightSchema = $this->declaredRight;
+
+        if ($rightSchema === null) {
+            try {
+                $rightSchema = $this->right->schema();
+            } catch (SchemaNotDerivableException) {
+                // an undescribable right side is still joinable, its shape just has to be
+                // discovered from the rows that flow
+                $rightSchema = null;
+            }
+        }
+
         $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 
         try {
-            $rightSchema = null;
-
             $rightRows = $this->tap(
                 $this->right->get(),
                 $rightSchema,
@@ -90,8 +141,6 @@ final readonly class HashJoinProcessor implements Processor
                 ? (new NullRowBuilder($rightSchema ?? new Schema()))->row()
                 : null;
 
-            $leftSchema = null;
-
             $leftRows = $this->tap(
                 $rows,
                 $leftSchema,
@@ -105,7 +154,7 @@ final readonly class HashJoinProcessor implements Processor
                 $rightBucket = $this->rightBuckets->all()[0] ?? null;
 
                 yield from $joiner->join(
-                    JoinSide::of($leftRows),
+                    JoinSide::of($leftRows, null, $leftSchema),
                     JoinSide::of(
                         $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
                         $nullRightRow,

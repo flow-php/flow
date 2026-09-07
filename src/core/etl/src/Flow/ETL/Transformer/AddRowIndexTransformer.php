@@ -6,8 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer;
 use Throwable;
@@ -23,6 +25,11 @@ final class AddRowIndexTransformer implements Transformer
         StartFrom $startFrom,
     ) {
         $this->index = $startFrom === StartFrom::ZERO ? 0 : 1;
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input->add(int_schema($this->indexColumn)));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

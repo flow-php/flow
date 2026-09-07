@@ -23,6 +23,33 @@ use function Flow\Types\DSL\type_string;
 
 final class SerializeTransformerTest extends FlowTestCase
 {
+    public function test_bind_adds_the_target_column_when_the_input_does_not_declare_it(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('serialized')),
+            (new SerializeTransformer('serialized'))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
+    public function test_bind_collapses_the_input_to_the_target_column_when_standalone(): void
+    {
+        static::assertEquals(
+            schema(str_schema('serialized')),
+            (new SerializeTransformer('serialized', standalone: true))->bind(schema(
+                int_schema('id'),
+                str_schema('name'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_replaces_the_target_column_with_a_string_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('payload')),
+            (new SerializeTransformer('payload'))->bind(schema(int_schema('id'), int_schema('payload')))->output,
+        );
+    }
+
     public function test_serializing_empty_row_under_one_entry(): void
     {
         $rows = rows($rowSchema = schema(), $row1 = row([]));

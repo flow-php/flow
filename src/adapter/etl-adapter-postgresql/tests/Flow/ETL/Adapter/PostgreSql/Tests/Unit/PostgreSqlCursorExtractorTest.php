@@ -268,4 +268,9 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
         from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withMaximum(0);
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->isRepeatable());
+    }
 }

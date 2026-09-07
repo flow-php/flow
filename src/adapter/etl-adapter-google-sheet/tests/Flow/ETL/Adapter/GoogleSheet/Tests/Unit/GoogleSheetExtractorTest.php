@@ -548,4 +548,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ->isSame(schema(int_schema('e00', true), str_schema('e01', true))),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(GoogleSheetFixtureContext::extractor(new Sheets())->isRepeatable());
+    }
 }

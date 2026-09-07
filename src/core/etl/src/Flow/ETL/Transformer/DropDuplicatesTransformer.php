@@ -9,8 +9,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
 use Throwable;
@@ -37,6 +39,11 @@ final readonly class DropDuplicatesTransformer implements Transformer
         $this->entries = $entries;
         $this->deduplication = new Hashes();
         $this->hashAlgorithm = new NativePHPHash();
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

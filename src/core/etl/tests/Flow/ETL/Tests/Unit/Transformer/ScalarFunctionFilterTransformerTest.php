@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 
@@ -19,6 +20,30 @@ use function Flow\ETL\DSL\schema;
 
 final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 {
+    public function test_bind_refuses_a_non_boolean_predicate(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new ScalarFunctionFilterTransformer(ref('a')))->bind(schema(int_schema('a')));
+    }
+
+    public function test_bind_refuses_a_predicate_referencing_a_column_missing_from_the_input(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new ScalarFunctionFilterTransformer(ref('missing')->equals(lit(1))))->bind(schema(int_schema('a')));
+    }
+
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('a'), int_schema('b'));
+
+        static::assertEquals(
+            $input,
+            (new ScalarFunctionFilterTransformer(ref('a')->equals(ref('b'))))->bind($input)->output,
+        );
+    }
+
     public function test_equal(): void
     {
         $rows = rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 1]), row(['a' => 1, 'b' => 2]));
@@ -178,13 +203,13 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_an_empty_batch_is_returned_without_binding(): void
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
     {
-        $empty = rows(schema());
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        static::assertSame($empty, (new ScalarFunctionFilterTransformer(ref('missing')->equals(lit(1))))->transform(
-            $empty,
+        (new ScalarFunctionFilterTransformer(ref('missing')->equals(lit(1))))->transform(
+            rows(schema()),
             flow_context(config()),
-        ));
+        );
     }
 }

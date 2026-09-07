@@ -6,7 +6,9 @@ namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -29,6 +31,11 @@ final readonly class OffsetProcessor implements Processor
         if ($this->offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0, given: ' . $this->offset);
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 
     public function process(Generator $rows, FlowContext $context): Generator

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
+use Flow\ETL\GroupBy\Pivot;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -16,6 +18,7 @@ use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -107,7 +110,7 @@ final class GroupByTest extends FlowTestCase
     {
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
-        $group->pivot(ref('country'));
+        $group->pivot(ref('country'), pivot_values('USA'));
 
         $schema = iterator_to_array($group->pivotResult(
             (static function (): Generator {
@@ -117,6 +120,7 @@ final class GroupByTest extends FlowTestCase
                 );
             })(),
             flow_context(config()),
+            new Pivot(ref('country'), pivot_values('USA')),
         ))[0]->schema();
 
         static::assertSame(['product', 'USA'], $schema->references()->names());
@@ -125,15 +129,45 @@ final class GroupByTest extends FlowTestCase
         static::assertSame('float', $schema->get('USA')->type()->toString());
     }
 
+    public function test_a_pivot_without_an_aggregation_is_refused(): void
+    {
+        $group = new GroupBy(ref('product'));
+        $group->pivot(ref('country'), pivot_values('USA'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Pivot requires exactly one aggregation');
+
+        iterator_to_array($group->pivotResult(
+            (static fn(): Generator => yield from [])(),
+            flow_context(config()),
+            new Pivot(ref('country'), pivot_values('USA')),
+        ));
+    }
+
+    public function test_a_pivot_with_more_than_one_aggregation_is_refused(): void
+    {
+        $group = new GroupBy(ref('product'));
+        $group->pivot(ref('country'), pivot_values('USA'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Pivot requires exactly one aggregation in group by, given: 2');
+
+        $group->aggregate(sum(ref('amount')), count(ref('amount')));
+    }
+
     public function test_a_pivot_over_an_empty_input_yields_nothing(): void
     {
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
-        $group->pivot(ref('country'));
+        $group->pivot(ref('country'), pivot_values('USA'));
 
         static::assertSame(
             [],
-            iterator_to_array($group->pivotResult((static fn(): Generator => yield from [])(), flow_context(config()))),
+            iterator_to_array($group->pivotResult(
+                (static fn(): Generator => yield from [])(),
+                flow_context(config()),
+                new Pivot(ref('country'), pivot_values('USA')),
+            )),
         );
     }
 
@@ -141,7 +175,7 @@ final class GroupByTest extends FlowTestCase
     {
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
-        $group->pivot(ref('country'));
+        $group->pivot(ref('country'), pivot_values('0', 'USA'));
 
         $result = iterator_to_array($group->pivotResult(
             (static function (): Generator {
@@ -152,6 +186,7 @@ final class GroupByTest extends FlowTestCase
                 );
             })(),
             flow_context(config()),
+            new Pivot(ref('country'), pivot_values('0', 'USA')),
         ))[0];
 
         static::assertSame(['product', '0', 'USA'], $result->schema()->references()->names());
@@ -162,7 +197,7 @@ final class GroupByTest extends FlowTestCase
     {
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
-        $group->pivot(ref('country'));
+        $group->pivot(ref('country'), pivot_values('Canada', 'China', 'Mexico', 'USA'));
 
         static::assertEquals(
             rows(
@@ -206,7 +241,7 @@ final class GroupByTest extends FlowTestCase
     {
         $group = new GroupBy(ref('product'));
         $group->aggregate(sum(ref('amount')));
-        $group->pivot(ref('country'));
+        $group->pivot(ref('country'), pivot_values('USA'));
 
         static::assertEquals(
             rows(
@@ -274,7 +309,7 @@ final class GroupByTest extends FlowTestCase
     public function test_key_values_throws_when_a_row_lacks_a_not_null_key(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Column "country" does not exist. Did you mean one of the following? ["age"]');
+        $this->expectExceptionMessage('Column "country" does not exist.');
 
         (new GroupBy('country'))->keyValues(row(['age' => 20]), schema(str_schema('country'), int_schema('age')));
     }

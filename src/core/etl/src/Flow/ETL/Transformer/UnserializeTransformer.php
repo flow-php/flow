@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
@@ -28,6 +29,15 @@ final readonly class UnserializeTransformer implements Transformer
         private string $mergePrefix = '',
     ) {}
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, (new UnpackedColumns())->of(
+            $this->merge ? $input : new Schema(),
+            $this->merge ? $this->mergePrefix : '',
+            $this->target,
+        ));
+    }
+
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
@@ -39,17 +49,12 @@ final readonly class UnserializeTransformer implements Transformer
 
             // a payload that fails to decode still has to produce the declared shape, so every declared
             // column is nullable - the same rule from_json follows
+            $outputSchema = $this->bind($rows->schema())->output;
             $declared = [];
-            $outputSchema = $this->merge ? $rows->schema() : new Schema();
 
-            foreach ($this->target->makeNullable()->definitions() as $definition) {
+            foreach ($this->target->definitions() as $definition) {
                 $payloadName = $definition->entry()->name();
-                $name = $this->merge ? $this->mergePrefix . $payloadName : $payloadName;
-                $declared[$name] = $payloadName;
-
-                $outputSchema = $outputSchema->findDefinition($name) === null
-                    ? $outputSchema->add($definition->rename($name))
-                    : $outputSchema->replace($name, $definition->rename($name));
+                $declared[$this->merge ? $this->mergePrefix . $payloadName : $payloadName] = $payloadName;
             }
 
             $decoder = SerializedPayloadDecoder::of($source, $serializer, $declared);

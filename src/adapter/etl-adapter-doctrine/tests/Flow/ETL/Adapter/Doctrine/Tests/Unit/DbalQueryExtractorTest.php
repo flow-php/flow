@@ -77,4 +77,11 @@ final class DbalQueryExtractorTest extends FlowTestCase
 
         static::assertSame($extractor->schema(), $extractor->schema());
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            (new DbalQueryExtractor(InMemorySqlite::connection(), 'SELECT * FROM users'))->isRepeatable(),
+        );
+    }
 }

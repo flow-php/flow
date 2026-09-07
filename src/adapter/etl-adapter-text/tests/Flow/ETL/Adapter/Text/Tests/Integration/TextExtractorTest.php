@@ -89,4 +89,9 @@ final class TextExtractorTest extends FlowTestCase
                 ->schema(),
         );
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'))->isRepeatable());
+    }
 }

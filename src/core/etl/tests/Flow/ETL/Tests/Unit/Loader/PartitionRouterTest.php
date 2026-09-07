@@ -90,7 +90,6 @@ final class PartitionRouterTest extends FlowTestCase
 
     public function test_partitioning_by_every_column_leaves_nothing_to_write(): void
     {
-        // DuckDB refuses the same shape (bind_copy.cpp:301) rather than writing empty files
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('No column left to write, every column is a partition column: "region"');
 

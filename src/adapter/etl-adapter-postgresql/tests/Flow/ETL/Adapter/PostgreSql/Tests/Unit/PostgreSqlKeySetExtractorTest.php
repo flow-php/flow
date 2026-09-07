@@ -225,4 +225,15 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
         )->withPageSize(0);
     }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            from_pgsql_key_set(
+                new SpyClient(),
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )->isRepeatable(),
+        );
+    }
 }

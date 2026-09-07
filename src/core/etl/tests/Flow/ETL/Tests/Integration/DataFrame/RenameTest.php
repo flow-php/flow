@@ -60,7 +60,10 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->withEntry('row', ref('array')->unpack())
+            ->withEntry(
+                'row',
+                ref('array')->unpack(schema(int_schema('id'), str_schema('name'), bool_schema('active'))),
+            )
             ->renameEach(rename_replace('row.', ''))
             ->drop('array')
             ->getEachAsArray();
@@ -122,7 +125,10 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->withEntry('row', ref('array')->unpack())
+            ->withEntry(
+                'row',
+                ref('array')->unpack(schema(int_schema('id'), str_schema('name'), bool_schema('isActive'))),
+            )
             ->renameEach(rename_replace(['row.', 'isActive'], ['', 'active']))
             ->drop('array')
             ->getEachAsArray();

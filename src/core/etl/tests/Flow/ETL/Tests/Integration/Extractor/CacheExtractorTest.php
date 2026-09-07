@@ -243,4 +243,10 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ->toArray(),
         );
     }
+
+    public function test_is_repeatable_unless_it_clears_on_finish(): void
+    {
+        static::assertTrue(from_cache('key')->isRepeatable());
+        static::assertFalse(from_cache('key')->withClearOnFinish(true)->isRepeatable());
+    }
 }

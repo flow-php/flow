@@ -17,6 +17,26 @@ use function Flow\ETL\DSL\str_schema;
 
 final class PruneEntriesTransformerTest extends FlowTestCase
 {
+    public function test_bind_keeps_only_the_declared_refs_in_ref_order(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), int_schema('id')),
+            (new PruneEntriesTransformer(ref('name'), ref('id'), ref('missing')))->bind(schema(
+                int_schema('id'),
+                str_schema('name'),
+                int_schema('dropped'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_with_no_ref_present_in_the_input_derives_an_empty_schema(): void
+    {
+        static::assertEquals(
+            schema(),
+            (new PruneEntriesTransformer(ref('missing')))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
     public function test_keeping_only_the_given_entries(): void
     {
         static::assertSame(

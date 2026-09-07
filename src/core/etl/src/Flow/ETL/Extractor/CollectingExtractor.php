@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-final class CollectingExtractor implements Extractor, OverridingExtractor
+final class CollectingExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -33,6 +33,11 @@ final class CollectingExtractor implements Extractor, OverridingExtractor
         }
 
         yield $collectedRows ?? new Rows($this->schema());
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function extractors(): array

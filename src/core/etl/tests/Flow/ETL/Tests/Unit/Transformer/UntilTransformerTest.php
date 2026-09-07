@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\LimitReachedException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\UntilTransformer;
 
@@ -20,6 +21,20 @@ use function Flow\ETL\DSL\schema;
 
 final class UntilTransformerTest extends FlowTestCase
 {
+    public function test_bind_refuses_a_non_boolean_predicate(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new UntilTransformer(ref('id')))->bind(schema(int_schema('id')));
+    }
+
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'));
+
+        static::assertEquals($input, (new UntilTransformer(ref('id')->lessThan(lit(3))))->bind($input)->output);
+    }
+
     public function test_passes_rows_until_the_predicate_stops_holding(): void
     {
         static::assertSame(
@@ -57,14 +72,11 @@ final class UntilTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_an_empty_batch_is_returned_without_binding(): void
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
     {
-        $empty = rows(schema());
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        static::assertSame($empty, (new UntilTransformer(ref('missing')->equals(lit(1))))->transform(
-            $empty,
-            flow_context(config()),
-        ));
+        (new UntilTransformer(ref('missing')->equals(lit(1))))->transform(rows(schema()), flow_context(config()));
     }
 
     public function test_a_reached_limit_stops_an_empty_next_batch(): void

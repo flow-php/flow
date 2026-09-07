@@ -16,6 +16,7 @@ use function array_map;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
@@ -79,7 +80,7 @@ final class LimitTest extends FlowIntegrationTestCase
 
             public function schema(): Schema
             {
-                return new Schema();
+                return schema(integer_schema('id'));
             }
 
             /**
@@ -109,7 +110,7 @@ final class LimitTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -159,7 +160,13 @@ final class LimitTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(list_schema(
+                        'ids',
+                        type_list(type_structure([
+                            'id' => type_integer(),
+                            'more_ids' => type_list(type_map(type_string(), type_integer())),
+                        ])),
+                    ));
                 }
 
                 /**
@@ -191,7 +198,10 @@ final class LimitTest extends FlowIntegrationTestCase
             })
             ->withEntries([
                 'expanded' => ref('ids')->expand(),
-                'element' => ref('expanded')->unpack(),
+                'element' => ref('expanded')->unpack(schema(
+                    int_schema('id'),
+                    list_schema('more_ids', type_list(type_map(type_string(), type_integer()))),
+                )),
                 'more_ids' => ref('element.more_ids')->expand(),
             ])
             ->rename('element.id', 'id')
@@ -213,7 +223,7 @@ final class LimitTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -246,7 +256,7 @@ final class LimitTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
@@ -279,7 +289,7 @@ final class LimitTest extends FlowIntegrationTestCase
 
                 public function schema(): Schema
                 {
-                    return new Schema();
+                    return schema(integer_schema('id'));
                 }
 
                 /**
