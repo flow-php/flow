@@ -107,6 +107,6 @@ more than 50 distinct values. Because it reads the frame before the real run, it
 twice, and refuses one it cannot:
 
 ```
-Flow\ETL\Extractor\GeneratorExtractor cannot read its dataset twice, so describing it would consume the
+Flow\ETL\Extractor\DataFrameExtractor cannot read its dataset twice, so describing it would consume the
 rows before they are extracted. Pass an array, or declare the schema with ->withSchema().
 ```

@@ -11,7 +11,7 @@ use Flow\ETL\Schema;
 use Generator;
 
 /**
- * Yields no batch and cannot describe itself either - Avro's shape, and the four pipeline-wrapping extractors'.
+ * Models Avro's reason-less refusal - the only reason-less producer in src/.
  * An empty read of one of these must stay empty rather than start throwing.
  */
 final class UndescribableRowLessExtractor implements Extractor

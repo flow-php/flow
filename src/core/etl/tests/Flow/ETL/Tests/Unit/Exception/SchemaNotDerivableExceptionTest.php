@@ -49,13 +49,4 @@ final class SchemaNotDerivableExceptionTest extends FlowTestCase
             SchemaNotDerivableException::nonRewindable('ChainExtractor')->getMessage(),
         );
     }
-
-    public function test_pipeline_names_the_extractor(): void
-    {
-        static::assertSame(
-            'DataFrameExtractor holds a whole pipeline, so its output columns depend on every step in it. Reading '
-            . 'the schema would have to run the pipeline, which is what asking before extraction avoids.',
-            SchemaNotDerivableException::pipeline('DataFrameExtractor')->getMessage(),
-        );
-    }
 }

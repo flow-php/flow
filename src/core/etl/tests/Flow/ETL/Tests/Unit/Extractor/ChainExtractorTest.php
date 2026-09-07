@@ -10,8 +10,10 @@ use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -22,6 +24,17 @@ use function iterator_to_array;
 
 final class ChainExtractorTest extends FlowTestCase
 {
+    public function test_a_chain_containing_a_data_frame_source_folds_its_schema(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id', true), str_schema('name', true)),
+            from_all(
+                from_rows(rows(schema(int_schema('id')), row(['id' => 1]))),
+                from_data_frame(df()->read(from_rows(rows(schema(str_schema('name')), row(['name' => 'a']))))),
+            )->schema(),
+        );
+    }
+
     public function test_chain_extractor(): void
     {
         $extractor = from_all(new class implements Extractor {

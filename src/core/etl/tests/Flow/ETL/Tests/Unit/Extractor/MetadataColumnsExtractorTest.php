@@ -79,7 +79,7 @@ final class MetadataColumnsExtractorTest extends FlowTestCase
 
     public function test_the_census_covers_every_extractor_in_src(): void
     {
-        static::assertCount(35, ExtractorClasses::all());
+        static::assertCount(33, ExtractorClasses::all());
     }
 
     public function test_the_config_delegator_is_gone(): void

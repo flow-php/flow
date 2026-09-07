@@ -403,9 +403,6 @@ final class DataFrame
             return $this;
         }
 
-        // schema() runs after the instanceof guard - a non-FileExtractor must still get the
-        // RuntimeException above - and before withPathFilter(), which nulls the listing caches.
-        // The filter's constructor runs the comparability gate.
         $extractor->withPathFilter(new ScalarFunctionFilter($filter, $extractor->schema(), $this->context));
         $this->pipeline->invalidateBind();
 

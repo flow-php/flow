@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Fiber;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -24,13 +23,13 @@ use Generator;
  */
 final class FeedExtractor implements Extractor
 {
-    private ?Schema $schema = null;
-
     private ?Rows $batch = null;
 
     private bool $finished = false;
 
-    private ?Schema $fedSchema = null;
+    public function __construct(
+        private Schema $schema,
+    ) {}
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -50,7 +49,6 @@ final class FeedExtractor implements Extractor
 
             $rows = $this->batch;
             $this->batch = null;
-            $this->fedSchema = $rows->schema();
 
             $signal = yield $rows;
 
@@ -62,9 +60,8 @@ final class FeedExtractor implements Extractor
             // Mago does not model the generator suspension above: feed() and finish() run while the enclosing Fiber
             // is parked, so both operands can change between the yield and this check.
             if ($this->batch === null && !$this->finished) {
-                // the idle yield keeps the shape of what has been fed, so a downstream projection
-                // still sees the columns it was built against
-                $signal = yield new Rows($this->schema ?? $this->fedSchema);
+                // a downstream projection still sees the columns it was built against
+                $signal = yield new Rows($this->schema);
 
                 if ($signal === Signal::STOP) {
                     return;
@@ -85,11 +82,7 @@ final class FeedExtractor implements Extractor
 
     public function schema(): Schema
     {
-        if ($this->schema !== null) {
-            return $this->schema;
-        }
-
-        throw SchemaNotDerivableException::pipeline(self::class);
+        return $this->schema;
     }
 
     public function withSchema(Schema $schema): static

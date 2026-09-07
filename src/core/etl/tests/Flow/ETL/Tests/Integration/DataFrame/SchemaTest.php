@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -198,28 +196,16 @@ final class SchemaTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_taking_schema_from_pipeline(): void
+    public function test_an_array_extractor_derives_its_schema_before_it_yields(): void
     {
-        $pipeline = new Pipeline(
-            $extractor = from_array([
-                ['string' => null, 'bool' => null, 'int' => null, 'float' => null],
-                ['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24],
-            ]),
-        );
+        $extractor = from_array([
+            ['string' => null, 'bool' => null, 'int' => null, 'float' => null],
+            ['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24],
+        ]);
 
-        static::assertEquals(
-            schema(
-                str_schema('string', true),
-                bool_schema('bool', true),
-                int_schema('int', true),
-                float_schema('float', true),
-            ),
-            Schema::fromPipeline($pipeline, $context = flow_context()),
-        );
-
-        // The extractor derives one schema before it yields, so row 1's nulls are TYPED nulls in
-        // known columns rather than untyped null columns a later row contradicts.
-        $batches = iterator_to_array($extractor->extract($context));
+        // Row 1's nulls are TYPED nulls in known columns rather than untyped null columns a later
+        // row contradicts.
+        $batches = iterator_to_array($extractor->extract(flow_context()));
 
         static::assertSame(
             [
@@ -237,5 +223,6 @@ final class SchemaTest extends FlowIntegrationTestCase
             ),
             $batches[0]->schema(),
         );
+        static::assertEquals($extractor->schema(), $batches[0]->schema());
     }
 }

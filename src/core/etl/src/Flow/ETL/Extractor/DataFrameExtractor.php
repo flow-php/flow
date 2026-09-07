@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\DataFrame;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
@@ -45,7 +44,7 @@ final class DataFrameExtractor implements Extractor
             return $this->schema;
         }
 
-        throw SchemaNotDerivableException::pipeline(self::class);
+        return $this->dataFrame->schema();
     }
 
     public function withSchema(Schema $schema): static

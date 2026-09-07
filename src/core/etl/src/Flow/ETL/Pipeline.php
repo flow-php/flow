@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Pipeline\BoundPlan;
 use Flow\ETL\Pipeline\PlanBinder;
@@ -17,7 +18,11 @@ final class Pipeline
 {
     private ?SchemaNotDerivableException $bindRefusal = null;
 
+    private bool $binding = false;
+
     private ?BoundPlan $bound = null;
+
+    private bool $running = false;
 
     private readonly Segments $segments;
 
@@ -38,6 +43,7 @@ final class Pipeline
     /**
      * Walk the plan once and memoise the result, refusal included.
      *
+     * @throws InvalidLogicException
      * @throws SchemaNotDerivableException
      */
     public function bind(): BoundPlan
@@ -50,12 +56,20 @@ final class Pipeline
             return $this->bound;
         }
 
+        if ($this->binding) {
+            throw InvalidLogicException::cyclicPlanOnDescribe();
+        }
+
+        $this->binding = true;
+
         try {
             return $this->bound = (new PlanBinder())->bind($this->extractor, $this->segments);
         } catch (SchemaNotDerivableException $refusal) {
             $this->bindRefusal = $refusal;
 
             throw $refusal;
+        } finally {
+            $this->binding = false;
         }
     }
 
@@ -103,20 +117,37 @@ final class Pipeline
      */
     public function process(FlowContext $context): Generator
     {
-        $generator = $this->extractor->extract($context);
-
-        foreach (($this->boundOrNull()?->segments() ?? $this->segments)->all() as $segment) {
-            $generator = $segment->execute($generator, $context);
-
-            $processor = $segment->processor();
-
-            if ($processor !== null) {
-                $generator = $processor->process($generator, $context);
-            }
+        if ($this->running) {
+            throw InvalidLogicException::cyclicPlanOnRun();
         }
 
-        foreach ($generator as $rows) {
-            yield $rows;
+        $this->running = true;
+
+        try {
+            $generator = $this->extractor->extract($context);
+
+            foreach (($this->boundOrNull()?->segments() ?? $this->segments)->all() as $segment) {
+                $generator = $segment->execute($generator, $context);
+
+                $processor = $segment->processor();
+
+                if ($processor !== null) {
+                    $generator = $processor->process($generator, $context);
+                }
+            }
+
+            // disarmed across our own yield: while parked we are not advancing, so a second read
+            // arriving here is another reader of the same plan, not recursion. Only a re-entry during
+            // the advance is a cycle - every step is pulled from inside this foreach.
+            foreach ($generator as $rows) {
+                $this->running = false;
+
+                yield $rows;
+
+                $this->running = true;
+            }
+        } finally {
+            $this->running = false;
         }
     }
 

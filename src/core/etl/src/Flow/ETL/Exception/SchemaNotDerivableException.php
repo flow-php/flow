@@ -39,13 +39,4 @@ class SchemaNotDerivableException extends InvalidArgumentException
             $extractor,
         ));
     }
-
-    public static function pipeline(string $extractor): self
-    {
-        return new self(sprintf(
-            '%s holds a whole pipeline, so its output columns depend on every step in it. Reading '
-            . 'the schema would have to run the pipeline, which is what asking before extraction avoids.',
-            $extractor,
-        ));
-    }
 }

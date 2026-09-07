@@ -32,6 +32,7 @@ final class TransformationStreamTest extends FlowTestCase
         $sink = new ThrowingLoader($failure);
         $stream = new TransformationStream(
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()),
+            schema(int_schema('id')),
             $sink,
             flow_context(config()),
         );
@@ -55,7 +56,12 @@ final class TransformationStreamTest extends FlowTestCase
     public function test_a_sink_failure_propagates_from_feed(): void
     {
         $failure = new RuntimeException('sink exploded');
-        $stream = new TransformationStream(select('id'), new ThrowingLoader($failure), flow_context(config()));
+        $stream = new TransformationStream(
+            select('id'),
+            schema(int_schema('id')),
+            new ThrowingLoader($failure),
+            flow_context(config()),
+        );
 
         try {
             $stream->feed(rows(schema(int_schema('id')), row(['id' => 1])));
@@ -71,6 +77,7 @@ final class TransformationStreamTest extends FlowTestCase
         $sink = new SpyLoader();
         $stream = new TransformationStream(
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->limit(1)),
+            schema(int_schema('id')),
             $sink,
             flow_context(config()),
         );
@@ -94,6 +101,7 @@ final class TransformationStreamTest extends FlowTestCase
 
                     return $df;
                 }),
+                schema(int_schema('id')),
                 new SpyLoader(),
                 flow_context(config()),
             );
@@ -109,7 +117,7 @@ final class TransformationStreamTest extends FlowTestCase
     {
         $sink = new SpyLoader();
 
-        (new TransformationStream(select('id'), $sink, flow_context(config())))->drain();
+        (new TransformationStream(select('id'), schema(int_schema('id')), $sink, flow_context(config())))->drain();
 
         static::assertSame(0, $sink->loadsCount);
     }
@@ -119,6 +127,7 @@ final class TransformationStreamTest extends FlowTestCase
         $sink = new SpyLoader();
         $stream = new TransformationStream(
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()),
+            schema(int_schema('id')),
             $sink,
             flow_context(config()),
         );
@@ -140,7 +149,12 @@ final class TransformationStreamTest extends FlowTestCase
     {
         $sink = new SpyLoader();
         $context = flow_context(config());
-        $stream = new TransformationStream(select('id'), $sink, $context);
+        $stream = new TransformationStream(
+            select('id'),
+            schema(int_schema('id'), int_schema('other')),
+            $sink,
+            $context,
+        );
 
         $stream->feed(rows(schema(int_schema('id'), int_schema('other')), row(['id' => 1, 'other' => 10])));
         $stream->feed(rows(schema(int_schema('id'), int_schema('other')), row(['id' => 2, 'other' => 20])));
@@ -157,9 +171,27 @@ final class TransformationStreamTest extends FlowTestCase
     public function test_the_drive_knows_the_context_it_was_built_for(): void
     {
         $context = flow_context(config());
-        $stream = new TransformationStream(select('id'), new SpyLoader(), $context);
+        $stream = new TransformationStream(select('id'), schema(int_schema('id')), new SpyLoader(), $context);
 
         static::assertTrue($stream->drivenBy($context));
         static::assertFalse($stream->drivenBy(flow_context(config())));
+    }
+
+    public function test_the_nested_frame_is_seeded_with_the_fed_shape(): void
+    {
+        $captured = null;
+
+        new TransformationStream(
+            new CallbackTransformation(static function (DataFrame $df) use (&$captured): DataFrame {
+                $captured = $df->schema();
+
+                return $df;
+            }),
+            schema(int_schema('id'), int_schema('other')),
+            new SpyLoader(),
+            flow_context(config()),
+        );
+
+        static::assertEquals(schema(int_schema('id'), int_schema('other')), $captured);
     }
 }

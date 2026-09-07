@@ -84,7 +84,12 @@ final class BranchingLoader implements Closure, Discardable, Loader, OverridingL
                 $this->loader->load($branchRows, $context);
             } else {
                 if ($this->stream === null || !$this->stream->drivenBy($context)) {
-                    $this->stream = new TransformationStream($this->transformation, $this->loader, $context);
+                    $this->stream = new TransformationStream(
+                        $this->transformation,
+                        $branchRows->schema(),
+                        $this->loader,
+                        $context,
+                    );
                 }
 
                 try {

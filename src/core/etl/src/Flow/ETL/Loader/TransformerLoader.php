@@ -77,7 +77,7 @@ final class TransformerLoader implements Closure, Discardable, Loader, Overridin
                 $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
                 if ($this->stream === null || !$this->stream->drivenBy($context)) {
-                    $this->stream = new TransformationStream($transformer, $this->loader, $context);
+                    $this->stream = new TransformationStream($transformer, $rows->schema(), $this->loader, $context);
                 }
 
                 try {

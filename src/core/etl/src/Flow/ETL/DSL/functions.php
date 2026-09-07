@@ -46,7 +46,6 @@ use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\PartitionTypes;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
-use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Extractor\SequenceExtractor;
 use Flow\ETL\Extractor\SequenceGenerator\DatePeriodSequenceGenerator;
@@ -148,7 +147,6 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Pipeline;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Retry\DelayFactory;
 use Flow\ETL\Retry\DelayFactory\Exponential;
@@ -429,12 +427,6 @@ function batched_by(Extractor $extractor, string|Reference $column, ?int $min_si
 function batches(Extractor $extractor, int $size): BatchExtractor
 {
     return new BatchExtractor($extractor, $size);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_pipeline(Pipeline $pipeline): PipelineExtractor
-{
-    return new PipelineExtractor($pipeline);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
