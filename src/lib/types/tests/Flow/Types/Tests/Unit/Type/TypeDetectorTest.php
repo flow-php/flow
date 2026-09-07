@@ -397,8 +397,8 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            // [4.0, 5, 6] mixes float and integer, and the float floor rejects 5, so it stays untyped.
-            'list<array<mixed>>',
+            // [4.0, 5, 6] mixes float and integer; the element types unify to float.
+            'list<list<float>>',
         ];
 
         yield 'list of lists with null' => [
@@ -483,10 +483,29 @@ final class TypeDetectorTest extends TestCase
             'array<mixed>',
         ];
 
-        yield 'heterogeneous list of int and float' => [
+        yield 'list of int and float promotes to float' => [
             [1, 1.5],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<float>',
+        ];
+
+        yield 'map of int to int and float promotes to float' => [
+            [1 => 1, 5 => 2.5],
+            MapType::class,
+            'map<integer, float>',
+        ];
+
+        yield 'map of int to structures differing by one field' => [
+            [1 => ['a' => 1], 5 => ['a' => 1, 'b' => 2]],
+            MapType::class,
+            // the element types do not unify; the widener's optional field is what carries them
+            'map<integer, structure{a: integer, b?: integer}>',
+        ];
+
+        yield 'map of int to a list and an untyped array' => [
+            [1 => [1, 2], 5 => [null]],
+            MapType::class,
+            'map<integer, array<mixed>>',
         ];
 
         yield 'heterogeneous map of int to mixed' => [
@@ -653,11 +672,16 @@ final class TypeDetectorTest extends TestCase
     }
 
     #[DataProvider('provide_detected_type_law_data')]
-    public function test_detected_type_accepts_the_value_it_was_detected_from(mixed $data): void
+    public function test_detection_is_idempotent_under_its_own_materialization(mixed $data): void
     {
         $type = (new TypeDetector())->detectType($data);
 
-        static::assertTrue($type->isValid($data), $type->toString() . ' rejects the value it describes');
+        static::assertSame(
+            $type->toString(),
+            (new TypeDetector())
+                ->detectType($type->cast($data))
+                ->toString(),
+        );
     }
 
     public function test_enum_type(): void

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumns;
@@ -31,7 +32,7 @@ use function sprintf;
 /**
  * @import-type GoogleSheetOptions from GoogleSheetReadOptions
  */
-final class GoogleSheetExtractor implements Extractor, LimitableExtractor, MetadataColumnsExtractor
+final class GoogleSheetExtractor implements Extractor, InfersSchema, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
     use MetadataColumns;

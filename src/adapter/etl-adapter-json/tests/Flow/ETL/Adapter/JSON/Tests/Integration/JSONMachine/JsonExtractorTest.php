@@ -106,10 +106,7 @@ final class JsonExtractorTest extends FlowTestCase
         $rows = df()
             ->read(from_json(
                 __DIR__ . '/../../Fixtures/timezones.json',
-                schema: $schema = df()
-                    ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
-                    ->autoCast()
-                    ->schema(),
+                schema: $schema = df()->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))->schema(),
             ))
             ->fetch();
 
@@ -130,10 +127,10 @@ final class JsonExtractorTest extends FlowTestCase
         static::assertEquals($schema, $rows->schema());
         static::assertSame(<<<'SCHEMA'
             schema
-            |-- timezones: list<string>
-            |-- latlng: list<float>
-            |-- name: string
-            |-- country_code: string
+            |-- timezones: ?list<string>
+            |-- latlng: ?list<float>
+            |-- name: ?string
+            |-- country_code: ?string
             |-- capital: ?string
 
             SCHEMA, schema_to_ascii($schema));
@@ -204,7 +201,7 @@ final class JsonExtractorTest extends FlowTestCase
         static::assertSame(<<<'SCHEMA'
             schema
             |-- timezones: ?list<string>
-            |-- latlng: ?json
+            |-- latlng: ?list<float>
             |-- name: ?string
             |-- country_code: ?string
             |-- capital: ?string
@@ -307,14 +304,14 @@ final class JsonExtractorTest extends FlowTestCase
     {
         $extractor = from_json(JsonFixtureContext::path('timezones.json'));
 
-        static::assertSame('json', $extractor->schema()->get('latlng')->type()->toString());
+        static::assertSame('list<float>', $extractor->schema()->get('latlng')->type()->toString());
 
         $extractor->inferSchema(infer_schema()->allStrings());
 
         static::assertSame(<<<'SCHEMA'
             schema
             |-- timezones: ?list<string>
-            |-- latlng: ?string
+            |-- latlng: ?list<string>
             |-- name: ?string
             |-- country_code: ?string
             |-- capital: ?string

@@ -16,7 +16,6 @@ if ($fs->status(path(__DIR__ . '/output/schema.json')) === null) {
     $schema = data_frame()
         ->read(from_csv(__DIR__ . '/data/orders.csv'))
         ->limit(100) // Limiting the number of rows to read will speed up the process but might bring less accurate results
-        ->autoCast()
         ->schema();
 
     $fs->writeTo(path(__DIR__ . '/output/schema.json'))

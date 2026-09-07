@@ -847,9 +847,7 @@ final class CSVExtractorTest extends FlowTestCase
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
-        $rows = df()
-            ->read(from_csv($path, schema: $schema = df()->read(from_csv($path))->autoCast()->schema()))
-            ->fetch();
+        $rows = df()->read(from_csv($path, schema: $schema = df()->read(from_csv($path))->schema()))->fetch();
 
         foreach ($rows as $row) {
             static::assertSame(
@@ -874,16 +872,16 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(<<<'SCHEMA'
             schema
-            |-- Year: integer
-            |-- Industry_aggregation_NZSIOC: string
-            |-- Industry_code_NZSIOC: string
-            |-- Industry_name_NZSIOC: string
-            |-- Units: string
-            |-- Variable_code: string
-            |-- Variable_name: string
-            |-- Variable_category: string
-            |-- Value: string
-            |-- Industry_code_ANZSIC06: string
+            |-- Year: ?integer
+            |-- Industry_aggregation_NZSIOC: ?string
+            |-- Industry_code_NZSIOC: ?string
+            |-- Industry_name_NZSIOC: ?string
+            |-- Units: ?string
+            |-- Variable_code: ?string
+            |-- Variable_name: ?string
+            |-- Variable_category: ?string
+            |-- Value: ?string
+            |-- Industry_code_ANZSIC06: ?string
 
             SCHEMA, schema_to_ascii($rows->schema()));
     }

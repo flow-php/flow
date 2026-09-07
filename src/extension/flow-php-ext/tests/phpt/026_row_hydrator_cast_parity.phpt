@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -90,6 +91,7 @@ $datasets = [
             map_schema('m', type_map(type_string(), type_integer())),
             map_schema('mi', type_map(type_integer(), type_string())),
             list_schema('lo', type_list(type_optional(type_integer()))),
+            list_schema('lf', type_list(type_float())),
             structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true)),
         ),
         [
@@ -98,9 +100,10 @@ $datasets = [
                 'm' => ['a' => '1', 'b' => 2],
                 'mi' => [0 => 'x', 5 => 7],
                 'lo' => ['1', null, 3],
+                'lf' => [33, 65.5],
                 'st' => ['a' => '5', 'extra' => 'dropped'],
             ]),
-            new RawRowValues(['l' => [], 'm' => [], 'mi' => [], 'lo' => [], 'st' => ['a' => 1, 'b' => 'kept']]),
+            new RawRowValues(['l' => [], 'm' => [], 'mi' => [], 'lo' => [], 'lf' => [], 'st' => ['a' => 1, 'b' => 'kept']]),
         ],
     ],
     'exotic_fallback' => [
@@ -141,6 +144,16 @@ foreach ($datasets as $label => [$s, $batch]) {
     printf("%-16s hydrate:%s\n", $label, $hydrateOk ? 'yes' : 'NO');
 }
 
+// TypeDetector types [33, 65.5] as list<float>; both hydrators must materialize it as floats.
+$promotion = schema(list_schema('lf', type_list(type_float())));
+$promotionBatch = [new RawRowValues(['lf' => [33, 65.5]])];
+printf(
+    "%-16s php:%s native:%s\n",
+    'list_promotion',
+    json_encode($php->hydrate($promotionBatch, $promotion)->first()->get('lf'), JSON_PRESERVE_ZERO_FRACTION),
+    json_encode($native->hydrate($promotionBatch, $promotion)->first()->get('lf'), JSON_PRESERVE_ZERO_FRACTION),
+);
+
 $mutated = schema(int_schema('id'));
 $php->hydrate([new RawRowValues(['id' => '1'])], $mutated);
 $native->hydrate([new RawRowValues(['id' => '1'])], $mutated);
@@ -166,5 +179,6 @@ fill_and_metadata hydrate:yes
 all_optional_st  hydrate:yes
 interleaved_st   hydrate:yes
 empty            hydrate:yes
+list_promotion   php:[33.0,65.5] native:[33.0,65.5]
 schema_mutation  hydrate:yes
 native class registered:yes

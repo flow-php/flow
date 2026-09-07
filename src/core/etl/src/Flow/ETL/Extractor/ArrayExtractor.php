@@ -20,7 +20,7 @@ use Generator;
 use function Flow\ETL\DSL\array_to_rows;
 use function is_array;
 
-final class ArrayExtractor implements Extractor
+final class ArrayExtractor implements Extractor, InfersSchema
 {
     private ?Schema $derivedSchema = null;
 

@@ -7,30 +7,35 @@
 DataFrame provides several methods for manipulating data structures and values within your datasets. These operations
 allow you to add, modify, cast, and clean data efficiently.
 
-## Type Casting with autoCast()
+## Inferring Types from an Array
 
-Automatically cast data types based on content analysis:
+An array source carries no schema, so ask it to infer one:
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, infer_schema};
 
 data_frame()
     ->read(from_array([
         ['id' => '1', 'price' => '19.99', 'active' => 'true'],
         ['id' => '2', 'price' => '29.99', 'active' => 'false'],
         ['id' => '3', 'price' => '39.99', 'active' => 'true'],
-    ]))
-    ->autoCast() // Automatically cast strings to appropriate types
-    ->write(to_output())
-    ->run();
+    ])->inferSchema(infer_schema()))
+    ->collect()
+    ->printSchema();
 
-// Result: id becomes integer, price becomes float, active becomes boolean
+// schema
+// |-- id: ?string
+// |-- price: ?string
+// |-- active: ?string
 ```
 
-> **Note**: `autoCast()` analyzes data patterns and attempts to convert string values to more appropriate types like
-> integers, floats, booleans, and dates. Use with caution on large datasets as it requires data analysis.
+> **Note**: inference reads the sample once and freezes one type per column, so a column never comes out mixed. Every
+> inferred column is nullable. `from_array()` infers from the PHP value, so these string cells stay strings.
+> Narrowing text is a file-source behaviour - `from_csv()` and `from_json()` read each cell as text and narrow it to
+> the richest type that parses, so `'19.99'` read from a CSV infers as `?float`. Restrict the candidates with
+> `->types(...)`, or take strings only with `->allStrings()`.
 
 ## Adding Entries with withEntry()
 

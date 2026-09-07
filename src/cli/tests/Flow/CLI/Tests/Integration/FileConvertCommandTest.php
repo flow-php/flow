@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function file_exists;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\data_frame;
 use function unlink;
 
 final class FileConvertCommandTest extends TestCase
@@ -53,12 +55,31 @@ final class FileConvertCommandTest extends TestCase
             'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
             'output-file' => $output,
             '--input-file-limit' => 5,
-            '--schema-auto-cast' => true,
         ], $options));
 
         $tester->assertCommandIsSuccessful();
 
         static::assertFileExists($output);
+        unlink($output);
+    }
+
+    public function test_convert_with_sample_size_writes_the_truncated_value(): void
+    {
+        $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.csv';
+
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/inference/widening.csv',
+            'output-file' => $output,
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // The frozen ?integer schema truncates 1.5 - integer::cast(1.5) is 1
+        static::assertSame([['a' => 1], ['a' => 1]], data_frame()->read(from_csv($output))->fetch()->toArray());
+
         unlink($output);
     }
 

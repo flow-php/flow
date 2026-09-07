@@ -17,7 +17,7 @@ use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
-final class SequenceExtractor implements Extractor
+final class SequenceExtractor implements Extractor, InfersSchema
 {
     private ?Schema $derivedSchema = null;
 

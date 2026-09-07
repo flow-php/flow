@@ -10,6 +10,7 @@ use Flow\CLI\Command\Traits\CSVOptions;
 use Flow\CLI\Command\Traits\ExcelOptions;
 use Flow\CLI\Command\Traits\JSONOptions;
 use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\SchemaInferenceOptions;
 use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
@@ -41,6 +42,7 @@ final class FileAnalyzeCommand extends Command
     use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
+    use SchemaInferenceOptions;
     use StatisticsOptions;
     use XMLOptions;
 
@@ -80,7 +82,7 @@ final class FileAnalyzeCommand extends Command
                 'input-file-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                'Limit number of rows read from the file.',
                 null,
             )
             ->addOption(
@@ -89,13 +91,6 @@ final class FileAnalyzeCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'Number of rows to skip before starting to read data',
                 null,
-            )
-            ->addOption(
-                'schema-auto-cast',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
-                false,
             );
 
         $this->addConfigOptions($this);
@@ -104,6 +99,7 @@ final class FileAnalyzeCommand extends Command
         $this->addExcelInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addSchemaInferenceOptions($this);
         $this->addStatisticsOptions($this);
     }
 
@@ -118,7 +114,13 @@ final class FileAnalyzeCommand extends Command
         $style->title('Analyzing File');
         $style->info('File path: ' . $this->sourcePath->basename());
 
-        $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
+        $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
+
+        if (!$this->applySchemaInference($extractor, $input, $style)) {
+            return Command::FAILURE;
+        }
+
+        $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
 
@@ -129,10 +131,6 @@ final class FileAnalyzeCommand extends Command
         }
 
         $df->batchSize($batchSize);
-
-        if (option_bool('schema-auto-cast', $input)) {
-            $df->autoCast();
-        }
 
         $limit = option_int_nullable('input-file-limit', $input);
 

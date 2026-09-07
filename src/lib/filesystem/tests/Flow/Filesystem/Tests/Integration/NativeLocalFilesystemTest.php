@@ -10,7 +10,6 @@ use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
-use Flow\Types\Type\AutoCaster;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
@@ -20,6 +19,7 @@ use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
@@ -312,7 +312,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
                         ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
-                new AutoCaster(),
+                schema(),
                 flow_context(),
             ),
         ));
@@ -350,7 +350,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         $statuses = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-            new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new AutoCaster(), flow_context()),
+            new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), schema(), flow_context()),
         ));
 
         $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);

@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
@@ -32,7 +33,7 @@ use function array_values;
 use function iterator_to_array;
 use function sprintf;
 
-final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, MetadataColumnsExtractor
+final class CSVExtractor implements Extractor, FileExtractor, InfersSchema, LimitableExtractor, MetadataColumnsExtractor
 {
     use Limitable;
     use FileReading;

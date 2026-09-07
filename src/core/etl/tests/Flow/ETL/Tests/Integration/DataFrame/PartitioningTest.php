@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Types\Exception\InvalidArgumentException;
 
 use function array_map;
 use function file_exists;
@@ -14,6 +16,7 @@ use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\from_rows;
@@ -21,11 +24,13 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 use function rmdir;
@@ -36,6 +41,62 @@ use function usort;
 
 final class PartitioningTest extends FlowIntegrationTestCase
 {
+    public function test_a_partition_filter_with_a_numeric_literal_binds_over_a_string_partition(): void
+    {
+        // Comparator::comparable(string, integer) is true, so the bind gate lets a bare integer
+        // literal through against an undeclared (string) partition column.
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt';
+
+        static::assertCount(
+            7,
+            df()
+                ->read(from_text($glob))
+                ->filterPartitions(ref('year')->between(lit(2020), lit(2025)))
+                ->fetch(),
+        );
+        static::assertCount(
+            5,
+            df()
+                ->read(from_text($glob))
+                ->filterPartitions(ref('year')->between(lit(2023), lit(2025)))
+                ->fetch(),
+        );
+    }
+
+    public function test_a_partition_filter_binds_when_the_partition_type_is_declared(): void
+    {
+        $rows = df()
+            ->read(from_text(__DIR__
+            . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt')->partitionTypes(
+                partition_types(year: type_integer()),
+            ))
+            ->filterPartitions(ref('year')->equals(lit(2023)))
+            ->fetch();
+
+        static::assertCount(5, $rows);
+    }
+
+    public function test_a_partition_filter_on_an_extractor_without_partition_columns_is_not_gated(): void
+    {
+        // The same literal throws at bind on from_text(), which declares its partition columns
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt';
+        $incomparable = static fn(): ScalarFunction => ref('year')->equals(lit(new DateTimeImmutable('2024-01-01')));
+
+        static::assertCount(0, df()->read(from_path_partitions($glob))->filterPartitions($incomparable())->fetch());
+        static::assertCount(0, df()->read(files($glob))->filterPartitions($incomparable())->fetch());
+    }
+
+    public function test_a_partition_filter_with_an_incomparable_literal_is_refused_at_bind(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Can't compare '(string == date)' due to data type mismatch.");
+
+        df()
+            ->read(from_text(__DIR__
+            . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
+            ->filterPartitions(ref('year')->equals(lit(new DateTimeImmutable('2024-01-01'))));
+    }
+
     public function test_overwrite_save_mode_not_dropping_old_partitions(): void
     {
         if (file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03')) {

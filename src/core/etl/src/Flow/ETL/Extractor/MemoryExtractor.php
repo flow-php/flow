@@ -16,7 +16,7 @@ use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
-final class MemoryExtractor implements Extractor
+final class MemoryExtractor implements Extractor, InfersSchema
 {
     private ?Schema $derivedSchema = null;
 

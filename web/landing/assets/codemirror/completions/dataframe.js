@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 50
+ * DataFrame methods: 47
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","partitionBy","rename","renameEach","reorderEntries","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -31,21 +31,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("aggregate(" + "$" + "{" + "1:aggregations" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "autoCast",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">autoCast</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("autoCast()"),
         boost: 10
     },        {
         label: "batchBy",
@@ -241,24 +226,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("dropDuplicates(" + "$" + "{" + "1:entries" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "dropPartitions",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">dropPartitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$dropPartitionColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are<br>also removed.<br>@lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("dropPartitions(" + "$" + "{" + "1:dropPartitionColumns" + "}" + ")"),
         boost: 10
     },        {
         label: "duplicateRow",
@@ -582,22 +549,22 @@ const dataframeMethods = [
         apply: snippet("onError(" + "$" + "{" + "1:handler" + "}" + ")"),
         boost: 10
     },        {
-        label: "partitionBy",
+        label: "repartition",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">partitionBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>Shuffles the stream so every row sharing the given columns arrives in one batch. It does not<br>write directories - that is declared on the loader, \`to_csv(...)->partitionBy(\'region\')\`.
                 </div>
                             `
             return div
         },
-        apply: snippet("partitionBy(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
+        apply: snippet("repartition(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "printRows",
@@ -667,21 +634,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("renameEach(" + "$" + "{" + "1:strategies" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "reorderEntries",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">reorderEntries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SortingStrategy</span> <span class=\"fn-param\">$strategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\SortingStrategy\\TypeStrategy::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("reorderEntries(" + "$" + "{" + "1:strategy" + "}" + ")"),
         boost: 10
     },        {
         label: "rows",

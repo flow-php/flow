@@ -42,7 +42,6 @@ final class StringTypeNarrower implements TypeNarrower
 {
     /**
      * DateTimeZone::listIdentifiers() is 419 entries and was rebuilt on every cell that reached the rung.
-     * Static because AutoCaster::castToString() constructs a narrower per value.
      *
      * @var null|array<string, true>
      */

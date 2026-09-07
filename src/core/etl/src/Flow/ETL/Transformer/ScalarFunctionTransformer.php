@@ -62,9 +62,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
 
         // N columns whose names come from runtime array keys cannot be declared before rows flow -
         // ArrayUnpack::returns() throws SchemaNotDerivableException by design. This is the one
-        // PERMANENT schemaless producer (AutoCastTransformer is the other caller until task 10 deletes
-        // it). Spark takes the opposite position - unresolved means invalid, not unknown - but Spark
-        // has no array_unpack, and both from_json and explode demand a declared schema.
+        // PERMANENT schemaless producer.
         if ($this->function instanceof UnpackResults) {
             $batch = [];
 

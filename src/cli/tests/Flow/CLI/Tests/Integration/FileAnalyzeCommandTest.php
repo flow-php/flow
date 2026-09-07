@@ -22,7 +22,6 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             '--input-file-limit' => 5,
             '--stats-schema' => true,
             '--stats-columns' => true,
-            '--schema-auto-cast' => true,
         ]);
 
         $tester->assertCommandIsSuccessful();
@@ -35,37 +34,65 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             OUTPUT, $tester->getDisplay());
 
         self::assertCommandOutputContains(<<<'OUTPUT'
-            ┌────────────┬───────────────────────────────────────────────────────────────────────┬──────────┬──────────┐
-            │ Name       │ Type                                                                  │ Nullable │ Metadata │
-            ├────────────┼───────────────────────────────────────────────────────────────────────┼──────────┼──────────┤
-            │ order_id   │ uuid                                                                  │ false    │ {}       │
-            │ created_at │ datetime                                                              │ false    │ {}       │
-            │ updated_at │ datetime                                                              │ false    │ {}       │
-            │ discount   │ float                                                                 │ true     │ {}       │
-            │ address    │ structure{street: string, city: string, zip: string, country: string} │ false    │ {}       │
-            │ notes      │ list<string>                                                          │ false    │ {}       │
-            │ items      │ list<structure{sku: string, quantity: integer, price: float}>         │ false    │ {}       │
-            └────────────┴───────────────────────────────────────────────────────────────────────┴──────────┴──────────┘
+            ┌────────────┬──────────┬──────────┬──────────┐
+            │ Name       │ Type     │ Nullable │ Metadata │
+            ├────────────┼──────────┼──────────┼──────────┤
+            │ order_id   │ uuid     │ true     │ {}       │
+            │ created_at │ datetime │ true     │ {}       │
+            │ updated_at │ datetime │ true     │ {}       │
+            │ discount   │ float    │ true     │ {}       │
+            │ address    │ json     │ true     │ {}       │
+            │ notes      │ json     │ true     │ {}       │
+            │ items      │ json     │ true     │ {}       │
+            └────────────┴──────────┴──────────┴──────────┘
 
             Columns
             -------
 
-            ┌────────────┬───────────────────────────────────────────────────────────────────────┬───────┬─────────────────┬───────────────────────────┬───────────────────────────┬────────────┬────────────┬────────────────────┬────────────────────┐
-            │ Name       │ Type                                                                  │ Nulls │ Distinct Values │ Min                       │ Max                       │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
-            ├────────────┼───────────────────────────────────────────────────────────────────────┼───────┼─────────────────┼───────────────────────────┼───────────────────────────┼────────────┼────────────┼────────────────────┼────────────────────┤
-            │ order_id   │ uuid                                                                  │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ created_at │ datetime                                                              │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
-            │ updated_at │ datetime                                                              │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
-            │ discount   │ float                                                                 │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
-            │ address    │ structure{street: string, city: string, zip: string, country: string} │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ notes      │ list<string>                                                          │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 1                  │ 5                  │
-            │ items      │ list<structure{sku: string, quantity: integer, price: float}>         │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 2                  │ 4                  │
-            └────────────┴───────────────────────────────────────────────────────────────────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
+            ┌────────────┬──────────┬───────┬─────────────────┬───────────────────────────┬───────────────────────────┬────────────┬────────────┬────────────────────┬────────────────────┐
+            │ Name       │ Type     │ Nulls │ Distinct Values │ Min                       │ Max                       │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
+            ├────────────┼──────────┼───────┼─────────────────┼───────────────────────────┼───────────────────────────┼────────────┼────────────┼────────────────────┼────────────────────┤
+            │ order_id   │ uuid     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ created_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+            │ updated_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+            │ discount   │ float    │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
+            │ address    │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ notes      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ items      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            └────────────┴──────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
             OUTPUT, $tester->getDisplay());
 
         self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
 
         self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
+    }
+
+    public function test_read_rows_csv_with_all_strings(): void
+    {
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 5,
+            '--stats-schema' => true,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            ┌────────────┬────────┬──────────┬──────────┐
+            │ Name       │ Type   │ Nullable │ Metadata │
+            ├────────────┼────────┼──────────┼──────────┤
+            │ order_id   │ string │ true     │ {}       │
+            │ created_at │ string │ true     │ {}       │
+            │ updated_at │ string │ true     │ {}       │
+            │ discount   │ string │ true     │ {}       │
+            │ address    │ string │ true     │ {}       │
+            │ notes      │ string │ true     │ {}       │
+            │ items      │ string │ true     │ {}       │
+            └────────────┴────────┴──────────┴──────────┘
+            OUTPUT, $tester->getDisplay());
     }
 
     public function test_read_rows_csv_without_schema(): void
@@ -76,7 +103,6 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 5,
             '--stats-columns' => true,
-            '--schema-auto-cast' => true,
         ]);
 
         $tester->assertCommandIsSuccessful();
@@ -92,17 +118,17 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             Columns
             -------
 
-            ┌────────────┬───────────────────────────────────────────────────────────────────────┬───────┬─────────────────┬───────────────────────────┬───────────────────────────┬────────────┬────────────┬────────────────────┬────────────────────┐
-            │ Name       │ Type                                                                  │ Nulls │ Distinct Values │ Min                       │ Max                       │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
-            ├────────────┼───────────────────────────────────────────────────────────────────────┼───────┼─────────────────┼───────────────────────────┼───────────────────────────┼────────────┼────────────┼────────────────────┼────────────────────┤
-            │ order_id   │ uuid                                                                  │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ created_at │ datetime                                                              │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
-            │ updated_at │ datetime                                                              │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
-            │ discount   │ float                                                                 │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
-            │ address    │ structure{street: string, city: string, zip: string, country: string} │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ notes      │ list<string>                                                          │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 1                  │ 5                  │
-            │ items      │ list<structure{sku: string, quantity: integer, price: float}>         │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 2                  │ 4                  │
-            └────────────┴───────────────────────────────────────────────────────────────────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
+            ┌────────────┬──────────┬───────┬─────────────────┬───────────────────────────┬───────────────────────────┬────────────┬────────────┬────────────────────┬────────────────────┐
+            │ Name       │ Type     │ Nulls │ Distinct Values │ Min                       │ Max                       │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
+            ├────────────┼──────────┼───────┼─────────────────┼───────────────────────────┼───────────────────────────┼────────────┼────────────┼────────────────────┼────────────────────┤
+            │ order_id   │ uuid     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ created_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+            │ updated_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+            │ discount   │ float    │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
+            │ address    │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ notes      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ items      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            └────────────┴──────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
             OUTPUT, $tester->getDisplay());
 
         self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());

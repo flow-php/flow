@@ -36,6 +36,53 @@ final class FileReadCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
+    public function test_read_rows_csv_with_all_strings(): void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 2,
+            '--output-truncate' => 10,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +------------+------------+------------+----------+------------+------------+------------+
+            |   order_id | created_at | updated_at | discount |    address |      notes |      items |
+            +------------+------------+------------+----------+------------+------------+------------+
+            | e13d7098-5 | 2024-06-17 | 2024-06-17 |    12.45 | {"street": | ["Doloremq | [{"sku":"S |
+            | 947df050-3 | 2024-02-23 | 2024-02-23 |          | {"street": | ["Neque do | [{"sku":"S |
+            +------------+------------+------------+----------+------------+------------+------------+
+            2 rows
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_read_rows_csv_with_sample_size(): void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/inference/widening.csv',
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // The frozen ?integer schema truncates 1.5 - integer::cast(1.5) is 1
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +---+
+            | a |
+            +---+
+            | 1 |
+            | 1 |
+            +---+
+            2 rows
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_read_rows_excel(): void
     {
         $tester = new CommandTester(new FileReadCommand('read'));

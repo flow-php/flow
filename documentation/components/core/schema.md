@@ -92,11 +92,15 @@ Inference sees only the values in front of it:
   lattice, so it unifies with any other list rather than destroying its element type. In the example the first row
   infers `tags: list<string>`, and merging it with the second row's empty array yields `list<?string>`: the element
   is still a string, but it is no longer known to be present in every row.
-- An array with mixed value types detects as `array<mixed>` - `json` in the schema, because no narrower type fits.
-- Sources that transport everything as text (CSV) infer every column as `string`.
+- An array whose element types do not unify detects as `array<mixed>` - `json` in the schema, because no
+  narrower type fits. `[1, 2, 'a']` and `[1, true]` are such arrays; `[1, 1.5]` is not, because integer and
+  float unify to `float`, giving `list<float>`.
+- Sources that transport everything as text (CSV, JSON) read each cell as a string and narrow it to the
+  richest type that parses, so a CSV column of `10.5` infers as `?float`, not `?string`.
 
 Inference is a fallback. When the source schema is known, declare it on the extractor ("Declaring the Source Schema"
-below); when it is not, `autoCast()` can narrow the obvious cases ("Automatic Casting" below).
+below); when it is not, the extractor infers one - including from a plain PHP array ("Inferring Types from an Array"
+below).
 
 ## When Two Types Disagree
 
@@ -300,33 +304,36 @@ That happens for exactly three things:
 
 In all three cases `->withSchema(...)` is the escape hatch, and it skips the probe.
 
-## Automatic Casting
+## Inferring Types from an Array
 
-`DataFrame::autoCast()` detects every value in the pipeline: strings are narrowed to `null`, `boolean`, `integer`,
-`float`, `datetime`, `date`, `uuid`, `json` or `xml` (and `html` on PHP 8.4+) when they parse as one, and arrays
-mixing integers with floats are unified to floats. Use it when the source has no schema to declare and does not infer
-one either - CSV does infer one, so it no longer needs `autoCast()` to be typed:
+An array source has no schema of its own, so ask it to infer one:
 
 ```php
 <?php
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\infer_schema;
 
 data_frame()
-    ->read(from_array([['id' => '1', 'customer' => 'Norbert', 'total' => '10.5', 'paid' => 'true']]))
-    ->autoCast()
+    ->read(from_array([['id' => '1', 'customer' => 'Norbert', 'total' => '10.5', 'paid' => 'true']])
+        ->inferSchema(infer_schema()))
     ->printSchema();
 
 // schema
-// |-- id: integer
-// |-- customer: string
-// |-- total: float
-// |-- paid: boolean
+// |-- id: ?string
+// |-- customer: ?string
+// |-- total: ?string
+// |-- paid: ?string
 ```
 
-`autoCast()` guesses per value, so a column can still come out mixed ("123" in one row is an integer, "abc" in the
-next stays a string). A declared schema ("Declaring the Source Schema" above) is always the stronger option.
+`from_array()` infers from the PHP value, so a string cell stays a string. Narrowing text to a richer type is a
+file-source behaviour: `from_csv()` and `from_json()` read each cell as text and narrow it to the richest type
+that parses, so `'10.5'` read from a CSV infers as `?float`.
+
+A declared schema ("Declaring the Source Schema" above) is still the stronger option when you know the types;
+inference is what answers when you do not. Every inferred column is nullable - inference never claims a column
+cannot be null.
 
 ## Schema Validation Strategies
 

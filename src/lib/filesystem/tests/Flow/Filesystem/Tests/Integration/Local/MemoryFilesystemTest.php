@@ -10,13 +10,13 @@ use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
-use Flow\Types\Type\AutoCaster;
 
 use function array_map;
 use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
@@ -225,7 +225,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
                         ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
-                new AutoCaster(),
+                schema(),
                 flow_context(),
             ),
         ));

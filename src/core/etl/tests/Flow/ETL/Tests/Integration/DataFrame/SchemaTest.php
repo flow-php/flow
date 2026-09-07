@@ -146,7 +146,7 @@ final class SchemaTest extends FlowIntegrationTestCase
 
         static::assertEquals(
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            df()->read(from_rows($rows))->autoCast()->schema(),
+            df()->read(from_rows($rows))->schema(),
         );
     }
 
@@ -172,12 +172,9 @@ final class SchemaTest extends FlowIntegrationTestCase
 
         static::assertEquals(
             schema(int_schema('id'), str_schema('name'), bool_schema('active'), str_schema('union', nullable: true)),
-            df()->read(from_rows($rows))->autoCast()->limit(50)->schema(),
+            df()->read(from_rows($rows))->limit(50)->schema(),
         );
-        static::assertEquals(
-            df()->read(from_rows($rows))->autoCast()->schema(),
-            df()->read(from_rows($rows))->autoCast()->limit(50)->schema(),
-        );
+        static::assertEquals(df()->read(from_rows($rows))->schema(), df()->read(from_rows($rows))->limit(50)->schema());
     }
 
     public function test_schema_when_starting_rows_are_null(): void

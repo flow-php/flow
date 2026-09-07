@@ -12,74 +12,27 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\Mother\MarketRowsMother;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
 final class AnalyzeTest extends FlowIntegrationTestCase
 {
-    public function test_analyzing_csv_file_with_auto_cast(): void
+    public function test_analyzing_an_inferred_array_source(): void
     {
         $config = config_builder()->clock($clock = new FakeClock())->build();
 
         $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
-            ->read(from_array([
-                [
-                    'Index' => 1,
-                    'Date' => '2024-01-19',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 2,
-                    'Date' => '2024-01-20',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 3,
-                    'Date' => '2024-01-21',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 4,
-                    'Date' => '2024-01-22',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 5,
-                    'Date' => '2024-01-23',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-            ]))
-            ->autoCast()
+            ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
             ->run(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();
@@ -93,13 +46,13 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertSame(5, $report->statistics()->totalRows());
         static::assertEquals(
             schema(
-                int_schema('Index'),
-                date_schema('Date'),
-                float_schema('Close'),
-                float_schema('Volume'),
-                float_schema('Open'),
-                float_schema('High'),
-                float_schema('Low'),
+                int_schema('Index', nullable: true),
+                str_schema('Date', nullable: true),
+                str_schema('Close', nullable: true),
+                str_schema('Volume', nullable: true),
+                str_schema('Open', nullable: true),
+                str_schema('High', nullable: true),
+                str_schema('Low', nullable: true),
             ),
             $report->schema(),
         );
@@ -120,53 +73,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
     public function test_analyzing_csv_file_with_limit(): void
     {
         $report = df()
-            ->read(from_array([
-                [
-                    'Index' => '1',
-                    'Date' => '2024-01-19',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => '2',
-                    'Date' => '2024-01-20',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => '3',
-                    'Date' => '2024-01-21',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => '4',
-                    'Date' => '2024-01-22',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => '5',
-                    'Date' => '2024-01-23',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-            ]))
+            ->read(from_array(MarketRowsMother::fiveDaysWithStringIndex()))
             ->limit(2)
             ->run(analyze: analyze()->withSchema()->withColumnStatistics());
 
@@ -193,54 +100,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
 
         $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
-            ->read(from_array([
-                [
-                    'Index' => 1,
-                    'Date' => '2024-01-19',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 2,
-                    'Date' => '2024-01-20',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 3,
-                    'Date' => '2024-01-21',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 4,
-                    'Date' => '2024-01-22',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 5,
-                    'Date' => '2024-01-23',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-            ]))
-            ->autoCast()
+            ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
             ->run(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();
@@ -254,13 +114,13 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertSame(5, $report->statistics()->totalRows());
         static::assertEquals(
             schema(
-                int_schema('Index'),
-                date_schema('Date'),
-                float_schema('Close'),
-                float_schema('Volume'),
-                float_schema('Open'),
-                float_schema('High'),
-                float_schema('Low'),
+                int_schema('Index', nullable: true),
+                str_schema('Date', nullable: true),
+                str_schema('Close', nullable: true),
+                str_schema('Volume', nullable: true),
+                str_schema('Open', nullable: true),
+                str_schema('High', nullable: true),
+                str_schema('Low', nullable: true),
             ),
             $report->schema(),
         );
@@ -274,54 +134,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
 
         $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
-            ->read(from_array([
-                [
-                    'Index' => 1,
-                    'Date' => '2024-01-19',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 2,
-                    'Date' => '2024-01-20',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 3,
-                    'Date' => '2024-01-21',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 4,
-                    'Date' => '2024-01-22',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-                [
-                    'Index' => 5,
-                    'Date' => '2024-01-23',
-                    'Close' => '2029.3',
-                    'Volume' => '166078.0',
-                    'Open' => '2027.4',
-                    'High' => '2041.9',
-                    'Low' => '2022.2',
-                ],
-            ]))
-            ->autoCast()
+            ->read(from_array(MarketRowsMother::fiveDays()))
             ->collect()
             ->run(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();

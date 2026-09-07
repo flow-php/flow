@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileSchemaCommand;
+use Flow\CLI\Tests\Context\SchemaInferenceFixtureContext;
+use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\CommandOutputNormalizer;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileSchemaCommandTest extends TestCase
@@ -23,6 +28,26 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
             [{"ref":"order_id","type":{"type":"uuid"},"nullable":true,"metadata":[]},{"ref":"created_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"updated_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"discount","type":{"type":"float"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":true,"metadata":[]}]
+
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_run_schema_all_strings_wins_over_sample_size(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::wideningPath(),
+            '--output-ascii' => true,
+            '--schema-all-strings' => true,
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- a: ?string
 
             OUTPUT, $tester->getDisplay());
     }
@@ -44,6 +69,135 @@ final class FileSchemaCommandTest extends TestCase
             |-- address: ?json
             |-- notes: ?json
             |-- items: ?json
+
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_run_schema_options_are_ignored_by_a_self_describing_source(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.parquet',
+            '--output-table' => true,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputEquals(<<<'OUTPUT'
+            +------------+--------------+----------+----------+
+            |       name |         type | nullable | metadata |
+            +------------+--------------+----------+----------+
+            |   order_id |         uuid |    false |       [] |
+            | created_at |     datetime |    false |       [] |
+            | updated_at |     datetime |     true |       [] |
+            |   discount |        float |     true |       [] |
+            |      email |       string |    false |       [] |
+            |   customer |       string |    false |       [] |
+            |    address | structure_v2 |    false |       [] |
+            |      notes |         list |    false |       [] |
+            |      items |         list |    false |       [] |
+            +------------+--------------+----------+----------+
+            9 rows
+
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_run_schema_with_a_sample_size_the_file_outgrows_fails(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage("could not convert 'xyz' (string) to integer");
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::outgrownPath(),
+            '--output-ascii' => true,
+            '--schema-sample-size' => 1,
+        ]);
+    }
+
+    public function test_run_schema_with_all_strings(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--output-table' => true,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputEquals(<<<'OUTPUT'
+            +------------+--------+----------+----------+
+            |       name |   type | nullable | metadata |
+            +------------+--------+----------+----------+
+            |   order_id | string |     true |       [] |
+            | created_at | string |     true |       [] |
+            | updated_at | string |     true |       [] |
+            |   discount | string |     true |       [] |
+            |    address | string |     true |       [] |
+            |      notes | string |     true |       [] |
+            |      items | string |     true |       [] |
+            +------------+--------+----------+----------+
+            7 rows
+
+            OUTPUT, $tester->getDisplay());
+    }
+
+    #[TestWith([0])]
+    #[TestWith([-2])]
+    public function test_run_schema_with_an_invalid_files_to_sniff_is_refused(int $filesToSniff): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--schema-files-to-sniff' => $filesToSniff,
+        ]);
+
+        static::assertSame(Command::FAILURE, $tester->getStatusCode());
+        static::assertStringContainsString(
+            'Schema files to sniff must be greater than 0, or -1 for all sources.',
+            $tester->getDisplay(),
+        );
+    }
+
+    #[TestWith([0])]
+    #[TestWith([-2])]
+    public function test_run_schema_with_an_invalid_sample_size_is_refused(int $sampleSize): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--schema-sample-size' => $sampleSize]);
+
+        static::assertSame(Command::FAILURE, $tester->getStatusCode());
+        static::assertStringContainsString(
+            'Schema sample size must be greater than 0, or -1 for all rows.',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function test_run_schema_with_files_to_sniff_bounds_the_sources_read(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::unionGlob(),
+            '--output-ascii' => true,
+            '--schema-union-by-name' => true,
+            '--schema-files-to-sniff' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Only the first source is opened, so the second file's "c" column is never seen
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- a: ?integer
+            |-- b: ?integer
 
             OUTPUT, $tester->getDisplay());
     }
@@ -214,6 +368,25 @@ final class FileSchemaCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
+    public function test_run_schema_with_sample_size_freezes_the_narrower_type(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::wideningPath(),
+            '--output-ascii' => true,
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- a: ?integer
+
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_run_schema_with_table_output(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -239,35 +412,6 @@ final class FileSchemaCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_and_auto_cast(): void
-    {
-        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
-
-        $tester->execute([
-            'input-file' => __DIR__ . '/Fixtures/orders.csv',
-            '--output-table' => true,
-            '--schema-auto-cast' => true,
-        ]);
-
-        $tester->assertCommandIsSuccessful();
-
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +------------+--------------+----------+----------+
-            |       name |         type | nullable | metadata |
-            +------------+--------------+----------+----------+
-            |   order_id |         uuid |    false |       [] |
-            | created_at |     datetime |    false |       [] |
-            | updated_at |     datetime |    false |       [] |
-            |   discount |        float |     true |       [] |
-            |    address | structure_v2 |    false |       [] |
-            |      notes |         list |    false |       [] |
-            |      items |         list |    false |       [] |
-            +------------+--------------+----------+----------+
-            7 rows
-
-            OUTPUT, $tester->getDisplay());
-    }
-
     public function test_run_schema_with_table_output_and_limit_5(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -275,24 +419,23 @@ final class FileSchemaCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--output-table' => true,
-            '--schema-auto-cast' => true,
             '--input-file-limit' => 5,
         ]);
 
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +------------+--------------+----------+----------+
-            |       name |         type | nullable | metadata |
-            +------------+--------------+----------+----------+
-            |   order_id |         uuid |    false |       [] |
-            | created_at |     datetime |    false |       [] |
-            | updated_at |     datetime |    false |       [] |
-            |   discount |        float |     true |       [] |
-            |    address | structure_v2 |    false |       [] |
-            |      notes |         list |    false |       [] |
-            |      items |         list |    false |       [] |
-            +------------+--------------+----------+----------+
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |     true |       [] |
+            | created_at | datetime |     true |       [] |
+            | updated_at | datetime |     true |       [] |
+            |   discount |    float |     true |       [] |
+            |    address |     json |     true |       [] |
+            |      notes |     json |     true |       [] |
+            |      items |     json |     true |       [] |
+            +------------+----------+----------+----------+
             7 rows
 
             OUTPUT, $tester->getDisplay());
@@ -330,7 +473,6 @@ final class FileSchemaCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.json',
             '--output-table' => true,
-            '--schema-auto-cast' => true,
             '--input-file-limit' => 5,
         ]);
 
@@ -340,15 +482,15 @@ final class FileSchemaCommandTest extends TestCase
             +--------------+--------------+----------+----------+
             |         name |         type | nullable | metadata |
             +--------------+--------------+----------+----------+
-            |     order_id |         uuid |    false |       [] |
-            |   created_at |     datetime |    false |       [] |
-            |   updated_at |     datetime |    false |       [] |
-            | cancelled_at |         null |     true |       [] |
-            |  total_price |        float |    false |       [] |
-            |     discount |        float |    false |       [] |
-            |     customer | structure_v2 |    false |       [] |
-            |      address | structure_v2 |    false |       [] |
-            |        notes |         list |    false |       [] |
+            |     order_id |       string |     true |       [] |
+            |   created_at |       string |     true |       [] |
+            |   updated_at |       string |     true |       [] |
+            | cancelled_at |       string |     true |       [] |
+            |  total_price |        float |     true |       [] |
+            |     discount |        float |     true |       [] |
+            |     customer | structure_v2 |     true |       [] |
+            |      address | structure_v2 |     true |       [] |
+            |        notes |         list |     true |       [] |
             +--------------+--------------+----------+----------+
             9 rows
 
@@ -362,7 +504,6 @@ final class FileSchemaCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.parquet',
             '--output-table' => true,
-            '--schema-auto-cast' => true,
             '--input-file-limit' => 5,
         ]);
 
@@ -394,7 +535,6 @@ final class FileSchemaCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.txt',
             '--output-table' => true,
-            '--schema-auto-cast' => true,
         ]);
 
         $tester->assertCommandIsSuccessful();
@@ -418,7 +558,6 @@ final class FileSchemaCommandTest extends TestCase
             'input-file' => __DIR__ . '/Fixtures/orders.xml',
             '--input-xml-node-path' => 'root/row',
             '--output-table' => true,
-            '--schema-auto-cast' => true,
             '--input-file-limit' => 5,
         ]);
 
@@ -431,6 +570,27 @@ final class FileSchemaCommandTest extends TestCase
             | node |  xml |    false |       [] |
             +------+------+----------+----------+
             1 rows
+
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_run_schema_with_union_by_name_unions_the_column_sets(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::unionGlob(),
+            '--output-ascii' => true,
+            '--schema-union-by-name' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- a: ?integer
+            |-- b: ?integer
+            |-- c: ?integer
 
             OUTPUT, $tester->getDisplay());
     }
@@ -459,5 +619,18 @@ final class FileSchemaCommandTest extends TestCase
             |-- items: ?json
 
             OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_run_schema_without_union_by_name_refuses_differing_column_sets(): void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('unexpected [c], missing [b]');
+
+        $tester->execute([
+            'input-file' => SchemaInferenceFixtureContext::unionGlob(),
+            '--output-ascii' => true,
+        ]);
     }
 }

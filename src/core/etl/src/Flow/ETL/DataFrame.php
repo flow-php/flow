@@ -42,7 +42,6 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Sort\SortSteps;
-use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
@@ -58,7 +57,6 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 use Flow\ETL\Transformer\UntilTransformer;
 use Flow\Filesystem\Path\Filter;
-use Flow\Types\Type\AutoCaster;
 use Generator;
 use Throwable;
 
@@ -101,13 +99,6 @@ final class DataFrame
         foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
-
-        return $this;
-    }
-
-    public function autoCast(): self
-    {
-        $this->pipeline->add(new AutoCastTransformer(new AutoCaster()));
 
         return $this;
     }
@@ -414,7 +405,10 @@ final class DataFrame
             return $this;
         }
 
-        $extractor->withPathFilter(new ScalarFunctionFilter($filter, new AutoCaster(), $this->context));
+        // schema() runs after the instanceof guard - a non-FileExtractor must still get the
+        // RuntimeException above - and before withPathFilter(), which nulls the listing caches.
+        // The filter's constructor runs the comparability gate.
+        $extractor->withPathFilter(new ScalarFunctionFilter($filter, $extractor->schema(), $this->context));
 
         return $this;
     }
