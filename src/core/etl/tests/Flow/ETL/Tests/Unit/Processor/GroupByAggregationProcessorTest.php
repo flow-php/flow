@@ -14,10 +14,12 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
+use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -232,5 +234,106 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         static::assertSame([], $result);
+    }
+
+    public function test_a_bound_global_aggregate_over_an_empty_stream_emits_one_row_of_defaults(): void
+    {
+        $groupBy = new GroupBy();
+        $groupBy->aggregate(sum(ref('amount')), count(ref('amount')));
+
+        $bound = (new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets())))->bind(schema(int_schema(
+            'amount',
+        )));
+
+        static::assertInstanceOf(GroupByAggregationProcessor::class, $bound->step);
+
+        $result = iterator_to_array(
+            $bound->step->process(
+                (static function (): Generator {
+                    yield from [];
+                })(),
+                flow_context(),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertCount(1, $result);
+        static::assertSame([['amount_sum' => null, 'amount_count' => 0]], $result[0]->toArray());
+        static::assertEquals($bound->output, $result[0]->schema());
+    }
+
+    public function test_a_bound_keyed_aggregate_over_an_empty_stream_emits_nothing(): void
+    {
+        $groupBy = new GroupBy(ref('category'));
+        $groupBy->aggregate(sum(ref('amount')));
+
+        $bound = (new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets())))->bind(schema(
+            str_schema('category'),
+            int_schema('amount'),
+        ));
+
+        static::assertInstanceOf(GroupByAggregationProcessor::class, $bound->step);
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                $bound->step->process(
+                    (static function (): Generator {
+                        yield from [];
+                    })(),
+                    flow_context(),
+                ),
+                preserve_keys: false,
+            ),
+        );
+    }
+
+    public function test_an_unbound_global_aggregate_over_an_empty_stream_emits_nothing(): void
+    {
+        $groupBy = new GroupBy();
+        $groupBy->aggregate(sum(ref('amount')), count(ref('amount')));
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                (new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets())))->process(
+                    (static function (): Generator {
+                        yield from [];
+                    })(),
+                    flow_context(),
+                ),
+                preserve_keys: false,
+            ),
+        );
+    }
+
+    public function test_a_bound_global_aggregate_with_input_emits_no_extra_row(): void
+    {
+        $groupBy = new GroupBy();
+        $groupBy->aggregate(sum(ref('amount')), count(ref('amount')));
+
+        $buckets = new Buckets(new MemoryBuckets());
+        $metadata = GroupByContext::bucketMetadata(
+            $buckets,
+            [],
+            rows(schema(int_schema('amount')), row(['amount' => 10]), row(['amount' => 20])),
+        );
+
+        $bound = (new GroupByAggregationProcessor($groupBy, $buckets))->bind(schema(int_schema('amount')));
+
+        static::assertInstanceOf(GroupByAggregationProcessor::class, $bound->step);
+
+        $result = iterator_to_array(
+            $bound->step->process(
+                (static function () use ($metadata): Generator {
+                    yield from $metadata;
+                })(),
+                flow_context(),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertCount(1, $result);
+        static::assertSame([['amount_sum' => 30.0, 'amount_count' => 2]], $result[0]->toArray());
     }
 }

@@ -60,9 +60,11 @@ final class UntilTransformer implements Transformer
             foreach ($rows as $row) {
                 if (!$this->resolved->eval($row, $context)) {
                     $this->limitReached = true;
-                } else {
-                    $nextRows[] = $row;
+
+                    break;
                 }
+
+                $nextRows[] = $row;
             }
 
             $result = new Rows($rows->schema(), ...$nextRows);

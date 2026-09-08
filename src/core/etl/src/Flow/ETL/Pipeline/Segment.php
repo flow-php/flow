@@ -114,6 +114,10 @@ final readonly class Segment
                                     'exception' => $exception,
                                 ]);
 
+                            // the batch is half transformed, so its columns no longer match its siblings -
+                            // skipping means emitting nothing, not emitting what the failed step had produced
+                            $rows = new Rows($rows->schema());
+
                             break;
                         }
                     }

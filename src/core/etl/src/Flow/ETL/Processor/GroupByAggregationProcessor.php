@@ -12,6 +12,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\BucketAggregation;
 use Flow\ETL\GroupBy\GroupByShape;
+use Flow\ETL\GroupBy\GroupKey;
 use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
@@ -65,6 +66,7 @@ final class GroupByAggregationProcessor implements Processor
     public function process(Generator $rows, FlowContext $context): Generator
     {
         $aggregation = new BucketAggregation($this->batchSize);
+        $emitted = false;
 
         try {
             foreach ($rows as $metadata) {
@@ -79,9 +81,24 @@ final class GroupByAggregationProcessor implements Processor
 
                     // re-key batches, yield from would restart keys at 0 for every bucket
                     foreach ($aggregated as $aggregatedBatch) {
+                        $emitted = true;
+
                         yield $aggregatedBatch;
                     }
                 }
+            }
+
+            // SQL's scalar aggregate: no input and no grouping key is one row of the initial accumulators,
+            // not no row. Only reachable bound - an unbound plan has no schema to type the defaults with.
+            if (!$emitted && $this->shape !== null && $this->groupBy->isGlobal()) {
+                yield new Rows(
+                    $this->shape->output,
+                    $this->groupBy->aggregatedRow(
+                        new GroupKey([]),
+                        $this->shape->aggregators->cloned(),
+                        $this->shape->output,
+                    ),
+                );
             }
         } finally {
             $this->buckets->clear();

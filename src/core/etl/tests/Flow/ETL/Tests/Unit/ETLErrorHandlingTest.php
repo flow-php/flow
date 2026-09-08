@@ -20,8 +20,11 @@ use function array_merge;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ignore_error_handler;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -196,6 +199,27 @@ final class ETLErrorHandlingTest extends FlowTestCase
             ],
             $loader->result,
         );
+    }
+
+    public function test_skip_rows_handler_does_not_emit_the_half_transformed_batch(): void
+    {
+        $rows = data_frame()
+            ->read(from_array(
+                [['id' => 1, 'v' => '10'], ['id' => 2, 'v' => 'boom'], ['id' => 3, 'v' => '30']],
+                schema(int_schema('id'), str_schema('v')),
+            ))
+            ->onError(skip_rows_handler())
+            ->withEntry('doubled', ref('v')->cast('integer')->multiply(lit(2)))
+            ->fetch();
+
+        static::assertSame(
+            [
+                ['id' => 1, 'v' => '10', 'doubled' => 20],
+                ['id' => 3, 'v' => '30', 'doubled' => 60],
+            ],
+            $rows->toArray(),
+        );
+        static::assertSame(['id', 'v', 'doubled'], $rows->schema()->references()->names());
     }
 
     public function test_skip_rows_handler(): void

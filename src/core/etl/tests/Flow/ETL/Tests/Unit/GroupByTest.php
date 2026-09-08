@@ -8,7 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
-use Flow\ETL\GroupBy\Pivot;
+use Flow\ETL\GroupBy\PivotAggregation;
+use Flow\ETL\GroupBy\PivotShape;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -18,6 +19,7 @@ use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -112,7 +114,7 @@ final class GroupByTest extends FlowTestCase
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'), pivot_values('USA'));
 
-        $schema = iterator_to_array($group->pivotResult(
+        $schema = iterator_to_array((new PivotAggregation())->aggregate(
             (static function (): Generator {
                 yield rows(
                     schema(str_schema('product'), str_schema('country'), int_schema('amount')),
@@ -120,7 +122,7 @@ final class GroupByTest extends FlowTestCase
                 );
             })(),
             flow_context(config()),
-            new Pivot(ref('country'), pivot_values('USA')),
+            $group,
         ))[0]->schema();
 
         static::assertSame(['product', 'USA'], $schema->references()->names());
@@ -137,10 +139,10 @@ final class GroupByTest extends FlowTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Pivot requires exactly one aggregation');
 
-        iterator_to_array($group->pivotResult(
+        iterator_to_array((new PivotAggregation())->aggregate(
             (static fn(): Generator => yield from [])(),
             flow_context(config()),
-            new Pivot(ref('country'), pivot_values('USA')),
+            $group,
         ));
     }
 
@@ -163,12 +165,61 @@ final class GroupByTest extends FlowTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($group->pivotResult(
+            iterator_to_array((new PivotAggregation())->aggregate(
                 (static fn(): Generator => yield from [])(),
                 flow_context(config()),
-                new Pivot(ref('country'), pivot_values('USA')),
+                $group,
             )),
         );
+    }
+
+    public function test_a_bound_pivot_over_an_empty_input_yields_nothing(): void
+    {
+        $group = new GroupBy(ref('product'));
+        $group->aggregate(sum(ref('amount')));
+        $group->pivot(ref('country'), pivot_values('USA'));
+
+        static::assertSame(
+            [],
+            iterator_to_array((new PivotAggregation())->aggregateBound(
+                (static fn(): Generator => yield from [])(),
+                flow_context(config()),
+                $group,
+                PivotShape::of($group, schema(str_schema('product'), str_schema('country'), int_schema('amount'))),
+            )),
+        );
+    }
+
+    public function test_an_unbound_pivot_resolves_an_argument_typed_aggregate(): void
+    {
+        $group = new GroupBy(ref('product'));
+        $group->aggregate(min(ref('amount')));
+        $group->pivot(ref('country'), pivot_values('USA'));
+
+        $result = iterator_to_array((new PivotAggregation())->aggregate(
+            (static function (): Generator {
+                yield rows(
+                    schema(str_schema('product'), str_schema('country'), int_schema('amount')),
+                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 30]),
+                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]),
+                );
+            })(),
+            flow_context(config()),
+            $group,
+        ))[0];
+
+        static::assertSame([['product' => 'Banana', 'USA' => 10]], $result->toArray());
+        static::assertSame('integer', $result->schema()->get('USA')->type()->toString());
+    }
+
+    public function test_a_group_by_without_references_is_global(): void
+    {
+        static::assertTrue((new GroupBy())->isGlobal());
+    }
+
+    public function test_a_group_by_with_references_is_not_global(): void
+    {
+        static::assertFalse((new GroupBy(ref('product')))->isGlobal());
     }
 
     public function test_a_falsy_pivot_value_keeps_its_column(): void
@@ -177,7 +228,7 @@ final class GroupByTest extends FlowTestCase
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'), pivot_values('0', 'USA'));
 
-        $result = iterator_to_array($group->pivotResult(
+        $result = iterator_to_array((new PivotAggregation())->aggregate(
             (static function (): Generator {
                 yield rows(
                     schema(str_schema('product'), str_schema('country'), int_schema('amount')),
@@ -186,7 +237,7 @@ final class GroupByTest extends FlowTestCase
                 );
             })(),
             flow_context(config()),
-            new Pivot(ref('country'), pivot_values('0', 'USA')),
+            $group,
         ))[0];
 
         static::assertSame(['product', '0', 'USA'], $result->schema()->references()->names());

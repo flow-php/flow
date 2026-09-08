@@ -12,9 +12,12 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\collect;
+use function Flow\ETL\DSL\collect_unique;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
@@ -22,6 +25,7 @@ use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
@@ -32,6 +36,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\string_agg;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\window;
@@ -567,6 +572,96 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ],
             ],
             $rows->toArray(),
+        );
+    }
+
+    public function test_a_pivot_with_an_argument_typed_aggregate(): void
+    {
+        static::assertSame(
+            [
+                ['k' => 'x', 'p1' => 1, 'p2' => 2],
+                ['k' => 'y', 'p1' => 3, 'p2' => null],
+            ],
+            df()
+                ->read(from_array(
+                    [
+                        ['k' => 'x', 'p' => 'p1', 'a' => 1],
+                        ['k' => 'x', 'p' => 'p2', 'a' => 2],
+                        ['k' => 'y', 'p' => 'p1', 'a' => 3],
+                    ],
+                    schema(str_schema('k'), str_schema('p'), int_schema('a')),
+                ))
+                ->groupBy(ref('k'))
+                ->pivot(ref('p'), pivot_values('p1', 'p2'))
+                ->aggregate(min(ref('a')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_global_aggregate_over_an_empty_source_emits_one_row_of_typed_defaults(): void
+    {
+        $frame = df()
+            ->read(from_array([], schema(int_schema('a'), str_schema('s'))))
+            ->aggregate([
+                sum(ref('a')),
+                count(ref('a')),
+                count(),
+                average(ref('a')),
+                min(ref('a')),
+                max(ref('a')),
+                first(ref('a')),
+                last(ref('a')),
+                collect(ref('a')),
+                collect_unique(ref('a')),
+                string_agg(ref('s')),
+            ]);
+
+        $declared = $frame->schema();
+        $rows = $frame->fetch();
+
+        static::assertCount(1, $rows);
+        static::assertSame(
+            [[
+                'a_sum' => null,
+                'a_count' => 0,
+                '_count' => 0,
+                'a_avg' => null,
+                'a_min' => null,
+                'a_max' => null,
+                'a_first' => null,
+                'a_last' => null,
+                'a_collection' => [],
+                'a_collection_unique' => [],
+                's_str_agg' => '',
+            ]],
+            $rows->toArray(),
+        );
+        static::assertEquals($declared, $rows->schema());
+    }
+
+    public function test_a_keyed_aggregate_over_an_empty_source_emits_no_rows(): void
+    {
+        static::assertCount(
+            0,
+            df()
+                ->read(from_array([], schema(str_schema('k'), int_schema('a'))))
+                ->groupBy(ref('k'))
+                ->aggregate(sum(ref('a')), count(ref('a')))
+                ->fetch(),
+        );
+    }
+
+    public function test_a_global_aggregate_emptied_by_a_filter_emits_one_row_of_typed_defaults(): void
+    {
+        static::assertSame(
+            [['a_sum' => null, 'a_count' => 0]],
+            df()
+                ->read(from_array([['a' => 1], ['a' => 2], ['a' => 3]], schema(int_schema('a'))))
+                ->filter(ref('a')->greaterThan(lit(100)))
+                ->aggregate([sum(ref('a')), count(ref('a'))])
+                ->fetch()
+                ->toArray(),
         );
     }
 

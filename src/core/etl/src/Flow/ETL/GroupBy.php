@@ -12,19 +12,12 @@ use Flow\ETL\GroupBy\Aggregators;
 use Flow\ETL\GroupBy\DeclaredPivotValues;
 use Flow\ETL\GroupBy\GroupKey;
 use Flow\ETL\GroupBy\Pivot;
-use Flow\ETL\GroupBy\PivotSchema;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
-use Generator;
 
-use function array_key_exists;
 use function array_unique;
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\definition_from_type;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 
 final class GroupBy
 {
@@ -77,6 +70,11 @@ final class GroupBy
     public function aggregations(): Aggregators
     {
         return $this->aggregations;
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->refs->count() === 0;
     }
 
     public function isPivot(): bool
@@ -132,100 +130,6 @@ final class GroupBy
     public function pivotedBy(): ?Pivot
     {
         return $this->pivot;
-    }
-
-    /**
-     * @param Generator<Rows> $rows
-     * @param int<1, max> $batchSize
-     *
-     * @return Generator<Rows>
-     */
-    public function pivotResult(Generator $rows, FlowContext $context, Pivot $pivot, int $batchSize = 1000): Generator
-    {
-        if ($this->aggregations->count() === 0) {
-            throw new RuntimeException('Pivot requires exactly one aggregation');
-        }
-
-        $aggregation = $this->aggregations->first();
-        $pivotColumns = $pivot->values->all();
-
-        /** @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>> $pivotedTable */
-        $pivotedTable = [];
-
-        $input = null;
-
-        foreach ($rows as $batch) {
-            $input ??= $batch->schema();
-
-            foreach ($batch as $row) {
-                $values = [];
-
-                foreach ($this->refs as $ref) {
-                    $values[$ref->name()] = $row->get($ref);
-                }
-
-                $indexValue = (string) new GroupKey($values);
-                $pivotValue = $row->get($pivot->column);
-
-                if (!array_key_exists($indexValue, $pivotedTable)) {
-                    $pivotedTable[$indexValue] = [];
-                }
-
-                foreach ($this->refs as $ref) {
-                    $pivotedTable[$indexValue][$ref->name()] = $row->get($ref);
-                }
-
-                if ($pivotValue === null) {
-                    continue;
-                }
-
-                $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
-
-                if (!array_key_exists($pivotValue, $pivotedTable[$indexValue])) {
-                    $pivotedTable[$indexValue][$pivotValue] = clone $aggregation;
-                }
-
-                $aggregator = $pivotedTable[$indexValue][$pivotValue];
-
-                if ($aggregator instanceof AggregatingFunction) {
-                    $aggregator->aggregate($row, $context);
-                }
-            }
-        }
-
-        // nothing was read, so there is no input schema to declare a pivot against
-        if ($input === null) {
-            return;
-        }
-
-        $pivotSchema = (new PivotSchema())->of($input, $this->refs, $pivotColumns, $aggregation);
-
-        $buffer = [];
-
-        foreach ($pivotedTable as $columns) {
-            $row = [];
-
-            foreach ($columns as $rowIndex => $value) {
-                $row[$rowIndex] = $value instanceof AggregatingFunction ? $value->value() : $value;
-            }
-
-            foreach ($pivotColumns as $column) {
-                if (!array_key_exists($column, $row)) {
-                    $row[$column] = null;
-                }
-            }
-
-            $buffer[] = $row;
-
-            if (count($buffer) >= $batchSize) {
-                yield array_to_rows($buffer, $pivotSchema, $context->hydrator());
-                $buffer = [];
-            }
-        }
-
-        if ($buffer !== []) {
-            yield array_to_rows($buffer, $pivotSchema, $context->hydrator());
-        }
     }
 
     /**

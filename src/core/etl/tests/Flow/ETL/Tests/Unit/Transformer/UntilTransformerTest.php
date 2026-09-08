@@ -51,6 +51,29 @@ final class UntilTransformerTest extends FlowTestCase
         );
     }
 
+    public function test_it_stops_at_the_first_row_failing_the_predicate(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1],
+                ['id' => 2],
+            ],
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))
+                ->transform(
+                    rows(
+                        schema(int_schema('id')),
+                        row(['id' => 1]),
+                        row(['id' => 2]),
+                        row(['id' => 5]),
+                        row(['id' => 1]),
+                        row(['id' => 2]),
+                    ),
+                    flow_context(config()),
+                )
+                ->toArray(),
+        );
+    }
+
     public function test_a_reached_limit_stops_the_next_batch(): void
     {
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));

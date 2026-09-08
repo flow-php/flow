@@ -710,8 +710,12 @@ final class DataFrameTest extends FlowTestCase
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        // void() drops rows, not columns - the batch it yields carries the plan's declared schema
-        static::assertEquals(rows(schema(float_schema('average_age', nullable: true))), $rows);
+        // void() drops rows, not columns - the batch it yields carries the plan's declared schema, and
+        // the global aggregate that follows it reads zero rows, so it emits its initial accumulators
+        static::assertEquals(
+            rows(schema(float_schema('average_age', nullable: true)), row(['average_age' => null])),
+            $rows,
+        );
     }
 
     public function test_with_batch_size(): void
