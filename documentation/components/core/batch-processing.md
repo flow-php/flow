@@ -31,12 +31,13 @@ $dataFrame = data_frame()
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_database};
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
 $dataFrame = data_frame()
     ->read(from_array($orders_with_line_items))
     ->batchBy('order_id', minSize: 1000) // Keep order line items together
-    ->write(to_database($connection, 'orders_table'))
+    ->write(to_dbal_table_insert($connection, 'orders_table'))
     ->run();
 ```
 
@@ -89,7 +90,7 @@ $report = data_frame()
     ->batchSize(1000)
     ->with($transformation)
     ->write($loader)
-    ->run(analyze: analzyze());
+    ->run(analyze: analyze());
 
 echo "Peak memory usage: " . $report->statistics()->memory->max()->inMb() . " bytes\n";
 ```

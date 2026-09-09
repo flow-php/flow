@@ -9,13 +9,29 @@ In this example, Pipeline will take only 5 rows from Extractor passing them thro
 ## Example 
 
 ```php
-<?php 
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_sequence_number, to_output};
 
 data_frame()
-    ->read(from_())
+    ->read(from_sequence_number('id', 1, 100))
     ->limit(5)
-    ->write(to_())
+    ->collect()
+    ->write(to_output(truncate: false))
     ->run();
+```
+
+```text
++----+
+| id |
++----+
+|  1 |
+|  2 |
+|  3 |
+|  4 |
+|  5 |
++----+
+5 rows
 ```
 
 It's important to remember that some transformers might actually change the original number of rows extracted

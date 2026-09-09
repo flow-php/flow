@@ -28,7 +28,7 @@ use Flow\Clock\SystemClock;
 use function Flow\ETL\DSL\{config_builder, df, from_array, telemetry_options, to_output};
 use function Flow\Telemetry\DSL\{
     batching_log_processor, batching_metric_processor, batching_span_processor,
-    console_exporter, console_exporter, console_exporter,
+    console_exporter,
     logger_provider, memory_context_storage, meter_provider, resource, telemetry, tracer_provider
 };
 
@@ -68,7 +68,7 @@ Flow PHP provides granular control over what telemetry data is collected through
 
 ### Selective Configuration
 
-```php
+```php ignore
 // Only trace loaders (useful for debugging slow writes)
 telemetry_options(trace_loading: true)
 
@@ -89,7 +89,7 @@ You can also use the fluent builder pattern:
 telemetry_options()
     ->traceLoading(true)
     ->traceTransformations(true)
-    ->collectMetrics(true)
+    ->collectMetrics(true);
 ```
 
 ## Configuration
@@ -115,9 +115,7 @@ Console exporters output telemetry data directly to stdout with ASCII table form
 development and debugging:
 
 ```php
-use function Flow\Telemetry\DSL\{
-    console_exporter, console_exporter, console_exporter
-};
+use function Flow\Telemetry\DSL\console_exporter;
 
 // Spans are displayed as tables with trace IDs, durations, and attributes
 $spanExporter = console_exporter(colors: true);
@@ -247,7 +245,7 @@ Telemetry data is processed through configurable processors:
 
 Collect telemetry in memory and export in batches for better performance:
 
-```php
+```php ignore
 use function Flow\Telemetry\DSL\{
     batching_span_processor, batching_metric_processor, batching_log_processor
 };
@@ -266,7 +264,7 @@ batching_log_processor($exporter, batchSize: 512)
 
 Export immediately for real-time visibility during debugging:
 
-```php
+```php ignore
 use function Flow\Telemetry\DSL\{
     pass_through_span_processor, pass_through_metric_processor, pass_through_log_processor
 };
@@ -380,7 +378,7 @@ For high-volume pipelines, consider sampling to reduce telemetry volume:
 use function Flow\Telemetry\DSL\{parent_based_sampler, trace_id_ratio_based_sampler};
 
 // Honor the parent's decision; sample 10% of traces that originate here
-tracer_provider($processor, $clock, $contextStorage, parent_based_sampler(trace_id_ratio_based_sampler(0.1)))
+tracer_provider($processor, $clock, $contextStorage, parent_based_sampler(trace_id_ratio_based_sampler(0.1)));
 ```
 
 See the [breaking change note](../libs/telemetry.md#sampling) in the telemetry library docs: the default sampler
@@ -397,7 +395,7 @@ resource([
     'service.version' => '2.1.0',
     'service.namespace' => 'ecommerce',
     'deployment.environment' => 'production',
-])
+]);
 ```
 
 ## Disabling Telemetry

@@ -6,42 +6,50 @@ Displaying/printing data frame is a common operation during development.
 It's the easiest way to debug data frame.
 By default, it will grab the selected number of rows (20 by default)
 
-## Example: 
+## Example
+
+`display()` returns a string; `write(to_output())` prints one.
 
 ```php
-<?php 
+<?php
 
-$output = data_frame()
-    ->read(from_())
-    ->withEntry('...', ref()->doSomething())
-    ->display($limit = 5, $truncate = 0);
-    
-echo $output;
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, ref, schema, str_schema};
+
+echo data_frame()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'norbert'],
+        ['id' => 2, 'name' => 'jane'],
+        ['id' => 3, 'name' => 'john'],
+    ], schema(int_schema('id'), str_schema('name'))))
+    ->withEntry('name', ref('name')->upper())
+    ->collect()
+    ->display($limit = 2);
 ```
 
-Output:
-
-```
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-|   id |  price | deleted | created-at                | phase | items                        | tags                                                                                       | object                                                                                         |
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-5 rows
+```text
++----+---------+
+| id |    name |
++----+---------+
+|  1 | NORBERT |
+|  2 |    JANE |
++----+---------+
+2 rows
 ```
 
 Alternatively you can use `DataFrame::write` function to display data frame:
 
 ```php
-<?php 
+<?php
 
-$output = data_frame()
-    ->read(from_())
-    ->withEntry('...', ref()->doSomething())
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, ref, schema, str_schema, to_output};
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'norbert'],
+        ['id' => 2, 'name' => 'jane'],
+    ], schema(int_schema('id'), str_schema('name'))))
+    ->withEntry('name', ref('name')->upper())
+    ->collect()
     ->write(to_output(truncate: false))
     ->run();
 ```

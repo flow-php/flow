@@ -88,7 +88,7 @@ other file-based sources:
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\DSL\{data_frame, from_array, partition_by, ref};
 use function Flow\Floe\DSL\{from_floe, to_floe};
 
 data_frame()
@@ -96,8 +96,8 @@ data_frame()
         ['id' => 1, 'country' => 'PL'],
         ['id' => 2, 'country' => 'US'],
     ]))
-    ->partitionBy('country')
-    ->write(to_floe(__DIR__ . '/data/dataset.floe'))
+    ->write(to_floe(__DIR__ . '/data/dataset.floe')
+        ->partitionBy(partition_by(ref('country'))))
     ->run();
 
 // prune to a single partition

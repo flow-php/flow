@@ -193,7 +193,7 @@ function dbal_from_query(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
+#[DocumentationExample(topic: 'writing', example: 'dbal', option: 'upsert')]
 function to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null): DbalLoader
 {
     return is_array($connection)
@@ -272,7 +272,7 @@ function table_schema_to_flow_schema(DoctrineTable $table, array $types_map = []
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
+#[DocumentationExample(topic: 'writing', example: 'dbal', option: 'upsert')]
 function postgresql_insert_options(
     ?bool $skip_conflicts = null,
     ?string $constraint = null,

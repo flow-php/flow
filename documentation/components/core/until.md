@@ -12,12 +12,22 @@ Example:
 
 data_frame()
     ->read(from_array([
-        ['a' => 100, 'b' => 100],
-        ['a' => 100, 'b' => 200]
+        ['a' => 50, 'b' => 100],
+        ['a' => 999, 'b' => 200],
+        ['a' => 150, 'b' => 300]
     ]))
-    ->until(ref('b')->divide(lit(2))->equals(lit('a')))
+    ->until(ref('b')->divide(lit(2))->equals(ref('a')))
     ->write(to_output(false))
     ->run();
+```
+
+```text
++----+-----+
+|  a |   b |
++----+-----+
+| 50 | 100 |
++----+-----+
+1 rows
 ```
 
 This feature is useful when you want to stop the extraction process when a certain condition is met but the data source

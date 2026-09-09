@@ -34,7 +34,7 @@ use function is_string;
  * @param string $xml_node_path - @deprecated use `from_xml($file)->withXMLNodePath($xmlNodePath)` method instead
  */
 #[DocumentationDSL(module: Module::XML, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'xml')]
+#[DocumentationExample(topic: 'reading', example: 'xml')]
 function from_xml(
     Path|string $path,
     string $xml_node_path = '',

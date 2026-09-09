@@ -41,7 +41,8 @@ use function Flow\ETL\DSL\{
     write_with_retries,
     retry_any_throwable,
     delay_fixed,
-    duration_milliseconds
+    duration_milliseconds,
+    to_output
 };
 
 $dataFrame = data_frame()
@@ -50,7 +51,7 @@ $dataFrame = data_frame()
         ['id' => 2, 'name' => 'Jane']
     ]))
     ->write(write_with_retries(
-        to_some_service(...),
+        to_output(),
         retry_any_throwable(3),           // Retry up to 3 times
         delay_fixed(duration_milliseconds(500)) // Wait 500ms between retries
     ))
@@ -268,7 +269,7 @@ use function Flow\ETL\DSL\{
 $result = data_frame()
     ->read(from_array($largeDataset))
     ->write(write_with_retries(
-        to_database($connection, 'transactions'),
+        to_dbal_table_insert($connection, 'transactions'),
 
         // Only retry on specific transient failures
         retry_on_exception_types([
@@ -299,10 +300,10 @@ use Flow\ETL\Exception\FailedRetryException;
 try {
     $dataFrame->write($retryLoader)->run();
 } catch (FailedRetryException $e) {
-    echo "Failed after {$e->getRetriesRecord()->count()} attempts\n";
+    echo "Failed after {$e->record->count()} attempts\n";
 
     // Access individual retry attempts
-    foreach ($e->getRetriesRecord()->all() as $retry) {
+    foreach ($e->record->all() as $retry) {
         echo "Attempt {$retry->attempt()}: {$retry->exception()->getMessage()}\n";
         echo "Timestamp: {$retry->timestamp()->format('Y-m-d H:i:s')}\n";
     }

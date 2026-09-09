@@ -36,7 +36,7 @@ return config_builder()
 The CLI reads and writes `file://` paths only. To work with a remote filesystem, build it in a pipeline
 file and run that with `flow run`:
 
-```php
+```php ignore
 # pipeline.php
 $s3 = aws_s3_filesystem($bucket, aws_s3_client([...]));
 

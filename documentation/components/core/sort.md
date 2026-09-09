@@ -76,7 +76,7 @@ to the spill storage, so `storage()` alone stays sufficient:
 ```php
 external_sort()
     ->storage(new MemoryBuckets())                                   // spill runs
-    ->mergeStorage(new FilesystemBuckets($fs, path('/tmp/merge')))   // merged runs only
+    ->mergeStorage(new FilesystemBuckets($fs, path('/tmp/merge')));  // merged runs only
 ```
 
 > While runs are spilled, each bucket is announced downstream as a single metadata row
@@ -93,7 +93,7 @@ data_frame()
     ->sortBy([ref('id')->desc()])
     ->collect()
     ->write(to_output(false))
-    ->run()
+    ->run();
 ```
 
 Output:

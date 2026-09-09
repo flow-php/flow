@@ -17,7 +17,7 @@
             {% set primary = [
                 {label: 'Docs',       href: path('documentation'),                                                                                       route: 'documentation'},
                 {label: 'Playground', href: path('playground'),                                                                                          route: 'playground'},
-                {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), route: 'example_option'},
+                {label: 'Examples',   href: path('example', {topic: 'reading', example: 'array', _fragment: 'example'}), route: 'example'},
                 {label: 'Work-Shop',  href: path('work_shop'),                                                                                           route: 'work_shop', glow: true},
                 {label: 'Blog',       href: path('blog'),                                                                                                route: 'blog'},
             ] %}
@@ -77,7 +77,7 @@
                     {% set mobileNav = [
                         {label: 'Docs',       href: path('documentation'),    icon: 'checklist'},
                         {label: 'Playground', href: path('playground'),       icon: 'play'},
-                        {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), icon: 'code'},
+                        {label: 'Examples',   href: path('example', {topic: 'reading', example: 'array', _fragment: 'example'}), icon: 'code'},
                         {label: 'Work-Shop',  href: path('work_shop'),        icon: 'cart', glow: true},
                         {label: 'Blog',       href: path('blog'),             icon: 'pencil'},
                         {label: 'Sponsor',    href: path('sponsor'),          icon: 'heart'},

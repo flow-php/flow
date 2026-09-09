@@ -284,6 +284,9 @@
         <testsuite name="bridge-phpunit-telemetry-unit">
             <directory>src/bridge/phpunit/telemetry/tests/Flow/Bridge/PHPUnit/Telemetry/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="tools-documentation-unit">
+            <directory>src/tools/documentation/tests/Flow/Documentation/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="tools-documentation-integration">
             <directory>src/tools/documentation/tests/Flow/Documentation/Tests/Integration</directory>
         </testsuite>

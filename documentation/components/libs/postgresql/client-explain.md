@@ -26,7 +26,7 @@ $plan = $client->explain($query);
 
 echo "Execution time: {$plan->executionTime()}ms\n";
 echo "Planning time: {$plan->planningTime()}ms\n";
-echo "Total cost: {$plan->rootNode()->cost()->total()}\n";
+echo "Total cost: {$plan->rootNode()->cost()->totalCost()}\n";
 ```
 
 You can also pass raw SQL strings with parameters:
@@ -58,7 +58,7 @@ $rootNode = $plan->rootNode();
 
 // All nodes as a flat list
 foreach ($plan->allNodes() as $node) {
-    echo "{$node->nodeType()->value}: {$node->cost()->total()}\n";
+    echo "{$node->nodeType()->value}: {$node->cost()->totalCost()}\n";
 }
 ```
 
@@ -76,12 +76,12 @@ $node->nodeType();           // PlanNodeType enum
 $node->nodeType()->value;    // 'Seq Scan', 'Index Scan', etc.
 
 // Cost estimates
-$node->cost()->startup();    // Cost to return first row
-$node->cost()->total();      // Total cost
+$node->cost()->startupCost();    // Cost to return first row
+$node->cost()->totalCost();      // Total cost
 
 // Row estimates vs actual
 $node->estimatedRows();      // Planner's row estimate
-$node->timing()?->actualRows();  // Actual rows (with ANALYZE)
+$node->actualRows();  // Actual rows (with ANALYZE)
 
 // Timing information (requires ANALYZE)
 $node->timing()?->startupTime();    // Time to first row
@@ -183,7 +183,7 @@ foreach ($analyzer->externalSorts() as $insight) {
 
 Find filters that scan many rows but return few:
 
-```php
+```php ignore
 <?php
 
 // Find filters removing more than 50% of rows
@@ -197,7 +197,7 @@ foreach ($analyzer->inefficientFilters(threshold: 0.5) as $insight) {
 
 Analyze cache efficiency and disk reads:
 
-```php
+```php ignore
 <?php
 
 // Find nodes reading from disk

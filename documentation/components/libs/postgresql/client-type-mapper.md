@@ -14,7 +14,7 @@ Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenien
 
 ## DSL
 
-```php
+```php ignore
 type_mapper(Type<TType> $type, ?RowMapper<TNext> $next = null) : TypeMapper<TType, TNext>
 ```
 

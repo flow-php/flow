@@ -27,11 +27,12 @@ The `iterate()` method returns a generator that yields rows one at a time:
 ```php
 <?php
 
+function processEvent(array $row): void { /* your code */ }
+
 $cursor = $client->cursor('SELECT * FROM events ORDER BY created_at');
 
 foreach ($cursor->iterate() as $row) {
-    // Process one row at a time
-    processEvent($row['id'], $row['payload']);
+    processEvent($row);
 }
 ```
 
@@ -39,6 +40,8 @@ You can also use the cursor directly as an iterator (implements `IteratorAggrega
 
 ```php
 <?php
+
+function processEvent(array $row): void { /* your code */ }
 
 foreach ($cursor as $row) {
     processEvent($row);
@@ -76,6 +79,8 @@ Override the default mapper for specific mapping logic:
 
 ```php
 <?php
+
+function processEvent(array $event): void { /* your code */ }
 
 use Flow\PostgreSql\Client\RowMapper;
 
@@ -139,6 +144,8 @@ Cursors are essential for processing large datasets:
 ```php
 <?php
 
+function processAuditEntry(array $row): void { /* your code */ }
+
 // BAD: Loads all 1 million rows into memory
 $rows = $client->fetchAll('SELECT * FROM audit_log');
 foreach ($rows as $row) {
@@ -167,6 +174,8 @@ For early termination, call `free()` to release resources immediately:
 
 $cursor = $client->cursor('SELECT * FROM large_table');
 
+function foundWhat(array $row): bool { /* your code */ return true; }
+
 foreach ($cursor->iterate() as $row) {
     if (foundWhat($row)) {
         $cursor->free();  // Release server resources now
@@ -181,6 +190,8 @@ Process rows in batches for bulk operations:
 
 ```php
 <?php
+
+function processBatch(array $batch): void { /* your code */ }
 
 $cursor = $client->cursor('SELECT * FROM products');
 

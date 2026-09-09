@@ -34,7 +34,7 @@ $salesData = data_frame()
     ]))
     ->groupBy(['region', 'product'])
     ->pivot(col('product'), pivot_values('Laptop', 'Phone')) // creates the 'Laptop' and 'Phone' columns
-    ->aggregate(sum(col('sales'))->as('total_sales'))
+    ->aggregate(sum(col('sales')->as('total_sales')))
     ->write(to_output())
     ->run();
 ```
@@ -55,7 +55,7 @@ Create a pivot table showing sales by month:
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, col, discover_pivot_values, sum, avg, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, col, discover_pivot_values, sum, average, to_output};
 
 $monthlySales = data_frame()
     ->read(from_array([
@@ -68,7 +68,7 @@ $monthlySales = data_frame()
     ]))
     ->groupBy(['region'])
     ->pivot(col('month'), discover_pivot_values()) // reads the month column once at build time
-    ->aggregate(avg(col('sales'))->as('avg_sales'))
+    ->aggregate(average(col('sales')->as('avg_sales')))
     ->write(to_output())
     ->run();
 ```

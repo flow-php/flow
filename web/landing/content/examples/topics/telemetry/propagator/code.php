@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use function Flow\Telemetry\DSL\{
@@ -60,8 +61,18 @@ if ($extractedContext->baggage !== null) {
 // Create a span as child of the extracted context
 $tracer = $telemetry->tracer('order-service');
 
-// Use extracted span context as explicit parent
-$span = $tracer->span('handle-request', SpanKind::SERVER, parentContext: $extractedContext->spanContext);
+// extract() yields a PropagationContext; span() parents on a Context, so lift one into the other
+$parentContext = Context::root();
+
+if ($extractedContext->spanContext !== null) {
+    $parentContext = $parentContext->withActiveSpan($extractedContext->spanContext);
+}
+
+if ($extractedContext->baggage !== null) {
+    $parentContext = $parentContext->withBaggage($extractedContext->baggage);
+}
+
+$span = $tracer->span('handle-request', SpanKind::SERVER, parent: $parentContext);
 $span->setAttribute('http.method', 'POST');
 $span->setAttribute('http.route', '/api/orders');
 

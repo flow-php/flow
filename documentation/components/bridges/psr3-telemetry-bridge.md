@@ -165,7 +165,7 @@ $psrLogger = psr3_telemetry_logger(
 Builds the converter that turns each PSR-3 call into a `LogRecord`. Use it to plug in a custom severity mapper or value
 normalizer.
 
-```php
+```php ignore
 $converter = psr3_log_record_converter(
     severityMapper: psr3_severity_mapper([...]),
     valueNormalizer: psr3_value_normalizer(),

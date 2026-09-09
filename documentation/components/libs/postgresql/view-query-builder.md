@@ -81,24 +81,6 @@ echo $query->toSql();
 // CREATE TEMPORARY VIEW temp_users AS SELECT * FROM users
 ```
 
-### RECURSIVE
-
-Create a recursive view (typically used with CTEs):
-
-```php
-<?php
-
-use function Flow\PostgreSql\DSL\{create, select};
-
-$query = create()->view('subordinates')
-    ->recursive()
-    ->columns('id', 'name', 'manager_id')
-    ->as(select('id', 'name', 'manager_id')->from('employees'));
-
-echo $query->toSql();
-// CREATE RECURSIVE VIEW subordinates (id, name, manager_id) AS SELECT id, name, manager_id FROM employees
-```
-
 ### Column Aliases
 
 Define column aliases for the view:
@@ -265,8 +247,8 @@ use function Flow\PostgreSql\DSL\{create, select};
 
 $query = create()->materializedView('analytics.user_stats')
     ->ifNotExists()
-    ->columns('user_id', 'order_count', 'total_spent')
     ->using('heap')
+    ->columns('user_id', 'order_count', 'total_spent')
     ->as(select('id', 'count(*)', 'sum(total)')->from('users'))
     ->tablespace('analytics_ts')
     ->withNoData();

@@ -7,12 +7,21 @@ use function Flow\Filesystem\DSL\{fstab, path};
 require __DIR__ . '/vendor/autoload.php';
 
 $filesystem = fstab()->for('file');
-$outputStream = $filesystem->writeTo(path(__DIR__ . '/output.txt'));
 
-$outputStream->append("Files List\n\n");
-
-foreach ($filesystem->list(path(__DIR__ . '/*')) as $file) {
-    $outputStream->append(($file->isFile() ? 'File' : 'Directory') . ': ' . $file->path->basename() . "\n");
+foreach (['first.txt' => "one\n", 'second.txt' => "two\n"] as $name => $content) {
+    $stream = $filesystem->writeTo(path(__DIR__ . '/listing/' . $name));
+    $stream->append($content);
+    $stream->close();
 }
 
-$outputStream->close();
+$listing = $filesystem->writeTo(path(__DIR__ . '/listing/written.txt'));
+
+$listing->append("Files List\n\n");
+
+foreach ($filesystem->list(path(__DIR__ . '/listing/*.txt')) as $file) {
+    $listing->append(($file->isFile() ? 'File' : 'Directory') . ': ' . $file->path->basename() . "\n");
+}
+
+$listing->close();
+
+echo $filesystem->readFrom(path(__DIR__ . '/listing/written.txt'))->content();

@@ -1,1 +1,0 @@
-- [Data Manipulation](/documentation/components/core/data-manipulation)

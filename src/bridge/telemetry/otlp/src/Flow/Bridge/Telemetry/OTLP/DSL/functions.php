@@ -161,7 +161,7 @@ function otlp_async_curl_transport(
     AsyncCurlTransportOptions $options = new AsyncCurlTransportOptions(),
     ?Transport $failover = null,
     ErrorHandler $error_handler = new ErrorLogHandler(),
-): Transport {
+): AsyncCurlTransport {
     return new AsyncCurlTransport($endpoint, $serializer, $options, $failover, $error_handler);
 }
 

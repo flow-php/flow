@@ -288,16 +288,16 @@ use function strtolower;
  * Alias for data_frame() : Flow.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function df(Config|ConfigBuilder|null $config = null): Flow
 {
     return data_frame($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function data_frame(Config|ConfigBuilder|null $config = null): Flow
 {
     return new Flow($config);
@@ -314,8 +314,8 @@ function telemetry_options(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function from_rows(Rows ...$rows): RowsExtractor
 {
     return new RowsExtractor(...$rows);
@@ -337,8 +337,8 @@ function from_path_partitions(
  *                          $filesystem->getSystemTmpDir() and only on that path
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'array')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
+#[DocumentationExample(topic: 'reading', example: 'array')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
 function from_array(
     iterable $array,
     ?Schema $schema = null,
@@ -487,7 +487,7 @@ function to_memory(Memory $memory): MemoryLoader
  * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'array')]
+#[DocumentationExample(topic: 'writing', example: 'array')]
 function to_array(array &$array): ArrayLoader
 {
     // @mago-ignore analysis:redundant-docblock-type
@@ -614,14 +614,14 @@ function col(string $entry): UnresolvedReference
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
+#[DocumentationExample(topic: 'columns', example: 'create')]
 function entry(string $entry): UnresolvedReference
 {
     return new UnresolvedReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
+#[DocumentationExample(topic: 'columns', example: 'create')]
 function ref(string $entry): UnresolvedReference
 {
     return new UnresolvedReference($entry);
@@ -694,7 +694,7 @@ function optional(ScalarFunction $function): Optional
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
+#[DocumentationExample(topic: 'columns', example: 'create')]
 function lit(mixed $value): Literal
 {
     return new Literal($value);
@@ -1901,8 +1901,8 @@ function compare_any(Comparison $comparison, Comparison ...$comparisons): Compar
  * @param array<Comparison|string>|Comparison $comparisons
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'join', example: 'join')]
-#[DocumentationExample(topic: 'join', example: 'join_each')]
+#[DocumentationExample(topic: 'joins', example: 'join')]
+#[DocumentationExample(topic: 'joins', example: 'join_each')]
 function join_on(array|Comparison $comparisons, string $join_prefix = ''): Expression
 {
     return Expression::on($comparisons, $join_prefix);

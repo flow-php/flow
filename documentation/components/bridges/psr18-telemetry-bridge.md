@@ -40,7 +40,7 @@ This is particularly useful for:
 
 ### Wrapping a PSR-18 HTTP Client
 
-```php
+```php ignore
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\HttpClient\Psr18Client;

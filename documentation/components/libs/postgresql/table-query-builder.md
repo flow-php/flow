@@ -185,11 +185,11 @@ echo $query->toSql();
 use function Flow\PostgreSql\DSL\{create, column, column_type_integer};
 
 $query = create()->table('temp_results')
-    ->temporary()
-    ->column(column('id', column_type_integer()));
+    ->column(column('id', column_type_integer()))
+    ->temporary();
 
 echo $query->toSql();
-// CREATE TEMPORARY TABLE temp_results (id int) ON COMMIT DROP
+// CREATE TEMPORARY TABLE temp_results (id int)
 ```
 
 ### Unlogged Tables

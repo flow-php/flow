@@ -1,1 +1,0 @@
-- [Core](/documentation/components/core/core)

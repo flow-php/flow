@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 814
+ * Total functions: 818
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -700,15 +700,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
+                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions<br>@param null|Schema $schema
+                    @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:hydrator" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:hydrator" + "}" + ", " + "$" + "{" + "4:partitions" + "}" + ")"),
         boost: 10
     },                {
         label: "array_to_rows",
@@ -718,15 +718,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions<br>@param null|Schema $schema
+                    @param array<array<mixed>>|array<mixed|string> $data
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:hydrator" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:hydrator" + "}" + ")"),
         boost: 10
     },                {
         label: "array_unpack",
@@ -736,15 +736,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$skip_keys</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|string|null</span> <span class=\"fn-param\">$entry_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
+                    <span class=\"fn-name\">array_unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed>|ScalarFunction $array<br>@param array<array-key, mixed>|ScalarFunction $skip_keys
+                    @param array<array-key, mixed>|ScalarFunction $array
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_unpack(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:skip_keys" + "}" + ", " + "$" + "{" + "3:entry_prefix" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_unpack(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "asc",
@@ -3291,6 +3291,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\discard(" + "$" + "{" + "1:type" + "}" + ")"),
         boost: 10
     },                {
+        label: "discover_pivot_values",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">discover_pivot_values</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxValues</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10000</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DiscoveredPivotValues</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Reads the pivot column once at build time and turns what it finds into declared values. Refuses a<br>source that cannot be read twice.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\discover_pivot_values(" + "$" + "{" + "1:maxValues" + "}" + ")"),
+        boost: 10
+    },                {
         label: "distinct_from",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3982,15 +4000,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">floe_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$validate_data</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$buffer_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param bool $validate_data gates the per-value type check on write. The column-set check -<br>                           a row carrying a column the session schema does not declare -<br>                           always runs. Mirrors parquet-java\'s ParquetWriter::withValidation().
+                    <span class=\"fn-name\">floe_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$buffer_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\floe_options(" + "$" + "{" + "1:validate_data" + "}" + ", " + "$" + "{" + "2:buffer_size" + "}" + ", " + "$" + "{" + "3:codec" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\floe_options(" + "$" + "{" + "1:buffer_size" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ")"),
         boost: 10
     },                {
         label: "flow_context",
@@ -4204,15 +4219,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_array</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">iterable</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExtractor</span>
+                    <span class=\"fn-name\">from_array</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">iterable</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path</span> <span class=\"fn-param\">$spillRoot</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param iterable<array<mixed>> $array<br>@param null|Schema $schema - @deprecated use withSchema() method instead
+                    @param iterable<array<mixed>> $array<br>@param null|Schema $schema - @deprecated use withSchema() method instead<br>@param null|Path $spillRoot - where a non-array $array is spilled while it is described; null resolves to<br>                         $filesystem->getSystemTmpDir() and only on that path
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_array(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_array(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:filesystem" + "}" + ", " + "$" + "{" + "4:spillRoot" + "}" + ")"),
         boost: 10
     },                {
         label: "from_avro",
@@ -4605,21 +4620,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\from_pgsql_limit_offset(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
         boost: 10
     },                {
-        label: "from_pipeline",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_pipeline</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Pipeline</span> <span class=\"fn-param\">$pipeline</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PipelineExtractor</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_pipeline(" + "$" + "{" + "1:pipeline" + "}" + ")"),
-        boost: 10
-    },                {
         label: "from_rows",
         type: "function",
         detail: "flow\u002Ddsl\u002Dextractors",
@@ -5002,6 +5002,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\hash_join()"),
+        boost: 10
+    },                {
+        label: "hash_repartition",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">hash_repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HashRepartitionBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\hash_repartition()"),
         boost: 10
     },                {
         label: "host_detector",
@@ -5497,6 +5512,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_spgist()"),
+        boost: 10
+    },                {
+        label: "infer_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">infer_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SchemaInferenceBuilder</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\infer_schema()"),
         boost: 10
     },                {
         label: "insert",
@@ -6982,7 +7012,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_async_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JsonSerializer|ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\JsonSerializer::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AsyncCurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\AsyncCurlTransportOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$failover</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$error_handler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
+                    <span class=\"fn-name\">otlp_async_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JsonSerializer|ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\JsonSerializer::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AsyncCurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\AsyncCurlTransportOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$failover</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$error_handler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AsyncCurlTransport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Create an asynchronous curl transport for OTLP endpoints.<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param AsyncCurlTransportOptions $options Transport configuration options<br>@param ?Transport $failover Optional failover transport receiving prior batches when primary fails<br>@param ErrorHandler $error_handler Handler for failures reaped on send()/tick()/shutdown() (no failover)
@@ -7338,6 +7368,39 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\partitions(" + "$" + "{" + "1:partition" + "}" + ")"),
         boost: 10
     },                {
+        label: "partition_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">partition_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Partitioning</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\partition_by(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "partition_types",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">partition_types</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$types</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PartitionTypes</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param Type<mixed> ...$types partition column name => type, passed as named arguments
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\partition_types(" + "$" + "{" + "1:types" + "}" + ")"),
+        boost: 10
+    },                {
         label: "pass_through_log_processor",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -7663,6 +7726,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\pipeline_log_processor(" + "$" + "{" + "1:middleware" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pivot_values",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pivot_values</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string|int</span> <span class=\"fn-param\">$values</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeclaredPivotValues</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Declares the pivot columns a groupBy()->pivot() produces, so the plan can name them before a row flows.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\pivot_values(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },                {
         label: "postgresql_context",
@@ -8599,24 +8680,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\rows(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:row" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "rows_partitioned",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rows_partitioned</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$rows</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array<Row> $rows<br>@param array<Partition|string>|Partitions $partitions
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\rows_partitioned(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:rows" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ")"),
         boost: 10
     },                {
         label: "row_expr",
@@ -11212,7 +11275,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Path|string $path<br>@param Options $options see floe_options() - validateData gates the per-value type check
+                    @param Path|string $path
                 </div>
                             `
             return div

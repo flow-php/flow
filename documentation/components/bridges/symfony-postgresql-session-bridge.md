@@ -60,7 +60,7 @@ session_set_save_handler($handler, true);
 
 ## Constructor
 
-```php
+```php ignore
 new FlowPostgreSqlSessionHandler(
     ConnectionParameters|Client $connection,
     array $options = [],

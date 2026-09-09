@@ -17,76 +17,57 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
             static::markTestSkipped('This test is flaky and fails randomly on GitHub Actions, need to debug it more');
         }
 
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
 
-        $this->waitForWasmReady($client);
-
-        $client->wait(1);
-
-        $testCode = <<<'PHP'
+        $this->setPlaygroundCode($page, <<<'PHP'
             <?php
             require 'vendor/autoload.php';
             use function Flow\ETL\DSL\{df, from_array, to_output};
             df()->read(from_array([['id' => 1, 'name' => 'Snippet Test']]))->write(to_output(truncate: false))->run();
-            PHP;
+            PHP);
 
-        $this->setPlaygroundCode($client, $testCode);
+        $page->evaluate('() => { window.prompt = () => null; document.getElementById("action-share").click(); }');
+        $browser->waitUntilSeeIn('[data-playground-output-target="container"]', 'copied to clipboard');
 
-        $client->executeScript('window.prompt = () => null; document.getElementById("action-share").click();');
+        $currentUrl = $page->url();
 
-        $client->waitForElementToContain('[data-playground-output-target="container"]', 'copied to clipboard', 15);
+        static::assertStringContainsString('/playground?snippet=', $currentUrl);
 
-        $currentUrl = $client->getCurrentURL();
+        $query = [];
+        parse_str(parse_url($currentUrl, PHP_URL_QUERY) ?: '', $query);
+        $snippetId = $query['snippet'] ?? null;
 
-        static::assertStringContainsString('/playground?snippet=', $currentUrl, 'URL should contain snippet parameter');
+        static::assertNotNull($snippetId);
 
-        $parsedUrl = parse_url($currentUrl);
-        $queryParams = [];
-        parse_str($parsedUrl['query'] ?? '', $queryParams);
-        $snippetId = $queryParams['snippet'] ?? null;
+        $browser->visit('/playground?snippet=' . type_string()->assert($snippetId));
+        $this->waitForWasmReady($page);
 
-        static::assertNotNull($snippetId, 'Snippet ID should be extracted from URL');
+        $browser->waitUntilSeeIn('[data-playground-output-target="container"]', 'Snippet loaded successfully');
 
-        $client->request('GET', '/playground?snippet=' . type_string()->assert($snippetId));
+        $loadedCode = $this->getPlaygroundCode($page);
 
-        $this->waitForWasmReady($client);
-
-        $client->waitForElementToContain(
-            '[data-playground-output-target="container"]',
-            'Snippet loaded successfully',
-            10,
-        );
-
-        $loadedCode = $this->getPlaygroundCode($client);
         static::assertStringContainsString('Snippet Test', $loadedCode);
         static::assertStringContainsString('from_array', $loadedCode);
     }
 
     public function test_load_nonexistent_snippet_shows_error(): void
     {
-        $client = self::navigateWithRetry('/playground?snippet=nonexistent123');
-
-        $this->waitForWasmReady($client);
-
-        $client->waitForElementToContain('[data-playground-output-target="container"]', 'Failed to load snippet', 10);
-
-        $output = $client->getCrawler()->filter('[data-playground-output-target="container"]')->text();
-        static::assertStringContainsString('Failed to load snippet', $output);
+        $this
+            ->openPlayground('/playground?snippet=nonexistent123')
+            ->waitUntilSeeIn('[data-playground-output-target="container"]', 'Failed to load snippet')
+            ->assertSeeIn('[data-playground-output-target="container"]', 'Failed to load snippet');
     }
 
     public function test_share_requires_non_empty_code(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
 
-        $this->waitForWasmReady($client);
+        $this->setPlaygroundCode($page, '');
+        $page->evaluate('() => document.getElementById("action-share").click()');
+        $browser->wait(2000);
 
-        $this->setPlaygroundCode($client, '');
-
-        $client->executeScript('document.getElementById("action-share").click();');
-
-        $client->wait(2);
-
-        $currentUrl = $client->getCurrentURL();
-        static::assertStringNotContainsString('snippet=', $currentUrl, 'Empty code should not create snippet');
+        static::assertStringNotContainsString('snippet=', $page->url());
     }
 }

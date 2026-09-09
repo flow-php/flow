@@ -28,7 +28,7 @@ use function is_string;
  * @param null|Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'json')]
+#[DocumentationExample(topic: 'reading', example: 'json')]
 function from_json(
     string|Path $path,
     ?string $pointer = null,
@@ -54,7 +54,7 @@ function from_json(
  * @param Path|string $path - string is internally turned into stream
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'jsonl')]
+#[DocumentationExample(topic: 'reading', example: 'jsonl')]
 function from_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLinesExtractor
 {
     return new JsonLinesExtractor(is_string($path) ? path_real($path) : $path, $filesystem);

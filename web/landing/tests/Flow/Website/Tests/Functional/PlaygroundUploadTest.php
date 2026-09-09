@@ -6,49 +6,35 @@ namespace Flow\Website\Tests\Functional;
 
 final class PlaygroundUploadTest extends EndToEndTestCase
 {
+    private const INPUT = '[data-playground-upload-target="fileInput"]';
+
     public function test_upload_multiple_files(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
 
-        $this->waitForWasmReady($client);
+        $this->upload($page, self::INPUT, [$this->createTempFile('data.csv', "id,value\n1,100")]);
+        $browser->waitUntilSeeIn('[data-playground-workspace-target="tree"]', 'data.csv');
 
-        $client
-            ->getCrawler()
-            ->filter('[data-playground-upload-target="fileInput"]')
-            ->sendKeys($this->createTempFile('data.csv', "id,value\n1,100"));
-        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'data.csv', 5);
-
-        $client
-            ->getCrawler()
-            ->filter('[data-playground-upload-target="fileInput"]')
-            ->sendKeys($this->createTempFile('data.json', '{"id": 1, "value": 100}'));
-        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'data.json', 5);
-
-        static::assertStringContainsString(
-            'data.csv',
-            $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text(),
-        );
-        static::assertStringContainsString(
-            'data.json',
-            $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text(),
-        );
+        $this->upload($page, self::INPUT, [$this->createTempFile('data.json', '{"id": 1, "value": 100}')]);
+        $browser
+            ->waitUntilSeeIn('[data-playground-workspace-target="tree"]', 'data.json')
+            ->assertSeeIn('[data-playground-workspace-target="tree"]', 'data.csv')
+            ->assertSeeIn('[data-playground-workspace-target="tree"]', 'data.json');
     }
 
     public function test_upload_single_file(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->openPlayground('/playground');
 
-        $this->waitForWasmReady($client);
-
-        $client
-            ->getCrawler()
-            ->filter('[data-playground-upload-target="fileInput"]')
-            ->sendKeys($this->createTempFile('test.csv', "id,name\n1,Alice\n2,Bob"));
-        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'test.csv', 5);
-
-        static::assertStringContainsString(
+        $this->upload($this->pageOf($browser), self::INPUT, [$this->createTempFile(
             'test.csv',
-            $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text(),
+            "id,name\n1,Alice\n2,Bob",
+        )]);
+
+        $browser->waitUntilSeeIn('[data-playground-workspace-target="tree"]', 'test.csv')->assertSeeIn(
+            '[data-playground-workspace-target="tree"]',
+            'test.csv',
         );
     }
 }

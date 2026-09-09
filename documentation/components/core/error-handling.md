@@ -65,6 +65,10 @@ For fine-grained error handling during row processing operations:
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+function validateAndProcess(Row $row): void { /* your code */ }
+function logInvalidRow(Row $row, string $message): void { /* your code */ }
+function logGeneralError(Row $row, Throwable $error): void { /* your code */ }
+
 $successCount = 0;
 $errorCount = 0;
 

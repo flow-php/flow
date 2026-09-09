@@ -8,67 +8,93 @@
         {
             "type": "path",
             "url": "../../src/core/etl",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/adapter/etl-adapter-http",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/lib/telemetry",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/lib/types",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/lib/array-dot",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/lib/filesystem",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/symfony/telemetry-bundle",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/symfony/http-foundation-telemetry",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/psr18/telemetry",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/telemetry/otlp",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/monolog/telemetry",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/adapter/etl-adapter-json",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../src/bridge/psr3/telemetry",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {
@@ -107,12 +133,13 @@
         "symfony/string": "^7.4"
     },
     "require-dev": {
+        "norberttech/static-content-generator-bundle": "1.x-dev",
+        "playwright-php/playwright": "^1.4",
+        "playwright-php/playwright-symfony": "^0.10",
+        "symfony/css-selector": "^6.4",
         "symfony/web-profiler-bundle": "^6.4",
         "symfonycasts/tailwind-bundle": "~0.8.0",
-        "norberttech/static-content-generator-bundle": "1.x-dev",
-        "symfony/css-selector": "^6.4",
-        "symfony/panther": "^2.1",
-        "dbrekelmans/bdi": "^1.2"
+        "zenstruck/browser": "^1.12"
     },
     "autoload": {
         "psr-4": {
@@ -139,23 +166,11 @@
         ],
         "post-install-cmd": [
             "@importmap:install",
-            "@build:tailwind",
-            "@tools:install",
-            "vendor/bin/bdi detect drivers"
+            "@build:tailwind"
         ],
         "post-update-cmd": [
             "@importmap:install",
-            "@build:tailwind",
-            "vendor/bin/bdi detect drivers"
-        ],
-        "tools:install": [
-            "composer install --working-dir=./tools/phpunit"
-        ],
-        "tools:updated": [
-            "composer update --working-dir=./tools/phpunit"
-        ],
-        "test": [
-            "tools/phpunit/vendor/bin/phpunit"
+            "@build:tailwind"
         ],
         "assets:clear": "rm -rf public/assets",
         "importmap:install": "bin/console importmap:install",

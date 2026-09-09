@@ -1,1 +1,0 @@
-- [JSON Adapter](/documentation/components/adapters/json)

@@ -111,7 +111,7 @@ All tests are located in the directory [`Flow/Types/Tests/Unit`](/src/lib/types/
 
 Below is an example template that can be used to create cover a type with unit tests:
 
-```php
+```php ignore
 <?php
 
 declare(strict_types=1);

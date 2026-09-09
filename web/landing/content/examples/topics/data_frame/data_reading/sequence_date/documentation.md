@@ -1,1 +1,0 @@
-- [Data Retrieval](/documentation/components/core/data-retrieval)

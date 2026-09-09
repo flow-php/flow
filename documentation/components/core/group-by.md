@@ -55,7 +55,7 @@ largest bucket instead of the whole grouped dataset. Other implementations are `
 `groupBy()` and `aggregate()` each take an optional trailing `GroupByAlgorithmBuilder`, so one operation can
 override the configured algorithm:
 
-```php
+```php ignore
 ->groupBy([ref('country')], hash_group_by()->storage(new MemoryBuckets()))
 ```
 

@@ -1937,15 +1937,15 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$skipKeys</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|string|null</span> <span class=\"fn-param\">$entryPrefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
+                    <span class=\"fn-name\">unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param ScalarFunction|array<array-key, mixed> $skipKeys
+                    Unpacks each element of an array into a new entry, using the array key as the entry name.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  | 2|{\"d\":4,\"e\":5,\"f\":6}|<br>  +--+-------------------+<br>After:<br>  +--+-----+-----+-----+-----+-----+<br>  |id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>  +--+-----+-----+-----+-----+-----+<br>  | 1|    2|    3|     |     |     |<br>  | 2|     |     |    4|    5|    6|<br>  +--+-----+-----+-----+-----+-----+
                 </div>
                             `
             return div
         },
-        apply: snippet("unpack(" + "$" + "{" + "1:skipKeys" + "}" + ", " + "$" + "{" + "2:entryPrefix" + "}" + ")"),
+        apply: snippet("unpack(" + "$" + "{" + "1:schema" + "}" + ")"),
         boost: 10
     },                {
         label: "upper",

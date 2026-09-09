@@ -75,7 +75,7 @@ batch carries the schema that types its columns.
 
 **See it running**
 
-- [Examples](/data_frame/data_reading/array) - runnable snippets grouped by
+- [Examples](/reading/array) - runnable snippets grouped by
   topic and format. Open any example in the Playground.
 
 **Going to production**

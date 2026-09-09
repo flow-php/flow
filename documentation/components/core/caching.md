@@ -21,14 +21,32 @@ So instead of going to datasource multiple times and then repeating all transfor
 do the whole job and others could benefit from the final form of dataset in a memory-safe way.
 
 ```php
-<?php 
+<?php
 
-data_frame
-    ->read(from_())
-    ->withEntry('...', ref('...')->doSomething())
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, ref, schema, str_schema, to_output};
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'norbert'],
+        ['id' => 2, 'name' => 'jane'],
+        ['id' => 3, 'name' => 'john'],
+    ], schema(int_schema('id'), str_schema('name'))))
+    ->withEntry('name', ref('name')->upper())
     ->cache()
-    ->write(to_())
+    ->collect()
+    ->write(to_output(truncate: false))
     ->run();
+```
+
+```text
++----+---------+
+| id |    name |
++----+---------+
+|  1 | NORBERT |
+|  2 |    JANE |
+|  3 |    JOHN |
++----+---------+
+3 rows
 ```
 
 By default, Flow is using Filesystem Cache, location of the cache storage can be adjusted through

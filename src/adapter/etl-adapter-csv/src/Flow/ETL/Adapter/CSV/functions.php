@@ -31,7 +31,7 @@ use function is_string;
  * @param null|Schema $schema - @deprecated use $loader->withSchema() instead
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'csv')]
+#[DocumentationExample(topic: 'reading', example: 'csv')]
 function from_csv(
     string|Path $path,
     bool $with_header = true,

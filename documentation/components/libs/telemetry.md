@@ -78,8 +78,8 @@ $logger->info('Something happened');
 
 // Inspect collected data
 $spans = $spanProcessor->endedSpans();
-$metrics = $metricProcessor->collectedMetrics();
-$logs = $logProcessor->collectedLogs();
+$metrics = $metricProcessor->metrics();
+$logs = $logProcessor->entries();
 ```
 
 ### Scope vs Signal Attributes
@@ -125,8 +125,6 @@ use function Flow\Telemetry\DSL\{
     pass_through_span_processor,
     pass_through_metric_processor,
     pass_through_log_processor,
-    console_exporter,
-    console_exporter,
     console_exporter,
 };
 

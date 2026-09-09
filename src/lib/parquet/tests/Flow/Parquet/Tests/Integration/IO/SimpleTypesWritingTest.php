@@ -29,13 +29,38 @@ use function max;
 use function min;
 use function mkdir;
 use function mt_rand;
+use function pack;
 use function range;
 use function round;
 use function sprintf;
 use function unlink;
+use function unpack;
 
 class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 {
+    /**
+     * 100 rows cycling values that are NOT exactly representable in binary32, paired with what
+     * reading them back must produce. `10.25` is the exactly-representable control.
+     *
+     * @param callable(int, float): ?float $pick
+     *
+     * @return array{0: list<array{float: null|float}>, 1: list<array{float: null|float}>}
+     */
+    public static function float32Cases(callable $pick): array
+    {
+        $values = [10.25, 0.1, 1 / 3, 1.0e-8, 18.52, -0.1];
+        $input = [];
+        $widened = [];
+
+        foreach (range(1, 100) as $i) {
+            $value = $pick($i, $values[$i % count($values)]);
+            $input[] = ['float' => $value];
+            $widened[] = ['float' => $value === null ? null : unpack('g', pack('g', $value))[1]];
+        }
+
+        return [$input, $widened];
+    }
+
     public static function decimalPrecisionProvider(): array
     {
         $precisions = [
@@ -465,19 +490,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = array_merge(...array_map(
-            static fn(int $i): array => [
-                [
-                    'float' => 10.25,
-                ],
-            ],
-            range(1, 100),
-        ));
+        [$inputData, $widened] = self::float32Cases(static fn(int $i, float $value): float => $value);
 
         $writer->write($path, $schema, $inputData);
 
-        static::assertEquals(
-            $inputData,
+        static::assertSame(
+            $widened,
             iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
@@ -497,19 +515,14 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = array_merge(...array_map(
-            static fn(int $i): array => [
-                [
-                    'float' => ($i % 2) === 0 ? 10.25 : null,
-                ],
-            ],
-            range(1, 100),
-        ));
+        [$inputData, $widened] = self::float32Cases(static fn(int $i, float $value): ?float => ($i % 2) === 0
+            ? $value
+            : null);
 
         $writer->write($path, $schema, $inputData);
 
-        static::assertEquals(
-            $inputData,
+        static::assertSame(
+            $widened,
             iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)

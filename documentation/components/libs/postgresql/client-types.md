@@ -333,7 +333,7 @@ $converters->unregister(ValueType::MONEY);
 PostgreSQL types are identified by OID (Object ID). The `ValueType` enum exposes the common OIDs used by the
 client's converters and by `typed()`:
 
-```php
+```php ignore
 <?php
 
 use Flow\PostgreSql\Client\Types\ValueType;

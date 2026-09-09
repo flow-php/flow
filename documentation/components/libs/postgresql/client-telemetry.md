@@ -145,6 +145,8 @@ Cursors create spans that track the entire iteration lifecycle:
 ```php
 <?php
 
+function processRow(array $row): void { /* your code */ }
+
 $cursor = $client->cursor('SELECT * FROM large_table');
 // Span: SELECT large_table (cursor)
 
@@ -303,6 +305,8 @@ try {
 
 ```php
 <?php
+
+function processAuditEntry(array $row): void { /* your code */ }
 
 $cursor = $client->cursor('SELECT * FROM audit_log WHERE created_at > $1', [$since]);
 

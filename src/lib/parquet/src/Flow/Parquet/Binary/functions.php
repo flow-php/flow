@@ -16,7 +16,6 @@ use function count;
 use function max;
 use function number_format;
 use function pack;
-use function round;
 use function sprintf;
 use function str_repeat;
 use function strlen;
@@ -258,10 +257,6 @@ function decode_f32(ByteOrder $order, string $bytes): array
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G';
     /** @var array<int, float> $values */
     $values = unpack($format . '*', $bytes);
-
-    foreach ($values as $k => $v) {
-        $values[$k] = round($v, 7);
-    }
 
     return array_values($values);
 }

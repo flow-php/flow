@@ -24,7 +24,7 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Available Functions
 
-```php
+```php ignore
 <?php 
 
 array_dot_get(array $array, string $path) : mixed;

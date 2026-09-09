@@ -1,2 +1,4 @@
-priority: 2
+priority: 4
 hidden: false
+run:
+  skip: "needs Azure Blob Storage credentials in a .env file"

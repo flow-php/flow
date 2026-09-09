@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{append, data_frame, from_array, ref, to_output};
+use function Flow\ETL\DSL\{append, data_frame, from_array, partition_by, ref, to_output};
 
 require __DIR__ . '/vendor/autoload.php';
 

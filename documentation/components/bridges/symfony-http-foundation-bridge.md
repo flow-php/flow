@@ -92,7 +92,7 @@ new class implements Transformation {
     {
         return $dataFrame->withColumn('time', \time());
     }
-}
+};
 ```
 
 Above example will add a new column `time` to the dataset with the current timestamp.
@@ -161,7 +161,7 @@ The `analyze()` function supports additional options for collecting more detaile
 - `analyze()->withColumnStatistics()` - Also collects per-column statistics (min, max, null counts)
 - `analyze()->withSchema()->withColumnStatistics()` - Collects all available statistics
 
-```php
+```php ignore
 // Collect schema information along with basic statistics
 ->config(Config::builder()->analyze(analyze()->withSchema()))
 

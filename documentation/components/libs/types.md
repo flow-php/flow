@@ -184,7 +184,7 @@ use Flow\Types\DSL\type_integer;
 $userStructure = type_structure([
     'id' => type_string(),
     'name' => type_string()
-])
+]);
 ```
 
 Insertion order of the `$elements` map is the field order. A plain `Type` value declares a required

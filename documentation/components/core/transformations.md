@@ -110,7 +110,7 @@ use function Flow\ETL\DSL\{df, from_csv, batch_size};
 df()
     ->read(from_csv('huge_file.csv'))
     ->with(batch_size(100))
-    ->write(to_database('users'))
+    ->write(to_dbal_table_insert($connection, 'users'))
     ->run();
 ```
 
@@ -146,11 +146,12 @@ df()
 Restrict the number of rows processed, useful for debugging or sampling data.
 
 ```php
-use function Flow\ETL\DSL\{df, from_database, limit};
+use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
+use function Flow\ETL\DSL\{df, limit};
 
 // Process only first 1000 rows
 df()
-    ->read(from_database('large_table'))
+    ->read(from_dbal_query($connection, 'SELECT * FROM large_table'))
     ->with(limit(1000))
     ->write(to_csv('sample.csv'))
     ->run();

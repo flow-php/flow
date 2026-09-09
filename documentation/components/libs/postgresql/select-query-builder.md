@@ -36,7 +36,7 @@ echo $query->toSql();
 use function Flow\PostgreSql\DSL\{
     select, star, table, col,
     eq, gt, lt, ge, le, ne, between, in_, like, is_null,
-    literal, literal,
+    literal,
     and_, or_, not_
 };
 

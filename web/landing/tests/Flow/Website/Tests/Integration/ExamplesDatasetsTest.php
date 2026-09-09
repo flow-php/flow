@@ -49,7 +49,7 @@ final class ExamplesDatasetsTest extends TestCase
             );
 
             foreach ($references[1] as $reference) {
-                $matches = glob($wasmDir . '/' . $reference);
+                $matches = glob($wasmDir . '/' . $reference) ?: [];
 
                 static::assertNotEmpty($matches, sprintf(
                     '%s references "%s" which the playground does not ship',

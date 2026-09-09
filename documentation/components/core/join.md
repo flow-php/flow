@@ -57,7 +57,7 @@ external sort - and the configured implementation decides how the join executes:
 
 `join()` takes an optional trailing `JoinAlgorithmBuilder`, so one join can override the configured algorithm:
 
-```php
+```php ignore
 ->join($right, on(['id' => 'id']), Join::left, hash_join()->storage(new MemoryBuckets()))
 ```
 

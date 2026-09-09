@@ -1,2 +1,4 @@
 priority: 3
 hidden: false
+run:
+  skip: "needs AWS S3 credentials in a .env file"

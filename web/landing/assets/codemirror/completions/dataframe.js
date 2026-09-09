@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 47
+ * DataFrame methods: 49
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -277,6 +277,24 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("filter(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "extractor",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">extractor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Extractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal engine paths only - a build-time scan has to know whether the source can be read twice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("extractor()"),
         boost: 10
     },        {
         label: "filterPartitions",
@@ -592,15 +610,33 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger
+                    @lazy<br>@throws SchemaNotDerivableException
                 </div>
                             `
             return div
         },
-        apply: snippet("printSchema(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
+        apply: snippet("printSchema(" + "$" + "{" + "1:formatter" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "registerGroupBy",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">registerGroupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal engine paths only - GroupedDataFrame builds its steps against this frame\'s plan
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("registerGroupBy(" + "$" + "{" + "1:groupBy" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "rename",
@@ -682,7 +718,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">schema</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger<br>@return Schema
+                    @lazy<br>@throws SchemaNotDerivableException
                 </div>
                             `
             return div

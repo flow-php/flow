@@ -25,7 +25,7 @@ For detailed installation instructions, see the [installation page](/documentati
 
 $string = 'This is some random string';
 
-echo \snappy_decompress(\snappy_compress($string)); // This is some random string
+echo \snappy_uncompress(\snappy_compress($string)); // This is some random string
 ```
 
 ## Performance

@@ -1,0 +1,13 @@
+playwright:
+    # the app is served on 127.0.0.1 and only that host is routed into the kernel, so the
+    # playground's calls to the wrangler worker on localhost:8787 reach the real worker
+    base_url: 'http://127.0.0.1'
+    intercepted_hosts: ['127.0.0.1']
+    browsers:
+        default:
+            type: 'chromium'
+            headless: true
+            # one value replaces Panther's per-call timeouts. It must stay UNDER the JSON-RPC
+            # transport's own 30s ceiling (JsonRpcClient::$defaultTimeoutMs), which the bundle does
+            # not expose - past it a browser wait dies as a transport TimeoutException instead.
+            timeout_ms: 25000

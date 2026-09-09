@@ -4,44 +4,123 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
-use Exception;
-use Facebook\WebDriver\Exception\WebDriverException;
 use Flow\Website\Kernel;
-use RuntimeException;
-use Symfony\Component\Panther\Client;
-use Symfony\Component\Panther\PantherTestCase;
-use Throwable;
+use Flow\Website\Playwright\BinarySafeResponseConverter;
+use Playwright\Dialog\DialogInterface;
+use Playwright\Page\PageInterface;
+use Playwright\Symfony\Client\BrowserRegistry;
+use Playwright\Symfony\Client\BrowserSessionInterface;
+use Playwright\Symfony\Client\Interception\AssetServer;
+use Playwright\Symfony\Client\PlaywrightKernelClient;
+use Playwright\Symfony\Client\RequestConverter;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Zenstruck\Browser\PlaywrightBrowser;
+use Zenstruck\Browser\Test\BrowserExtension;
 
-use function array_merge;
 use function file_put_contents;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
+use function is_string;
 use function json_encode;
 use function sprintf;
 use function sys_get_temp_dir;
-use function time;
 use function unlink;
-use function usleep;
 
-abstract class EndToEndTestCase extends PantherTestCase
+/**
+ * Base for the tests that drive the WASM playground in a real browser.
+ *
+ * The playground is Stimulus-driven, so most steps reach the controllers through page scripts
+ * rather than through the DOM. Playwright evaluates an expression, not a statement body, so every
+ * script here is written as an arrow function.
+ */
+abstract class EndToEndTestCase extends KernelTestCase
 {
+    /** @var list<string> */
     private array $tempFiles = [];
+
+    // the registry owns the node process and the browser, and creating one launches both. PHPUnit
+    // builds a fresh test-case object per test, so holding it per instance launched a browser 165
+    // times a run; the per-test isolation comes from the session, which is still closed each time.
+    private static ?BrowserRegistry $registry = null;
+
+    private ?BrowserSessionInterface $session = null;
+
+    public static function tearDownAfterClass(): void
+    {
+        self::$registry?->close();
+        self::$registry = null;
+
+        parent::tearDownAfterClass();
+    }
 
     protected function tearDown(): void
     {
-        foreach (type_list(type_string())->assert($this->tempFiles) as $file) {
+        foreach ($this->tempFiles as $file) {
             @unlink($file);
         }
+
+        $this->tempFiles = [];
+
+        if (self::$registry !== null && $this->session !== null) {
+            self::$registry->closeSession($this->session);
+        }
+
+        $this->session = null;
 
         parent::tearDown();
     }
 
-    protected function clearLocalStorage(Client $client): void
+    /**
+     * Builds the browser directly instead of using zenstruck's HasBrowser trait.
+     *
+     * The trait hard-codes `new ResponseConverter()` (HasBrowser.php:220), so the container cannot
+     * supply the fixed converter that BinarySafeResponseConverter provides - and without it every
+     * binary asset reaches the browser base64-encoded and the playground never boots.
+     */
+    protected function playwrightBrowser(): PlaywrightBrowser
     {
-        $client->executeScript(
-            'window.Stimulus.getControllerForElementAndIdentifier(document.getElementById("playground"), "playground-storage").clearCode();',
+        $kernel = self::bootKernel();
+        $container = $kernel->getContainer();
+        self::$registry ??= BrowserRegistry::fromEnvironment();
+        $this->session ??= self::$registry->createSession();
+
+        $hosts = type_list(type_string())->assert($container->getParameter('playwright.intercepted_hosts'));
+        $baseUrl = $container->getParameter('playwright.base_url');
+        $assets = $container->has(AssetServer::class)
+            ? type_instance_of(AssetServer::class)->assert($container->get(AssetServer::class))
+            : null;
+
+        $browser = new PlaywrightBrowser(
+            new PlaywrightKernelClient(
+                $this->session,
+                $kernel,
+                new RequestConverter(),
+                new BinarySafeResponseConverter(),
+                [],
+                $hosts,
+                null,
+                $assets,
+                is_string($baseUrl) && $baseUrl !== '' ? $baseUrl : 'http://127.0.0.1',
+            ),
+        );
+
+        BrowserExtension::registerBrowser($browser);
+
+        return $browser;
+    }
+
+    protected function acceptDialogs(PageInterface $page): void
+    {
+        // Playwright dialogs are event-driven and auto-dismissed when unhandled, so the handler has
+        // to be registered before the click that opens one - unlike Panther's post-hoc switchTo().
+        $page->events()->onDialog(static fn(DialogInterface $dialog): mixed => $dialog->accept());
+    }
+
+    protected function clearLocalStorage(PageInterface $page): void
+    {
+        $page->evaluate(
+            '() => window.Stimulus.getControllerForElementAndIdentifier(document.getElementById("playground"), "playground-storage").clearCode()',
         );
     }
 
@@ -54,119 +133,64 @@ abstract class EndToEndTestCase extends PantherTestCase
         return $path;
     }
 
-    protected function dismissAlert(Client $client): void
+    protected function getPlaygroundCode(PageInterface $page): string
     {
-        try {
-            $client->switchTo()->alert()->accept();
-        } catch (Exception) {
-        }
+        return type_string()->assert($page->evaluate(
+            '() => { const textarea = document.getElementById("code-editor");
+             return window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor").getCode(); }',
+        ));
     }
 
-    protected function getFromLocalStorage(Client $client, string $key): ?string
+    protected function openPlayground(string $path): PlaywrightBrowser
     {
-        return type_union(type_string(), type_null())->assert($client->executeScript(sprintf(
-            'return localStorage.getItem(%s);',
-            json_encode($key),
-        )));
+        $browser = $this->playwrightBrowser()->visit($path);
+
+        $this->waitForWasmReady($this->pageOf($browser));
+
+        return $browser;
     }
 
-    protected function getPlaygroundCode(Client $client): string
+    /**
+     * Not zenstruck's attachFile(): that resolves the field through Mink's named-field finder
+     * (id, name, label or value), and this input is hidden and addressed by a data attribute.
+     *
+     * @param list<string> $files
+     */
+    protected function upload(PageInterface $page, string $selector, array $files): void
     {
-        return type_string()->assert($client->executeScript('const textarea = document.getElementById("code-editor");
-             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
-             return controller.getCode();'));
+        $page->setInputFiles($selector, $files);
     }
 
-    protected function setPlaygroundCode(Client $client, string $code): void
+    protected function pageOf(PlaywrightBrowser $browser): PageInterface
     {
-        $client->executeScript(sprintf('const textarea = document.getElementById("code-editor");
-             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
-             controller.setCode(%s);
-             // Manually save to localStorage for tests (bypass debounce)
+        $page = $browser->client()->getPage();
+
+        self::assertNotNull($page, 'the browser has no open page');
+
+        return $page;
+    }
+
+    protected function setPlaygroundCode(PageInterface $page, string $code): void
+    {
+        $page->evaluate(sprintf('() => { const textarea = document.getElementById("code-editor");
+             window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor").setCode(%s);
              const playground = document.getElementById("playground");
              const storage = window.Stimulus.getControllerForElementAndIdentifier(playground, "playground-storage");
              if (storage) {
                  localStorage.setItem(storage.storageKeyValue || "flow-playground-code", %s);
-             }', json_encode($code), json_encode($code)));
+             } }', json_encode($code), json_encode($code)));
     }
 
-    protected function waitForWasmReady(Client $client, int $timeout = 30): void
+    protected function waitForWasmReady(PageInterface $page): void
     {
-        $startTime = time();
-
-        while ((time() - $startTime) < $timeout) {
-            try {
-                if (
-                    $client->executeScript(
-                        'const playground = document.getElementById("playground");
-                    if (!playground) return false;
-                    const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
-                    return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();',
-                    ) === true
-                ) {
-                    $client->wait(1);
-
-                    return;
-                }
-            } catch (WebDriverException) {
-                // Page may not be fully attached yet, retry
-            }
-
-            $client->wait(1);
-        }
-
-        throw new Exception('WASM did not initialize within ' . $timeout . ' seconds');
-    }
-
-    protected static function createE2EClient(array $options = []): Client
-    {
-        return static::createPantherClient(
-            array_merge([
-                'env' => ['APP_ENV' => 'test'],
-            ], $options),
-            [],
-            [
-                'capabilities' => [
-                    'pageLoadStrategy' => 'eager',
-                ],
-            ],
-        );
+        $page->waitForFunction('() => { const playground = document.getElementById("playground");
+             if (!playground || !window.Stimulus) { return false; }
+             const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
+             return Boolean(wasm) && wasm.isLoaded() && wasm.areResourcesLoaded(); }');
     }
 
     protected static function getKernelClass(): string
     {
         return Kernel::class;
-    }
-
-    protected static function navigateWithRetry(string $url, int $maxRetries = 3): Client
-    {
-        $lastException = null;
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            $client = static::createE2EClient();
-
-            try {
-                $client->request('GET', $url);
-
-                return $client;
-            } catch (WebDriverException $e) {
-                $lastException = $e;
-
-                try {
-                    $client->quit();
-                } catch (Throwable) {
-                }
-
-                if ($attempt < $maxRetries) {
-                    usleep(500_000);
-                }
-            }
-        }
-
-        if ($lastException === null) {
-            throw new RuntimeException(sprintf('Failed to navigate to "%s".', $url));
-        }
-
-        throw $lastException;
     }
 }
