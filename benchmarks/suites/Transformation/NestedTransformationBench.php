@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Transformation;
 
+use Flow\Benchmarks\BenchmarkRows;
+use Flow\Benchmarks\Datasets\Datasets;
 use Generator;
 use PhpBench\Attributes as Bench;
 
@@ -12,8 +14,14 @@ use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_transformation;
 
+#[Bench\BeforeMethods('warm')]
 final class NestedTransformationBench
 {
+    public function warm(array $params): void
+    {
+        Datasets::orders((int) $params['rows'])->floe();
+    }
+
     #[Bench\ParamProviders('rows')]
     #[Bench\Groups(['transformation'])]
     public function bench_blocking_transformation(array $params): void
@@ -43,7 +51,7 @@ final class NestedTransformationBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

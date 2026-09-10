@@ -6,7 +6,9 @@ namespace Flow\Benchmarks\Service\Postgresql;
 
 use Flow\Benchmarks\Datasets\Datasets;
 
-use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\Floe\DSL\from_floe;
@@ -46,9 +48,10 @@ final readonly class PostgresqlReadScenario
     {
         $client = PostgresqlConnection::open();
 
-        data_frame()->read(from_pgsql_limit_offset(
+        data_frame()->read(from_pgsql_key_set(
             $client,
             select(star())->from(table($this->table()))->orderBy(asc(col('order_id'))),
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('order_id')),
         )->withPageSize(1000))->run();
 
         $client->close();

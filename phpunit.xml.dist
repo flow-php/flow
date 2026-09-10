@@ -296,6 +296,9 @@
         <testsuite name="bridge-phpstan-types-unit">
             <directory>src/bridge/phpstan/types/tests/Flow/Bridge/PHPStan/Types/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="benchmarks-unit">
+            <directory>benchmarks/tests/Flow/Benchmarks/Tests/Unit</directory>
+        </testsuite>
     </testsuites>
     <source ignoreIndirectDeprecations="true">
         <include>

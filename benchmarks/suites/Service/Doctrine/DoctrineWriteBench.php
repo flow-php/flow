@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Service\Doctrine;
 
+use Flow\Benchmarks\BenchmarkRows;
+use Flow\Benchmarks\Datasets\Datasets;
 use Generator;
 use PhpBench\Attributes as Bench;
 
 #[Bench\AfterClassMethods('dropWrite')]
+#[Bench\BeforeMethods('warm')]
 final class DoctrineWriteBench
 {
+    public function warm(array $params): void
+    {
+        Datasets::orders((int) $params['rows'])->floe();
+    }
+
     public function setUpWrite(array $params): void
     {
         (new DoctrineWriteScenario((int) $params['rows']))->setUp();
@@ -19,7 +27,7 @@ final class DoctrineWriteBench
     {
         (new DoctrineWriteScenario(100_000))->dropTable();
 
-        (new DoctrineWriteScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->dropTable();
+        (new DoctrineWriteScenario(BenchmarkRows::count()))->dropTable();
     }
 
     #[Bench\ParamProviders('rows')]
@@ -32,7 +40,7 @@ final class DoctrineWriteBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Format\Parquet;
 
+use Flow\Benchmarks\BenchmarkRows;
+use Flow\Benchmarks\Datasets\Datasets;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Generator;
@@ -11,8 +13,14 @@ use PhpBench\Attributes as Bench;
 
 use function extension_loaded;
 
+#[Bench\BeforeMethods('warm')]
 final class ParquetReadBench
 {
+    public function warm(array $params): void
+    {
+        Datasets::orders((int) $params['rows'])->parquet();
+    }
+
     #[Bench\ParamProviders(['rows', 'engines'])]
     #[Bench\Groups(['format', 'format-parquet'])]
     public function bench_parquet_read(array $params): void
@@ -24,7 +32,7 @@ final class ParquetReadBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

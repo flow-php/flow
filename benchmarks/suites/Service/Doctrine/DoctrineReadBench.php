@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Service\Doctrine;
 
+use Flow\Benchmarks\BenchmarkRows;
 use Generator;
 use PhpBench\Attributes as Bench;
 
@@ -13,12 +14,12 @@ final class DoctrineReadBench
 {
     public static function seedRead(): void
     {
-        (new DoctrineReadScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->seed();
+        (new DoctrineReadScenario(BenchmarkRows::count()))->seed();
     }
 
     public static function dropRead(): void
     {
-        (new DoctrineReadScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->dropTable();
+        (new DoctrineReadScenario(BenchmarkRows::count()))->dropTable();
     }
 
     #[Bench\ParamProviders('rows')]
@@ -30,7 +31,7 @@ final class DoctrineReadBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

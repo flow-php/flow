@@ -10,8 +10,6 @@ use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
-use function Flow\Filesystem\DSL\native_local_filesystem;
-use function Flow\Filesystem\DSL\path;
 
 final readonly class TextDataset
 {
@@ -21,15 +19,15 @@ final readonly class TextDataset
 
     public function path(): string
     {
-        $parquetPath = (new OrdersDataset($this->rows))->parquet();
-        $path = Paths::datasets() . '/orders_' . $this->rows . '.txt';
+        $fixture = new FixturePath('orders', $this->rows, FixtureFormat::text);
 
-        if (!Datasets::isStale($path, $parquetPath)) {
-            return $path;
+        if ($fixture->exists()) {
+            return $fixture->path();
         }
 
-        native_local_filesystem()->rm(path($path));
+        $fixture->prune();
 
+        $parquetPath = (new OrdersDataset($this->rows))->parquet();
         $lines = [];
 
         foreach (data_frame()->read(from_parquet($parquetPath)->withColumns(['customer', 'notes']))->get() as $batch) {
@@ -49,8 +47,8 @@ final readonly class TextDataset
             }
         }
 
-        data_frame()->read(from_array($lines))->write(to_text($path))->run();
+        data_frame()->read(from_array($lines))->write(to_text($fixture->path()))->run();
 
-        return $path;
+        return $fixture->path();
     }
 }

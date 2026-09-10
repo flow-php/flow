@@ -330,6 +330,9 @@
                 "benchmarks/src",
                 "benchmarks/suites"
             ],
+            "Flow\\Benchmarks\\Tests\\": [
+                "benchmarks/tests/Flow/Benchmarks/Tests"
+            ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
                 "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"
             ],

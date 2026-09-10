@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Service\Postgresql;
 
+use Flow\Benchmarks\BenchmarkRows;
 use Generator;
 use PhpBench\Attributes as Bench;
 
@@ -13,12 +14,12 @@ final class PostgresqlReadBench
 {
     public static function seedRead(): void
     {
-        (new PostgresqlReadScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->seed();
+        (new PostgresqlReadScenario(BenchmarkRows::count()))->seed();
     }
 
     public static function dropRead(): void
     {
-        (new PostgresqlReadScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->dropTable();
+        (new PostgresqlReadScenario(BenchmarkRows::count()))->dropTable();
     }
 
     #[Bench\ParamProviders('rows')]
@@ -30,7 +31,7 @@ final class PostgresqlReadBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }
