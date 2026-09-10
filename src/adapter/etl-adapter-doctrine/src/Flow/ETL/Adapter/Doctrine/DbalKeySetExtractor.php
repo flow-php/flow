@@ -11,6 +11,10 @@ use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -20,6 +24,7 @@ use Generator;
 
 use function array_key_exists;
 use function count;
+use function min;
 use function sha1;
 
 /**
@@ -30,13 +35,14 @@ use function sha1;
  * and sort orders for pagination. The key columns must be non-null and provide a unique
  * ordering to ensure correct pagination.
  */
-final class DbalKeySetExtractor implements Extractor, RewindableExtractor
+final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private string $keyAliasSuffix = '_previous';
 
     private ?int $maximum = null;
-
-    private int $pageSize = 1000;
 
     private ?Schema $schema = null;
 
@@ -58,6 +64,9 @@ final class DbalKeySetExtractor implements Extractor, RewindableExtractor
         if (empty($this->keySet->keys)) {
             throw new InvalidArgumentException('KeySet must contain at least one key for pagination');
         }
+
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
     }
 
     public function isRepeatable(): bool
@@ -71,13 +80,23 @@ final class DbalKeySetExtractor implements Extractor, RewindableExtractor
     public function extract(FlowContext $context): Generator
     {
         $schema = $this->schema();
-        $totalFetched = 0;
+        $yielded = 0;
         $lastRow = null;
         $encoder = new DbalEncoder();
+        $pushed = $this->pushedLimit();
+        $maximum = match (true) {
+            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null => $this->maximum,
+            default => $pushed,
+        };
 
         while (true) {
+            if ($maximum !== null && $yielded >= $maximum) {
+                return;
+            }
+
             $qb = clone $this->queryBuilder;
-            $qb->setMaxResults($this->pageSize);
+            $qb->setMaxResults($maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded));
 
             foreach ($this->keySet->keys as $key) {
                 $qb->addOrderBy($key->column, $key->order->value);
@@ -155,24 +174,18 @@ final class DbalKeySetExtractor implements Extractor, RewindableExtractor
                 $rawBatch[] = $row;
             }
 
-            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
-
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                $totalFetched++;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if (null !== $this->maximum && $totalFetched >= $this->maximum) {
-                    return;
-                }
-            }
-
             if (!$hasRows) {
                 break;
+            }
+
+            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+
+            $yielded += $hydrated->count();
+
+            $signal = yield $hydrated;
+
+            if ($signal === Signal::STOP) {
+                return;
             }
         }
     }
@@ -212,26 +225,6 @@ final class DbalKeySetExtractor implements Extractor, RewindableExtractor
         }
 
         $this->maximum = $maximum;
-
-        return $this;
-    }
-
-    /**
-     * Sets the number of rows per page.
-     *
-     * @param int $pageSize the page size (must be > 0)
-     *
-     * @throws InvalidArgumentException if page size is <= 0
-     *
-     * @return $this
-     */
-    public function withPageSize(int $pageSize): self
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
-        }
-
-        $this->pageSize = $pageSize;
 
         return $this;
     }

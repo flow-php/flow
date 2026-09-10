@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\CountingMemory;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function array_map;
 use function Flow\ETL\DSL\config;
@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 use function iterator_to_array;
+use function range;
 
 final class MemoryExtractorTest extends FlowTestCase
 {
@@ -73,13 +74,11 @@ final class MemoryExtractorTest extends FlowTestCase
     {
         $extractor = from_memory(new ArrayMemory([['code' => 1000], ['code' => 'AB-01'], ['id' => 3]]));
 
-        static::assertEquals(
-            [$extractor->schema(), $extractor->schema(), $extractor->schema()],
-            array_map(
-                static fn(Rows $rows): Schema => $rows->schema(),
-                iterator_to_array($extractor->extract(flow_context(config()))),
-            ),
-        );
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+        }
+
+        self::assertExtractedRowsCount(3, $extractor, flow_context(config()));
     }
 
     public function test_schema_before_save_does_not_freeze_empty(): void
@@ -165,5 +164,16 @@ final class MemoryExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_memory(new ArrayMemory([['number' => 1]]))->isRepeatable());
+    }
+
+    public function test_memory_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): MemoryExtractor => from_memory(new ArrayMemory(array_map(
+                static fn(int $id): array => ['id' => $id],
+                range(1, 5),
+            ))),
+            RowsMother::sequentialIds(5),
+        );
     }
 }

@@ -22,6 +22,7 @@ final readonly class PostgresqlReadScenario
 {
     public function __construct(
         private int $rows,
+        private ?int $limit = null,
     ) {}
 
     public function table(): string
@@ -48,11 +49,14 @@ final readonly class PostgresqlReadScenario
     {
         $client = PostgresqlConnection::open();
 
-        data_frame()->read(from_pgsql_key_set(
-            $client,
-            select(star())->from(table($this->table()))->orderBy(asc(col('order_id'))),
-            pgsql_pagination_key_set(pgsql_pagination_key_asc('order_id')),
-        )->withPageSize(1000))->run();
+        data_frame()
+            ->read(from_pgsql_key_set(
+                $client,
+                select(star())->from(table($this->table()))->orderBy(asc(col('order_id'))),
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('order_id')),
+            )->withBatchSize(1000))
+            ->limit($this->limit)
+            ->run();
 
         $client->close();
     }

@@ -6,9 +6,12 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
@@ -20,6 +23,28 @@ use function Flow\ETL\DSL\str_schema;
 
 final class CachingProcessorTest extends FlowTestCase
 {
+    public function test_a_stop_still_completes_the_cache(): void
+    {
+        $cache = new InMemoryCache();
+        $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
+        $processed = (new CachingProcessor('stop-cache', $cache))->process(
+            $upstream->extract(flow_context()),
+            flow_context(),
+        );
+
+        static::assertTrue($processed->valid());
+
+        $processed->send(Signal::STOP);
+
+        static::assertFalse($processed->valid());
+        static::assertSame(5, $upstream->batchesYielded);
+
+        $indexRows = $cache->get('stop-cache');
+
+        static::assertInstanceOf(Rows::class, $indexRows);
+        static::assertCount(5, CacheIndex::fromRows('stop-cache', $indexRows)->values());
+    }
+
     public function test_bind_returns_the_input_schema(): void
     {
         $input = schema(int_schema('id'), str_schema('name'));

@@ -26,7 +26,6 @@ final readonly class Config
 {
     /**
      * @param Hydrator $hydrator
-     * @param int<1, max> $extractorBatchSize
      */
     public function __construct(
         private string $id,
@@ -43,7 +42,6 @@ final readonly class Config
         public HashGroupByConfig $grouping,
         public HashJoinConfig $join,
         public HashRepartitionConfig $repartition,
-        private int $extractorBatchSize = 1000,
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
@@ -71,14 +69,6 @@ final readonly class Config
     public function clock(): ClockInterface
     {
         return $this->clock;
-    }
-
-    /**
-     * @return int<1, max>
-     */
-    public function extractorBatchSize(): int
-    {
-        return $this->extractorBatchSize;
     }
 
     /**

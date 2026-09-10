@@ -6,6 +6,10 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -19,6 +23,7 @@ use function bin2hex;
 use function Flow\PostgreSql\DSL\close_cursor;
 use function Flow\PostgreSql\DSL\declare_cursor;
 use function Flow\PostgreSql\DSL\fetch;
+use function min;
 use function random_bytes;
 
 /**
@@ -30,11 +35,12 @@ use function random_bytes;
  *
  * Note: Requires a transaction context (auto-started if not in one).
  */
-final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
+final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
-    private ?string $cursorName = null;
+    use Batches;
+    use PushesLimit;
 
-    private int $fetchSize = 1000;
+    private ?string $cursorName = null;
 
     private ?int $maximum = null;
 
@@ -49,7 +55,10 @@ final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
         private readonly Client $client,
         private readonly string|Sql $query,
         private readonly array $parameters = [],
-    ) {}
+    ) {
+        // a fetch is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -70,10 +79,21 @@ final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
         try {
             $this->client->execute(declare_cursor($cursorName, $this->query), $this->parameters);
 
-            $totalFetched = 0;
+            $pushed = $this->pushedLimit();
+            $maximum = match (true) {
+                $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+                $this->maximum !== null => $this->maximum,
+                default => $pushed,
+            };
+            $yielded = 0;
 
             while (true) {
-                $cursor = $this->client->cursor(fetch($cursorName)->forward($this->fetchSize));
+                if ($maximum !== null && $yielded >= $maximum) {
+                    return;
+                }
+
+                $pageSize = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
+                $cursor = $this->client->cursor(fetch($cursorName)->forward($pageSize));
                 $rowCount = $cursor->count();
 
                 if ($rowCount === 0) {
@@ -92,21 +112,16 @@ final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
 
                 $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
 
-                foreach ($hydrated as $hydratedRow) {
-                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                $yielded += $hydrated->count();
 
-                    $totalFetched++;
+                $signal = yield $hydrated;
 
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                        return;
-                    }
+                if ($signal === Signal::STOP) {
+                    return;
                 }
 
-                if ($rowCount < $this->fetchSize) {
+                // compared against what was asked for, so a narrowed final fetch is not read as exhausted
+                if ($rowCount < $pageSize) {
                     break;
                 }
             }
@@ -139,17 +154,6 @@ final class PostgreSqlCursorExtractor implements Extractor, RewindableExtractor
     public function withCursorName(string $cursorName): self
     {
         $this->cursorName = $cursorName;
-
-        return $this;
-    }
-
-    public function withFetchSize(int $fetchSize): self
-    {
-        if ($fetchSize <= 0) {
-            throw new InvalidArgumentException('Fetch size must be greater than 0, got ' . $fetchSize);
-        }
-
-        $this->fetchSize = $fetchSize;
 
         return $this;
     }

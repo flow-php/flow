@@ -15,6 +15,7 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -27,6 +28,8 @@ use RuntimeException;
 use function array_filter;
 use function array_keys;
 use function array_map;
+use function array_sum;
+use function count;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\config;
@@ -47,6 +50,7 @@ use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
+use function max;
 use function sort;
 
 final class CSVExtractorTest extends FlowTestCase
@@ -186,18 +190,20 @@ final class CSVExtractorTest extends FlowTestCase
     {
         $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'));
         $schema = $extractor->schema();
-        $seen = 0;
+        $sizes = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->extractorBatchSize(3)->build())) as $rows) {
+        foreach ($extractor->withBatchSize(3)->extract(flow_context()) as $rows) {
             static::assertTrue($schema->isSame($rows->schema()));
-            $seen++;
+            $sizes[] = $rows->count();
 
-            if ($seen === 10) {
+            if (count($sizes) === 10) {
                 break;
             }
         }
 
-        static::assertSame(10, $seen);
+        static::assertLessThanOrEqual(3, max($sizes));
+        static::assertContains(3, $sizes);
+        static::assertSame(30, array_sum($sizes));
     }
 
     public function test_a_declared_schema_opens_each_file_once(): void
@@ -472,7 +478,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame('integer', $extractor->schema()->get('id')->type()->toString());
         static::assertSame('string', $extractor->schema()->get('name')->type()->toString());
-        static::assertCount(1, iterator_to_array($extractor->extract(flow_context(config()))));
+        self::assertExtractedRowsCount(1, $extractor, flow_context(config()));
     }
 
     #[TestWith(['empty_then_header_only'])]
@@ -540,7 +546,7 @@ final class CSVExtractorTest extends FlowTestCase
             $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'), filesystem: $counting);
 
             if ($mode === 'limit') {
-                $extractor->changeLimit(2);
+                $extractor->pushLimit(2);
 
                 iterator_to_array($extractor->extract(flow_context(config())));
             } else {
@@ -745,26 +751,19 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(
             [
                 [
-                    [
-                        'id' => '',
-                        'name' => '',
-                        'active' => 'false',
-                        '_input_file_uri' => $path->uri(),
-                    ],
+                    'id' => '',
+                    'name' => '',
+                    'active' => 'false',
+                    '_input_file_uri' => $path->uri(),
                 ],
                 [
-                    [
-                        'id' => '1',
-                        'name' => 'Norbert',
-                        'active' => '',
-                        '_input_file_uri' => $path->uri(),
-                    ],
+                    'id' => '1',
+                    'name' => 'Norbert',
+                    'active' => '',
+                    '_input_file_uri' => $path->uri(),
                 ],
             ],
-            array_map(
-                static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
-            ),
+            ExtractedRows::of($extractor, flow_context(Config::builder()->build()))->toArray(),
         );
     }
 
@@ -775,24 +774,17 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(
             [
                 [
-                    [
-                        'id' => null,
-                        'name' => null,
-                        'active' => false,
-                    ],
+                    'id' => null,
+                    'name' => null,
+                    'active' => false,
                 ],
                 [
-                    [
-                        'id' => 1,
-                        'name' => 'Norbert',
-                        'active' => null,
-                    ],
+                    'id' => 1,
+                    'name' => 'Norbert',
+                    'active' => null,
                 ],
             ],
-            array_map(
-                static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(config()))),
-            ),
+            ExtractedRows::of($extractor, flow_context(config()))->toArray(),
         );
     }
 
@@ -802,17 +794,10 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(
             [
-                [
-                    ['e00' => null, 'name' => null, 'active' => false],
-                ],
-                [
-                    ['e00' => 1, 'name' => 'Norbert', 'active' => null],
-                ],
+                ['e00' => null, 'name' => null, 'active' => false],
+                ['e00' => 1, 'name' => 'Norbert', 'active' => null],
             ],
-            array_map(
-                static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(config()))),
-            ),
+            ExtractedRows::of($extractor, flow_context(config()))->toArray(),
         );
     }
 
@@ -999,9 +984,9 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
-        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
     }
 
     /**

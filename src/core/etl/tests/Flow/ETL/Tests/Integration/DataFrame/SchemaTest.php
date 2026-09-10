@@ -201,7 +201,7 @@ final class SchemaTest extends FlowIntegrationTestCase
         $extractor = from_array([
             ['string' => null, 'bool' => null, 'int' => null, 'float' => null],
             ['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24],
-        ]);
+        ])->withBatchSize(1);
 
         // Row 1's nulls are TYPED nulls in known columns rather than untyped null columns a later
         // row contradicts.

@@ -58,7 +58,7 @@ final class RecordingFilesystem implements Filesystem
     {
         $this->calls[] = 'readFrom';
 
-        return $this->filesystem->readFrom($path);
+        return new RecordingSourceStream($this->filesystem->readFrom($path), $this);
     }
 
     public function record(string $call): void

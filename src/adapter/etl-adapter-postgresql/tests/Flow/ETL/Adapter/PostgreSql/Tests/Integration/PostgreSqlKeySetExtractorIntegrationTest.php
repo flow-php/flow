@@ -53,7 +53,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -72,7 +72,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                     select(col('id'), col('name'))->from(table($this->tableName)),
                     pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 )
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(12),
             )
             ->fetch()
@@ -91,7 +91,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_desc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -109,7 +109,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [5, 15],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -126,7 +126,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName,
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -144,7 +144,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [10],
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -162,7 +162,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2 AND name LIKE $3',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [5, 15, 'User_%'],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -181,7 +181,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(star())->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(10))
+            )->withBatchSize(10))
             ->fetch()
             ->toArray();
 

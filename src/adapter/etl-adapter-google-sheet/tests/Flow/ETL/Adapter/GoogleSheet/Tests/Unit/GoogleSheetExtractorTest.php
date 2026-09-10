@@ -13,11 +13,12 @@ use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowTestCase;
 use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\config_builder;
+use function array_sum;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -25,6 +26,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
+use function max;
 
 final class GoogleSheetExtractorTest extends FlowTestCase
 {
@@ -113,17 +115,16 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ->withSchema(schema(str_schema('header')))
             ->withMetadataColumns(true);
 
-        /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array($extractor->extract(flow_context()));
+        $rows = ExtractedRows::of($extractor);
 
-        static::assertCount(2, $rowsArray);
+        static::assertCount(2, $rows);
         static::assertEquals(
             row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row1']),
-            $rowsArray[0]->first(),
+            $rows->all()[0],
         );
         static::assertEquals(
             row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row2']),
-            $rowsArray[1]->first(),
+            $rows->all()[1],
         );
     }
 
@@ -185,10 +186,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $values = GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([['id'], ['1'], ['2']])], []);
         $service = GoogleSheetFixtureContext::service(3, $values);
 
-        static::assertCount(
-            2,
-            iterator_to_array(GoogleSheetFixtureContext::extractor($service)->extract(flow_context())),
-        );
+        self::assertExtractedRowsCount(2, GoogleSheetFixtureContext::extractor($service));
 
         // no batchGet at all: the read was served from the rows the sample already held
         static::assertCount(1, $values->getCalls);
@@ -207,13 +205,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ['2'],
         ])], [SheetValuesMother::batch([[['id'], ['1'], ['2'], ['3']]])]);
 
-        static::assertCount(
+        self::assertExtractedRowsCount(
             3,
-            iterator_to_array(
-                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values))->extract(
-                    flow_context(),
-                ),
-            ),
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values)),
         );
         static::assertCount(1, $values->batchGetCalls);
     }
@@ -307,20 +301,21 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             $values,
         ))->withMetadataColumns(true);
 
-        /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array($extractor->extract(
-            flow_context(config_builder()->extractorBatchSize(2)->build()),
-        ));
+        $sizes = [];
+        $first = null;
 
-        static::assertCount(3, $rowsArray);
-
-        foreach ($rowsArray as $rows) {
+        foreach ($extractor->withBatchSize(2)->extract(flow_context()) as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
+            $sizes[] = $rows->count();
+            $first ??= $rows->first()->toArray();
         }
 
+        static::assertLessThanOrEqual(2, max($sizes));
+        static::assertContains(2, $sizes);
+        static::assertSame(3, array_sum($sizes));
         static::assertSame(
             ['id' => 1, 'name' => 'a', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
-            $rowsArray[0]->first()->toArray(),
+            $first,
         );
     }
 
@@ -513,13 +508,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         // 3, not 2: the blank row still decodes to a column-less row, as it did before inference existed. What this
         // pins is that the divergence check no longer reads that row as "every column is missing".
-        static::assertCount(
+        self::assertExtractedRowsCount(
             3,
-            iterator_to_array(
-                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values))
-                    ->withHeader(false)
-                    ->extract(flow_context()),
-            ),
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values))->withHeader(false),
         );
     }
 

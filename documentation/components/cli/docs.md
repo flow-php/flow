@@ -96,7 +96,7 @@ Arguments:
 
 Options:
       --input-file-format=INPUT-FILE-FORMAT                          File format. When not set file format is guessed from input file path extension
-      --input-file-batch-size=INPUT-FILE-BATCH-SIZE                  Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE                  Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once [default: 100]
       --input-file-limit=INPUT-FILE-LIMIT                            Limit number of rows read from the file.
       --input-file-offset=INPUT-FILE-OFFSET                          Number of rows to skip before starting to read data
       --output-file-format=OUTPUT-FILE-FORMAT                        File format. When not set file format is guessed from output file path extension
@@ -230,7 +230,7 @@ Arguments:
 
 Options:
       --input-file-format=INPUT-FILE-FORMAT                File format. When not set file format is guessed from source file path extension
-      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 1000]
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once [default: 1000]
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows read from the file.
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
@@ -279,7 +279,7 @@ Arguments:
 
 Options:
       --input-file-format=INPUT-FILE-FORMAT                File format. When not set file format is guessed from source file path extension
-      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once [default: 100]
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows read from the file.
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --output-truncate=OUTPUT-TRUNCATE                    Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]

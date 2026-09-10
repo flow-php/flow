@@ -16,6 +16,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
+use function count;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_equals;
@@ -49,7 +50,7 @@ final class UntilTransformer implements Transformer
                     TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
                 ]);
 
-                throw new LimitReachedException(0);
+                throw new LimitReachedException(0, new Rows($rows->schema()));
             }
 
             // the unbound path has no plan to hold the resolved predicate, so it is memoised here -
@@ -61,20 +62,23 @@ final class UntilTransformer implements Transformer
                 if (!$this->resolved->eval($row, $context)) {
                     $this->limitReached = true;
 
-                    break;
+                    $context->telemetry()->transformationCompleted($this, [
+                        TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                        TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => count($nextRows),
+                    ]);
+
+                    throw new LimitReachedException(0, new Rows($rows->schema(), ...$nextRows));
                 }
 
                 $nextRows[] = $row;
             }
 
-            $result = new Rows($rows->schema(), ...$nextRows);
-
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
-                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
             ]);
 
-            return $result;
+            return $rows;
         } catch (LimitReachedException $e) {
             throw $e;
         } catch (Throwable $e) {

@@ -27,9 +27,9 @@ final class Pipeline
     private readonly Segments $segments;
 
     public function __construct(
-        private readonly Extractor $extractor,
+        private Extractor $extractor,
     ) {
-        $this->segments = new Segments();
+        $this->segments = new Segments($extractor);
     }
 
     public function add(Transformer|Loader|Processor $step): self
@@ -149,6 +149,13 @@ final class Pipeline
         } finally {
             $this->running = false;
         }
+    }
+
+    public function replaceExtractor(Extractor $extractor): void
+    {
+        $this->extractor = $extractor;
+        $this->segments->replaceExtractor($extractor);
+        $this->invalidateBind();
     }
 
     /**

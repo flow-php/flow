@@ -185,12 +185,13 @@ final class CacheTest extends FlowIntegrationTestCase
 
         $cacheIndex = CacheIndex::fromRows('test', $indexRows);
 
-        static::assertCount(100, $cacheIndex->values());
+        // no batch size was set, so each cache entry is one batch the extractor yielded
+        static::assertCount(1, $cacheIndex->values());
 
         foreach ($cacheIndex->values() as $cacheRowsKey) {
             $rows = $cache->get($cacheRowsKey);
             static::assertInstanceOf(Rows::class, $rows);
-            static::assertCount(1, $rows);
+            static::assertCount(100, $rows);
         }
     }
 }

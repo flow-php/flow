@@ -8,6 +8,7 @@ use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Types\Exception\InvalidTypeException;
 
+use function array_chunk;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -60,6 +61,26 @@ final readonly class BulkData
 
         $this->columns = new Columns(...$columns);
         $this->rows = $rows;
+    }
+
+    /**
+     * @param int<1, max> $rows
+     *
+     * @return list<self>
+     */
+    public function chunk(int $rows): array
+    {
+        if (count($this->rows) <= $rows) {
+            return [$this];
+        }
+
+        $chunks = [];
+
+        foreach (array_chunk($this->rows, $rows) as $chunk) {
+            $chunks[] = new self($chunk, $this->types, $this->parametersStyle);
+        }
+
+        return $chunks;
     }
 
     public function columns(): Columns

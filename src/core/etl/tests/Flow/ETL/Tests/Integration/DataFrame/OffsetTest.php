@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -132,7 +133,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -175,7 +176,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -220,7 +221,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -297,7 +298,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {

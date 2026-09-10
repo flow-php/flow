@@ -11,11 +11,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
+use function range;
 
 final class PostgreSqlCursorExtractorTest extends FlowTestCase
 {
@@ -54,18 +56,13 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
         static::assertSame(1, $client->callsTo('cursor'));
     }
 
-    public function test_cursor_loop_breaks_when_rows_less_than_fetch_size(): void
+    public function test_cursor_loop_breaks_when_rows_less_than_batch_size(): void
     {
         $client = (new SpyClient())
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]));
 
-        static::assertCount(
-            2,
-            iterator_to_array(
-                from_pgsql_cursor($client, 'SELECT id FROM t')->withFetchSize(5)->extract(flow_context()),
-            ),
-        );
+        self::assertExtractedRowsCount(2, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(5));
         static::assertSame(1, $client->callsTo('cursor'));
     }
 
@@ -75,27 +72,17 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
 
-        static::assertCount(
-            3,
-            iterator_to_array(
-                from_pgsql_cursor($client, 'SELECT id FROM t')->withFetchSize(2)->extract(flow_context()),
-            ),
-        );
+        self::assertExtractedRowsCount(3, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2));
         static::assertSame(2, $client->callsTo('cursor'));
     }
 
-    public function test_cursor_loop_with_exact_fetch_size_multiple_does_extra_fetch(): void
+    public function test_cursor_loop_with_exact_batch_size_multiple_does_extra_fetch(): void
     {
         $client = (new SpyClient())
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor());
 
-        static::assertCount(
-            2,
-            iterator_to_array(
-                from_pgsql_cursor($client, 'SELECT id FROM t')->withFetchSize(2)->extract(flow_context()),
-            ),
-        );
+        self::assertExtractedRowsCount(2, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2));
         static::assertSame(2, $client->callsTo('cursor'));
     }
 
@@ -159,7 +146,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
 
-        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t')->withFetchSize(2);
+        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2);
         $batches = iterator_to_array($extractor->extract(flow_context()));
 
         static::assertSame(1, $client->callsTo('describe'));
@@ -187,6 +174,23 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
         }
     }
 
+    public function test_pushed_limit_issues_no_query_once_satisfied(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1, 1000))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1001, 1500))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1501, 2500))),
+            );
+        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t');
+        $extractor->pushLimit(1500);
+
+        self::assertExtractedRowsCount(1500, $extractor);
+        // FETCH 1000, then FETCH 500 - a full narrowed fetch, which only the limit itself can stop
+        static::assertSame(2, $client->callsTo('cursor'));
+    }
+
     public function test_schema_is_derived_from_result_metadata(): void
     {
         $schema = from_pgsql_cursor(
@@ -209,27 +213,27 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
         static::assertSame(['describe'], $client->calls);
     }
 
-    public function test_with_fetch_size_validates_negative_value(): void
+    public function test_with_batch_size_validates_negative_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Fetch size must be greater than 0, got -1');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got -1');
 
-        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withFetchSize(-1);
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withBatchSize(-1);
     }
 
-    public function test_with_fetch_size_validates_positive_value(): void
+    public function test_with_batch_size_validates_positive_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Fetch size must be greater than 0, got 0');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
 
-        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withFetchSize(0);
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withBatchSize(0);
     }
 
-    public function test_with_fetch_size_returns_the_same_extractor(): void
+    public function test_with_batch_size_returns_the_same_extractor(): void
     {
         $extractor = from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t');
 
-        static::assertSame($extractor, $extractor->withFetchSize(10));
+        static::assertSame($extractor, $extractor->withBatchSize(10));
     }
 
     public function test_with_maximum_returns_the_same_extractor(): void

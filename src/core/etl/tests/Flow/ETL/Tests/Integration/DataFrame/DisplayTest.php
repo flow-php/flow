@@ -6,12 +6,15 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Generator;
 
 use function array_map;
@@ -43,6 +46,7 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_xml;
 use function ob_get_clean;
 use function ob_start;
+use function preg_match_all;
 use function range;
 
 final class DisplayTest extends FlowIntegrationTestCase
@@ -63,7 +67,7 @@ final class DisplayTest extends FlowIntegrationTestCase
             }
 
             /**
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
@@ -140,7 +144,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 }
 
                 /**
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -203,18 +207,13 @@ final class DisplayTest extends FlowIntegrationTestCase
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            +------+------------+-----+---------+----------------------+-------+
-            5 rows
-            +------+------------+-----+---------+----------------------+-------+
-            |   id |      price | 100 | deleted |           created-at | group |
-            +------+------------+-----+---------+----------------------+-------+
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
             +------+------------+-----+---------+----------------------+-------+
-            5 rows
+            10 rows
 
             ASCIITABLE, $etl->display(10));
     }
@@ -302,7 +301,7 @@ final class DisplayTest extends FlowIntegrationTestCase
         $output = ob_get_clean() ?: '';
 
         // from_rows() folds its batches into one shape and matches each batch to it, so the first
-        // batch carries the nullable "salary" column the second one introduced
+        // batch carries the nullable "salary" column the second one introduced; both print as one table
         self::assertCommandOutputContains(<<<'ASCII'
             +----+---------+-----+--------+
             | id | country | age | salary |
@@ -310,15 +309,10 @@ final class DisplayTest extends FlowIntegrationTestCase
             |  1 |      PL |  20 |        |
             |  2 |      PL |  20 |        |
             |  3 |      PL |  25 |        |
-            +----+---------+-----+--------+
-            3 rows
-            +----+---------+-----+--------+
-            | id | country | age | salary |
-            +----+---------+-----+--------+
             |  1 |      PL |  20 |   5000 |
             |  1 |      PL |  20 |        |
             +----+---------+-----+--------+
-            2 rows
+            5 rows
             ASCII, $output);
     }
 
@@ -369,5 +363,45 @@ final class DisplayTest extends FlowIntegrationTestCase
             |-- age: integer
             |-- salary: ?integer
             ASCII, $output);
+    }
+
+    public function test_display_renders_one_table_for_a_varying_batch_source(): void
+    {
+        $output = df()
+            ->read(
+                new CountingExtractor(
+                    schema(int_schema('id')),
+                    RowsMother::sequentialIds(1),
+                    RowsMother::sequentialIds(1000),
+                    RowsMother::sequentialIds(0),
+                    RowsMother::sequentialIds(7),
+                    RowsMother::sequentialIds(999),
+                ),
+            )
+            ->display(20);
+
+        static::assertSame(1, preg_match_all('/^\d+ rows$/m', $output));
+        static::assertStringContainsString('20 rows', $output);
+    }
+
+    public function test_print_rows_renders_one_table(): void
+    {
+        ob_start();
+        df()
+            ->read(
+                new CountingExtractor(
+                    schema(int_schema('id')),
+                    RowsMother::sequentialIds(1),
+                    RowsMother::sequentialIds(1000),
+                    RowsMother::sequentialIds(0),
+                    RowsMother::sequentialIds(7),
+                    RowsMother::sequentialIds(999),
+                ),
+            )
+            ->printRows(20);
+        $output = ob_get_clean() ?: '';
+
+        static::assertSame(1, preg_match_all('/^\d+ rows$/m', $output));
+        static::assertStringContainsString('20 rows', $output);
     }
 }

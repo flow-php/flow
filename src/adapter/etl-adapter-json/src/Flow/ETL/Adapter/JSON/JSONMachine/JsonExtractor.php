@@ -6,12 +6,14 @@ namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -31,14 +33,16 @@ use function iterator_to_array;
 use function sprintf;
 
 final class JsonExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
     InfersSchema,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     private SchemaInference $inference;
@@ -67,7 +71,6 @@ final class JsonExtractor implements
 
         $this->filesystem = $filesystem;
         $this->inference = new SchemaInference();
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -81,7 +84,8 @@ final class JsonExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
         $reader = new JsonFileReader(
@@ -124,14 +128,18 @@ final class JsonExtractor implements
 
                 $hydrated = $hydrator->hydrate($batch, $schema);
 
-                foreach ($hydrated as $hydratedRow) {
-                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                $yielded += $hydrated->count();
 
-                    $this->incrementReturnedRows();
+                $signal = yield $hydrated;
 
-                    if ($signal === Signal::STOP || $this->reachedLimit()) {
-                        return;
-                    }
+                if ($signal === Signal::STOP) {
+                    return;
+                }
+
+                $limit = $this->pushedLimit();
+
+                if ($limit !== null && $yielded >= $limit) {
+                    return;
                 }
             }
         }

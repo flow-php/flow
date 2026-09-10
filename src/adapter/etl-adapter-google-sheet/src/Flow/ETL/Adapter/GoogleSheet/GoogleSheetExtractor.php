@@ -7,11 +7,13 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -34,13 +36,15 @@ use function sprintf;
  * @import-type GoogleSheetOptions from GoogleSheetReadOptions
  */
 final class GoogleSheetExtractor implements
+    BatchableExtractor,
     Extractor,
     InfersSchema,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use MetadataColumns;
 
     /**
@@ -68,7 +72,6 @@ final class GoogleSheetExtractor implements
     ) {
         $this->inference = new SchemaInference(sampleSize: self::SAMPLE_ROWS);
         $this->readOptions = new GoogleSheetReadOptions();
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -95,7 +98,8 @@ final class GoogleSheetExtractor implements
         $hydrator = $context->hydrator();
         $checked = $this->schema !== null || $this->inference->unionByName;
 
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         // the sample already holds every row when its range covered the grid, so the read is served from it rather
         // than fetching the same rows again; nothing can have diverged from a schema read off these very rows
         $batches = ($sampledNow ? $sampler->batches($batchSize) : null) ?? $reader->batches(
@@ -146,14 +150,18 @@ final class GoogleSheetExtractor implements
 
             $hydrated = $hydrator->hydrate($batch, $schema);
 
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+            $yielded += $hydrated->count();
 
-                $this->incrementReturnedRows();
+            $signal = yield $hydrated;
 
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
+            }
+
+            $limit = $this->pushedLimit();
+
+            if ($limit !== null && $yielded >= $limit) {
+                return;
             }
         }
     }

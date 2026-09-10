@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Double;
 
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -82,7 +83,7 @@ final readonly class FakeExtractor implements Extractor
     /**
      * @param FlowContext $context
      *
-     * @return \Generator<int, Rows, mixed, void>
+     * @return \Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {

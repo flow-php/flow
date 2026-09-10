@@ -17,11 +17,14 @@ use Flow\Filesystem\Path;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function is_array;
 
-final class ArrayExtractor implements Extractor, InfersSchema, RewindableExtractor
+final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchema, RewindableExtractor
 {
+    use Batches;
+
     private ?Schema $derivedSchema = null;
 
     private readonly Filesystem $filesystem;
@@ -62,16 +65,30 @@ final class ArrayExtractor implements Extractor, InfersSchema, RewindableExtract
      */
     public function extract(FlowContext $context): Generator
     {
+        $batchSize = $this->batchSize();
         $schema = $this->schema();
+        $buffer = [];
 
         $rows = $this->source?->rows() ?? $this->dataset;
 
         foreach ($rows as $row) {
-            $signal = yield array_to_rows([$row], $schema, $context->hydrator());
+            $buffer[] = $row;
+
+            if (count($buffer) < $batchSize) {
+                continue;
+            }
+
+            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;
             }
+
+            $buffer = [];
+        }
+
+        if ($buffer !== []) {
+            yield array_to_rows($buffer, $schema, $context->hydrator());
         }
     }
 

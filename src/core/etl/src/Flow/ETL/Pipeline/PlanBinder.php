@@ -16,7 +16,7 @@ final readonly class PlanBinder
     public function bind(Extractor $extractor, Segments $segments): BoundPlan
     {
         $schema = $extractor->schema();
-        $bound = new Segments();
+        $bound = new Segments($extractor);
 
         foreach ($segments->steps() as $step) {
             if ($step instanceof Loader) {

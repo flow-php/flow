@@ -6,11 +6,13 @@ namespace Flow\Floe;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -27,15 +29,17 @@ use Generator;
 use function sprintf;
 
 final class FloeExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     private ?int $offset = null;
@@ -62,7 +66,6 @@ final class FloeExtractor implements
         }
 
         $this->filesystem = $filesystem;
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -76,6 +79,7 @@ final class FloeExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $fileOffset = $this->offset ?? 0;
+        $yielded = 0;
         // schema() opens a footer, so it is asked only when a schema was declared - an undeclared
         // read is gated batch by batch by the checked door below instead
         $promisedSchema = $this->schema === null ? null : $this->schema();
@@ -98,10 +102,10 @@ final class FloeExtractor implements
                 $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
 
-                $limit = $this->limit();
-                $remaining = $limit === null ? null : $limit - $this->yieldedRows;
+                $limit = $this->pushedLimit();
+                $remaining = $limit === null ? null : $limit - $yielded;
 
-                foreach ($file->reader->rows(1000, $fileOffset, $remaining) as $rows) {
+                foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
                     // R7: the stamp stays post-hydration - FloeStreamReader::rows() yields hydrated Rows and
                     // must not learn about paths - but the constants are the shared ones, already typed
                     $filled = [];
@@ -118,13 +122,15 @@ final class FloeExtractor implements
                         $rows = $rows->matchTo($promisedSchema);
                     }
 
+                    $yielded += $rows->count();
+
                     $signal = yield $rows;
 
-                    foreach ($rows as $row) {
-                        $this->incrementReturnedRows();
+                    if ($signal === Signal::STOP) {
+                        return;
                     }
 
-                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    if ($limit !== null && $yielded >= $limit) {
                         return;
                     }
                 }

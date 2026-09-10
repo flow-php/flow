@@ -6,11 +6,13 @@ namespace Flow\ETL\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\ThrowingAfterFirstBatchExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 use Generator;
@@ -20,6 +22,7 @@ use function array_merge;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ignore_error_handler;
 use function Flow\ETL\DSL\int_schema;
@@ -34,6 +37,16 @@ use function Flow\ETL\DSL\throw_error_handler;
 
 final class ETLErrorHandlingTest extends FlowTestCase
 {
+    public function test_a_source_ended_by_the_handler_takes_the_chained_sources_after_it(): void
+    {
+        $rows = data_frame()
+            ->read(from_all(new ThrowingAfterFirstBatchExtractor(), from_array([['id' => 2]])))
+            ->onError(ignore_error_handler())
+            ->fetch();
+
+        static::assertSame([['id' => 1]], $rows->toArray());
+    }
+
     public function test_default_handler(): void
     {
         $extractor = new class implements Extractor {
@@ -50,7 +63,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
@@ -126,7 +139,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
@@ -182,23 +195,9 @@ final class ETLErrorHandlingTest extends FlowTestCase
             ->load($loader)
             ->run();
 
-        static::assertEquals(
-            [
-                [
-                    'id' => 101,
-                    'deleted' => false,
-                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
-                    'phase' => null,
-                ],
-                [
-                    'id' => 102,
-                    'deleted' => true,
-                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
-                    'phase' => null,
-                ],
-            ],
-            $loader->result,
-        );
+        // a declined transformation drops its batch - running the remaining steps on it would load a half
+        // transformed batch
+        static::assertSame([], $loader->result);
     }
 
     public function test_skip_rows_handler_does_not_emit_the_half_transformed_batch(): void
@@ -207,7 +206,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             ->read(from_array(
                 [['id' => 1, 'v' => '10'], ['id' => 2, 'v' => 'boom'], ['id' => 3, 'v' => '30']],
                 schema(int_schema('id'), str_schema('v')),
-            ))
+            )->withBatchSize(1))
             ->onError(skip_rows_handler())
             ->withEntry('doubled', ref('v')->cast('integer')->multiply(lit(2)))
             ->fetch();
@@ -238,7 +237,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {

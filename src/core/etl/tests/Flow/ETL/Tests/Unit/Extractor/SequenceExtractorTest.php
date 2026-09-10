@@ -8,13 +8,11 @@ use DateInterval;
 use DatePeriod;
 use DateTimeImmutable;
 use Flow\ETL\Extractor\SequenceExtractor;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\MixedSequenceGenerator;
 use Flow\ETL\Tests\Double\RecordingSequenceGenerator;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
-use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -27,7 +25,6 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function iterator_to_array;
 
 final class SequenceExtractorTest extends FlowTestCase
 {
@@ -173,12 +170,10 @@ final class SequenceExtractorTest extends FlowTestCase
 
         $extractor->schema();
 
-        static::assertSame(
+        self::assertExtractedRowsAsArrayEquals(
             [['code' => '1000'], ['code' => 'AB-01']],
-            array_map(
-                static fn(Rows $rows): array => $rows->first()->toArray(),
-                iterator_to_array($extractor->extract(flow_context(config()))),
-            ),
+            $extractor,
+            flow_context(config()),
         );
         static::assertSame(2, $generator->generateCalls);
     }
@@ -187,17 +182,23 @@ final class SequenceExtractorTest extends FlowTestCase
     {
         $extractor = new SequenceExtractor(new MixedSequenceGenerator(), 'code');
 
-        static::assertEquals(
-            [$extractor->schema(), $extractor->schema()],
-            array_map(
-                static fn(Rows $rows): Schema => $rows->schema(),
-                iterator_to_array($extractor->extract(flow_context(config()))),
-            ),
-        );
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+        }
+
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
     }
 
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_sequence_number('num', 1, 3)->isRepeatable());
+    }
+
+    public function test_sequence_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): SequenceExtractor => from_sequence_number('id', 1, 5),
+            RowsMother::sequentialIds(5),
+        );
     }
 }

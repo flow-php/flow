@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
@@ -42,6 +43,11 @@ final readonly class BatchingProcessor implements Processor
         return new BoundStep($this, $input);
     }
 
+    /**
+     * @param Generator<int, Rows> $rows
+     *
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<Row> $buffer */
@@ -49,16 +55,25 @@ final readonly class BatchingProcessor implements Processor
 
         $schema = null;
 
-        foreach ($rows as $batch) {
+        while ($rows->valid()) {
+            $batch = $rows->current();
             $schema ??= $batch->schema();
 
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
                 if (count($buffer) >= $this->size) {
-                    yield new Rows($schema, ...array_splice($buffer, 0, $this->size));
+                    $signal = yield new Rows($schema, ...array_splice($buffer, 0, $this->size));
+
+                    if ($signal === Signal::STOP) {
+                        $rows->send(Signal::STOP);
+
+                        return;
+                    }
                 }
             }
+
+            $rows->next();
         }
 
         if ($buffer !== []) {

@@ -4,16 +4,67 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
+use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint\ReferentialAction;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Tests\Mother\WideTableMother;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
 
 final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
 {
+    public function test_a_failing_chunk_rolls_back_the_whole_delete(): void
+    {
+        $this->databaseContext->createTable(WideTableMother::tableWithPrimaryKey(
+            $parent = 'flow_doctrine_bulk_parent',
+            40,
+        ));
+        // named to sort before its parent, so the teardown drops the referencing table first
+        $this->databaseContext->createTable(
+            new Table($child = 'flow_doctrine_bulk_child', [new Column('parent_c1', Type::getType(Types::INTEGER), [
+                'notnull' => true,
+            ])], fkConstraints: [
+                ForeignKeyConstraint::editor()
+                    ->setUnquotedName('flow_doctrine_bulk_child_parent_fk')
+                    ->setUnquotedReferencingColumnNames('parent_c1')
+                    ->setUnquotedReferencedTableName($parent)
+                    ->setUnquotedReferencedColumnNames('c1')
+                    ->setOnDeleteAction(ReferentialAction::RESTRICT)
+                    ->create(),
+            ]),
+        );
+        Bulk::create()->insert(
+            $this->databaseContext->connection(),
+            $parent,
+            new BulkData(WideTableMother::rows(40, 2000)),
+        );
+
+        // 1638 rows fit under the cap at 40 columns, so parent row 2000 sits in the second of two statements
+        Bulk::create()->insert($this->databaseContext->connection(), $child, new BulkData([['parent_c1' => 2000]]));
+
+        $failure = null;
+
+        try {
+            Bulk::create()->delete(
+                $this->databaseContext->connection(),
+                $parent,
+                new BulkData(WideTableMother::rows(40, 2000)),
+            );
+        } catch (DriverException $e) {
+            $failure = $e;
+        }
+
+        static::assertInstanceOf(DriverException::class, $failure);
+        // restrict_violation; DBAL maps only foreign_key_violation (23503) to ForeignKeyConstraintViolationException
+        static::assertSame('23001', $failure->getSQLState());
+        static::assertSame(2000, $this->databaseContext->tableCount($parent));
+    }
+
     public function test_delete_nonexistent_rows(): void
     {
         // @mago-expect analysis:deprecated-method

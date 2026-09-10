@@ -7,11 +7,13 @@ namespace Flow\ETL\Adapter\XML;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -35,15 +37,17 @@ use function sprintf;
  * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
  */
 final class XMLReaderExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     private readonly Filesystem $filesystem;
@@ -85,7 +89,6 @@ final class XMLReaderExtractor implements
                 'XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.',
             );
         }
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -99,7 +102,8 @@ final class XMLReaderExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $encoder = new XMLEncoder();
 
         $baseSchema = $this->schema ?? schema(xml_schema('node'));
@@ -113,84 +117,95 @@ final class XMLReaderExtractor implements
             $xmlReader = new XMLReader();
             $xmlReader->open($source->path->path());
 
-            $previousDepth = 0;
-            $currentPathBreadCrumbs = [];
+            try {
+                $previousDepth = 0;
+                $currentPathBreadCrumbs = [];
 
-            $rawNodes = [];
+                $rawNodes = [];
 
-            while ($xmlReader->read()) {
-                if ($xmlReader->nodeType === XMLReader::ELEMENT) {
-                    if ($previousDepth === $xmlReader->depth) {
-                        array_pop($currentPathBreadCrumbs);
-                        $currentPathBreadCrumbs[] = $xmlReader->name;
-                    }
+                while ($xmlReader->read()) {
+                    if ($xmlReader->nodeType === XMLReader::ELEMENT) {
+                        if ($previousDepth === $xmlReader->depth) {
+                            array_pop($currentPathBreadCrumbs);
+                            $currentPathBreadCrumbs[] = $xmlReader->name;
+                        }
 
-                    if ($xmlReader->depth > $previousDepth) {
-                        $currentPathBreadCrumbs[] = $xmlReader->name;
-                    }
+                        if ($xmlReader->depth > $previousDepth) {
+                            $currentPathBreadCrumbs[] = $xmlReader->name;
+                        }
 
-                    while ($xmlReader->depth < $previousDepth) {
-                        array_pop($currentPathBreadCrumbs);
-                        $previousDepth--;
-                    }
+                        while ($xmlReader->depth < $previousDepth) {
+                            array_pop($currentPathBreadCrumbs);
+                            $previousDepth--;
+                        }
 
-                    $currentPath = implode('/', array_map(strval(...), $currentPathBreadCrumbs));
+                        $currentPath = implode('/', array_map(strval(...), $currentPathBreadCrumbs));
 
-                    if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
-                        $dom = new DOMDocument('1.0', '');
-                        $node = $xmlReader->expand($dom);
-                        $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
+                        if (
+                            $currentPath === $this->xmlNodePath
+                            || $this->xmlNodePath === '' && $xmlReader->depth === 0
+                        ) {
+                            $dom = new DOMDocument('1.0', '');
+                            $node = $xmlReader->expand($dom);
+                            $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
 
-                        if (count($rawNodes) >= $batchSize) {
-                            $batch = [];
+                            if (count($rawNodes) >= $batchSize) {
+                                $batch = [];
 
-                            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                            }
+                                foreach ($encoder->decode($rawNodes) as $rowValues) {
+                                    $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                                }
 
-                            $rawNodes = [];
+                                $rawNodes = [];
 
-                            $hydrated = $hydrator->hydrate($batch, $schema);
+                                $hydrated = $hydrator->hydrate($batch, $schema);
 
-                            foreach ($hydrated as $hydratedRow) {
-                                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                                $yielded += $hydrated->count();
 
-                                $this->incrementReturnedRows();
+                                $signal = yield $hydrated;
 
-                                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                                    $xmlReader->close();
+                                if ($signal === Signal::STOP) {
+                                    return;
+                                }
 
+                                $limit = $this->pushedLimit();
+
+                                if ($limit !== null && $yielded >= $limit) {
                                     return;
                                 }
                             }
                         }
+
+                        $previousDepth = $xmlReader->depth;
+                    }
+                }
+
+                if ($rawNodes !== []) {
+                    $batch = [];
+
+                    foreach ($encoder->decode($rawNodes) as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
                     }
 
-                    $previousDepth = $xmlReader->depth;
+                    $hydrated = $hydrator->hydrate($batch, $schema);
+
+                    $yielded += $hydrated->count();
+
+                    $signal = yield $hydrated;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
                 }
+            } finally {
+                $xmlReader->close();
             }
-
-            $batch = [];
-
-            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-            }
-
-            $hydrated = $hydrator->hydrate($batch, $schema);
-
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $xmlReader->close();
-
-                    return;
-                }
-            }
-
-            $xmlReader->close();
         }
     }
 

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use Doctrine\DBAL\Logging\Middleware;
 use Flow\ETL\Adapter\Doctrine\DbalKeySetExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -24,7 +26,7 @@ final class DbalKeySetExtractorTest extends FlowTestCase
             $connection,
             $connection->createQueryBuilder()->select('*')->from('users'),
             pagination_key_set(pagination_key_asc('id')),
-        ))->withPageSize(2);
+        ))->withBatchSize(2);
 
         static::assertSame(['id', 'name', 'amount'], $extractor->schema()->references()->names());
 
@@ -62,6 +64,23 @@ final class DbalKeySetExtractorTest extends FlowTestCase
         );
 
         static::assertEquals(schema(int_schema('id')), $extractor->withSchema(schema(int_schema('id')))->schema());
+    }
+
+    public function test_pushed_limit_issues_no_query_once_satisfied(): void
+    {
+        $counter = new SelectQueryCounter();
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(new Middleware($counter)), 3000);
+        $extractor = new DbalKeySetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users'),
+            pagination_key_set(pagination_key_asc('id')),
+        );
+        $extractor->pushLimit(1500);
+        $counter->reset();
+
+        self::assertExtractedRowsCount(1500, $extractor);
+        // 1000, then a page narrowed to the 500 still wanted - and no third query for row 1501
+        static::assertSame(2, $counter->count);
     }
 
     public function test_is_repeatable(): void

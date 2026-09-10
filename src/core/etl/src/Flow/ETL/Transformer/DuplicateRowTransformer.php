@@ -19,6 +19,7 @@ use Flow\Types\Type\Unifier\NullabilityRule;
 use Flow\Types\Type\Unifier\PromotingUnifier;
 use Throwable;
 
+use function array_key_exists;
 use function array_values;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\rows;
@@ -66,10 +67,12 @@ final class DuplicateRowTransformer implements Transformer
             $condition = $this->resolved ?? $this->resolve($rows->schema());
             $output = $this->output ?? $this->declare($rows->schema());
             $duplicated = [];
+            $sources = [];
 
-            foreach ($rows->all() as $row) {
+            foreach ($rows->all() as $position => $row) {
                 if ((new Parameter($condition))->asBoolean($row, $context) ?? false) {
                     $duplicated[] = $row;
+                    $sources[$position] = true;
                 }
             }
 
@@ -85,7 +88,20 @@ final class DuplicateRowTransformer implements Transformer
                     );
                 }
 
-                $rows = new Rows($output, ...$rows->all(), ...$duplicatedRows->all());
+                $copies = $duplicatedRows->all();
+                $copy = 0;
+                $interleaved = [];
+
+                // each copy follows the row it duplicates, so the output does not depend on where a batch ends
+                foreach ($rows->all() as $position => $row) {
+                    $interleaved[] = $row;
+
+                    if (array_key_exists($position, $sources)) {
+                        $interleaved[] = $copies[$copy++];
+                    }
+                }
+
+                $rows = new Rows($output, ...$interleaved);
             } else {
                 $rows = new Rows($output, ...$rows->all());
             }

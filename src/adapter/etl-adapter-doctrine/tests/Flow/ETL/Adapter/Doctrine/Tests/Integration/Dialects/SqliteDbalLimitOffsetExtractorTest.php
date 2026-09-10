@@ -148,7 +148,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
                     ))
                     ->withMaximum(5)
                     ->withOffset(10)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Integration;
 
 use Flow\ETL\Adapter\GoogleSheet\Tests\GoogleSheetsContext;
-use Flow\ETL\Config;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -191,7 +191,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             '1234567890',
             'Sheet',
         );
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
         static::assertCount(2, df()->extract($extractor)->fetch()->toArray());
     }
@@ -252,11 +252,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         );
 
         /** @var array<Rows> $batches */
-        $batches = iterator_to_array($extractor->extract(
-            flow_context(Config::builder()->extractorBatchSize(1)->build()),
-        ));
+        $batches = iterator_to_array($extractor->withBatchSize(1)->extract(flow_context()));
 
-        static::assertCount(3, $batches);
+        static::assertSame([1, 1, 1], array_map(static fn(Rows $rows): int => $rows->count(), $batches));
 
         foreach ($batches as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
@@ -380,7 +378,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             '1234567890',
             'Sheet',
         );
-        $extractor->changeLimit(1);
+        $extractor->withBatchSize(1)->pushLimit(1);
 
         static::assertCount(1, df()->extract($extractor)->fetch()->toArray());
         static::assertCount(4, $this->context->requests());

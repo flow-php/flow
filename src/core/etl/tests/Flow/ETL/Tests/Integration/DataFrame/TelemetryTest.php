@@ -313,7 +313,7 @@ final class TelemetryTest extends FlowTestCase
 
         $output = [];
         df($context->config)
-            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->read(from_array([['id' => 1], ['id' => 2]])->withBatchSize(1))
             ->duplicateRow(condition: lit(true), entries: with_entry('id', ref('id')->multiply(lit(-1))))
             ->write(to_array($output))
             ->run();
@@ -401,7 +401,7 @@ final class TelemetryTest extends FlowTestCase
 
         $output = [];
         df($context->config)
-            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->read(from_array([['id' => 1], ['id' => 2]])->withBatchSize(1))
             ->load(new RetryLoader(to_array($output)))
             ->run();
 

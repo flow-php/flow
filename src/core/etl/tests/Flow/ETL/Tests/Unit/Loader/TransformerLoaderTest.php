@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Loader;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
+use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
@@ -242,22 +244,59 @@ final class TransformerLoaderTest extends FlowTestCase
         static::assertSame(2, $throwing->loadsCount);
     }
 
-    public function test_a_declined_failure_breaks_the_step_chain_like_a_plain_loader(): void
+    public function test_a_declined_failure_keeps_loading_into_the_next_loader_like_a_plain_loader(): void
     {
-        // skip_rows_handler() is the only handler under which the declined path is observable end to end: Segment
-        // breaks the step chain for the failing batch, so the loader after this one never sees it - exactly what a
-        // plain loader's failure does.
+        // skipLoader declines one sink's failure, not the batch: the loader after this one still receives it -
+        // exactly what a plain loader's declined failure does.
         $tail = new SpyLoader();
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
             ->batchSize(1)
-            ->onError(skip_rows_handler())
+            ->onError(ignore_error_handler())
             ->write(to_transformation(new ThrowWhenRowMatches('id', 2, new RuntimeException('boom')), new SpyLoader()))
             ->write($tail)
             ->run();
 
-        static::assertSame([1, 3], array_column($tail->loadedRowsToArray(), 'id'));
+        static::assertSame([1, 2, 3], array_column($tail->loadedRowsToArray(), 'id'));
+    }
+
+    public function test_closure_reports_a_drain_failure_as_a_loading_error(): void
+    {
+        $handler = new RecordingErrorHandler();
+        $context = flow_context(config())->setErrorHandler($handler);
+        $loader = to_transformation(
+            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+                new RuntimeException('boom'),
+            ))),
+            new SpyLoader(),
+        );
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->closure($context);
+
+        static::assertCount(1, $handler->errors);
+        static::assertInstanceOf(LoadingError::class, $handler->errors[0]);
+        static::assertSame($loader, $handler->errors[0]->loader);
+        static::assertSame('boom', $handler->errors[0]->cause->getMessage());
+    }
+
+    public function test_closure_rethrows_a_drain_failure_under_skip_rows(): void
+    {
+        $context = flow_context(config())->setErrorHandler(skip_rows_handler());
+        $loader = to_transformation(
+            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+                new RuntimeException('boom'),
+            ))),
+            new SpyLoader(),
+        );
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('boom');
+
+        $loader->closure($context);
     }
 
     public function test_a_failed_run_does_not_close_the_wrapped_loader(): void

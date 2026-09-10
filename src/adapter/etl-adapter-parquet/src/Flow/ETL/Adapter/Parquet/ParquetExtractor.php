@@ -6,11 +6,13 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -31,15 +33,17 @@ use function max;
 use function sprintf;
 
 final class ParquetExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
@@ -79,7 +83,6 @@ final class ParquetExtractor implements
         }
 
         $this->filesystem = $filesystem;
-        $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
         $this->options = Options::default();
     }
@@ -95,7 +98,8 @@ final class ParquetExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
 
         $fileOffset = $this->offset ?? 0;
         $promisedSchema = $this->schema === null ? null : $this->schema();
@@ -122,32 +126,44 @@ final class ParquetExtractor implements
 
                 $rawBatch = [];
 
-                foreach ($file->file->values($this->columns, $this->limit(), $fileOffset) as $row) {
+                foreach ($file->file->values($this->columns, $this->pushedLimit(), $fileOffset) as $row) {
                     $rawBatch[] = $constants->fill($row);
 
                     if (count($rawBatch) >= $batchSize) {
                         $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
 
-                        foreach ($hydrated as $hydratedRow) {
-                            $this->incrementReturnedRows();
-                            $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                        $yielded += $hydrated->count();
 
-                            if ($signal === Signal::STOP || $this->reachedLimit()) {
-                                return;
-                            }
+                        $signal = yield $hydrated;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
+
+                        $limit = $this->pushedLimit();
+
+                        if ($limit !== null && $yielded >= $limit) {
+                            return;
                         }
 
                         $rawBatch = [];
                     }
                 }
 
-                $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+                if ($rawBatch !== []) {
+                    $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
 
-                foreach ($hydrated as $hydratedRow) {
-                    $this->incrementReturnedRows();
-                    $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                    $yielded += $hydrated->count();
 
-                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $signal = yield $hydrated;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
                         return;
                     }
                 }

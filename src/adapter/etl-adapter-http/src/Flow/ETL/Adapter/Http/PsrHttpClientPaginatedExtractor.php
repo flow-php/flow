@@ -69,12 +69,10 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
 
             $hydrated = $hydrator->hydrate($raw, $this->schema());
 
-            foreach ($hydrated as $row) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$row]);
+            $signal = yield $hydrated;
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
             }
 
             $request = $this->paginator->nextRequest(

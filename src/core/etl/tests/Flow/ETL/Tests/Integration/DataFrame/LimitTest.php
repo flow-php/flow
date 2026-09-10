@@ -6,12 +6,14 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
+use function array_column;
 use function array_map;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
@@ -19,6 +21,7 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -86,7 +89,7 @@ final class LimitTest extends FlowIntegrationTestCase
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
@@ -116,7 +119,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -172,7 +175,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -229,7 +232,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -262,7 +265,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -295,7 +298,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -308,5 +311,36 @@ final class LimitTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertCount(5, $rows);
+    }
+
+    public function test_limit_after_a_filter_returns_exactly_the_limit(): void
+    {
+        $source = from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 20)));
+
+        static::assertSame(
+            [2, 4, 6, 8, 10],
+            array_column(
+                df()
+                    ->read($source)
+                    ->select('id')
+                    ->filter(ref('id')->mod(lit(2))->equals(lit(0)))
+                    ->limit(5)
+                    ->fetch()
+                    ->toArray(),
+                'id',
+            ),
+        );
+        static::assertSame(
+            [2, 4, 6, 8, 10],
+            array_column(
+                df()
+                    ->read($source)
+                    ->filter(ref('id')->mod(lit(2))->equals(lit(0)))
+                    ->limit(5)
+                    ->fetch()
+                    ->toArray(),
+                'id',
+            ),
+        );
     }
 }

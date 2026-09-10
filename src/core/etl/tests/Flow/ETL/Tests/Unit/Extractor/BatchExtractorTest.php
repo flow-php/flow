@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\batches;
 use function Flow\ETL\DSL\flow_context;
@@ -50,18 +53,42 @@ final class BatchExtractorTest extends FlowTestCase
         iterator_to_array(batches($child, 2)->extract(flow_context()), false);
     }
 
+    public function test_batch_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): BatchExtractor => batches(from_rows(RowsMother::sequentialIds(5)), 2),
+            RowsMother::sequentialIds(5),
+        );
+    }
+
     public function test_chunk_extractor(): void
     {
-        $extractor = batches(new FakeExtractor($batches = 100), $chunkSize = 10);
+        $batches = 0;
 
-        self::assertExtractedBatchesCount($batches / $chunkSize, $extractor);
+        foreach (batches(new FakeExtractor(100), 10)->extract(flow_context()) as $_rows) {
+            $batches++;
+        }
+
+        static::assertSame(10, $batches);
     }
 
     public function test_chunk_extractor_with_chunk_size_greater_than_(): void
     {
-        $extractor = batches(new FakeExtractor(total: 20), size: 25);
+        $batches = 0;
 
-        self::assertExtractedBatchesCount(1, $extractor);
+        foreach (batches(new FakeExtractor(total: 20), size: 25)->extract(flow_context()) as $_rows) {
+            $batches++;
+        }
+
+        static::assertSame(1, $batches);
+    }
+
+    public function test_throws_when_constructed_with_zero_batch_size(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
+
+        new BatchExtractor(from_rows(RowsMother::sequentialIds(1)), 0);
     }
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void

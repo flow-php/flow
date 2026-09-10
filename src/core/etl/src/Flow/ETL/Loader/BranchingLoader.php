@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\ErrorHandler\LoadingAction;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
@@ -42,7 +44,10 @@ final class BranchingLoader implements Closure, Discardable, Loader, OverridingL
             } catch (Throwable $failure) {
                 // Same ruling as TransformerLoader::closure(): a drain failure never reached load(), so the
                 // ErrorHandler rules here; declining means the run continues and the loader must still close.
-                if ($context->errorHandler()->throw($failure, new Rows(new Schema()))) {
+                if (
+                    $context->errorHandler()->onLoading(new LoadingError($failure, $this, new Rows(new Schema())))
+                    === LoadingAction::propagate
+                ) {
                     throw $failure;
                 }
             }

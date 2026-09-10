@@ -16,6 +16,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
@@ -101,7 +102,7 @@ final class HashJoinProcessor implements Processor
     /**
      * @param Generator<Rows> $rows
      *
-     * @return Generator<Rows>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
@@ -153,7 +154,7 @@ final class HashJoinProcessor implements Processor
             if ($resident) {
                 $rightBucket = $this->rightBuckets->all()[0] ?? null;
 
-                yield from $joiner->join(
+                $joinedBatches = $joiner->join(
                     JoinSide::of($leftRows, null, $leftSchema),
                     JoinSide::of(
                         $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
@@ -161,6 +162,18 @@ final class HashJoinProcessor implements Processor
                         $rightSchema,
                     ),
                 );
+
+                // the left side streams through the join, so a stop has to reach its source: the upstream
+                // segment then completes and closes its loaders instead of being abandoned mid-run
+                foreach ($joinedBatches as $joinedBatch) {
+                    $signal = yield $joinedBatch;
+
+                    if ($signal === Signal::STOP) {
+                        $rows->send(Signal::STOP);
+
+                        return;
+                    }
+                }
 
                 return;
             }

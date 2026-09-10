@@ -7,11 +7,13 @@ namespace Flow\ETL\Adapter\XML;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -31,13 +33,15 @@ use function Flow\ETL\DSL\xml_schema;
 use function sprintf;
 
 final class XMLParserExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     /**
@@ -102,7 +106,6 @@ final class XMLParserExtractor implements
         }
 
         $this->filesystem = $filesystem;
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -141,7 +144,8 @@ final class XMLParserExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $encoder = new XMLEncoder();
 
         $baseSchema = $this->schema ?? schema(xml_schema('node'));
@@ -152,73 +156,82 @@ final class XMLParserExtractor implements
         foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
 
-            $constants = $fileColumns->forFile($source, $schema);
+            try {
+                $constants = $fileColumns->forFile($source, $schema);
 
-            $rawNodes = [];
+                $rawNodes = [];
 
-            foreach ($stream->iterate($this->bufferSize) as $chunk) {
-                if (!xml_parse($this->parser(), $chunk)) {
-                    throw new RuntimeException(sprintf(
-                        'XML Error: %s at line %d',
-                        (string) xml_error_string(xml_get_error_code($this->parser())),
-                        xml_get_current_line_number($this->parser()),
-                    ));
-                }
+                foreach ($stream->iterate($this->bufferSize) as $chunk) {
+                    if (!xml_parse($this->parser(), $chunk)) {
+                        throw new RuntimeException(sprintf(
+                            'XML Error: %s at line %d',
+                            (string) xml_error_string(xml_get_error_code($this->parser())),
+                            xml_get_current_line_number($this->parser()),
+                        ));
+                    }
 
-                foreach ($this->elements as $element) {
-                    $rawNodes[] = $element;
+                    foreach ($this->elements as $element) {
+                        $rawNodes[] = $element;
 
-                    if (count($rawNodes) >= $batchSize) {
-                        $batch = [];
+                        if (count($rawNodes) >= $batchSize) {
+                            $batch = [];
 
-                        foreach ($encoder->decode($rawNodes) as $rowValues) {
-                            $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                        }
+                            foreach ($encoder->decode($rawNodes) as $rowValues) {
+                                $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                            }
 
-                        $rawNodes = [];
+                            $rawNodes = [];
 
-                        $hydrated = $hydrator->hydrate($batch, $schema);
+                            $hydrated = $hydrator->hydrate($batch, $schema);
 
-                        foreach ($hydrated as $hydratedRow) {
-                            $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                            $yielded += $hydrated->count();
 
-                            $this->incrementReturnedRows();
+                            $signal = yield $hydrated;
 
-                            if ($signal === Signal::STOP || $this->reachedLimit()) {
-                                $this->freeParser();
+                            if ($signal === Signal::STOP) {
+                                return;
+                            }
 
+                            $limit = $this->pushedLimit();
+
+                            if ($limit !== null && $yielded >= $limit) {
                                 return;
                             }
                         }
                     }
+
+                    $this->elements = [];
                 }
 
-                $this->elements = [];
-            }
+                if ($rawNodes !== []) {
+                    $batch = [];
 
-            $batch = [];
+                    foreach ($encoder->decode($rawNodes) as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                    }
 
-            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-            }
+                    $hydrated = $hydrator->hydrate($batch, $schema);
 
-            $hydrated = $hydrator->hydrate($batch, $schema);
+                    $yielded += $hydrated->count();
 
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                    $signal = yield $hydrated;
 
-                $this->incrementReturnedRows();
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
 
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $this->freeParser();
+                    $limit = $this->pushedLimit();
 
-                    return;
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
                 }
+
+                xml_parse($this->parser(), '', true);
+            } finally {
+                $this->freeParser();
+                $stream->close();
             }
-
-            xml_parse($this->parser(), '', true);
-
-            $this->freeParser();
         }
     }
 
@@ -305,6 +318,9 @@ final class XMLParserExtractor implements
         $this->parser = null;
         $this->namespaceStack = [];
         $this->currentPath = [];
+        $this->elements = [];
+        $this->capturing = false;
+        $this->writer = null;
     }
 
     private function parser(): XMLParser

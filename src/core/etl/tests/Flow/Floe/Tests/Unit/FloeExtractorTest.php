@@ -7,11 +7,14 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Floe\FloeExtractor;
 use Flow\Floe\Tests\Context\FloeEngineContext;
-use PHPUnit\Framework\TestCase;
 
+use function array_sum;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
@@ -26,14 +29,15 @@ use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function Flow\Types\DSL\type_integer;
 use function iterator_to_array;
+use function max;
 
-final class FloeExtractorTest extends TestCase
+final class FloeExtractorTest extends FlowTestCase
 {
     public function test_change_limit_to_zero_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->changeLimit(0);
+        from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->pushLimit(0);
     }
 
     public function test_default_filter_keeps_only_files(): void
@@ -92,7 +96,7 @@ final class FloeExtractorTest extends TestCase
         $loader->closure($context);
 
         $extractor = from_floe($path, filesystem: $memory);
-        $extractor->changeLimit(2);
+        $extractor->pushLimit(2);
 
         $ids = [];
 
@@ -213,11 +217,11 @@ final class FloeExtractorTest extends TestCase
     {
         $extractor = from_floe(path('memory://x.floe'), filesystem: memory_filesystem());
 
-        static::assertFalse($extractor->isLimited());
+        static::assertNull($extractor->pushedLimit());
 
-        $extractor->changeLimit(5);
+        $extractor->pushLimit(5);
 
-        static::assertTrue($extractor->isLimited());
+        static::assertNotNull($extractor->pushedLimit());
     }
 
     public function test_negative_offset_throws(): void
@@ -432,5 +436,41 @@ final class FloeExtractorTest extends TestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->isRepeatable());
+    }
+
+    public function test_floe_extractor_honours_the_batch_contract(): void
+    {
+        $context = flow_context(config());
+        $memory = memory_filesystem();
+        $path = path('memory://contract.floe');
+
+        $loader = to_floe($path, filesystem: $memory);
+        $loader->load(RowsMother::sequentialIds(7), $context);
+        $loader->closure($context);
+
+        self::assertExtractorHonoursBatchContract(
+            static fn(): FloeExtractor => from_floe($path, filesystem: $memory),
+            RowsMother::sequentialIds(7),
+        );
+    }
+
+    public function test_reader_batch_follows_the_batch_size(): void
+    {
+        $context = flow_context(config());
+        $memory = memory_filesystem();
+        $path = path('memory://twenty.floe');
+
+        $loader = to_floe($path, filesystem: $memory);
+        $loader->load(RowsMother::sequentialIds(20), $context);
+        $loader->closure($context);
+
+        $sizes = [];
+
+        foreach (from_floe($path, filesystem: $memory)->withBatchSize(7)->extract($context) as $rows) {
+            $sizes[] = $rows->count();
+        }
+
+        static::assertLessThanOrEqual(7, max($sizes));
+        static::assertSame(20, array_sum($sizes));
     }
 }

@@ -764,4 +764,26 @@ final class BulkDataTest extends TestCase
 
         $connection->createSchemaManager()->createTable($table);
     }
+
+    public function test_chunk_returns_self_when_it_fits(): void
+    {
+        $bulkData = new BulkData([['id' => 1], ['id' => 2]]);
+
+        static::assertSame([$bulkData], $bulkData->chunk(2));
+    }
+
+    public function test_chunk_splits_and_preserves_types_and_parameters_style(): void
+    {
+        $types = ['id' => Type::getType(Types::INTEGER)];
+        $chunks = (new BulkData([['id' => 1], ['id' => 2], ['id' => 3]], $types, SQLParametersStyle::NAMED))->chunk(2);
+
+        static::assertCount(2, $chunks);
+        static::assertSame([['id' => 1], ['id' => 2]], $chunks[0]->rows());
+        static::assertSame([['id' => 3]], $chunks[1]->rows());
+
+        foreach ($chunks as $chunk) {
+            static::assertSame($types, $chunk->types());
+            static::assertSame(SQLParametersStyle::NAMED, $chunk->parametersStyle());
+        }
+    }
 }

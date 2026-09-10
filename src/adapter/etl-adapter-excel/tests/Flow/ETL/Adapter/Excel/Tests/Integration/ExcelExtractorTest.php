@@ -16,6 +16,7 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -40,6 +41,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
+use function max;
 
 final class ExcelExtractorTest extends FlowTestCase
 {
@@ -85,7 +87,7 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_extract_excel_file_with_limit(string $fixtureName): void
     {
         $extractor = from_excel($fixtureName);
-        $extractor->changeLimit(5);
+        $extractor->withBatchSize(1)->pushLimit(5);
 
         $rows = df()->extract($extractor)->fetch()->toArray();
 
@@ -333,9 +335,11 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $extractor = from_excel($fixtureName);
         $emails = [];
+        $sizes = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->extractorBatchSize(2)->build())) as $rows) {
+        foreach ($extractor->withBatchSize(2)->extract(flow_context()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
+            $sizes[] = $rows->count();
 
             foreach ($rows as $row) {
                 $emails[] = $row->get('email');
@@ -344,6 +348,8 @@ final class ExcelExtractorTest extends FlowTestCase
 
         static::assertCount(10, $emails);
         static::assertNull($emails[9]);
+        static::assertLessThanOrEqual(2, max($sizes));
+        static::assertContains(2, $sizes);
     }
 
     public function test_a_datetime_past_a_date_sample_is_truncated(): void
@@ -483,7 +489,7 @@ final class ExcelExtractorTest extends FlowTestCase
         $before = ExcelFixtureContext::sharedStringsFolders();
 
         $extractor = from_excel(ExcelFixtureContext::file('orders_flow.xlsx'));
-        $extractor->changeLimit(1);
+        $extractor->pushLimit(1);
 
         df()->read($extractor)->run();
 
@@ -493,7 +499,7 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_limit_pays_the_sample_but_yields_only_the_limit(): void
     {
         $extractor = from_excel(ExcelFixtureContext::file('orders_1k.xlsx'));
-        $extractor->changeLimit(5);
+        $extractor->withBatchSize(1)->pushLimit(5);
 
         static::assertCount(5, df()->extract($extractor)->fetch()->toArray());
         static::assertNotEmpty($extractor->schema()->references()->names());
@@ -687,7 +693,9 @@ final class ExcelExtractorTest extends FlowTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))->extract(flow_context(config()));
+        $generator = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))
+            ->withBatchSize(1)
+            ->extract(flow_context(config()));
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -696,5 +704,24 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
+    }
+
+    public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $generator = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))
+            ->withBatchSize(10)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))->withBatchSize(10);
+        $extractor->pushLimit(2);
+
+        static::assertCount(2, ExtractedRows::of($extractor));
     }
 }

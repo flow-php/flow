@@ -9,8 +9,10 @@ use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\DSL\flow_context;
@@ -27,6 +29,34 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true`',
             );
         }
+    }
+
+    public function test_an_empty_page_is_not_yielded(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([
+                ['id' => '1'],
+                ['id' => '2'],
+                ['id' => '3'],
+                ['id' => '4'],
+                ['id' => '5'],
+            ]), new StubCursor([]));
+
+        // the second page asks for the 5 rows still allowed and gets none back
+        static::assertSame(
+            [5],
+            array_map(
+                static fn(Rows $rows): int => $rows->count(),
+                iterator_to_array(
+                    from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')
+                        ->withBatchSize(5)
+                        ->withMaximum(10)
+                        ->extract(flow_context()),
+                    false,
+                ),
+            ),
+        );
     }
 
     public function test_a_declared_schema_runs_no_query(): void
@@ -75,7 +105,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
             ->willCountTotal(3)
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
 
-        $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withPageSize(2);
+        $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2);
         $batches = iterator_to_array($extractor->extract(flow_context()));
 
         static::assertSame(1, $client->callsTo('describe'));
@@ -132,11 +162,11 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         iterator_to_array(from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t')->extract(flow_context()));
     }
 
-    public function test_with_page_size_returns_the_same_extractor(): void
+    public function test_with_batch_size_returns_the_same_extractor(): void
     {
         $extractor = from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id');
 
-        static::assertSame($extractor, $extractor->withPageSize(10));
+        static::assertSame($extractor, $extractor->withBatchSize(10));
     }
 
     public function test_with_maximum_returns_the_same_extractor(): void
@@ -169,20 +199,48 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withMaximum(0);
     }
 
-    public function test_with_page_size_validates_negative_value(): void
+    public function test_with_batch_size_validates_negative_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Page size must be greater than 0, got -1');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got -1');
 
-        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withPageSize(-1);
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withBatchSize(-1);
     }
 
-    public function test_with_page_size_validates_positive_value(): void
+    public function test_with_batch_size_validates_positive_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Page size must be greater than 0, got 0');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
 
-        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withPageSize(0);
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withBatchSize(0);
+    }
+
+    public function test_pushed_limit_skips_the_count_query(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(1000)
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+        $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2);
+        $extractor->pushLimit(3);
+
+        self::assertExtractedRowsCount(3, $extractor);
+        // countTotal() is the only caller of fetchScalarInt()
+        static::assertSame(0, $client->callsTo('fetchScalarInt'));
+    }
+
+    public function test_stops_issuing_pages_when_a_page_comes_back_short(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        self::assertExtractedRowsCount(
+            3,
+            from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2)->withMaximum(1000),
+        );
+        // bounded by the rows the table has, not by ceil(1000 / 2)
+        static::assertSame(2, $client->callsTo('cursor'));
     }
 
     public function test_is_repeatable(): void

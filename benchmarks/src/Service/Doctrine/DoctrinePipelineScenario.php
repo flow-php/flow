@@ -59,7 +59,7 @@ final readonly class DoctrinePipelineScenario
                 $connection->createQueryBuilder()->select('*')->from($this->table()),
                 pagination_key_set(pagination_key_asc('order_id')),
             )
-                ->withPageSize(1000)
+                ->withBatchSize(1000)
                 ->withSchema(OrdersSchema::ofService(ServiceSource::doctrine)),
             'doctrine',
         ))->run();

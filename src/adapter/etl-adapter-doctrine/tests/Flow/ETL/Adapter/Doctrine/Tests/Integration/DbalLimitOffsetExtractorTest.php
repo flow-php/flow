@@ -18,16 +18,14 @@ use Flow\ETL\Adapter\Doctrine\Table;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Adapter\Doctrine\TypesMap;
 use Flow\ETL\Config;
-use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
-use function array_map;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
-use function iterator_to_array;
 
 final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
@@ -66,28 +64,19 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         static::assertSame(
             [
                 [
-                    [
-                        'id' => 3,
-                        'code' => 200,
-                    ],
+                    'id' => 3,
+                    'code' => 200,
                 ],
                 [
-                    [
-                        'id' => 1,
-                        'code' => 100,
-                    ],
+                    'id' => 1,
+                    'code' => 100,
                 ],
                 [
-                    [
-                        'id' => 2,
-                        'code' => 100,
-                    ],
+                    'id' => 2,
+                    'code' => 100,
                 ],
             ],
-            array_map(
-                static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(flow_context(Config::builder()->build()))),
-            ),
+            ExtractedRows::of($extractor, flow_context(Config::builder()->build()))->toArray(),
         );
     }
 

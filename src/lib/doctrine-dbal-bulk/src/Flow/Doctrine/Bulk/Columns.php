@@ -39,6 +39,11 @@ final readonly class Columns
         return $this->columns;
     }
 
+    public function count(): int
+    {
+        return count($this->columns);
+    }
+
     /**
      * @param string ...$columnNames
      *

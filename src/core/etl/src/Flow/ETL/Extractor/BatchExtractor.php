@@ -12,17 +12,18 @@ use Generator;
 
 use function count;
 
-final class BatchExtractor implements Extractor, OverridingExtractor, RewindableExtractor
+final class BatchExtractor implements BatchableExtractor, Extractor, OverridingExtractor, RewindableExtractor
 {
+    use Batches;
+
     private ?Schema $schema = null;
 
-    /**
-     * @param int<1, max> $chunkSize
-     */
     public function __construct(
         private Extractor $extractor,
-        private int $chunkSize,
-    ) {}
+        int $batchSize,
+    ) {
+        $this->withBatchSize($batchSize);
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -42,7 +43,7 @@ final class BatchExtractor implements Extractor, OverridingExtractor, Rewindable
             foreach ($rows->all() as $row) {
                 $buffer[] = $row;
 
-                if (count($buffer) === $this->chunkSize) {
+                if (count($buffer) === $this->batchSize) {
                     $signal = yield Rows::trusted($schema, $buffer);
 
                     if ($signal === Signal::STOP) {

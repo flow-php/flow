@@ -8,6 +8,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -17,14 +21,16 @@ use Generator;
 
 use function count;
 use function is_numeric;
+use function min;
 
-final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
+final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private ?int $maximum = null;
 
     private int $offset = 0;
-
-    private int $pageSize = 1000;
 
     private ?Schema $schema = null;
 
@@ -33,7 +39,10 @@ final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
     public function __construct(
         private readonly Connection $connection,
         private readonly QueryBuilder $queryBuilder,
-    ) {}
+    ) {
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
 
     /**
      * @param array<OrderBy> $orderBy
@@ -76,8 +85,15 @@ final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
             $this->offset = $this->queryBuilder->getFirstResult();
         }
 
-        if (isset($this->maximum)) {
-            $total = $this->maximum;
+        $pushed = $this->pushedLimit();
+        $maximum = match (true) {
+            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null => $this->maximum,
+            default => $pushed,
+        };
+
+        if (null !== $maximum) {
+            $total = $maximum;
         } else {
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
@@ -105,17 +121,23 @@ final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
             }
         }
 
-        $totalFetched = 0;
+        $yielded = 0;
         $encoder = new DbalEncoder();
 
-        for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
-            $offset = ($page * $this->pageSize) + $this->offset;
+        for ($page = 0; $page < (new Pages($total, $this->batchSize))->pages(); $page++) {
+            // the request asks only for what is still wanted, while the offset keeps striding by the batch size
+            $pageSize = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
+            $offset = ($page * $this->batchSize) + $this->offset;
 
-            $pageQuery = (clone $this->queryBuilder)->setMaxResults($this->pageSize)->setFirstResult($offset);
+            $pageQuery = (clone $this->queryBuilder)->setMaxResults($pageSize)->setFirstResult($offset);
 
             $pageResults = $this->connection
                 ->executeQuery($pageQuery->getSQL(), $pageQuery->getParameters(), $pageQuery->getParameterTypes())
                 ->fetchAllAssociative();
+
+            if ($pageResults === []) {
+                return;
+            }
 
             $rawBatch = [];
 
@@ -125,18 +147,17 @@ final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
 
             $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
 
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+            $yielded += $hydrated->count();
 
-                $totalFetched++;
+            $signal = yield $hydrated;
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
+            }
 
-                if (null !== $this->maximum && $totalFetched >= $this->maximum) {
-                    return;
-                }
+            // a short page means the source ran out, whatever $total promised
+            if (count($pageResults) < $pageSize) {
+                return;
             }
         }
     }
@@ -170,17 +191,6 @@ final class DbalLimitOffsetExtractor implements Extractor, RewindableExtractor
         }
 
         $this->offset = $offset;
-
-        return $this;
-    }
-
-    public function withPageSize(int $pageSize): self
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
-        }
-
-        $this->pageSize = $pageSize;
 
         return $this;
     }

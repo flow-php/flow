@@ -272,6 +272,7 @@ final class DataFrame
         Formatter $formatter = new AsciiTableFormatter(),
     ): string {
         $this->limit($limit);
+        $this->collect();
 
         $output = '';
 
@@ -686,6 +687,7 @@ final class DataFrame
             $this->limit($limit);
         }
 
+        $this->collect();
         $this->load(to_output($truncate, Output::rows, $formatter));
 
         $this->run();

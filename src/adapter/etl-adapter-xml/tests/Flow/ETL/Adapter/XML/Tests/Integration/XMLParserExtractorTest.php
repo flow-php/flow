@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\ETL\Config;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
+use function file_get_contents;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
@@ -18,6 +23,9 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
 
@@ -41,7 +49,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_limit(): void
     {
         $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row');
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
         $rows = df()->extract($extractor)->fetch()->toArray();
 
@@ -293,8 +301,105 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         static::assertFalse($generator->valid());
     }
 
+    public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $generator = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')
+            ->withBatchSize(10)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')->withBatchSize(10);
+        $extractor->pushLimit(1);
+
+        static::assertCount(1, ExtractedRows::of($extractor));
+    }
+
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row')->isRepeatable());
+    }
+
+    public function test_a_limited_read_closes_its_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        $extractor = (new XMLParserExtractor(path_real(__DIR__ . '/../Fixtures/simple_items.xml'), $filesystem))
+            ->withXMLNodePath('root/items/item')
+            ->withBatchSize(1);
+        $extractor->pushLimit(1);
+
+        foreach ($extractor->extract(flow_context(config())) as $_rows) {
+        }
+
+        static::assertContains('closeSource', $filesystem->calls);
+    }
+
+    public function test_a_failed_read_leaves_nothing_behind_for_the_next_read(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://items.xml');
+        $filesystem->writeTo($path)->append('<root><item><id>1</id></item><item><id>2</id></wrong></root>')->close();
+        $extractor = from_xml($path, 'root/item', $filesystem);
+
+        $thrown = null;
+
+        try {
+            ExtractedRows::of($extractor);
+        } catch (RuntimeException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(RuntimeException::class, $thrown);
+
+        $filesystem
+            ->writeTo($path)
+            ->append((string) file_get_contents(__DIR__ . '/../Fixtures/one_line_items.xml'))
+            ->close();
+
+        static::assertCount(10, ExtractedRows::of($extractor));
+    }
+
+    public function test_a_read_stopped_at_a_batch_leaves_nothing_behind_for_the_next_read(): void
+    {
+        $extractor = from_xml(__DIR__ . '/../Fixtures/one_line_items.xml', 'root/item')->withBatchSize(1);
+
+        $extractor->extract(flow_context(config()))->send(Signal::STOP);
+
+        static::assertCount(10, ExtractedRows::of($extractor));
+    }
+
+    public function test_a_read_stopped_inside_an_element_leaves_nothing_behind_for_the_next_read(): void
+    {
+        // 35 bytes end right after the second <item> opens, so the read stops mid-capture
+        $extractor = from_xml(__DIR__ . '/../Fixtures/one_line_items.xml', 'root/item')
+            ->withBatchSize(1)
+            ->withBufferSize(35);
+
+        $extractor->extract(flow_context(config()))->send(Signal::STOP);
+
+        static::assertEquals(
+            ExtractedRows::of(from_xml(__DIR__ . '/../Fixtures/one_line_items.xml', 'root/item')),
+            ExtractedRows::of($extractor),
+        );
+    }
+
+    public function test_a_stopped_read_closes_its_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        $generator = (new XMLParserExtractor(path_real(__DIR__ . '/../Fixtures/simple_items.xml'), $filesystem))
+            ->withXMLNodePath('root/items/item')
+            ->withBatchSize(1)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+
+        $generator->send(Signal::STOP);
+
+        static::assertContains('closeSource', $filesystem->calls);
     }
 }

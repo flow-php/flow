@@ -12,6 +12,14 @@ use Flow\Doctrine\Bulk\UpdateOptions;
 interface Dialect
 {
     /**
+     * The maximum number of bind parameters one statement may carry on this platform. A bulk statement
+     * binds rows x columns parameters, so it is chunked to intdiv(this, columns) rows.
+     *
+     * @return int<1, max>
+     */
+    public function maxBindParameters(): int;
+
+    /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
      *

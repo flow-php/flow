@@ -14,8 +14,6 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function count;
-
 final class LimitTransformer implements Transformer
 {
     private int $rowsCount = 0;
@@ -42,19 +40,15 @@ final class LimitTransformer implements Transformer
         try {
             $this->rowsCount += $rows->count();
 
-            if ($this->rowsCount > $this->limit) {
-                $rows = $rows->dropRight($this->rowsCount - $this->limit);
+            if ($this->rowsCount >= $this->limit) {
+                $trimmed = $this->rowsCount > $this->limit ? $rows->dropRight($this->rowsCount - $this->limit) : $rows;
 
                 $context->telemetry()->transformationCompleted($this, [
                     TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $inputRowCount,
-                    TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
+                    TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $trimmed->count(),
                 ]);
 
-                if (count($rows)) {
-                    return $rows;
-                }
-
-                throw new LimitReachedException($this->limit);
+                throw new LimitReachedException($this->limit, $trimmed);
             }
 
             $context->telemetry()->transformationCompleted($this, [

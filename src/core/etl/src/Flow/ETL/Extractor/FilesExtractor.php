@@ -14,18 +14,20 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class FilesExtractor implements Extractor, FileExtractor, LimitableExtractor, RewindableExtractor
+final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, LimitPushDown, RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
     use PathFiltering;
+    use PushesLimit;
 
     private readonly Filesystem $filesystem;
 
@@ -56,30 +58,49 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
      */
     public function extract(FlowContext $context): Generator
     {
+        $batchSize = $this->batchSize();
+        $schema = $this->schema();
+        $buffer = [];
+        $yielded = 0;
+
         foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
             $extension = $fileStatus->path->extension();
 
-            $signal = yield array_to_rows(
-                [
-                    'path' => $fileStatus->path->path(),
-                    'protocol' => $fileStatus->path->protocol(),
-                    'file_name' => $fileStatus->path->filename(),
-                    'base_name' => $fileStatus->path->basename(),
-                    'is_file' => $fileStatus->isFile(),
-                    'is_dir' => $fileStatus->isDirectory(),
-                    // Path::extension() answers false for an extensionless file; the column is one
-                    // type, so the absence is spelled null rather than a boolean in a string column.
-                    'extension' => $extension === false ? null : $extension,
-                ],
-                $this->schema(),
-                $context->hydrator(),
-            );
+            $buffer[] = [
+                'path' => $fileStatus->path->path(),
+                'protocol' => $fileStatus->path->protocol(),
+                'file_name' => $fileStatus->path->filename(),
+                'base_name' => $fileStatus->path->basename(),
+                'is_file' => $fileStatus->isFile(),
+                'is_dir' => $fileStatus->isDirectory(),
+                // Path::extension() answers false for an extensionless file; the column is one
+                // type, so the absence is spelled null rather than a boolean in a string column.
+                'extension' => $extension === false ? null : $extension,
+            ];
 
-            $this->incrementReturnedRows();
+            if (count($buffer) < $batchSize) {
+                continue;
+            }
 
-            if ($signal === Signal::STOP || $this->reachedLimit()) {
+            $yielded += count($buffer);
+
+            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+
+            if ($signal === Signal::STOP) {
                 return;
             }
+
+            $buffer = [];
+
+            $limit = $this->pushedLimit();
+
+            if ($limit !== null && $yielded >= $limit) {
+                return;
+            }
+        }
+
+        if ($buffer !== []) {
+            yield array_to_rows($buffer, $schema, $context->hydrator());
         }
     }
 

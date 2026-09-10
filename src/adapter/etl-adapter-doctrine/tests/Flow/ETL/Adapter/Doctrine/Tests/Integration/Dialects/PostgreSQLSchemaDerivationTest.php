@@ -209,7 +209,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
         }
 
-        static::assertSame(3, $batches);
+        static::assertSame(2, $batches);
     }
 
     public function test_schema_comes_from_result_metadata(): void

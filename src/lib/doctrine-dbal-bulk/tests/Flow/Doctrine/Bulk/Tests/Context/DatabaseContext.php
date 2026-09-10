@@ -52,14 +52,14 @@ final readonly class DatabaseContext
         }
     }
 
-    public function selectAll(string $tableName): array
+    public function selectAll(string $tableName, string $orderBy = 'id'): array
     {
         return $this->connection->fetchAllAssociative(
             $this->connection
                 ->createQueryBuilder()
                 ->select('*')
                 ->from($tableName)
-                ->orderBy('id')
+                ->orderBy($orderBy)
                 ->getSQL(),
         );
     }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use Flow\ETL\Adapter\PostgreSql\Operation;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+use Flow\ETL\Adapter\PostgreSql\Tests\Mother\WideRowsMother;
 
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_delete_options;
@@ -14,6 +15,7 @@ use function Flow\ETL\Adapter\PostgreSql\pgsql_update_options;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
@@ -38,6 +40,35 @@ final class PostgreSqlLoaderIntegrationTest extends IntegrationTestCase
                 ->column(column('id', column_type_integer())->primaryKey())
                 ->column(column('name', column_type_text()))
                 ->column(column('email', column_type_text())->unique()),
+        );
+    }
+
+    public function test_insert_of_more_rows_than_the_bind_cap_succeeds(): void
+    {
+        $create = create()->table('flow_postgresql_loader_wide_test');
+
+        for ($c = 1; $c <= 70; $c++) {
+            $create = $create->column(column('c' . $c, column_type_integer()));
+        }
+
+        $this->client->execute($create);
+
+        // 1000 rows x 70 columns = 70 000 parameters, past PostgreSQL's 65 535
+        df()
+            ->read(from_rows(WideRowsMother::of(70, 1000)))
+            ->batchSize(1000)
+            ->write(to_pgsql_table($this->client, 'flow_postgresql_loader_wide_test'))
+            ->run();
+
+        static::assertSame(
+            1000,
+            df()
+                ->read(from_pgsql_limit_offset(
+                    $this->client,
+                    select(star())->from(table('flow_postgresql_loader_wide_test'))->orderBy(asc(col('c1'))),
+                ))
+                ->fetch()
+                ->count(),
         );
     }
 

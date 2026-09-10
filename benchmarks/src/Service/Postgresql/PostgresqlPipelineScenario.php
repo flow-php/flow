@@ -64,7 +64,7 @@ final readonly class PostgresqlPipelineScenario
                 select(star())->from(table($this->table()))->orderBy(asc(col('order_id'))),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('order_id')),
             )
-                ->withPageSize(1000)
+                ->withBatchSize(1000)
                 ->withSchema(OrdersSchema::ofService(ServiceSource::postgresql)),
             'postgresql',
         ))->run();

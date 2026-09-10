@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader;
+use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\RecordingSink;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
@@ -63,6 +67,27 @@ final class JoinTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
+    }
+
+    public function test_a_limit_after_a_resident_join_closes_the_loaders_before_it(): void
+    {
+        $sink = new RecordingSink();
+
+        $rows = df()
+            ->read((new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(10)))->withBatchSize(1))
+            ->write($sink)
+            ->join(
+                df()->read(from_rows(RowsMother::sequentialIds(10))),
+                join_on(['id' => 'id'], 'r_'),
+                Join::left,
+                hash_join()->storage(new MemoryBuckets()),
+            )
+            ->limit(2)
+            ->fetch();
+
+        static::assertCount(2, $rows);
+        static::assertSame(1, $sink->closed);
+        static::assertSame(0, $sink->discarded);
     }
 
     public function test_join_inner_with_on_disk_buckets_cache(): void

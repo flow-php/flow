@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
@@ -33,6 +34,12 @@ final class ChainExtractorTest extends FlowTestCase
                 from_data_frame(df()->read(from_rows(rows(schema(str_schema('name')), row(['name' => 'a']))))),
             )->schema(),
         );
+    }
+
+    public function test_a_chain_takes_no_batch_size_of_its_own(): void
+    {
+        // a chain has no unit of its own: batches(from_all(...), $n) re-slices one, or each child is sized
+        static::assertNotInstanceOf(BatchableExtractor::class, from_all(from_rows(rows(schema()))));
     }
 
     public function test_chain_extractor(): void

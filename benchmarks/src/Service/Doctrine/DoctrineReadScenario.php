@@ -17,6 +17,7 @@ final readonly class DoctrineReadScenario
 {
     public function __construct(
         private int $rows,
+        private ?int $limit = null,
     ) {}
 
     public function table(): string
@@ -43,11 +44,14 @@ final readonly class DoctrineReadScenario
     {
         $connection = DoctrineConnection::open();
 
-        data_frame()->read(from_dbal_key_set_qb(
-            $connection,
-            $connection->createQueryBuilder()->select('*')->from($this->table()),
-            pagination_key_set(pagination_key_asc('order_id')),
-        )->withPageSize(1000))->run();
+        data_frame()
+            ->read(from_dbal_key_set_qb(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from($this->table()),
+                pagination_key_set(pagination_key_asc('order_id')),
+            )->withBatchSize(1000))
+            ->limit($this->limit)
+            ->run();
 
         $connection->close();
     }

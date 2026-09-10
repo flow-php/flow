@@ -12,6 +12,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
+use function array_sum;
 use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
@@ -37,6 +39,7 @@ use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function iterator_to_array;
+use function max;
 
 final class JsonLinesExtractorTest extends FlowTestCase
 {
@@ -177,9 +180,9 @@ final class JsonLinesExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl'));
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
-        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
     }
 
     public function test_schema_appends_the_metadata_column(): void
@@ -235,14 +238,19 @@ final class JsonLinesExtractorTest extends FlowTestCase
     {
         $extractor = from_json_lines(JsonFixtureContext::path('timezones.jsonl'));
         $expected = $extractor->schema();
-        $batches = 0;
+        $sizes = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->extractorBatchSize(3)->build())) as $rows) {
+        foreach ($extractor->withBatchSize(3)->extract(flow_context()) as $rows) {
             static::assertTrue($rows->schema()->isSame($expected));
-            $batches++;
+            $sizes[] = $rows->count();
         }
 
-        static::assertGreaterThanOrEqual(4, $batches);
+        static::assertLessThanOrEqual(3, max($sizes));
+        static::assertContains(3, $sizes);
+        static::assertSame(
+            ExtractedRows::of(from_json_lines(JsonFixtureContext::path('timezones.jsonl')))->count(),
+            array_sum($sizes),
+        );
     }
 
     public function test_the_inferred_schema_is_memoised_across_schema_and_extract(): void
@@ -503,7 +511,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         }
 
         if ($mode === 'limit') {
-            $extractor->changeLimit(2);
+            $extractor->pushLimit(2);
             iterator_to_array($extractor->extract(flow_context(config())));
         }
 

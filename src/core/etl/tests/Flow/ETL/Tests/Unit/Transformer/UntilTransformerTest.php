@@ -21,6 +21,16 @@ use function Flow\ETL\DSL\schema;
 
 final class UntilTransformerTest extends FlowTestCase
 {
+    public function test_a_batch_that_holds_the_predicate_throughout_passes_through(): void
+    {
+        static::assertSame(
+            [['id' => 1], ['id' => 2]],
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))
+                ->transform(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), flow_context(config()))
+                ->toArray(),
+        );
+    }
+
     public function test_bind_refuses_a_non_boolean_predicate(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -37,51 +47,64 @@ final class UntilTransformerTest extends FlowTestCase
 
     public function test_passes_rows_until_the_predicate_stops_holding(): void
     {
-        static::assertSame(
-            [
-                ['id' => 1],
-                ['id' => 2],
-            ],
-            (new UntilTransformer(ref('id')->lessThan(lit(3))))
-                ->transform(
-                    rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
-                    flow_context(config()),
-                )
-                ->toArray(),
-        );
+        $thrown = null;
+
+        try {
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(
+                rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+                flow_context(config()),
+            );
+        } catch (LimitReachedException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(LimitReachedException::class, $thrown);
+        static::assertSame([['id' => 1], ['id' => 2]], $thrown->rows?->toArray());
     }
 
     public function test_it_stops_at_the_first_row_failing_the_predicate(): void
     {
-        static::assertSame(
-            [
-                ['id' => 1],
-                ['id' => 2],
-            ],
-            (new UntilTransformer(ref('id')->lessThan(lit(3))))
-                ->transform(
-                    rows(
-                        schema(int_schema('id')),
-                        row(['id' => 1]),
-                        row(['id' => 2]),
-                        row(['id' => 5]),
-                        row(['id' => 1]),
-                        row(['id' => 2]),
-                    ),
-                    flow_context(config()),
-                )
-                ->toArray(),
-        );
+        $thrown = null;
+
+        try {
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(
+                rows(
+                    schema(int_schema('id')),
+                    row(['id' => 1]),
+                    row(['id' => 2]),
+                    row(['id' => 5]),
+                    row(['id' => 1]),
+                    row(['id' => 2]),
+                ),
+                flow_context(config()),
+            );
+        } catch (LimitReachedException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(LimitReachedException::class, $thrown);
+        static::assertSame([['id' => 1], ['id' => 2]], $thrown->rows?->toArray());
     }
 
     public function test_a_reached_limit_stops_the_next_batch(): void
     {
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
-        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
 
-        $this->expectException(LimitReachedException::class);
+        try {
+            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
+        } catch (LimitReachedException) {
+        }
 
-        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 0])), flow_context(config()));
+        $thrown = null;
+
+        try {
+            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 0])), flow_context(config()));
+        } catch (LimitReachedException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(LimitReachedException::class, $thrown);
+        static::assertEquals(rows(schema(int_schema('id'))), $thrown->rows);
     }
 
     public function test_a_non_boolean_predicate_is_rejected_at_bind(): void
@@ -105,10 +128,21 @@ final class UntilTransformerTest extends FlowTestCase
     public function test_a_reached_limit_stops_an_empty_next_batch(): void
     {
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
-        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
 
-        $this->expectException(LimitReachedException::class);
+        try {
+            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
+        } catch (LimitReachedException) {
+        }
 
-        $transformer->transform(rows(schema()), flow_context(config()));
+        $thrown = null;
+
+        try {
+            $transformer->transform(rows(schema()), flow_context(config()));
+        } catch (LimitReachedException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(LimitReachedException::class, $thrown);
+        static::assertSame([], $thrown->rows?->toArray());
     }
 }

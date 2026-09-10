@@ -7,9 +7,11 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\Constraint;
 use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -43,9 +45,17 @@ final class ConstrainedProcessor implements Processor
         return new BoundStep($this, $input);
     }
 
+    /**
+     * @param Generator<int, Rows> $rows
+     *
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        foreach ($rows as $batch) {
+        while ($rows->valid()) {
+            /** @var Rows $batch */
+            $batch = $rows->current();
+
             foreach ($batch->all() as $row) {
                 foreach ($this->constraints as $constraint) {
                     if (!$constraint->isSatisfiedBy($row, $batch->schema())) {
@@ -60,7 +70,15 @@ final class ConstrainedProcessor implements Processor
                 $this->rowIndex++;
             }
 
-            yield $batch;
+            $signal = yield $batch;
+
+            if ($signal === Signal::STOP) {
+                $rows->send(Signal::STOP);
+
+                return;
+            }
+
+            $rows->next();
         }
     }
 }

@@ -50,7 +50,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -68,7 +68,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                     $this->client,
                     select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
                 )
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(12),
             )
             ->fetch()
@@ -87,7 +87,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2 ORDER BY id',
                 [5, 15],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -103,7 +103,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' ORDER BY id',
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -120,7 +120,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1 ORDER BY id',
                 [10],
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -139,7 +139,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 . $this->tableName
                 . ' WHERE id >= $1 AND id <= $2 AND name LIKE $3 ORDER BY id',
                 [5, 15, 'User_%'],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -157,7 +157,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 select(star())->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withPageSize(10))
+            )->withBatchSize(10))
             ->fetch()
             ->toArray();
 

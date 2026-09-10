@@ -10,16 +10,39 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
 
+use function array_map;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function implode;
 
 final class DbalLimitOffsetExtractorTest extends FlowTestCase
 {
+    public function test_an_empty_page_is_not_yielded(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 5);
+        $extractor = (new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+        ))
+            ->withBatchSize(5)
+            ->withMaximum(10);
+
+        // the second page asks for the 5 rows still allowed and gets none back
+        static::assertSame(
+            [5],
+            array_map(
+                static fn(Rows $rows): int => $rows->count(),
+                iterator_to_array($extractor->extract(flow_context()), false),
+            ),
+        );
+    }
+
     public function test_a_declared_schema_is_answered_without_probing(): void
     {
         // The native handle has no arm, so any derivation throws: only the short-circuit can answer.
@@ -42,7 +65,7 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
         $extractor = (new DbalLimitOffsetExtractor(
             $connection,
             $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
-        ))->withPageSize(2);
+        ))->withBatchSize(2);
 
         $batches = 0;
 
@@ -51,7 +74,8 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
         }
 
-        static::assertSame(5, $batches);
+        // 5 rows at 2 per page: 2, 2, 1
+        static::assertSame(3, $batches);
         static::assertSame($extractor->schema(), $extractor->schema());
         // COUNT(*) plus three pages; the SQLite name probe is native, so DBAL never sees it.
         static::assertSame(4, $counter->count);
@@ -63,7 +87,7 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
         $queryBuilder = $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id');
 
         foreach ((new DbalLimitOffsetExtractor($connection, $queryBuilder))
-            ->withPageSize(2)
+            ->withBatchSize(2)
             ->extract(flow_context()) as $_rows) {
         }
 
@@ -149,6 +173,40 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
         }
 
         static::assertSame([['id' => '1', 'name' => 'name_1', 'amount' => '1.5']], $rows);
+    }
+
+    public function test_pushed_limit_skips_the_count_query(): void
+    {
+        $counter = new SelectQueryCounter();
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(new Middleware($counter)), 5);
+        $extractor = (new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+        ))->withBatchSize(2);
+        $extractor->pushLimit(5);
+        $counter->reset();
+
+        self::assertExtractedRowsCount(5, $extractor);
+        // the three pages of the unlimited read, without the COUNT(*) in front of them
+        static::assertSame(3, $counter->count);
+        static::assertStringNotContainsString('COUNT(*)', implode(' ', $counter->queries));
+    }
+
+    public function test_stops_issuing_pages_when_a_page_comes_back_short(): void
+    {
+        $counter = new SelectQueryCounter();
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(new Middleware($counter)), 3);
+        $extractor = (new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+        ))
+            ->withBatchSize(2)
+            ->withMaximum(1000);
+        $counter->reset();
+
+        self::assertExtractedRowsCount(3, $extractor);
+        // not ceil(1000 / 2) pages: the second one came back short
+        static::assertSame(2, $counter->count);
     }
 
     public function test_is_repeatable(): void

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -18,6 +21,19 @@ use function Flow\ETL\DSL\str_schema;
 
 final class BatchingProcessorTest extends FlowTestCase
 {
+    public function test_batching_processor_forwards_stop_to_its_upstream(): void
+    {
+        $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
+        $processed = (new BatchingProcessor(1))->process($upstream->extract(flow_context()), flow_context());
+
+        static::assertTrue($processed->valid());
+
+        $processed->send(Signal::STOP);
+
+        static::assertFalse($processed->valid());
+        static::assertSame(1, $upstream->batchesYielded);
+    }
+
     public function test_bind_returns_the_input_schema(): void
     {
         $input = schema(int_schema('id'), str_schema('name'));

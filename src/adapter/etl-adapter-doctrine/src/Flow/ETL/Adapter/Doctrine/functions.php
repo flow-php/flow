@@ -50,7 +50,7 @@ function dbal_dataframe_factory(
  * @param Connection $connection
  * @param string|Table $table
  * @param array<OrderBy>|OrderBy $order_by
- * @param int $page_size
+ * @param int $page_size - becomes the extractor's batch size: rows per page
  * @param null|int $maximum
  *
  * @throws InvalidArgumentException
@@ -67,7 +67,7 @@ function from_dbal_limit_offset(
         $connection,
         is_string($table) ? new Table($table) : $table,
         $order_by instanceof OrderBy ? [$order_by] : $order_by,
-    )->withPageSize($page_size);
+    )->withBatchSize($page_size);
 
     if ($maximum !== null) {
         $loader->withMaximum($maximum);
@@ -78,7 +78,7 @@ function from_dbal_limit_offset(
 
 /**
  * @param Connection $connection
- * @param int $page_size
+ * @param int $page_size - becomes the extractor's batch size: rows per page
  * @param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it's set
  * @param int $offset - offset can also be taken from a query builder, $offset however is used regardless of the query builder if it's set to non 0 value
  */
@@ -91,7 +91,7 @@ function from_dbal_limit_offset_qb(
     int $offset = 0,
 ): DbalLimitOffsetExtractor {
     $loader = (new DbalLimitOffsetExtractor($connection, $queryBuilder))
-        ->withPageSize($page_size)
+        ->withBatchSize($page_size)
         ->withOffset($offset);
 
     if ($maximum !== null) {

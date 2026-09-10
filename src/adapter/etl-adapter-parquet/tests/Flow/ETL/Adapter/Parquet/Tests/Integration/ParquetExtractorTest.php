@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -32,7 +33,7 @@ final class ParquetExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
-        $extractor->changeLimit(2);
+        $extractor->pushLimit(2);
 
         $extractedRows = 0;
 
@@ -334,6 +335,33 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
+    }
+
+    public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $generator = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))
+            ->withBatchSize(1500)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(1500);
+        $extractor->pushLimit(1000);
+
+        static::assertCount(1000, ExtractedRows::of($extractor));
+    }
+
+    public function test_limit_reached_on_a_full_batch_of_the_first_file_skips_the_remaining_files(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(500);
+        $extractor->pushLimit(1000);
+
+        static::assertCount(1000, ExtractedRows::of($extractor));
     }
 
     public function test_is_repeatable(): void

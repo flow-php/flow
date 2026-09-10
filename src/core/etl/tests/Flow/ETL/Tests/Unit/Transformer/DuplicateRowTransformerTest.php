@@ -131,20 +131,20 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                     'date_updated' => null,
                 ],
                 [
-                    'id' => 3,
-                    'status' => 'active',
-                    'amount' => 100,
-                    'date_created' => new DateTimeImmutable('2025-01-01'),
-                    'date_deactivated' => null,
-                    'date_updated' => null,
-                ],
-                [
                     'id' => 2,
                     'status' => 'inactive',
                     'amount' => -100,
                     'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => new DateTimeImmutable('2025-01-03'),
                     'date_updated' => new DateTimeImmutable('2025-01-03'),
+                ],
+                [
+                    'id' => 3,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => null,
+                    'date_updated' => null,
                 ],
             ],
             $transformedRows->toArray(),
@@ -218,8 +218,8 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             [
                 ['id' => 1, 'status' => 'active', 'amount' => 100],
                 ['id' => 2, 'status' => 'inactive', 'amount' => 100],
-                ['id' => 3, 'status' => 'active', 'amount' => 100],
                 ['id' => 2, 'status' => 'inactive', 'amount' => -100],
+                ['id' => 3, 'status' => 'active', 'amount' => 100],
             ],
             $transformedRows->toArray(),
         );

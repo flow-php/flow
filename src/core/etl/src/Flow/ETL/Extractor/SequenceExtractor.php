@@ -15,10 +15,13 @@ use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 
-final class SequenceExtractor implements Extractor, InfersSchema, RewindableExtractor
+final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSchema, RewindableExtractor
 {
+    use Batches;
+
     private ?Schema $derivedSchema = null;
 
     private SchemaInference $inference;
@@ -42,15 +45,29 @@ final class SequenceExtractor implements Extractor, InfersSchema, RewindableExtr
      */
     public function extract(FlowContext $context): Generator
     {
+        $batchSize = $this->batchSize();
         $schema = $this->schema();
+        $buffer = [];
 
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {
-            $signal = yield array_to_rows([[$this->entryName => $item]], $schema, $context->hydrator());
+            $buffer[] = [$this->entryName => $item];
+
+            if (count($buffer) < $batchSize) {
+                continue;
+            }
+
+            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;
             }
+
+            $buffer = [];
+        }
+
+        if ($buffer !== []) {
+            yield array_to_rows($buffer, $schema, $context->hydrator());
         }
     }
 

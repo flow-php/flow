@@ -133,7 +133,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -177,7 +177,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -221,7 +221,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -257,7 +257,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                 $this->pgsqlDatabaseContext->connection(),
                 $this->pgsqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
                 pagination_key_set(pagination_key_asc('created_at'), pagination_key_asc('id')),
-            )->withPageSize(2))
+            )->withBatchSize(2))
             ->fetch()
             ->toArray();
 
@@ -321,7 +321,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                     pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
                 )
                     ->withSchema(schema(int_schema('id')))
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(5),
             )
             ->fetch()
@@ -387,7 +387,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                 )
                     ->withKeyAliasSuffix('_something_custom')
                     ->withSchema(schema(int_schema('id')))
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(5),
             )
             ->fetch()

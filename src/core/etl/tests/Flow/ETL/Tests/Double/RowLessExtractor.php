@@ -9,6 +9,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Generator;
 
+use function Flow\ETL\DSL\from_rows;
+
 /**
  * A source that describes itself and then yields no batch at all - the shape an inferring reader has when the file
  * holds a header and nothing else. Counts its extractions, so a caller can prove the pipeline ran once.
@@ -25,7 +27,7 @@ final class RowLessExtractor implements Extractor
     {
         $this->extractCalls++;
 
-        yield from [];
+        return from_rows()->extract($context);
     }
 
     public function schema(): Schema

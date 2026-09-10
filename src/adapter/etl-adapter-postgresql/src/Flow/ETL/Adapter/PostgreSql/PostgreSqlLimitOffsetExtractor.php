@@ -6,6 +6,10 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -16,16 +20,19 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
 
 use function ceil;
+use function count;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_query_order_by;
 use function Flow\PostgreSql\DSL\sql_to_count_query;
 use function Flow\PostgreSql\DSL\sql_to_paginated_query;
+use function min;
 
-final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtractor
+final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
-    private ?int $maximum = null;
+    use Batches;
+    use PushesLimit;
 
-    private int $pageSize = 1000;
+    private ?int $maximum = null;
 
     private ?Schema $derivedSchema = null;
 
@@ -38,7 +45,10 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtra
         private readonly Client $client,
         private readonly string|Sql $query,
         private readonly array $parameters = [],
-    ) {}
+    ) {
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -55,20 +65,29 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtra
 
         $schema = $this->schema();
 
-        $total = $this->maximum ?? $this->countTotal($sql);
+        $pushed = $this->pushedLimit();
+        $maximum = match (true) {
+            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null => $this->maximum,
+            default => $pushed,
+        };
+
+        $total = $maximum ?? $this->countTotal($sql);
 
         if ($total === 0) {
             return;
         }
 
         $encoder = new PostgreSqlEncoder();
-        $totalFetched = 0;
-        $pages = (int) ceil($total / $this->pageSize);
+        $yielded = 0;
+        $pages = (int) ceil($total / $this->batchSize);
 
         for ($page = 0; $page < $pages; $page++) {
-            $offset = $page * $this->pageSize;
+            // the request asks only for what is still wanted, while the offset keeps striding by the batch size
+            $pageSize = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
+            $offset = $page * $this->batchSize;
 
-            $paginatedSql = $this->applyPagination($sql, $this->pageSize, $offset);
+            $paginatedSql = $this->applyPagination($sql, $pageSize, $offset);
 
             $cursor = $this->client->cursor($paginatedSql, $this->parameters);
 
@@ -80,20 +99,23 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtra
 
             $cursor->free();
 
+            if ($rawBatch === []) {
+                return;
+            }
+
             $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
 
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+            $yielded += $hydrated->count();
 
-                $totalFetched++;
+            $signal = yield $hydrated;
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
+            }
 
-                if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                    return;
-                }
+            // a short page means the source ran out, whatever $total promised
+            if (count($rawBatch) < $pageSize) {
+                return;
             }
         }
     }
@@ -122,17 +144,6 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor, RewindableExtra
         }
 
         $this->maximum = $maximum;
-
-        return $this;
-    }
-
-    public function withPageSize(int $pageSize): self
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
-        }
-
-        $this->pageSize = $pageSize;
 
         return $this;
     }

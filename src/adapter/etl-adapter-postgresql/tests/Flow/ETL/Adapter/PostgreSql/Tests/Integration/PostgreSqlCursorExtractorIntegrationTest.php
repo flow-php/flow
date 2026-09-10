@@ -57,7 +57,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withFetchSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -73,7 +73,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
-            )->withFetchSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -88,7 +88,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
                     $this->client,
                     select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
                 )
-                    ->withFetchSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(12),
             )
             ->fetch()
@@ -108,7 +108,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
                     $this->client,
                     select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
                 )
-                    ->withFetchSize(5)
+                    ->withBatchSize(5)
                     ->withCursorName('my_custom_cursor'),
             )
             ->fetch()
@@ -120,13 +120,13 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertSame(range(1, 25), array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_custom_fetch_size(): void
+    public function test_extracts_with_custom_batch_size(): void
     {
         $rows = df()
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withFetchSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -143,7 +143,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1 ORDER BY id',
                 [10],
-            )->withFetchSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -159,7 +159,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' ORDER BY id',
-            )->withFetchSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 

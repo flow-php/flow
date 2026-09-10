@@ -74,8 +74,7 @@ data_frame()
     ->read(from_pgsql_cursor(
         $client,
         "SELECT id, name, email FROM users",
-        fetchSize: 1000
-    ))
+    )->withBatchSize(1000))
     ->write(to_output())
     ->run();
 ```
@@ -90,8 +89,7 @@ data_frame()
     ->read(from_pgsql_cursor(
         $client,
         select(star())->from(table('large_table')),
-        fetchSize: 500
-    ))
+    )->withBatchSize(500))
     ->write(to_output())
     ->run();
 ```
@@ -106,8 +104,7 @@ data_frame()
         $client,
         "SELECT * FROM orders WHERE status = $1 AND created_at > $2",
         parameters: ['pending', '2024-01-01'],
-        fetchSize: 1000
-    ))
+    )->withBatchSize(1000))
     ->write(to_output())
     ->run();
 ```
@@ -137,8 +134,7 @@ data_frame()
     ->read(from_pgsql_limit_offset(
         $client,
         "SELECT id, name, email FROM users ORDER BY id",
-        pageSize: 1000
-    ))
+    )->withBatchSize(1000))
     ->write(to_output())
     ->run();
 ```
@@ -155,8 +151,7 @@ data_frame()
         select(col('id'), col('name'), col('email'))
             ->from(table('users'))
             ->orderBy(asc(col('id'))),
-        pageSize: 500
-    ))
+    )->withBatchSize(500))
     ->write(to_output())
     ->run();
 ```
@@ -170,9 +165,7 @@ data_frame()
     ->read(from_pgsql_limit_offset(
         $client,
         "SELECT * FROM large_table ORDER BY id",
-        pageSize: 1000,
-        maximum: 10000  // Only extract first 10,000 rows
-    ))
+    )->withBatchSize(1000)->withMaximum(10000)) // Only extract first 10,000 rows
     ->write(to_output())
     ->run();
 ```
@@ -195,8 +188,7 @@ data_frame()
         $client,
         "SELECT id, name, email FROM users",
         pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-        pageSize: 1000
-    ))
+    )->withBatchSize(1000))
     ->write(to_output())
     ->run();
 ```
@@ -211,8 +203,7 @@ data_frame()
         $client,
         "SELECT id, name, created_at FROM orders",
         pgsql_pagination_key_set(pgsql_pagination_key_desc('id')),  // Newest first
-        pageSize: 500
-    ))
+    )->withBatchSize(500))
     ->write(to_output())
     ->run();
 ```
@@ -232,8 +223,7 @@ data_frame()
             pgsql_pagination_key_desc('created_at'),  // First by date descending
             pgsql_pagination_key_asc('id')             // Then by ID ascending
         ),
-        pageSize: 1000
-    ))
+    )->withBatchSize(1000))
     ->write(to_output())
     ->run();
 ```
@@ -249,8 +239,7 @@ data_frame()
         $client,
         select(star())->from(table('products')),
         pgsql_pagination_key_set(pgsql_pagination_key_asc('product_id')),
-        pageSize: 500
-    ))
+    )->withBatchSize(500))
     ->write(to_output())
     ->run();
 ```
@@ -259,11 +248,13 @@ data_frame()
 
 ### Extractor Functions
 
-| Function                                                            | Description                           |
-|---------------------------------------------------------------------|---------------------------------------|
-| `from_pgsql_cursor($client, $query, $parameters, $fetchSize, $max)` | Extract using server-side cursor      |
-| `from_pgsql_limit_offset($client, $query, $pageSize, $maximum)`     | Extract using LIMIT/OFFSET pagination |
-| `from_pgsql_key_set($client, $query, $keySet, $pageSize, $maximum)` | Extract using keyset pagination       |
+| Function                                                    | Description                           |
+|-------------------------------------------------------------|---------------------------------------|
+| `from_pgsql_cursor($client, $query, $parameters)`           | Extract using server-side cursor      |
+| `from_pgsql_limit_offset($client, $query, $parameters)`     | Extract using LIMIT/OFFSET pagination |
+| `from_pgsql_key_set($client, $query, $keySet, $parameters)` | Extract using keyset pagination       |
+
+Each returns an extractor configured with the fluent `->withBatchSize(n)` (rows per round trip, default 1000) and `->withMaximum(n)`.
 
 ### Key Functions
 

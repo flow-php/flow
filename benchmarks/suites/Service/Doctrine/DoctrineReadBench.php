@@ -29,6 +29,23 @@ final class DoctrineReadBench
         (new DoctrineReadScenario((int) $params['rows']))->run();
     }
 
+    #[Bench\ParamProviders(['rows', 'limits'])]
+    #[Bench\Groups(['service', 'service-doctrine'])]
+    public function bench_limit_pushdown(array $params): void
+    {
+        (new DoctrineReadScenario(
+            (int) $params['rows'],
+            $params['limit'] === null ? null : (int) $params['limit'],
+        ))->run();
+    }
+
+    public function limits(): Generator
+    {
+        yield 'none' => ['limit' => null];
+
+        yield '1000' => ['limit' => 1000];
+    }
+
     public function rows(): Generator
     {
         $rows = BenchmarkRows::count();

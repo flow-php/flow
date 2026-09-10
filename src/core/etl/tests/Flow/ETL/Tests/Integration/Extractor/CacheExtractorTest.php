@@ -199,16 +199,14 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 3],
             ]));
 
-        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
-
-        static::assertCount(3, $rows);
-        static::assertEquals(
+        self::assertExtractedRowsAsArrayEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
             ],
-            array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
+            $extractor,
+            flow_context(config_builder()->cache($cache)->build()),
         );
     }
 

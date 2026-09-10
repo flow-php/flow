@@ -8,13 +8,15 @@ use ArrayIterator;
 use ArrayObject;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Row\PhpRowHydrator;
-use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\FixedTmpDirFilesystem;
 use Flow\ETL\Tests\Double\FreshRowsAggregate;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Types\Type\Native\UnionType;
 use Generator;
@@ -56,9 +58,7 @@ final class ArrayExtractorTest extends FlowTestCase
             spillRoot: path('memory://tmp'),
         )->withSchema(schema(int_schema('id')));
 
-        $rows = iterator_to_array($extractor->extract(execution_context(config())));
-
-        static::assertCount(2, $rows);
+        self::assertExtractedRowsCount(2, $extractor, execution_context(config()));
         static::assertNull($filesystem->status(path('memory://tmp/flow-php-source/*.b64')));
     }
 
@@ -96,8 +96,8 @@ final class ArrayExtractorTest extends FlowTestCase
 
         // The generator is advanced once; every later extract() replays the spill it produced, so
         // ->schema() followed by ->run(), or two run() calls, behave as they do for an array.
-        static::assertCount(2, iterator_to_array($extractor->extract(execution_context(config()))));
-        static::assertCount(2, iterator_to_array($extractor->extract(execution_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, execution_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, execution_context(config()));
     }
 
     public function test_infer_schema_resets_the_memo(): void
@@ -166,11 +166,10 @@ final class ArrayExtractorTest extends FlowTestCase
                 ->type()
                 ->toString(), $extractor->schema()->definitions()),
         );
-        static::assertSame(
+        self::assertExtractedRowsAsArrayEquals(
             [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => 'Michal']],
-            array_map(static fn(Rows $batch): array => $batch
-                ->first()
-                ->toArray(), iterator_to_array($extractor->extract(execution_context(config())))),
+            $extractor,
+            execution_context(config()),
         );
     }
 
@@ -181,13 +180,11 @@ final class ArrayExtractorTest extends FlowTestCase
             ['id' => 2, 'name' => 'Michal'],
         ]);
 
-        $rows = iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
-
-        static::assertCount(2, $rows);
-        static::assertInstanceOf(Rows::class, $rows[0]);
-        static::assertInstanceOf(Rows::class, $rows[1]);
-        static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        self::assertExtractedRowsAsArrayEquals(
+            [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => 'Michal']],
+            $extractor,
+            execution_context(config_builder()->build()),
+        );
     }
 
     public function test_extraction_with_a_union_column_in_the_schema(): void
@@ -204,12 +201,12 @@ final class ArrayExtractorTest extends FlowTestCase
             schema: schema(int_schema('id'), new UnionDefinition('a', $union, true)),
         );
 
-        $rows = iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
+        $rows = ExtractedRows::of($extractor, execution_context(config_builder()->build()));
 
-        static::assertSame(42, $rows[0]->first()->get('a'));
-        static::assertSame('x', $rows[1]->first()->get('a'));
-        static::assertNull($rows[2]->first()->get('a'));
-        static::assertInstanceOf(UnionDefinition::class, $rows[0]->schema()->get('a'));
+        static::assertSame(42, $rows->all()[0]->get('a'));
+        static::assertSame('x', $rows->all()[1]->get('a'));
+        static::assertNull($rows->all()[2]->get('a'));
+        static::assertInstanceOf(UnionDefinition::class, $rows->schema()->get('a'));
     }
 
     public function test_generator_extraction_with_a_declared_schema(): void
@@ -222,13 +219,11 @@ final class ArrayExtractorTest extends FlowTestCase
 
         $extractor = from_array($generator())->withSchema(schema(int_schema('id'), str_schema('name')));
 
-        $rows = iterator_to_array($extractor->extract(execution_context(config())));
-
-        static::assertCount(2, $rows);
-        static::assertInstanceOf(Rows::class, $rows[0]);
-        static::assertInstanceOf(Rows::class, $rows[1]);
-        static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        self::assertExtractedRowsAsArrayEquals(
+            [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => 'Michal']],
+            $extractor,
+            execution_context(config()),
+        );
     }
 
     public function test_a_retry_after_the_source_broke_is_refused_rather_than_re_read(): void
@@ -269,7 +264,7 @@ final class ArrayExtractorTest extends FlowTestCase
         $extractor->schema();
 
         static::assertNotNull($filesystem->status(path('memory://systmp/flow-php-source/*.b64')));
-        static::assertCount(2, iterator_to_array($extractor->extract(execution_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, execution_context(config()));
 
         unset($extractor);
 
@@ -289,14 +284,11 @@ final class ArrayExtractorTest extends FlowTestCase
 
         static::assertSame('string', $extractor->schema()->get('id')->type()->toString());
 
-        $rows = iterator_to_array($extractor->extract(execution_context(config())));
-
-        static::assertCount(3, $rows);
-        static::assertSame([['id' => '1'], ['id' => '2'], ['id' => 'AB-01']], [
-            $rows[0]->first()->toArray(),
-            $rows[1]->first()->toArray(),
-            $rows[2]->first()->toArray(),
-        ]);
+        self::assertExtractedRowsAsArrayEquals(
+            [['id' => '1'], ['id' => '2'], ['id' => 'AB-01']],
+            $extractor,
+            execution_context(config()),
+        );
     }
 
     /**
@@ -374,5 +366,13 @@ final class ArrayExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_array([['id' => 1]])->isRepeatable());
+    }
+
+    public function test_array_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): ArrayExtractor => from_array(RowsMother::sequentialIds(5)->toArray()),
+            RowsMother::sequentialIds(5),
+        );
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor\CollectingExtractor;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -21,7 +20,6 @@ final class CollectingExtractorTest extends FlowTestCase
 {
     public function test_collecting_every_batch_into_one(): void
     {
-        /** @var list<Rows> $collected */
         $collected = iterator_to_array(
             (new CollectingExtractor(from_rows(
                 rows(schema(int_schema('id')), row(['id' => 1])),
@@ -45,7 +43,6 @@ final class CollectingExtractorTest extends FlowTestCase
             false,
         );
 
-        /** @var list<Rows> $rerun */
         $rerun = iterator_to_array((new CollectingExtractor($child))->extract(flow_context()), false);
 
         static::assertTrue($child->schema()->isSame(schema(int_schema('id'))));

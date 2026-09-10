@@ -73,7 +73,7 @@ final class FileReadCommand extends Command
                 'input-file-batch-size',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once',
+                'Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once',
                 self::DEFAULT_BATCH_SIZE,
             )
             ->addOption(

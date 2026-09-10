@@ -9,6 +9,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -16,8 +20,21 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-final class DbalQueryExtractor implements Extractor, RewindableExtractor
+use function count;
+
+/**
+ * batchSize() is a yield cap, not a fetch size: fetchAllAssociative() materialises the whole result set per
+ * parameter set, so lowering it cannot lower peak memory. The paginating extractors default to 1000 because
+ * their number IS a round trip.
+ *
+ * A pushed limit is global across parameter sets - their batches are concatenated - and no set is queried
+ * once it is reached. The query is a raw string, so the first queried set is never bounded server-side.
+ */
+final class DbalQueryExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private ParametersSet $parametersSet;
 
     private ?Schema $schema = null;
@@ -72,8 +89,14 @@ final class DbalQueryExtractor implements Extractor, RewindableExtractor
         $schema = $this->schema();
         $hydrator = $context->hydrator();
         $encoder = new DbalEncoder();
+        $yielded = 0;
+        $maximum = $this->pushedLimit();
 
         foreach ($this->parametersSet->all() as $parameters) {
+            if ($maximum !== null && $yielded >= $maximum) {
+                return;
+            }
+
             $rawBatch = [];
 
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
@@ -81,9 +104,29 @@ final class DbalQueryExtractor implements Extractor, RewindableExtractor
             }
 
             $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $schema);
+            $buffer = [];
 
             foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                $buffer[] = $hydratedRow;
+                $yielded++;
+
+                if (count($buffer) === $this->batchSize) {
+                    $signal = yield Rows::trusted($hydrated->schema(), $buffer);
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $buffer = [];
+
+                    if ($maximum !== null && $yielded >= $maximum) {
+                        return;
+                    }
+                }
+            }
+
+            if ($buffer !== []) {
+                $signal = yield Rows::trusted($hydrated->schema(), $buffer);
 
                 if ($signal === Signal::STOP) {
                     return;

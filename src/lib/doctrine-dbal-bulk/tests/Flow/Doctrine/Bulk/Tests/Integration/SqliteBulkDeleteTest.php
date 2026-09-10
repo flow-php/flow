@@ -10,7 +10,10 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Tests\Mother\WideTableMother;
 use Flow\Doctrine\Bulk\Tests\SqliteIntegrationTestCase;
+
+use function array_slice;
 
 final class SqliteBulkDeleteTest extends SqliteIntegrationTestCase
 {
@@ -47,6 +50,28 @@ final class SqliteBulkDeleteTest extends SqliteIntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three'],
             ],
             $remainingRows,
+        );
+    }
+
+    public function test_delete_of_more_rows_than_the_bind_cap_succeeds(): void
+    {
+        $this->databaseContext->createTable(WideTableMother::table($table = 'flow_doctrine_bulk_wide_test', 40));
+        Bulk::create()->insert(
+            $this->databaseContext->connection(),
+            $table,
+            new BulkData(WideTableMother::rows(40, 1100)),
+        );
+
+        // 1000 rows x 40 columns = 40 000 parameters, past SQLite's 32 766
+        Bulk::create()->delete(
+            $this->databaseContext->connection(),
+            $table,
+            new BulkData(WideTableMother::rows(40, 1000)),
+        );
+
+        static::assertEquals(
+            array_slice(WideTableMother::rows(40, 1100), 1000),
+            $this->databaseContext->selectAll($table, 'c1'),
         );
     }
 

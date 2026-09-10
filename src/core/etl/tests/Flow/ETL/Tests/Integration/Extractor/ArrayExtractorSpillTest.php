@@ -61,7 +61,7 @@ final class ArrayExtractorSpillTest extends FlowIntegrationTestCase
             spillRoot: $spillRoot,
         );
 
-        static::assertCount(2, iterator_to_array($extractor->extract(execution_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, execution_context(config()));
         static::assertCount(1, iterator_to_array(
             $this->fs()->list($spillRoot->suffix('/flow-php-source/*.b64')),
             false,

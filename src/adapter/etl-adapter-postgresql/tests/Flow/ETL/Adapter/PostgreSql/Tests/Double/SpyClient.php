@@ -19,13 +19,14 @@ use RuntimeException;
 use Throwable;
 
 use function array_filter;
+use function array_key_exists;
 use function array_shift;
 use function array_values;
 use function count;
 
 /**
- * Answers describe() and cursor() from what the test seeds, records every call it receives, and
- * refuses everything the three extractors never reach.
+ * Answers from what the test seeds, records every call it receives, and refuses everything the extractors and
+ * the loader never reach.
  */
 final class SpyClient implements Client
 {
@@ -45,6 +46,9 @@ final class SpyClient implements Client
 
     private int $scalarIntAnswer = 0;
 
+    /** @var array<int, Throwable> */
+    private array $executeFailures = [];
+
     public function __construct(
         private int $transactionNestingLevel = 0,
     ) {}
@@ -52,6 +56,16 @@ final class SpyClient implements Client
     public function callsTo(string $method): int
     {
         return count(array_filter($this->calls, static fn(string $call): bool => $call === $method));
+    }
+
+    /**
+     * The $call-th execute(), counting from 1, throws $failure.
+     */
+    public function willFailExecute(int $call, Throwable $failure): self
+    {
+        $this->executeFailures[$call] = $failure;
+
+        return $this;
     }
 
     public function willCountTotal(int $total): self
@@ -148,12 +162,18 @@ final class SpyClient implements Client
 
     public function converters(): ValueConverters
     {
-        throw new RuntimeException('SpyClient does not implement ' . __FUNCTION__);
+        return new ValueConverters();
     }
 
     public function execute(Sql|string $sql, array $parameters = []): int
     {
         $this->calls[] = 'execute';
+
+        $execution = $this->callsTo('execute');
+
+        if (array_key_exists($execution, $this->executeFailures)) {
+            throw $this->executeFailures[$execution];
+        }
 
         return 0;
     }

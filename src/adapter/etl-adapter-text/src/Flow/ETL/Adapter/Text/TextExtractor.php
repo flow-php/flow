@@ -6,11 +6,13 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -28,15 +30,17 @@ use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
 final class TextExtractor implements
+    BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitableExtractor,
+    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
+    use PushesLimit;
     use FileReading;
 
     private readonly Filesystem $filesystem;
@@ -56,7 +60,6 @@ final class TextExtractor implements
         }
 
         $this->filesystem = $filesystem;
-        $this->resetLimit();
     }
 
     public function isRepeatable(): bool
@@ -70,7 +73,8 @@ final class TextExtractor implements
     public function extract(FlowContext $context): Generator
     {
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $encoder = new TextEncoder();
 
         $baseSchema = $this->schema ?? schema(str_schema('text'));
@@ -81,55 +85,67 @@ final class TextExtractor implements
         foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
 
-            $constants = $fileColumns->forFile($source, $schema);
+            try {
+                $constants = $fileColumns->forFile($source, $schema);
 
-            $rawLines = [];
+                $rawLines = [];
 
-            foreach ($stream->readLines() as $line) {
-                $rawLines[] = $line;
+                foreach ($stream->readLines() as $line) {
+                    $rawLines[] = $line;
 
-                if (count($rawLines) >= $batchSize) {
+                    if (count($rawLines) >= $batchSize) {
+                        $batch = [];
+
+                        foreach ($encoder->decode($rawLines) as $rowValues) {
+                            $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                        }
+
+                        $rawLines = [];
+
+                        $hydrated = $hydrator->hydrate($batch, $schema);
+
+                        $yielded += $hydrated->count();
+
+                        $signal = yield $hydrated;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
+
+                        $limit = $this->pushedLimit();
+
+                        if ($limit !== null && $yielded >= $limit) {
+                            return;
+                        }
+                    }
+                }
+
+                if ($rawLines !== []) {
                     $batch = [];
 
                     foreach ($encoder->decode($rawLines) as $rowValues) {
                         $batch[] = new RawRowValues($constants->fill($rowValues->values));
                     }
 
-                    $rawLines = [];
-
                     $hydrated = $hydrator->hydrate($batch, $schema);
 
-                    foreach ($hydrated as $hydratedRow) {
-                        $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
+                    $yielded += $hydrated->count();
 
-                        $this->incrementReturnedRows();
+                    $signal = yield $hydrated;
 
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            return;
-                        }
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
                     }
                 }
+            } finally {
+                $stream->close();
             }
-
-            $batch = [];
-
-            foreach ($encoder->decode($rawLines) as $rowValues) {
-                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-            }
-
-            $hydrated = $hydrator->hydrate($batch, $schema);
-
-            foreach ($hydrated as $hydratedRow) {
-                $signal = yield Rows::trusted($hydrated->schema(), [$hydratedRow]);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    return;
-                }
-            }
-
-            $stream->close();
         }
     }
 

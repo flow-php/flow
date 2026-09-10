@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Processor;
 use Flow\ETL\Transformer;
@@ -22,9 +23,9 @@ final class Segments
     /** @var array<Segment> */
     private array $segments = [];
 
-    public function __construct()
+    public function __construct(?Extractor $extractor = null)
     {
-        $this->currentSegment = new Segment();
+        $this->currentSegment = new Segment(extractor: $extractor);
     }
 
     public function add(Transformer|Loader|Processor $step): void
@@ -35,6 +36,17 @@ final class Segments
         } else {
             $this->currentSegment->add($step);
         }
+    }
+
+    public function replaceExtractor(Extractor $extractor): void
+    {
+        if ($this->segments === []) {
+            $this->currentSegment = $this->currentSegment->withExtractor($extractor);
+
+            return;
+        }
+
+        $this->segments[0] = $this->segments[0]->withExtractor($extractor);
     }
 
     /**

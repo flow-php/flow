@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Loader;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
+use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
@@ -31,6 +33,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\skip_rows_handler;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_branch;
 
@@ -276,6 +279,44 @@ final class BranchingLoaderTest extends FlowTestCase
 
         static::assertSame(0, $spy->loadsCount);
         static::assertSame(1, $spy->closureCount);
+    }
+
+    public function test_closure_reports_a_drain_failure_as_a_loading_error(): void
+    {
+        $handler = new RecordingErrorHandler();
+        $context = flow_context(config())->setErrorHandler($handler);
+        $loader = to_branch(
+            lit(true),
+            new SpyLoader(),
+        )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+            new RuntimeException('boom'),
+        ))));
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->closure($context);
+
+        static::assertCount(1, $handler->errors);
+        static::assertInstanceOf(LoadingError::class, $handler->errors[0]);
+        static::assertSame($loader, $handler->errors[0]->loader);
+        static::assertSame('boom', $handler->errors[0]->cause->getMessage());
+    }
+
+    public function test_closure_rethrows_a_drain_failure_under_skip_rows(): void
+    {
+        $context = flow_context(config())->setErrorHandler(skip_rows_handler());
+        $loader = to_branch(
+            lit(true),
+            new SpyLoader(),
+        )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+            new RuntimeException('boom'),
+        ))));
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('boom');
+
+        $loader->closure($context);
     }
 
     public function test_closure_for_a_new_run_does_not_drain_a_dead_runs_drive(): void

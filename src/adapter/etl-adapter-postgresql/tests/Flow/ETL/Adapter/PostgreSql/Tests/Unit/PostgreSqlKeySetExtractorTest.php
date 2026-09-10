@@ -11,6 +11,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
+use function range;
 
 final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 {
@@ -88,7 +90,7 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
             $client,
             'SELECT id FROM t',
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-        )->withPageSize(2);
+        )->withBatchSize(2);
         $batches = iterator_to_array($extractor->extract(flow_context()));
 
         static::assertSame(1, $client->callsTo('describe'));
@@ -145,7 +147,7 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         static::assertSame(['describe'], $client->calls);
     }
 
-    public function test_with_page_size_returns_the_same_extractor(): void
+    public function test_with_batch_size_returns_the_same_extractor(): void
     {
         $extractor = from_pgsql_key_set(
             new SpyClient(),
@@ -153,7 +155,7 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
         );
 
-        static::assertSame($extractor, $extractor->withPageSize(10));
+        static::assertSame($extractor, $extractor->withBatchSize(10));
     }
 
     public function test_with_maximum_returns_the_same_extractor(): void
@@ -202,28 +204,49 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         )->withMaximum(0);
     }
 
-    public function test_with_page_size_validates_negative_value(): void
+    public function test_with_batch_size_validates_negative_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Page size must be greater than 0, got -1');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got -1');
 
         from_pgsql_key_set(
             new SpyClient(),
             'SELECT id FROM t',
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-        )->withPageSize(-1);
+        )->withBatchSize(-1);
     }
 
-    public function test_with_page_size_validates_positive_value(): void
+    public function test_with_batch_size_validates_positive_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Page size must be greater than 0, got 0');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
 
         from_pgsql_key_set(
             new SpyClient(),
             'SELECT id FROM t',
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-        )->withPageSize(0);
+        )->withBatchSize(0);
+    }
+
+    public function test_pushed_limit_issues_no_query_once_satisfied(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1, 1000))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1001, 1500))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1501, 2500))),
+            );
+        $extractor = from_pgsql_key_set(
+            $client,
+            'SELECT id FROM t',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+        );
+        $extractor->pushLimit(1500);
+
+        self::assertExtractedRowsCount(1500, $extractor);
+        // 1000, then a page narrowed to the 500 still wanted - and no third query for row 1501
+        static::assertSame(2, $client->callsTo('cursor'));
     }
 
     public function test_is_repeatable(): void

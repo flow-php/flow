@@ -6,13 +6,16 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\JoinException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
@@ -595,6 +598,24 @@ final class HashJoinProcessorTest extends FlowTestCase
             static::assertTrue(str_starts_with($bucketId, 'join-left-'), $bucketId);
         }
         static::assertNotSame([], $storage->readBucketIds());
+    }
+
+    public function test_resident_join_forwards_stop_to_its_left_upstream(): void
+    {
+        $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
+        $joined = HashJoinProcessorMother::resident(
+            df()->read(from_rows(RowsMother::sequentialIds(5))),
+            Expression::on(['id' => 'id']),
+            Join::inner,
+            batchSize: 1,
+        )->process($upstream->extract(flow_context()), flow_context());
+
+        static::assertTrue($joined->valid());
+
+        $joined->send(Signal::STOP);
+
+        static::assertFalse($joined->valid());
+        static::assertSame(1, $upstream->batchesYielded);
     }
 
     /**

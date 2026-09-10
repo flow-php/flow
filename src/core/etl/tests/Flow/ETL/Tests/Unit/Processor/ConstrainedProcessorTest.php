@@ -7,11 +7,14 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Constraint;
 use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -21,6 +24,19 @@ use function Flow\ETL\DSL\schema;
 
 final class ConstrainedProcessorTest extends FlowTestCase
 {
+    public function test_constrained_processor_forwards_stop_to_its_upstream(): void
+    {
+        $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
+        $processed = (new ConstrainedProcessor([]))->process($upstream->extract(flow_context()), flow_context());
+
+        static::assertTrue($processed->valid());
+
+        $processed->send(Signal::STOP);
+
+        static::assertFalse($processed->valid());
+        static::assertSame(1, $upstream->batchesYielded);
+    }
+
     public function test_bind_returns_the_input_schema(): void
     {
         $input = schema(int_schema('id'));

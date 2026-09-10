@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use Doctrine\DBAL\Logging\Middleware;
 use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -76,6 +79,27 @@ final class DbalQueryExtractorTest extends FlowTestCase
         );
 
         static::assertSame($extractor->schema(), $extractor->schema());
+    }
+
+    #[TestWith([5, 5])]
+    #[TestWith([100, 10])]
+    public function test_pushed_limit_stops_querying_further_parameter_sets(int $batchSize, int $extractedRows): void
+    {
+        $counter = new SelectQueryCounter();
+        $extractor = (new DbalQueryExtractor(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(new Middleware($counter)), 30),
+            'SELECT id, name FROM users WHERE id > :min AND id <= :max',
+        ))
+            ->withParameters(
+                new ParametersSet(['min' => 0, 'max' => 10], ['min' => 10, 'max' => 20], ['min' => 20, 'max' => 30]),
+            )
+            ->withBatchSize($batchSize);
+        $extractor->pushLimit(5);
+        $counter->reset();
+
+        // at 100 the first set is one batch that overshoots the limit - trimming it is the limit operator's job
+        self::assertExtractedRowsCount($extractedRows, $extractor);
+        static::assertSame(1, $counter->count);
     }
 
     public function test_is_repeatable(): void

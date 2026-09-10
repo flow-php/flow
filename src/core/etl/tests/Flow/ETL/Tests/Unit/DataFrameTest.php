@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\BoundStep;
@@ -219,7 +220,7 @@ final class DataFrameTest extends FlowTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -369,7 +370,7 @@ final class DataFrameTest extends FlowTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -420,7 +421,7 @@ final class DataFrameTest extends FlowTestCase
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
@@ -505,25 +506,8 @@ final class DataFrameTest extends FlowTestCase
             ->write($loader)
             ->run();
 
-        static::assertEquals(
-            [
-                [
-                    'id' => 101,
-                    'stamp' => 'zero:one:two:three',
-                    'deleted' => false,
-                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
-                    'phase' => null,
-                ],
-                [
-                    'id' => 102,
-                    'stamp' => 'zero:one:two:three',
-                    'deleted' => true,
-                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
-                    'phase' => null,
-                ],
-            ],
-            $loader->result,
-        );
+        // IgnoreError drops a batch whose transformation failed, so the stamps after it never run
+        static::assertSame([], $loader->result);
     }
 
     public function test_process_constructor(): void
@@ -735,7 +719,7 @@ final class DataFrameTest extends FlowTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {
@@ -798,7 +782,7 @@ final class DataFrameTest extends FlowTestCase
                 /**
                  * @param FlowContext $context
                  *
-                 * @return \Generator<int, Rows, mixed, void>
+                 * @return \Generator<int, Rows, Signal|null, void>
                  */
                 public function extract(FlowContext $context): Generator
                 {

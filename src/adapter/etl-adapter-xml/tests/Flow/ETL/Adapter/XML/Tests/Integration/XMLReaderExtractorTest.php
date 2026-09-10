@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
@@ -19,7 +20,6 @@ use function Flow\ETL\DSL\xml_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
-use function iterator_to_array;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
@@ -27,9 +27,9 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
     {
         // @mago-ignore analysis:deprecated-class
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
-        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
     }
 
     public function test_partition_columns_are_not_leaking_between_streams(): void
@@ -161,6 +161,30 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
+    }
+
+    public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $generator = (new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'), 'root/item'))
+            ->withBatchSize(10)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = (new XMLReaderExtractor(
+            path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'),
+            'root/item',
+        ))->withBatchSize(10);
+        $extractor->pushLimit(1);
+
+        static::assertCount(1, ExtractedRows::of($extractor));
     }
 
     public function test_is_repeatable(): void

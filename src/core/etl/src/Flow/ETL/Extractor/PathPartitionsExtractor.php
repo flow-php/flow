@@ -18,22 +18,27 @@ use Generator;
 use function array_map;
 use function array_merge;
 use function array_values;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
-final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor, RewindableExtractor
+final class PathPartitionsExtractor implements
+    BatchableExtractor,
+    Extractor,
+    FileExtractor,
+    LimitPushDown,
+    RewindableExtractor
 {
     private ?Schema $schema = null;
 
-    use Limitable;
+    use Batches;
     use PathFiltering;
+    use PushesLimit;
 
     private readonly Filesystem $filesystem;
 
@@ -64,32 +69,42 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
      */
     public function extract(FlowContext $context): Generator
     {
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
-            $partitions = $fileStatus->path->partitions();
+        $batchSize = $this->batchSize();
+        $schema = $this->schema();
+        $buffer = [];
+        $yielded = 0;
 
-            $row = row([
+        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
+            $buffer[] = [
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
                     $p->name => $p->value,
-                ], $partitions->toArray()))),
-            ]);
+                ], $fileStatus->path->partitions()->toArray()))),
+            ];
 
-            $batch = rows(
-                schema(str_schema('path'), map_schema('partitions', type_map(type_string(), type_string()))),
-                $row,
-            );
-
-            if ($this->schema !== null) {
-                $batch = array_to_rows($batch->toArray(), $this->schema, $context->hydrator());
+            if (count($buffer) < $batchSize) {
+                continue;
             }
 
-            $signal = yield $batch;
+            $yielded += count($buffer);
 
-            $this->incrementReturnedRows();
+            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
 
-            if ($signal === Signal::STOP || $this->reachedLimit()) {
+            if ($signal === Signal::STOP) {
                 return;
             }
+
+            $buffer = [];
+
+            $limit = $this->pushedLimit();
+
+            if ($limit !== null && $yielded >= $limit) {
+                return;
+            }
+        }
+
+        if ($buffer !== []) {
+            yield array_to_rows($buffer, $schema, $context->hydrator());
         }
     }
 
