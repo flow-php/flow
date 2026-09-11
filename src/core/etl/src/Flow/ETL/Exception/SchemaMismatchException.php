@@ -12,8 +12,10 @@ use function sprintf;
  */
 final class SchemaMismatchException extends InvalidArgumentException
 {
-    public function __construct(int $rowIndex, ColumnMismatchException $cause)
-    {
+    public function __construct(
+        public readonly int $rowIndex,
+        public readonly ColumnMismatchException $cause,
+    ) {
         parent::__construct(
             sprintf(
                 'Rows do not match their schema: column "%s" (row %d)%s',

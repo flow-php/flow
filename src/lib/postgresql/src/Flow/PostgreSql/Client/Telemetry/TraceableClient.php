@@ -8,6 +8,7 @@ use Closure;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
@@ -221,15 +222,16 @@ final class TraceableClient implements Client
         return $columns;
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
+        $logged = $parameters instanceof ConvertedParameters ? $parameters->values : $parameters;
 
         return $this->traceQuery(
             $query,
-            $parameters,
-            function () use ($sql, $parameters, $query): int {
-                $this->logQuery($query, $parameters);
+            $logged,
+            function () use ($sql, $parameters, $query, $logged): int {
+                $this->logQuery($query, $logged);
 
                 return $this->client->execute($sql, $parameters);
             },

@@ -54,7 +54,7 @@ final readonly class ParameterModel
             'default_value' => type_optional(type_string()),
         ])->assert($data);
 
-        /** @phpstan-var array<array<string, mixed>> $type */
+        /** @var array<array<string, mixed>> $type */
         $type = $data['type'];
 
         return new self(

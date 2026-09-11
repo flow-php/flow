@@ -9,6 +9,8 @@ use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Generator;
 
+use function array_key_exists;
+
 final class WorkbookSampler implements SchemaSampler
 {
     /**
@@ -45,14 +47,35 @@ final class WorkbookSampler implements SchemaSampler
     }
 
     /**
-     * $rowBudget is deliberately unused: rows() is lazy and SchemaInferrer stops advancing it.
+     * A bounded sample keeps what it parsed for take(); an unbounded one parses every row, so it streams and closes
+     * as it goes. Either way SchemaInferrer stops advancing a sheet once its budget is spent.
      *
      * @return Generator<int, Generator<int, RawRowValues>>
      */
     public function samples(int $rowBudget): iterable
     {
         foreach ($this->files as $index => $file) {
-            yield ($this->sheets[$index] ??= $this->workbook->sheet($file))->rows();
+            $sheet = $this->sheets[$index] ??= $this->workbook->sheet($file);
+
+            yield $rowBudget === -1 ? $sheet->rows() : $sheet->sample();
         }
+    }
+
+    /**
+     * The sheet this sampler read $file through, handed over to the caller to read on and close; null when the
+     * sample never reached the file.
+     */
+    public function take(SourceFile $file): ?WorkbookSheet
+    {
+        foreach ($this->files as $index => $sampled) {
+            if ($sampled->uri() === $file->uri() && array_key_exists($index, $this->sheets)) {
+                $sheet = $this->sheets[$index];
+                unset($this->sheets[$index]);
+
+                return $sheet;
+            }
+        }
+
+        return null;
     }
 }

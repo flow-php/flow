@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Adapter\XML\XMLWriter;
-use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
+use Flow\ETL\Adapter\XML\XMLWriter\StringXMLWriter;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
@@ -27,7 +27,7 @@ final readonly class XMLOutput implements Output
         private string $rowElementName = 'row',
         private string $attributePrefix = '_',
         private string $dateTimeFormat = 'Y-m-d\TH:i:s.uP',
-        private XMLWriter $xmlWriter = new DOMDocumentWriter(),
+        private XMLWriter $xmlWriter = new StringXMLWriter(),
     ) {}
 
     public function loader(Path $path, Filesystem $filesystem): Loader

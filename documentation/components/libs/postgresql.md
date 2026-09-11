@@ -298,6 +298,9 @@ $users = $client->fetchAll('SELECT * FROM users WHERE active = $1', [true]);
 // Execute INSERT/UPDATE/DELETE
 $affected = $client->execute('UPDATE users SET active = $1 WHERE id = $2', [false, 1]);
 
+// The same, with parameters already in PostgreSQL text form - no converter runs
+$affected = $client->execute('UPDATE users SET active = $1 WHERE id = $2', converted_parameters(['f', '1']));
+
 // Transaction with automatic commit/rollback
 $result = $client->transaction(function ($client) {
     $client->execute('INSERT INTO users (name) VALUES ($1)', ['John']);

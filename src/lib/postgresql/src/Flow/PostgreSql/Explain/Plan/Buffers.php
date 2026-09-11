@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Explain\Plan;
 
 /**
- * @phpstan-type BuffersShape = array{shared_hit: int, shared_read: int, shared_dirtied: int, shared_written: int, local_hit: int, local_read: int, local_dirtied: int, local_written: int, temp_read: int, temp_written: int}
+ * @type BuffersShape = array{shared_hit: int, shared_read: int, shared_dirtied: int, shared_written: int, local_hit: int, local_read: int, local_dirtied: int, local_written: int, temp_read: int, temp_written: int}
  */
 final readonly class Buffers
 {

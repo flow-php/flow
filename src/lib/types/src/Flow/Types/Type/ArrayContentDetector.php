@@ -60,11 +60,8 @@ final readonly class ArrayContentDetector
             ->without(type_array(), type_empty_array(), type_null())
             ->count();
 
-        $countedValueTypes = $this->uniqueValuesType->reduceOptionals()->without(
-            type_array(),
-            type_empty_array(),
-            type_null(),
-        );
+        $reducedValueTypes = $this->uniqueValuesType->reduceOptionals();
+        $countedValueTypes = $reducedValueTypes->without(type_array(), type_empty_array(), type_null());
 
         $unified = null;
 
@@ -76,7 +73,7 @@ final readonly class ArrayContentDetector
         // Ignoring array<mixed>/array{} values in the unification is only sound when the unified
         // type is an array itself - a scalar mixed with arrays has no common list/map value type.
         $this->valueTypesConsistent =
-            !$this->uniqueValuesType->reduceOptionals()->hasAny(type_array(), type_empty_array())
+            !$reducedValueTypes->hasAny(type_array(), type_empty_array())
             || $countedValueTypes->first() instanceof ListType
             || $countedValueTypes->first() instanceof MapType
             || $countedValueTypes->first() instanceof StructureType;

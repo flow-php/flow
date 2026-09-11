@@ -54,6 +54,14 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
 
     private string $dateTimeFormat = 'yyyy-mm-dd hh:mm:ss';
 
+    /**
+     * OpenSpout registers every Style instance as its own cell format, so a Style built per cell grows styles.xml
+     * by one entry per cell - which every reader of the workbook then has to parse.
+     *
+     * @var array<string, Style>
+     */
+    private array $formatStyles = [];
+
     private ?ExcelEncoder $encoder = null;
 
     private ?Style $headerStyle = null;
@@ -298,8 +306,9 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
     private function temporalStyle(Definition $definition): ?Style
     {
         return match ($definition->type()::class) {
-            DateTimeType::class => (new Style())->withFormat($this->dateTimeFormat),
-            DateType::class => (new Style())->withFormat($this->dateFormat),
+            DateTimeType::class
+                => $this->formatStyles[$this->dateTimeFormat] ??= (new Style())->withFormat($this->dateTimeFormat),
+            DateType::class => $this->formatStyles[$this->dateFormat] ??= (new Style())->withFormat($this->dateFormat),
             default => null,
         };
     }

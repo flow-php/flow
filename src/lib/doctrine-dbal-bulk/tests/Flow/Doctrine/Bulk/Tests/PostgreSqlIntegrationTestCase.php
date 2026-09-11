@@ -20,7 +20,7 @@ abstract class PostgreSqlIntegrationTestCase extends IntegrationTestCase
 
         $this->databaseContext = new DatabaseContext(DriverManager::getConnection(
             (new DsnParser(['pgsql' => 'pdo_pgsql']))->parse(getenv('PGSQL_DATABASE_URL') ?: ''),
-            (new Configuration())->setMiddlewares([new Middleware($this->logger)]),
+            (new Configuration())->setMiddlewares([new Middleware($this->logger), $this->spy]),
         ));
     }
 }

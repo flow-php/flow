@@ -11,6 +11,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -21,6 +22,24 @@ use function Flow\ETL\DSL\str_schema;
 
 final class BatchingProcessorTest extends FlowTestCase
 {
+    /**
+     * @param int<1, max> $size
+     */
+    #[TestWith([2])]
+    #[TestWith([5])]
+    public function test_a_batch_under_another_schema_is_conformed_to_the_first(int $size): void
+    {
+        $generator = (static function () {
+            yield rows(schema(int_schema('id'), str_schema('name', true)), row(['id' => 1, 'name' => 'a']));
+            yield rows(schema(int_schema('id')), row(['id' => 2]));
+        })();
+
+        /** @var list<Rows> $result */
+        $result = iterator_to_array((new BatchingProcessor($size))->process($generator, flow_context()));
+
+        static::assertSame([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]], $result[0]->toArray());
+    }
+
     public function test_batching_processor_forwards_stop_to_its_upstream(): void
     {
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);

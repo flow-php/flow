@@ -55,8 +55,8 @@ final readonly class Tables implements Countable, IteratorAggregate
     }
 
     /**
-     * @phpstan-assert-if-false Table $this->first()
-     * @phpstan-assert-if-false Table $this->last()
+     * @assert-if-false Table $this->first()
+     * @assert-if-false Table $this->last()
      */
     public function isEmpty(): bool
     {
@@ -64,8 +64,8 @@ final readonly class Tables implements Countable, IteratorAggregate
     }
 
     /**
-     * @phpstan-assert-if-true Table $this->first()
-     * @phpstan-assert-if-true Table $this->last()
+     * @assert-if-true Table $this->first()
+     * @assert-if-true Table $this->last()
      */
     public function isSingle(): bool
     {

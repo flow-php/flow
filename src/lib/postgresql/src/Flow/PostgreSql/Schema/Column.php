@@ -9,10 +9,10 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 /**
- * @phpstan-import-type ColumnTypeShape from ColumnType
- * @phpstan-import-type ColumnDefaultShape from ColumnDefault
+ * @import-type ColumnTypeShape from ColumnType
+ * @import-type ColumnDefaultShape from ColumnDefault
  *
- * @phpstan-type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default?: ?ColumnDefaultShape, is_identity?: bool, identity_generation?: ?string, is_generated?: bool, generation_expression?: ?string, ordinal_position?: ?int}
+ * @type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default?: ?ColumnDefaultShape, is_identity?: bool, identity_generation?: ?string, is_generated?: bool, generation_expression?: ?string, ordinal_position?: ?int}
  */
 final readonly class Column
 {

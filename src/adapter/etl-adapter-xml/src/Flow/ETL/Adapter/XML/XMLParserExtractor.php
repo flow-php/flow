@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -24,8 +23,6 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
-use XMLParser;
-use XMLWriter;
 
 use function count;
 use function Flow\ETL\DSL\schema;
@@ -49,28 +46,7 @@ final class XMLParserExtractor implements
      */
     private int $bufferSize = 8096;
 
-    private bool $capturing = false;
-
-    /**
-     * @var array<string>
-     */
-    private array $currentPath = [];
-
-    /**
-     * @var array<string>
-     */
-    private array $elements = [];
-
-    /**
-     * @var list<array<string, string>>
-     */
-    private array $namespaceStack = [];
-
-    private ?XMLParser $parser = null;
-
     private ?Schema $schema = null;
-
-    private ?XMLWriter $writer = null;
 
     private string $xmlNodePath = '';
 
@@ -113,31 +89,6 @@ final class XMLParserExtractor implements
         return true;
     }
 
-    public function characterDataHandler(XMLParser $parser, string $data): void
-    {
-        if ($this->capturing) {
-            $this->writer()->text($data);
-        }
-    }
-
-    public function endElementHandler(XMLParser $parser, string $name): void
-    {
-        if ($this->capturing) {
-            $this->writer()->endElement();
-
-            if (
-                implode('/', $this->currentPath) === $this->xmlNodePath
-                || $this->xmlNodePath === '' && count($this->currentPath) === 1
-            ) {
-                $this->capturing = false;
-                $this->elements[] = $this->writer()->outputMemory();
-            }
-        }
-
-        array_pop($this->currentPath);
-        array_pop($this->namespaceStack);
-    }
-
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
@@ -146,7 +97,7 @@ final class XMLParserExtractor implements
         $hydrator = $context->hydrator();
         $batchSize = $this->batchSize();
         $yielded = 0;
-        $encoder = new XMLEncoder();
+        $nodes = new XMLNodes($this->xmlNodePath);
 
         $baseSchema = $this->schema ?? schema(xml_schema('node'));
 
@@ -159,57 +110,33 @@ final class XMLParserExtractor implements
             try {
                 $constants = $fileColumns->forFile($source, $schema);
 
-                $rawNodes = [];
+                $batch = [];
 
-                foreach ($stream->iterate($this->bufferSize) as $chunk) {
-                    if (!xml_parse($this->parser(), $chunk)) {
-                        throw new RuntimeException(sprintf(
-                            'XML Error: %s at line %d',
-                            (string) xml_error_string(xml_get_error_code($this->parser())),
-                            xml_get_current_line_number($this->parser()),
-                        ));
-                    }
+                foreach ($nodes->of($stream, $this->bufferSize) as $node) {
+                    $batch[] = new RawRowValues($constants->fill(['node' => $node]));
 
-                    foreach ($this->elements as $element) {
-                        $rawNodes[] = $element;
+                    if (count($batch) >= $batchSize) {
+                        $hydrated = $hydrator->hydrate($batch, $schema);
 
-                        if (count($rawNodes) >= $batchSize) {
-                            $batch = [];
+                        $batch = [];
 
-                            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                                $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                            }
+                        $yielded += $hydrated->count();
 
-                            $rawNodes = [];
+                        $signal = yield $hydrated;
 
-                            $hydrated = $hydrator->hydrate($batch, $schema);
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
 
-                            $yielded += $hydrated->count();
+                        $limit = $this->pushedLimit();
 
-                            $signal = yield $hydrated;
-
-                            if ($signal === Signal::STOP) {
-                                return;
-                            }
-
-                            $limit = $this->pushedLimit();
-
-                            if ($limit !== null && $yielded >= $limit) {
-                                return;
-                            }
+                        if ($limit !== null && $yielded >= $limit) {
+                            return;
                         }
                     }
-
-                    $this->elements = [];
                 }
 
-                if ($rawNodes !== []) {
-                    $batch = [];
-
-                    foreach ($encoder->decode($rawNodes) as $rowValues) {
-                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                    }
-
+                if ($batch !== []) {
                     $hydrated = $hydrator->hydrate($batch, $schema);
 
                     $yielded += $hydrated->count();
@@ -226,10 +153,7 @@ final class XMLParserExtractor implements
                         return;
                     }
                 }
-
-                xml_parse($this->parser(), '', true);
             } finally {
-                $this->freeParser();
                 $stream->close();
             }
         }
@@ -243,50 +167,6 @@ final class XMLParserExtractor implements
     public function source(): Path
     {
         return $this->path;
-    }
-
-    /**
-     * @param array<string, string> $attrs
-     */
-    public function startElementHandler(XMLParser $parser, string $name, array $attrs): void
-    {
-        $this->currentPath[] = $name;
-
-        $namespaceDeclarations = [];
-        $otherAttributes = [];
-
-        foreach ($attrs as $key => $value) {
-            if ($key === 'xmlns' || str_starts_with($key, 'xmlns:')) {
-                $namespaceDeclarations[$key] = $value;
-            } else {
-                $otherAttributes[$key] = $value;
-            }
-        }
-
-        $this->namespaceStack[] = $namespaceDeclarations;
-
-        $isCapturedRoot =
-            implode('/', $this->currentPath) === $this->xmlNodePath
-            || $this->xmlNodePath === '' && count($this->currentPath) === 1;
-
-        if ($isCapturedRoot) {
-            $this->capturing = true;
-            $namespacesToEmit = array_merge(...$this->namespaceStack);
-        } elseif ($this->capturing) {
-            $namespacesToEmit = $namespaceDeclarations;
-        } else {
-            return;
-        }
-
-        $this->writer()->startElement($name);
-
-        foreach ($namespacesToEmit as $nsKey => $nsValue) {
-            $this->writer()->writeAttribute($nsKey, $nsValue);
-        }
-
-        foreach ($otherAttributes as $key => $value) {
-            $this->writer()->writeAttribute($key, $value);
-        }
     }
 
     /**
@@ -311,38 +191,5 @@ final class XMLParserExtractor implements
         $this->xmlNodePath = $xmlNodePath;
 
         return $this;
-    }
-
-    private function freeParser(): void
-    {
-        $this->parser = null;
-        $this->namespaceStack = [];
-        $this->currentPath = [];
-        $this->elements = [];
-        $this->capturing = false;
-        $this->writer = null;
-    }
-
-    private function parser(): XMLParser
-    {
-        if ($this->parser === null) {
-            $this->parser = xml_parser_create('UTF-8');
-            xml_parser_set_option($this->parser, XML_OPTION_CASE_FOLDING, 0);
-            xml_set_element_handler($this->parser, $this->startElementHandler(...), $this->endElementHandler(...));
-            xml_set_character_data_handler($this->parser, $this->characterDataHandler(...));
-        }
-
-        return $this->parser;
-    }
-
-    private function writer(): XMLWriter
-    {
-        if ($this->writer === null) {
-            $this->writer = new XMLWriter();
-            $this->writer->openMemory();
-            $this->writer->setIndent(true);
-        }
-
-        return $this->writer;
     }
 }

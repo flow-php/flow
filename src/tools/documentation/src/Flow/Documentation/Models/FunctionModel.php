@@ -57,11 +57,11 @@ final readonly class FunctionModel
             'doc_comment' => type_optional(type_string()),
         ])->assert($data);
 
-        /** @phpstan-var array<array<string, mixed>> $parameters */
+        /** @var array<array<string, mixed>> $parameters */
         $parameters = $data['parameters'];
-        /** @phpstan-var array<array<string, mixed>> $returnType */
+        /** @var array<array<string, mixed>> $returnType */
         $returnType = $data['return_type'];
-        /** @phpstan-var array<array<string, mixed>> $attributes */
+        /** @var array<array<string, mixed>> $attributes */
         $attributes = $data['attributes'];
 
         return new self(

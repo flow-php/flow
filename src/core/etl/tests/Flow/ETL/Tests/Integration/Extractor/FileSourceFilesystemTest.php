@@ -71,8 +71,9 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
             df()->read(from_excel($sniffed, filesystem: $counting))->write(to_array($rows))->run();
 
             static::assertSame(['a'], array_column($rows, 'id'));
-            // twice: an undeclared read sniffs the format once for the schema sample and once for the read loop
-            static::assertSame(2, $counting->readFromCalls);
+            // once: the undeclared read sniffs the format for the schema sample, and the read loop reads on from the
+            // sample's open sheet
+            static::assertSame(1, $counting->readFromCalls);
 
             return;
         }

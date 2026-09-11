@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\column_type_from_string;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -220,6 +221,21 @@ final class EntryTypesMapTest extends TestCase
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::INT2, $result->targetType);
         static::assertSame(42, $result->value);
+    }
+
+    public function test_value_type_is_the_one_map_wraps_values_in(): void
+    {
+        $map = new EntryTypesMap([IntegerType::class => ValueType::INT2]);
+
+        static::assertSame(ValueType::INT2, $map->valueType('small_count', type_integer()));
+        static::assertSame(ValueType::TEXT, $map->valueType('name', type_string()));
+    }
+
+    public function test_value_type_refuses_an_unmapped_type(): void
+    {
+        $this->expectException(TypeMappingException::class);
+
+        (new EntryTypesMap())->valueType('payload', type_array());
     }
 
     public function test_maps_boolean_type_to_bool(): void

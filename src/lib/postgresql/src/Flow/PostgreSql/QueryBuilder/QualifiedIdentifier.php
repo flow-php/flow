@@ -76,7 +76,7 @@ final readonly class QualifiedIdentifier
     /**
      * Check if this identifier has a schema part.
      *
-     * @phpstan-assert-if-true !null $this->schema()
+     * @assert-if-true !null $this->schema()
      */
     public function hasSchema(): bool
     {

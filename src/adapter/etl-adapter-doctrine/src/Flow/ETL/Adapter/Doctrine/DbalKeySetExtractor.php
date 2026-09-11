@@ -23,6 +23,8 @@ use Flow\ETL\Schema;
 use Generator;
 
 use function array_key_exists;
+use function array_key_last;
+use function array_map;
 use function count;
 use function min;
 use function sha1;
@@ -89,6 +91,7 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitP
             $this->maximum !== null => $this->maximum,
             default => $pushed,
         };
+        $keyAliases = array_map($this->keyAlias(...), $this->keySet->keys);
 
         while (true) {
             if ($maximum !== null && $yielded >= $maximum) {
@@ -154,28 +157,24 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitP
                 }
             }
 
-            $stmt = $this->connection->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes());
+            // the pgsql driver resolves the result's column types on every fetchAssociative(), but once per
+            // fetchAllAssociative(); a page is buffered whole either way
+            $rawBatch = $this->connection
+                ->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes())
+                ->fetchAllAssociative();
 
-            $hasRows = false;
-            $rawBatch = [];
-
-            while ($row = $stmt->fetchAssociative()) {
-                $hasRows = true;
-                $lastRow = $row;
-
-                foreach ($this->keySet->keys as $key) {
-                    $keyAlias = $this->keyAlias($key);
-
-                    if (array_key_exists($keyAlias, $row)) {
-                        unset($row[$keyAlias]);
-                    }
-                }
-
-                $rawBatch[] = $row;
+            if ($rawBatch === []) {
+                break;
             }
 
-            if (!$hasRows) {
-                break;
+            $lastRow = $rawBatch[array_key_last($rawBatch)];
+
+            foreach ($rawBatch as $index => $row) {
+                foreach ($keyAliases as $keyAlias) {
+                    unset($row[$keyAlias]);
+                }
+
+                $rawBatch[$index] = $row;
             }
 
             $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);

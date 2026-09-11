@@ -33,7 +33,7 @@ use function array_merge;
 use function round;
 
 /**
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final class TelemetryContext
 {

@@ -8,7 +8,16 @@ use DateTimeZone;
 use DOMDocument;
 use Exception;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\TimeZoneType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
@@ -78,7 +87,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     public function emitsType(Type $type): bool
     {
-        return $this->emits === null || array_key_exists($type::class, $this->emits);
+        return $this->emitsClass($type::class);
     }
 
     /**
@@ -98,24 +107,47 @@ final class StringTypeNarrower implements TypeNarrower
 
         // a rung that cannot produce a candidate is skipped, so its predicate never runs - that is where
         // all-strings mode gets its speed, and why isXML() no longer builds a DOMDocument per cell
-        $temporal = $this->emitsType(type_datetime()) || $this->emitsType(type_date())
-            ? StringTemporalParts::from($value)
-            : new StringTemporalParts(false, false, false);
+        $type = match (true) {
+            $this->isNull($value) => type_null(),
+            $this->emitsClass(JsonType::class) && $this->isJson($value) => type_json(),
+            $this->emitsClass(UuidType::class) && $this->isUuid($value) => type_uuid(),
+            $this->emitsClass(HTMLType::class) && $this->isHTML($value) => type_html(),
+            $this->emitsClass(XMLType::class) && $this->isXML($value) => type_xml(),
+            $this->emitsClass(FloatType::class) && $this->isFloat($value) => type_float(),
+            $this->emitsClass(IntegerType::class) && $this->isInteger($value) => type_integer(),
+            default => null,
+        };
+
+        if ($type !== null) {
+            return $type;
+        }
+
+        // one temporal parse serves both temporal rungs, and a value an earlier rung claimed never pays for it
+        if ($this->emitsClass(DateTimeType::class) || $this->emitsClass(DateType::class)) {
+            $temporal = StringTemporalParts::from($value);
+
+            if ($this->emitsClass(DateTimeType::class) && $temporal->isDateTime()) {
+                return type_datetime();
+            }
+
+            if ($this->emitsClass(DateType::class) && $temporal->isDate()) {
+                return type_date();
+            }
+        }
 
         return match (true) {
-            $this->isNull($value) => type_null(),
-            $this->emitsType(type_json()) && $this->isJson($value) => type_json(),
-            $this->emitsType(type_uuid()) && $this->isUuid($value) => type_uuid(),
-            $this->emitsType(type_html()) && $this->isHTML($value) => type_html(),
-            $this->emitsType(type_xml()) && $this->isXML($value) => type_xml(),
-            $this->emitsType(type_float()) && $this->isFloat($value) => type_float(),
-            $this->emitsType(type_integer()) && $this->isInteger($value) => type_integer(),
-            $this->emitsType(type_datetime()) && $temporal->isDateTime() => type_datetime(),
-            $this->emitsType(type_date()) && $temporal->isDate() => type_date(),
-            $this->emitsType(type_boolean()) && $this->isBoolean($value) => type_boolean(),
-            $this->emitsType(type_time_zone()) && $this->isTimeZone($value) => type_time_zone(),
+            $this->emitsClass(BooleanType::class) && $this->isBoolean($value) => type_boolean(),
+            $this->emitsClass(TimeZoneType::class) && $this->isTimeZone($value) => type_time_zone(),
             default => type_string(),
         };
+    }
+
+    /**
+     * @param class-string<Type<mixed>> $class
+     */
+    private function emitsClass(string $class): bool
+    {
+        return $this->emits === null || array_key_exists($class, $this->emits);
     }
 
     /**

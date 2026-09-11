@@ -38,39 +38,18 @@ final readonly class Row
      */
     public function matchTo(Schema $schema): self
     {
-        $definitions = $schema->definitions();
-        $matched = [];
-        $taken = 0;
+        return $this->conform($schema, checkValues: true);
+    }
 
-        foreach ($definitions as $name => $definition) {
-            if (!array_key_exists($name, $this->values)) {
-                if (!$definition->isNullable()) {
-                    throw ColumnMismatchException::missingColumn($definition);
-                }
-
-                $matched[$name] = null;
-
-                continue;
-            }
-
-            $taken++;
-
-            if (!$definition->matches($this->values[$name])) {
-                throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
-            }
-
-            $matched[$name] = $this->values[$name];
-        }
-
-        if ($taken !== count($this->values)) {
-            foreach ($this->values as $name => $_) {
-                if (!array_key_exists($name, $definitions)) {
-                    throw ColumnMismatchException::unexpectedColumn($name);
-                }
-            }
-        }
-
-        return new self($matched);
+    /**
+     * matchTo() without its value check: the order, padding, missing, unknown and null rules all hold, but a non-null
+     * value is not validated against its type - the caller produced it by casting to, or decoding from, that type.
+     *
+     * @throws ColumnMismatchException
+     */
+    public function conformTo(Schema $schema): self
+    {
+        return $this->conform($schema, checkValues: false);
     }
 
     /**
@@ -178,5 +157,49 @@ final readonly class Row
     public function values(): array
     {
         return $this->values;
+    }
+
+    /**
+     * @throws ColumnMismatchException
+     */
+    private function conform(Schema $schema, bool $checkValues): self
+    {
+        $definitions = $schema->definitions();
+        $matched = [];
+        $taken = 0;
+
+        foreach ($definitions as $name => $definition) {
+            if (!array_key_exists($name, $this->values)) {
+                if (!$definition->isNullable()) {
+                    throw ColumnMismatchException::missingColumn($definition);
+                }
+
+                $matched[$name] = null;
+
+                continue;
+            }
+
+            $taken++;
+
+            if (
+                $checkValues
+                    ? !$definition->matches($this->values[$name])
+                    : $this->values[$name] === null && !$definition->isNullable()
+            ) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+            }
+
+            $matched[$name] = $this->values[$name];
+        }
+
+        if ($taken !== count($this->values)) {
+            foreach ($this->values as $name => $_) {
+                if (!array_key_exists($name, $definitions)) {
+                    throw ColumnMismatchException::unexpectedColumn($name);
+                }
+            }
+        }
+
+        return new self($matched);
     }
 }

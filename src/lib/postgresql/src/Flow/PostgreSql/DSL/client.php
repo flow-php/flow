@@ -10,6 +10,7 @@ use Flow\ETL\Attribute\Type as DSLType;
 use Flow\PostgreSql\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Context;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
@@ -371,4 +372,18 @@ function static_factory_mapper(string $class, string $method): StaticFactoryMapp
 function typed(mixed $value, ValueType $targetType): TypedValue
 {
     return new TypedValue($value, $targetType);
+}
+
+/**
+ * Parameters already in PostgreSQL's text form, which Client::execute() sends without running a converter.
+ *
+ * @param list<null|string> $values
+ *
+ * @example
+ * $client->execute('UPDATE users SET active = $1 WHERE id = $2', converted_parameters(['f', '1']));
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function converted_parameters(array $values): ConvertedParameters
+{
+    return new ConvertedParameters($values);
 }

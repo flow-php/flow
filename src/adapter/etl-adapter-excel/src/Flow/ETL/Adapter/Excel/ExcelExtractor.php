@@ -28,6 +28,7 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
+use Throwable;
 
 use function array_diff;
 use function array_values;
@@ -51,6 +52,12 @@ final class ExcelExtractor implements
     private SchemaInference $inference;
 
     private ExcelReadOptions $readOptions;
+
+    /**
+     * The sheets the last inference sampled, still open: the next extract() reads on from where the sample stopped
+     * instead of parsing the sample again. DuckDB keeps its CSV sniffer's buffers for the scan the same way.
+     */
+    private ?WorkbookSampler $sampled = null;
 
     private ?Schema $schema = null;
 
@@ -84,6 +91,15 @@ final class ExcelExtractor implements
         $this->readOptions = new ExcelReadOptions();
     }
 
+    /**
+     * An inference no extract() followed still holds its sample's open readers, and OpenSpout's file-based
+     * shared-strings cache leaves its temp folder behind until a reader closes.
+     */
+    public function __destruct()
+    {
+        $this->sampled?->close();
+    }
+
     public function isRepeatable(): bool
     {
         return true;
@@ -101,72 +117,102 @@ final class ExcelExtractor implements
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
         $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
         $inferredFrom = '';
+        // only the first extract() after an inference reads on from its sample; every later one parses afresh
+        $sampled = $this->sampled;
+        $this->sampled = null;
 
-        if ($this->schema !== null) {
-            $base = $this->schema;
-        } else {
-            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
-            $derived = $this->derivedSchema;
+        try {
+            if ($this->schema !== null) {
+                $base = $this->schema;
+            } else {
+                // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+                $derived = $this->derivedSchema;
 
-            if ($derived === null) {
-                $sampler = new WorkbookSampler($workbook, $sources);
+                if ($derived === null) {
+                    $sampler = new WorkbookSampler($workbook, $sources);
 
-                try {
-                    // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
-                    $header = $sampler->header();
-                    $inferredFrom = $header->source ?? '';
+                    try {
+                        // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
+                        $header = $sampler->header();
+                        $inferredFrom = $header->source ?? '';
 
-                    $derived =
-                        $this->derivedSchema = (new SchemaInferrer(
-                            $this->inference,
-                            new CellTypeNarrower($this->inference->candidates()),
-                        ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
-                } finally {
-                    $sampler->close();
+                        $derived =
+                            $this->derivedSchema = (new SchemaInferrer(
+                                $this->inference,
+                                new CellTypeNarrower($this->inference->candidates()),
+                            ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+                    } catch (Throwable $failure) {
+                        $sampler->close();
+
+                        throw $failure;
+                    }
+
+                    $sampled?->close();
+                    $sampled = $sampler;
                 }
+
+                $base = $fileColumns->withoutTail($derived);
             }
 
-            $base = $fileColumns->withoutTail($derived);
-        }
+            $schema = $fileColumns->declare($base);
+            $tail = $fileColumns->tail();
+            $expected = $base->references()->names();
 
-        $schema = $fileColumns->declare($base);
-        $tail = $fileColumns->tail();
-        $expected = $base->references()->names();
+            foreach ($sources as $source) {
+                $sheet = $sampled?->take($source) ?? $workbook->sheet($source);
 
-        foreach ($sources as $source) {
-            $sheet = $workbook->sheet($source);
+                try {
+                    if ($this->schema === null && !$this->inference->unionByName) {
+                        $columns = array_values(array_diff($sheet->columns(), $tail));
 
-            try {
-                if ($this->schema === null && !$this->inference->unionByName) {
-                    $columns = array_values(array_diff($sheet->columns(), $tail));
-
-                    if (
-                        $columns !== []
-                        && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
-                    ) {
-                        throw InferredSchemaException::columnsDiverge(
-                            $source->uri(),
-                            $inferredFrom,
-                            $base,
-                            $columns,
-                            $this->inference,
-                        );
+                        if (
+                            $columns !== []
+                            && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
+                        ) {
+                            throw InferredSchemaException::columnsDiverge(
+                                $source->uri(),
+                                $inferredFrom,
+                                $base,
+                                $columns,
+                                $this->inference,
+                            );
+                        }
                     }
-                }
 
-                // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
-                $constants = $fileColumns->forFile($source, $schema);
-                $batch = [];
+                    // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
+                    $constants = $fileColumns->forFile($source, $schema);
+                    $batch = [];
 
-                foreach ($sheet->rows() as $rowValues) {
-                    $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                    foreach ($sheet->rows() as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
 
-                    if (count($batch) < $batchSize) {
+                        if (count($batch) < $batchSize) {
+                            continue;
+                        }
+
+                        $hydrated = $hydrator->hydrate($batch, $schema);
+                        $batch = [];
+
+                        $yielded += $hydrated->count();
+
+                        $signal = yield $hydrated;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
+
+                        $limit = $this->pushedLimit();
+
+                        if ($limit !== null && $yielded >= $limit) {
+                            return;
+                        }
+                    }
+
+                    if ($batch === []) {
                         continue;
                     }
 
                     $hydrated = $hydrator->hydrate($batch, $schema);
-                    $batch = [];
 
                     $yielded += $hydrated->count();
 
@@ -181,37 +227,19 @@ final class ExcelExtractor implements
                     if ($limit !== null && $yielded >= $limit) {
                         return;
                     }
+                } finally {
+                    $sheet->close();
                 }
-
-                if ($batch === []) {
-                    continue;
-                }
-
-                $hydrated = $hydrator->hydrate($batch, $schema);
-
-                $yielded += $hydrated->count();
-
-                $signal = yield $hydrated;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                $limit = $this->pushedLimit();
-
-                if ($limit !== null && $yielded >= $limit) {
-                    return;
-                }
-            } finally {
-                $sheet->close();
             }
+        } finally {
+            $sampled?->close();
         }
     }
 
     public function inferSchema(SchemaInferenceBuilder $builder): static
     {
         $this->inference = $builder->build();
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
     }
@@ -239,9 +267,14 @@ final class ExcelExtractor implements
                         $this->inference,
                         new CellTypeNarrower($this->inference->candidates()),
                     ))->infer($sampler->header()->names, $sampler->samples($this->inference->sampleSize));
-            } finally {
+            } catch (Throwable $failure) {
                 $sampler->close();
+
+                throw $failure;
             }
+
+            $this->sampled?->close();
+            $this->sampled = $sampler;
         }
 
         return $fileColumns->declare($fileColumns->withoutTail($derived));
@@ -255,7 +288,7 @@ final class ExcelExtractor implements
     public function withConvertEmptyToNull(bool $convertEmptyToNull): self
     {
         $this->readOptions = $this->readOptions->withConvertEmptyToNull($convertEmptyToNull);
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
     }
@@ -263,7 +296,7 @@ final class ExcelExtractor implements
     public function withHeader(bool $withHeader): self
     {
         $this->readOptions = $this->readOptions->withHeader($withHeader);
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
     }
@@ -271,7 +304,7 @@ final class ExcelExtractor implements
     public function withOffset(int $offset): self
     {
         $this->readOptions = $this->readOptions->withOffset($offset);
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
     }
@@ -279,7 +312,7 @@ final class ExcelExtractor implements
     public function withReader(ExcelReader $reader): self
     {
         $this->readOptions = $this->readOptions->withFormat($reader);
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
     }
@@ -294,8 +327,18 @@ final class ExcelExtractor implements
     public function withSheetName(string $sheetName): self
     {
         $this->readOptions = $this->readOptions->withSheetName($sheetName);
-        $this->derivedSchema = null;
+        $this->forgetInference();
 
         return $this;
+    }
+
+    /**
+     * A changed read option or inference voids both the schema and the rows sampled under the old one.
+     */
+    private function forgetInference(): void
+    {
+        $this->derivedSchema = null;
+        $this->sampled?->close();
+        $this->sampled = null;
     }
 }

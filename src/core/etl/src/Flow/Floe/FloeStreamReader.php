@@ -386,7 +386,9 @@ final class FloeStreamReader
      */
     private function batch(array $rows): Rows
     {
-        return new Rows($this->schema(), ...$rows);
+        // every row comes out of the hydrator, which already conformed it to the file schema - padding and the
+        // NOT NULL check included
+        return Rows::trusted($this->schema(), $rows);
     }
 
     /**

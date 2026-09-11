@@ -110,11 +110,23 @@ final readonly class EntryTypesMap
             return null;
         }
 
+        return new TypedValue($value, $this->valueType($column, $type));
+    }
+
+    /**
+     * The PostgreSQL value type a column of this Flow type is written as.
+     *
+     * @param Type<mixed> $type
+     *
+     * @throws TypeMappingException when the Flow type is not in the map
+     */
+    public function valueType(string $column, Type $type): ValueType
+    {
         if (!array_key_exists($type::class, $this->typeMap)) {
             throw TypeMappingException::unmappedColumn($column, $type::class);
         }
 
-        return new TypedValue($value, $this->typeMap[$type::class]);
+        return $this->typeMap[$type::class];
     }
 
     /**

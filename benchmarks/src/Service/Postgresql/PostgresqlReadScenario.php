@@ -34,7 +34,7 @@ final readonly class PostgresqlReadScenario
     {
         $client = PostgresqlConnection::open();
         PostgresqlConnection::dropTable($client, $this->table());
-        PostgresqlConnection::createTable($client, $this->table());
+        PostgresqlConnection::createTable($client, $this->table(), keyed: true);
 
         data_frame()
             ->read(from_floe(Datasets::orders($this->rows)->floe()))

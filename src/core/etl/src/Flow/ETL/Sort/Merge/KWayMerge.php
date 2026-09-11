@@ -40,19 +40,23 @@ final readonly class KWayMerge
         /** @var array<string, BucketCursor> $cursors */
         $cursors = [];
         $schema = null;
+        $uniform = true;
 
         foreach ($runs as $run) {
             $cursor = new BucketCursor($run->rows());
 
             if ($cursor->valid()) {
                 $schema ??= $cursor->schema();
+                $uniform = $uniform && $cursor->schema()->isSame($schema);
                 $heap->push($cursor->current(), $run->id);
                 $cursor->next();
                 $cursors[$run->id] = $cursor;
             }
         }
 
-        $buffer = new RowsBuffer($schema ?? new Schema(), $this->batchSize);
+        // every run's rows passed the gate when they were read back - merged under the one schema they share, a
+        // batch needs no second check
+        $buffer = new RowsBuffer($schema ?? new Schema(), $this->batchSize, $uniform ? Rows::trusted(...) : null);
 
         while (!$heap->isEmpty()) {
             $top = $heap->extract();

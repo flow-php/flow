@@ -9,6 +9,7 @@ use Flow\PostgreSql\AST\Transformers\ExplainModifier;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Context as ClientContext;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\DescribeQuery;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
@@ -39,6 +40,7 @@ use PgSql\Result;
 use Throwable;
 
 use function array_fill;
+use function array_filter;
 use function array_key_exists;
 use function array_map;
 use function array_values;
@@ -88,7 +90,6 @@ use function pg_socket;
 use function sprintf;
 use function str_contains;
 use function stream_select;
-use function strval;
 
 use const PGSQL_ASSOC;
 use const PGSQL_CONNECT_FORCE_NEW;
@@ -224,9 +225,16 @@ final class PgSqlClient implements Client
         }
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
-        $result = $this->query($sql, $parameters);
+        if ($parameters instanceof ConvertedParameters) {
+            $this->assertConnected();
+
+            $result = $this->send($sql instanceof Sql ? $sql->toSql() : $sql, $parameters->values);
+        } else {
+            $result = $this->query($sql, $parameters);
+        }
+
         $affected = pg_affected_rows($result);
         pg_free_result($result);
 
@@ -258,7 +266,7 @@ final class PgSqlClient implements Client
             return null;
         }
 
-        $converted = $this->convertRow($result, $row);
+        $converted = $this->convertRow($row, $this->convertingColumns($result));
         pg_free_result($result);
 
         return $converted;
@@ -268,10 +276,11 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
         $rows = pg_fetch_all($result) ?: [];
+        $columns = $this->convertingColumns($result);
         $converted = [];
 
         foreach ($rows as $row) {
-            $converted[] = $this->convertRow($result, $row);
+            $converted[] = $this->convertRow($row, $columns);
         }
 
         $rows = $converted;
@@ -330,7 +339,7 @@ final class PgSqlClient implements Client
             return null;
         }
 
-        $converted = $this->convertRow($result, $row);
+        $converted = $this->convertRow($row, $this->convertingColumns($result));
         pg_free_result($result);
 
         return $converted;
@@ -633,29 +642,41 @@ final class PgSqlClient implements Client
 
     /**
      * @param array<array-key, mixed> $row
+     * @param array<string, string> $columns the result's converting columns, from convertingColumns()
      *
      * @return array<string, mixed>
      */
-    private function convertRow(Result $result, array $row): array
+    private function convertRow(array $row, array $columns): array
     {
-        // By name, last wins, exactly as pg_fetch_all() collapses duplicate output names. A
-        // positional lookup applies the wrong column's type to the surviving value: for
-        // SELECT id AS a, label AS a it casts the text through int8 and yields 0.
+        foreach ($columns as $column => $type) {
+            // @mago-ignore analysis:mixed-assignment
+            $value = $row[$column] ?? null;
+
+            if (is_string($value)) {
+                $row[$column] = $this->resultCaster->cast($value, $type);
+            }
+        }
+
+        /** @var array<string, mixed> $row */
+        return $row;
+    }
+
+    /**
+     * The columns whose values ResultCaster converts, by name. By name, last wins, exactly as pg_fetch_all()
+     * collapses duplicate output names. A positional lookup applies the wrong column's type to the surviving
+     * value: for SELECT id AS a, label AS a it casts the text through int8 and yields 0.
+     *
+     * @return array<string, string>
+     */
+    private function convertingColumns(Result $result): array
+    {
         $types = [];
 
         foreach ((new ResultColumns())->of($result) as $column) {
             $types[$column['name']] = $column['type'];
         }
 
-        $keys = array_map(strval(...), array_keys($row));
-
-        return array_combine($keys, array_map(
-            fn(string $key, mixed $value): mixed => is_string($value)
-                ? $this->resultCaster->cast($value, $types[$key] ?? null)
-                : $value,
-            $keys,
-            array_values($row),
-        ));
+        return array_filter($types, $this->resultCaster->converts(...));
     }
 
     /**
@@ -717,11 +738,16 @@ final class PgSqlClient implements Client
     {
         $this->assertConnected();
 
+        return $this->send($sql instanceof Sql ? $sql->toSql() : $sql, $this->convertParameters($parameters));
+    }
+
+    /**
+     * @param array<int, null|string> $convertedParams
+     */
+    private function send(string $query, array $convertedParams): Result
+    {
         /** @var Connection $connection */
         $connection = $this->connection;
-
-        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
-        $convertedParams = $this->convertParameters($parameters);
 
         $success = @pg_send_query_params($connection, $query, $convertedParams);
 

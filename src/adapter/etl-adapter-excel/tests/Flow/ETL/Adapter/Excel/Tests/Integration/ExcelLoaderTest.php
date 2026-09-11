@@ -15,6 +15,7 @@ use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
 use PHPUnit\Framework\Attributes\DataProvider;
+use ZipArchive;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\to_excel;
@@ -254,6 +255,27 @@ final class ExcelLoaderTest extends FlowTestCase
             schema(date_schema('date_val', nullable: true), datetime_schema('datetime_val', nullable: true)),
             from_excel($outputPath)->schema(),
         );
+    }
+
+    public function test_temporal_cells_share_one_cell_format_per_format(): void
+    {
+        $outputPath = __DIR__ . '/var/output_shared_formats.xlsx';
+
+        df()
+            ->read(from_rows(rows(
+                schema(date_schema('d'), datetime_schema('dt')),
+                row(['d' => new DateTimeImmutable('2024-06-15'), 'dt' => new DateTimeImmutable('2024-06-15 14:30:00')]),
+                row(['d' => new DateTimeImmutable('2024-06-16'), 'dt' => new DateTimeImmutable('2024-06-16 14:30:00')]),
+                row(['d' => new DateTimeImmutable('2024-06-17'), 'dt' => new DateTimeImmutable('2024-06-17 14:30:00')]),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
+            ->run();
+
+        $workbook = new ZipArchive();
+        $workbook->open($outputPath);
+
+        // the default format, one date format and one datetime format - not one per cell
+        static::assertStringContainsString('<cellXfs count="3">', (string) $workbook->getFromName('xl/styles.xml'));
     }
 
     public function test_round_trip_with_dynamic_sheet_names(): void

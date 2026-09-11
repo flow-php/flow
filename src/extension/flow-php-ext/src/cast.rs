@@ -793,8 +793,8 @@ pub fn cast_rows(
         .array()
         .ok_or_else(|| ext_exception("flow_php expected a list of raw row values"))?;
 
-    let mut rows_args: Vec<Zval> = Vec::with_capacity(batch_ht.len() + 1);
-    rows_args.push(fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?);
+    let schema_zv = fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?;
+    let mut rows_ht = ZendHashTable::with_capacity(batch_ht.len() as u32);
 
     ht_for_each(batch_ht, |_, row_index, rv_zv| {
         let rv = expect_object(rv_zv, "a RawRowValues")?;
@@ -874,14 +874,17 @@ pub fn cast_rows(
         let mut row = construct_with_zvals(assembly.row_ce, &mut [values_zv], "a Row")?;
         let mut row_zv = Zval::new();
         row_zv.set_object(&mut row);
-        rows_args.push(row_zv);
+        rows_ht.push(row_zv).map_err(|e| {
+            ext_exception(format!("flow_php failed to collect hydrated rows: {e:?}"))
+        })?;
 
         Ok(())
     })?;
 
-    let mut rows = construct_with_zvals(assembly.rows_ce, &mut rows_args, "Rows")?;
-    let mut zv = Zval::new();
-    zv.set_object(&mut rows);
+    let mut rows_zv = Zval::new();
+    rows_zv.set_hashtable(rows_ht);
 
-    Ok(zv)
+    // every non-null value was just cast to its column's type, so the batch takes
+    // the shape-only door - the one HydratedBatch returns through
+    call_handle(assembly.rows_conformed, None, &mut [schema_zv, rows_zv], "conform Rows")
 }

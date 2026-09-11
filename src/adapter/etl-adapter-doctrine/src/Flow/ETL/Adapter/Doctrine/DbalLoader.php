@@ -21,7 +21,7 @@ use function in_array;
 use function strtolower;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 final class DbalLoader implements Loader
 {

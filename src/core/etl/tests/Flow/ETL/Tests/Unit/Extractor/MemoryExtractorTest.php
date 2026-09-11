@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingMemory;
@@ -94,7 +95,7 @@ final class MemoryExtractorTest extends FlowTestCase
         self::assertExtractedRowsAsArrayEquals([['number' => 1, 'name' => 'one']], $extractor);
     }
 
-    public function test_a_bounded_sample_is_opt_in(): void
+    public function test_a_bounded_sample_types_only_its_prefix(): void
     {
         $memory = new ArrayMemory([['code' => 1000], ['code' => 1001], ['code' => 'AB-01']]);
 
@@ -103,6 +104,13 @@ final class MemoryExtractorTest extends FlowTestCase
             from_memory($memory)->inferSchema(infer_schema()->sampleSize(2))->schema()->get('code')->type()->toString(),
         );
         static::assertSame('string', from_memory($memory)->schema()->get('code')->type()->toString());
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('Row 2 of from_memory() does not fit the schema inferred from its first 2 rows');
+
+        iterator_to_array(
+            from_memory($memory)->inferSchema(infer_schema()->sampleSize(2))->extract(flow_context(config())),
+        );
     }
 
     public function test_a_mutable_memory_is_described_as_of_the_first_non_empty_schema(): void

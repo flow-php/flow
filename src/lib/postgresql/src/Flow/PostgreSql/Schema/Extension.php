@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-type ExtensionShape = array{name: string, version: ?string}
+ * @type ExtensionShape = array{name: string, version: ?string}
  */
 final readonly class Extension
 {

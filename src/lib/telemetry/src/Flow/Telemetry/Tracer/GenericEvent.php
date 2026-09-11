@@ -19,8 +19,8 @@ use Flow\Telemetry\Attributes;
  * echo $event->name(); // "user.login"
  * ```
  *
- * @phpstan-import-type TAttributeValue from Attributes
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValue from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final readonly class GenericEvent implements SpanEvent
 {

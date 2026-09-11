@@ -55,15 +55,21 @@ final readonly class BatchingProcessor implements Processor
 
         $schema = null;
 
+        // rows re-batched from batches under one schema already passed the gate under it - only a batch that
+        // arrives under another schema needs the full gate to conform it to the first one
+        $uniform = true;
+
         while ($rows->valid()) {
             $batch = $rows->current();
             $schema ??= $batch->schema();
+            $uniform = $uniform && $batch->schema()->isSame($schema);
 
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
                 if (count($buffer) >= $this->size) {
-                    $signal = yield new Rows($schema, ...array_splice($buffer, 0, $this->size));
+                    $chunk = array_splice($buffer, 0, $this->size);
+                    $signal = yield $uniform ? Rows::trusted($schema, $chunk) : new Rows($schema, ...$chunk);
 
                     if ($signal === Signal::STOP) {
                         $rows->send(Signal::STOP);
@@ -77,7 +83,9 @@ final readonly class BatchingProcessor implements Processor
         }
 
         if ($buffer !== []) {
-            yield new Rows($schema ?? new Schema(), ...$buffer);
+            $schema ??= new Schema();
+
+            yield $uniform ? Rows::trusted($schema, $buffer) : new Rows($schema, ...$buffer);
         }
     }
 }

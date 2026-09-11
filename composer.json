@@ -31,7 +31,7 @@
         "google/protobuf": "^4.0 || ^5.0",
         "halaxa/json-machine": "^1.1",
         "monolog/monolog": "^3.0",
-        "openspout/openspout": "^5.2",
+        "openspout/openspout": "~5.3.0",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",
         "psr/clock": "^1.0",

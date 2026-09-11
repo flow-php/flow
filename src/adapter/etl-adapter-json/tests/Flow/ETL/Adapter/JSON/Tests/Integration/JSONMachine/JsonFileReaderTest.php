@@ -11,6 +11,7 @@ use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
+use JsonMachine\Exception\SyntaxErrorException;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -131,6 +132,41 @@ final class JsonFileReaderTest extends FlowTestCase
             [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]],
             array_map(static fn(mixed $row): array => type_array()->assert($row), $rows),
         );
+    }
+
+    #[TestWith(['bom_first_line.jsonl', [['id' => 1], ['id' => 2]]])]
+    #[TestWith(['two_objects_on_a_line.jsonl', [['id' => 1], ['id' => 2]]])]
+    /**
+     * @param list<array<string, int>> $expected
+     */
+    public function test_a_line_json_decode_rejects_keeps_the_json_machine_reading(
+        string $fixture,
+        array $expected,
+    ): void {
+        $filesystem = new NativeLocalFilesystem();
+        $reader = JsonFixtureContext::reader(JsonFormat::Lines);
+
+        $stream = $filesystem->readFrom(JsonFixtureContext::source($fixture)->path);
+        $rows = iterator_to_array($reader->lineItems($stream), false);
+        $stream->close();
+
+        static::assertSame($expected, $rows);
+    }
+
+    public function test_a_bare_scalar_line_is_refused(): void
+    {
+        $filesystem = new NativeLocalFilesystem();
+        $reader = JsonFixtureContext::reader(JsonFormat::Lines);
+        $stream = $filesystem->readFrom(JsonFixtureContext::source('scalar_line.jsonl')->path);
+
+        $this->expectException(SyntaxErrorException::class);
+        $this->expectExceptionMessage("Unexpected symbol '5'");
+
+        try {
+            iterator_to_array($reader->lineItems($stream), false);
+        } finally {
+            $stream->close();
+        }
     }
 
     #[TestWith([JsonFormat::Document, 'nested_timezones.json', '/timezones', 247, 'name', ['Aruba', 'Afghanistan']])]

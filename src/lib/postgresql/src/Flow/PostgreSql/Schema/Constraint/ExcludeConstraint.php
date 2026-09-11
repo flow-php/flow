@@ -9,7 +9,7 @@ use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Parser\ParsedExcludeDefinition;
 
 /**
- * @phpstan-type ExcludeConstraintShape = array{definition: string, name: ?string}
+ * @type ExcludeConstraintShape = array{definition: string, name: ?string}
  */
 final readonly class ExcludeConstraint
 {

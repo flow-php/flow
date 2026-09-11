@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Calculator\Tests\Unit;
 
+use Brick\Math\Exception\IntegerOverflowException;
 use DivisionByZeroError;
 use Flow\Calculator\Calculator;
 use Flow\Calculator\Rounding;
@@ -106,6 +107,21 @@ final class CalculatorTest extends TestCase
         static::assertSame(0.0, $calculator->subtract(1, 1.0));
         static::assertSame(3.0, $calculator->multiply(1.5, 2));
         static::assertSame(1.0, $calculator->power(1.0, 3));
+    }
+
+    public function test_multiply_keeps_the_largest_overflow_free_int_products_exact(): void
+    {
+        $calculator = new Calculator();
+
+        static::assertSame(9_223_372_030_926_249_001, $calculator->multiply(3_037_000_499, 3_037_000_499));
+        static::assertSame(-9_223_372_030_926_249_001, $calculator->multiply(-3_037_000_499, 3_037_000_499));
+    }
+
+    public function test_multiply_refuses_an_int_product_that_overflows(): void
+    {
+        $this->expectException(IntegerOverflowException::class);
+
+        (new Calculator())->multiply(3_037_000_500, 3_037_000_500);
     }
 
     public function test_int_operands_yield_int(): void

@@ -15,8 +15,8 @@ use Throwable;
 use function count;
 
 /**
- * @phpstan-type MigrationRow array{version: string, name: string, state: string, executedAt: null|string, executionTimeMs: null|int}
- * @phpstan-type ConfigurationData array{tableName: string, tableSchema: string, directory: string, namespace: string, allOrNothing: bool}
+ * @type MigrationRow = array{version: string, name: string, state: string, executedAt: null|string, executionTimeMs: null|int}
+ * @type ConfigurationData = array{tableName: string, tableSchema: string, directory: string, namespace: string, allOrNothing: bool}
  */
 final class FlowMigrationsDataCollector extends DataCollector
 {

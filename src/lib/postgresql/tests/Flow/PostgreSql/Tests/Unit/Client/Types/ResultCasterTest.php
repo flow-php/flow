@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types;
 use Flow\PostgreSql\Client\Types\ResultCaster;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use const INF;
@@ -203,5 +204,28 @@ final class ResultCasterTest extends TestCase
     public function test_timestamp_positive_infinity_is_not_marked(): void
     {
         static::assertSame('infinity', $this->caster->cast('infinity', 'timestamp'));
+    }
+
+    #[TestWith(['bool', true])]
+    #[TestWith(['int2', true])]
+    #[TestWith(['int4', true])]
+    #[TestWith(['int8', true])]
+    #[TestWith(['oid', true])]
+    #[TestWith(['float4', true])]
+    #[TestWith(['float8', true])]
+    #[TestWith(['bytea', true])]
+    #[TestWith(['timestamp', true])]
+    #[TestWith(['timetz', true])]
+    #[TestWith(['_int4', true])]
+    #[TestWith(['_text', true])]
+    #[TestWith(['text', false])]
+    #[TestWith(['uuid', false])]
+    #[TestWith(['jsonb', false])]
+    #[TestWith(['timestamptz', false])]
+    #[TestWith(['numeric', false])]
+    #[TestWith([null, false])]
+    public function test_converts_names_exactly_the_types_cast_changes(?string $type, bool $converts): void
+    {
+        static::assertSame($converts, $this->caster->converts($type));
     }
 }

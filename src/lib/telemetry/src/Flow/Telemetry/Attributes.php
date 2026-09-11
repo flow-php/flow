@@ -39,8 +39,8 @@ use function method_exists;
  * ]);
  * ```
  *
- * @phpstan-type TAttributeValue = array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable
- * @phpstan-type TAttributeValueMap = array<string, TAttributeValue>
+ * @type TAttributeValue = array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable
+ * @type TAttributeValueMap = array<string, TAttributeValue>
  */
 final readonly class Attributes
 {

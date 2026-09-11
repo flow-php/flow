@@ -58,7 +58,7 @@ final readonly class HydratedBatch
                 $name = $definition->entry()->name();
 
                 if (!array_key_exists($name, $rowValues->values)) {
-                    // never fill: Rows::__construct runs Row::matchTo(), which pads a declared-nullable
+                    // never fill: Rows::conformed() runs Row::conformTo(), which pads a declared-nullable
                     // absence and refuses a NOT-NULL one as a missing column rather than as a null value
                     continue;
                 }
@@ -78,6 +78,7 @@ final readonly class HydratedBatch
             $rows[] = new Row($values);
         }
 
-        return new Rows($schema, ...$rows);
+        // every non-null value was just cast to its column's type - the one place a value is validated
+        return Rows::conformed($schema, $rows);
     }
 }

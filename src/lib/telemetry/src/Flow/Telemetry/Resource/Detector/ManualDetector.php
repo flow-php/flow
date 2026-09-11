@@ -33,7 +33,7 @@ use Flow\Telemetry\Resource\ResourceDetector;
  * );
  * ```
  *
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final readonly class ManualDetector implements ResourceDetector
 {

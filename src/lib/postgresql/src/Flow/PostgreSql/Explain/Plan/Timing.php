@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Explain\Plan;
 
 /**
- * @phpstan-type TimingShape = array{startup_time: float, total_time: float, loops: int}
+ * @type TimingShape = array{startup_time: float, total_time: float, loops: int}
  */
 final readonly class Timing
 {

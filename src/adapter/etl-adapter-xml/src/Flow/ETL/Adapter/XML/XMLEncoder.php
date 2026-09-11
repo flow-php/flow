@@ -87,13 +87,13 @@ final class XMLEncoder implements Encoder
         $lines = [];
 
         foreach ($batch as $rowValues) {
-            $node = XMLNode::nestedNode($this->rowElementName);
+            $elements = [];
 
             foreach ($rowValues->types as $name => $type) {
-                $node = $node->append($this->normalize($name, $type, $rowValues->values[$name]));
+                $elements[] = $this->normalize($name, $type, $rowValues->values[$name]);
             }
 
-            $lines[] = $xmlWriter->write($node);
+            $lines[] = $xmlWriter->write(XMLNode::nested($this->rowElementName, ...$elements));
         }
 
         return $lines;
@@ -126,46 +126,40 @@ final class XMLEncoder implements Encoder
         }
 
         if ($type instanceof ListType) {
-            $listNode = XMLNode::nestedNode($name);
-
             if (!is_array($value) && !$value instanceof Countable || !count($value) || !is_iterable($value)) {
-                return $listNode;
+                return XMLNode::nestedNode($name);
             }
+
+            $elements = [];
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($value as $elementValue) {
-                $listNode = $listNode->append($this->normalize(
-                    $this->listElementName,
-                    $type->element(),
-                    $elementValue,
-                ));
+                $elements[] = $this->normalize($this->listElementName, $type->element(), $elementValue);
             }
 
-            return $listNode;
+            return XMLNode::nested($name, ...$elements);
         }
 
         if ($type instanceof MapType) {
-            $mapNode = XMLNode::nestedNode($name);
-
             if (!is_array($value) && !$value instanceof Countable || !count($value) || !is_iterable($value)) {
-                return $mapNode;
+                return XMLNode::nestedNode($name);
             }
+
+            $elements = [];
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $elementValue) {
-                $mapNode = $mapNode->append(
-                    XMLNode::nestedNode($this->mapElementName)
-                        ->append($this->normalize($this->mapElementKeyName, $type->key(), $key))
-                        ->append($this->normalize($this->mapElementValueName, $type->value(), $elementValue)),
+                $elements[] = XMLNode::nested(
+                    $this->mapElementName,
+                    $this->normalize($this->mapElementKeyName, $type->key(), $key),
+                    $this->normalize($this->mapElementValueName, $type->value(), $elementValue),
                 );
             }
 
-            return $mapNode;
+            return XMLNode::nested($name, ...$elements);
         }
 
         if ($type instanceof StructureType) {
-            $structureNode = XMLNode::nestedNode($name);
-
             $values = is_array($value) ? array_values($value) : [];
 
             if (count($values) > count($type->elements())) {
@@ -177,15 +171,13 @@ final class XMLEncoder implements Encoder
                 ));
             }
 
+            $elements = [];
+
             foreach ($type->elements() as $position => $element) {
-                $structureNode = $structureNode->append($this->normalize(
-                    (string) $element->name,
-                    $element->type,
-                    $values[$position] ?? null,
-                ));
+                $elements[] = $this->normalize((string) $element->name, $element->type, $values[$position] ?? null);
             }
 
-            return $structureNode;
+            return XMLNode::nested($name, ...$elements);
         }
 
         return match ($type::class) {

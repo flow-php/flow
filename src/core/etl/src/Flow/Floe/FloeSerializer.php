@@ -71,7 +71,8 @@ final class FloeSerializer implements Serializer
                 ));
             }
 
-            return new Rows($footer->schema(), ...$rows);
+            // every row came out of a reader batch already conformed to this schema
+            return Rows::trusted($reader->schema(), $rows);
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

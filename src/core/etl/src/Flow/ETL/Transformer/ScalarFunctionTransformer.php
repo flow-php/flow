@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
@@ -21,6 +23,7 @@ use Flow\ETL\Transformer;
 use Flow\Types\Type\Logical\StructureType;
 use Throwable;
 
+use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 use function sprintf;
@@ -120,11 +123,29 @@ final readonly class ScalarFunctionTransformer implements Transformer
         return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
     }
 
+    /**
+     * @param Definition<mixed> $derived
+     *
+     * @throws SchemaMismatchException
+     */
+    private function derivedValue(Definition $derived, mixed $value, int $rowIndex): mixed
+    {
+        // @mago-ignore analysis:mixed-assignment
+        $cast = $value === null ? null : $derived->type()->cast($value);
+
+        if (!$derived->matches($cast)) {
+            throw new SchemaMismatchException($rowIndex, ColumnMismatchException::valueDoesNotMatch($derived, $cast));
+        }
+
+        return $cast;
+    }
+
     private function map(Rows $rows, FlowContext $context): Rows
     {
         $function = $this->resolved ?? $this->resolve($rows->schema());
         $derived = $this->derived ?? $this->derived($function);
-        $output = $this->output ?? $this->declare($rows->schema(), $derived);
+        $declared = $this->declare($rows->schema(), $derived);
+        $output = $this->output ?? $declared;
         $name = $derived->entry()->name();
         $mapped = [];
 
@@ -134,23 +155,23 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 foreach (type_array()->assert($function->eval($r, $context)) as $val) {
                     $mapped[] = new Row([
                         ...$r->values(),
-                        $name => $val === null ? null : $derived->type()->cast($val),
+                        $name => $this->derivedValue($derived, $val, count($mapped)),
                     ]);
                 }
 
                 continue;
             }
 
-            // @mago-ignore analysis:mixed-assignment
-            $value = $function->eval($r, $context);
-
             $mapped[] = new Row([
                 ...$r->values(),
-                $name => $value === null ? null : $derived->type()->cast($value),
+                $name => $this->derivedValue($derived, $function->eval($r, $context), count($mapped)),
             ]);
         }
 
-        return new Rows($output, ...$mapped);
+        // Only the derived column is new, and derivedValue() checked it. Every other value passed the gate under
+        // the same definition - unless the batch arrived under a schema other than the one bound, which the full
+        // gate then conforms.
+        return $declared->isSame($output) ? Rows::trusted($output, $mapped) : new Rows($output, ...$mapped);
     }
 
     /**

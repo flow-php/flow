@@ -207,7 +207,7 @@ final class PhpParquetEngine implements ParquetEngine
                 if (is_array($columnData)) {
                     // @mago-ignore analysis:mixed-assignment
                     foreach ($columnData as $key => $value) {
-                        $row[$key] = $value;
+                        $row[(string) $key] = $value;
                     }
                 }
             }

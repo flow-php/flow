@@ -10,7 +10,7 @@ use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\parsed_select;
 
 /**
- * @phpstan-type ViewShape = array{name: string, definition: string, is_updatable: bool}
+ * @type ViewShape = array{name: string, definition: string, is_updatable: bool}
  */
 final readonly class View
 {

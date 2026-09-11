@@ -7,10 +7,10 @@ namespace Flow\PostgreSql\Explain\Plan;
 use function array_map;
 
 /**
- * @phpstan-import-type TimingShape from Timing
- * @phpstan-import-type BuffersShape from Buffers
+ * @import-type TimingShape from Timing
+ * @import-type BuffersShape from Buffers
  *
- * @phpstan-type PlanNodeShape = array{
+ * @type PlanNodeShape = array{
  *     node_type: string,
  *     cost: array{startup_cost: float, total_cost: float},
  *     estimated_rows: int,

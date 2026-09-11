@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
@@ -80,9 +81,12 @@ class SpyClient implements Client
         throw new RuntimeException('Not implemented');
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
-        $this->executedQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
+        $this->executedQueries[] = [
+            'sql' => $sql instanceof Sql ? $sql->toSql() : $sql,
+            'parameters' => $parameters instanceof ConvertedParameters ? $parameters->values : $parameters,
+        ];
 
         return $this->executeReturn;
     }

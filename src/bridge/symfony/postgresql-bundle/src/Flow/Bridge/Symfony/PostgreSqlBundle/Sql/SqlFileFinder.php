@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Sql;
 
-use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
@@ -33,12 +32,7 @@ final readonly class SqlFileFinder
 
         $files = [];
 
-        // @mago-expect analysis:mixed-assignment
         foreach ($this->filesystem->list($path) as $fileStatus) {
-            if (!$fileStatus instanceof FileStatus) {
-                continue;
-            }
-
             if (!$fileStatus->isFile()) {
                 continue;
             }

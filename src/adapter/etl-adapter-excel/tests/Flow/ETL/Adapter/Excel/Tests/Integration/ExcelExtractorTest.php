@@ -575,6 +575,56 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertSame([], ExcelFixtureContext::leakedSharedStringsFoldersSince($before));
     }
 
+    public function test_the_first_extract_after_the_schema_reads_on_from_its_sample(): void
+    {
+        // sniff/a is extension-less, so every open of it costs one readFrom
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $extractor = from_excel(
+            ExcelFixtureContext::path('sniff/a'),
+            $filesystem,
+        )->inferSchema(infer_schema()->sampleSize(1));
+        $extractor->schema();
+
+        static::assertEquals(
+            ExtractedRows::of(from_excel(ExcelFixtureContext::path('sniff/a'))),
+            ExtractedRows::of($extractor),
+        );
+        static::assertSame(1, $filesystem->readFromCalls);
+
+        ExtractedRows::of($extractor);
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
+    public function test_a_changed_read_option_drops_the_sample(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $extractor = from_excel(
+            ExcelFixtureContext::path('sniff/a'),
+            $filesystem,
+        )->inferSchema(infer_schema()->sampleSize(1));
+        $extractor->schema();
+        $extractor->withHeader(true);
+
+        ExtractedRows::of($extractor);
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
+    public function test_an_unbounded_sample_is_parsed_again(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $extractor = from_excel(
+            ExcelFixtureContext::path('sniff/a'),
+            $filesystem,
+        )->inferSchema(infer_schema()->sampleSize(-1));
+        $extractor->schema();
+
+        ExtractedRows::of($extractor);
+
+        static::assertSame(2, $filesystem->readFromCalls);
+    }
+
     public function test_signal_stop_leaves_no_shared_strings_temp_folder(): void
     {
         $before = ExcelFixtureContext::sharedStringsFolders();

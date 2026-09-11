@@ -15,11 +15,14 @@ final class MixedType implements Type
 {
     public function assert(mixed $value): mixed
     {
+        // the mixed type accepts and returns anything: there is no narrower type to return
+        // @mago-ignore analysis:mixed-return-statement
         return $value;
     }
 
     public function cast(mixed $value): mixed
     {
+        // @mago-ignore analysis:mixed-return-statement
         return $value;
     }
 

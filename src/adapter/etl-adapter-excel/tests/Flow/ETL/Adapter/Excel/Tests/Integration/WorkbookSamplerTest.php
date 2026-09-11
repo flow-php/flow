@@ -60,6 +60,31 @@ final class WorkbookSamplerTest extends FlowTestCase
         static::assertSame(2, $filesystem->readFromCalls);
     }
 
+    public function test_a_bounded_sample_hands_its_open_sheet_over_once(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $sampler = ExcelFixtureContext::sampler('sniff/a', $filesystem);
+        ExcelFixtureContext::infer($sampler, infer_schema()->sampleSize(1)->build());
+
+        $sheet = $sampler->take(ExcelFixtureContext::source('sniff/a'));
+
+        static::assertNotNull($sheet);
+        static::assertNull($sampler->take(ExcelFixtureContext::source('sniff/a')));
+        static::assertEquals(
+            iterator_to_array(ExcelFixtureContext::sheet('sniff/a')->rows(), false),
+            iterator_to_array($sheet->rows(), false),
+        );
+        // sniff/a is extension-less, so every open costs one readFrom: the sample's, and none for the rows
+        static::assertSame(1, $filesystem->readFromCalls);
+    }
+
+    public function test_take_is_null_for_a_file_the_sample_never_opened(): void
+    {
+        static::assertNull(ExcelFixtureContext::sampler('fixture.xlsx')->take(ExcelFixtureContext::source(
+            'fixture.xlsx',
+        )));
+    }
+
     public function test_all_strings_floors_every_column(): void
     {
         static::assertEquals(

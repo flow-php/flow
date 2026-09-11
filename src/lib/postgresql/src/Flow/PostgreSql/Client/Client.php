@@ -74,11 +74,11 @@ interface Client
      * Returns the number of affected rows.
      *
      * @param Sql|string $sql SQL statement or query builder with $1, $2, ... placeholders
-     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
+     * @param ConvertedParameters|list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap one with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type, or pass {@see ConvertedParameters} already in PostgreSQL's text form to skip the converters
      *
      * @throws QueryException
      */
-    public function execute(Sql|string $sql, array $parameters = []): int;
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int;
 
     /**
      * Execute EXPLAIN ANALYZE on a query and return the execution plan.

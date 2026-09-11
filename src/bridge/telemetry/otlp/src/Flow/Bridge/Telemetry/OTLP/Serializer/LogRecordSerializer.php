@@ -13,7 +13,7 @@ use Flow\Telemetry\Tracer\SpanContext;
  *
  * Converts Flow Telemetry log record arrays to the OTLP JSON wire format.
  *
- * @phpstan-import-type TAttributeValue from Attributes
+ * @import-type TAttributeValue from Attributes
  *
  * @see https://opentelemetry.io/docs/specs/otlp/#otlphttp-request
  */

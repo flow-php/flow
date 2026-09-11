@@ -22,8 +22,8 @@ namespace Flow\Telemetry;
  *
  * @see https://opentelemetry.io/docs/specs/otel/glossary/#instrumentation-scope
  *
- * @phpstan-import-type TAttributeValue from Attributes
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValue from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final readonly class InstrumentationScope
 {

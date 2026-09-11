@@ -21,6 +21,7 @@ use RuntimeException;
 
 use function array_fill;
 use function Flow\PostgreSql\DSL\column_type_from_string;
+use function Flow\PostgreSql\DSL\converted_parameters;
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -153,6 +154,26 @@ final class TraceableClientTest extends TestCase
         static::assertSame('UPDATE', $span->attributes()[SemConvAttributes::DB_OPERATION_NAME]);
         static::assertSame('users', $span->attributes()[SemConvAttributes::DB_COLLECTION_NAME]);
         static::assertSame(5, $span->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
+    }
+
+    public function test_execute_with_converted_parameters_creates_span_with_correct_attributes(): void
+    {
+        $spanProcessor = memory_span_processor(void_exporter());
+        $config = $this->createConfig($spanProcessor);
+
+        $mockClient = $this->createMockClient();
+        $mockClient->method('execute')->willReturn(5);
+
+        $client = traceable_postgresql_client($mockClient, $config);
+        $result = $client->execute('UPDATE users SET active = $1 WHERE id = $2', converted_parameters(['t', '123']));
+
+        static::assertSame(5, $result);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame('UPDATE users', $spans[0]->name());
+        static::assertSame('UPDATE', $spans[0]->attributes()[SemConvAttributes::DB_OPERATION_NAME]);
+        static::assertSame(5, $spans[0]->attributes()[SemConvAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
     public function test_execute_rethrows_exception_and_records_error(): void

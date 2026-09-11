@@ -363,11 +363,11 @@ final class FileReadCommandTest extends TestCase
             +----------------------+
             |                 node |
             +----------------------+
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
             +----------------------+
             5 rows
             OUTPUT, $tester->getDisplay());

@@ -18,7 +18,6 @@ use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function is_array;
 
 final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchema, RewindableExtractor
@@ -52,7 +51,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
     ) {
         $this->filesystem = $filesystem;
         $this->spillRoot = $spillRoot;
-        $this->inference = new SchemaInference(sampleSize: -1);
+        $this->inference = new SchemaInference();
     }
 
     public function isRepeatable(): bool
@@ -69,6 +68,12 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         $schema = $this->schema();
         $buffer = [];
 
+        // a one-shot dataset is typed from every row it spills, so only an array's bounded sample can be outrun
+        $batches = new InferredRows(
+            'from_array()',
+            $this->schema === null && is_array($this->dataset) ? $this->inference : null,
+        );
+
         $rows = $this->source?->rows() ?? $this->dataset;
 
         foreach ($rows as $row) {
@@ -78,7 +83,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
                 continue;
             }
 
-            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+            $signal = yield $batches->of($buffer, $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -88,14 +93,11 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $schema, $context->hydrator());
+            yield $batches->of($buffer, $schema, $context->hydrator());
         }
     }
 
     /**
-     * The builder replaces this extractor's exact fold wholesale: an unset sampleSize is 20_480, not the
-     * -1 the constructor chose, so ->inferSchema(infer_schema()->allStrings()) also bounds the sample.
-     *
      * @throws InvalidLogicException when a one-shot dataset was already read
      */
     public function inferSchema(SchemaInferenceBuilder $builder): static

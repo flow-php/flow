@@ -28,7 +28,6 @@ final class WindowProcessorContext
 
         $batches = [];
 
-        /** @var Rows $batch */
         foreach ((new WindowProcessor($entry, $function))->process($input, flow_context()) as $batch) {
             $batches[] = $batch;
         }

@@ -15,7 +15,7 @@ use function count;
 use function Flow\ETL\DSL\df;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 final class DbalDataFrameFactory implements DataFrameFactory
 {

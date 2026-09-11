@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Profiler;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
@@ -95,11 +96,11 @@ final class ProfilerClient implements Client
         return $this->record($sql, $parameters, fn(): array => $this->client->describe($sql, $parameters), null);
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         return $this->record(
             $sql,
-            $parameters,
+            $parameters instanceof ConvertedParameters ? $parameters->values : $parameters,
             fn(): int => $this->client->execute($sql, $parameters),
             static fn(int $affected): int => $affected,
         );

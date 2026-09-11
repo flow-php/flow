@@ -179,6 +179,48 @@ final class RowsTest extends FlowTestCase
         rows(schema(int_schema('id')), row(['id' => 1]))->project(schema(int_schema('id'), str_schema('name')));
     }
 
+    public function test_project_rejects_a_schema_that_retypes_a_column(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 0): could not convert 1 (integer) to string');
+
+        rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a']))->project(schema(str_schema(
+            'id',
+        )));
+    }
+
+    public function test_project_does_not_recheck_columns_that_keep_their_definition(): void
+    {
+        // the rows passed a door under these definitions, and a subset of them needs no second check
+        static::assertSame(
+            [['id' => 'not-an-integer']],
+            Rows::trusted(schema(int_schema('id'), str_schema('name')), [row([
+                'id' => 'not-an-integer',
+                'name' => 'a',
+            ])])
+                ->project(schema(int_schema('id')))
+                ->toArray(),
+        );
+    }
+
+    public function test_conformed_pads_the_shape_without_revalidating_values(): void
+    {
+        static::assertSame(
+            [['id' => 'not-an-integer', 'name' => null]],
+            Rows::conformed(schema(int_schema('id'), str_schema('name', true)), [row([
+                'id' => 'not-an-integer',
+            ])])->toArray(),
+        );
+    }
+
+    public function test_conformed_reports_the_violating_row_at_its_position_in_the_batch(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 1)');
+
+        Rows::conformed(schema(int_schema('id')), [row(['id' => 1]), row(['id' => null])]);
+    }
+
     public function test_construct_reorders_row_storage_into_schema_order(): void
     {
         static::assertSame(

@@ -54,6 +54,35 @@ final class WorkbookSheet
     }
 
     /**
+     * rows() for a bounded schema sample: every row it hands out stays buffered and the sheet stays open, so the
+     * rows() that follows replays the sample and parses on from where the sample stopped, instead of parsing the
+     * sample a second time. Closing the sheet stays with its owner.
+     *
+     * @return Generator<int, RawRowValues>
+     */
+    public function sample(): Generator
+    {
+        $sheet = $this->sheet ??= $this->reader->open($this->path);
+        $this->columns();
+
+        foreach ($this->buffered as $rowValues) {
+            yield $rowValues;
+        }
+
+        while (($row = $sheet->cells->current()) !== null) {
+            // advanced before the row is handed out: a sampler that stops here leaves the cursor past everything
+            // buffered, so rows() neither repeats nor skips a row
+            $sheet->cells->next();
+
+            foreach ($sheet->encoder->decode([$row]) as $rowValues) {
+                $this->buffered[] = $rowValues;
+
+                yield $rowValues;
+            }
+        }
+    }
+
+    /**
      * @return Generator<int, RawRowValues>
      */
     public function rows(): Generator

@@ -37,6 +37,41 @@ final class WorkbookSheetTest extends FlowTestCase
         static::assertSame(2, $filesystem->readFromCalls);
     }
 
+    #[TestWith([1])]
+    #[TestWith([4])]
+    #[TestWith([10])]
+    #[TestWith([11])]
+    public function test_rows_after_a_sample_yield_every_row_once(int $sampled): void
+    {
+        $sheet = ExcelFixtureContext::sheet('fixture.xlsx');
+        $taken = 0;
+
+        foreach ($sheet->sample() as $_row) {
+            if (++$taken >= $sampled) {
+                break;
+            }
+        }
+
+        static::assertEquals(
+            iterator_to_array(ExcelFixtureContext::sheet('fixture.xlsx')->rows(), false),
+            iterator_to_array($sheet->rows(), false),
+        );
+    }
+
+    public function test_rows_after_a_sample_read_on_without_reopening_the_file(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $sheet = ExcelFixtureContext::sheet('sniff/a', $filesystem);
+
+        iterator_to_array($sheet->sample(), false);
+
+        static::assertEquals(
+            iterator_to_array(ExcelFixtureContext::sheet('sniff/a')->rows(), false),
+            iterator_to_array($sheet->rows(), false),
+        );
+        static::assertSame(1, $filesystem->readFromCalls);
+    }
+
     public function test_a_second_close_is_a_no_op(): void
     {
         $sheet = ExcelFixtureContext::sheet('fixture.xlsx');

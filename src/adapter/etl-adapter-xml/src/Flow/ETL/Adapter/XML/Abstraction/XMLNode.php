@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\XML\Abstraction;
 use Flow\ETL\Exception\InvalidArgumentException;
 
 use function count;
-use function mb_strlen;
 
 final readonly class XMLNode
 {
@@ -25,7 +24,7 @@ final readonly class XMLNode
         public array $attributes = [],
         public array $children = [],
     ) {
-        if (!mb_strlen($name)) {
+        if ($name === '') {
             throw new InvalidArgumentException('XMLNode name can not be empty');
         }
     }
@@ -33,6 +32,25 @@ final readonly class XMLNode
     public static function flatNode(string $name, ?string $value): self
     {
         return new self($name, $value, XMLNodeType::FLAT);
+    }
+
+    /**
+     * A nested node built with all its attributes and children at once - append() copies the whole node per call.
+     */
+    public static function nested(string $name, self|XMLAttribute ...$elements): self
+    {
+        $attributes = [];
+        $children = [];
+
+        foreach ($elements as $element) {
+            if ($element instanceof XMLAttribute) {
+                $attributes[] = $element;
+            } else {
+                $children[] = $element;
+            }
+        }
+
+        return new self($name, null, XMLNodeType::NESTED, $attributes, $children);
     }
 
     public static function nestedNode(string $name): self

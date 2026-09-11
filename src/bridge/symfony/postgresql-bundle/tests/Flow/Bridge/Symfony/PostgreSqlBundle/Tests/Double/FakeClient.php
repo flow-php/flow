@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
@@ -99,7 +100,7 @@ final class FakeClient implements Client
         return $this->describeReturn;
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         $this->guard();
 

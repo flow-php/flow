@@ -66,6 +66,11 @@ sources with differing column sets as one wider schema, instead of rejecting the
 which check the column set against the header) or dropping the columns a later source introduces (JSON, which has no
 header to check). Every inferred column is nullable, and where narrowing is not safe the column floors to `string`.
 
+`from_array()`, `from_memory()` and the `from_sequence_*()` extractors infer the same way, from their first
+`sampleSize` rows (20,480 by default). `from_array()` given a non-array iterable types every row. A row after the
+sample that does not fit the inferred type fails the read with an `InferredSchemaException` naming that row - infer
+from every row with `->inferSchema(infer_schema()->sampleSize(-1))`, or declare the schema.
+
 **Sources that do not.** For the rest, every value still gets its type detected as rows are created and each batch
 carries its own schema.
 

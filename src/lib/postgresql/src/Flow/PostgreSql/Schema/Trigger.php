@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema;
 use function array_map;
 
 /**
- * @phpstan-type TriggerShape = array{name: string, table_name: string, timing: string, events: non-empty-list<string>, function_name: string, for_each_row: bool, when_condition: ?string}
+ * @type TriggerShape = array{name: string, table_name: string, timing: string, events: non-empty-list<string>, function_name: string, for_each_row: bool, when_condition: ?string}
  */
 final readonly class Trigger
 {

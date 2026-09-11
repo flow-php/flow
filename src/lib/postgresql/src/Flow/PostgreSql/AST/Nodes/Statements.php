@@ -61,8 +61,8 @@ final readonly class Statements implements Countable, IteratorAggregate
     }
 
     /**
-     * @phpstan-assert-if-false Statement<mixed> $this->first()
-     * @phpstan-assert-if-false Statement<mixed> $this->last()
+     * @assert-if-false Statement<mixed> $this->first()
+     * @assert-if-false Statement<mixed> $this->last()
      */
     public function isEmpty(): bool
     {
@@ -70,8 +70,8 @@ final readonly class Statements implements Countable, IteratorAggregate
     }
 
     /**
-     * @phpstan-assert-if-true Statement<mixed> $this->first()
-     * @phpstan-assert-if-true Statement<mixed> $this->last()
+     * @assert-if-true Statement<mixed> $this->first()
+     * @assert-if-true Statement<mixed> $this->last()
      */
     public function isSingle(): bool
     {

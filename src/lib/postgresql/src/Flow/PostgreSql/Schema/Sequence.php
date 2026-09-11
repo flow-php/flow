@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-type SequenceShape = array{name: string, data_type: string, start_value: int|string, min_value: int|string, max_value: null|int|string, increment_by: int|string, cycle: bool, cache_value: int|string, owned_by_table: ?string, owned_by_column: ?string}
+ * @type SequenceShape = array{name: string, data_type: string, start_value: int|string, min_value: int|string, max_value: null|int|string, increment_by: int|string, cycle: bool, cache_value: int|string, owned_by_table: ?string, owned_by_column: ?string}
  */
 final readonly class Sequence
 {

@@ -147,7 +147,9 @@ final class Joiner
                     $projected[] = $joinedRow->project($outputSchema);
                 }
 
-                yield new Rows($outputSchema, ...$projected);
+                // every joined value passed the gate on its own side - conforming checks the joined shape and the
+                // nulls the join introduced, not the values again
+                yield Rows::conformed($outputSchema, $projected);
             }
         }
 
@@ -155,7 +157,7 @@ final class Joiner
             $leftSchema ??= new Schema();
             $nullLeftRow ??= (new NullRowBuilder($leftSchema))->row();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
-            $buffer = new RowsBuffer($outputSchema, $this->batchSize);
+            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
 
             foreach ($hashTable->unmatchedRows() as $rightRow) {
                 if (null !== ($batch = $buffer->add($this->merge($nullLeftRow, $rightRow)->project($outputSchema)))) {
@@ -251,7 +253,7 @@ final class Joiner
                     $projected[] = $joinedRow->project($outputSchema);
                 }
 
-                yield new Rows($outputSchema, ...$projected);
+                yield Rows::conformed($outputSchema, $projected);
             }
         }
 
@@ -260,7 +262,7 @@ final class Joiner
         if ($this->type === Join::left || $this->type === Join::left_anti) {
             $nullRightRow ??= (new NullRowBuilder($rightSchema))->row();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
-            $buffer = new RowsBuffer($outputSchema, $this->batchSize);
+            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
 
             foreach ($hashTable->unmatchedRows() as $leftRow) {
                 $joined = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow;

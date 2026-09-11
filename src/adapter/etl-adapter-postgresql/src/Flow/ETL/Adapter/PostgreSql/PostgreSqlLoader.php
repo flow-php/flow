@@ -140,6 +140,7 @@ final class PostgreSqlLoader implements Loader
             [$query, $params] = $builder->build(
                 $this->encoder()->encode($context->hydrator()->dehydrate($rows)),
                 $rows->schema(),
+                $this->client->converters(),
                 $this->insertOptions,
             );
             $this->client->execute($query, $params);
@@ -160,6 +161,7 @@ final class PostgreSqlLoader implements Loader
                 [$query, $params] = $builder->build(
                     $this->encoder()->encode($context->hydrator()->dehydrate($chunk)),
                     $chunk->schema(),
+                    $this->client->converters(),
                     $this->insertOptions,
                 );
                 $this->client->execute($query, $params);

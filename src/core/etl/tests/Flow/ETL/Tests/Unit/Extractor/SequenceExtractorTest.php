@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use DateInterval;
 use DatePeriod;
 use DateTimeImmutable;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\SequenceExtractor;
 use Flow\ETL\Tests\Double\MixedSequenceGenerator;
 use Flow\ETL\Tests\Double\RecordingSequenceGenerator;
@@ -25,6 +26,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function iterator_to_array;
 
 final class SequenceExtractorTest extends FlowTestCase
 {
@@ -110,7 +112,7 @@ final class SequenceExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_a_bounded_sample_is_opt_in(): void
+    public function test_a_bounded_sample_types_only_its_prefix(): void
     {
         $extractor = (new SequenceExtractor(
             new MixedSequenceGenerator(),
@@ -126,6 +128,11 @@ final class SequenceExtractorTest extends FlowTestCase
                 ->type()
                 ->toString(),
         );
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('Row 1 of the sequence does not fit the schema inferred from its first 1 rows');
+
+        iterator_to_array($extractor->extract(flow_context(config())));
     }
 
     public function test_a_numeric_entry_name_yields_one_column(): void

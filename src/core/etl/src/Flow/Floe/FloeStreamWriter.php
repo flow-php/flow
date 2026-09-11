@@ -160,9 +160,9 @@ final class FloeStreamWriter
         $this->openSession();
         $this->assertBatchFitsSession($rows->schema());
 
-        // the session schema is the file's contract - a batch narrower than it goes through the gate,
-        // which pads the columns it declares nullable, so every row reaches the encoder complete
-        $typed = $this->hydrator->dehydrate($rows->matchTo($this->sessionSchema));
+        $typed = $this->hydrator->dehydrate(
+            $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema),
+        );
 
         if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
             $this->startSection();

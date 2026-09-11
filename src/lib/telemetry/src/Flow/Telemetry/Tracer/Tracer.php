@@ -60,7 +60,7 @@ use Throwable;
  * });
  * ```
  *
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final class Tracer
 {

@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Command;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\SymfonyContext;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\SimpleTestCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
-use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\PostgreSql\Client\DsnParser;
@@ -206,12 +205,7 @@ final class CommandTestContext
     {
         $dirs = [];
 
-        // @mago-expect analysis:mixed-assignment
         foreach ($this->filesystem->list(path($this->migrationsDir . '/' . $pattern), new KeepAll()) as $fileStatus) {
-            if (!$fileStatus instanceof FileStatus) {
-                continue;
-            }
-
             if ($fileStatus->isDirectory()) {
                 $dirs[] = $fileStatus->path->path();
             }

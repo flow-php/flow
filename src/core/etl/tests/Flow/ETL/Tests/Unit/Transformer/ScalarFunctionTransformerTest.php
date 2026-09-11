@@ -9,6 +9,7 @@ use DOMNodeList;
 use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Function\ArrayExpand;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Tests\FlowTestCase;
@@ -226,6 +227,41 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
 
         static::assertEquals($wholeBatch->schema()->get('out'), $single->schema()->get('out'));
         static::assertEquals($wholeBatch->toArray(), $single->toArray());
+    }
+
+    public function test_a_null_produced_under_a_not_null_declaration_names_its_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "out" (row 1)');
+
+        (new ScalarFunctionTransformer(int_schema('out'), ref('v')))->transform(
+            rows(schema(int_schema('v', nullable: true)), row(['v' => 1]), row(['v' => null])),
+            flow_context(config()),
+        );
+    }
+
+    public function test_a_batch_arriving_under_another_schema_than_the_bound_one_is_conformed_to_the_bound_output(): void
+    {
+        $step = type_instance_of(ScalarFunctionTransformer::class)->assert((new ScalarFunctionTransformer(
+            'out',
+            lit('x'),
+        ))->bind(schema(int_schema('id'), str_schema('name', nullable: true)))->step);
+
+        static::assertSame(
+            [['id' => 1, 'name' => null, 'out' => 'x']],
+            $step->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()))->toArray(),
+        );
+    }
+
+    public function test_an_expanded_null_under_a_not_null_declaration_names_its_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "out" (row 1)');
+
+        (new ScalarFunctionTransformer(
+            int_schema('out'),
+            new ArrayExpand(lit([1, null]), ArrayExpand\ArrayExpand::VALUES),
+        ))->transform(rows(schema(), row([])), flow_context(config()));
     }
 
     public function test_an_empty_batch_is_bound_against_its_own_schema(): void

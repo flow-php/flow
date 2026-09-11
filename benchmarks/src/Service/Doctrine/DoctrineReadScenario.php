@@ -29,7 +29,7 @@ final readonly class DoctrineReadScenario
     {
         $connection = DoctrineConnection::open();
         DoctrineConnection::dropTable($connection, $this->table());
-        DoctrineConnection::createTable($connection, $this->table());
+        DoctrineConnection::createTable($connection, $this->table(), keyed: true);
 
         data_frame()
             ->read(from_floe(Datasets::orders($this->rows)->floe()))

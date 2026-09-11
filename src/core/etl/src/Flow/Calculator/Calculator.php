@@ -13,13 +13,21 @@ use DivisionByZeroError;
 use Flow\Calculator\Exception\InvalidScaleException;
 use Flow\Calculator\Exception\NonNumericValueException;
 
+use function abs;
 use function defined;
 use function is_float;
+use function is_int;
 use function is_string;
 use function method_exists;
 
 final class Calculator
 {
+    /**
+     * floor(sqrt(PHP_INT_MAX)): two ints no larger than this multiply natively without overflowing, so the product
+     * is exact and needs no BigDecimal.
+     */
+    private const int OVERFLOW_FREE_FACTOR = 3_037_000_499;
+
     /**
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
@@ -106,6 +114,15 @@ final class Calculator
      */
     public function multiply(int|float|string $a, int|float|string $b): int|float
     {
+        if (
+            is_int($a)
+            && is_int($b)
+            && abs($a) <= self::OVERFLOW_FREE_FACTOR
+            && abs($b) <= self::OVERFLOW_FREE_FACTOR
+        ) {
+            return $a * $b;
+        }
+
         $result = BigDecimal::of((string) $a)->multipliedBy(BigDecimal::of((string) $b));
 
         if (self::eitherIsFloat($a, $b) || self::hasNonZeroFractionalPart($result)) {

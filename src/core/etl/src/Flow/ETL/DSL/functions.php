@@ -491,7 +491,7 @@ function to_memory(Memory $memory): MemoryLoader
 function to_array(array &$array): ArrayLoader
 {
     // @mago-ignore analysis:redundant-docblock-type
-    /** @phpstan-var array<array<mixed>> $array */
+    /** @var array<array<mixed>> $array */
     return new ArrayLoader($array);
 }
 

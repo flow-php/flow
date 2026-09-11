@@ -25,11 +25,11 @@ use function max;
 use function usort;
 
 /**
- * @phpstan-type SpanRow array{name: string, kind: string, durationMs: null|float, startMs: float, offsetMs: float, startTime: string, scope: string, spanId: string, parentSpanId: null|string, depth: int, statusCode: int, statusDescription: null|string, attributes: array<string, mixed>, eventCount: int}
- * @phpstan-type MetricRow array{name: string, type: string, value: float|int, unit: null|string, scope: string, attributes: array<string, mixed>}
- * @phpstan-type LogRow array{severity: string, severityCode: int, message: string, scope: string, time: string, attributes: \Symfony\Component\VarDumper\Cloner\Data, hasAttributes: bool}
- * @phpstan-type ScopeRow array{name: string, version: string, attributes: array<string, mixed>}
- * @phpstan-type InstrumentRow array{type: string, name: string, version: string, attributes: array<string, mixed>}
+ * @type SpanRow = array{name: string, kind: string, durationMs: null|float, startMs: float, offsetMs: float, startTime: string, scope: string, spanId: string, parentSpanId: null|string, depth: int, statusCode: int, statusDescription: null|string, attributes: array<string, mixed>, eventCount: int}
+ * @type MetricRow = array{name: string, type: string, value: float|int, unit: null|string, scope: string, attributes: array<string, mixed>}
+ * @type LogRow = array{severity: string, severityCode: int, message: string, scope: string, time: string, attributes: \Symfony\Component\VarDumper\Cloner\Data, hasAttributes: bool}
+ * @type ScopeRow = array{name: string, version: string, attributes: array<string, mixed>}
+ * @type InstrumentRow = array{type: string, name: string, version: string, attributes: array<string, mixed>}
  */
 final class FlowTelemetryDataCollector extends DataCollector implements LateDataCollectorInterface
 {

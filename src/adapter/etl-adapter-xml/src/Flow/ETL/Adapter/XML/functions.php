@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use Flow\ETL\Adapter\XML\Loader\XMLLoader;
-use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
+use Flow\ETL\Adapter\XML\XMLWriter\StringXMLWriter;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\DocumentationExample;
 use Flow\ETL\Attribute\Module;
@@ -60,7 +60,7 @@ function to_xml(
     string $row_element_name = 'row',
     string $attribute_prefix = '_',
     string $date_time_format = 'Y-m-d\TH:i:s.uP',
-    XMLWriter $xml_writer = new DOMDocumentWriter(),
+    XMLWriter $xml_writer = new StringXMLWriter(),
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): XMLLoader {
     return (new XMLLoader(is_string($path) ? path_real($path) : $path, $xml_writer, $filesystem))

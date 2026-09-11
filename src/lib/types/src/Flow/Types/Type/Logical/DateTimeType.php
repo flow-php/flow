@@ -15,9 +15,11 @@ use Flow\Types\Type;
 use Flow\Types\Type\Native\String\StringTemporalParts;
 use Throwable;
 
+use function checkdate;
 use function is_bool;
 use function is_numeric;
 use function is_string;
+use function preg_match;
 
 /**
  * @template T of \DateTimeInterface
@@ -26,6 +28,12 @@ use function is_string;
  */
 final readonly class DateTimeType implements Type
 {
+    /**
+     * A date, its day spelled out, and a time: every string this matches with a real calendar day is one
+     * StringTemporalParts would accept, and the constructor rejects the rest just as it would after that check.
+     */
+    private const string ISO_DATE_TIME = '/^(\d{4})-(\d{2})-(\d{2})[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}(?::?\d{2})?)?$/';
+
     public function assert(mixed $value): DateTimeInterface
     {
         if ($this->isValid($value)) {
@@ -51,6 +59,15 @@ final readonly class DateTimeType implements Type
 
         try {
             if (is_string($value)) {
+                $date = [];
+
+                if (
+                    preg_match(self::ISO_DATE_TIME, $value, $date) === 1
+                    && checkdate((int) $date[2], (int) $date[3], (int) $date[1])
+                ) {
+                    return new DateTimeImmutable($value);
+                }
+
                 $parts = StringTemporalParts::from($value);
 
                 if (!$parts->isDate() && !$parts->isDateTime()) {

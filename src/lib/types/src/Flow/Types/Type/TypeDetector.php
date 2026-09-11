@@ -50,8 +50,13 @@ use function is_string;
 
 final class TypeDetector
 {
+    /**
+     * @param null|TypeWidener $widener built on the first array value: get_type() constructs a detector per call,
+     *                                  and most of them never see an array
+     */
     public function __construct(
         private TypeUnifier $unifier = new StrictUnifier(),
+        private ?TypeWidener $widener = null,
     ) {}
 
     /**
@@ -92,30 +97,19 @@ final class TypeDetector
                 return type_list(type_null());
             }
 
-            $valueTypes = types(...array_map($this->detectType(...), array_values($value)))->deduplicate();
+            // each value is detected once - the structure arm reads back the same types the unification used
+            $detected = array_map($this->detectType(...), $value);
+            $valueTypes = types(...array_values($detected))->deduplicate();
 
             $detector = new ArrayContentDetector(
                 types(...array_map($this->detectType(...), array_keys($value)))->deduplicate(),
                 $valueTypes,
                 array_is_list($value),
+                $this->widener ??= new TypeWidener(),
             );
 
-            // ArrayContentDetector has ALREADY widened the element types with TypeWidener, and
-            // Type::isValid() used to re-test the RAW values against that widened type - an int inside a
-            // list<float> fails by construction. TypeWidener cannot express "these do not unify": its
-            // last arm gives up to type_string(). StrictUnifier answers null for exactly that case, so
-            // it is the honest guard.
-            //
-            // The widener has two promotion arms - int|float -> float, and date|datetime -> datetime.
-            // Only the first ever needed a guard, because DateTimeType::isValid() already accepts a
-            // date-only DateTimeImmutable. That is a coincidence of PHP's date model, not a principle:
-            // a NEW widener arm needs this guard re-checked.
-            // Only the list and map arms unify; detectType() recurses over every nested array, so the
-            // fold stays inside the two branches that read it.
             $unifies = fn(): bool => $this->unifier->unifyAll(NullabilityRule::ANY, ...$valueTypes->all()) !== null;
 
-            // isValid() is wanted for its boolean, not for its @assert-if-true narrowing, which says
-            // nothing new about a value already known to be an array.
             $accepted = static fn(Type $candidate, mixed $raw): bool => $unifies() || $candidate->isValid($raw);
 
             if ($detector->isList()) {
@@ -133,13 +127,10 @@ final class TypeDetector
             if ($detector->isStructure()) {
                 $elements = [];
 
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($value as $key => $item) {
-                    $elements[type_string()->assert($key)] = $this->detectType($item);
+                foreach ($detected as $key => $type) {
+                    $elements[type_string()->assert($key)] = $type;
                 }
 
-                // Unconditional: the structure arm types each key from its own value, so nothing is
-                // unified and nothing can be over-widened.
                 return type_structure($elements);
             }
 

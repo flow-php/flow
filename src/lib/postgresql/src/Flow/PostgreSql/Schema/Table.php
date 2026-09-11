@@ -27,16 +27,16 @@ use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-import-type ColumnShape from Column
- * @phpstan-import-type IndexShape from Index
- * @phpstan-import-type TriggerShape from Trigger
- * @phpstan-import-type PrimaryKeyShape from PrimaryKey
- * @phpstan-import-type ForeignKeyShape from ForeignKey
- * @phpstan-import-type UniqueConstraintShape from UniqueConstraint
- * @phpstan-import-type CheckConstraintShape from CheckConstraint
- * @phpstan-import-type ExcludeConstraintShape from ExcludeConstraint
+ * @import-type ColumnShape from Column
+ * @import-type IndexShape from Index
+ * @import-type TriggerShape from Trigger
+ * @import-type PrimaryKeyShape from PrimaryKey
+ * @import-type ForeignKeyShape from ForeignKey
+ * @import-type UniqueConstraintShape from UniqueConstraint
+ * @import-type CheckConstraintShape from CheckConstraint
+ * @import-type ExcludeConstraintShape from ExcludeConstraint
  *
- * @phpstan-type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
+ * @type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
  */
 final readonly class Table
 {

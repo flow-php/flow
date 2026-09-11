@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException as Brid
 use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlReceiver;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -268,7 +269,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
     public function test_keepalive_wraps_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function execute(Sql|string $sql, array $parameters = []): int
+            public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
             {
                 throw new RuntimeException('oops');
             }
@@ -296,7 +297,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
     public function test_reject_wraps_connection_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function execute(Sql|string $sql, array $parameters = []): int
+            public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
             {
                 throw new RuntimeException('delete failed');
             }

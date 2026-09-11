@@ -72,9 +72,11 @@ final class PartitionRouter
 
         $stripped = $this->dropped === [] ? $schema : $schema->gracefulRemove(...$this->partitioning->by->names());
 
+        // a group is a subset of a batch that already passed the gate, and stripping removes the same
+        // columns from its rows and from the schema, so neither needs checking again
         foreach ($groups as [$partitions, $rowsOfGroup]) {
             if ($this->dropped === []) {
-                yield [$partitions, new Rows($schema, ...$rowsOfGroup)];
+                yield [$partitions, Rows::trusted($schema, $rowsOfGroup)];
 
                 continue;
             }
@@ -85,7 +87,7 @@ final class PartitionRouter
                 $strippedRows[] = new Row(array_diff_key($row->values(), $this->dropped));
             }
 
-            yield [$partitions, new Rows($stripped, ...$strippedRows)];
+            yield [$partitions, Rows::trusted($stripped, $strippedRows)];
         }
     }
 

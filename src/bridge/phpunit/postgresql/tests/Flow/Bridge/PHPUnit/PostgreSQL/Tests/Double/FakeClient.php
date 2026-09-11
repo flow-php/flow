@@ -7,6 +7,7 @@ namespace Flow\Bridge\PHPUnit\PostgreSQL\Tests\Double;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
@@ -55,7 +56,7 @@ final class FakeClient implements Client
         throw new RuntimeException('Not implemented');
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         throw new RuntimeException('Not implemented');
     }

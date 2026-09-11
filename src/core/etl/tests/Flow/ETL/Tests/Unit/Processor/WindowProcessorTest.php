@@ -439,7 +439,6 @@ final class WindowProcessorTest extends FlowTestCase
             yield rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]));
         })();
 
-        /** @var list<Rows> $batches */
         $batches = iterator_to_array($processor->process($generator, flow_context()), preserve_keys: false);
         $values = [];
 

@@ -328,6 +328,48 @@ $converter = $converters->forValueType(ValueType::JSONB);
 $converters->unregister(ValueType::MONEY);
 ```
 
+## Pre-converted Parameters
+
+`execute()` runs a converter for every parameter. Parameters already in PostgreSQL's text form can skip that step:
+wrap the whole list in `converted_parameters()` and every value is sent as it is.
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\converted_parameters;
+
+$client->execute(
+    'INSERT INTO users (id, created_at, tags) VALUES ($1, $2, $3)',
+    converted_parameters(['1', '2024-01-01 00:00:00+00', '{a,b}']),
+);
+```
+
+Bulk writes use it to resolve each column's converter once, instead of once per value:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{bulk_insert, converted_parameters, value_type_int8, value_type_timestamptz};
+
+$converters = $client->converters();
+$id = $converters->forValueType(value_type_int8());
+$createdAt = $converters->forValueType(value_type_timestamptz());
+
+$values = [];
+
+foreach ($users as $user) {
+    $values[] = $id->toDatabase($user->id);               // '42'
+    $values[] = $createdAt->toDatabase($user->createdAt); // '2024-01-01 10:00:00.000000+00:00'
+}
+
+$client->execute(bulk_insert('users', ['id', 'created_at'], count($users)), converted_parameters($values));
+```
+
+- Each value is a `string`, or `null` for SQL `NULL`, bound by position to `$1`, `$2`, ...
+- Nothing is converted or checked: registered converters are skipped, and a value PostgreSQL cannot parse for its
+  column fails the query with a `QueryException` (SQLSTATE `22P02`).
+- Only `execute()` accepts it.
+
 ## PostgreSQL Type Reference
 
 PostgreSQL types are identified by OID (Object ID). The `ValueType` enum exposes the common OIDs used by the

@@ -9,6 +9,7 @@ use DateTimeInterface;
 use Generator;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Reader\SheetInterface;
+use OpenSpout\Reader\XLSX\Sheet as XlsxSheet;
 
 use function array_map;
 use function count;
@@ -32,11 +33,11 @@ final readonly class SheetCells
         $previousWidth = 0;
         $index = 0;
 
-        foreach ($this->sheet->getRowIterator() as $sheetRow) {
+        foreach ($this->values() as $row) {
             $index++;
 
             if ($index === 1 && $this->withHeader) {
-                yield array_map(static fn(Cell $cell) => $cell->getValue(), $sheetRow->cells);
+                yield $row;
 
                 continue;
             }
@@ -44,8 +45,6 @@ final readonly class SheetCells
             if ($this->offset > $index) {
                 continue;
             }
-
-            $row = array_map(static fn(Cell $cell) => $cell->getValue(), $sheetRow->cells);
 
             // the ODS reader drops trailing empty cells; widen to the previous row so columns keep their index
             for ($i = count($row); $i < $previousWidth; $i++) {
@@ -55,6 +54,22 @@ final readonly class SheetCells
             $previousWidth = count($row);
 
             yield $row;
+        }
+    }
+
+    /**
+     * @return Generator<int, array<int, SheetCellValue>>
+     */
+    private function values(): Generator
+    {
+        if ($this->sheet instanceof XlsxSheet) {
+            yield from (new XlsxSheetRows($this->sheet))->values();
+
+            return;
+        }
+
+        foreach ($this->sheet->getRowIterator() as $sheetRow) {
+            yield array_map(static fn(Cell $cell) => $cell->getValue(), $sheetRow->cells);
         }
     }
 }

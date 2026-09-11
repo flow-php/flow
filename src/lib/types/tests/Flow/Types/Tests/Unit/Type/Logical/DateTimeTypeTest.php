@@ -182,6 +182,34 @@ final class DateTimeTypeTest extends TestCase
         static::assertSame('2024-03-05', type_datetime()->cast('20240305')->format('Y-m-d'));
     }
 
+    #[TestWith(['2024-03-05 12:34:56'])]
+    #[TestWith(['2024-03-05T12:34:56'])]
+    #[TestWith(['2024-03-05 12:34'])]
+    #[TestWith(['2024-03-05 12:34:56.123456'])]
+    #[TestWith(['2024-03-05 12:34:56.123456789'])]
+    #[TestWith(['2024-03-05T12:34:56Z'])]
+    #[TestWith(['2024-03-05 12:34:56+02:00'])]
+    #[TestWith(['2024-03-05 12:34:56-0530'])]
+    #[TestWith(['2024-03-05 12:34:56+02'])]
+    #[TestWith(['2024-02-29 00:00:00'])]
+    #[TestWith(['2024-03-05 24:00:00'])]
+    public function test_an_iso_date_time_casts_to_the_instant_it_names(string $value): void
+    {
+        static::assertEquals(new DateTimeImmutable($value), type_datetime()->cast($value));
+    }
+
+    #[TestWith(['2023-02-29 10:00:00'])]
+    #[TestWith(['2024-04-31T10:00:00Z'])]
+    #[TestWith(['2024-13-01 10:00:00'])]
+    #[TestWith(['2024-03-05 25:00:00'])]
+    #[TestWith(['2024-03-05 12:60:00'])]
+    public function test_an_iso_date_time_off_the_calendar_or_clock_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
+    }
+
     /**
      * @param null|class-string<\Throwable> $exceptionClass
      */

@@ -12,6 +12,7 @@ use Generator;
 use PgSql\Result;
 use Traversable;
 
+use function array_filter;
 use function max;
 use function pg_fetch_assoc;
 use function pg_free_result;
@@ -25,12 +26,13 @@ final class PgSqlCursor implements Cursor
     private ?array $columnMetaCache = null;
 
     /**
-     * pg_fetch_assoc() collapses duplicate output names last-wins, so the type lookup collapses the
-     * same way. Cached beside the meta list because convertRow() needs it for every row.
+     * The columns whose values ResultCaster converts, by name. pg_fetch_assoc() collapses duplicate output
+     * names last-wins, so the type lookup collapses the same way. Cached beside the meta list because
+     * convertRow() needs it for every row.
      *
      * @var null|array<string, string>
      */
-    private ?array $columnTypesCache = null;
+    private ?array $convertingColumnsCache = null;
 
     private int $position = 0;
 
@@ -127,22 +129,25 @@ final class PgSqlCursor implements Cursor
      */
     private function convertRow(array $row): array
     {
-        if ($this->columnTypesCache === null) {
+        if ($this->convertingColumnsCache === null) {
             $types = [];
 
             foreach ($this->columnMeta() as $column) {
                 $types[$column['name']] = $column['type'];
             }
 
-            $this->columnTypesCache = $types;
+            $this->convertingColumnsCache = array_filter($types, $this->resultCaster->converts(...));
         }
 
-        $types = $this->columnTypesCache;
-        $converted = [];
+        /** @var array<string, mixed> $converted */
+        $converted = $row;
 
-        foreach ($row as $column => $value) {
-            $key = (string) $column;
-            $converted[$key] = $value === null ? null : $this->resultCaster->cast($value, $types[$key] ?? null);
+        foreach ($this->convertingColumnsCache as $column => $type) {
+            $value = $row[$column] ?? null;
+
+            if ($value !== null) {
+                $converted[$column] = $this->resultCaster->cast($value, $type);
+            }
         }
 
         return $converted;

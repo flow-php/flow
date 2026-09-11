@@ -80,12 +80,39 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      *
      * @internal engine paths only
      *
-     * @param array<int, Row> $rows re-indexed here - first(), last(), chunks() and offsetGet() read by position
+     * @param array<Row> $rows re-indexed here - first(), last(), chunks() and offsetGet() read by position
      */
     public static function trusted(Schema $schema, array $rows): self
     {
         $instance = new self($schema);
         $instance->rows = array_values($rows);
+
+        return $instance;
+    }
+
+    /**
+     * The constructor's shape check without its value check. Columns take the Schema's order, a declared-nullable
+     * absence is padded, and a missing NOT NULL column, an unknown column or a null under NOT NULL is refused - but a
+     * non-null value is not validated against its type, because the caller produced it by casting to, or decoding
+     * from, that type. A value is validated once, where it enters the engine.
+     *
+     * @internal engine paths only
+     *
+     * @param array<Row> $rows
+     *
+     * @throws SchemaMismatchException
+     */
+    public static function conformed(Schema $schema, array $rows): self
+    {
+        $instance = new self($schema);
+
+        foreach ($rows as $row) {
+            try {
+                $instance->rows[] = $row->conformTo($schema);
+            } catch (ColumnMismatchException $e) {
+                throw new SchemaMismatchException(count($instance->rows), $e);
+            }
+        }
 
         return $instance;
     }
@@ -513,7 +540,16 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             $projected[] = $row->project($schema);
         }
 
-        return new self($schema, ...$projected);
+        foreach ($schema->definitions() as $name => $definition) {
+            $own = $this->schema->findDefinition($name);
+
+            if ($own === null || !$own->isSame($definition)) {
+                return new self($schema, ...$projected);
+            }
+        }
+
+        // every kept column kept its definition, so each value already passed the gate under it
+        return self::trusted($schema, $projected);
     }
 
     public function reduceToArray(string|Reference $reference): array

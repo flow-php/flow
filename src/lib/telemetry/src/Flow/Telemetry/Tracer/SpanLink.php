@@ -20,8 +20,8 @@ use Flow\Telemetry\Attributes;
  * $link = SpanLink::create($otherSpanContext, ['reason' => 'batch']);
  * ```
  *
- * @phpstan-import-type TAttributeValue from Attributes
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValue from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final readonly class SpanLink
 {

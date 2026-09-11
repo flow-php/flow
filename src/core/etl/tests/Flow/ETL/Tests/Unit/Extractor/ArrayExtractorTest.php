@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use ArrayIterator;
 use ArrayObject;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidLogicException;
-use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Definition;
@@ -40,6 +40,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 use function iterator_to_array;
+use function range;
 
 final class ArrayExtractorTest extends FlowTestCase
 {
@@ -311,7 +312,7 @@ final class ArrayExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_a_bounded_sample_is_opt_in(): void
+    public function test_a_bounded_sample_types_only_its_prefix(): void
     {
         $dataset = [['code' => 1000], ['code' => 1001], ['code' => 1002], ['code' => 'AB-01']];
 
@@ -319,15 +320,39 @@ final class ArrayExtractorTest extends FlowTestCase
             'integer',
             from_array($dataset)->inferSchema(infer_schema()->sampleSize(3))->schema()->get('code')->type()->toString(),
         );
-        static::assertSame('string', from_array($dataset)->schema()->get('code')->type()->toString());
+        static::assertSame(
+            'string',
+            from_array($dataset)
+                ->inferSchema(infer_schema()->sampleSize(-1))
+                ->schema()
+                ->get('code')
+                ->type()
+                ->toString(),
+        );
 
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('Row 3 of from_array() does not fit the schema inferred from its first 3 rows');
 
         iterator_to_array(
             from_array($dataset)
                 ->inferSchema(infer_schema()->sampleSize(3))
                 ->extract(execution_context(config_builder()->hydrator(new PhpRowHydrator())->build())),
         );
+    }
+
+    public function test_the_default_sample_is_the_first_20480_rows(): void
+    {
+        $dataset = array_map(static fn(int $code): array => ['code' => $code], range(0, 20_479));
+        $dataset[] = ['code' => 'AB-01'];
+
+        static::assertSame('integer', from_array($dataset)->schema()->get('code')->type()->toString());
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'Row 20480 of from_array() does not fit the schema inferred from its first 20480 rows',
+        );
+
+        iterator_to_array(from_array($dataset)->extract(execution_context(config())));
     }
 
     public function test_a_column_holding_only_empty_arrays_floors_to_json(): void

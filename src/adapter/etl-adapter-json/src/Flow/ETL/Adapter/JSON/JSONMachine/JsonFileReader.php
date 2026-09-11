@@ -12,9 +12,12 @@ use Flow\Filesystem\SourceStream;
 use Generator;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
+use LimitIterator;
 
 use function count;
+use function is_array;
 use function iterator_to_array;
+use function json_decode;
 
 /**
  * The read of one listed file, for both the sample and the real read.
@@ -100,7 +103,20 @@ final readonly class JsonFileReader implements SchemaSampler
             return;
         }
 
-        yield from (new Items($this->chunks($stream, $first), $this->options))->getIterator();
+        if ($this->pointer !== null) {
+            yield from (new Items($this->chunks($stream, $first), $this->options))->getIterator();
+
+            return;
+        }
+
+        yield from (new JsonArrayElements())->of(
+            $stream,
+            $first,
+            fn(int $skip): LimitIterator => new LimitIterator(
+                (new Items($this->chunks($stream, $first), $this->options))->getIterator(),
+                $skip,
+            ),
+        );
     }
 
     /**
@@ -112,7 +128,12 @@ final readonly class JsonFileReader implements SchemaSampler
     {
         foreach ($stream->readLines() as $line) {
             if ($this->pointer === null) {
-                yield iterator_to_array(Items::fromString($line, $this->options));
+                // json_decode is an order of magnitude faster and agrees with JSON Machine on every object or
+                // array line; a line it rejects (a BOM, two objects, a bare scalar) keeps JSON Machine's verdict
+                // @mago-ignore analysis:mixed-assignment
+                $record = json_decode($line, true);
+
+                yield is_array($record) ? $record : iterator_to_array(Items::fromString($line, $this->options));
 
                 continue;
             }

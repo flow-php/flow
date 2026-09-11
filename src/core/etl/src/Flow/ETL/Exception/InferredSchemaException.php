@@ -37,4 +37,29 @@ final class InferredSchemaException extends InvalidArgumentException
             $inference->filesToSniff === -1 ? 'all' : (string) $inference->filesToSniff,
         ));
     }
+
+    /**
+     * @param int $row - the row's 0-based position in the whole source, not in the batch the gate refused
+     */
+    public static function pastTheSample(
+        string $source,
+        int $row,
+        SchemaInference $inference,
+        SchemaMismatchException $mismatch,
+    ): self {
+        return new self(
+            sprintf(
+                'Row %d of %s does not fit the schema inferred from its first %d rows: column "%s"%s. Infer from '
+                . 'every row with ->inferSchema(infer_schema()->sampleSize(-1)), or declare the schema with '
+                . '->withSchema(...).',
+                $row,
+                $source,
+                $inference->sampleSize,
+                $mismatch->cause->column,
+                $mismatch->cause->detail,
+            ),
+            0,
+            $mismatch,
+        );
+    }
 }

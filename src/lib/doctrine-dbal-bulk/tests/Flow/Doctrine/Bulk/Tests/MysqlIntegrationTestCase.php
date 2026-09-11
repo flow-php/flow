@@ -20,7 +20,7 @@ abstract class MysqlIntegrationTestCase extends IntegrationTestCase
 
         $this->databaseContext = new DatabaseContext(DriverManager::getConnection(
             (new DsnParser(['mysql' => 'pdo_mysql']))->parse(getenv('MYSQL_DATABASE_URL') ?: ''),
-            (new Configuration())->setMiddlewares([new Middleware($this->logger)]),
+            (new Configuration())->setMiddlewares([new Middleware($this->logger), $this->spy]),
         ));
         $this->databaseContext->connection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
     }

@@ -15,7 +15,6 @@ use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
 use function count;
-use function Flow\ETL\DSL\array_to_rows;
 
 final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSchema, RewindableExtractor
 {
@@ -30,8 +29,7 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
     public function __construct(
         private readonly Memory $memory,
     ) {
-        // -1: Memory::dump() returns an array, so it re-reads for free and an exact fold costs nothing.
-        $this->inference = new SchemaInference(sampleSize: -1);
+        $this->inference = new SchemaInference();
     }
 
     public function isRepeatable(): bool
@@ -47,6 +45,7 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
         $batchSize = $this->batchSize();
         $schema = $this->schema();
         $buffer = [];
+        $batches = new InferredRows('from_memory()', $this->schema === null ? $this->inference : null);
 
         foreach ($this->memory->dump() as $row) {
             $buffer[] = $row;
@@ -55,7 +54,7 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
                 continue;
             }
 
-            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+            $signal = yield $batches->of($buffer, $schema, $context->hydrator());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -65,14 +64,10 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $schema, $context->hydrator());
+            yield $batches->of($buffer, $schema, $context->hydrator());
         }
     }
 
-    /**
-     * The builder replaces this extractor's exact fold wholesale: an unset sampleSize is 20_480, not the
-     * -1 the constructor chose, so ->inferSchema(infer_schema()->allStrings()) also bounds the sample.
-     */
     public function inferSchema(SchemaInferenceBuilder $builder): static
     {
         $this->inference = $builder->build();

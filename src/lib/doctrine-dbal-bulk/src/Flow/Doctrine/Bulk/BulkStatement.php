@@ -12,6 +12,7 @@ final readonly class BulkStatement
 {
     public function __construct(
         private QueryFactory $queryFactory,
+        private LastPreparedStatement $statement = new LastPreparedStatement(),
     ) {}
 
     /**
@@ -19,7 +20,8 @@ final readonly class BulkStatement
      */
     public function delete(Connection $connection, TableDefinition $table, BulkData $bulkData): void
     {
-        $connection->executeStatement(
+        $this->statement->execute(
+            $connection,
             $this->queryFactory->delete($connection->getDatabasePlatform(), $table, $bulkData),
             $bulkData->toSqlParameters($table),
             $table->dbalParameterTypes($bulkData),
@@ -35,7 +37,8 @@ final readonly class BulkStatement
         BulkData $bulkData,
         ?InsertOptions $options = null,
     ): void {
-        $connection->executeStatement(
+        $this->statement->execute(
+            $connection,
             $this->queryFactory->insert($connection->getDatabasePlatform(), $table, $bulkData, $options),
             $bulkData->toSqlParameters($table),
             $bulkData->types(),
@@ -51,7 +54,8 @@ final readonly class BulkStatement
         BulkData $bulkData,
         ?UpdateOptions $options = null,
     ): void {
-        $connection->executeStatement(
+        $this->statement->execute(
+            $connection,
             $this->queryFactory->update($connection->getDatabasePlatform(), $table, $bulkData, $options),
             $bulkData->toSqlParameters($table),
             $bulkData->types(),

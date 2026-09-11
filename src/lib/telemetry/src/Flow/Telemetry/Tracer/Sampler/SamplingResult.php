@@ -25,7 +25,7 @@ use Flow\Telemetry\Context\TraceState;
  * }
  * ```
  *
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final readonly class SamplingResult
 {

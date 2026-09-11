@@ -26,6 +26,51 @@ use function Flow\Types\DSL\type_structure;
 
 final class RowTest extends FlowTestCase
 {
+    public function test_conform_to_does_not_validate_a_non_null_value(): void
+    {
+        // the caller produced the value by casting to the column's type - conformTo() checks the shape only
+        static::assertSame(
+            ['a' => 'not-an-integer'],
+            row(['a' => 'not-an-integer'])->conformTo(schema(int_schema('a')))->values(),
+        );
+    }
+
+    public function test_conform_to_carries_the_schema_order_and_pads_a_nullable_absence(): void
+    {
+        static::assertSame(
+            ['c' => 3, 'a' => 1, 'b' => null],
+            row(['a' => 1, 'c' => 3])->conformTo(schema(
+                int_schema('c'),
+                int_schema('a'),
+                str_schema('b', true),
+            ))->values(),
+        );
+    }
+
+    public function test_conform_to_refuses_a_null_under_not_null(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage('column "a"');
+
+        row(['a' => null])->conformTo(schema(int_schema('a')));
+    }
+
+    public function test_conform_to_refuses_a_missing_not_null_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage('column "b"');
+
+        row(['a' => 1])->conformTo(schema(int_schema('a'), int_schema('b')));
+    }
+
+    public function test_conform_to_refuses_an_unknown_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage('column "z"');
+
+        row(['a' => 1, 'z' => 2])->conformTo(schema(int_schema('a')));
+    }
+
     public function test_match_to_accepts_null_in_a_nullable_column(): void
     {
         static::assertSame(['a' => null], row(['a' => null])->matchTo(schema(str_schema('a', true)))->values());

@@ -21,7 +21,6 @@ use Flow\Types\Type\Native\NullType;
 
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -41,6 +40,10 @@ final readonly class TypeWidener
         StructureType::class,
     ];
 
+    public function __construct(
+        private Comparator $comparator = new Comparator(),
+    ) {}
+
     /**
      * @param Type<mixed> $left
      * @param Type<mixed> $right
@@ -49,7 +52,7 @@ final readonly class TypeWidener
      */
     public function widen(Type $left, Type $right): Type
     {
-        if (type_equals($left, $right)) {
+        if ($this->comparator->equals($left, $right)) {
             return $left;
         }
 
@@ -150,7 +153,7 @@ final readonly class TypeWidener
     public function widenMaps(MapType $left, MapType $right): MapType
     {
         return type_map(
-            type_equals($left->key(), $right->key()) ? $left->key() : type_string(),
+            $this->comparator->equals($left->key(), $right->key()) ? $left->key() : type_string(),
             $this->widen($left->value(), $right->value()),
         );
     }

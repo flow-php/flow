@@ -12,9 +12,9 @@ use function array_values;
 use function sprintf;
 
 /**
- * @phpstan-import-type SchemaShape from Schema
+ * @import-type SchemaShape from Schema
  *
- * @phpstan-type CatalogShape = array{schemas: list<SchemaShape>}
+ * @type CatalogShape = array{schemas: list<SchemaShape>}
  */
 final readonly class Catalog
 {

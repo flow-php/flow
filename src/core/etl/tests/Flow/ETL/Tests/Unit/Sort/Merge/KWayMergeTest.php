@@ -144,6 +144,29 @@ final class KWayMergeTest extends FlowTestCase
         );
     }
 
+    public function test_runs_under_different_schemas_are_conformed_to_the_first(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $buckets->storage()->append('a', rows(
+            schema(int_schema('id'), str_schema('name', true)),
+            row(['id' => 1, 'name' => 'a']),
+        ));
+        $buckets->storage()->append('b', rows(schema(int_schema('id')), row(['id' => 2])));
+
+        $merge = new KWayMerge(refs(ref('id')->asc()));
+
+        static::assertSame(
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
+            array_map(
+                static fn(Row $r): array => $r->toArray(),
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('a', $buckets),
+                    new BucketRun('b', $buckets),
+                ])),
+            ),
+        );
+    }
+
     public function test_single_run_passthrough(): void
     {
         $buckets = new Buckets(new MemoryBuckets());

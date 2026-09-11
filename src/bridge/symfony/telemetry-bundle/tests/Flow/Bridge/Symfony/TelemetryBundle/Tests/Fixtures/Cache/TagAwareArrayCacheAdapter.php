@@ -88,6 +88,8 @@ final class TagAwareArrayCacheAdapter implements
     public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         if (isset($this->cache[$key])) {
+            // a cache hands back whatever was stored under the key
+            // @mago-ignore analysis:mixed-return-statement
             return $this->cache[$key];
         }
 

@@ -26,6 +26,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -78,7 +79,9 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
         $this->filesystem = $filesystem;
         $this->router = new PartitionRouter(Partitioning::none());
         $this->converter = new SchemaConverter();
-        $this->options = Options::default();
+        // every row reaching a loader was validated where it entered the pipeline, so the writer does not validate
+        // each value against the column again - withOptions() can still turn it back on
+        $this->options = Options::default()->set(ParquetOption::VALIDATE_DATA, false);
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
 

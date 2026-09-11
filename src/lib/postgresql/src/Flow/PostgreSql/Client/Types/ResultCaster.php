@@ -56,6 +56,19 @@ final readonly class ResultCaster
     }
 
     /**
+     * Whether cast() changes a value of this type at all - every other type's text is its value already, so a
+     * reader can skip those columns for a whole result.
+     */
+    public function converts(?string $typeName): bool
+    {
+        return match ($typeName) {
+            'bool', 'int2', 'int4', 'oid', 'int8', 'float4', 'float8', 'bytea', 'timestamp', 'timetz' => true,
+            null => false,
+            default => str_starts_with($typeName, '_'),
+        };
+    }
+
+    /**
      * pg carries an array's element type once, for every dimension, so a nested list re-enters the
      * same conversion rather than being re-parsed.
      *
