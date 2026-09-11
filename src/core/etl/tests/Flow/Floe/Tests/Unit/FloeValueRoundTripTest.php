@@ -140,7 +140,7 @@ final class FloeValueRoundTripTest extends TestCase
     {
         $rows = rows(
             schema(html_schema('html')),
-            row(['html' => type_html()->cast('<html><body><p>hello</p></body></html>')]),
+            row(['html' => type_html()->cast('<!DOCTYPE html><html><head></head><body><p>hello</p></body></html>')]),
         );
 
         static::assertSame(

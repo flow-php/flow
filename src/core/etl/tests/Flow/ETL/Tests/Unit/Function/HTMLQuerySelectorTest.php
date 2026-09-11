@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Dom\Element;
 use Dom\HTMLDocument;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RequiredPHPVersionException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
@@ -48,7 +49,9 @@ final class HTMLQuerySelectorTest extends TestCase
     #[RequiresPhp('>= 8.4.0')]
     public function test_invalid_value(): void
     {
-        $result = ref('value')->htmlQuerySelector('body div span')->eval(row(['value' => '']), flow_context());
-        static::assertNull($result);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected one of');
+
+        ref('value')->htmlQuerySelector('body div span')->eval(row(['value' => '']), flow_context());
     }
 }

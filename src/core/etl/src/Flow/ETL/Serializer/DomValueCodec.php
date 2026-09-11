@@ -9,6 +9,8 @@ use DOMDocument;
 use DOMElement;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\Floe\ValueDecoder;
+use Flow\Floe\ValueEncoder;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
@@ -17,6 +19,7 @@ use Flow\Types\Type\Logical\XMLType;
 
 use function base64_decode;
 use function base64_encode;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_string;
 use function gzcompress;
 use function gzuncompress;
@@ -56,15 +59,7 @@ final readonly class DomValueCodec
         }
 
         if ($type instanceof HTMLElementType) {
-            // @mago-expect analysis:unavailable-method
-            $html = HTMLDocument::createFromString($xml, LIBXML_NOERROR);
-            $element = $html->documentElement;
-
-            if ($element === null) {
-                throw new InvalidArgumentException('Given HTML does not contain a document element');
-            }
-
-            return $element;
+            return ValueDecoder::htmlElementFromString($xml);
         }
 
         $document = new DOMDocument();
@@ -105,7 +100,11 @@ final readonly class DomValueCodec
             return $value;
         }
 
-        $compressed = gzcompress(type_string()->cast($value));
+        $compressed = gzcompress(
+            $type instanceof HTMLElementType
+                ? ValueEncoder::htmlElementToString(type_html_element()->assert($value))
+                : type_string()->cast($value),
+        );
 
         if ($compressed === false) {
             throw new RuntimeException('Failed to gzcompress XML column value.');

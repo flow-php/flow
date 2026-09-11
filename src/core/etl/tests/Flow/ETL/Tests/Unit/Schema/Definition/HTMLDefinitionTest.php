@@ -157,7 +157,7 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('content');
 
-        static::assertTrue($def->matches(type_html()->cast('<html><body></body></html>')));
+        static::assertTrue($def->matches(type_html()->cast('<!DOCTYPE html><html><head></head><body></body></html>')));
     }
 
     /**
@@ -235,7 +235,7 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('col', true);
 
-        static::assertTrue($def->matches(type_html()->cast('<html><body></body></html>')));
+        static::assertTrue($def->matches(type_html()->cast('<!DOCTYPE html><html><head></head><body></body></html>')));
     }
 
     public function test_rename(): void
