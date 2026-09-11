@@ -34,8 +34,8 @@ class SchemaNotDerivableException extends InvalidArgumentException
     public static function nonRewindable(string $extractor): self
     {
         return new self(sprintf(
-            '%s cannot read its dataset twice, so describing it would consume the rows before they '
-            . 'are extracted. Pass an array, or declare the schema with ->withSchema().',
+            '%s cannot read its dataset twice, so discover_pivot_values() cannot scan it before the pivot '
+            . 'runs. Declare the values with pivot_values(...).',
             $extractor,
         ));
     }

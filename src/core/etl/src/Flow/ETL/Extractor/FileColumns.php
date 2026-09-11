@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Partition;
 use Throwable;
 
 use function array_key_exists;
@@ -70,7 +71,7 @@ final readonly class FileColumns
                         $name,
                         $source->uri(),
                         $definition->type()->toString(),
-                        (string) $value,
+                        array_key_exists($name, $source->partitionValues) ? $value ?? Partition::NULL_VALUE : '',
                     ),
                     0,
                     $e,

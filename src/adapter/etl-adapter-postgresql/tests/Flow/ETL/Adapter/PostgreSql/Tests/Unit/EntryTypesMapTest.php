@@ -210,6 +210,22 @@ final class EntryTypesMapTest extends TestCase
         );
     }
 
+    #[DataProvider('provide_catalog_array_types')]
+    public function test_an_array_column_becomes_a_list_on_the_catalog_route(string $pgType, Type $expected): void
+    {
+        static::assertEquals($expected, (new EntryTypesMap())->toFlowType(column_type_from_string($pgType)));
+    }
+
+    /**
+     * @return Generator<string, array{string, Type<mixed>}>
+     */
+    public static function provide_catalog_array_types(): Generator
+    {
+        yield 'integer[]' => ['integer[]', type_list(type_union(type_integer(), type_null()))];
+        yield 'text[]' => ['text[]', type_list(type_union(type_string(), type_null()))];
+        yield 'timestamptz[]' => ['timestamptz[]', type_list(type_union(type_datetime(), type_null()))];
+    }
+
     public function test_allows_override_for_integer_type_to_int2(): void
     {
         $map = new EntryTypesMap([

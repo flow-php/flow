@@ -62,6 +62,22 @@ final class FileColumnsTest extends FlowTestCase
         );
     }
 
+    public function test_a_hive_null_value_under_a_not_null_declaration_names_the_sentinel(): void
+    {
+        $fileColumns = FileColumnsContext::discovering(names: ['year' => true]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Partition column "year" of file "memory://orders/year=__HIVE_DEFAULT_PARTITION__/data.csv" declares '
+            . 'type string, but its path value "__HIVE_DEFAULT_PARTITION__" cannot be cast to it.',
+        );
+
+        $fileColumns->forFile(
+            new SourceFile(path('memory://orders/year=__HIVE_DEFAULT_PARTITION__/data.csv')),
+            $fileColumns->declare(schema(str_schema('year'))),
+        );
+    }
+
     public function test_declare_appends_the_metadata_column_then_the_partition_block(): void
     {
         static::assertSame(

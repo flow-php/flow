@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -17,12 +18,14 @@ use Flow\Floe\Tests\Context\FloeEngineContext;
 use function array_sum;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
@@ -33,6 +36,100 @@ use function max;
 
 final class FloeExtractorTest extends FlowTestCase
 {
+    public function test_a_later_file_with_other_columns_throws_naming_both_files(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeFiles($memory, [
+            'memory://glob/a.floe' => rows(schema(int_schema('id')), row(['id' => 1])),
+            'memory://glob/b.floe' => rows(
+                schema(int_schema('id'), str_schema('extra')),
+                row([
+                    'id' => 2,
+                    'extra' => 'x',
+                ]),
+            ),
+        ]);
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            "Columns of memory://glob/b.floe do not match the schema read from memory://glob/a.floe:\n"
+            . "  Unexpected Definitions: \n"
+            . '    |-- extra<string>',
+        );
+
+        iterator_to_array(from_floe(path('memory://glob/*.floe'), filesystem: $memory)->extract(
+            flow_context(config()),
+        ));
+    }
+
+    public function test_a_later_file_with_another_column_type_throws(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeFiles($memory, [
+            'memory://glob/a.floe' => rows(schema(int_schema('id')), row(['id' => 1])),
+            'memory://glob/b.floe' => rows(schema(str_schema('id')), row(['id' => 'x'])),
+        ]);
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('|-- expected: id<integer>, given: id<string>');
+
+        iterator_to_array(from_floe(path('memory://glob/*.floe'), filesystem: $memory)->extract(
+            flow_context(config()),
+        ));
+    }
+
+    public function test_a_later_file_with_the_columns_in_another_order_follows_the_first(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeFiles($memory, [
+            'memory://glob/a.floe' => rows(
+                schema(int_schema('id'), str_schema('name')),
+                row([
+                    'id' => 1,
+                    'name' => 'a',
+                ]),
+            ),
+            'memory://glob/b.floe' => rows(
+                schema(str_schema('name'), int_schema('id')),
+                row([
+                    'name' => 'b',
+                    'id' => 2,
+                ]),
+            ),
+        ]);
+
+        static::assertSame(
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']],
+            df()
+                ->read(from_floe(path('memory://glob/*.floe'), filesystem: $memory))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_union_by_name_reads_every_file_under_one_schema(): void
+    {
+        $memory = memory_filesystem();
+        FloeEngineContext::writeFiles($memory, [
+            'memory://glob/a.floe' => rows(schema(int_schema('id')), row(['id' => 1])),
+            'memory://glob/b.floe' => rows(
+                schema(int_schema('id'), str_schema('extra')),
+                row([
+                    'id' => 2,
+                    'extra' => 'x',
+                ]),
+            ),
+        ]);
+
+        static::assertSame(
+            [['id' => 1, 'extra' => null], ['id' => 2, 'extra' => 'x']],
+            df()
+                ->read(from_floe(path('memory://glob/*.floe'), filesystem: $memory)->unionByName())
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_change_limit_to_zero_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);

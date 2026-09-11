@@ -61,6 +61,8 @@ final class ExcelExtractor implements
 
     private ?Schema $schema = null;
 
+    private string $inferredFrom = '';
+
     private readonly Filesystem $filesystem;
 
     public function __construct(
@@ -116,7 +118,6 @@ final class ExcelExtractor implements
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
         $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
-        $inferredFrom = '';
         // only the first extract() after an inference reads on from its sample; every later one parses afresh
         $sampled = $this->sampled;
         $this->sampled = null;
@@ -134,7 +135,7 @@ final class ExcelExtractor implements
                     try {
                         // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
                         $header = $sampler->header();
-                        $inferredFrom = $header->source ?? '';
+                        $this->inferredFrom = $header->source ?? '';
 
                         $derived =
                             $this->derivedSchema = (new SchemaInferrer(
@@ -171,7 +172,7 @@ final class ExcelExtractor implements
                         ) {
                             throw InferredSchemaException::columnsDiverge(
                                 $source->uri(),
-                                $inferredFrom,
+                                $this->inferredFrom,
                                 $base,
                                 $columns,
                                 $this->inference,
@@ -262,11 +263,15 @@ final class ExcelExtractor implements
             );
 
             try {
+                // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
+                $header = $sampler->header();
+                $this->inferredFrom = $header->source ?? '';
+
                 $derived =
                     $this->derivedSchema = (new SchemaInferrer(
                         $this->inference,
                         new CellTypeNarrower($this->inference->candidates()),
-                    ))->infer($sampler->header()->names, $sampler->samples($this->inference->sampleSize));
+                    ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
             } catch (Throwable $failure) {
                 $sampler->close();
 
@@ -338,6 +343,7 @@ final class ExcelExtractor implements
     private function forgetInference(): void
     {
         $this->derivedSchema = null;
+        $this->inferredFrom = '';
         $this->sampled?->close();
         $this->sampled = null;
     }

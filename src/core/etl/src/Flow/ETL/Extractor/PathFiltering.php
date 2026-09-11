@@ -18,6 +18,8 @@ trait PathFiltering
      */
     private ?Schema $derivedSchema = null;
 
+    private string $derivedFrom = '';
+
     private ?Filter $filter = null;
 
     /**
@@ -42,9 +44,14 @@ trait PathFiltering
         }
 
         $schema = new Schema();
+        $this->derivedFrom = '';
 
         foreach ($files as $file) {
             try {
+                if ($this->derivedFrom === '') {
+                    $this->derivedFrom = $file->source()->uri();
+                }
+
                 $schema = $schema->merge($file->schema());
             } finally {
                 $file->close();

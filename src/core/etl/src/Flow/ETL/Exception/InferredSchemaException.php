@@ -6,6 +6,7 @@ namespace Flow\ETL\Exception;
 
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Validator\ValidationContext;
 
 use function array_diff;
 use function implode;
@@ -35,6 +36,20 @@ final class InferredSchemaException extends InvalidArgumentException
             implode(', ', array_diff($expected, $columns)),
             $inference->sampleSize === -1 ? 'all' : (string) $inference->sampleSize,
             $inference->filesToSniff === -1 ? 'all' : (string) $inference->filesToSniff,
+        ));
+    }
+
+    /**
+     * @param string $readFrom - the file the extractor's schema was read from, the first one it listed
+     */
+    public static function filesDiverge(string $source, string $readFrom, ValidationContext $validation): self
+    {
+        return new self(sprintf(
+            "Columns of %s do not match the schema read from %s:\n%sRead the files as one wider schema with "
+            . '->unionByName(), or declare the schema with ->withSchema(...).',
+            $source,
+            $readFrom,
+            $validation->toString(),
         ));
     }
 

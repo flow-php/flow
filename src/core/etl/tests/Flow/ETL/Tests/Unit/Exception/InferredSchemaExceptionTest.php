@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Exception;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_schema;
@@ -31,6 +32,24 @@ final class InferredSchemaExceptionTest extends FlowTestCase
         static::assertStringContainsString('file:///orders/part-01.csv', $exception->getMessage());
         static::assertStringContainsString('->withSchema(...)', $exception->getMessage());
         static::assertStringContainsString('infer_schema()->unionByName()', $exception->getMessage());
+    }
+
+    public function test_files_diverge_names_both_files_the_difference_and_both_remedies(): void
+    {
+        static::assertSame(
+            "Columns of file:///orders/part-02.parquet do not match the schema read from file:///orders/part-01.parquet:\n"
+            . "  Unexpected Definitions: \n"
+            . "    |-- extra<string>\n"
+            . 'Read the files as one wider schema with ->unionByName(), or declare the schema with ->withSchema(...).',
+            InferredSchemaException::filesDiverge(
+                'file:///orders/part-02.parquet',
+                'file:///orders/part-01.parquet',
+                (new StrictValidator())->validate(
+                    new Schema(int_schema('id')),
+                    new Schema(int_schema('id'), string_schema('extra')),
+                ),
+            )->getMessage(),
+        );
     }
 
     public function test_unbounded_knobs_are_spelled_all_in_the_prose(): void

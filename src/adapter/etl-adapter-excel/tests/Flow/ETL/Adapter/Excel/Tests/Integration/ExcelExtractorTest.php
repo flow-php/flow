@@ -405,8 +405,9 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_a_later_file_with_a_different_header_throws(): void
     {
         $this->expectException(InferredSchemaException::class);
-        $this->expectExceptionMessage(
-            'unexpected [zip], missing []. The sample was at most 20480 rows over at most 10 sources.',
+        $this->expectExceptionMessageMatches(
+            '#do not match the schema inferred from \S+/diverging_header/a\.xlsx: unexpected \[zip\], missing \[\]\. '
+            . 'The sample was at most 20480 rows over at most 10 sources\.#',
         );
 
         df()->extract(from_excel(ExcelFixtureContext::file('diverging_header/*.xlsx')))->fetch();

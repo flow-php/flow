@@ -81,6 +81,16 @@ final class FloeEngineContext
     }
 
     /**
+     * @param array<string, Rows> $files - uri => the rows written to it
+     */
+    public static function writeFiles(Filesystem $filesystem, array $files): void
+    {
+        foreach ($files as $uri => $rows) {
+            self::writeAll(self::phpWriter($filesystem, $rows->schema()), path($uri), [$rows]);
+        }
+    }
+
+    /**
      * @param array<int, Rows> $batches
      */
     public static function writeAll(FloeWriter $writer, Path $path, array $batches): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -18,6 +19,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -103,6 +105,9 @@ final class ParquetExtractor implements
 
         $fileOffset = $this->offset ?? 0;
         $promisedSchema = $this->schema === null ? null : $this->schema();
+        // undeclared, every file is read under the first file's schema, or the union of all of them
+        $expected = $this->schema === null ? $this->derivedSchema($this->files(), $this->unionByName) : null;
+        $target = $promisedSchema ?? $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
@@ -118,9 +123,22 @@ final class ParquetExtractor implements
                     continue;
                 }
 
+                if ($expected !== null && !$this->unionByName) {
+                    $validation = (new StrictValidator())->validate($expected, $file->schema());
+
+                    if (!$validation->isValid()) {
+                        throw InferredSchemaException::filesDiverge(
+                            $file->source()->uri(),
+                            $this->derivedFrom,
+                            $validation,
+                        );
+                    }
+                }
+
                 // R6: over the FILE's schema, never over schema()'s output
                 $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
+                $matchTo = $promisedSchema === null && !$fileSchema->isSame($target) ? $target : null;
 
                 $encoder = new ParquetEncoder($file->file->schema());
 
@@ -131,6 +149,10 @@ final class ParquetExtractor implements
 
                     if (count($rawBatch) >= $batchSize) {
                         $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+
+                        if ($matchTo !== null) {
+                            $hydrated = $hydrated->matchTo($matchTo);
+                        }
 
                         $yielded += $hydrated->count();
 
@@ -152,6 +174,10 @@ final class ParquetExtractor implements
 
                 if ($rawBatch !== []) {
                     $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+
+                    if ($matchTo !== null) {
+                        $hydrated = $hydrated->matchTo($matchTo);
+                    }
 
                     $yielded += $hydrated->count();
 

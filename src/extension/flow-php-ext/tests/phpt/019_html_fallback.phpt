@@ -22,7 +22,7 @@ $schema = schema(int_schema('id'), html_schema('doc'), html_element_schema('el')
 
 $frames = php_frames(rows($schema, row([
     'id' => 1,
-    'doc' => type_html()->cast('<!DOCTYPE html><html><body><p id="x">hello</p></body></html>'),
+    'doc' => type_html()->cast('<!DOCTYPE html><html><head></head><body><p id="x">hello</p></body></html>'),
     'el' => type_html_element()->cast('<div class="c">content</div>'),
 ])));
 $actual = ext_decode_frames($frames);

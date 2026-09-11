@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
+use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -19,10 +21,15 @@ use Flow\Parquet\Reader;
 use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_types;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
@@ -367,5 +374,50 @@ final class ParquetExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'))->isRepeatable());
+    }
+
+    public function test_a_later_file_with_other_columns_throws_naming_both_files(): void
+    {
+        $memory = memory_filesystem();
+        ParquetFilesContext::write($memory, [
+            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
+            'memory://glob/b.parquet' => rows(
+                schema(int_schema('id'), str_schema('extra')),
+                row([
+                    'id' => 2,
+                    'extra' => 'x',
+                ]),
+            ),
+        ]);
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'Columns of memory://glob/b.parquet do not match the schema read from memory://glob/a.parquet:',
+        );
+
+        df()->read(from_parquet(path('memory://glob/*.parquet'), filesystem: $memory))->fetch();
+    }
+
+    public function test_union_by_name_reads_every_file_under_one_schema(): void
+    {
+        $memory = memory_filesystem();
+        ParquetFilesContext::write($memory, [
+            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
+            'memory://glob/b.parquet' => rows(
+                schema(int_schema('id'), str_schema('extra')),
+                row([
+                    'id' => 2,
+                    'extra' => 'x',
+                ]),
+            ),
+        ]);
+
+        static::assertSame(
+            [['id' => 1, 'extra' => null], ['id' => 2, 'extra' => 'x']],
+            df()
+                ->read(from_parquet(path('memory://glob/*.parquet'), filesystem: $memory)->unionByName())
+                ->fetch()
+                ->toArray(),
+        );
     }
 }

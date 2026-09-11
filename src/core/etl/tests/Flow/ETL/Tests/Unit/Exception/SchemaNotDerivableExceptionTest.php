@@ -44,8 +44,8 @@ final class SchemaNotDerivableExceptionTest extends FlowTestCase
     public function test_non_rewindable_names_the_extractor_and_the_way_out(): void
     {
         static::assertSame(
-            'ChainExtractor cannot read its dataset twice, so describing it would consume the rows before they '
-            . 'are extracted. Pass an array, or declare the schema with ->withSchema().',
+            'ChainExtractor cannot read its dataset twice, so discover_pivot_values() cannot scan it before the '
+            . 'pivot runs. Declare the values with pivot_values(...).',
             SchemaNotDerivableException::nonRewindable('ChainExtractor')->getMessage(),
         );
     }

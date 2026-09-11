@@ -156,7 +156,11 @@ final readonly class EntryTypesMap
      */
     public function toFlowType(ColumnType $columnType): Type
     {
-        return $this->resolve($columnType->normalize()['name'], floorUnrecognised: false);
+        $normalized = $columnType->normalize();
+        $type = $this->resolve($normalized['name'], floorUnrecognised: false);
+
+        // the catalog names an array by its element (int4) plus a flag, where the result route sees _int4
+        return $normalized['is_array'] ?? false ? type_list(type_union($type, type_null())) : $type;
     }
 
     /**

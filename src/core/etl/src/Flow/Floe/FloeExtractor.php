@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -20,6 +21,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -80,9 +82,10 @@ final class FloeExtractor implements
     {
         $fileOffset = $this->offset ?? 0;
         $yielded = 0;
-        // schema() opens a footer, so it is asked only when a schema was declared - an undeclared
-        // read is gated batch by batch by the checked door below instead
         $promisedSchema = $this->schema === null ? null : $this->schema();
+        // undeclared, every file is read under the first file's schema, or the union of all of them
+        $expected = $this->schema === null ? $this->derivedSchema($this->files(), $this->unionByName) : null;
+        $target = $promisedSchema ?? $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
@@ -98,9 +101,23 @@ final class FloeExtractor implements
                     continue;
                 }
 
+                if ($expected !== null && !$this->unionByName) {
+                    $validation = (new StrictValidator())->validate($expected, $file->schema());
+
+                    if (!$validation->isValid()) {
+                        throw InferredSchemaException::filesDiverge(
+                            $file->source()->uri(),
+                            $this->derivedFrom,
+                            $validation,
+                        );
+                    }
+                }
+
                 // R6: over the FILE's schema, never over schema()'s output
                 $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
+                // a declared schema is always matched: the rows below are only trusted against the footer
+                $matchTo = $promisedSchema ?? (!$fileSchema->isSame($target) ? $target : null);
 
                 $limit = $this->pushedLimit();
                 $remaining = $limit === null ? null : $limit - $yielded;
@@ -118,8 +135,8 @@ final class FloeExtractor implements
                     // written in the order declare() emits it, so a second full check buys nothing
                     $rows = Rows::trusted($fileSchema, $filled);
 
-                    if ($promisedSchema !== null) {
-                        $rows = $rows->matchTo($promisedSchema);
+                    if ($matchTo !== null) {
+                        $rows = $rows->matchTo($matchTo);
                     }
 
                     $yielded += $rows->count();
