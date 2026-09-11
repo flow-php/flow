@@ -14,8 +14,9 @@ use function strstr;
 use function strtr;
 
 /**
- * DOMDocumentWriter's output, byte for byte, without building a DOM for every row: libxml's escaping, a control
- * character written as U+FFFD, a value cut at its first NUL, and a name DOM refuses refused with DOM's exception.
+ * DOMDocumentWriter's output on libxml 2.14 and later, byte for byte, without building a DOM for every row: libxml's
+ * escaping, a control character written as U+FFFD, a value cut at its first NUL, and a name DOM refuses refused with
+ * DOM's exception.
  */
 final class StringXMLWriter implements XMLWriter
 {

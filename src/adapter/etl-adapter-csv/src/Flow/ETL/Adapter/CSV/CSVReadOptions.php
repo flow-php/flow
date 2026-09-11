@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+
+use function strlen;
+
 final readonly class CSVReadOptions
 {
     /**
@@ -17,7 +21,19 @@ final readonly class CSVReadOptions
         public ?string $enclosure = null,
         public ?string $escape = null,
         public ?int $charactersReadInLine = null,
-    ) {}
+    ) {
+        if ($separator !== null && strlen($separator) !== 1) {
+            throw new InvalidArgumentException('Separator must be a single character');
+        }
+
+        if ($enclosure !== null && strlen($enclosure) !== 1) {
+            throw new InvalidArgumentException('Enclosure must be a single character');
+        }
+
+        if ($escape !== null && strlen($escape) > 1) {
+            throw new InvalidArgumentException('Escape must be empty or a single character');
+        }
+    }
 
     /**
      * @param int<1, max> $charactersReadInLine - bytes read per step from a remote stream (S3, Azure); never splits a line

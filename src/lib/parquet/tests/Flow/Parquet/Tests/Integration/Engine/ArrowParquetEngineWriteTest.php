@@ -14,19 +14,16 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function extension_loaded;
-use function file_exists;
-use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
-use function mkdir;
 use function range;
 use function str_repeat;
-use function unlink;
 
 #[Group('native-extension')]
 final class ArrowParquetEngineWriteTest extends TestCase
@@ -36,15 +33,16 @@ final class ArrowParquetEngineWriteTest extends TestCase
         if (!extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
         }
+    }
 
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
+    protected function tearDown(): void
+    {
+        TestParquetFile::remove($this);
     }
 
     public function test_write_flat_columns_readable_by_php_engine(): void
     {
-        $path = __DIR__ . '/var/test-arrow-write-flat-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(
             FlatColumn::int32('id', Repetition::REQUIRED),
@@ -74,13 +72,11 @@ final class ArrowParquetEngineWriteTest extends TestCase
         static::assertSame('Alice', $result[0]['name']);
         static::assertTrue($result[0]['active']);
         static::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
-
-        unlink($path);
     }
 
     public function test_write_nested_types(): void
     {
-        $path = __DIR__ . '/var/test-arrow-write-nested-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(
             FlatColumn::int32('id', Repetition::REQUIRED),
@@ -107,13 +103,11 @@ final class ArrowParquetEngineWriteTest extends TestCase
 
         static::assertCount(2, $result);
         static::assertSame(1, $result[0]['id']);
-
-        unlink($path);
     }
 
     public function test_write_with_gzip_compression(): void
     {
-        $path = __DIR__ . '/var/test-arrow-write-gzip-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
@@ -130,13 +124,11 @@ final class ArrowParquetEngineWriteTest extends TestCase
         );
 
         static::assertCount(20, $result);
-
-        unlink($path);
     }
 
     public function test_write_with_snappy_compression(): void
     {
-        $path = __DIR__ . '/var/test-arrow-write-snappy-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
@@ -154,7 +146,5 @@ final class ArrowParquetEngineWriteTest extends TestCase
 
         static::assertCount(50, $result);
         static::assertSame(1, $result[0]['id']);
-
-        unlink($path);
     }
 }

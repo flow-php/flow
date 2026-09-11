@@ -147,7 +147,11 @@ final class InferredTypes
 
         $returns = $this->named($reflection->getReturnType());
 
-        return $returns === 'static' || $returns === 'self' ? $class : $returns;
+        return match ($returns) {
+            'static' => $class,
+            'self' => $reflection->getDeclaringClass()->getName(),
+            default => $returns,
+        };
     }
 
     /**

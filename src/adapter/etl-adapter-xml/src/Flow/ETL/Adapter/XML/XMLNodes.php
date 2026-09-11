@@ -32,6 +32,11 @@ final readonly class XMLNodes
     private const int DOCUMENT_EMPTY = 4;
 
     /**
+     * libxml's XML_ERR_DOCUMENT_END, which libxml before 2.12 also reports for a document without a root
+     */
+    private const int EXTRA_CONTENT = 5;
+
+    /**
      * @var null|non-empty-list<string>
      */
     private ?array $target;
@@ -104,7 +109,12 @@ final readonly class XMLNodes
 
             $error = libxml_get_last_error();
 
-            if ($error !== false && $error->level === LIBXML_ERR_FATAL && $error->code !== self::DOCUMENT_EMPTY) {
+            if (
+                $error !== false
+                && $error->level === LIBXML_ERR_FATAL
+                && $error->code !== self::DOCUMENT_EMPTY
+                && !($error->code === self::EXTRA_CONTENT && (new RootlessDocument())->matches($stream, $bufferSize))
+            ) {
                 throw $this->failure();
             }
         } finally {

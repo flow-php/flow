@@ -1433,6 +1433,13 @@ Registering the commands in your own console application: drop the `setName()` /
 
 Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 
+### 99) `flow-php/etl-adapter-csv` - `withSeparator()`, `withEnclosure()` and `withEscape()` take a single byte
+
+| Before                                                                                                         | After                                                |
+|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| `withSeparator('\|\|')` / `withEnclosure('\|\|')` / `withEscape('ab')` - PHP 8.3: first byte used; PHP 8.4+: `ValueError` on read | throws `Flow\ETL\Exception\InvalidArgumentException` |
+| `withSeparator('')` / `withEnclosure('')` - PHP 8.3: `,` / `"` used; PHP 8.4+: `ValueError` on read            | throws `Flow\ETL\Exception\InvalidArgumentException` |
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x

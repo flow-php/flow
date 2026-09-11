@@ -40,23 +40,49 @@ final class StringXMLWriterTest extends FlowTestCase
         yield 'a prefixed name' => [XMLNode::flatNode('a:b', '1')];
         yield 'a non-ascii name' => [XMLNode::flatNode('ünï', '1')];
 
+        yield 'text with non-ascii text' => [XMLNode::flatNode('v', 'ünïcødé ☃')];
+        yield 'text with invalid UTF-8' => [XMLNode::flatNode('v', "a\xC3\x28b")];
+        yield 'text with a noncharacter' => [XMLNode::flatNode('v', "a\u{FFFE}b")];
+
         foreach ([
             'markup characters' => "a&b<c>d\"e'f",
             'line breaks and tabs' => "line\r\nbreak\ttab",
             'a CDATA terminator' => ']]>',
             'an entity look-alike' => '&amp;',
-            'non-ascii text' => 'ünïcødé ☃',
-            'control characters' => "a\x01b\x1Fc",
             'a DEL character' => "a\x7Fb",
             'a NUL in the middle' => "a\x00b",
             'a leading NUL' => "\x00a",
-            'invalid UTF-8' => "a\xC3\x28b",
-            'a noncharacter' => "a\u{FFFE}b",
             'only whitespace' => '  ',
         ] as $label => $value) {
             yield 'text with ' . $label => [XMLNode::flatNode('v', $value)];
             yield 'an attribute with ' . $label => [XMLNode::nested('row', new XMLAttribute('a', $value))];
         }
+    }
+
+    /**
+     * DOMDocument writes these as below on libxml 2.14 and later only - older libxml escapes them differently.
+     *
+     * @return Generator<string, array{XMLNode, string}>
+     */
+    public static function nodesOlderLibxmlWritesDifferently(): Generator
+    {
+        yield 'text with control characters' => [XMLNode::flatNode('v', "a\x01b\x1Fc"), '<v>a&#xFFFD;b&#xFFFD;c</v>'];
+        yield 'an attribute with control characters' => [
+            XMLNode::nested('row', new XMLAttribute('a', "a\x01b\x1Fc")),
+            '<row a="a&#xFFFD;b&#xFFFD;c"/>',
+        ];
+        yield 'an attribute with non-ascii text' => [
+            XMLNode::nested('row', new XMLAttribute('a', 'ünïcødé ☃')),
+            '<row a="ünïcødé ☃"/>',
+        ];
+        yield 'an attribute with invalid UTF-8' => [
+            XMLNode::nested('row', new XMLAttribute('a', "a\xC3\x28b")),
+            "<row a=\"a\xC3\x28b\"/>",
+        ];
+        yield 'an attribute with a noncharacter' => [
+            XMLNode::nested('row', new XMLAttribute('a', "a\u{FFFE}b")),
+            "<row a=\"a\u{FFFE}b\"/>",
+        ];
     }
 
     #[TestWith(['order id'])]
@@ -99,5 +125,13 @@ final class StringXMLWriterTest extends FlowTestCase
     public function test_writes_what_dom_document_writer_writes(XMLNode $node): void
     {
         static::assertSame((new DOMDocumentWriter())->write($node), (new StringXMLWriter())->write($node));
+    }
+
+    #[DataProvider('nodesOlderLibxmlWritesDifferently')]
+    public function test_writes_what_dom_document_writer_writes_on_libxml_2_14_and_later(
+        XMLNode $node,
+        string $xml,
+    ): void {
+        static::assertSame($xml, (new StringXMLWriter())->write($node));
     }
 }

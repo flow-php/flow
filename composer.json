@@ -29,7 +29,7 @@
         "doctrine/dbal": "^4.4",
         "google/apiclient": "^2.13",
         "google/protobuf": "^4.0 || ^5.0",
-        "halaxa/json-machine": "^1.1",
+        "halaxa/json-machine": "^1.2",
         "monolog/monolog": "^3.0",
         "openspout/openspout": "~5.3.0",
         "packaged/thrift": "^0.15.0",

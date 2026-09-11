@@ -5,10 +5,34 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 
 use Flow\ETL\Adapter\CSV\CSVReadOptions;
+use Flow\ETL\Exception\InvalidArgumentException;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class CSVReadOptionsTest extends TestCase
 {
+    /**
+     * @param array<string, string> $options
+     */
+    #[TestWith([['separator' => '||'], 'Separator must be a single character'])]
+    #[TestWith([['separator' => ''], 'Separator must be a single character'])]
+    #[TestWith([['separator' => '§'], 'Separator must be a single character'])]
+    #[TestWith([['enclosure' => '||'], 'Enclosure must be a single character'])]
+    #[TestWith([['enclosure' => ''], 'Enclosure must be a single character'])]
+    #[TestWith([['escape' => 'ab'], 'Escape must be empty or a single character'])]
+    public function test_a_dialect_value_that_is_not_a_single_byte_is_refused(array $options, string $message): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        new CSVReadOptions(...$options);
+    }
+
+    public function test_an_empty_escape_is_accepted(): void
+    {
+        static::assertSame('', (new CSVReadOptions())->withEscape('')->escape);
+    }
+
     public function test_a_wither_returns_a_new_instance(): void
     {
         $options = new CSVReadOptions();

@@ -13,31 +13,22 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function array_merge;
-use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function iterator_to_array;
-use function mkdir;
 use function range;
 
 class ListsWritingTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[DataProvider('engine_provider')]
     public function test_writing_empty_lists_of_ints(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -66,7 +57,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_of_decimals(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('prices', ListElement::decimal(18, 2)));
@@ -88,7 +79,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_of_ints(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -121,7 +112,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_of_strings(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
@@ -154,7 +145,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_of_structures(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_structs', ListElement::structure([
@@ -193,7 +184,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_with_nullable_elements(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -228,7 +219,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_list_with_nullable_list_values(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -263,7 +254,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_nullable_list_of_ints(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -298,7 +289,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_nullable_list_of_structures(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_structs', ListElement::structure([
@@ -339,7 +330,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_nullable_list_of_structures_with_required_fields(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_structs', ListElement::structure([
@@ -376,7 +367,7 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_nullable_lists_of_ints(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));

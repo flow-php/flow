@@ -35,7 +35,7 @@ final class UlidTest extends FlowTestCase
     public function test_ulid_with_invalid_value_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Ulid requires valid ULID string: Invalid ULID.');
+        $this->expectExceptionMessage('Ulid requires valid ULID string: Invalid ULID');
 
         ulid(lit(''))->eval(row([]), flow_context());
     }

@@ -55,12 +55,18 @@ final class XMLNodesTest extends FlowTestCase
         static::assertSame([], SerializedNodes::of('feed/entry', '<root><item>1</item></root>'));
     }
 
-    #[TestWith([''])]
-    #[TestWith(["  \n "])]
-    #[TestWith(["<?xml version='1.0'?>"])]
-    public function test_a_document_without_a_root_yields_nothing(string $xml): void
+    /**
+     * @param int<1, max> $bufferSize
+     */
+    #[TestWith(['', 8192])]
+    #[TestWith(["  \n ", 8192])]
+    #[TestWith(["<?xml version='1.0'?>", 8192])]
+    #[TestWith(["<?xml version='1.0'?>\n \n", 1])]
+    #[TestWith(['<!-- c -->', 8192])]
+    #[TestWith(["\xEF\xBB\xBF", 8192])]
+    public function test_a_document_without_a_root_yields_nothing(string $xml, int $bufferSize): void
     {
-        static::assertSame([], SerializedNodes::of('root/item', $xml));
+        static::assertSame([], SerializedNodes::of('root/item', $xml, $bufferSize));
     }
 
     public function test_a_node_declares_the_ancestor_namespaces_it_uses(): void
@@ -89,14 +95,22 @@ final class XMLNodesTest extends FlowTestCase
 
     #[TestWith([
         '<root><item>1</item><item>2</wrong></root>',
-        'XML Error: Opening and ending tag mismatch: item line 1 and wrong at line 1',
+        '/^XML Error: Opening and ending tag mismatch: item line 1 and wrong at line 1$/',
     ])]
-    #[TestWith(['<root><item>1</item>', 'XML Error: Premature end of data in tag root line 1 at line 1'])]
-    #[TestWith(['<root/>junk', 'XML Error: Extra content at the end of the document at line 1'])]
+    // older libxml reports an unclosed root as extra content
+    #[TestWith([
+        '<root><item>1</item>',
+        '/^XML Error: (Premature end of data in tag root line 1|Extra content at the end of the document) at line 1$/',
+    ])]
+    #[TestWith(['<root/>junk', '/^XML Error: Extra content at the end of the document at line 1$/'])]
+    #[TestWith([
+        "<?xml version='1.0'?><root/>junk",
+        '/^XML Error: Extra content at the end of the document at line 1$/',
+    ])]
     public function test_a_malformed_document_is_refused(string $xml, string $message): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage($message);
+        $this->expectExceptionMessageMatches($message);
 
         SerializedNodes::of('root/item', $xml);
     }

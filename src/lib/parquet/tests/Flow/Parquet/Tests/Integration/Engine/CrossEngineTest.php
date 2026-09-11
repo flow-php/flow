@@ -14,18 +14,15 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
-use function file_exists;
-use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function iterator_to_array;
-use function mkdir;
-use function unlink;
 
 #[Group('native-extension')]
 final class CrossEngineTest extends TestCase
@@ -35,15 +32,16 @@ final class CrossEngineTest extends TestCase
         if (!extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
         }
+    }
 
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
+    protected function tearDown(): void
+    {
+        TestParquetFile::remove($this);
     }
 
     public function test_arrow_write_arrow_read_roundtrip(): void
     {
-        $path = __DIR__ . '/var/test-cross-arrow-arrow-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(
             FlatColumn::int32('id', Repetition::REQUIRED),
@@ -69,13 +67,11 @@ final class CrossEngineTest extends TestCase
         static::assertSame(1, $result[0]['id']);
         static::assertSame('first', $result[0]['label']);
         static::assertSame(1_000_000_000_000, $result[0]['big_number']);
-
-        unlink($path);
     }
 
     public function test_arrow_write_php_read(): void
     {
-        $path = __DIR__ . '/var/test-cross-arrow-php-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(
             FlatColumn::int32('id', Repetition::REQUIRED),
@@ -104,13 +100,11 @@ final class CrossEngineTest extends TestCase
         static::assertTrue($result[0]['active']);
         static::assertSame(20, $result[1]['id']);
         static::assertFalse($result[1]['active']);
-
-        unlink($path);
     }
 
     public function test_explicit_php_engine(): void
     {
-        $path = __DIR__ . '/var/test-php-engine-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('name'));
 
@@ -131,13 +125,11 @@ final class CrossEngineTest extends TestCase
         static::assertCount(1, $result);
         static::assertSame(1, $result[0]['id']);
         static::assertSame('forced-php', $result[0]['name']);
-
-        unlink($path);
     }
 
     public function test_php_write_arrow_read(): void
     {
-        $path = __DIR__ . '/var/test-cross-php-arrow-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(
             FlatColumn::int32('id', Repetition::REQUIRED),
@@ -164,7 +156,5 @@ final class CrossEngineTest extends TestCase
         static::assertSame(1, $result[0]['id']);
         static::assertSame('one', $result[0]['name']);
         static::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
-
-        unlink($path);
     }
 }

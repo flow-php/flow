@@ -69,6 +69,30 @@ final class InferredTypesTest extends TestCase
         );
     }
 
+    public function test_a_self_return_resolves_to_the_class_declaring_the_method(): void
+    {
+        static::assertSame(
+            ['a.md:1' => ['Flow\PostgreSql\QueryBuilder\Schema\CreateTable\CreateTableFinalStep::column()']],
+            (new DocumentMethodCalls())->unresolved([
+                $this->fences->php("<?php\n\nuse function Flow\\PostgreSql\\DSL\\create;\n\n"
+                . "create()->table('t')->ifNotExists()->column(\$c);"),
+            ]),
+        );
+    }
+
+    public function test_a_static_return_resolves_to_the_receiver(): void
+    {
+        static::assertSame(
+            ['a.md:1' => ['Flow\Documentation\Tests\Double\FluentChild::thereIsNoSuchMethod()']],
+            (new DocumentMethodCalls())->unresolved([
+                $this->fences->php(
+                    "<?php\n\nuse Flow\\Documentation\\Tests\\Double\\FluentChild;\n\n"
+                    . '(new FluentChild())->fluent()->thereIsNoSuchMethod();',
+                ),
+            ]),
+        );
+    }
+
     public function test_a_real_method_on_a_resolved_receiver_is_accepted(): void
     {
         static::assertSame(

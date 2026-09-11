@@ -16,6 +16,7 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,6 +51,30 @@ class PaginationTest extends ParquetIntegrationTestCase
                 ];
             }
         }
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_offset_past_first_page_of_multi_page_column(ParquetEngine $engine): void
+    {
+        $path = TestParquetFile::path($this);
+
+        Writer::php(options: Options::default()->set(Option::PAGE_SIZE_BYTES, 100)->set(
+            Option::PAGE_SIZE_CHECK_INTERVAL,
+            1,
+        ))->write(
+            $path,
+            Schema::with(FlatColumn::int64('id')),
+            array_map(static fn(int $i): array => ['id' => $i], range(0, 99)),
+        );
+
+        static::assertSame(
+            array_map(static fn(int $i): array => ['id' => $i], range(30, 99)),
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read($path)
+                    ->values(['id'], offset: 30),
+            ),
+        );
     }
 
     #[DataProvider('engine_provider')]

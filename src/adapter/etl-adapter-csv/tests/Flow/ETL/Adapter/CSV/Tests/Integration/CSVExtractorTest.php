@@ -150,15 +150,14 @@ final class CSVExtractorTest extends FlowTestCase
     }
 
     /**
-     * The dialect setters are not the detector's single-character guard: a multi-character value degrades the
-     * same way it did before inference existed, rather than throwing.
-     *
      * @param Closure(CSVExtractor): CSVExtractor $setter
      */
     #[DataProvider('multiCharacterDialectSetters')]
-    public function test_a_multi_character_dialect_value_does_not_throw(Closure $setter): void
+    public function test_a_multi_character_dialect_value_is_refused(Closure $setter): void
     {
-        static::assertNotSame([], $setter(from_csv(CSVFixtureContext::path('two_rows.csv')))->schema()->definitions());
+        $this->expectException(InvalidArgumentException::class);
+
+        $setter(from_csv(CSVFixtureContext::path('two_rows.csv')));
     }
 
     /**

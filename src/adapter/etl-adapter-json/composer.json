@@ -15,7 +15,7 @@
         "ext-json": "*",
         "flow-php/etl": "self.version",
         "flow-php/filesystem": "self.version",
-        "halaxa/json-machine": "^1.1",
+        "halaxa/json-machine": "^1.2",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0"
     },

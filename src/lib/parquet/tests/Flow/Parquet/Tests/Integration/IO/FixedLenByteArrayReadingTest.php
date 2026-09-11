@@ -9,30 +9,20 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function file_exists;
 use function iterator_to_array;
-use function mkdir;
 use function random_bytes;
 use function str_repeat;
-use function uniqid;
-use function unlink;
 
 class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[DataProvider('engine_provider')]
     public function test_reading_and_writing_fixed_len_byte_array_without_logical_type(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/parquet_fixed_len_byte_array_' . uniqid() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::fixedSizeByteArray('raw_bytes', 8, Repetition::REQUIRED));
 
@@ -62,14 +52,12 @@ class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
         static::assertSame($bytes1, $rows[0]['raw_bytes']);
         static::assertSame($bytes2, $rows[1]['raw_bytes']);
         static::assertSame($bytes3, $rows[2]['raw_bytes']);
-
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_reading_fixed_len_byte_array_returns_raw_string(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/parquet_fixed_len_byte_array_bytes_' . uniqid() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::fixedSizeByteArray('data', 16, Repetition::REQUIRED));
 
@@ -88,7 +76,5 @@ class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
         static::assertCount(1, $rows);
         static::assertIsString($rows[0]['data']);
         static::assertSame($data, $rows[0]['data']);
-
-        unlink($path);
     }
 }
