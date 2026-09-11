@@ -14,16 +14,22 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\HashJoin\Joiner;
+use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\JoinShape;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function array_intersect_key;
@@ -32,21 +38,29 @@ use function array_keys;
 /**
  * @internal
  */
-final readonly class HashJoinProcessor implements Processor
+final class HashJoinProcessor implements Processor
 {
+    /**
+     * The schemas this step declares. Only bind() sets them; the unbound path discovers each side
+     * from the rows that flow.
+     */
+    private ?Schema $left = null;
+
+    private ?Schema $declaredRight = null;
+
     /**
      * @param int<1, max> $bucketsCount
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private DataFrame $right,
-        private Expression $expression,
-        private Join $type,
-        private Buckets $leftBuckets,
-        private Buckets $rightBuckets,
-        private RandomValueGenerator $random,
-        private int $bucketsCount = 64,
-        private int $batchSize = 1000,
+        private readonly DataFrame $right,
+        private readonly Expression $expression,
+        private readonly Join $type,
+        private readonly Buckets $leftBuckets,
+        private readonly Buckets $rightBuckets,
+        private readonly RandomValueGenerator $random,
+        private readonly int $bucketsCount = 64,
+        private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -61,18 +75,58 @@ final readonly class HashJoinProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        $right = $this->right->schema();
+
+        $bound = new self(
+            $this->right,
+            $this->expression,
+            $this->type,
+            $this->leftBuckets,
+            $this->rightBuckets,
+            $this->random,
+            $this->bucketsCount,
+            $this->batchSize,
+        );
+        $bound->left = $input;
+        $bound->declaredRight = $right;
+
+        return new BoundStep($bound, JoinShape::of($this->expression, $this->type)->schema()->of(
+            $this->type,
+            $input,
+            $right,
+        ));
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $joiner = new Joiner($this->expression, $this->type, $context->entryFactory(), $this->batchSize);
+        $leftSchema = $this->left;
+        $rightSchema = $this->declaredRight;
+
+        if ($rightSchema === null) {
+            try {
+                $rightSchema = $this->right->schema();
+            } catch (SchemaNotDerivableException) {
+                // an undescribable right side is still joinable, its shape just has to be
+                // discovered from the rows that flow
+                $rightSchema = null;
+            }
+        }
+
+        $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 
         try {
-            $nullRightBuilder = $this->type === Join::left ? new NullRowBuilder($context->entryFactory()) : null;
-
             $rightRows = $this->tap(
                 $this->right->get(),
-                $nullRightBuilder,
+                $rightSchema,
                 // right rows with a null join key can never match, they only surface in right join output
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,
             );
@@ -84,16 +138,13 @@ final readonly class HashJoinProcessor implements Processor
                 'join-right',
             );
 
-            $nullRightRow = $nullRightBuilder?->row();
-
-            // in the resident path the Joiner collects the null-left row itself while streaming
-            $nullLeftBuilder = !$resident && $this->type === Join::right
-                ? new NullRowBuilder($context->entryFactory())
+            $nullRightRow = $this->type === Join::left
+                ? (new NullRowBuilder($rightSchema ?? new Schema()))->row()
                 : null;
 
             $leftRows = $this->tap(
                 $rows,
-                $nullLeftBuilder,
+                $leftSchema,
                 // left rows with a null join key can never match, they only surface in left/left_anti output
                 $equalityKeys !== null && $this->type !== Join::left && $this->type !== Join::left_anti
                     ? $equalityKeys->leftRefs()
@@ -103,26 +154,51 @@ final readonly class HashJoinProcessor implements Processor
             if ($resident) {
                 $rightBucket = $this->rightBuckets->all()[0] ?? null;
 
-                yield from $joiner->join(
-                    $leftRows,
-                    $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
-                    null,
-                    $nullRightRow,
+                $joinedBatches = $joiner->join(
+                    JoinSide::of($leftRows, null, $leftSchema),
+                    JoinSide::of(
+                        $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
+                        $nullRightRow,
+                        $rightSchema,
+                    ),
                 );
+
+                // the left side streams through the join, so a stop has to reach its source: the upstream
+                // segment then completes and closes its loaders instead of being abandoned mid-run
+                foreach ($joinedBatches as $joinedBatch) {
+                    $signal = yield $joinedBatch;
+
+                    if ($signal === Signal::STOP) {
+                        $rows->send(Signal::STOP);
+
+                        return;
+                    }
+                }
 
                 return;
             }
 
             $this->bucketize($leftRows, $this->leftBuckets, $equalityKeys?->leftRefs(), 'join-left');
 
-            $nullLeftRow = $nullLeftBuilder?->row();
+            // only the bucketized path builds it here, the resident path above derives the null-left
+            // row inside the Joiner while streaming
+            $nullLeftRow = $this->type === Join::right
+                ? (new NullRowBuilder($leftSchema ?? new Schema()))->row()
+                : null;
 
             foreach ($this->bucketPairs() as [$leftBucket, $rightBucket]) {
+                // a bucket pair is a slice of each side; the output shape is the whole side's
                 $joinedBatches = $joiner->join(
-                    $leftBucket === null ? self::noRows() : $this->leftBuckets->rows($leftBucket->id),
-                    $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
-                    $nullLeftRow,
-                    $nullRightRow,
+                    JoinSide::of(
+                        $leftBucket === null ? self::noRows() : $this->leftBuckets->rows($leftBucket->id),
+                        $nullLeftRow,
+                        $leftSchema,
+                    ),
+                    JoinSide::of(
+                        $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
+                        $nullRightRow,
+                        $rightSchema,
+                    ),
                     buildLeft: ($leftBucket->totalRows ?? 0) < ($rightBucket->totalRows ?? 0),
                 );
 
@@ -131,7 +207,7 @@ final readonly class HashJoinProcessor implements Processor
                     yield $joinedBatch;
                 }
             }
-        } catch (DuplicatedEntriesException $e) {
+        } catch (DuplicatedEntriesException|SchemaDefinitionNotUniqueException $e) {
             throw new JoinException($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
             $this->leftBuckets->clear();
@@ -200,29 +276,30 @@ final readonly class HashJoinProcessor implements Processor
      * can never match and their unmatched padding never reaches the output for the given join type.
      *
      * @param Generator<Rows> $rows
+     * @param null|Schema $schema - out parameter, the schema of the first batch flowing through
      * @param null|array<Reference> $dropNullKeyRefs
      *
      * @return Generator<Rows>
      */
-    private function tap(Generator $rows, ?NullRowBuilder $nullRowBuilder, ?array $dropNullKeyRefs): Generator
+    private function tap(Generator $rows, ?Schema &$schema, ?array $dropNullKeyRefs): Generator
     {
         foreach ($rows as $batch) {
-            if ($nullRowBuilder !== null) {
-                foreach ($batch as $row) {
-                    $nullRowBuilder->collect($row);
-                }
-            }
+            $schema ??= $batch->schema();
 
             if ($dropNullKeyRefs !== null) {
-                $batch = $batch->filter(static function (Row $row) use ($dropNullKeyRefs): bool {
+                $kept = [];
+
+                foreach ($batch->all() as $row) {
                     foreach ($dropNullKeyRefs as $ref) {
-                        if ($row->valueOf($ref) === null) {
-                            return false;
+                        if ($row->get($ref) === null) {
+                            continue 2;
                         }
                     }
 
-                    return true;
-                });
+                    $kept[] = $row;
+                }
+
+                $batch = Rows::trusted($batch->schema(), $kept);
 
                 if ($batch->empty()) {
                     continue;

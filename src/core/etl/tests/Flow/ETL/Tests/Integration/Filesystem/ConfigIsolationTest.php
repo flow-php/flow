@@ -7,15 +7,16 @@ namespace Flow\ETL\Tests\Integration\Filesystem;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\InlineLoader;
+use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\to_callable;
 use function Flow\Floe\DSL\floe_options;
+use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 
 final class ConfigIsolationTest extends FlowIntegrationTestCase
@@ -35,8 +36,8 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
                 ->read(from_array($rows))
                 ->batchSize(10)
                 ->write(to_floe($destination, options: floe_options(buffer_size: 64)))
-                ->write(to_callable(static function (Rows $rows, FlowContext $context): void {
-                    if ($rows->first()->valueOf('id') === 101) {
+                ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
+                    if ($rows->first()->get('id') === 101) {
                         throw new RuntimeException('aborted mid run');
                     }
                 }))
@@ -46,40 +47,56 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
             static::assertSame('aborted mid run', $e->getMessage());
         }
 
-        $partialContent = $this->fs()->readFrom($destination)->content();
-        static::assertNotSame('', $partialContent);
+        // the dead run took its own file with it, so the destination is exactly as it was before the run
+        static::assertNull($this->fs()->status($destination));
 
-        try {
-            data_frame($config)->read(from_array($rows))->write(to_floe($destination))->run();
-            static::fail('The retry was expected to refuse writing to the existing destination');
-        } catch (RuntimeException $e) {
-            static::assertStringContainsString('already exists', $e->getMessage());
+        data_frame($config)->read(from_array($rows))->write(to_floe($destination))->run();
+
+        $retried = 0;
+
+        foreach (data_frame($config)->read(from_floe($destination))->get() as $batch) {
+            $retried += $batch->count();
         }
 
-        static::assertSame($partialContent, $this->fs()->readFrom($destination)->content());
+        static::assertSame(200, $retried);
     }
 
-    public function test_aborted_runs_do_not_accumulate_stream_registrations(): void
+    public function test_a_dead_run_does_not_bleed_into_the_next_on_the_same_sink(): void
     {
         $config = config();
-        $aborted = 0;
+        $destination = $this->cacheDir->suffix('reused_sink.floe');
 
-        for ($run = 1; $run <= 3; $run++) {
-            try {
-                data_frame($config)
-                    ->read(from_array([['id' => 1]]))
-                    ->write(to_floe($this->cacheDir->suffix("aborted_{$run}.floe")))
-                    ->write(to_callable(static function (Rows $rows, FlowContext $context): void {
-                        throw new RuntimeException('aborted');
-                    }))
-                    ->run();
-            } catch (RuntimeException) {
-                $aborted++;
+        // ONE sink reused across both runs - a per-sink registry would carry run 1's stream into run 2
+        $sink = to_floe($destination);
+
+        try {
+            data_frame($config)
+                ->read(from_array([['id' => 1]]))
+                ->write($sink)
+                ->write(new ThrowingLoader(new RuntimeException('aborted')))
+                ->run();
+            static::fail('The first run was expected to fail');
+        } catch (RuntimeException $e) {
+            static::assertSame('aborted', $e->getMessage());
+        }
+
+        static::assertNull($this->fs()->status($destination));
+
+        // the same sink again: run 1's stream must not be reachable, and its rows must not appear here
+        data_frame($config)
+            ->read(from_array([['id' => 2]]))
+            ->write($sink)
+            ->run();
+
+        $ids = [];
+
+        foreach (data_frame($config)->read(from_floe($destination))->get() as $batch) {
+            foreach ($batch as $row) {
+                $ids[] = $row->get('id');
             }
         }
 
-        static::assertSame(3, $aborted);
-        static::assertCount(0, flow_context($config)->streams());
+        static::assertSame([2], $ids);
     }
 
     public function test_save_mode_does_not_leak_from_one_data_frame_to_the_next(): void
@@ -89,8 +106,7 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
 
         data_frame($config)
             ->read(from_array([['id' => 1]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($this->cacheDir->suffix('first_frame.floe')))
+            ->write(to_floe($this->cacheDir->suffix('first_frame.floe'))->saveMode(overwrite()))
             ->run();
 
         $this->fs()->writeTo($destination)->append('pre-existing')->close();

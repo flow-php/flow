@@ -6,13 +6,13 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
+use Flow\Types\Type;
 
 use function count;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 use function implode;
 use function is_string;
 use function rsort;
@@ -20,6 +20,10 @@ use function sort;
 
 final class StringAggregate implements AggregatingFunction
 {
+    use ResolvesFromChildren;
+
+    private readonly string $outputName;
+
     /**
      * @var array<string>
      */
@@ -29,20 +33,45 @@ final class StringAggregate implements AggregatingFunction
         private readonly Reference $ref,
         private readonly string $separator,
         private readonly ?SortOrder $sort = null,
-    ) {}
+    ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_str_agg';
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0], $this->separator, $this->sort);
+    }
 
     public function aggregate(Row $row, FlowContext $context): void
     {
-        $stringValue = $row->valueOf($this->ref->to());
+        if (!$row->has($this->ref->to())) {
+            return;
+        }
+
+        $stringValue = $row->get($this->ref->to());
 
         if (is_string($stringValue)) {
             $this->values[] = $stringValue;
         }
     }
 
-    /**
-     * @return Row\Entry<?string>
-     */
+    public function outputName(): string
+    {
+        return $this->outputName;
+    }
+
     /**
      * @return list<Reference>
      */
@@ -51,20 +80,26 @@ final class StringAggregate implements AggregatingFunction
         return [$this->ref];
     }
 
-    public function result(EntryFactory $entryFactory): Entry
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_str_agg');
+        return type_optional(type_string());
+    }
+
+    public function value(): string
+    {
+        if (!count($this->values)) {
+            return '';
         }
 
-        if (!count($this->values)) {
-            return str_entry($this->ref->name(), '');
-        }
+        $values = $this->values;
 
         if ($this->sort) {
-            $this->sort === SortOrder::ASC ? sort($this->values) : rsort($this->values);
+            $this->sort === SortOrder::ASC ? sort($values) : rsort($values);
         }
 
-        return str_entry($this->ref->name(), implode($this->separator, $this->values));
+        return implode($this->separator, $values);
     }
 }

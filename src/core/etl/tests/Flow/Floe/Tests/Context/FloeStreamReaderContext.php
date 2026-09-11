@@ -9,13 +9,13 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
 use Flow\Floe\Format;
 use Flow\Floe\FrameReader;
 
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -55,7 +55,7 @@ final class FloeStreamReaderContext
         $filesystem = memory_filesystem();
         $path = path('memory://round-trip.floe');
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -66,7 +66,7 @@ final class FloeStreamReaderContext
                 ->rows(),
         );
 
-        return $batches === [] ? rows() : $batches[0];
+        return $batches === [] ? rows(schema()) : $batches[0];
     }
 
     /**
@@ -97,7 +97,7 @@ final class FloeStreamReaderContext
             }
         }
 
-        return $file->footer()->reconstructRows($rows);
+        return new Rows($file->footer()->schema(), ...$rows);
     }
 
     /**
@@ -105,15 +105,15 @@ final class FloeStreamReaderContext
      */
     public static function readAll(Filesystem $filesystem, Path $path): Rows
     {
-        $merged = new Rows();
+        $merged = null;
 
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows() as $batch) {
-            $merged = $merged->merge($batch);
+            $merged = $merged === null ? $batch : $merged->merge($batch);
         }
 
-        return $merged;
+        return $merged ?? rows(schema());
     }
 
     /**
@@ -121,7 +121,7 @@ final class FloeStreamReaderContext
      */
     public static function write(Filesystem $filesystem, Path $path, Rows $rows, array $metadata = []): void
     {
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path, Metadata::fromArray($metadata));
         $writer->write($rows);
         $writer->close();
@@ -134,7 +134,7 @@ final class FloeStreamReaderContext
      */
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void
     {
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($filesystem, $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();

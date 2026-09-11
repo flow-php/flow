@@ -16,7 +16,7 @@ final class CountAccumulator implements FrameAccumulator
 
     public function __construct(
         private readonly ?Reference $ref,
-        private readonly FlowContext $context,
+        FlowContext $context,
     ) {}
 
     public function accumulate(Row $row): void
@@ -28,19 +28,15 @@ final class CountAccumulator implements FrameAccumulator
         }
 
         try {
-            if ($row->valueOf($this->ref) !== null) {
+            if ($row->get($this->ref) !== null) {
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
-            $this->context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e),
-                );
+            throw new InvalidArgumentException('Count window function error: ' . $e->getMessage(), 0, $e);
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         return $this->count;
     }

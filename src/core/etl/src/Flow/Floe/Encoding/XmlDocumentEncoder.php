@@ -6,11 +6,13 @@ namespace Flow\Floe\Encoding;
 
 use Flow\Floe\ValueEncoder as ValueEncoderFactory;
 
+/**
+ * @implements ValueEncoder<\DOMDocument>
+ */
 final class XmlDocumentEncoder implements ValueEncoder
 {
     public function encode(mixed $value): string
     {
-        /** @var \DOMDocument $value */
         return ValueEncoderFactory::lengthPrefixed(ValueEncoderFactory::xmlDocumentToString($value));
     }
 }

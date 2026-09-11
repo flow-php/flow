@@ -9,13 +9,12 @@ use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByConfig;
 use Flow\ETL\Config\Join\HashJoinConfig;
+use Flow\ETL\Config\Repartition\HashRepartitionConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Pipeline\Optimizer;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
 
@@ -27,7 +26,6 @@ final readonly class Config
 {
     /**
      * @param Hydrator $hydrator
-     * @param int<1, max> $extractorBatchSize
      */
     public function __construct(
         private string $id,
@@ -35,9 +33,7 @@ final readonly class Config
         private string $version,
         private Serializer $serializer,
         private ClockInterface $clock,
-        private FilesystemTable $filesystemTable,
         private Optimizer $optimizer,
-        private bool $putInputIntoRows,
         private Hydrator $hydrator,
         public CacheConfig $cache,
         public MemorySortConfig|ExternalSortConfig $sort,
@@ -45,8 +41,7 @@ final readonly class Config
         public TelemetryConfig $telemetry,
         public HashGroupByConfig $grouping,
         public HashJoinConfig $join,
-        private int $extractorBatchSize = 1000,
-        private EntryFactory $entryFactory = new EntryFactory(),
+        public HashRepartitionConfig $repartition,
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
     ) {}
@@ -74,24 +69,6 @@ final readonly class Config
     public function clock(): ClockInterface
     {
         return $this->clock;
-    }
-
-    public function fstab(): FilesystemTable
-    {
-        return $this->filesystemTable;
-    }
-
-    public function entryFactory(): EntryFactory
-    {
-        return $this->entryFactory;
-    }
-
-    /**
-     * @return int<1, max>
-     */
-    public function extractorBatchSize(): int
-    {
-        return $this->extractorBatchSize;
     }
 
     /**
@@ -125,11 +102,6 @@ final readonly class Config
     public function serializer(): Serializer
     {
         return $this->serializer;
-    }
-
-    public function shouldPutInputIntoRows(): bool
-    {
-        return $this->putInputIntoRows;
     }
 
     public function version(): string

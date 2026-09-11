@@ -7,7 +7,7 @@ namespace Flow\ETL\Config\Bucketing;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
 final class BucketingConfigBuilder
@@ -21,8 +21,6 @@ final class BucketingConfigBuilder
      * @var int<1, max>
      */
     private int $bucketsCount;
-
-    private string $filesystemProtocol = 'file';
 
     private ?BucketsStorage $storage = null;
 
@@ -51,12 +49,12 @@ final class BucketingConfigBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): BucketingConfig
+    public function build(Path $spillRoot): BucketingConfig
     {
         return new BucketingConfig(
             $this->storage ?? new FilesystemBuckets(
-                $filesystemTable->for($this->filesystemProtocol),
-                $localFilesystemCacheDir->suffix($this->spillDirectory),
+                new NativeLocalFilesystem(),
+                $spillRoot->suffix($this->spillDirectory),
                 $this->batchSize,
             ),
             $this->bucketsCount,
@@ -75,13 +73,6 @@ final class BucketingConfigBuilder
         }
 
         $this->bucketsCount = $bucketsCount;
-
-        return $this;
-    }
-
-    public function filesystemProtocol(string $protocol): self
-    {
-        $this->filesystemProtocol = $protocol;
 
         return $this;
     }

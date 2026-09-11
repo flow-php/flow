@@ -301,7 +301,7 @@ Only alter the sequence if it exists:
 use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq')
-    ->ifExists()
+    ->withIfExists()
     ->incrementBy(10);
 
 echo $query->toSql();

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type;
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\Pagination\Paginator;
 use Flow\ETL\Adapter\Http\Pagination\RequestOption;
@@ -23,9 +26,6 @@ use Flow\ETL\Adapter\Http\Pagination\Strategy\LinkHeader;
 use Flow\ETL\Adapter\Http\Pagination\Strategy\NextUrlFromBody;
 use Flow\ETL\Adapter\Http\Pagination\Strategy\OffsetLimit;
 use Flow\ETL\Adapter\Http\Pagination\Strategy\PageNumber;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
 use Flow\ETL\Schema;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;

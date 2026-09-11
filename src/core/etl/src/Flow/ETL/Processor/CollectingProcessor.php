@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -20,14 +22,23 @@ use Generator;
  */
 final readonly class CollectingProcessor implements Processor
 {
+    public function __construct(
+        private ?Schema $declared = null,
+    ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep(new self($input), $input);
+    }
+
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $collected = new Rows();
+        $collected = null;
 
         foreach ($rows as $batch) {
-            $collected = $collected->merge($batch);
+            $collected = $collected === null ? $batch : $collected->merge($batch);
         }
 
-        yield $collected;
+        yield $collected ?? new Rows($this->declared ?? new Schema());
     }
 }

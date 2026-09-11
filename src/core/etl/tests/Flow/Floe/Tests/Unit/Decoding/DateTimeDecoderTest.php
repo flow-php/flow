@@ -12,13 +12,11 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Tests\Mother\DateTimeDecoderMother;
 use PHPUnit\Framework\TestCase;
 
-use function chr;
-use function pack;
 use function strlen;
 
 final class DateTimeDecoderTest extends TestCase
 {
-    public function test_round_trip_preserves_class_timezone_and_microseconds(): void
+    public function test_round_trip_preserves_timezone_and_microseconds(): void
     {
         $value = new DateTimeImmutable('2025-06-15 12:30:45.987654', new DateTimeZone('Australia/Eucla'));
         $encoded = (new DateTimeEncoder())->encode($value);
@@ -33,15 +31,15 @@ final class DateTimeDecoderTest extends TestCase
         static::assertSame(strlen($encoded), $position);
     }
 
-    public function test_round_trip_of_mutable_datetime(): void
+    public function test_a_mutable_datetime_decodes_as_immutable(): void
     {
         $value = new DateTime('2025-01-01 00:00:00 UTC');
         $position = 0;
 
-        static::assertInstanceOf(DateTime::class, DateTimeDecoderMother::create()->decode(
-            (new DateTimeEncoder())->encode($value),
-            $position,
-        ));
+        $decoded = DateTimeDecoderMother::create()->decode((new DateTimeEncoder())->encode($value), $position);
+
+        static::assertInstanceOf(DateTimeImmutable::class, $decoded);
+        static::assertSame($value->format('Y-m-d H:i:s.u e'), $decoded->format('Y-m-d H:i:s.u e'));
     }
 
     public function test_round_trip_before_epoch(): void
@@ -55,14 +53,13 @@ final class DateTimeDecoderTest extends TestCase
         ));
     }
 
-    public function test_unknown_class_flag_throws(): void
+    public function test_a_truncated_datetime_value_throws(): void
     {
-        $encoded = chr(0x02) . pack('V', 11) . 'NoSuchClass' . pack('P', 0) . pack('V', 0) . pack('V', 3) . 'UTC';
         $position = 0;
 
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe found unknown datetime flag 0x02');
+        $this->expectExceptionMessage('Floe found a truncated datetime value');
 
-        DateTimeDecoderMother::create()->decode($encoded, $position);
+        DateTimeDecoderMother::create()->decode("\xEE", $position);
     }
 }

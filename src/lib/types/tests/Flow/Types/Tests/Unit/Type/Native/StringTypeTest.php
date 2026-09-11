@@ -11,6 +11,7 @@ use DateTimeZone;
 use Dom\HTMLDocument;
 use DOMDocument;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use Flow\Types\Type\Native\StringType;
@@ -246,6 +247,13 @@ final class StringTypeTest extends TestCase
         $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
+    }
+
+    public function test_null_is_not_an_empty_string(): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_string()->cast(null);
     }
 
     #[RequiresPhp('>= 8.4.0')]

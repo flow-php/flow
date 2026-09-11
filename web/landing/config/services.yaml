@@ -118,3 +118,21 @@ services:
     Flow\Bridge\Monolog\Telemetry\TelemetryHandler:
         arguments:
             - '@flow.telemetry.monolog.logger'
+
+when@test:
+    services:
+        # test-only overrides for playwright-php/playwright-symfony v0.10.0
+        Flow\Website\Playwright\BinarySafeResponseConverter: ~
+        Playwright\Symfony\Client\ResponseConverter: '@Flow\Website\Playwright\BinarySafeResponseConverter'
+
+        # the in-process asset server corrupts binaries and is final, so binaries are hidden from it
+        # and fall through to the kernel; text assets keep the fast path
+        flow.playwright.asset_mapper_locator:
+            class: Flow\Website\Playwright\TextOnlyAssetLocator
+            decorates: Playwright\Symfony\Asset\AssetMapperProxy
+            arguments: ['@.inner']
+
+        flow.playwright.filesystem_locator:
+            class: Flow\Website\Playwright\TextOnlyAssetLocator
+            decorates: Playwright\Symfony\Asset\FilesystemProxy
+            arguments: ['@.inner']

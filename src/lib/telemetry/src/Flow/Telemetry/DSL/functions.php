@@ -6,9 +6,9 @@ namespace Flow\Telemetry\DSL;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Context\Context;

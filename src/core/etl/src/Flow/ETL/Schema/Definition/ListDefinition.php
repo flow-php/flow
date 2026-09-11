@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\TypeWidener;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
@@ -42,7 +42,7 @@ final readonly class ListDefinition implements Definition
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = (new TypeProjection())->list($type);
     }
@@ -122,17 +122,9 @@ final readonly class ListDefinition implements Definition
         return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $entry->type() instanceof ListType && $this->type->isValid($entry->value());
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -152,7 +144,7 @@ final readonly class ListDefinition implements Definition
         if ($definition instanceof self) {
             return new self(
                 $this->ref,
-                (new TypeMerge())->mergeLists($this->type, $definition->type),
+                (new TypeWidener())->widenLists($this->type, $definition->type),
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata),
             );
@@ -212,13 +204,5 @@ final readonly class ListDefinition implements Definition
     public function type(): ListType
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\ListEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\ListEntry::class;
     }
 }

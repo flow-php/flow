@@ -19,5 +19,10 @@ interface Cache
 
     public function has(string $key): bool;
 
+    /**
+     * @throws KeyNotInCacheException
+     */
+    public function schema(string $key): Schema;
+
     public function set(string $key, Rows $value): void;
 }

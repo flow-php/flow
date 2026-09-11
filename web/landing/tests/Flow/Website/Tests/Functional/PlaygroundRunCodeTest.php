@@ -8,28 +8,21 @@ final class PlaygroundRunCodeTest extends EndToEndTestCase
 {
     public function test_run_simple_flow_pipeline(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
 
-        $this->waitForWasmReady($client);
-
-        $this->setPlaygroundCode($client, <<<'PHP'
+        $this->setPlaygroundCode($page, <<<'PHP'
             <?php
             require 'vendor/autoload.php';
             use function Flow\ETL\DSL\{df, from_array, to_output};
             df()->read(from_array([['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']]))->write(to_output(truncate: false))->run();
             PHP);
 
-        $client->executeScript('document.getElementById("action-run").click();');
+        $page->evaluate('() => document.getElementById("action-run").click()');
 
-        $client->waitForElementToContain('[data-playground-output-target="container"]', 'Alice', 10);
-
-        static::assertStringContainsString(
-            'Alice',
-            $client->getCrawler()->filter('[data-playground-output-target="container"]')->text(),
-        );
-        static::assertStringContainsString(
-            'Bob',
-            $client->getCrawler()->filter('[data-playground-output-target="container"]')->text(),
-        );
+        $browser
+            ->waitUntilSeeIn('[data-playground-output-target="container"]', 'Alice')
+            ->assertSeeIn('[data-playground-output-target="container"]', 'Alice')
+            ->assertSeeIn('[data-playground-output-target="container"]', 'Bob');
     }
 }

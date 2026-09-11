@@ -284,11 +284,20 @@
         <testsuite name="bridge-phpunit-telemetry-unit">
             <directory>src/bridge/phpunit/telemetry/tests/Flow/Bridge/PHPUnit/Telemetry/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="tools-documentation-unit">
+            <directory>src/tools/documentation/tests/Flow/Documentation/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="tools-documentation-integration">
             <directory>src/tools/documentation/tests/Flow/Documentation/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-mago-types-unit">
+            <directory>src/bridge/mago/types/tests/Flow/Bridge/Mago/Types/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="bridge-phpstan-types-unit">
             <directory>src/bridge/phpstan/types/tests/Flow/Bridge/PHPStan/Types/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="benchmarks-unit">
+            <directory>benchmarks/tests/Flow/Benchmarks/Tests/Unit</directory>
         </testsuite>
     </testsuites>
     <source ignoreIndirectDeprecations="true">

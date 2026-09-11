@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 use DateTimeInterface;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
 
@@ -26,9 +27,9 @@ final readonly class JsonOutput implements Output
         private bool $putRowsInNewLines = false,
     ) {}
 
-    public function loader(Path $path): Loader
+    public function loader(Path $path, Filesystem $filesystem): Loader
     {
-        return to_json($path)
+        return to_json($path, filesystem: $filesystem)
             ->withFlags($this->flags)
             ->withDateTimeFormat($this->dateTimeFormat)
             ->withRowsInNewLines($this->putRowsInNewLines);

@@ -1,1 +1,0 @@
-- [HTTP Adapter](/documentation/components/adapters/http)

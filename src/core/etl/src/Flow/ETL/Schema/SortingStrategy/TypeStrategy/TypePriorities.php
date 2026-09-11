@@ -11,6 +11,7 @@ use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -39,6 +40,7 @@ final readonly class TypePriorities
         StructureType::class => 11,
         XMLType::class => 12,
         XMLElementType::class => 13,
+        TimeZoneType::class => 14,
     ];
 
     public const int UNKNOWN_TYPE_PRIORITY = PHP_INT_MAX;

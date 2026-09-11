@@ -48,36 +48,35 @@ $sdk = azure_blob_service(
 
 ## Usage with Flow
 
-To use the Azure Blob filesystem with Flow, you need to mount the filesystem to the configuration.
-This operation will mount the Azure Blob filesystem to the fstab instance available in the DataFrame runtime.
+To use the Azure Blob filesystem with Flow, pass it to the source or sink that reads or writes the
+`azure-blob://` path. Hold one instance and pass the same one to both sides.
 
-The **mount protocol** - the URI scheme under which the filesystem is registered in the
-`FilesystemTable` - defaults to `'azure-blob'`. Override via the third argument
-(`azure_filesystem($blobService, $options, protocol: 'warehouse')`) when you need to mount the same
-container under a different scheme.
+The **mount protocol** - the URI scheme the filesystem serves - defaults to `'azure-blob'`. Override via
+the third argument (`azure_filesystem($blobService, $options, protocol: 'warehouse')`) when the paths you
+read and write use a different scheme.
 
 ```php
-$config = config_builder()
-    ->mount(
-        azure_filesystem(
-            azure_blob_service(
-                azure_blob_service_config(
-                    $_ENV['AZURE_ACCOUNT'],
-                    $_ENV['AZURE_CONTAINER']
-                ),
-                azure_shared_key_authorization_factory(
-                    $_ENV['AZURE_ACCOUNT'],
-                    $_ENV['AZURE_ACCOUNT_KEY']
-                ),
-            )
-        )
-    );
+$azure = azure_filesystem(
+    azure_blob_service(
+        azure_blob_service_config(
+            $_ENV['AZURE_ACCOUNT'],
+            $_ENV['AZURE_CONTAINER']
+        ),
+        azure_shared_key_authorization_factory(
+            $_ENV['AZURE_ACCOUNT'],
+            $_ENV['AZURE_ACCOUNT_KEY']
+        ),
+    )
+);
 
-data_frame($config)
-    ->read(from_csv(path('azure-blob://test.csv')))
-    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
+data_frame()
+    ->read(from_csv(path('azure-blob://test.csv'), filesystem: $azure))
+    ->write(to_parquet(path('azure-blob://test.parquet'), filesystem: $azure))
     ->run();
 ```
+
+A source or sink given a filesystem that does not serve its path throws at construction, naming the
+`filesystem:` argument.
 
 `FileStatus` values returned from `list()` and `status()` carry `size` (from the `Content-Length`
 header / listing property) and `lastModifiedAt` (from the `Last-Modified` header, parsed as RFC 7231)

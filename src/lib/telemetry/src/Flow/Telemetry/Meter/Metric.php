@@ -27,7 +27,7 @@ use Flow\Telemetry\Resource;
  * );
  * ```
  *
- * @phpstan-import-type TAttributeValue from Attributes
+ * @import-type TAttributeValue from Attributes
  */
 final readonly class Metric
 {

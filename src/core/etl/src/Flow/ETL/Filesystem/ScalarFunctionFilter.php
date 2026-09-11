@@ -4,35 +4,69 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Schema;
 use Flow\Filesystem\FileStatus;
-use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter;
-use Flow\Types\Type\AutoCaster;
+use Throwable;
 
-use function array_map;
 use function Flow\ETL\DSL\row;
+use function sprintf;
 
 final readonly class ScalarFunctionFilter implements Filter
 {
     public function __construct(
         private ScalarFunction $function,
-        private EntryFactory $entryFactory,
-        private AutoCaster $caster,
+        private Schema $partitions,
         private FlowContext $context,
-    ) {}
+    ) {
+        // The comparability gate belongs here, where the function and the schema it binds against
+        // are both in hand - a filter reaching withPathFilter() any other way is gated too.
+        // resolved() guards it: files() and from_path_partitions() declare no partition columns, so
+        // their reference never resolves and returns() would throw instead of answering.
+        $resolved = (new ReferenceResolver())->resolve($function, $partitions);
+
+        if ($resolved->resolved()) {
+            $resolved->returns();
+        }
+    }
 
     public function accept(FileStatus $status): bool
     {
+        $values = [];
+
+        foreach ($status->path->partitions()->toArray() as $partition) {
+            // findDefinition(), not get(): files() and from_path_partitions() declare no partition
+            // columns and filterPartitions() works on both, while Schema::get() would throw.
+            $definition = $this->partitions->findDefinition($partition->name);
+
+            if ($definition === null || $definition->matches($partition->value)) {
+                $values[$partition->name] = $partition->value;
+
+                continue;
+            }
+
+            try {
+                $values[$partition->name] = $definition->type()->cast($partition->value);
+            } catch (Throwable $e) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Partition column "%s" of file "%s" declares type %s, but its path value %s cannot be cast to it.',
+                        $partition->name,
+                        $status->path->uri(),
+                        $definition->type()->toString(),
+                        $partition->value === null ? 'NULL' : '"' . $partition->value . '"',
+                    ),
+                    0,
+                    $e,
+                );
+            }
+        }
+
         // @mago-ignore analysis:mixed-operand
-        return (bool) $this->function->eval(
-            row(...array_map(fn(Partition $partition) => $this->entryFactory->create(
-                $partition->name,
-                $this->caster->cast($partition->value),
-            ), $status->path->partitions()->toArray())),
-            $this->context,
-        );
+        return (bool) $this->function->eval(row($values), $this->context);
     }
 }

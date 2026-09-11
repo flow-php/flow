@@ -25,11 +25,12 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\delay_fixed;
 use function Flow\ETL\DSL\duration_milliseconds;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\retry_any_throwable;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_transformation;
@@ -57,7 +58,7 @@ final class RetryLoaderTest extends TestCase
         $sleep = new FakeSleep();
 
         write_with_retries(loader: to_branch(lit(true), $flaky), sleep: $sleep)->load(
-            rows(row(int_entry('id', 1))),
+            rows(schema(int_schema('id')), row(['id' => 1])),
             flow_context(config()),
         );
 
@@ -75,7 +76,7 @@ final class RetryLoaderTest extends TestCase
         );
 
         try {
-            $retry->load(rows(row(int_entry('id', 1))), flow_context(config()));
+            $retry->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()));
 
             static::fail('Expected the raw-Transformer wrap to be refused.');
         } catch (InvalidLogicException $e) {
@@ -93,13 +94,13 @@ final class RetryLoaderTest extends TestCase
         $sleep = new FakeSleep();
         $retry = write_with_retries(loader: $branch, sleep: $sleep);
 
-        $retry->load(rows(row(int_entry('id', 1))), $context = flow_context(config()));
+        $retry->load(rows(schema(int_schema('id')), row(['id' => 1])), $context = flow_context(config()));
         $branch->withTransformation(new CallbackTransformation(
             static fn(DataFrame $dataFrame): DataFrame => $dataFrame->collect(),
         ));
 
         try {
-            $retry->load(rows(row(int_entry('id', 2))), $context);
+            $retry->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
 
             static::fail('Expected the armed transformation to be refused.');
         } catch (InvalidLogicException $e) {
@@ -118,7 +119,7 @@ final class RetryLoaderTest extends TestCase
         $retry = write_with_retries(loader: to_transformation(select('id'), $spy), sleep: $sleep);
 
         try {
-            $retry->load(rows(row(int_entry('id', 1))), flow_context(config()));
+            $retry->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()));
 
             static::fail('Expected the transformation-wrapped loader to be refused.');
         } catch (InvalidLogicException $e) {
@@ -136,7 +137,7 @@ final class RetryLoaderTest extends TestCase
         $retry = write_with_retries(loader: to_branch(lit(true), to_transformation(select('id'), $spy)), sleep: $sleep);
 
         try {
-            $retry->load(rows(row(int_entry('id', 1))), flow_context(config()));
+            $retry->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()));
 
             static::fail('Expected the nested transformation-wrapped loader to be refused.');
         } catch (InvalidLogicException $e) {
@@ -162,7 +163,7 @@ final class RetryLoaderTest extends TestCase
         $spy = new SpyLoader();
         $loader = write_with_retries($spy);
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         static::assertSame(1, $spy->loadsCount);
@@ -208,7 +209,7 @@ final class RetryLoaderTest extends TestCase
     public function test_exhausting_all_retries(): void
     {
         $mockLoader = $this->createMock(Loader::class);
-        $rows = rows();
+        $rows = rows(schema());
         $context = flow_context(config());
         $sleep = new FakeSleep();
 
@@ -260,9 +261,9 @@ final class RetryLoaderTest extends TestCase
 
         $retryLoader = write_with_retries(loader: $mockLoader, sleep: $sleep);
 
-        $retryLoader->load(rows(row(int_entry('id', 1))), $context);
-        $retryLoader->load(rows(row(int_entry('id', 2))), $context);
-        $retryLoader->load(rows(row(int_entry('id', 3))), $context);
+        $retryLoader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $retryLoader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
+        $retryLoader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
 
         static::assertCount(3, $mockLoader->loadedRows);
         static::assertEquals(
@@ -279,7 +280,7 @@ final class RetryLoaderTest extends TestCase
     public function test_retry_on_transient_failure_that_succeeds(): void
     {
         $mockLoader = $this->createMock(Loader::class);
-        $rows = rows();
+        $rows = rows(schema());
         $context = flow_context(config());
         $sleep = new FakeSleep();
 
@@ -312,7 +313,7 @@ final class RetryLoaderTest extends TestCase
     public function test_retry_strategy_determining_not_to_retry(): void
     {
         $mockLoader = $this->createMock(Loader::class);
-        $rows = rows();
+        $rows = rows(schema());
         $context = flow_context(config());
         $sleep = new FakeSleep();
 
@@ -337,7 +338,7 @@ final class RetryLoaderTest extends TestCase
     public function test_successful_load_without_retries(): void
     {
         $mockLoader = $this->createMock(Loader::class);
-        $rows = rows();
+        $rows = rows(schema());
         $context = flow_context(config());
 
         $mockLoader->expects(self::once())->method('load')->with($rows, $context);

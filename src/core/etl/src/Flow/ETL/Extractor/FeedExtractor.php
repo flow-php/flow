@@ -8,6 +8,7 @@ use Fiber;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -25,6 +26,10 @@ final class FeedExtractor implements Extractor
     private ?Rows $batch = null;
 
     private bool $finished = false;
+
+    public function __construct(
+        private Schema $schema,
+    ) {}
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -55,7 +60,8 @@ final class FeedExtractor implements Extractor
             // Mago does not model the generator suspension above: feed() and finish() run while the enclosing Fiber
             // is parked, so both operands can change between the yield and this check.
             if ($this->batch === null && !$this->finished) {
-                $signal = yield new Rows();
+                // a downstream projection still sees the columns it was built against
+                $signal = yield new Rows($this->schema);
 
                 if ($signal === Signal::STOP) {
                     return;
@@ -72,5 +78,17 @@ final class FeedExtractor implements Extractor
     public function finish(): void
     {
         $this->finished = true;
+    }
+
+    public function schema(): Schema
+    {
+        return $this->schema;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

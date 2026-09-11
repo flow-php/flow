@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileReadCommand;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileReadCommandTest extends TestCase
@@ -22,16 +24,63 @@ final class FileReadCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputContains(<<<'OUTPUT'
-            +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
-            |             order_id |           created_at |           updated_at | discount |              address |                notes |                items |
-            +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
-            | e13d7098-5a78-3389-9 | 2024-06-17T19:24:49+ | 2024-06-17T19:24:49+ |    12.45 | {"street":"9742 Jask | ["Doloremque cum et  | [{"sku":"SKU_0003"," |
-            | 947df050-3abb-3f5a-9 | 2024-02-23T19:18:53+ | 2024-02-23T19:18:53+ |          | {"street":"37051 Ale | ["Neque dolor et min | [{"sku":"SKU_0004"," |
-            | 6315f9e2-86bf-3321-a | 2024-04-02T11:30:25+ | 2024-04-02T11:30:25+ |     47.1 | {"street":"792 Golda | ["Et porro fugiat fu | [{"sku":"SKU_0003"," |
-            | 4cccb632-fade-34e2-8 | 2024-05-06T00:17:57+ | 2024-05-06T00:17:57+ |    19.76 | {"street":"30203 Wal | ["Aliquam saepe iste | [{"sku":"SKU_0004"," |
-            | 82384f8c-9adb-38be-9 | 2024-05-10T11:17:41+ | 2024-05-10T11:17:41+ |          | {"street":"757 Tobin | ["Beatae nesciunt au | [{"sku":"SKU_0005"," |
-            +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
+            +----------------------+----------------------+----------------------+-----------+----------------------+----------------------+----------------------+
+            |             order_id |           created_at |           updated_at |  discount |              address |                notes |                items |
+            +----------------------+----------------------+----------------------+-----------+----------------------+----------------------+----------------------+
+            | e13d7098-5a78-3389-9 | 2024-06-17T19:24:49+ | 2024-06-17T19:24:49+ | 12.450000 | {"street":"9742 Jask | ["Doloremque cum et  | [{"sku":"SKU_0003"," |
+            | 947df050-3abb-3f5a-9 | 2024-02-23T19:18:53+ | 2024-02-23T19:18:53+ |           | {"street":"37051 Ale | ["Neque dolor et min | [{"sku":"SKU_0004"," |
+            | 6315f9e2-86bf-3321-a | 2024-04-02T11:30:25+ | 2024-04-02T11:30:25+ | 47.100000 | {"street":"792 Golda | ["Et porro fugiat fu | [{"sku":"SKU_0003"," |
+            | 4cccb632-fade-34e2-8 | 2024-05-06T00:17:57+ | 2024-05-06T00:17:57+ | 19.760000 | {"street":"30203 Wal | ["Aliquam saepe iste | [{"sku":"SKU_0004"," |
+            | 82384f8c-9adb-38be-9 | 2024-05-10T11:17:41+ | 2024-05-10T11:17:41+ |           | {"street":"757 Tobin | ["Beatae nesciunt au | [{"sku":"SKU_0005"," |
+            +----------------------+----------------------+----------------------+-----------+----------------------+----------------------+----------------------+
             5 rows
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_read_rows_csv_with_all_strings(): void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 2,
+            '--output-truncate' => 10,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +------------+------------+------------+----------+------------+------------+------------+
+            |   order_id | created_at | updated_at | discount |    address |      notes |      items |
+            +------------+------------+------------+----------+------------+------------+------------+
+            | e13d7098-5 | 2024-06-17 | 2024-06-17 |    12.45 | {"street": | ["Doloremq | [{"sku":"S |
+            | 947df050-3 | 2024-02-23 | 2024-02-23 |          | {"street": | ["Neque do | [{"sku":"S |
+            +------------+------------+------------+----------+------------+------------+------------+
+            2 rows
+            OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_read_rows_csv_with_sample_size(): void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/inference/widening.csv',
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // The frozen ?integer schema truncates 1.5 - integer::cast(1.5) is 1
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +---+
+            | a |
+            +---+
+            | 1 |
+            | 1 |
+            +---+
+            2 rows
             OUTPUT, $tester->getDisplay());
     }
 
@@ -248,13 +297,13 @@ final class FileReadCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputContains(<<<'OUTPUT'
-            +----------------------+----------+----------------------+
-            |             order_id | discount |           created_at |
-            +----------------------+----------+----------------------+
-            | e13d7098-5a78-3389-9 |    12.45 | 2024-06-17T19:24:49+ |
-            | 947df050-3abb-3f5a-9 |          | 2024-02-23T19:18:53+ |
-            | 6315f9e2-86bf-3321-a |     47.1 | 2024-04-02T11:30:25+ |
-            +----------------------+----------+----------------------+
+            +----------------------+-----------+----------------------+
+            |             order_id |  discount |           created_at |
+            +----------------------+-----------+----------------------+
+            | e13d7098-5a78-3389-9 | 12.450000 | 2024-06-17T19:24:49+ |
+            | 947df050-3abb-3f5a-9 |           | 2024-02-23T19:18:53+ |
+            | 6315f9e2-86bf-3321-a | 47.100000 | 2024-04-02T11:30:25+ |
+            +----------------------+-----------+----------------------+
             3 rows
             OUTPUT, $tester->getDisplay());
     }
@@ -263,23 +312,16 @@ final class FileReadCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
+        // selecting a column the schema does not declare is an error, not an empty column - there is
+        // no type to give it and no reader could see a value that row storage does not carry
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for entry "nonexistent_column" not found');
+
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 2,
             '--output-columns' => ['nonexistent_column'],
         ]);
-
-        $tester->assertCommandIsSuccessful();
-
-        self::assertCommandOutputContains(<<<'OUTPUT'
-            +--------------------+
-            | nonexistent_column |
-            +--------------------+
-            |                    |
-            |                    |
-            +--------------------+
-            2 rows
-            OUTPUT, $tester->getDisplay());
     }
 
     public function test_read_rows_with_output_columns_single_column(): void
@@ -322,13 +364,21 @@ final class FileReadCommandTest extends TestCase
             +----------------------+
             |                 node |
             +----------------------+
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
-            | <row>     <order_id/ |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
+            | <row>    <order_id/> |
             +----------------------+
             5 rows
             OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_file_read_command_registers_the_read_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileReadCommand()]);
+
+        static::assertInstanceOf(FileReadCommand::class, $application->find('read'));
     }
 }

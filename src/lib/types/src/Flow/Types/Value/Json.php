@@ -9,6 +9,7 @@ use JsonSerializable;
 use Stringable;
 
 use function array_is_list;
+use function array_keys;
 use function Flow\Types\DSL\type_array;
 use function is_array;
 use function json_decode;
@@ -43,8 +44,16 @@ final readonly class Json implements JsonSerializable, Stringable
      */
     public static function fromArray(array $value, bool $asObject = false): self
     {
-        if ($asObject && [] === $value) {
-            return new self('{}');
+        if ($asObject) {
+            if ([] === $value) {
+                return new self('{}');
+            }
+
+            foreach (array_keys($value) as $key) {
+                if (!is_string($key)) {
+                    throw new InvalidArgumentException('All keys of a JSON object must be strings');
+                }
+            }
         }
 
         return new self(json_encode($value, JSON_THROW_ON_ERROR));

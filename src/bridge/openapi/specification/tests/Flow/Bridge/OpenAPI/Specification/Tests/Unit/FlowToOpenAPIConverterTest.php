@@ -30,6 +30,7 @@ use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_integer;
@@ -296,8 +297,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
                 'address',
                 type_structure([
                     'street' => type_string(),
-                ], [
-                    'city' => type_string(),
+                    'city' => structure_element('city', type_string(), optional: true),
                 ]),
                 false,
             ),
@@ -325,6 +325,31 @@ final class FlowToOpenAPIConverterTest extends TestCase
                 ],
             ],
             $result,
+        );
+    }
+
+    public function test_to_open_api_interleaved_structure_preserves_declaration_order(): void
+    {
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    's' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'z' => ['type' => 'integer', 'nullable' => false],
+                            'a' => ['type' => 'string', 'nullable' => true],
+                            'b' => ['type' => 'string', 'nullable' => false],
+                        ],
+                        'nullable' => false,
+                    ],
+                ],
+            ],
+            (new OpenAPIConverter())->toOpenAPI(schema(structure_schema('s', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_string(), optional: true),
+                'b' => type_string(),
+            ])))),
         );
     }
 
@@ -668,9 +693,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
         $converter = new OpenAPIConverter();
         $definition = structure_schema(
             'optional_only',
-            type_structure([], [
-                'optional_field' => type_string(),
-            ]),
+            type_structure(['optional_field' => structure_element('optional_field', type_string(), optional: true)]),
             false,
         );
         $schema = schema($definition);
@@ -702,8 +725,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             type_structure([
                 'street' => type_string(),
                 'city' => type_string(),
-            ], [
-                'postal_code' => type_string(),
+                'postal_code' => structure_element('postal_code', type_string(), optional: true),
             ]),
             false,
         );

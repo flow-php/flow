@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -30,6 +31,7 @@ use ReflectionFunction;
 use RuntimeException;
 
 use function implode;
+use function is_int;
 use function sprintf;
 
 final class TypeFormatter
@@ -106,6 +108,7 @@ final class TypeFormatter
             ResourceType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_resource'),
             NullType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_null'),
             UuidType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
+            TimeZoneType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_time_zone'),
             CallableType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
             JsonType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
             HTMLType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_html'),
@@ -131,21 +134,21 @@ final class TypeFormatter
 
         $fields = [];
 
-        foreach ($type->elements() as $name => $element) {
-            $fields[] = sprintf('"%s" => %s', $name, $this->format($element));
+        foreach ($type->elements() as $element) {
+            // a quoted "0" would NOT coerce back to int 0 as a function argument, unlike an array key
+            $name = is_int($element->name) ? (string) $element->name : sprintf('"%s"', $element->name);
+
+            $fields[] = $element->optional
+                ? sprintf(
+                    '%s => \\Flow\\Types\\DSL\\structure_element(%s, %s, optional: true)',
+                    $name,
+                    $name,
+                    $this->format($element->type),
+                )
+                : sprintf('%s => %s', $name, $this->format($element->type));
         }
 
         $arguments = sprintf('elements: [%s]', implode(', ', $fields));
-
-        if (count($type->optionalElements())) {
-            $optionalFields = [];
-
-            foreach ($type->optionalElements() as $name => $element) {
-                $optionalFields[] = sprintf('"%s" => %s', $name, $this->format($element));
-            }
-
-            $arguments .= sprintf(', optional_elements: [%s]', implode(', ', $optionalFields));
-        }
 
         if ($type->allowsExtra()) {
             $arguments .= ', allow_extra: true';

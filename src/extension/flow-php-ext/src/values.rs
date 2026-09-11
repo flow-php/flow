@@ -11,11 +11,7 @@ use crate::ctx::{
     write_slot, zval_long, zval_str, Ctx,
 };
 use crate::exception::ext_exception;
-use crate::format::{
-    Reader, DATETIME_IMMUTABLE, DATETIME_MUTABLE, KEY_INTEGER, TAG_ARRAY, TAG_BOOLEAN,
-    TAG_DATETIME, TAG_FLOAT, TAG_INTEGER, TAG_JSON, TAG_NULL, TAG_STRING, TAG_UUID, VALUE_ABSENT,
-    VALUE_NULL, VALUE_PRESENT,
-};
+use crate::format::{Reader, VALUE_ABSENT, VALUE_NULL, VALUE_PRESENT};
 use crate::plan::{Decoder, MapKey};
 
 extern "C" {
@@ -103,7 +99,6 @@ pub fn decode_value(
             zv.set_zend_string(ZendStr::new(reader.bytes(length, "string value")?, false));
         }
         Decoder::Null => zv.set_null(),
-        Decoder::Dynamic => zv = decode_dynamic(reader, ctx)?,
         Decoder::DateTime => zv = decode_datetime(reader, ctx)?,
         Decoder::Interval => zv = decode_interval(reader, ctx)?,
         Decoder::Uuid => zv = decode_uuid(reader, ctx)?,
@@ -133,9 +128,7 @@ pub fn decode_value(
             zv.set_hashtable(values);
         }
         Decoder::Map(key, value) => zv = decode_map(key, value, reader, ctx)?,
-        Decoder::Structure(elements, allow_extra) => {
-            zv = decode_structure(elements, *allow_extra, reader, ctx)?;
-        }
+        Decoder::Structure(elements) => zv = decode_structure(elements, reader, ctx)?,
         Decoder::Optional(base) => {
             if reader.u8("optional value")? == VALUE_NULL {
                 zv.set_null();
@@ -170,11 +163,6 @@ fn decode_map(
                 let map_value = decode_value(value, reader, ctx)?;
                 ht_insert(&mut values, map_key, map_value);
             }
-            MapKey::Dynamic => {
-                let map_key = decode_dynamic(reader, ctx)?;
-                let map_value = decode_value(value, reader, ctx)?;
-                insert_by_zval_key(&mut values, &map_key, map_value)?;
-            }
         }
     }
 
@@ -186,7 +174,6 @@ fn decode_map(
 
 fn decode_structure(
     elements: &[(Vec<u8>, Decoder)],
-    allow_extra: bool,
     reader: &mut Reader,
     ctx: &mut Ctx,
 ) -> Result<Zval, PhpException> {
@@ -210,114 +197,21 @@ fn decode_structure(
         }
     }
 
-    if allow_extra {
-        let count = reader.u32("structure extra keys")?;
-
-        for _ in 0..count {
-            let length = reader.u32("structure extra key")? as usize;
-            let key = reader.bytes(length, "structure extra key")?;
-            let value = decode_dynamic(reader, ctx)?;
-            ht_insert(&mut structure, key, value);
-        }
-    }
-
     let mut zv = Zval::new();
     zv.set_hashtable(structure);
 
     Ok(zv)
 }
 
-/// Mirrors `ValueDecoder::decodeDynamic`.
-fn decode_dynamic(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpException> {
-    let tag = reader.u8("dynamic value")?;
-    let mut zv = Zval::new();
-
-    match tag {
-        TAG_NULL => zv.set_null(),
-        TAG_INTEGER => zv.set_long(reader.i64("dynamic value")?),
-        TAG_FLOAT => zv.set_double(reader.f64("dynamic value")?),
-        TAG_BOOLEAN => zv.set_bool(reader.u8("dynamic value")? == 0x01),
-        TAG_STRING => {
-            let length = reader.u32("dynamic value")? as usize;
-            zv.set_zend_string(ZendStr::new(reader.bytes(length, "dynamic value")?, false));
-        }
-        TAG_ARRAY => {
-            let count = reader.u32("dynamic array")?;
-            let mut values = ZendHashTable::with_capacity(count);
-
-            for _ in 0..count {
-                if reader.u8("dynamic array key")? == KEY_INTEGER {
-                    let key = reader.i64("dynamic array key")?;
-                    let value = decode_dynamic(reader, ctx)?;
-                    ht_insert_index(&mut values, key, value);
-                } else {
-                    let length = reader.u32("dynamic array key")? as usize;
-                    let key = reader.bytes(length, "dynamic array key")?;
-                    let value = decode_dynamic(reader, ctx)?;
-                    ht_insert(&mut values, key, value);
-                }
-            }
-
-            zv.set_hashtable(values);
-        }
-        TAG_DATETIME => zv = decode_datetime(reader, ctx)?,
-        TAG_UUID => zv = decode_uuid(reader, ctx)?,
-        TAG_JSON => zv = decode_json(reader, ctx)?,
-        other => {
-            return Err(ext_exception(format!(
-                "flow_php found unknown dynamic value tag 0x{other:02X}"
-            )));
-        }
-    }
-
-    Ok(zv)
-}
-
-fn insert_by_zval_key(
-    values: &mut ZendHashTable,
-    key: &Zval,
-    value: Zval,
-) -> Result<(), PhpException> {
-    if let Some(index) = key.long() {
-        ht_insert_index(values, index, value);
-
-        return Ok(());
-    }
-
-    if let Some(key) = key.zend_str() {
-        ht_insert(values, key.as_bytes(), value);
-
-        return Ok(());
-    }
-
-    Err(ext_exception(
-        "flow_php cannot use a decoded dynamic value as an array key",
-    ))
-}
-
 /// Mirrors `ValueDecoder::decodeDateTime`.
 fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpException> {
-    let class_flag = reader.u8("datetime value")?;
+    let timestamp = reader.i64("datetime value")?;
+    let microseconds = reader.u32("datetime value")?;
+    let timezone_length = reader.u32("datetime value")? as usize;
+    let timezone_name = reader.bytes(timezone_length, "datetime value")?;
 
-    let timestamp;
-    let microseconds;
-    let timezone_name;
-
-    let fns = match class_flag {
-        DATETIME_IMMUTABLE | DATETIME_MUTABLE => {
-            timestamp = reader.i64("datetime value")?;
-            microseconds = reader.u32("datetime value")?;
-            let timezone_length = reader.u32("datetime value")? as usize;
-            timezone_name = reader.bytes(timezone_length, "datetime value")?;
-
-            ctx.datetime_fns(class_flag == DATETIME_MUTABLE)?
-        }
-        other => {
-            return Err(ext_exception(format!(
-                "flow_php found unknown datetime flag 0x{other:02X}"
-            )));
-        }
-    };
+    // the class is not stored: a datetime column always hydrates to DateTimeImmutable
+    let fns = ctx.datetime_fns(false)?;
 
     let ce = fns.ce;
     let set_timezone = fns.set_timezone;
@@ -419,7 +313,8 @@ fn decode_interval(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpExcept
 /// Mirrors `ValueDecoder::$createUuid`: constructor-less instantiation - the
 /// data was written by Flow and is trusted.
 fn decode_uuid(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpException> {
-    let value = reader.bytes(36, "uuid value")?;
+    let length = reader.u32("uuid value")? as usize;
+    let value = reader.bytes(length, "uuid value")?;
     let (uuid_ce, value_slot) = ctx.uuid()?;
     let mut uuid = ZendObject::new(uuid_ce);
     write_slot(&mut uuid, value_slot, zval_str(value));

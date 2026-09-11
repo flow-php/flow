@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\ErrorHandler\ExtractionAction;
+use Flow\ETL\ErrorHandler\ExtractionError;
+use Flow\ETL\ErrorHandler\LoadingAction;
+use Flow\ETL\ErrorHandler\LoadingError;
+use Flow\ETL\ErrorHandler\TransformationAction;
+use Flow\ETL\ErrorHandler\TransformationError;
 use Flow\ETL\Exception\LimitReachedException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
+use Flow\ETL\Loader\LoaderTree;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -16,6 +25,8 @@ use Generator;
 use SplObjectStorage;
 use Throwable;
 
+use function array_map;
+use function array_merge;
 use function count;
 
 /**
@@ -28,8 +39,12 @@ final readonly class Segment
     /** @var \SplObjectStorage<Loader|Transformer, null> */
     private SplObjectStorage $steps;
 
+    /**
+     * @param null|Extractor $extractor the source this segment reads directly; null behind a processor
+     */
     public function __construct(
         private ?Processor $processor = null,
+        private ?Extractor $extractor = null,
     ) {
         /** @var \SplObjectStorage<Loader|Transformer, null> $steps */
         $steps = new SplObjectStorage();
@@ -53,9 +68,9 @@ final readonly class Segment
     /**
      * Execute this segment's Transformers and Loaders on the input generator.
      *
-     * @param \Generator<Rows> $input
+     * @param Generator<Rows> $input
      *
-     * @return \Generator<Rows>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function execute(Generator $input, FlowContext $context): Generator
     {
@@ -67,60 +82,188 @@ final readonly class Segment
             }
         }
 
-        while ($input->valid()) {
-            $rows = $input->current();
-            $input->next();
+        $completed = false;
+        $endings = [];
+        $started = false;
 
-            if ($rows === null) {
-                continue;
-            }
-
-            foreach ($this->steps as $step) {
+        try {
+            while (true) {
                 try {
-                    if ($step instanceof Transformer) {
-                        try {
-                            $rows = $step->transform($rows, $context);
-                        } catch (LimitReachedException $e) {
-                            $context->telemetry()->limitReached(['limit' => $e->limit]);
-                            $rows = new Rows();
-                            $input->send(Signal::STOP);
-                        }
-                    } elseif ($rows->count()) {
-                        $step->load($rows, $context);
-                    }
-                } catch (Throwable $exception) {
-                    if ($context->errorHandler()->throw($exception, $rows)) {
-                        $context
-                            ->telemetry()
-                            ->logger()
-                            ->error('Error during ETL segment execution.', ['exception' => $exception]);
-
-                        throw $exception;
+                    // resuming the input runs the source, so it has to happen inside the try that answers for it
+                    if ($started) {
+                        $input->next();
                     }
 
-                    if ($context->errorHandler()->skipRows($exception, $rows)) {
-                        $context
-                            ->telemetry()
-                            ->logger()
-                            ->debug('Skipping rows due to error during ETL segment execution.', [
-                                'exception' => $exception,
-                            ]);
+                    $started = true;
 
+                    if (!$input->valid()) {
                         break;
                     }
+
+                    $rows = $input->current();
+                } catch (Throwable $extraction) {
+                    // behind a processor the input is an upstream segment, which already put its failures to the handler
+                    if ($this->extractor === null) {
+                        throw $extraction;
+                    }
+
+                    if (
+                        $context->errorHandler()->onExtraction(new ExtractionError($extraction, $this->extractor))
+                        === ExtractionAction::propagate
+                    ) {
+                        $context
+                            ->telemetry()
+                            ->logger()
+                            ->error('Error during extraction.', ['exception' => $extraction]);
+
+                        throw $extraction;
+                    }
+
+                    // a generator that threw cannot be resumed, so skipping the failed batch ends the source
+                    break;
+                }
+
+                if ($rows === null) {
+                    continue;
+                }
+
+                // the batch is half transformed, so its columns no longer match its siblings -
+                // skipping means emitting nothing, not emitting what the failed step had produced
+                $skipped = false;
+                $stop = false;
+
+                foreach ($this->steps as $step) {
+                    try {
+                        if ($step instanceof Transformer) {
+                            $rows = $step->transform($rows, $context);
+                        } elseif ($rows->count()) {
+                            $step->load($rows, $context);
+                        }
+                    } catch (LimitReachedException $limit) {
+                        $context->telemetry()->limitReached(['limit' => $limit->limit]);
+                        // the remaining steps still run, on the trimmed batch
+                        $rows = $limit->rows ?? new Rows($rows->schema());
+                        $stop = true;
+                    } catch (Throwable $failure) {
+                        if ($step instanceof Transformer) {
+                            if (
+                                $context->errorHandler()->onTransformation(new TransformationError(
+                                    $failure,
+                                    $step,
+                                    $rows,
+                                )) === TransformationAction::propagate
+                            ) {
+                                $context
+                                    ->telemetry()
+                                    ->logger()
+                                    ->error('Error during ETL segment execution.', ['exception' => $failure]);
+
+                                throw $failure;
+                            }
+
+                            $context
+                                ->telemetry()
+                                ->logger()
+                                ->debug('Skipping rows due to error during ETL segment execution.', [
+                                    'exception' => $failure,
+                                ]);
+
+                            $skipped = true;
+
+                            break;
+                        }
+
+                        if (
+                            $context->errorHandler()->onLoading(new LoadingError($failure, $step, $rows))
+                            === LoadingAction::propagate
+                        ) {
+                            $context
+                                ->telemetry()
+                                ->logger()
+                                ->error('Error during ETL segment execution.', ['exception' => $failure]);
+
+                            throw $failure;
+                        }
+
+                        $context
+                            ->telemetry()
+                            ->logger()
+                            ->debug('Skipping loader due to error during ETL segment execution.', [
+                                'exception' => $failure,
+                            ]);
+                    }
+                }
+
+                if (!$skipped && count($rows)) {
+                    $signal = yield $rows;
+
+                    if ($signal === Signal::STOP) {
+                        $stop = true;
+                    }
+                }
+
+                if ($stop) {
+                    $input->send(Signal::STOP);
+
+                    // a stop is a completed run - the loaders still close
+                    break;
                 }
             }
 
-            if (count($rows)) {
-                yield $rows;
-            }
+            $completed = true;
+        } finally {
+            $endings = $this->endLoaders($loaders, $context, $completed);
+        }
+
+        // unreachable while an exception is in flight, so a failed run keeps its own exception
+        if ($endings !== []) {
+            throw $endings[0];
+        }
+    }
+
+    /**
+     * A completed run ends only the outermost loader: a wrapper's closure() drains its stream before forwarding, and
+     * that ordering is the wrapper's to own. A dead run has no such ordering, and a wrapper that forgets to forward
+     * would strand the sink it wraps - so discarding walks the whole loader tree instead of trusting each wrapper.
+     *
+     * @param array<Loader> $loaders
+     *
+     * @return array<Throwable> failures raised while ending, empty when the run did not complete
+     */
+    private function endLoaders(array $loaders, FlowContext $context, bool $completed): array
+    {
+        $ending = [];
+
+        if (!$completed) {
+            $tree = new LoaderTree();
+            $loaders = array_merge(...array_map(static fn(Loader $loader): array => $tree->flatten($loader), $loaders));
         }
 
         foreach ($loaders as $loader) {
-            if ($loader instanceof Closure) {
-                $loader->closure($context);
+            try {
+                if ($completed) {
+                    if ($loader instanceof Closure) {
+                        $loader->closure($context);
+                    }
+                } elseif ($loader instanceof Discardable) {
+                    $loader->discard($context);
+                }
+            } catch (Throwable $failure) {
+                // one sink failing to end must not strand the others
+                if ($completed) {
+                    $ending[] = $failure;
+                } else {
+                    $context
+                        ->telemetry()
+                        ->logger()
+                        ->error('Loader failed to end after a failed run.', [
+                            'exception' => $failure,
+                        ]);
+                }
             }
         }
+
+        return $ending;
     }
 
     /**
@@ -156,9 +299,20 @@ final readonly class Segment
         return iterator_to_array($this->steps);
     }
 
+    public function withExtractor(Extractor $extractor): self
+    {
+        $segment = new self($this->processor, $extractor);
+
+        foreach ($this->steps as $step) {
+            $segment->steps->offsetSet($step);
+        }
+
+        return $segment;
+    }
+
     public function withProcessor(Processor $processor): self
     {
-        $segment = new self($processor);
+        $segment = new self($processor, $this->extractor);
 
         foreach ($this->steps as $step) {
             $segment->steps->offsetSet($step);

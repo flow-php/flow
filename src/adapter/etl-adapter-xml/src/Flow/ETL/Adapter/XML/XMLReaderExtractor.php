@@ -7,14 +7,21 @@ namespace Flow\ETL\Adapter\XML;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 use XMLReader;
@@ -22,17 +29,28 @@ use XMLReader;
 use function array_pop;
 use function count;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function implode;
+use function sprintf;
 
 /**
  * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
  */
-final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class XMLReaderExtractor implements
+    BatchableExtractor,
+    Extractor,
+    FileExtractor,
+    LimitPushDown,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
-    use Limitable;
-    use PathFiltering;
+    private ?Schema $schema = null;
+
+    use Batches;
+    use PushesLimit;
+    use FileReading;
+
+    private readonly Filesystem $filesystem;
 
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -52,13 +70,30 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     public function __construct(
         private readonly Path $path,
         private readonly string $xmlNodePath = '',
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_xml($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+
         if (!$this->path->isLocal()) {
             throw new InvalidArgumentException(
                 'XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.',
             );
         }
-        $this->resetLimit();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -66,133 +101,128 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $encoder = new XMLEncoder();
 
-        $baseSchema = schema(xml_schema('node'));
+        $baseSchema = $this->schema ?? schema(xml_schema('node'));
 
-        if ($shouldPutInputIntoRows && $baseSchema->findDefinition('_input_file_uri') === null) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $fileColumns->declare($baseSchema);
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
-
-            $schema = $baseSchema;
-
-            foreach ($partitions as $partition) {
-                if ($schema->findDefinition($partition->name) === null) {
-                    $schema = $schema->add(str_schema($partition->name));
-                }
-            }
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $constants = $fileColumns->forFile($source, $schema);
 
             $xmlReader = new XMLReader();
-            $xmlReader->open($stream->path()->path());
+            $xmlReader->open($source->path->path());
 
-            $previousDepth = 0;
-            $currentPathBreadCrumbs = [];
+            try {
+                $previousDepth = 0;
+                $currentPathBreadCrumbs = [];
 
-            $rawNodes = [];
+                $rawNodes = [];
 
-            while ($xmlReader->read()) {
-                if ($xmlReader->nodeType === XMLReader::ELEMENT) {
-                    if ($previousDepth === $xmlReader->depth) {
-                        array_pop($currentPathBreadCrumbs);
-                        $currentPathBreadCrumbs[] = $xmlReader->name;
-                    }
+                while ($xmlReader->read()) {
+                    if ($xmlReader->nodeType === XMLReader::ELEMENT) {
+                        if ($previousDepth === $xmlReader->depth) {
+                            array_pop($currentPathBreadCrumbs);
+                            $currentPathBreadCrumbs[] = $xmlReader->name;
+                        }
 
-                    if ($xmlReader->depth > $previousDepth) {
-                        $currentPathBreadCrumbs[] = $xmlReader->name;
-                    }
+                        if ($xmlReader->depth > $previousDepth) {
+                            $currentPathBreadCrumbs[] = $xmlReader->name;
+                        }
 
-                    while ($xmlReader->depth < $previousDepth) {
-                        array_pop($currentPathBreadCrumbs);
-                        $previousDepth--;
-                    }
+                        while ($xmlReader->depth < $previousDepth) {
+                            array_pop($currentPathBreadCrumbs);
+                            $previousDepth--;
+                        }
 
-                    $currentPath = implode('/', array_map(strval(...), $currentPathBreadCrumbs));
+                        $currentPath = implode('/', array_map(strval(...), $currentPathBreadCrumbs));
 
-                    if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
-                        $dom = new DOMDocument('1.0', '');
-                        $node = $xmlReader->expand($dom);
-                        $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
+                        if (
+                            $currentPath === $this->xmlNodePath
+                            || $this->xmlNodePath === '' && $xmlReader->depth === 0
+                        ) {
+                            $dom = new DOMDocument('1.0', '');
+                            $node = $xmlReader->expand($dom);
+                            $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
 
-                        if (count($rawNodes) >= $batchSize) {
-                            $batch = [];
+                            if (count($rawNodes) >= $batchSize) {
+                                $batch = [];
 
-                            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                                $rowData = $rowValues->values;
-
-                                if ($streamUri !== null) {
-                                    $rowData['_input_file_uri'] = $streamUri;
+                                foreach ($encoder->decode($rawNodes) as $rowValues) {
+                                    $batch[] = new RawRowValues($constants->fill($rowValues->values));
                                 }
 
-                                foreach ($partitions as $partition) {
-                                    $rowData[$partition->name] = $partition->value;
+                                $rawNodes = [];
+
+                                $hydrated = $hydrator->hydrate($batch, $schema);
+
+                                $yielded += $hydrated->count();
+
+                                $signal = yield $hydrated;
+
+                                if ($signal === Signal::STOP) {
+                                    return;
                                 }
 
-                                $batch[] = new RawRowValues($rowData);
-                            }
+                                $limit = $this->pushedLimit();
 
-                            $rawNodes = [];
-
-                            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                                $this->incrementReturnedRows();
-
-                                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                                    $xmlReader->close();
-                                    $context->streams()->closeStreams($this->path);
-
+                                if ($limit !== null && $yielded >= $limit) {
                                     return;
                                 }
                             }
                         }
+
+                        $previousDepth = $xmlReader->depth;
+                    }
+                }
+
+                if ($rawNodes !== []) {
+                    $batch = [];
+
+                    foreach ($encoder->decode($rawNodes) as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
                     }
 
-                    $previousDepth = $xmlReader->depth;
+                    $hydrated = $hydrator->hydrate($batch, $schema);
+
+                    $yielded += $hydrated->count();
+
+                    $signal = yield $hydrated;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
                 }
+            } finally {
+                $xmlReader->close();
             }
-
-            $batch = [];
-
-            foreach ($encoder->decode($rawNodes) as $rowValues) {
-                $rowData = $rowValues->values;
-
-                if ($streamUri !== null) {
-                    $rowData['_input_file_uri'] = $streamUri;
-                }
-
-                foreach ($partitions as $partition) {
-                    $rowData[$partition->name] = $partition->value;
-                }
-
-                $batch[] = new RawRowValues($rowData);
-            }
-
-            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $xmlReader->close();
-                    $context->streams()->closeStreams($this->path);
-
-                    return;
-                }
-            }
-
-            $xmlReader->close();
         }
+    }
+
+    public function schema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->schema ?? schema(xml_schema('node')));
     }
 
     public function source(): Path
     {
         return $this->path;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

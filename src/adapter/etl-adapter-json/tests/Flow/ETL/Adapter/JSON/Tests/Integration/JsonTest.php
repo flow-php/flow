@@ -20,16 +20,19 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_json;
 use function unlink;
 
 final class JsonTest extends FlowTestCase
@@ -43,8 +46,7 @@ final class JsonTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'descriptionHtml' => $domDocument, 'size' => 'small'],
             ]))
-            ->saveMode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_domdocument.json'))
+            ->write(to_json($path = __DIR__ . '/var/test_domdocument.json')->saveMode(overwrite()))
             ->run();
 
         $content = file_get_contents($path);
@@ -79,7 +81,7 @@ final class JsonTest extends FlowTestCase
     {
         $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
 
-        $loader->load(rows(), $context = flow_context(config()));
+        $loader->load(rows(schema()), $context = flow_context(config()));
 
         $loader->closure($context);
 
@@ -109,7 +111,7 @@ final class JsonTest extends FlowTestCase
 
         df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
-        df()->read(new FakeExtractor(100))->mode(overwrite())->write(to_json($path))->run();
+        df()->read(new FakeExtractor(100))->write(to_json($path)->saveMode(overwrite()))->run();
 
         $content = file_get_contents($path);
 
@@ -130,9 +132,11 @@ final class JsonTest extends FlowTestCase
     {
         $jsonObject = ['short' => 'short_description', 'long' => 'long_description'];
         df()
-            ->read(from_rows(rows(row(int_entry('id', 1), json_entry('nested', $jsonObject)))))
-            ->saveMode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json'))
+            ->read(from_rows(rows(
+                schema(int_schema('id'), json_schema('nested')),
+                row(['id' => 1, 'nested' => type_json()->cast($jsonObject)]),
+            )))
+            ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json')->saveMode(overwrite()))
             ->run();
 
         $content = file_get_contents($path);
@@ -152,8 +156,7 @@ final class JsonTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 2, 'tags' => [['t' => 'a'], ['t' => 'b']]],
             ]))
-            ->saveMode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_list_of_structures.json'))
+            ->write(to_json($path = __DIR__ . '/var/test_list_of_structures.json')->saveMode(overwrite()))
             ->run();
 
         $content = file_get_contents($path);
@@ -186,16 +189,18 @@ final class JsonTest extends FlowTestCase
                     ['id' => 12, 'color' => 'white', 'size' => 'large'],
                 ],
             ))
-            ->saveMode(overwrite())
-            ->partitionBy('size', 'color')
-            ->write(to_json(__DIR__ . '/var/test_partitioning_json_file/products.json'))
+            ->write(
+                to_json(__DIR__ . '/var/test_partitioning_json_file/products.json')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('size', 'color')),
+            )
             ->run();
 
         static::assertEquals(
             $dataset,
             df()
                 ->read(from_json(__DIR__ . '/var/test_partitioning_json_file/**/*.json'))
-                ->sortBy(ref('id')->asc())
+                ->sortBy([ref('id')->asc()])
                 ->fetch()
                 ->toArray(),
         );
@@ -210,11 +215,12 @@ final class JsonTest extends FlowTestCase
                 ['name' => 'Jake', 'age' => 30],
                 ['name' => 'Joe', 'age' => 30],
             ]))
-            ->saveMode(overwrite())
-            ->write(to_json(
-                $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
-                put_rows_in_new_lines: true,
-            ))
+            ->write(
+                to_json(
+                    $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
+                    put_rows_in_new_lines: true,
+                )->saveMode(overwrite()),
+            )
             ->run();
 
         $content = file_get_contents($path);
@@ -242,14 +248,15 @@ final class JsonTest extends FlowTestCase
                 ['name' => 'Jake', 'age' => 30, 'pets' => 1],
                 ['name' => 'Joe', 'age' => 30, 'pets' => 0],
             ]))
-            ->saveMode(overwrite())
-            ->groupBy('age')
+            ->groupBy(['age'])
             ->aggregate(average(ref('pets')))
-            ->write(to_json(
-                $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
-                flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
-                put_rows_in_new_lines: true,
-            ))
+            ->write(
+                to_json(
+                    $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
+                    flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
+                    put_rows_in_new_lines: true,
+                )->saveMode(overwrite()),
+            )
             ->run();
 
         $content = file_get_contents($path);
@@ -278,8 +285,10 @@ final class JsonTest extends FlowTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_json($path = __DIR__ . '/var/test_transformation_loader.json')))
+            ->write(to_transformation(
+                select('id'),
+                to_json($path = __DIR__ . '/var/test_transformation_loader.json')->saveMode(overwrite()),
+            ))
             ->run();
 
         $content = file_get_contents($path);

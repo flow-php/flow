@@ -10,6 +10,8 @@ use Flow\ETL\Constraint\UniqueConstraint\Storage;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Schema;
+use Flow\Types\Type\TypedValueFormatter;
 
 use function Flow\ETL\DSL\refs;
 
@@ -19,15 +21,28 @@ final class UniqueConstraint implements Constraint
 
     private Storage $storage;
 
+    /**
+     * Rows arrive batch by batch and Rows::schema() hands out the same instance for a whole batch,
+     * so the kept schema is folded once per batch instead of once per row.
+     */
+    private ?Schema $keptSchema = null;
+
+    private ?Schema $keptSchemaSource = null;
+
     public function __construct(string|Reference $column, string|Reference ...$columns)
     {
         $this->reference = refs($column, ...$columns);
         $this->storage = new InMemoryStorage();
     }
 
-    public function isSatisfiedBy(Row $row): bool
+    public function isSatisfiedBy(Row $row, Schema $schema): bool
     {
-        $key = $row->keep(...$this->reference)->hash();
+        if ($this->keptSchema === null || $this->keptSchemaSource !== $schema) {
+            $this->keptSchema = $schema->keep(...$this->reference);
+            $this->keptSchemaSource = $schema;
+        }
+
+        $key = $row->hash($this->keptSchema);
 
         if ($this->storage->has($key)) {
             return false;
@@ -46,12 +61,19 @@ final class UniqueConstraint implements Constraint
         )));
     }
 
-    public function violation(Row $row): string
+    public function violation(Row $row, Schema $schema): string
     {
+        $formatter = new TypedValueFormatter();
         $violations = [];
 
-        foreach ($row->keep(...$this->reference)->entries()->all() as $entry) {
-            $violations[] = $entry->name() . '<' . $entry->type()->toString() . '> = ' . $entry->toString();
+        foreach ($schema->keep(...$this->reference)->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $violations[] =
+                $name
+                . '<'
+                . $definition->type()->toString()
+                . '> = '
+                . $formatter->format($definition->type(), $row->get($name));
         }
 
         return sprintf('Values: [%s]', implode(', ', $violations));

@@ -20,8 +20,8 @@ use Flow\Telemetry\Tracer\SpanContext;
  *
  * This is the internal type passed to LogProcessor and Exporter implementations.
  *
- * @phpstan-import-type TAttributeValue from \Flow\Telemetry\Attributes
- * @phpstan-import-type TAttributeValueMap from \Flow\Telemetry\Attributes
+ * @import-type TAttributeValue from \Flow\Telemetry\Attributes
+ * @import-type TAttributeValueMap from \Flow\Telemetry\Attributes
  */
 final readonly class LogEntry
 {

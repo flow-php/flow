@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration;
 
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Tests\Context\ReadLinesContext;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function implode;
 use function iterator_to_array;
@@ -93,6 +96,27 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
         static::assertSame('that we are storing on azure blob', $lines->current());
         $lines->next();
         static::assertNull($lines->current());
+
+        $stream->close();
+    }
+
+    /**
+     * @param non-empty-string $separator
+     * @param null|int<1, max> $length
+     * @param list<string> $expected
+     */
+    #[DataProviderExternal(ReadLinesContext::class, 'cases')]
+    public function test_read_lines_conforms_to_the_source_stream_contract(
+        string $content,
+        string $separator,
+        ?int $length,
+        array $expected,
+    ): void {
+        $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
+
+        $stream = native_local_filesystem()->readFrom(path(__DIR__ . '/var/file.txt'));
+
+        static::assertSame($expected, iterator_to_array($stream->readLines($separator, $length)));
 
         $stream->close();
     }

@@ -6,9 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\Serializer\Base64Serializer;
 use Throwable;
@@ -16,7 +17,8 @@ use Throwable;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
 
 final readonly class SerializeTransformer implements Transformer
@@ -25,6 +27,21 @@ final readonly class SerializeTransformer implements Transformer
         private Reference|string $target,
         private bool $standalone = false,
     ) {}
+
+    public function bind(Schema $input): BoundStep
+    {
+        $name = $this->target instanceof Reference ? $this->target->name() : $this->target;
+        $column = str_schema($name);
+
+        if ($this->standalone) {
+            return new BoundStep($this, schema($column));
+        }
+
+        return new BoundStep(
+            $this,
+            $input->findDefinition($name) === null ? $input->add($column) : $input->replace($name, $column),
+        );
+    }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
@@ -35,9 +52,27 @@ final readonly class SerializeTransformer implements Transformer
             // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
-            $result = $rows->map(fn(Row $row) => $this->standalone
-                ? row(str_entry($target->name(), serialize_to_string($serializer, rows($row))))
-                : $row->add(str_entry($target->name(), serialize_to_string($serializer, rows($row)))));
+            $inputSchema = $rows->schema();
+            $column = str_schema($target->name());
+            $outputSchema = $this->standalone
+                ? schema($column)
+                : (
+                    $inputSchema->findDefinition($target->name()) === null
+                        ? $inputSchema->add($column)
+                        : $inputSchema->replace($target->name(), $column)
+                );
+
+            $serialized = [];
+
+            foreach ($rows->all() as $row) {
+                $payload = serialize_to_string($serializer, rows($inputSchema, $row));
+
+                $serialized[] = $this->standalone
+                    ? row([$target->name() => $payload])
+                    : row([...$row->values(), $target->name() => $payload]);
+            }
+
+            $result = new Rows($outputSchema, ...$serialized);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

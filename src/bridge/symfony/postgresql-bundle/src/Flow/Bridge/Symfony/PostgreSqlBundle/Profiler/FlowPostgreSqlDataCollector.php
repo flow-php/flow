@@ -19,7 +19,7 @@ use function preg_split;
 use function strtoupper;
 
 /**
- * @phpstan-type QueryRow array{statement: string, parameters: array<int, mixed>, returnedRows: null|int, durationMs: float, failed: bool, error: null|string, connection: string, caller: null|string, explainable: bool, runCount: int, isDuplicate: bool, parametersTruncated: bool, statementTruncated: bool}
+ * @type QueryRow = array{statement: string, parameters: array<int, mixed>, returnedRows: null|int, durationMs: float, failed: bool, error: null|string, connection: string, caller: null|string, explainable: bool, runCount: int, isDuplicate: bool, parametersTruncated: bool, statementTruncated: bool}
  */
 final class FlowPostgreSqlDataCollector extends DataCollector implements LateDataCollectorInterface
 {

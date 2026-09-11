@@ -11,9 +11,9 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
-use function is_array;
+use function is_bool;
 use function is_float;
-use function is_scalar;
+use function is_numeric;
 
 /**
  * @template T of float
@@ -43,18 +43,25 @@ final readonly class FloatType implements Type
         }
 
         if ($value instanceof DateTimeImmutable) {
-            return (float) $value->format('Uu');
+            // seconds with the fraction kept, where the integer casts floor to whole seconds
+            return (float) $value->format('U.u');
         }
 
         if ($value instanceof DateInterval) {
             $reference = new DateTimeImmutable();
             $endTime = $reference->add($value);
 
-            return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
+            // the reference is a wall clock, so a sub-second interval straddles a second boundary
+            // or not depending on when this runs - subtract in micros, then divide
+            return ((float) $endTime->format('Uu') - (float) $reference->format('Uu')) / 1e6;
         }
 
-        if (is_scalar($value) || null === $value || is_array($value)) {
+        if (is_numeric($value)) {
             return (float) $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 1.0 : 0.0;
         }
 
         throw new CastingException($value, $this);

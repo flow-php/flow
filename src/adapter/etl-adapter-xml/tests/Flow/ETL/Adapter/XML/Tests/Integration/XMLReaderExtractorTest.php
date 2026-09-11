@@ -7,16 +7,19 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
-use function iterator_to_array;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
@@ -24,9 +27,9 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
     {
         // @mago-ignore analysis:deprecated-class
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
-        $extractor->changeLimit(2);
+        $extractor->withBatchSize(1)->pushLimit(2);
 
-        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
     }
 
     public function test_partition_columns_are_not_leaking_between_streams(): void
@@ -41,7 +44,8 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
         static::assertSame(['node', 'date'], array_keys($rows[0]));
         static::assertSame('2026-01-01', $rows[0]['date']);
-        static::assertSame(['node'], array_keys($rows[1]));
+        static::assertSame(['node', 'date'], array_keys($rows[1]));
+        static::assertNull($rows[1]['date']);
     }
 
     public function test_reading_deep_xml(): void
@@ -84,7 +88,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="1">
               <id id_attribute_01="1">1</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->get('node')));
 
         // @mago-ignore analysis:deprecated-class
         $extractor2 = new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item');
@@ -92,7 +96,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="5">
               <id id_attribute_01="5">5</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->get('node')));
     }
 
     public function test_reading_xml_from_path(): void
@@ -120,8 +124,27 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             type_string()->cast(data_frame()
                 // @mago-ignore analysis:deprecated-class
                 ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
-                ->fetch()[0]->valueOf('node')),
+                ->fetch()[0]->get('node')),
         );
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+
+        static::assertEquals(
+            schema(xml_schema('node'), str_schema('_input_file_uri')),
+            $extractor->withMetadataColumns(true)->schema(),
+        );
+    }
+
+    public function test_schema_describes_a_single_node_column(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+
+        static::assertEquals(schema(xml_schema('node')), $extractor->schema());
     }
 
     public function test_signal_stop(): void
@@ -138,5 +161,37 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid());
+    }
+
+    public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $generator = (new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'), 'root/item'))
+            ->withBatchSize(10)
+            ->extract(flow_context(config()));
+
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $extractor = (new XMLReaderExtractor(
+            path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'),
+            'root/item',
+        ))->withBatchSize(10);
+        $extractor->pushLimit(1);
+
+        static::assertCount(1, ExtractedRows::of($extractor));
+    }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            // @mago-ignore analysis:deprecated-class
+            (new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row'))->isRepeatable(),
+        );
     }
 }

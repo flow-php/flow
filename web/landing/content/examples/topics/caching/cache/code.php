@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+use function Flow\ETL\DSL\{config_builder, data_frame, datetime_schema, filesystem_cache, from_cache, int_schema, ref, rename_replace, schema, str_schema, to_output};
+use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
+use Http\Client\Curl\Client;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
+
+require __DIR__ . '/vendor/autoload.php';
+
+$factory = new Psr17Factory();
+$client = new Client($factory, $factory);
+
+$from_github_api = new PsrHttpClientDynamicExtractor($client, new class implements NextRequestFactory {
+    public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
+    {
+        $factory = new Psr17Factory();
+
+        if ($previousResponse === null) {
+            return $factory
+                ->createRequest('GET', 'https://api.github.com/orgs/flow-php')
+                ->withHeader('Accept', 'application/vnd.github.v3+json')
+                ->withHeader('User-Agent', 'flow-php/etl');
+        }
+
+        return null;
+    }
+});
+
+data_frame(config_builder()->cache(filesystem_cache(__DIR__ . '/output/cache')))
+    ->read(
+        from_cache(
+            id: 'github_api',
+            fallback_extractor: $from_github_api
+        )
+    )
+    ->cache('github_api')
+    ->withEntry('unpacked', ref('response_body')->jsonDecode())
+    ->select('unpacked')
+    ->withEntry('unpacked', ref('unpacked')->unpack(schema(
+        str_schema('name'),
+        str_schema('html_url'),
+        str_schema('blog'),
+        str_schema('login'),
+        int_schema('public_repos'),
+        int_schema('followers'),
+        datetime_schema('created_at'),
+    )))
+    ->renameEach(rename_replace('unpacked.', ''))
+    ->drop('unpacked')
+    ->select('name', 'login', 'blog')
+    ->write(to_output(truncate: false))
+    ->run();

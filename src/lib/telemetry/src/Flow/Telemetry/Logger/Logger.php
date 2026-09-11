@@ -33,8 +33,8 @@ use Throwable;
  * $logger->error('Processing failed', ['error.message' => $e->getMessage()]);
  * ```
  *
- * @phpstan-import-type TAttributeValue from Attributes
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValue from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final class Logger
 {

@@ -14,15 +14,12 @@ use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\float_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\Types\DSL\type_float;
@@ -67,11 +64,9 @@ final class DefinitionTest extends FlowTestCase
         static::assertTrue($def->isSame(list_schema('list', type_list(type_integer()))));
     }
 
-    public function test_matches_when_type_and_name_match(): void
+    public function test_matches_when_type_matches(): void
     {
-        $def = integer_schema('test');
-
-        static::assertTrue($def->matches(int_entry('test', 1)));
+        static::assertTrue(integer_schema('test')->matches(1));
     }
 
     public function test_merge_definitions(): void
@@ -228,25 +223,14 @@ final class DefinitionTest extends FlowTestCase
         static::assertEquals($definition, definition_from_array($definition->normalize()));
     }
 
-    public function test_not_matches_when_not_nullable_name_matches_but_null_given(): void
+    public function test_not_matches_when_not_nullable_and_null_given(): void
     {
-        $def = integer_schema('test', false);
-
-        static::assertFalse($def->matches(str_entry('test', null)));
+        static::assertFalse(integer_schema('test', false)->matches(null));
     }
 
     public function test_not_matches_when_type_does_not_match(): void
     {
-        $def = integer_schema('test');
-
-        static::assertFalse($def->matches(str_entry('test', 'test')));
-    }
-
-    public function test_not_matches_when_type_name_not_match(): void
-    {
-        $def = integer_schema('test');
-
-        static::assertFalse($def->matches(int_entry('not-test', 1)));
+        static::assertFalse(integer_schema('test')->matches('test'));
     }
 
     public function test_set_metadata(): void
@@ -258,25 +242,8 @@ final class DefinitionTest extends FlowTestCase
         ])), $definition->setMetadata(Metadata::fromArray(['description' => 'some_random_description'])));
     }
 
-    public function test_structure_definition_metadata(): void
+    public function test_structure_definition_keeps_its_nested_type(): void
     {
-        $address = struct_entry(
-            'address',
-            [
-                'street' => 'street',
-                'city' => 'city',
-                'location' => ['lat' => 1.0, 'lng' => 1.0],
-            ],
-            type_structure([
-                'street' => type_string(),
-                'city' => type_string(),
-                'location' => type_structure([
-                    'lat' => type_float(),
-                    'lng' => type_float(),
-                ]),
-            ]),
-        );
-
         static::assertEquals(
             type_structure([
                 'street' => type_string(),
@@ -286,7 +253,14 @@ final class DefinitionTest extends FlowTestCase
                     'lng' => type_float(),
                 ]),
             ]),
-            $address->definition()->type(),
+            structure_schema('address', type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'location' => type_structure([
+                    'lat' => type_float(),
+                    'lng' => type_float(),
+                ]),
+            ]))->type(),
         );
     }
 }

@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Constraint;
 use function sort;
 
 /**
- * @phpstan-type PrimaryKeyShape = array{columns: non-empty-list<string>, name: ?string}
+ * @type PrimaryKeyShape = array{columns: non-empty-list<string>, name: ?string}
  */
 final readonly class PrimaryKey
 {

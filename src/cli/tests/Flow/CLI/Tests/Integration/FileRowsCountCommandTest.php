@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileRowsCountCommand;
+use Flow\CLI\Command\FileSchemaCommand;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileRowsCountCommandTest extends TestCase
@@ -135,5 +137,15 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         static::assertSame('10000', $tester->getDisplay());
+    }
+
+    public function test_file_rows_count_command_registers_under_its_own_name_beside_file_schema_command(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileSchemaCommand(), new FileRowsCountCommand()]);
+
+        static::assertInstanceOf(FileSchemaCommand::class, $application->find('file:schema'));
+        static::assertInstanceOf(FileRowsCountCommand::class, $application->find('file:rows:count'));
+        static::assertInstanceOf(FileRowsCountCommand::class, $application->find('count'));
     }
 }

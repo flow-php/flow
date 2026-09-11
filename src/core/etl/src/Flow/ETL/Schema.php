@@ -8,11 +8,10 @@ use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
@@ -25,7 +24,6 @@ use function array_splice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_array;
-use function Flow\ETL\DSL\schema;
 use function implode;
 use function is_array;
 use function sprintf;
@@ -63,56 +61,6 @@ final readonly class Schema implements Countable
         }
 
         return new self(...$schema);
-    }
-
-    /**
-     * Detecting schema from the pipeline has several disadvantages.
-     * First of all, it's expensive, it needs to iterate through the pipeline until it detects
-     * types of all columns.
-     * In some cases, when a given column is null in the first 1k rows it will anyway return incorrect
-     * schema since row 1001 might have an actual value.
-     * When dealing with schemaless file formats like CSV or JSON even when first 1k rows will
-     * carry value of one type, there is zero guarantee that following rows will do the same.
-     *
-     * Whenever it's possible, it's recommended to define schema upfront and pass it to the extractor.
-     * This way, whatever process would need to use this method, will do just one iteration.
-     */
-    public static function fromPipeline(Pipeline $pipeline, FlowContext $context, int $maxRows = 1000): self
-    {
-        if ($maxRows <= 0) {
-            throw new InvalidArgumentException('Total numbers of rows to scan must be a positive number');
-        }
-
-        $extractor = $pipeline->process($context);
-        $schema = schema();
-        $totalRows = 0;
-
-        foreach ($extractor as $rows) {
-            foreach ($rows as $row) {
-                $schema = $schema->merge($row->schema());
-                $totalRows++;
-
-                if ($totalRows >= $maxRows) {
-                    return $schema;
-                }
-
-                $allDetected = true;
-
-                foreach ($schema->definitions() as $definition) {
-                    if ($definition instanceof NullDefinition) {
-                        $allDetected = false;
-
-                        break;
-                    }
-                }
-
-                if ($allDetected) {
-                    return $schema;
-                }
-            }
-        }
-
-        return $schema;
     }
 
     /**
@@ -167,6 +115,34 @@ final readonly class Schema implements Countable
         return $this->replace($definition, $this->get($definition)->addMetadata($name, $value));
     }
 
+    /**
+     * Columns present in both schemas are emitted in $authority's order; columns only in $this are
+     * appended unchanged. Nothing is added, dropped or widened, and no type is rewritten - a column
+     * whose type orders its own elements differently is a different type, not a reorderable one.
+     */
+    public function matchOrderTo(self $authority): self
+    {
+        $definitions = [];
+
+        foreach ($authority->definitions() as $authorityDefinition) {
+            $definition = $this->findDefinition($authorityDefinition->entry());
+
+            if ($definition === null) {
+                continue;
+            }
+
+            $definitions[] = $definition;
+        }
+
+        foreach ($this->definitions as $definition) {
+            if ($authority->findDefinition($definition->entry()) === null) {
+                $definitions[] = $definition;
+            }
+        }
+
+        return new self(...$definitions);
+    }
+
     public function count(): int
     {
         return count($this->definitions);
@@ -207,7 +183,10 @@ final readonly class Schema implements Countable
      */
     public function get(string|Reference $ref): Definition
     {
-        return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
+        return (
+            $this->findDefinition($ref)
+            ?: throw SchemaDefinitionNotFoundException::withAvailable((string) $ref, ...$this->references()->names())
+        );
     }
 
     /**
@@ -255,17 +234,17 @@ final readonly class Schema implements Countable
         return new self(...$definitionsList);
     }
 
+    /**
+     * Column order is part of a Schema's identity - two schemas holding the same columns in a
+     * different order describe two different row shapes, and a row is stored in Schema order.
+     */
     public function isSame(self $schema): bool
     {
-        if (count($this->definitions) !== count($schema->definitions)) {
+        if (array_keys($this->definitions) !== array_keys($schema->definitions)) {
             return false;
         }
 
         foreach ($this->definitions as $entry => $definition) {
-            if (!array_key_exists($entry, $schema->definitions)) {
-                return false;
-            }
-
             if (!$definition->isSame($schema->definitions[$entry])) {
                 return false;
             }
@@ -285,7 +264,10 @@ final readonly class Schema implements Countable
 
         foreach ($entries as $entry) {
             if (!$this->findDefinition($entry)) {
-                throw new SchemaDefinitionNotFoundException((string) $entry);
+                throw SchemaDefinitionNotFoundException::withAvailable(
+                    (string) $entry,
+                    ...$this->references()->names(),
+                );
             }
         }
 
@@ -452,7 +434,10 @@ final readonly class Schema implements Countable
 
         foreach ($entries as $entry) {
             if (!$this->findDefinition($entry)) {
-                throw new SchemaDefinitionNotFoundException((string) $entry);
+                throw SchemaDefinitionNotFoundException::withAvailable(
+                    (string) $entry,
+                    ...$this->references()->names(),
+                );
             }
         }
 
@@ -473,11 +458,11 @@ final readonly class Schema implements Countable
         $definitions = [];
 
         if (!$this->findDefinition($entry)) {
-            throw new SchemaDefinitionNotFoundException((string) $entry);
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
                 $definitions[] = $nextDefinition->rename($newName);
             } else {
                 $definitions[] = $nextDefinition;
@@ -501,7 +486,8 @@ final readonly class Schema implements Countable
         $reordered = [];
 
         foreach ($names as $name) {
-            $definition = $this->findDefinition($name) ?: throw new SchemaDefinitionNotFoundException((string) $name);
+            $definition = $this->findDefinition($name)
+            ?: throw SchemaDefinitionNotFoundException::withAvailable((string) $name, ...$this->references()->names());
             $key = $definition->entry()->name();
 
             if (array_key_exists($key, $reordered)) {
@@ -531,11 +517,11 @@ final readonly class Schema implements Countable
         $definitions = [];
 
         if (!$this->findDefinition($entry)) {
-            throw new SchemaDefinitionNotFoundException((string) $entry);
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
                 $definitions[] = $definition;
             } else {
                 $definitions[] = $nextDefinition;
@@ -571,10 +557,13 @@ final readonly class Schema implements Countable
 
     private function indexOf(string|Reference $reference): int
     {
-        $index = array_search(EntryReference::init($reference)->name(), array_keys($this->definitions), true);
+        $index = array_search(UnresolvedReference::init($reference)->name(), array_keys($this->definitions), true);
 
         if ($index === false) {
-            throw new SchemaDefinitionNotFoundException((string) $reference);
+            throw SchemaDefinitionNotFoundException::withAvailable(
+                (string) $reference,
+                ...$this->references()->names(),
+            );
         }
 
         return $index;
@@ -583,13 +572,16 @@ final readonly class Schema implements Countable
     private function moveRelative(string|Reference $name, string|Reference $reference, int $offset): self
     {
         $from = $this->indexOf($name);
-        $referenceName = EntryReference::init($reference)->name();
+        $referenceName = UnresolvedReference::init($reference)->name();
 
         if (!$this->findDefinition($reference)) {
-            throw new SchemaDefinitionNotFoundException((string) $reference);
+            throw SchemaDefinitionNotFoundException::withAvailable(
+                (string) $reference,
+                ...$this->references()->names(),
+            );
         }
 
-        if (EntryReference::init($name)->name() === $referenceName) {
+        if (UnresolvedReference::init($name)->name() === $referenceName) {
             throw new InvalidArgumentException(sprintf('Cannot move entry "%s" relative to itself', (string) $name));
         }
 

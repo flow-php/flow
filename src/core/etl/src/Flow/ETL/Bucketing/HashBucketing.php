@@ -30,7 +30,6 @@ final class HashBucketing implements BucketingStrategy
         private readonly Hasher $hasher,
         private readonly RandomValueGenerator $random,
         private readonly string $namespace = 'bucket',
-        bool $nullOnMissing = false,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -38,7 +37,7 @@ final class HashBucketing implements BucketingStrategy
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
 
-        $this->keyValues = new KeyValues($by, $nullOnMissing);
+        $this->keyValues = new KeyValues($by);
     }
 
     /**
@@ -69,8 +68,9 @@ final class HashBucketing implements BucketingStrategy
                 $indexes[$id] = $index;
             }
 
+            // a bucket is a subset of a batch that already passed the gate, under the same schema
             foreach ($groups as $id => $groupRows) {
-                $storage->append($id, new Rows(...$groupRows));
+                $storage->append($id, Rows::trusted($batch->schema(), $groupRows));
                 $totals[$id] = ($totals[$id] ?? 0) + count($groupRows);
             }
         }

@@ -6,8 +6,14 @@ namespace Flow\Bridge\PHPStan\Types;
 
 use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Scalar\Int_;
+use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Type\Constant\ConstantArrayType;
@@ -40,24 +46,12 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
             return null;
         }
 
-        $optionalArrays = [];
-
-        if (isset($args[1])) {
-            $optionalArg = $scope->getType($args[1]->value);
-            $optionalArrays = $optionalArg->getConstantArrays();
-        }
+        $markerFlags = $this->markerOptionalFlags($args[0]->value);
 
         $results = [];
 
         foreach ($requiredArrays as $requiredArray) {
-            // If we have optional arrays, combine them with each required array
-            if (!empty($optionalArrays)) {
-                foreach ($optionalArrays as $optionalArray) {
-                    $results[] = $this->createResult($requiredArray, $optionalArray);
-                }
-            } else {
-                $results[] = $this->createResult($requiredArray);
-            }
+            $results[] = $this->createResult($requiredArray, $markerFlags);
         }
 
         $arrayShapeType = TypeCombinator::union(...$results);
@@ -73,32 +67,81 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
         return $functionReflection->getName() === 'Flow\Types\DSL\type_structure';
     }
 
-    private function createResult(
-        ConstantArrayType $requiredArrayType,
-        ?ConstantArrayType $optionalArrayType = null,
-    ): Type {
+    /**
+     * @param array<array-key, bool> $markerFlags
+     */
+    private function createResult(ConstantArrayType $requiredArrayType, array $markerFlags): Type
+    {
         $builder = ConstantArrayTypeBuilder::createEmpty();
 
         // Process required elements
         foreach ($requiredArrayType->getKeyTypes() as $key) {
             $valueType = $requiredArrayType->getOffsetValueType($key);
+
+            // a structure_element() marker value: the member type is the element's template, the
+            // optional flag comes from the call expression (the type alone cannot carry it)
+            if ((new ObjectType(StructureElement::class))->isSuperTypeOf($valueType)->yes()) {
+                $builder->setOffsetValueType(
+                    $key,
+                    $valueType->getTemplateType(StructureElement::class, 'T'),
+                    $markerFlags[$key->getValue()] ?? true,
+                );
+
+                continue;
+            }
+
             [$type, $optional] = $this->extractOptional($valueType->getTemplateType(FlowType::class, 'T'));
 
             $builder->setOffsetValueType($key, $type, $optional);
         }
 
-        // Process optional elements if provided
-        if ($optionalArrayType !== null) {
-            foreach ($optionalArrayType->getKeyTypes() as $key) {
-                $valueType = $optionalArrayType->getOffsetValueType($key);
-                [$type, $_wasOptional] = $this->extractOptional($valueType->getTemplateType(FlowType::class, 'T'));
+        return $builder->getArray();
+    }
 
-                // Optional elements are always optional in the result structure
-                $builder->setOffsetValueType($key, $type, true);
-            }
+    /**
+     * Reads the literal `optional:` flag off each structure_element() call in the array literal.
+     * A marker whose flag cannot be read statically is treated as optional - under-promising
+     * presence is the safe direction for an array shape.
+     *
+     * @return array<array-key, bool>
+     */
+    private function markerOptionalFlags(Expr $elements): array
+    {
+        if (!$elements instanceof Array_) {
+            return [];
         }
 
-        return $builder->getArray();
+        $flags = [];
+
+        foreach ($elements->items as $item) {
+            if ($item->key === null || !$item->value instanceof FuncCall) {
+                continue;
+            }
+
+            $key = match (true) {
+                $item->key instanceof String_ => $item->key->value,
+                $item->key instanceof Int_ => $item->key->value,
+                default => null,
+            };
+
+            if ($key === null) {
+                continue;
+            }
+
+            $optional = false;
+
+            foreach ($item->value->getArgs() as $position => $arg) {
+                $isOptionalArg = $arg->name?->toString() === 'optional' || $arg->name === null && $position === 2;
+
+                if ($isOptionalArg) {
+                    $optional = !($arg->value instanceof ConstFetch && $arg->value->name->toLowerString() === 'false');
+                }
+            }
+
+            $flags[$key] = $optional;
+        }
+
+        return $flags;
     }
 
     /**

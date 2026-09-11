@@ -20,6 +20,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -34,6 +35,7 @@ use UnitEnum;
 use function array_map;
 use function enum_exists;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -316,7 +318,6 @@ final class OpenAPIConverter
 
         if (isset($typeSpec['properties']) && is_array($typeSpec['properties'])) {
             $elements = [];
-            $optionalElements = [];
             $properties = type_map(type_string(), type_array())->assert($typeSpec['properties']);
 
             foreach ($properties as $propName => $propSpec) {
@@ -326,14 +327,12 @@ final class OpenAPIConverter
                     ? $propSpec['nullable']
                     : false;
 
-                if ($isNullable) {
-                    $optionalElements[$propName] = $propType;
-                } else {
-                    $elements[$propName] = $propType;
-                }
+                $elements[$propName] = $isNullable
+                    ? structure_element($propName, $propType, optional: true)
+                    : $propType;
             }
 
-            return type_structure($elements, $optionalElements);
+            return type_structure($elements);
         }
 
         return type_map(type_string(), type_string());
@@ -438,14 +437,9 @@ final class OpenAPIConverter
 
         $properties = [];
 
-        foreach ($type->elements() as $name => $elementType) {
-            $properties[$name] = $this->convertTypeToOpenAPI($elementType);
-            $properties[$name]['nullable'] = false;
-        }
-
-        foreach ($type->optionalElements() as $name => $elementType) {
-            $properties[$name] = $this->convertTypeToOpenAPI($elementType);
-            $properties[$name]['nullable'] = true;
+        foreach ($type->elements() as $element) {
+            $properties[$element->name] = $this->convertTypeToOpenAPI($element->type);
+            $properties[$element->name]['nullable'] = $element->optional;
         }
 
         return [
@@ -472,6 +466,7 @@ final class OpenAPIConverter
             DateTimeType::class => ['type' => 'string', 'format' => 'date-time'],
             TimeType::class => ['type' => 'string', 'format' => 'time'],
             UuidType::class => ['type' => 'string', 'format' => 'uuid'],
+            TimeZoneType::class => ['type' => 'string'],
             JsonType::class => ['type' => 'string', 'format' => 'json'],
             XMLType::class, XMLElementType::class => ['type' => 'string', 'format' => 'xml'],
             EnumType::class => $this->convertEnumToOpenAPI($type),

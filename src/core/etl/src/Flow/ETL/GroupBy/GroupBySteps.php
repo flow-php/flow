@@ -8,13 +8,14 @@ use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Config;
+use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\PruneEntriesTransformer;
 
 use function array_values;
 
@@ -24,12 +25,16 @@ use function array_values;
 final readonly class GroupBySteps
 {
     /**
+     * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+     *                                                algorithm for this operation and skips any automatic choice
+     *
      * @return list<Processor|Transformer>
      */
-    public static function of(GroupBy $groupBy, Config $config): array
+    public static function of(GroupBy $groupBy, Config $config, ?GroupByAlgorithmBuilder $algorithm = null): array
     {
+        $grouping = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->grouping;
         if ($groupBy->isPivot()) {
-            return [new PivotProcessor($groupBy, $config->grouping->bucketing->batchSize)];
+            return [new PivotProcessor($groupBy, $grouping->bucketing->batchSize)];
         }
 
         $steps = [];
@@ -42,23 +47,21 @@ final readonly class GroupBySteps
                 $pruned[$ref->base()] ??= $ref->base();
             }
 
-            $steps[] = new SelectEntriesTransformer(...array_values($pruned));
+            $steps[] = new PruneEntriesTransformer(...array_values($pruned));
         }
 
-        $buckets = new Buckets($config->grouping->bucketing->storage);
+        $buckets = new Buckets($grouping->bucketing->storage);
         $steps[] = new BucketingProcessor(
             new HashBucketing(
                 $groupBy->references(),
-                $config->grouping->bucketing->bucketsCount,
+                $grouping->bucketing->bucketsCount,
                 new NativeHasher(),
                 $config->randomValueGenerator(),
                 'group-by',
-                // matters only when pruning is disabled - pruned rows always carry every column
-                nullOnMissing: true,
             ),
             $buckets,
         );
-        $steps[] = new GroupByAggregationProcessor($groupBy, $buckets, $config->grouping->bucketing->batchSize);
+        $steps[] = new GroupByAggregationProcessor($groupBy, $buckets, $grouping->bucketing->batchSize);
 
         return $steps;
     }

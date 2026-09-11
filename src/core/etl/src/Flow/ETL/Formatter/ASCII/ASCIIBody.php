@@ -6,7 +6,7 @@ namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-use function count;
+use function Flow\Types\DSL\type_string;
 use function max;
 use function str_repeat;
 
@@ -25,12 +25,12 @@ final readonly class ASCIIBody
             $buffer .= '|';
 
             foreach ($this->headers->names() as $name) {
-                $header = new ASCIIValue($name);
+                $header = new ASCIIValue(type_string(), $name);
 
                 try {
-                    $value = new ASCIIValue($row->entries()->get($name));
+                    $value = new ASCIIValue($this->body->schema()->get($name)->type(), $row->get($name));
                 } catch (InvalidArgumentException) {
-                    $value = new ASCIIValue('');
+                    $value = new ASCIIValue(type_string(), '');
                 }
 
                 $length = max($header->length($truncate), $this->body->maximumLength($name, $truncate));
@@ -44,20 +44,11 @@ final readonly class ASCIIBody
         $buffer .= '+';
 
         foreach ($this->headers->names() as $name) {
-            $headerName = new ASCIIValue($name);
+            $headerName = new ASCIIValue(type_string(), $name);
 
             $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
             $buffer .= '-' . str_repeat('-', $length) . '-+';
-        }
-
-        if (count($this->body->partitions())) {
-            $buffer .= PHP_EOL;
-            $buffer .= 'Partitions:';
-
-            foreach ($this->body->partitions() as $partition) {
-                $buffer .= PHP_EOL . ' - ' . $partition->name . '=' . $partition->value;
-            }
         }
 
         return $buffer;

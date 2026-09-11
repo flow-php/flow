@@ -25,9 +25,13 @@ test *args:
 test-mutation *args:
     tools/infection/vendor/bin/infection --threads=max {{args}}
 
-# Run tests for the landing site.
-test-website:
-    composer test --working-dir=./web/landing
+# Run tests for the landing site, without the published examples.
+test-website *args:
+    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=unit,integration,functional {{args}}
+
+# Run every published example through the real playground. Minutes, on demand.
+test-examples *args:
+    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=examples {{args}}
 
 # Run phpbench benchmarks (local only; MUST be inside nix-shell). Args are forwarded to `phpbench run`.
 # Defaults to `--report=flow-report`; pass your own `--report=...` to override it.
@@ -86,6 +90,7 @@ lint-actions:
 # Run static analysis (Mago). The monorepo and web/landing are analyzed in separate runs because
 # web/landing is a standalone Composer sub-project with its own vendor (see web/landing/mago.toml).
 analyze *args:
+    tools/mago/vendor/bin/mago guard
     tools/mago/vendor/bin/mago analyze {{args}}
     tools/mago/vendor/bin/mago --workspace web/landing analyze {{args}}
 

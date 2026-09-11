@@ -6,7 +6,6 @@ namespace Flow\ETL\Config\Grouping;
 
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
 final class HashGroupByBuilder implements GroupByAlgorithmBuilder
@@ -28,9 +27,9 @@ final class HashGroupByBuilder implements GroupByAlgorithmBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): HashGroupByConfig
+    public function build(Path $spillRoot): HashGroupByConfig
     {
-        return new HashGroupByConfig($this->bucketing->build($filesystemTable, $localFilesystemCacheDir));
+        return new HashGroupByConfig($this->bucketing->build($spillRoot));
     }
 
     /**
@@ -39,13 +38,6 @@ final class HashGroupByBuilder implements GroupByAlgorithmBuilder
     public function bucketsCount(int $bucketsCount): self
     {
         $this->bucketing->bucketsCount($bucketsCount);
-
-        return $this;
-    }
-
-    public function filesystemProtocol(string $protocol): self
-    {
-        $this->bucketing->filesystemProtocol($protocol);
 
         return $this;
     }

@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use DateInterval;
 use DateTimeImmutable;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Partition;
+use Flow\Types\Exception\InvalidArgumentException;
 
 use function array_map;
-use function array_merge;
 use function file_exists;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\Filesystem\DSL\partition;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
-use function range;
 use function rmdir;
 use function sort;
 use function str_replace;
@@ -41,21 +41,76 @@ use function usort;
 
 final class PartitioningTest extends FlowIntegrationTestCase
 {
-    public function test_dropping_partitions(): void
+    public function test_a_partition_filter_with_a_numeric_literal_binds_over_a_string_partition(): void
+    {
+        // Comparator::comparable(string, integer) is true, so the bind gate lets a bare integer
+        // literal through against an undeclared (string) partition column.
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt';
+
+        static::assertCount(
+            7,
+            df()
+                ->read(from_text($glob))
+                ->filterPartitions(ref('year')->between(lit(2020), lit(2025)))
+                ->fetch(),
+        );
+        static::assertCount(
+            5,
+            df()
+                ->read(from_text($glob))
+                ->filterPartitions(ref('year')->between(lit(2023), lit(2025)))
+                ->fetch(),
+        );
+    }
+
+    public function test_a_partition_filter_binds_when_the_partition_type_is_declared(): void
     {
         $rows = df()
-            ->read(from_rows(rows_partitioned([
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-            ], [
-                partition('country', 'PL'),
-            ])))
-            ->dropPartitions()
+            ->read(from_text(__DIR__
+            . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt')->partitionTypes(
+                partition_types(year: type_integer()),
+            ))
+            ->filterPartitions(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertFalse($rows->isPartitioned());
+        static::assertCount(5, $rows);
+    }
+
+    public function test_a_partition_filter_on_an_extractor_without_partition_columns_is_not_gated(): void
+    {
+        // The same literal throws at bind on from_text(), which declares its partition columns
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt';
+        $incomparable = static fn(): ScalarFunction => ref('year')->equals(lit(new DateTimeImmutable('2024-01-01')));
+
+        static::assertCount(0, df()->read(from_path_partitions($glob))->filterPartitions($incomparable())->fetch());
+        static::assertCount(0, df()->read(files($glob))->filterPartitions($incomparable())->fetch());
+    }
+
+    public function test_a_partition_filter_with_an_incomparable_literal_is_refused_at_bind(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Can't compare '(string == date)' due to data type mismatch - an explicit cast is required.",
+        );
+
+        df()
+            ->read(from_text(__DIR__
+            . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
+            ->filterPartitions(ref('year')->equals(lit(new DateTimeImmutable('2024-01-01'))));
+    }
+
+    public function test_filter_partitions_rebinds(): void
+    {
+        // "tier" is nullable while both paths are listed - only one of them carries it - and becomes
+        // NOT NULL once the filter leaves only the path that does
+        $df = df()->read(from_text(__DIR__ . '/Fixtures/Partitioning/rebind/**/*.txt'));
+
+        static::assertTrue($df->schema()->get('tier')->isNullable());
+
+        $df->filterPartitions(ref('region')->equals(lit('eu')));
+
+        static::assertFalse($df->schema()->get('tier')->isNullable());
+        static::assertEquals($df->schema(), $df->fetch()->schema());
     }
 
     public function test_overwrite_save_mode_not_dropping_old_partitions(): void
@@ -75,9 +130,12 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['date' => '2024-04-03'],
                 ['date' => '2024-04-04'],
             ]))
-            ->partitionBy('date')
-            ->saveMode(overwrite())
-            ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt'))
+            ->write(
+                to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt')
+                    ->saveMode(overwrite())
+                    // the committed fixtures carry the date in the body, so this write must too
+                    ->partitionBy(partition_by('date')->writeColumns()),
+            )
             ->run();
 
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
@@ -134,86 +192,47 @@ final class PartitioningTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_partition_by(): void
+    public function test_repartition_groups_every_row_sharing_a_key_into_one_batch(): void
     {
-        $rows = df()
+        $batches = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 5, 'country' => 'US', 'age' => 40]),
+                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
+                row(['id' => 6, 'country' => 'US', 'age' => 40]),
+                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
             )))
-            ->partitionBy(ref('country'))
+            ->repartition(ref('country'))
             ->get();
 
-        static::assertEquals(
-            [
-                rows_partitioned([
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                ], [
-                    partition('country', 'PL'),
-                ]),
-                rows_partitioned([
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                ], [
-                    partition('country', 'US'),
-                ]),
-            ],
-            iterator_to_array($rows),
+        $countries = array_map(static fn(Rows $batch): array => $batch->reduceToArray(ref(
+            'country',
+        )), iterator_to_array($batches));
+
+        usort(
+            $countries,
+            static fn(array $a, array $b): int => type_string()->assert($a[0]) <=> type_string()->assert($b[0]),
         );
+
+        static::assertSame([['PL', 'PL', 'PL'], ['US', 'US']], $countries);
     }
 
-    public function test_partition_by_partitions_order(): void
+    public function test_partition_directories_nest_in_declaration_order(): void
     {
+        $output = __DIR__ . '/Fixtures/Partitioning/declaration_order';
+
         df()
-            ->read(from_array(array_merge(...array_map(
-                static function (int $i): array {
-                    $data = [];
+            ->read(from_array([['text' => 'a', 'year' => '2024', 'month' => '03', 'day' => '01']]))
+            ->write(
+                to_text($output . '/out.txt')
+                    ->saveMode(overwrite())
+                    // order is chosen on purpose: the writer nests in the order it was given, not by name
+                    ->partitionBy(partition_by('year', 'day', 'month')),
+            )
+            ->run();
 
-                    $maxItems = generate_random_int(2, 10);
-
-                    for ($d = 0; $d < $maxItems; $d++) {
-                        $data[] = [
-                            'id' => generate_random_string(),
-                            'created_at' => (new DateTimeImmutable('2020-01-01'))->add(
-                                new DateInterval('P' . $i . 'D'),
-                            )->setTime(
-                                generate_random_int(0, 23),
-                                generate_random_int(0, 59),
-                                generate_random_int(0, 59),
-                            ),
-                            'value' => generate_random_int(1, 1000),
-                        ];
-                    }
-
-                    return $data;
-                },
-                range(1, 10),
-            ))))
-            ->withEntry('year', ref('created_at')->dateFormat('Y'))
-            ->withEntry('month', ref('created_at')->dateFormat('m'))
-            ->withEntry('day', ref('created_at')->dateFormat('d'))
-            ->partitionBy(ref('year'), ref('day'), ref('month'))
-            ->run(function (Rows $rows): void {
-                $this->assertSame(
-                    [
-                        'year',
-                        'day',
-                        'month', // order is changed on purpose
-                    ],
-                    array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
-                );
-            });
+        static::assertFileExists($output . '/year=2024/day=01/month=03/out.txt');
     }
 
     public function test_partitioning_by_path_placeholders_only(): void
@@ -226,10 +245,11 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'text' => 'order 2'],
                 ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'text' => 'order 3'],
             ]))
-            ->partitionBy('order-year', 'order-month', 'order-name')
-            ->drop('order-year', 'order-month', 'order-name')
-            ->saveMode(overwrite())
-            ->write(to_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
+            ->write(
+                to_text($output . '/{order-year}/{order-month}/{order-name}.txt')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),
+            )
             ->run();
 
         static::assertFileExists($output . '/2024/03/123456-PL.txt');
@@ -238,14 +258,15 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
         df()->read(from_text($output
         . '/{order-year}/{order-month}/{order-name}.txt'))->run(function (Rows $rows): void {
+            // the placeholders put the values in the path, and the read takes them back from it
             $this->assertSame(
-                ['order-year', 'order-month', 'order-name'],
-                array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+                ['text', 'order-month', 'order-name', 'order-year'],
+                $rows->schema()->references()->names(),
             );
         });
 
         df()->read(from_text($output . '/**/*.txt'))->run(function (Rows $rows): void {
-            $this->assertFalse($rows->isPartitioned());
+            $this->assertSame(['text'], $rows->schema()->references()->names());
         });
 
         $prunedRows = df()
@@ -296,11 +317,11 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->collect()
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))
-            ->groupBy(ref('year'))
+            ->groupBy([ref('year')])
             ->aggregate(collect(ref('year')))
             ->fetch();
 
         static::assertCount(1, $rows);
-        static::assertSame(2023, $rows->first()->valueOf('year'));
+        static::assertSame(2023, $rows->first()->get('year'));
     }
 }

@@ -4,21 +4,21 @@
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::zend_ulong;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::ClassEntry;
+use ext_php_rs::zend::{ClassEntry, Function};
 
-use crate::ctx::{call_handle, call_handle_on, read_property, zval_str, Ctx};
+use crate::ctx::{
+    call_handle, call_handle_on, ce_method_ref, find_class, null_zval, read_property,
+    schema_mismatch, zval_str, Ctx,
+};
 use crate::exception::ext_exception;
 use crate::format::{
-    write_u32, DATETIME_IMMUTABLE, DATETIME_MUTABLE, KEY_INTEGER, KEY_STRING, TAG_ARRAY,
-    TAG_BOOLEAN, TAG_DATETIME, TAG_FLOAT, TAG_INTEGER, TAG_JSON, TAG_NULL, TAG_STRING, TAG_UUID,
-    VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
+    write_u32, VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
 use crate::plan::{parse_schema_json, TypeJson};
 
 enum EncodeMapKey {
     Integer,
     String,
-    Dynamic,
 }
 
 /// Declared structure element key after PHP's array-key coercion, mirroring
@@ -35,7 +35,6 @@ enum Encoder {
     Boolean,
     String,
     Null,
-    Dynamic,
     DateTime,
     Interval,
     Uuid,
@@ -48,7 +47,7 @@ enum Encoder {
     HtmlElement,
     List(Box<Encoder>),
     Map(EncodeMapKey, Box<Encoder>),
-    Structure(Vec<(DeclaredKey, Vec<u8>, Encoder)>, bool),
+    Structure(Vec<(DeclaredKey, Vec<u8>, Encoder)>),
     Optional(Box<Encoder>),
 }
 
@@ -66,7 +65,6 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
         "boolean" => Encoder::Boolean,
         "string" | "non_empty_string" | "numeric-string" | "class_string" => Encoder::String,
         "null" => Encoder::Null,
-        "mixed" | "union" | "scalar" | "literal" | "array" => Encoder::Dynamic,
         "datetime" | "date" => Encoder::DateTime,
         "time" => Encoder::Interval,
         "uuid" => Encoder::Uuid,
@@ -89,7 +87,11 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
             {
                 "integer" => EncodeMapKey::Integer,
                 "string" => EncodeMapKey::String,
-                _ => EncodeMapKey::Dynamic,
+                other => {
+                    return Err(ext_exception(format!(
+                        "flow_php does not support map keys of type \"{other}\""
+                    )));
+                }
             };
 
             Encoder::Map(
@@ -99,19 +101,33 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
                 )?),
             )
         }
-        "structure" => {
+        "structure_v2" => {
+            if type_json.fields().is_empty() {
+                return Err(ext_exception(
+                    "flow_php read a structure type with no fields; the loaded flow_php extension and the \
+                     flow-php/etl in use disagree on the structure schema format - reinstall one to match the \
+                     other, or set the Floe engine to FloeEngine::php",
+                ));
+            }
+
             let mut elements = Vec::new();
 
-            for (name, element) in type_json.all_elements() {
-                let bytes = name.clone().into_bytes();
+            for field in type_json.fields() {
+                let bytes = field.name.clone().into_bytes();
                 let declared = match crate::ctx::array_key_index(&bytes) {
                     Some(index) => DeclaredKey::Index(index),
                     None => DeclaredKey::Str(bytes.clone()),
                 };
-                elements.push((declared, bytes, build_encoder(element)?));
+                elements.push((declared, bytes, build_encoder(&field.type_)?));
             }
 
-            Encoder::Structure(elements, type_json.allow_extra())
+            if type_json.allow_extra() {
+                return Err(ext_exception(
+                    "flow_php does not support structures that allow extra values",
+                ));
+            }
+
+            Encoder::Structure(elements)
         }
         "optional" => Encoder::Optional(Box::new(build_encoder(
             type_json.base().ok_or_else(|| missing("base"))?,
@@ -127,6 +143,11 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
 pub(crate) struct EncodeColumn {
     pub(crate) name: Vec<u8>,
     encoder: Encoder,
+    /// `Definition::isNullable()`, read once at plan build - never per row
+    nullable: bool,
+    /// retained (refcount++) so a refusal can be raised through the PHP factory,
+    /// which is the only place a schema-mismatch message is ever authored
+    base_def: Zval,
     /// Canonical PHP `json_encode` of this column's section-schema metadata - the
     /// divergence reference. An entry whose metadata JSON differs rides its own
     /// metadata beside the value.
@@ -136,6 +157,8 @@ pub(crate) struct EncodeColumn {
 
 pub struct EncodePlan {
     pub(crate) columns: Vec<EncodeColumn>,
+    schema_mismatch_ce: &'static ClassEntry,
+    value_does_not_match: &'static Function,
 }
 
 /// `HASH_FLAG_PACKED` from zend_types.h.
@@ -199,8 +222,13 @@ fn write_len_prefixed(out: &mut Vec<u8>, bytes: &[u8]) {
 /// `SchemaEncoder` emits). Each column's section-schema metadata is captured as
 /// its canonical PHP `json_encode` so a diverging entry can be detected without
 /// re-parsing the schema per row.
-pub fn build_encode_plan(schema_json: &[u8], ctx: &mut Ctx) -> Result<EncodePlan, PhpException> {
+pub fn build_encode_plan(
+    schema_json: &[u8],
+    schema: &Zval,
+    ctx: &mut Ctx,
+) -> Result<EncodePlan, PhpException> {
     let definitions = parse_schema_json(schema_json)?;
+    let base_defs = schema_definitions(schema)?;
 
     let mut assoc_zv = Zval::new();
     assoc_zv.set_bool(true);
@@ -222,15 +250,29 @@ pub fn build_encode_plan(schema_json: &[u8], ctx: &mut Ctx) -> Result<EncodePlan
     for (index, definition) in definitions.iter().enumerate() {
         let plan_metadata_json = column_metadata_json(decoded_ht, index, ctx)?;
 
+        let base_def = base_defs
+            .get(index)
+            .ok_or_else(|| ext_exception("flow_php expected a Definition for every schema column"))?
+            .shallow_clone();
+
         columns.push(EncodeColumn {
             name: definition.name.clone().into_bytes(),
             encoder: build_encoder(&definition.type_)?,
+            nullable: definition.nullable,
+            base_def,
             plan_metadata_empty: plan_metadata_json == b"[]",
             plan_metadata_json,
         });
     }
 
-    Ok(EncodePlan { columns })
+    Ok(EncodePlan {
+        columns,
+        schema_mismatch_ce: find_class("Flow\\ETL\\Exception\\SchemaMismatchException")?,
+        value_does_not_match: ce_method_ref(
+            find_class("Flow\\ETL\\Exception\\ColumnMismatchException")?,
+            "valueDoesNotMatch",
+        )?,
+    })
 }
 
 /// Canonical PHP `json_encode` of the `metadata` map of the `index`th decoded
@@ -264,11 +306,40 @@ fn column_metadata_json(
         .ok_or_else(|| ext_exception("flow_php expected json_encode to return a string"))
 }
 
+/// The `Schema`'s own `Definition` objects in declaration order - the same walk
+/// `build_hydrate_plan` does, and the same order `parse_schema_json` yields.
+/// Runs once per schema rebind, never per row.
+fn schema_definitions(schema: &Zval) -> Result<Vec<Zval>, PhpException> {
+    let schema_obj = expect_object(schema, "a Schema")?;
+    let schema_ce = unsafe { schema_obj.ce.as_ref() }
+        .ok_or_else(|| ext_exception("flow_php failed to resolve the Schema class"))?;
+    let definitions = call_handle_on(
+        ce_method_ref(schema_ce, "definitions")?,
+        schema_obj,
+        &mut [],
+        "read schema definitions",
+    )?;
+    let definitions_ht = definitions
+        .array()
+        .ok_or_else(|| ext_exception("flow_php expected Schema::definitions to return an array"))?;
+
+    let mut base_defs = Vec::with_capacity(definitions_ht.len());
+
+    ht_for_each(definitions_ht, |_, _, def_zv| {
+        base_defs.push(def_zv.shallow_clone());
+
+        Ok(())
+    })?;
+
+    Ok(base_defs)
+}
+
 /// Encodes one `Flow\ETL\Row\TypedRowValues` (its `values` + `metadata` maps)
 /// into a bare ROW frame body (no length prefix, no frame type). Byte-identical
 /// to `Flow\Floe\PhpFloeEncoder::encode` for the same row.
 pub fn encode_typed_row(
     plan: &EncodePlan,
+    row_index: u64,
     values_ht: &ZendHashTable,
     metadata_ht: &ZendHashTable,
     ctx: &mut Ctx,
@@ -277,14 +348,24 @@ pub fn encode_typed_row(
 
     for column in &plan.columns {
         let Some(value) = ht_find(values_ht, &column.name) else {
-            out.push(VALUE_ABSENT);
-
-            continue;
+            return Err(ext_exception(format!(
+                "flow_php found a row that does not carry the declared column \"{}\"",
+                String::from_utf8_lossy(&column.name)
+            )));
         };
 
         let (diverges, entry_metadata_json) = typed_metadata(column, metadata_ht, ctx)?;
 
         if value.is_null() {
+            if !column.nullable {
+                return Err(schema_mismatch(
+                    plan.schema_mismatch_ce,
+                    plan.value_does_not_match,
+                    row_index,
+                    &mut [column.base_def.shallow_clone(), null_zval()],
+                )?);
+            }
+
             if diverges {
                 out.push(VALUE_NULL_WITH_META);
                 write_len_prefixed(&mut out, &entry_metadata_json);
@@ -394,16 +475,20 @@ fn encode_value(
                 .as_bytes(),
         ),
         Encoder::Null => {}
-        Encoder::Dynamic => encode_dynamic(value, out, ctx)?,
         Encoder::DateTime => encode_datetime(expect_object(value, "a datetime value")?, out, ctx)?,
         Encoder::Interval => encode_interval(expect_object(value, "a time value")?, out, ctx)?,
         Encoder::Uuid => {
             let uuid = expect_object(value, "a uuid value")?;
-            let (_, value_slot) = ctx.uuid()?;
+            let (uuid_ce, value_slot) = ctx.uuid()?;
+
+            if !std::ptr::eq(uuid.ce.cast_const(), std::ptr::from_ref(uuid_ce)) {
+                return Err(ext_exception("flow_php expected a uuid value to be an object"));
+            }
+
             let bytes = read_slot(uuid, value_slot)
                 .zend_str()
                 .ok_or_else(|| ext_exception("flow_php expected Uuid to hold a string"))?;
-            out.extend_from_slice(bytes.as_bytes());
+            write_len_prefixed(out, bytes.as_bytes());
         }
         Encoder::Json => encode_json(expect_object(value, "a json value")?, out, ctx)?,
         Encoder::TimeZone => {
@@ -483,22 +568,12 @@ fn encode_value(
                         None => write_len_prefixed(out, (index as i64).to_string().as_bytes()),
                         Some(key) => write_len_prefixed(out, key.as_bytes()),
                     },
-                    EncodeMapKey::Dynamic => match map_key {
-                        None => {
-                            out.push(TAG_INTEGER);
-                            out.extend_from_slice(&(index as i64).to_le_bytes());
-                        }
-                        Some(key) => {
-                            out.push(TAG_STRING);
-                            write_len_prefixed(out, key.as_bytes());
-                        }
-                    },
                 }
 
                 encode_value(element, item, out, ctx)
             })?;
         }
-        Encoder::Structure(elements, allow_extra) => {
+        Encoder::Structure(elements) => {
             let values = value
                 .array()
                 .ok_or_else(|| ext_exception("flow_php expected a structure value"))?;
@@ -517,45 +592,6 @@ fn encode_value(
                         encode_value(element, item, out, ctx)?;
                     }
                 }
-            }
-
-            if *allow_extra {
-                let is_declared = |key: Option<&ZendStr>, index: zend_ulong| {
-                    elements
-                        .iter()
-                        .any(|(declared, _, _)| match (declared, key) {
-                            (DeclaredKey::Index(declared_index), None) => {
-                                *declared_index == index as i64
-                            }
-                            (DeclaredKey::Str(declared_key), Some(key)) => {
-                                declared_key.as_slice() == key.as_bytes()
-                            }
-                            _ => false,
-                        })
-                };
-
-                let mut extra_count = 0u32;
-                ht_for_each(values, |key, index, _| {
-                    if !is_declared(key, index) {
-                        extra_count += 1;
-                    }
-
-                    Ok(())
-                })?;
-                write_u32(out, extra_count);
-
-                ht_for_each(values, |key, index, item| {
-                    if is_declared(key, index) {
-                        return Ok(());
-                    }
-
-                    match key {
-                        None => write_len_prefixed(out, (index as i64).to_string().as_bytes()),
-                        Some(key) => write_len_prefixed(out, key.as_bytes()),
-                    }
-
-                    encode_dynamic(item, out, ctx)
-                })?;
             }
         }
         Encoder::Optional(base) => {
@@ -590,109 +626,6 @@ fn ht_find<'a>(ht: &'a ZendHashTable, key: &[u8]) -> Option<&'a Zval> {
     }
 }
 
-/// Mirrors `ValueEncoder::encodeDynamic`.
-fn encode_dynamic(value: &Zval, out: &mut Vec<u8>, ctx: &mut Ctx) -> Result<(), PhpException> {
-    if value.is_null() {
-        out.push(TAG_NULL);
-
-        return Ok(());
-    }
-
-    if let Some(long) = value.long() {
-        out.push(TAG_INTEGER);
-        out.extend_from_slice(&long.to_le_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(double) = value.double() {
-        out.push(TAG_FLOAT);
-        out.extend_from_slice(&double.to_le_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(boolean) = value.bool() {
-        out.push(TAG_BOOLEAN);
-        out.push(u8::from(boolean));
-
-        return Ok(());
-    }
-
-    if let Some(string) = value.zend_str() {
-        out.push(TAG_STRING);
-        write_len_prefixed(out, string.as_bytes());
-
-        return Ok(());
-    }
-
-    if let Some(array) = value.array() {
-        out.push(TAG_ARRAY);
-        write_u32(out, array.len() as u32);
-
-        return ht_for_each(array, |key, index, item| {
-            match key {
-                None => {
-                    out.push(KEY_INTEGER);
-                    out.extend_from_slice(&(index as i64).to_le_bytes());
-                }
-                Some(key) => {
-                    out.push(KEY_STRING);
-                    write_len_prefixed(out, key.as_bytes());
-                }
-            }
-
-            encode_dynamic(item, out, ctx)
-        });
-    }
-
-    if let Some(object) = value.object() {
-        if object.instance_of(ctx.datetime_interface()?) {
-            out.push(TAG_DATETIME);
-
-            return encode_datetime(object, out, ctx);
-        }
-
-        let (uuid_ce, uuid_value_slot) = ctx.uuid()?;
-
-        if std::ptr::eq(object.ce.cast_const(), std::ptr::from_ref(uuid_ce)) {
-            out.push(TAG_UUID);
-            out.extend_from_slice(
-                read_slot(object, uuid_value_slot)
-                    .zend_str()
-                    .ok_or_else(|| ext_exception("flow_php expected Uuid to hold a string"))?
-                    .as_bytes(),
-            );
-
-            return Ok(());
-        }
-
-        let (json_ce, ..) = ctx.json()?;
-
-        if std::ptr::eq(object.ce.cast_const(), std::ptr::from_ref(json_ce)) {
-            out.push(TAG_JSON);
-
-            return encode_json(object, out, ctx);
-        }
-    }
-
-    Err(ext_exception(format!(
-        "flow_php does not support values of type \"{}\" in mixed/union context",
-        debug_type(value)
-    )))
-}
-
-fn debug_type(value: &Zval) -> String {
-    if let Some(object) = value.object() {
-        return unsafe { object.ce.as_ref() }
-            .and_then(ClassEntry::name)
-            .unwrap_or("object")
-            .to_string();
-    }
-
-    format!("{:?}", value.get_type())
-}
-
 /// Mirrors `ValueEncoder::encodeDateTime`.
 fn encode_datetime(
     value: &ZendObject,
@@ -703,11 +636,9 @@ fn encode_datetime(
     let immutable_ce = std::ptr::from_ref(ctx.datetime_fns(false)?.ce);
     let mutable_ce = std::ptr::from_ref(ctx.datetime_fns(true)?.ce);
 
-    if std::ptr::eq(ce, immutable_ce) {
-        out.push(DATETIME_IMMUTABLE);
-    } else if std::ptr::eq(ce, mutable_ce) {
-        out.push(DATETIME_MUTABLE);
-    } else {
+    // the class is not stored - a datetime column always hydrates to DateTimeImmutable - but a
+    // custom subclass is still refused, because its extra state would be dropped silently
+    if !std::ptr::eq(ce, immutable_ce) && !std::ptr::eq(ce, mutable_ce) {
         let class = unsafe { ce.as_ref() }
             .and_then(ClassEntry::name)
             .ok_or_else(|| ext_exception("flow_php failed to resolve a datetime class"))?;
@@ -785,7 +716,11 @@ fn encode_interval(
 }
 
 fn encode_json(value: &ZendObject, out: &mut Vec<u8>, ctx: &mut Ctx) -> Result<(), PhpException> {
-    let (_, value_slot, is_object_slot) = ctx.json()?;
+    let (json_ce, value_slot, is_object_slot) = ctx.json()?;
+
+    if !std::ptr::eq(value.ce.cast_const(), std::ptr::from_ref(json_ce)) {
+        return Err(ext_exception("flow_php expected a json value to be an object"));
+    }
 
     write_len_prefixed(
         out,

@@ -24,10 +24,13 @@ interface SourceStream extends Stream
     public function read(int $length, int $offset): string;
 
     /**
-     * @param string $separator The line separator, content will be read until the first occurrence of the separator
-     * @param null|int<1, max> $length Number of bytes to read in one step. If the end of the stream or separator is reached before the specified number of bytes are read, the remaining bytes are returned.
-     *                                 Otherwise we are reading until the separator is found or end of file is reached. When working with remote streams it might be a good idea to set length to few mb in orders to reduce number of network requests.
-     *                                 When no value is provided, filesystems will use a default value, for example NativeLocalFilesystem is going to use 8192 length.
+     * Yields the stream's lines with the separator stripped: a 0-byte stream yields nothing, a separator that ends the
+     * stream opens no further line, and every other empty line is yielded as ''. The separator is matched byte for
+     * byte; no "\r" is stripped. "x\ny\n" -> ["x","y"], "x\n\ny" -> ["x","","y"], "x\n\n" -> ["x",""],
+     * "x\r\ny" -> ["x\r","y"], "" -> [].
+     *
+     * @param non-empty-string $separator multi-byte included
+     * @param null|int<1, max> $length bytes read per step - a read-chunk hint, never a cap on line length; null lets the implementation choose
      *
      * @return \Generator<string>
      */

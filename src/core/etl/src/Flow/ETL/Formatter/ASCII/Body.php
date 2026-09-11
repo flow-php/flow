@@ -7,13 +7,18 @@ namespace Flow\ETL\Formatter\ASCII;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
+use Flow\ETL\Schema;
 
 final readonly class Body
 {
     public function __construct(
         private Rows $rows,
     ) {}
+
+    public function schema(): Schema
+    {
+        return $this->rows->schema();
+    }
 
     /**
      * @return int<0, max>
@@ -24,7 +29,7 @@ final readonly class Body
 
         foreach ($this->rows as $row) {
             try {
-                $value = new ASCIIValue($row->entries()->get($entry));
+                $value = new ASCIIValue($this->schema()->get($entry)->type(), $row->get($entry));
 
                 if ($value->length($truncate) >= $max) {
                     $max = $value->length($truncate);
@@ -34,14 +39,6 @@ final readonly class Body
         }
 
         return $max;
-    }
-
-    /**
-     * @return array<Partition>
-     */
-    public function partitions(): array
-    {
-        return $this->rows->partitions()->toArray();
     }
 
     /**

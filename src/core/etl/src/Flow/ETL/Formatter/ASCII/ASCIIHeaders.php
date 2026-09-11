@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Formatter\ASCII;
 
+use function Flow\Types\DSL\type_string;
 use function max;
 use function str_repeat;
 
@@ -19,7 +20,7 @@ final readonly class ASCIIHeaders
         $buffer = '+';
 
         foreach ($this->headers->names() as $name) {
-            $headerName = new ASCIIValue($name);
+            $headerName = new ASCIIValue(type_string(), $name);
 
             $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
@@ -32,7 +33,7 @@ final readonly class ASCIIHeaders
         $buffer .= '|';
 
         foreach ($this->headers->names() as $name) {
-            $headerName = new ASCIIValue($name);
+            $headerName = new ASCIIValue(type_string(), $name);
 
             $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 

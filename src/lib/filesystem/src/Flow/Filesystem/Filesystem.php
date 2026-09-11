@@ -30,6 +30,11 @@ interface Filesystem
     public function status(Path $path): ?FileStatus;
 
     /**
+     * True when this filesystem serves the given path's protocol.
+     */
+    public function supports(Path $path): bool;
+
+    /**
      * Open destination stream for writing, if file already exists it will be overwritten.
      */
     public function writeTo(Path $path): DestinationStream;

@@ -18,6 +18,7 @@ use Flow\CLI\Options\FileFormatOption;
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,6 +29,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
 
+#[AsCommand(name: 'file:rows:count', description: 'Count rows in a file.', aliases: ['count'])]
 final class FileRowsCountCommand extends Command
 {
     use ConfigOptions;
@@ -46,8 +48,6 @@ final class FileRowsCountCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:schema')
-            ->setDescription('Read data schema from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,
@@ -113,7 +113,7 @@ final class FileRowsCountCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

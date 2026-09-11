@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileConvertCommand;
+use Flow\CLI\Command\FileReadCommand;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function file_exists;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\data_frame;
 use function unlink;
 
 final class FileConvertCommandTest extends TestCase
@@ -52,13 +57,58 @@ final class FileConvertCommandTest extends TestCase
             'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
             'output-file' => $output,
             '--input-file-limit' => 5,
-            '--schema-auto-cast' => true,
         ], $options));
 
         $tester->assertCommandIsSuccessful();
 
         static::assertFileExists($output);
         unlink($output);
+    }
+
+    public function test_convert_with_sample_size_writes_the_truncated_value(): void
+    {
+        $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.csv';
+
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/inference/widening.csv',
+            'output-file' => $output,
+            '--schema-sample-size' => 1,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // The frozen ?integer schema truncates 1.5 - integer::cast(1.5) is 1
+        static::assertSame([['a' => 1], ['a' => 1]], data_frame()->read(from_csv($output))->fetch()->toArray());
+
+        unlink($output);
+    }
+
+    public function test_cli_rejects_a_remote_input_path(): void
+    {
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The Flow CLI reads and writes "file://" paths only');
+
+        $tester->execute([
+            'input-file' => 'aws-s3://bucket/orders.csv',
+            'output-file' => __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json',
+        ]);
+    }
+
+    public function test_cli_rejects_a_remote_output_path(): void
+    {
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The Flow CLI reads and writes "file://" paths only');
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            'output-file' => 'aws-s3://bucket/orders.parquet',
+        ]);
     }
 
     public function test_convert_with_offset(): void
@@ -127,5 +177,15 @@ final class FileConvertCommandTest extends TestCase
         static::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
 
         unlink($output);
+    }
+
+    public function test_file_convert_command_registers_under_its_own_name_beside_file_read_command(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileReadCommand(), new FileConvertCommand()]);
+
+        static::assertInstanceOf(FileReadCommand::class, $application->find('file:read'));
+        static::assertInstanceOf(FileConvertCommand::class, $application->find('file:convert'));
+        static::assertInstanceOf(FileConvertCommand::class, $application->find('convert'));
     }
 }

@@ -8,69 +8,51 @@ final class PlaygroundHelpTest extends EndToEndTestCase
 {
     public function test_help_buttons_show_help_section_with_correct_content(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->playwrightBrowser()->visit('/playground');
+        $page = $this->pageOf($browser);
 
-        $client->waitForVisibility('[data-help-topic="help-about"]', 5);
+        $browser
+            ->waitUntilVisible('[data-help-topic="help-about"]')
+            ->assertNotVisible('[data-playground-help-target="helpSection"]')
+            ->click('[data-help-topic="help-about"]')
+            ->waitUntilVisible('[data-playground-help-target="helpSection"]')
+            ->assertVisible('[data-playground-help-target="helpSection"]')
+            ->assertSeeIn('#help-about', 'Flow PHP Playground');
 
-        static::assertEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
+        $page->evaluate('() => document.querySelector(\'[data-action="click->playground-help#close"]\').click()');
+        $browser->waitUntilNotVisible('[data-playground-help-target="helpSection"]');
 
-        $client->getCrawler()->filter('[data-help-topic="help-about"]')->click();
-        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
+        $page->evaluate('() => document.querySelector(\'[data-help-topic="help-navigation"]\').click()');
+        $browser
+            ->waitUntilVisible('[data-playground-help-target="helpSection"]')
+            ->assertVisible('[data-playground-help-target="helpSection"]')
+            ->assertSeeIn('#help-navigation', 'Action Buttons');
 
-        static::assertNotEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
-        static::assertStringContainsString('Flow PHP Playground', $client->getCrawler()->filter('#help-about')->text());
+        $page->evaluate('() => document.querySelector(\'[data-action="click->playground-help#close"]\').click()');
+        $browser->waitUntilNotVisible('[data-playground-help-target="helpSection"]');
 
-        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
-        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
-
-        $client->executeScript('document.querySelector(\'[data-help-topic="help-navigation"]\').click();');
-        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
-
-        static::assertNotEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
-        static::assertStringContainsString('Action Buttons', $client->getCrawler()->filter('#help-navigation')->text());
-
-        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
-        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
-
-        $client->executeScript('document.querySelector(\'[data-help-topic="help-workspace"]\').click();');
-        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
-
-        static::assertNotEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
-        static::assertStringContainsString('Workspace', $client->getCrawler()->filter('#help-workspace')->text());
+        $page->evaluate('() => document.querySelector(\'[data-help-topic="help-workspace"]\').click()');
+        $browser
+            ->waitUntilVisible('[data-playground-help-target="helpSection"]')
+            ->assertVisible('[data-playground-help-target="helpSection"]')
+            ->assertSeeIn('#help-workspace', 'Workspace');
     }
 
     public function test_help_close_button_hides_help_section(): void
     {
-        $client = self::navigateWithRetry('/playground');
+        $browser = $this->playwrightBrowser()->visit('/playground');
+        $page = $this->pageOf($browser);
 
-        $client->waitForVisibility('[data-help-topic="help-about"]', 5);
+        $browser
+            ->waitUntilVisible('[data-help-topic="help-about"]')
+            ->click('[data-help-topic="help-about"]')
+            ->waitUntilVisible('[data-playground-help-target="helpSection"]')
+            ->assertVisible('[data-playground-help-target="helpSection"]');
 
-        $client->getCrawler()->filter('[data-help-topic="help-about"]')->click();
-        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
+        $page->evaluate('() => document.querySelector(\'[data-action="click->playground-help#close"]\').click()');
 
-        static::assertNotEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
-
-        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
-        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
-
-        static::assertEquals(
-            'none',
-            $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'),
-        );
+        $browser
+            ->waitUntilNotVisible('[data-playground-help-target="helpSection"]')
+            ->assertNotVisible('[data-playground-help-target="helpSection"]');
     }
 }

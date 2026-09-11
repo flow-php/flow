@@ -7,23 +7,39 @@ namespace Flow\ETL\Adapter\XML\Loader;
 use Flow\ETL\Adapter\XML\XMLEncoder;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
-use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
-use function array_key_exists;
-use function count;
+use function sprintf;
+use function trim;
 
-final class XMLLoader implements Closure, FileLoader, Loader
+final class XMLLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
+    private readonly Filesystem $filesystem;
+
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
+
+    private ?FilesSink $files = null;
+
     private string $attributePrefix = '_';
 
     private string $dateFormat = 'Y-m-d';
@@ -47,11 +63,6 @@ final class XMLLoader implements Closure, FileLoader, Loader
     private string $rowElementName = 'row';
 
     /**
-     * @var array<string, int>
-     */
-    private array $writes = [];
-
-    /**
      * @var array<string, string>
      */
     private array $xmlAttributes = ['version' => '1.0', 'encoding' => 'UTF-8'];
@@ -59,17 +70,44 @@ final class XMLLoader implements Closure, FileLoader, Loader
     public function __construct(
         Path $path,
         private readonly XMLWriter $xmlWriter,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. to_xml($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::XML);
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
     {
-        foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
+        foreach ($this->files?->openStreams() ?? [] as $stream) {
             $stream->append('</' . $this->rootElementName . '>');
         }
 
-        $context->streams()->closeStreams($this->path);
+        $this->files?->publish();
+        $this->files = null;
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        $this->files?->abandon();
+        $this->files = null;
     }
 
     public function destination(): Path
@@ -88,7 +126,9 @@ final class XMLLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
-            $this->write($rows, $rows->partitions()->toArray(), $context);
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $this->write($group, $partitions->toArray(), $context);
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {
@@ -96,6 +136,13 @@ final class XMLLoader implements Closure, FileLoader, Loader
 
             throw $e;
         }
+    }
+
+    public function saveMode(SaveMode $mode): static
+    {
+        $this->saveMode = $mode;
+
+        return $this;
     }
 
     public function withAttributePrefix(string $attributePrefix): self
@@ -176,39 +223,23 @@ final class XMLLoader implements Closure, FileLoader, Loader
      */
     public function write(Rows $nextRows, array $partitions, FlowContext $context): void
     {
-        $streams = $context->streams();
+        $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
+        $opening = !$files->touched($partitions);
+        $stream = $files->writeTo($partitions);
 
-        if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->writeTo($this->path, $partitions);
+        if ($opening) {
+            $attributes = '';
 
-            if (!array_key_exists($stream->path()->path(), $this->writes)) {
-                $this->writes[$stream->path()->path()] = 0;
+            foreach ($this->xmlAttributes as $name => $value) {
+                $attributes .= $name . '="' . $value . '" ';
             }
 
-            $xmlAttributes = '';
-            foreach ($this->xmlAttributes as $key => $value) {
-                $xmlAttributes .= $key . '="' . $value . '" ';
-            }
-
-            $stream->append('<?xml ' . trim($xmlAttributes) . "?>\n<" . $this->rootElementName . ">\n");
-        } else {
-            $stream = $streams->writeTo($this->path, $partitions);
+            $stream->append('<?xml ' . trim($attributes) . "?>\n<" . $this->rootElementName . ">\n");
         }
 
-        $this->writeXML($nextRows, $stream, $context);
-    }
-
-    public function writeXML(Rows $rows, DestinationStream $stream, FlowContext $context): void
-    {
-        if (!count($rows)) {
-            return;
-        }
-
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $node) {
+        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($nextRows)) as $node) {
             $stream->append($node . "\n");
         }
-
-        $this->writes[$stream->path()->path()]++;
     }
 
     private function encoder(): XMLEncoder

@@ -23,6 +23,12 @@ final readonly class PostgreSQLDialect implements Dialect
         private AbstractPlatform $platform,
     ) {}
 
+    public function maxBindParameters(): int
+    {
+        // PQ_QUERY_PARAM_MAX_LIMIT in libpq-fe.h, inclusive, checked per PQsendQueryParams
+        return 65_535;
+    }
+
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData

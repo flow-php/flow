@@ -15,78 +15,109 @@ specific version to ensure a smooth upgrade process.
 |-------------------------------------------------------------------|------------------------------------------------|
 | `{"tags":"[1,2,3]"}` (escaped JSON string)                        | `{"tags":[1,2,3]}`                             |
 | nested `DateTimeInterface`/`Uuid`/`UnitEnum` `json_encode`d as-is | datetime format / canonical string / case name |
-| non-array value under a container type → `""`                     | `null`                                         |
+| non-array value under a container type -> `""`                    | `null`                                         |
 
 ### 2) `flow-php/etl` - Floe inferred schema keeps the first batch's nullability
 
-| Before                                                            | After                                           |
-|-------------------------------------------------------------------|-------------------------------------------------|
-| inferred schema - every column nullable                           | nullability taken from the first batch's values |
-| `null` in batch ≥ 2 in a column non-nullable in batch 1 - written | throws                                          |
+| Before                                                             | After                                           |
+|--------------------------------------------------------------------|-------------------------------------------------|
+| inferred schema - every column nullable                            | nullability taken from the first batch's values |
+| `null` in batch >= 2 in a column non-nullable in batch 1 - written | throws                                          |
 
 Columns that may only become null in later batches, declare the schema explicitly:
 `to_floe($path)->withSchema($schema)`.
 
-### 3) `flow-php/types` - `detectType([])` returns `array{}`
+### 3) `flow-php/types` - `detectType([])` returns `list<null>`
 
-| Before                                                  | After                |
-|---------------------------------------------------------|----------------------|
-| `(new TypeDetector())->detectType([])` → `array<mixed>` | `array{}`            |
-| -                                                       | `type_empty_array()` |
+| Before                                                   | After        |
+|----------------------------------------------------------|--------------|
+| `(new TypeDetector())->detectType([])` -> `array<mixed>` | `list<null>` |
 
-### 4) `flow-php/types` - array type detection never returns a type that rejects its own input
+### 4) `flow-php/types` - `detectType()` returns different types for arrays
 
-| Before                                                            | After                 |
-|-------------------------------------------------------------------|-----------------------|
-| `detectType([5 => 'a', 6 => []])` → `map<integer, string>`        | `array<mixed>`        |
-| `detectType(['a', []])` → `list<string>`                          | `array<mixed>`        |
-| `detectType([['id' => '1'], []])` → `list<structure{id: string}>` | `list<array<mixed>>`  |
-| `detectType([[1, 2], [null]])` → `list<list<integer>>`            | `list<array<mixed>>`  |
-| `detectType([[1.2], [4.0, 5]])` → `list<list<float>>`             | `list<array<mixed>>`  |
-| `detectType([[], [1, 2]])` → `list<array<mixed>>`                 | `list<list<integer>>` |
+| Before                                                                                                   | After                                          |
+|----------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| `detectType([5 => 'a', 6 => []])` -> `map<integer, string>`                                              | `array<mixed>`                                 |
+| `detectType(['a', []])` -> `list<string>`                                                                | `array<mixed>`                                 |
+| `detectType([['id' => '1'], []])` -> `list<structure{id: string}>`                                       | `array<mixed>`                                 |
+| `detectType([[1, 2], [null]])` -> `list<list<integer>>`                                                  | `list<array<mixed>>`                           |
+| `detectType([[], [1, 2]])` -> `list<array<mixed>>`                                                       | `list<list<?integer>>`                         |
+| `detectType([1 => 1, 5 => 2.5])` -> `array<mixed>`                                                       | `map<integer, float>`                          |
+| `detectType(['name' => 'x', 'latlng' => [33, 65.5]])` -> `structure{name: string, latlng: array<mixed>}` | `structure{name: string, latlng: list<float>}` |
 
-### 5) `flow-php/types` - structure/list/map casting no longer fabricates missing data
+### 5) `flow-php/types` - `cast()` refuses values it used to coerce, fabricate or wrap
 
-| Before                                                                                                                                 | After                     |
-|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
-| `type_structure(['id' => type_integer(), 'name' => type_string()])->cast(['id' => 1])` → `['id' => 1, 'name' => '']`                   | throws `CastingException` |
-| same type, `->cast(['id' => 1, 'name' => null])` → `['id' => 1, 'name' => '']`                                                         | throws `CastingException` |
-| same type, `->cast([])`, `->cast(null)` → `['id' => 0, 'name' => '']`                                                                  | throws `CastingException` |
-| `type_structure(['id' => type_integer()], ['name' => type_string()])->cast(['id' => 1, 'name' => null])` → `['id' => 1, 'name' => '']` | throws `CastingException` |
-| `type_list(type_string())->cast(null)` → `['']`                                                                                        | throws `CastingException` |
-| `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` → throws                                                                | `['id' => 1]`             |
-| `type_list(type_integer())->cast('["1","2"]')` → throws                                                                                | `[1, 2]`                  |
+| Before                                                                                                                                  | After                     |
+|-----------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
+| `type_structure(['id' => type_integer(), 'name' => type_string()])->cast(['id' => 1])` -> `['id' => 1, 'name' => '']`                   | throws `CastingException` |
+| same type, `->cast(['id' => 1, 'name' => null])` -> `['id' => 1, 'name' => '']`                                                         | throws `CastingException` |
+| same type, `->cast([])`, `->cast(null)` -> `['id' => 0, 'name' => '']`                                                                  | throws `CastingException` |
+| `type_structure(['id' => type_integer()], ['name' => type_string()])->cast(['id' => 1, 'name' => null])` -> `['id' => 1, 'name' => '']` | throws `CastingException` |
+| `type_list(type_string())->cast(null)` -> `['']`                                                                                        | throws `CastingException` |
+| `type_structure(['id' => type_integer()])->cast('{"id":"1"}')` -> throws                                                                | `['id' => 1]`             |
+| `type_list(type_integer())->cast('["1","2"]')` -> throws                                                                                | `[1, 2]`                  |
+| `type_integer()->cast('abc')` -> `0`                                                                                                    | throws `CastingException` |
+| `type_integer()->cast('2024-01-01')` -> `2024`                                                                                          | throws `CastingException` |
+| `type_integer()->cast([1, 2, 3])` -> `1`                                                                                                | throws `CastingException` |
+| `type_integer()->cast(null)` -> `0`                                                                                                     | throws `CastingException` |
+| `type_integer()->cast('9223372036854775808')` -> `9223372036854775807`; also `'9223372036854775807.0'`, `type_positive_integer()`       | throws `CastingException` |
+| `type_integer()->cast(1e300)` -> `0`                                                                                                    | throws `CastingException` |
+| `type_integer()->cast(new DOMElement('e', 'abc'))` -> `0`                                                                               | throws `CastingException` |
+| `type_float()->cast('abc')` -> `0.0`                                                                                                    | throws `CastingException` |
+| `type_float()->cast([1])` -> `1.0`                                                                                                      | throws `CastingException` |
+| `type_float()->cast(null)` -> `0.0`                                                                                                     | throws `CastingException` |
+| `type_boolean()->cast('weird')` -> `true`                                                                                               | throws `CastingException` |
+| `type_boolean()->cast('')` -> `false`                                                                                                   | throws `CastingException` |
+| `type_boolean()->cast([1, 2, 3])` / `->cast(new DateTimeImmutable())` -> `true`                                                         | throws `CastingException` |
+| `type_boolean()->cast(null)` -> `false`                                                                                                 | throws `CastingException` |
+| `type_date()->cast('now')` / `type_datetime()->cast('now')` -> current time; also `''`, `'t'`, `'+12'`, `'yesterday'`, `'10:00:00'`     | throws `CastingException` |
+| `type_datetime()->cast('@1609459200')` -> `2021-01-01`; also `'2024-01'`, `'2024-001'`, and under `type_date()`                         | throws `CastingException` |
+| `type_string()->cast(null)` / `type_scalar()->cast(null)` -> `''`                                                                       | throws `CastingException` |
+| `type_list(type_string())->cast([null])` -> `['']`                                                                                      | throws `CastingException` |
+| `type_array()->cast('abc')` -> `['abc']`                                                                                                | throws `CastingException` |
+| `type_list(type_integer())->cast(5)` -> `[5]`                                                                                           | throws `CastingException` |
+| `type_array()->cast(null)` -> `[]`                                                                                                      | throws `CastingException` |
+| `type_integer()->cast(new DateTimeImmutable('@1700000000'))` -> `1700000000000000`                                                      | `1700000000`              |
+| `type_float()->cast(new DateTimeImmutable('@1700000000.5'))` -> `1700000000500000.0`                                                    | `1700000000.5`            |
+| `type_integer()->cast(new DateInterval('PT90S'))` -> `90000000`                                                                         | `90`                      |
+| `type_float()->cast(new DateInterval('PT90S'))` -> `90000000.0`                                                                         | `90.0`                    |
 
-### 6) `flow-php/etl` - `FilesystemStreams` is owned per `FlowContext`, not per `Config`
+### 6) `flow-php/etl` - `FilesystemStreams` replaced by `FilesSink`, and a failed run discards its sink
 
-| Before                                                                                  | After                                            |
-|-----------------------------------------------------------------------------------------|--------------------------------------------------|
-| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | applies only to the `DataFrame` it is called on  |
-| a failed run left its `DestinationStream` registered; the retry appended to it          | each run has its own registry; the retry refuses |
-| `Config::filesystemStreams()`                                                           | removed                                          |
-| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                          |
+| Before                                                                                  | After                                                                                      |
+|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `Flow\ETL\Filesystem\FilesystemStreams`                                                 | `Flow\ETL\Filesystem\FilesSink`                                                            |
+| `FilesystemStreams::FLOW_TMP_FILE_PREFIX`                                               | `FilesSink::FLOW_TMP_FILE_PREFIX`                                                          |
+| `new FilesystemStreams()` + `->setMode($mode)`                                          | `new FilesSink($filesystem, $destination, $mode)`                                          |
+| `$streams->writeTo($filesystem, $path, $partitions)`                                    | `$files->writeTo($partitions)`                                                             |
+| `$streams->isOpen($path, $partitions)`                                                  | `$files->touched($partitions)`                                                             |
+| `$streams->listOpenStreams($path)`                                                      | `$files->openStreams()`                                                                    |
+| `$streams->closeStreams($filesystem, $path)`                                            | `$files->publish()` / `$files->abandon()`                                                  |
+| `$streams->read()` / `->rm()` / `->exists()` / `count()` / `getIterator()`              | removed - use the `Filesystem` directly                                                    |
+| `saveMode()` on one `DataFrame` applied to every later `DataFrame` on the same `Config` | `saveMode()` is set on the sink and belongs to that sink alone                             |
+| a failed run left its `DestinationStream` registered; the retry appended to it          | the failed run's sink is discarded, the retry starts clean                                 |
+| an abandoned run left its `._flow_php_tmp.` file behind under `Overwrite`               | the abandoned run removes it and never renames it over the destination                     |
+| a failed run left its partial file at the destination under the other save modes        | it removes any file it created; a destination it did not create is untouched               |
+| a run that threw or was abandoned never reached its loaders                             | loaders implementing `Flow\ETL\Loader\Discardable` receive `discard(FlowContext $context)` |
+| `Config::filesystemStreams()`                                                           | removed                                                                                    |
+| `new Config(..., FilesystemStreams $filesystemStreams, ...)` constructor parameter      | removed                                                                                    |
 
-Pipelines that relied on a save mode set on an earlier frame sharing the same `Config` must call
-`saveMode()` on each frame. Build `Config` through `Config::builder()` / `Config::default()`.
+Build `Config` through `Config::builder()` / `Config::default()`. A `Loader` holding per-run state (an open stream, a
+writer, a counter) implements `Discardable` and drops that state in `discard()`.
 
 ### 7) `flow-php/etl` - `RetryLoader` no longer retries `InvalidLogicException` by default
 
-| Before                                                               | After                                                       |
-|----------------------------------------------------------------------|-------------------------------------------------------------|
-| `new RetryLoader($loader)` default strategy `new AnyThrowable(3)`    | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
-| `write_with_retries($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)` |
-| an `InvalidLogicException` was attempted 4 times with delays between | attempted once, no delay                                    |
+| Before                                                               | After                                                           |
+|----------------------------------------------------------------------|-----------------------------------------------------------------|
+| `new RetryLoader($loader)` default strategy `new AnyThrowable(3)`    | `new AnyThrowableExcept([InvalidLogicException::class], 3)`     |
+| `write_with_retries($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)`     |
+| an `InvalidLogicException` was attempted 4 times with delays between | attempted once, no delay                                        |
+| -                                                                    | `retry_any_throwable_except([InvalidLogicException::class], 3)` |
 
-`AnyThrowable` itself is unchanged. To keep retrying every throwable, pass it explicitly:
+To keep retrying every throwable:
 
 ```php
 write_with_retries($loader, retry_any_throwable(3));
-```
-
-New helper for the deny-list strategy:
-
-```php
-write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::class], 3));
 ```
 
 ### 8) `flow-php/etl` - operations inside a `Transformation` answer for the whole stream
@@ -97,14 +128,12 @@ write_with_retries($loader, retry_any_throwable_except([InvalidLogicException::c
 | `$df->aggregate(...)` / `groupBy()->aggregate()` / `pivot()` / window functions inside a `Transformation` answered per batch                                             | answer for the whole stream                                                                                                                                                               |
 | `$df->offset(2)` inside a `Transformation` lost rows                                                                                                                     | skips exactly the offset across the stream                                                                                                                                                |
 | `$df->cache($id)` inside a `Transformation` persisted one batch                                                                                                          | persists the whole stream                                                                                                                                                                 |
-| `$df->batchBy(...)` / `$df->partitionBy(...)` / `batch_size(...)` cut chunks at the incoming batches                                                                     | cut chunks over the stream                                                                                                                                                                |
-| `$df->join(...)` / `$df->partitionBy(...)` inside a `Transformation` emitted rows in input order                                                                         | emit rows grouped by key                                                                                                                                                                  |
+| `$df->batchBy(...)` / `batch_size(...)` cut chunks at the incoming batches                                                                                               | cut chunks over the stream                                                                                                                                                                |
+| `$df->join(...)` inside a `Transformation` emitted rows in input order                                                                                                   | emits rows grouped by key                                                                                                                                                                 |
+| `$df->partitionBy(...)` inside a `Transformation`                                                                                                                        | removed - `$df->repartition(...)` groups the whole stream by key, see 60)                                                                                                                 |
 | a `Transformation` calling `$df->fetch()` / `count()` / `schema()` silently answered over an empty stream                                                                | throws `InvalidLogicException`                                                                                                                                                            |
 | `write_with_retries($loader)` around `to_transformation(...)` (any wrapped step) or around a `to_branch(...)` armed with `withTransformation(...)`, at any nesting depth | throws `InvalidLogicException` at the first `load()`, use `to_transformation(..., write_with_retries($loader))` or `to_branch(..., write_with_retries($loader))->withTransformation(...)` |
-| `Flow\ETL\Extractor\SwappableRowsExtractor`                                                                                                                              | removed (internal `FeedExtractor` replaces it)                                                                                                                                            |
-
-`sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` and `join()` buffer
-proportional to the data, as on an outer frame.
+| `Flow\ETL\Extractor\SwappableRowsExtractor`                                                                                                                              | removed                                                                                                                                                                                   |
 
 ### 9) `flow-php/etl` - `to_branch()->withTransformation()` drives its `Transformation` once over the whole stream
 
@@ -117,8 +146,7 @@ proportional to the data, as on an outer frame.
 | the wrapped loader received exactly one `load()` per outer batch                              | receives output as the transformation produces it; blocking operations deliver at `closure()` |
 | telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows               | counts the rows offered to the branch                                                         |
 
-### 10) `flow-php/etl-adapter-doctrine` / `flow-php/etl-adapter-postgresql` - transactional loaders run
-`closure()` inside a transaction
+### 10) `flow-php/etl-adapter-doctrine`, `-postgresql` - transactional loaders run `closure()` in a transaction
 
 | Before                                                                                                      | After                                                                               |
 |-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
@@ -126,6 +154,1291 @@ proportional to the data, as on an outer frame.
 | blocking operations inside a wrapped `Transformation` answered per batch, each batch in its own transaction | answer for the whole stream, delivered at `closure()` in a single transaction       |
 | -                                                                                                           | a failure during the final transaction rolls back the drained delivery and rethrows |
 | `withIsolationLevel()` applied to per-batch transactions                                                    | applies to every transaction the wrapper opens                                      |
+
+### 11) `flow-php/etl` - Floe on-disk format v2, existing `.floe` files must be rewritten
+
+| Before                              | After                                           |
+|-------------------------------------|-------------------------------------------------|
+| header version byte `0x01`          | `0x02`                                          |
+| uuid payload - 36 raw bytes         | 4-byte little-endian length prefix + bytes      |
+| partition values stored in the file | not stored - read from the directory path only  |
+| reading a v1 file                   | throws `Floe does not support format version 1` |
+
+Files written by 0.43.x cannot be read. Regenerate them from their source, or export them with 0.43.x to another
+format before upgrading.
+
+### 12) `flow-php/etl` - Floe rejects columns whose type is only known per value
+
+| Before                                     | After                                                      |
+|--------------------------------------------|------------------------------------------------------------|
+| `list<mixed>` element - written with a tag | `Floe does not support values of type "mixed"`             |
+| `union_schema()` column - written          | `Floe does not support columns of type "integer\|string"`  |
+| `type_structure(..., allow_extra: true)`   | `Floe does not support structures that allow extra values` |
+| map key other than `integer`/`string`      | `Floe does not support map keys of type "..."`             |
+
+Declare an element type, or declare the column with `json_schema()` when the shape is dynamic.
+
+### 13) `flow-php/etl` - Floe validates every value against its column type
+
+| Before                                                                                           | After                                                      |
+|--------------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| `'AB-1'` into an `integer` column - wrote `0`                                                    | throws `IncompatibleSchemaException`                       |
+| `1.5` into an `integer` column - wrote `1`                                                       | throws                                                     |
+| `1000` into a `string` column - raw `TypeError`                                                  | throws `IncompatibleSchemaException`                       |
+| `int` into a `float` column - written                                                            | throws                                                     |
+| `null` into a non-nullable column - written                                                      | throws                                                     |
+| a batch without a NOT NULL session column - written                                              | throws `IncompatibleSchemaException`                       |
+| a batch without a nullable session column                                                        | unchanged, reads back as `null`                            |
+| `IncompatibleSchemaException` - `column "x" (...) is not compatible with the session type (...)` | a `Missing Definitions:` / `Mismatched Definitions:` block |
+| `floe_options(validate_data: false)` / `Options::withValidateData()`                             | removed                                                    |
+| `floe_options($validate_data, $buffer_size, $codec)`                                             | `floe_options($buffer_size, $codec)`                       |
+| `new Options($validateData, $bufferSize, $codec)`                                                | `new Options($bufferSize, $codec)`                         |
+
+### 14) `flow-php/etl` - aggregate result type no longer depends on the value
+
+| Before                                                              | After   |
+|---------------------------------------------------------------------|---------|
+| `sum()` over a `float` column, whole total - `int`                  | `float` |
+| `avg()`/`min()`/`max()` over a `float` column, whole result - `int` | `float` |
+| `sum()` over an `integer` column - `int`                            | `float` |
+
+### 15) `flow-php/etl` - aggregates ignore a row missing the aggregated column
+
+| Before                                                                                            | After                                      |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------|
+| missing column under `$df->mode(execution_strict())` - `Sum error: Entry "amount" does not exist` | contributes nothing                        |
+| missing column in the default mode - contributed nothing                                          | unchanged                                  |
+| a column no row declares - contributed nothing                                                    | throws `SchemaDefinitionNotFoundException` |
+
+### 16) `flow-php/types` - `EnumType::isValid()` requires an object
+
+| Before                                    | After                                               |
+|-------------------------------------------|-----------------------------------------------------|
+| `type_enum(Suit::class)->isValid('Suit')` | `false` (was `true`)                                |
+| `type_enum(Suit::class)->assert('Suit')`  | throws `InvalidTypeException` (was raw `TypeError`) |
+| `type_enum(Suit::class)->cast('Suit')`    | throws `CastingException` (was raw `TypeError`)     |
+
+### 17) `flow-php/etl` - filesystems are passed to sources and sinks, engine algorithms take a storage
+
+#### Filesystems
+
+| Before                                                                                 | After                                                                                                                              |
+|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `config_builder()->mount(aws_s3_filesystem(...))` + `from_csv(path('aws-s3://x.csv'))` | `from_csv(path('aws-s3://x.csv'), filesystem: aws_s3_filesystem(...))`                                                             |
+| `config_builder()->unmount($fs)`                                                       | removed                                                                                                                            |
+| `$config->fstab()`                                                                     | removed - use `Flow\Filesystem\DSL\fstab()` for `file_copy()` / `file_move()`                                                      |
+| `$context->filesystem($path)`                                                          | removed - pass `filesystem:` to the source or sink                                                                                 |
+| `$context->streams()->list($path, $filter)` -> `SourceStream`                          | `(new Flow\Filesystem\FileListing($filesystem))->list($path, $filter)` -> `FileStatus`                                             |
+| `$context->streams()->writeTo($path, $partitions)`                                     | `$files->writeTo($partitions)` on a sink-held `FilesSink` - see 6)                                                                 |
+| `$context->streams()->closeStreams($path)` in an extractor                             | removed                                                                                                                            |
+| `new FilesystemStreams($filesystemTable)`                                              | `new FilesSink($filesystem, $destination, $saveMode)` - see 6)                                                                     |
+| a custom file source reading through `FlowContext`                                     | takes `Filesystem $filesystem = new NativeLocalFilesystem()` as its last constructor argument                                      |
+| `schema_from_json_schema($s)` resolved local `$ref`s through `fstab()`                 | takes a trailing `Filesystem $filesystem = new NativeLocalFilesystem()`                                                            |
+| a `$ref` on `memory://` or `stdout://`                                                 | throws - pass the filesystem that serves it                                                                                        |
+| `ChartJSLoader::withOutputPath($path)` / `::withTemplate($path)`                       | both take a trailing `Filesystem $filesystem = new NativeLocalFilesystem()`; `withOutputPath()` throws on a path with no extension |
+| `FilePathArgument::getExisting($input, $config)` / `::getNotExisting(...)` (CLI)       | `getExisting($input)` / `getNotExisting($input)`; the constructor takes the `Filesystem`                                           |
+| a custom `FileLoader`                                                                  | implements `saveMode()` and `Discardable` - see 6)                                                                                 |
+| a custom `Flow\Filesystem\Filesystem` implementation                                   | adds `public function supports(Path $path): bool` - `return $this->mount()->supports($path);`                                      |
+
+Two `memory_filesystem()` calls are two separate stores: pass the same instance to the writer and the reader.
+
+#### Filesystem telemetry
+
+| Before                                                                                                         | After                                                                          |
+|----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `withTelemetry()` traced every filesystem: `filesystem.read` / `filesystem.write` spans and filesystem metrics | filesystems are not traced - wrap the filesystem with `traceable_filesystem()` |
+| `telemetry_options(filesystem: filesystem_telemetry_options(...))`                                             | removed                                                                        |
+| `TelemetryOptions::filesystem()` / `->filesystem`                                                              | removed                                                                        |
+| the pipeline-start debug log's `fstab` field                                                                   | a `spill` field naming the three spill storages                                |
+
+After:
+
+```php
+$fs = traceable_filesystem(
+    aws_s3_filesystem($bucket, $client),
+    filesystem_telemetry_config($telemetry, $clock, filesystem_telemetry_options(trace_streams: true)),
+);
+
+data_frame()->read(from_csv(path('aws-s3://x.csv'), filesystem: $fs))->run();
+```
+
+#### Engine algorithms
+
+| Before                                                                              | After                                                                                               |
+|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `config_builder()->cacheFilesystem('s3')`                                           | `config_builder()->cache($cache)`                                                                   |
+| `external_sort()->filesystemProtocol('file')`                                       | `external_sort()->storage(new FilesystemBuckets($fs, $path))`                                       |
+| `hash_join()->filesystemProtocol(...)` / `hash_group_by()->filesystemProtocol(...)` | `->storage(BucketsStorage $storage)`                                                                |
+| `CacheConfig::$filesystemMount`                                                     | removed                                                                                             |
+| `SortAlgorithmBuilder::build(FilesystemTable, Path)`                                | `build(Path $spillRoot)`                                                                            |
+| `new ExternalSortConfig($bucketing, $runSize)`                                      | `new ExternalSortConfig($bucketing, ?BucketsStorage $merge = null, $runSize)` - use named arguments |
+| -                                                                                   | `external_sort()->mergeStorage($s)` - merged runs only                                              |
+
+#### Per-operation algorithm overrides
+
+| Before                               | After                                                                               |
+|--------------------------------------|-------------------------------------------------------------------------------------|
+| `$df->sortBy(ref('a'), ref('b'))`    | `$df->sortBy([ref('a'), ref('b')])`                                                 |
+| `$df->groupBy('a', 'b')`             | `$df->groupBy(['a', 'b'])`                                                          |
+| `$df->aggregate(sum(ref('a')), ...)` | `$df->aggregate([sum(ref('a')), ...])`                                              |
+| -                                    | `$df->sortBy([ref('a')], external_sort()->storage(new MemoryBuckets()))`            |
+| -                                    | `$df->groupBy(['a'], hash_group_by()->storage($s))`                                 |
+| -                                    | `$df->join($right, $on, Join::left, hash_join()->storage($s))`                      |
+| -                                    | `$df->cache('report', cache: $psrCache)` + `from_cache('report', cache: $psrCache)` |
+
+`GroupedDataFrame::aggregate()` stays variadic: `$df->groupBy(['a'])->aggregate(sum(ref('b')))`.
+
+#### Save mode, the CLI and the HTTP bridge
+
+| Before                                                              | After                                                                                |
+|---------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `$df->saveMode(overwrite())` / `$df->mode(overwrite())`             | `to_csv($path)->saveMode(overwrite())` - per sink                                    |
+| `$df->saveMode(overwrite())->write(write_with_retries(to_csv($p)))` | `$df->write(write_with_retries(to_csv($p)->saveMode(overwrite())))`                  |
+| `to_text($path)` returned `Loader`                                  | returns `TextLoader`                                                                 |
+| `LoaderFactory::get()` returned `Loader`                            | returns `Loader&FileLoader`                                                          |
+| `flow read --config .flow.php aws-s3://bucket/x.csv`                | `flow pipeline:run pipeline.php`, with the filesystem built inside the pipeline file |
+| `new FlowBufferedResponse(..., filesystem: 'memory')`               | `new FlowBufferedResponse(..., filesystem: new MemoryFilesystem())`                  |
+| `new FlowStreamedResponse(..., filesystem: 'stdout')`               | `new FlowStreamedResponse(..., filesystem: new StdOutFilesystem())`                  |
+| `Output::loader(Path $path)`                                        | `Output::loader(Path $path, Filesystem $filesystem)`                                 |
+
+### 18) `flow-php/etl` - `equals()` / `notEquals()` return `null` when either side is `null`
+
+| Before                                                                          | After                             |
+|---------------------------------------------------------------------------------|-----------------------------------|
+| `ref('a')->equals(ref('b'))`, both `null` - `true`, `filter()` keeps the row    | `null`, `filter()` drops the row  |
+| `ref('a')->equals(lit(5))`, `a` is `null` - `false`                             | `null`                            |
+| `ref('a')->notEquals(lit(5))`, `a` is `null` - `true`, `filter()` keeps the row | `null`, `filter()` drops the row  |
+| `ref('a')->same(ref('b'))` / `ref('a')->notSame(lit(5))`                        | unchanged - `null` same as `null` |
+
+To keep the old result, switch to `same()` / `notSame()`:
+
+Before:
+
+```php
+$df->filter(ref('a')->equals(ref('b')));
+$df->filter(ref('a')->notEquals(lit(5)));
+```
+
+After:
+
+```php
+$df->filter(ref('a')->same(ref('b')));
+$df->filter(ref('a')->notSame(lit(5)));
+```
+
+`same()` compares with `===`: over an integer column `ref('i')->same(lit(1.0))` is `false` where `equals()` is `true`.
+
+### 19) `flow-php/etl` - execution modes are removed, a function given bad data throws
+
+| Before                                                                         | After                                                                   |
+|--------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| default mode: a function given bad data returned `null`                        | throws - wrap it: `optional($function)`                                 |
+| `$df->mode(execution_lenient())`                                               | removed - `optional($function)` per function                            |
+| `$df->mode(execution_strict())`                                                | removed - strict is the only behaviour                                  |
+| `coalesce($a, $b)` skipped a branch that threw                                 | rethrows - `coalesce(optional($a), $b)`                                 |
+| `ref('l')->onEach($fn)` set an element whose `$fn` threw to `null`             | throws - `ref('l')->onEach(optional($fn))`                              |
+| `ref('s')->indexOf('a')` / `->indexOfLast('a')` over `null` - `false`          | throws - `optional(ref('s')->indexOf('a'))`                             |
+| `DataFrame::mode()`                                                            | removed                                                                 |
+| `Flow\ETL\Function\ExecutionMode`, `execution_lenient()`, `execution_strict()` | removed                                                                 |
+| `Flow\ETL\Function\Functions`, `FlowContext::functions()`                      | removed - a custom function throws instead of calling `invalidResult()` |
+
+Before:
+
+```php
+data_frame()->read($extractor)->withEntry('payload', ref('json')->jsonDecode())->run();
+```
+
+After:
+
+```php
+data_frame()->read($extractor)->withEntry('payload', optional(ref('json')->jsonDecode()))->run();
+```
+
+### 20) `flow-php/etl` - `not()`, `all()`, `any()` and `isType()` return `null` for a `null` operand
+
+| Before                                                                            | After                             |
+|-----------------------------------------------------------------------------------|-----------------------------------|
+| `not(ref('a')->equals(lit(1)))`, `a` is `null` - `true`, `filter()` keeps the row | `null`, `filter()` drops the row  |
+| `all(ref('a')->equals(lit(1)), lit(true))`, `a` is `null` - `false`               | `null`                            |
+| `any(ref('a')->equals(lit(1)), lit(false))`, `a` is `null` - `false`              | `null`                            |
+| `ref('a')->isType(type_null())`, `a` is `null` - `true`                           | `null` - use `ref('a')->isNull()` |
+
+`isNull()`, `isNotNull()`, `same()`, `notSame()` and `exists()` still return `true` or `false`.
+
+### 21) `flow-php/etl` - expressions and steps are checked before the first row is read
+
+| Before                                                                                                                               | After                                                                             |
+|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `$df->filter(ref('id')->greaterThan(ref('created_at')))`, `integer` vs `datetime` - threw at the first row                           | throws at `schema()` / `run()`, before any row                                    |
+| the same failure under `onError(skip_rows_handler())` - handled per row by the error handler                                         | throws; the error handler is not consulted                                        |
+| `ref('a')->plus(ref('d'))` (`integer` + `date`) over a source with no rows - no rows                                                 | throws `Cannot combine types "integer", "date" - an explicit cast is required.`   |
+| `$df->filter(ref('id'))` / `$df->until(ref('id'))` / `to_branch(ref('id'), $loader)` over an `integer` column - accepted             | throws - compare explicitly: `ref('id')->notEquals(lit(0))`                       |
+| `greatest(ref('i'), ref('s'))` / `least(...)` over `integer` and `string` - `'apple'` for `5`, `'apple'`                             | throws `InvalidTypeException` - cast one side                                     |
+| `coalesce(ref('i'), ref('s'))` / `when($c, ref('i'), ref('s'))` / `match_cases()` with `integer` and `string` arms - typed per value | `string` column                                                                   |
+| `coalesce(ref('i'), lit(true))` - typed per value                                                                                    | throws `InvalidTypeException`                                                     |
+| `array_expand(ref('j'))` over a `json` column - typed per value                                                                      | throws `SchemaNotDerivableException`                                              |
+| `ref('u')` / `select('u')` over a column declared `integer\|string` - one type per value                                             | throws `UnsupportedUnionTypeException` - declare one type, e.g. `str_schema('u')` |
+
+Applies to frames read through `from_data_frame()` and to `to_transformation()` bodies: the inner error fails the
+outer `run()` / `schema()`.
+
+### 22) `flow-php/etl` - functions return only values their column type can hold
+
+| Before                                                                               | After                                 |
+|--------------------------------------------------------------------------------------|---------------------------------------|
+| `ref('d')->toDateTime('Y-m-d')` over an unparseable string - `false`                 | `null`                                |
+| `ref('j')->jsonDecode()` over scalar JSON (`'1'`) - `1`                              | throws - `cast()` scalar JSON         |
+| `ulid()` - `Symfony\Component\Uid\Ulid`                                              | base32 `string`                       |
+| `ref('x')->domElementParent()` of a root element - its `DOMDocument`                 | `null`                                |
+| `ref('x')->xpath($path)` - every matched node, text and attribute nodes included     | elements only, `null` when none match |
+| `when($condition, $then, $else)` with `$else` of `0`, `false`, `''` or `[]` - `null` | `$else`                               |
+| `round($v, 0)` / `ref('v')->round(0)` - `int`                                        | `float`                               |
+
+### 23) `flow-php/etl` - function arguments that decide the output type take plain values
+
+| Before                                                                                              | After                                                                                                                 |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| `array_sort($a, $sort_function)` - `ScalarFunction\|Sort\|null`                                     | `?Sort`                                                                                                               |
+| `array_reverse($a, $preserveKeys)` / `->arrayReverse($preserveKeys)` - `ScalarFunction\|bool`       | `bool`                                                                                                                |
+| `->onEach($fn, $preserveKeys)` - `ScalarFunction\|bool`                                             | `bool`                                                                                                                |
+| `regex()` / `regex_all()` / `->regex()` / `->regexAll()` `$flags` - `ScalarFunction\|int`           | `int`; `PREG_OFFSET_CAPTURE`, `PREG_UNMATCHED_AS_NULL` (and `PREG_SET_ORDER` for `regex_all()`) throw at construction |
+| `array_get($ref, $path)` / `->arrayGet($path)` - `ScalarFunction\|string`                           | `string`; a wildcard path throws - use `array_get_collection()`                                                       |
+| `array_key_rename($ref, $path, $newName)` - `ScalarFunction\|string`                                | `string`                                                                                                              |
+| `uuid_v7()` / `uuid_v7(null)`                                                                       | `uuid_v7($value)` - `$value` required                                                                                 |
+| `->domElementNextSibling()` / `->domElementPreviousSibling()` - next / previous node, text included | next / previous element                                                                                               |
+| `->domElementNextSibling(true)` / `->domElementPreviousSibling(true)`                               | argument removed                                                                                                      |
+| `ref('a')->isType('nope')` - threw at the first row                                                 | throws at construction                                                                                                |
+| `new Round($value)` - `$precision` defaults to `0`                                                  | defaults to `2`, as `round()`                                                                                         |
+
+### 24) `flow-php/etl` - `cast()` accepts column types only
+
+| Before                                                         | After                                             |
+|----------------------------------------------------------------|---------------------------------------------------|
+| `cast($v, 'json_pretty')`                                      | removed - throws at construction; use `'json'`    |
+| `cast($v, 'object')` / `'mixed'` / `'callable'` / `'resource'` | throws `InvalidArgumentException` at construction |
+
+### 25) `flow-php/etl` - `EntryReference` is renamed to `UnresolvedReference` and is immutable
+
+| Before                                                  | After                                         |
+|---------------------------------------------------------|-----------------------------------------------|
+| `Flow\ETL\Row\EntryReference`                           | renamed to `Flow\ETL\Row\UnresolvedReference` |
+| `ref()` / `col()` / `entry()` return `EntryReference`   | return `UnresolvedReference`                  |
+| `$ref->as('b')` / `->asc()` / `->desc()` changed `$ref` | return a copy - use the returned reference    |
+
+### 26) `flow-php/etl` - custom functions declare their output type and their children
+
+| Before                                                                    | After                                                                                                          |
+|---------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `class MyFunction extends ScalarFunctionChain`                            | `final class MyFunction implements ScalarFunction` + `use ScalarFunctionChain;`                                |
+| `ScalarFunction` - `eval()`                                               | also `returns(): Type`, `children(): array`, `withChildren(array $children): static`, `resolved(): bool`       |
+| a custom `Reference`                                                      | implements the `ScalarFunction` members above - `Reference` extends `ScalarFunction`                           |
+| `AggregatingFunction::result(EntryFactory $entryFactory): Entry`          | removed - implement `outputName(): string`, `value(): mixed`, `returns(): Type` and the `FunctionTree` members |
+| `WindowFunction`                                                          | adds `returns(): Type` and the `FunctionTree` members; `over()` returns a copy                                 |
+| `Flow\ETL\Function\ScalarFunction\ScalarResult`, `ScalarResult::from()`   | removed - return the plain value, declare the type in `returns()`                                              |
+| `FrameAccumulator::value(): mixed`                                        | `value(): float\|int\|null`                                                                                    |
+| `Parameter::as*()` over a malformed value - `null` / `false` / `$default` | throws `InvalidArgumentException`                                                                              |
+| `Parameter::asBoolean(): bool`                                            | `?bool`                                                                                                        |
+| `Parameter::asType()`                                                     | removed                                                                                                        |
+
+Before:
+
+```php
+final class Shout extends ScalarFunctionChain
+{
+    public function __construct(private readonly ScalarFunction $value) {}
+
+    public function eval(Row $row, FlowContext $context): ?string
+    {
+        $value = (new Parameter($this->value))->asString($row, $context);
+
+        return $value === null ? null : strtoupper($value);
+    }
+}
+```
+
+After:
+
+```php
+final class Shout implements ScalarFunction
+{
+    use ScalarFunctionChain;
+    use ResolvesFromChildren;
+
+    public function __construct(private readonly ScalarFunction $value) {}
+
+    public function eval(Row $row, FlowContext $context): ?string
+    {
+        $value = (new Parameter($this->value))->asString($row, $context);
+
+        return $value === null ? null : strtoupper($value);
+    }
+
+    public function returns(): Type
+    {
+        return type_optional(type_string());
+    }
+
+    public function children(): array
+    {
+        return [$this->value];
+    }
+
+    public function withChildren(array $children): static
+    {
+        return new self($children[0]);
+    }
+}
+```
+
+### 27) `flow-php/etl` - user callbacks removed, `call()` takes a `ScalarFunction` and a return type
+
+| Before                                                         | After                                                                    |
+|----------------------------------------------------------------|--------------------------------------------------------------------------|
+| `$df->map($callback)`                                          | removed                                                                  |
+| `Flow\ETL\Transformer\CallbackRowTransformer`                  | removed                                                                  |
+| `to_callable($callable)` / `Flow\ETL\Loader\CallbackLoader`    | removed - implement `Flow\ETL\Loader`                                    |
+| `Flow\ETL\Transformer\StyleConverter\ArrayKeyConverter`        | removed                                                                  |
+| `call('strtoupper', [ref('name')])`                            | `call(lit('strtoupper'), type_string(), [ref('name')])`                  |
+| `call($callable, $parameters, $return_type = null)`            | `call(lit($callable), $return_type, $parameters)` - return type required |
+| `->call($callable, $arguments, $refAlias, $returnType = null)` | `->call(lit($callable), $returnType, $arguments, $refAlias)`             |
+| `new CallUserFunc($callable, $parameters, $returnType)`        | `new CallUserFunc($callable, $returnType, $parameters)`                  |
+| `call(..., type_string())` column - `string`                   | `?string`                                                                |
+| `lit($closure)`, or a `Closure` inside a `lit()` array         | throws `InvalidArgumentException`                                        |
+| `(new TypeDetector())->detectType($closure)`                   | throws `Flow\Types\Exception\InvalidArgumentException`                   |
+
+Before:
+
+```php
+$df->map(fn (Row $row): Row => $row->set(str_entry('name', $row->valueOf('name') ?? 'default')));
+```
+
+After:
+
+```php
+$df->withEntry('name', coalesce(ref('name'), lit('default')));
+```
+
+Logic no scalar function expresses: implement `Flow\ETL\Transformer` and pass it to `$df->with($transformer)`.
+
+### 28) `flow-php/etl` - `Transformer` requires `bind()`
+
+| Before                                                           | After                                                   |
+|------------------------------------------------------------------|---------------------------------------------------------|
+| `Transformer::transform(Rows $rows, FlowContext $context): Rows` | plus `bind(Schema $input): Flow\ETL\Pipeline\BoundStep` |
+
+Return `new BoundStep($this, $output)`, where `$output` is the schema the step emits for `$input`.
+
+### 29) `flow-php/etl` - `Extractor` gains `schema()` and `withSchema()`
+
+| Before                                                               | After                                                            |
+|----------------------------------------------------------------------|------------------------------------------------------------------|
+| `Extractor` declares only `extract(FlowContext $context): Generator` | also `schema(): Schema` and `withSchema(Schema $schema): static` |
+| a custom `Extractor` implementing only `extract()`                   | fatal at load                                                    |
+
+A source that cannot describe its output before reading throws
+`Flow\ETL\Exception\SchemaNotDerivableException::extractor(self::class)` from `schema()`.
+
+### 30) `flow-php/etl` - `Entry` and the `*_entry()` functions are removed, a row is a name-keyed array under a `Schema`
+
+| Before                                                                                                                                                                 | After                                                                                                    |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `Flow\ETL\Row\Entry` and the 18 `Flow\ETL\Row\Entry\*Entry` classes                                                                                                    | removed                                                                                                  |
+| `Flow\ETL\Row\Entries`, `entries(...)`                                                                                                                                 | removed                                                                                                  |
+| `row(Entry ...$entries)`, `Row::create(...)`, `Row::with(...)`                                                                                                         | `row(array $values)` - `row(['id' => 1])`                                                                |
+| `rows(Row ...$rows)`, `new Rows(Row ...$rows)`                                                                                                                         | `rows(Schema $schema, Row ...$rows)`, `new Rows(Schema $schema, Row ...$rows)` - see 31)                 |
+| `$row->get('id')` returned an `Entry`                                                                                                                                  | returns the value                                                                                        |
+| `$row->valueOf('id')`                                                                                                                                                  | `$row->get('id')`                                                                                        |
+| `$row->entries()`                                                                                                                                                      | `$row->values()` / `$row->names()`                                                                       |
+| `$row->schema()`                                                                                                                                                       | `$rows->schema()`                                                                                        |
+| `$row->hash()`                                                                                                                                                         | `$row->hash($rows->schema())`                                                                            |
+| `$row->add()` / `set()` / `remove()` / `keep()` / `rename()` / `renameMany()` / `map()` / `merge()` / `isEqual()` / `sortEntries()`                                    | removed                                                                                                  |
+| `$rows->entries()`                                                                                                                                                     | removed                                                                                                  |
+| `Metadata` per entry, free to differ row to row: `int_entry('id', 1, $metadata)`                                                                                       | one `Metadata` per column: `int_schema('id', metadata: $metadata)`                                       |
+| `compare_entries_by_name()` / `compare_entries_by_name_desc()` / `compare_entries_by_type()` / `compare_entries_by_type_desc()` / `compare_entries_by_type_and_name()` | removed - sort a schema: `$schema->sort(schema_sort_by_name())`                                          |
+| `Flow\ETL\Transformer\OrderEntries\{Comparator, CombinedComparator, NameComparator, TypeComparator, TypePriorities, Order}`                                            | removed - implement `Flow\ETL\Schema\SortingStrategy::compare(Definition $left, Definition $right): int` |
+
+Before:
+
+```php
+$rows = rows(
+    row(int_entry('id', 1), str_entry('name', 'Norbert')),
+    row(int_entry('id', 2), str_entry('name', null)),
+);
+```
+
+After:
+
+```php
+$rows = rows(
+    schema(int_schema('id'), str_schema('name', nullable: true)),
+    row(['id' => 1, 'name' => 'Norbert']),
+    row(['id' => 2, 'name' => null]),
+);
+```
+
+| Before                                                      | Column in `schema(...)`                  | Value in `row([...])`                                           |
+|-------------------------------------------------------------|------------------------------------------|-----------------------------------------------------------------|
+| `bool_entry('x', true)`, `boolean_entry('x', true)`         | `bool_schema('x')`                       | `true`                                                          |
+| `int_entry('x', 1)`, `integer_entry('x', 1)`                | `int_schema('x')`, `integer_schema('x')` | `1`                                                             |
+| `float_entry('x', 1.5)`                                     | `float_schema('x')`                      | `1.5`                                                           |
+| `float_entry('x', 1)`, `float_entry('x', '1.5')`            | `float_schema('x')`                      | `type_float()->cast(1)`, `type_float()->cast('1.5')`            |
+| `str_entry('x', 'a')`, `string_entry('x', 'a')`             | `str_schema('x')`, `string_schema('x')`  | `'a'`                                                           |
+| `null_entry('x')`                                           | `null_schema('x')`                       | `null`                                                          |
+| `datetime_entry('x', '2024-01-02 10:00:00')`                | `datetime_schema('x')`                   | `type_datetime()->cast('2024-01-02 10:00:00')`                  |
+| `date_entry('x', '2024-01-02')`                             | `date_schema('x')`                       | `type_date()->cast('2024-01-02')`                               |
+| `time_entry('x', 'PT1H')`                                   | `time_schema('x')`                       | `type_time()->cast('PT1H')`                                     |
+| `enum_entry('x', Suit::Hearts)`                             | `enum_schema('x', Suit::class)`          | `Suit::Hearts`                                                  |
+| `json_entry('x', ['a' => 1])`, `json_entry('x', '{"a":1}')` | `json_schema('x')`                       | `type_json()->cast(['a' => 1])`, `type_json()->cast('{"a":1}')` |
+| `json_object_entry('x', [])`                                | `json_schema('x')`                       | `Flow\Types\Value\Json::fromArray([], asObject: true)`          |
+| `uuid_entry('x', $uuid)`                                    | `uuid_schema('x')`                       | `type_uuid()->cast($uuid)`                                      |
+| `xml_entry('x', '<a/>')`                                    | `xml_schema('x')`                        | `type_xml()->cast('<a/>')`                                      |
+| `xml_element_entry('x', '<a/>')`                            | `xml_element_schema('x')`                | `type_xml_element()->cast('<a/>')`                              |
+| `html_entry('x', $html)`                                    | `html_schema('x')`                       | `type_html()->cast($html)`                                      |
+| `html_element_entry('x', $html)`                            | `html_element_schema('x')`               | `type_html_element()->cast($html)`                              |
+| `structure_entry('x', $value, $type)`, `struct_entry(...)`  | `structure_schema('x', $type)`           | `$value`                                                        |
+| `list_entry('x', $value, $type)`                            | `list_schema('x', $type)`                | `$value`                                                        |
+| `map_entry('x', $value, $type)`                             | `map_schema('x', $type)`                 | `$value`                                                        |
+| `to_entry('x', $value)`                                     | the `*_schema('x')` matching `$value`    | `$value`                                                        |
+| any `*_entry('x', null)`                                    | `*_schema('x', nullable: true)`          | `null`                                                          |
+| any `*_entry('x', $value, $metadata)`                       | `*_schema('x', metadata: $metadata)`     | `$value`                                                        |
+
+### 31) `flow-php/etl` - `Rows` holds only rows that match its schema
+
+| Before                                                                                                         | After                                                                                                                                                                                      |
+|----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| any row accepted                                                                                               | `new Rows($schema, ...$rows)` throws `Flow\ETL\Exception\SchemaMismatchException` on a wrong-typed value, a `null` in a NOT NULL column, an undeclared column or a missing NOT NULL column |
+| -                                                                                                              | `Flow\ETL\Exception\ColumnMismatchException`, the `getPrevious()` of `SchemaMismatchException`                                                                                             |
+| a row without a declared nullable column                                                                       | padded with `null`                                                                                                                                                                         |
+| `$rows->toArray()` - keys in each row's insertion order                                                        | schema order                                                                                                                                                                               |
+| `$rows->map()` / `flatMap()` / `each()` / `filter()` / `find()` / `findOne()` / `reduce()` / `sort($callable)` | removed - see below                                                                                                                                                                        |
+| `$rows->sortEntries()` / `$df->reorderEntries()` / `Flow\ETL\Transformer\OrderEntriesTransformer`              | removed - `$df->select('a', 'b')` sets the column order                                                                                                                                    |
+| `Schema::isSame()` ignored column order                                                                        | order-sensitive                                                                                                                                                                            |
+| `$rows->merge($other)`, `$other` with other columns or another column order - rows concatenated                | throws `InvalidArgumentException`: `Cannot merge Rows with different schemas: [a: integer] and [a: string]`                                                                                |
+| declared NOT NULL column, empty cell or short line (`from_csv($p)->withSchema($schema)`) - `null`              | throws `SchemaMismatchException` - declare the column `nullable: true`                                                                                                                     |
+| `from_rows($a, $b)` - each batch kept its own columns                                                          | every batch carries every column of the combined schema, missing ones as `null`                                                                                                            |
+| `batches($extractor, $n)` / `batched_by(...)` over child batches of different shapes - mixed in one batch      | later child batches matched to the first: missing nullable column padded, extra column throws `SchemaMismatchException`                                                                    |
+
+Before:
+
+```php
+$adults = $rows->filter(fn (Row $row): bool => $row->valueOf('age') >= 18);
+```
+
+After:
+
+```php
+$adults = new Rows($rows->schema(), ...array_filter($rows->all(), fn (Row $row): bool => $row->get('age') >= 18));
+```
+
+### 32) `flow-php/etl` / `flow-php/etl-adapter-excel` - `Entry` parameters become the value and its `Definition`
+
+| Before                                                                                       | After                                                                                              |
+|----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| `Definition::matches(Entry $entry)`                                                          | `matches(mixed $value)` - the caller checks the name                                               |
+| `Row\Comparator::equals(Row $row, Row $nextRow)`                                             | `equals(Row $row, Row $nextRow, Schema $schema)`                                                   |
+| `RenameEntryStrategy::rename(Row $row): Row`                                                 | `renames(Schema $schema): array` - `current_name => new_name`, `[]` when nothing is renamed        |
+| `CellStyler::style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName)`       | `style(mixed $value, Definition $definition, int $rowNumber, int $columnIndex, string $sheetName)` |
+| `new ASCIIValue($value)` - an `Entry` or a scalar/array                                      | `new ASCIIValue(Type $type, mixed $value)`                                                         |
+| `Dataset\Statistics\Column::__construct(Entry $entry)`                                       | `__construct(Definition $definition, mixed $value)`                                                |
+| `Dataset\Statistics\Column::calculate(Entry $entry)`                                         | `add(Definition $definition, mixed $value)`                                                        |
+| `Dataset\Statistics\Columns::add(Entry $entry)`                                              | `add(Definition $definition, mixed $value)`                                                        |
+| `new NullRowBuilder(EntryFactory $entryFactory)` + `->collect($row)`                         | `new NullRowBuilder(Schema $schema)`, `collect()` removed                                          |
+| `new RowsBuffer(int $size)`                                                                  | `new RowsBuffer(Schema $schema, int $size)`                                                        |
+| `Rows::joinLeft($right, $on, $entryFactory)` / `Rows::joinRight($right, $on, $entryFactory)` | third argument removed                                                                             |
+| `Flow\ETL\Row\EntryFactory`, `Row\Entry\EntryInstantiator`, `Row\Entry\Instantiators`        | removed                                                                                            |
+| `EntryTypeResolver::fromDefinition()`                                                        | removed                                                                                            |
+
+### 33) `flow-php/etl` - `Config` options move to the extractors or are removed
+
+| Before                                                                                                 | After                                                                                                    |
+|--------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `data_frame(config_builder()->putInputIntoRows())->read(from_csv($path))`                              | `data_frame()->read(from_csv($path)->withMetadataColumns(true))`                                         |
+| `ConfigBuilder::putInputIntoRows()` / `dontPutInputIntoRows()`, `Config::shouldPutInputIntoRows()`     | removed                                                                                                  |
+| `config_builder()->extractorBatchSize(500)`                                                            | `from_csv($path)->withBatchSize(500)` - on each extractor                                                |
+| `Config::extractorBatchSize()`                                                                         | removed - `$extractor->batchSize()`                                                                      |
+| `FlowContext::entryFactory()`                                                                          | removed                                                                                                  |
+| `new Config(...)` with `$filesystemTable`, `$putInputIntoRows`, `$extractorBatchSize`, `$entryFactory` | those parameters removed, `HashRepartitionConfig $repartition` added - build through `Config::builder()` |
+
+`withMetadataColumns()` is on `from_csv()`, `from_json()`, `from_json_lines()`, `from_parquet()`, `from_text()`,
+`from_xml()`, `from_excel()`, `from_google_sheet()`, `from_google_sheet_columns()` and `from_floe()`.
+
+### 34) `flow-php/etl` - extractors yield batches
+
+| Before                                                                                                                   | After                                                                                                                                                                                                          |
+|--------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| every extractor yielded one row per `Rows`                                                                               | up to `batchSize()` rows per `Rows`: 100 by default, 1000 for `DbalLimitOffsetExtractor`, `DbalKeySetExtractor`, `PostgreSqlLimitOffsetExtractor`, `PostgreSqlKeySetExtractor` and `PostgreSqlCursorExtractor` |
+| `Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization` re-cut batches to 1000 rows before `DbalLoader` / `PostgreSqlLoader` | removed - `$df->batchSize(1000)` before `write()`                                                                                                                                                              |
+| `new BatchExtractor($extractor, chunkSize: 10)`                                                                          | `new BatchExtractor($extractor, batchSize: 10)` - a size below 1 throws                                                                                                                                        |
+| `$df->duplicateRow(...)` appended the copies after the batch's last row                                                  | each copy follows the row it duplicates                                                                                                                                                                        |
+
+### 35) `flow-php/etl` - `LimitableExtractor` replaced by `LimitPushDown`
+
+| Before                                                                         | After                                                                            |
+|--------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| `Flow\ETL\Extractor\LimitableExtractor`                                        | `Flow\ETL\Extractor\LimitPushDown`                                               |
+| `Flow\ETL\Extractor\Limitable` (trait)                                         | `Flow\ETL\Extractor\PushesLimit`                                                 |
+| `changeLimit(int $limit): void`                                                | `pushLimit(int $limit): void` - a second push can only lower the limit           |
+| `limit(): ?int`                                                                | `pushedLimit(): ?int`                                                            |
+| `isLimited(): bool`                                                            | removed - `pushedLimit() !== null`                                               |
+| `incrementReturnedRows()` / `reachedLimit()` / `resetLimit()`                  | removed                                                                          |
+| a pushed limit replaced the `limit()` step, so the extractor had to stop at it | the `limit()` step stays; stopping early is optional                             |
+| `new LimitReachedException($limit, $previous)`                                 | `new LimitReachedException($limit, $rows, $previous)` - pass `previous:` by name |
+
+### 36) `flow-php/etl` - `ErrorHandler` answers per stage: extraction, transformation, loading
+
+| Before                                                                                            | After                                                                                            |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `ErrorHandler::throw(Throwable $error, Rows $rows): bool`                                         | `onExtraction(ExtractionError $error): ExtractionAction` - `propagate` / `endSource`             |
+| `ErrorHandler::skipRows(Throwable $error, Rows $rows): bool`                                      | `onTransformation(TransformationError $error): TransformationAction` - `propagate` / `skipBatch` |
+| -                                                                                                 | `onLoading(LoadingError $error): LoadingAction` - `propagate` / `skipLoader`                     |
+| an extractor failure always propagated                                                            | goes to `onExtraction()`: `IgnoreError` and `SkipRows` end the source, `ThrowError` rethrows     |
+| `IgnoreError`: a failed transformation ran the remaining steps on the half-transformed batch      | the batch is dropped                                                                             |
+| `SkipRows` / `skip_rows_handler()`: a failed transformation emitted the half-transformed batch    | the batch is dropped                                                                             |
+| `SkipRows`: a failed loader was swallowed and the batch's remaining steps skipped                 | rethrown                                                                                         |
+| `SkipRows`: a drain failure of `to_transformation()` / `to_branch()` at `closure()` was swallowed | rethrown                                                                                         |
+
+The error objects and the action enums are in `Flow\ETL\ErrorHandler`.
+
+Before:
+
+```php
+final class SkipInvalidBatches implements ErrorHandler
+{
+    public function throw(Throwable $error, Rows $rows): bool
+    {
+        return !$error instanceof InvalidArgumentException;
+    }
+
+    public function skipRows(Throwable $error, Rows $rows): bool
+    {
+        return true;
+    }
+}
+```
+
+After:
+
+```php
+final class SkipInvalidBatches implements ErrorHandler
+{
+    public function onExtraction(ExtractionError $error): ExtractionAction
+    {
+        return ExtractionAction::propagate;
+    }
+
+    public function onTransformation(TransformationError $error): TransformationAction
+    {
+        return $error->cause instanceof InvalidArgumentException
+            ? TransformationAction::skipBatch
+            : TransformationAction::propagate;
+    }
+
+    public function onLoading(LoadingError $error): LoadingAction
+    {
+        return $error->cause instanceof InvalidArgumentException
+            ? LoadingAction::skipLoader
+            : LoadingAction::propagate;
+    }
+}
+```
+
+### 37) `flow-php/etl` - `Cache` gains `schema()`
+
+| Before                                              | After                                                                                    |
+|-----------------------------------------------------|------------------------------------------------------------------------------------------|
+| -                                                   | `Cache::schema(string $key): Schema`, throws `KeyNotInCacheException` for an unknown key |
+| a custom `Flow\ETL\Cache` implementation without it | fatal at load                                                                            |
+
+### 38) `flow-php/etl` - data cached or serialized by 0.43.x cannot be read back
+
+| Before                                                                                                          | After          |
+|-----------------------------------------------------------------------------------------------------------------|----------------|
+| `Rows` stored by `FilesystemCache`, `PSRSimpleCache`, `ApcuCache`, `PSRCacheBuckets` or `serialize_to_string()` | cannot be read |
+
+Clear persistent caches and regenerate stored `serialize_to_string()` payloads after upgrading.
+
+### 39) `flow-php/etl` - in-memory sources infer one nullable schema from the first 20,480 rows
+
+| Before                                                                                           | After                                                                                                     |
+|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `df()->read(from_array([['id' => 1]]))->schema()` - `id: integer`                                | `id: ?integer`; the same for `from_memory()` and `from_sequence_*()`                                      |
+| `from_array()` / `from_memory()` / `from_sequence_*()` typed each row on its own                 | columns inferred from the first 20,480 rows                                                               |
+| a row past the sample whose value the inferred type refuses - kept with its own type             | throws `Flow\ETL\Exception\InferredSchemaException`                                                       |
+| -                                                                                                | `from_array($rows)->inferSchema(infer_schema()->sampleSize(-1))` - infer from every row                   |
+| `from_array([['a' => 1], ['a' => 2, 'b' => 'x']])` - first row has no `b`                        | first row `'b' => null`                                                                                   |
+| `from_array([['a' => 'x'], ['a' => 1000]])` - second row `1000`                                  | `'1000'` - values follow the widened column type                                                          |
+| `from_array([['tz' => new DateTimeZone('Europe/Warsaw')]])` - `'Europe/Warsaw'`, column `string` | `DateTimeZone` object, column `?timezone`                                                                 |
+| `from_array([['s' => ['j' => null]]])` - `s: structure{j: null}`                                 | `s: ?structure{j: ?string}`                                                                               |
+| `from_array([['o' => new stdClass()]])` - `InvalidArgumentException` on `schema()` and on read   | `schema()` gives `o: ?string`; the read throws `SchemaMismatchException`                                  |
+| `from_array($generator)` - streamed                                                              | read in full into `<spillRoot>/flow-php-source/` before the first row; an endless generator never returns |
+| `from_array($generator)` read twice - `Cannot traverse an already closed generator`              | replayed from the spill file                                                                              |
+| -                                                                                                | `from_array($generator, $schema)` or `->withSchema($schema)` - streamed, no spill, one read only          |
+| -                                                                                                | `from_array($generator, spillRoot: path($dir))` - default is the filesystem's system tmp dir              |
+| `from_memory($memory)` read again after `$memory->save()` - saw the new columns                  | keeps the schema of its first non-empty read; create a new `from_memory($memory)`                         |
+
+`InferredSchemaException` is not a `SchemaMismatchException`; the mismatch is its `getPrevious()`.
+
+### 40) `flow-php/etl` - `Hydrator`, `array_to_row()` and `array_to_rows()` require a `Schema`
+
+| Before                                                    | After                                                                           |
+|-----------------------------------------------------------|---------------------------------------------------------------------------------|
+| `Hydrator::cast(array $batch, ?Schema $schema = null)`    | removed - use `hydrate($batch, $schema)`                                        |
+| `Hydrator::hydrate(array $batch, ?Schema $schema = null)` | `hydrate(array $batch, Schema $schema)`                                         |
+| `array_to_row($data, $hydrator, $partitions, $schema)`    | `array_to_row($data, $schema, $hydrator, $partitions)`                          |
+| `array_to_rows($data, $hydrator, $partitions, $schema)`   | `array_to_rows($data, $schema, $hydrator)` - put partition columns into `$data` |
+| `array_to_rows($data)`                                    | `df()->read(from_array($data))->fetch()`                                        |
+
+### 41) `flow-php/etl` / `flow-php/types` - `autoCast()` removed
+
+| Before                                     | After   |
+|--------------------------------------------|---------|
+| `DataFrame::autoCast()`                    | removed |
+| `Flow\ETL\Transformer\AutoCastTransformer` | removed |
+| `Flow\Types\Type\AutoCaster`               | removed |
+
+Before:
+
+```php
+df()->read(from_csv($path))->autoCast()->fetch();
+df()->read(from_array([['id' => '1', 'total' => '10.5']]))->autoCast()->fetch();
+```
+
+After:
+
+```php
+df()->read(from_csv($path))->fetch();
+df()->read(from_array([['id' => '1', 'total' => '10.5']], schema(int_schema('id'), float_schema('total'))))->fetch();
+```
+
+`from_array()` types by PHP value: numeric strings stay `?string` unless the schema is declared.
+
+### 42) `flow-php/etl` - a value a declared column refuses throws `SchemaMismatchException`
+
+| Before                                                                                                                  | After                                                                                                                                                   |
+|-------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `from_csv($path)->withSchema($schema)`, `'n/a'` in a `datetime` column - throws `Flow\Types\Exception\CastingException` | throws `Flow\ETL\Exception\SchemaMismatchException`: `Rows do not match their schema: column "d" (row 1): could not convert 'n/a' (string) to datetime` |
+| `getPrevious()` of the thrown exception                                                                                 | `Flow\ETL\Exception\ColumnMismatchException`, never the `CastingException`                                                                              |
+| `type_datetime()->cast('n/a')` - throws `CastingException`                                                              | unchanged                                                                                                                                               |
+
+Replace `catch (CastingException $e)` around a read with `catch (SchemaMismatchException $e)`.
+
+### 43) `flow-php/etl` - `DataFrame::schema()` describes the plan without running it
+
+| Before                                                                                                                   | After                                                                                  |
+|--------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `$df->schema()` ran the pipeline, loaders included, and merged every batch's schema                                      | derived from the source's `schema()` through each step; no row is read, no loader runs |
+| `$df->schema()` on a plan containing `joinEach()` - ran the pipeline                                                     | throws `DataDependentSchemaException`                                                  |
+| `$df->schema()` over a source that cannot describe its schema, also through `from_data_frame($inner)` - ran the pipeline | throws `SchemaNotDerivableException`                                                   |
+| `schema()` reported `dataFrameCompleted` / `dataFrameFailed` telemetry                                                   | reports neither                                                                        |
+| `$df->fetch()` returning no rows, `$df->void()->fetch()` - `Rows` with an empty schema                                   | `Rows` carrying the plan's columns                                                     |
+
+### 44) `flow-php/etl` - `printSchema()` prints the plan's schema and takes no limit
+
+| Before                                                                                   | After                                                                        |
+|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| `printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter())` | `printSchema(SchemaFormatter $formatter = new ASCIISchemaFormatter())`       |
+| `$df->printSchema(20, $formatter)`                                                       | `$df->printSchema($formatter)`                                               |
+| ran the pipeline, loaders included, printing one schema per batch                        | prints `$df->schema()` once and runs nothing; throws where `schema()` throws |
+| `$df->printSchema(); $df->fetch()` - at most 20 rows                                     | every row                                                                    |
+
+### 45) `flow-php/etl` - `display()` and `printRows()` render one table
+
+| Before                                                      | After                          |
+|-------------------------------------------------------------|--------------------------------|
+| `$df->display()` / `$df->printRows()` - one table per batch | one table                      |
+| `$df->printRows(null)` streamed the frame batch by batch    | collects the whole frame first |
+
+### 46) `flow-php/etl` - `select()` and `groupBy()` refuse an undeclared column
+
+| Before                                                               | After                                                                                          |
+|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `$df->select('missing')` - added a `missing` string column of `null` | throws `SchemaDefinitionNotFoundException`: `Schema definition for entry "missing" not found.` |
+| `$df->groupBy(['missing'])` - grouped every row under a `null` key   | throws `SchemaDefinitionNotFoundException`                                                     |
+
+### 47) `flow-php/etl` - renaming onto an existing column throws
+
+| Before                                                                              | After                                                                                                                    |
+|-------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `$df->rename('a_b', 'ab')` while `ab` exists - `a_b` replaced `ab`                  | throws `SchemaDefinitionNotUniqueException`: `Entry definitions must be unique, duplicated entries: [ab], all: [ab, ab]` |
+| `$df->renameEach(rename_replace('_', ''))` producing an existing name - replaced it | throws `SchemaDefinitionNotUniqueException`                                                                              |
+
+### 48) `flow-php/etl` - float values compare exactly
+
+| Before                                                                                                      | After                                   |
+|-------------------------------------------------------------------------------------------------------------|-----------------------------------------|
+| `$rows->unique()` / `diffLeft()` / `diffRight()` - floats sharing an integer part were equal (`1.5 == 1.9`) | exact: `1.5 != 1.9`, `0.1 + 0.2 != 0.3` |
+| `rank()` / `dense_rank()` peers over a float column - same rule                                             | exact                                   |
+
+### 49) `flow-php/etl` - `Window` and window functions are immutable
+
+| Before                                                                                  | After                                                           |
+|-----------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| `$window->partitionBy(...)` / `->orderBy(...)` / `->rowsBetween(...)` changed `$window` | return a copy - use the returned window                         |
+| `$function->over($window)` changed `$function`                                          | returns a copy                                                  |
+| `window()->partitionBy(ref('a'))->partitions()` - `array<Reference>`                    | `References`; `->all()` returns the array                       |
+| `window()->partitionBy(ref('nope'))` - every row in one partition                       | throws `SchemaDefinitionNotFoundException` before the first row |
+| `window()->orderBy(ref('nope'))` - threw per row                                        | throws `SchemaDefinitionNotFoundException` before the first row |
+
+### 50) `flow-php/etl` - group and join key extraction reads the schema
+
+| Before                                                                                        | After                                                                                      |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `GroupBy::keyValues(Row $row)`                                                                | `keyValues(Row $row, Schema $input)`                                                       |
+| `GroupBy::aggregatedRow(GroupKey $key, Aggregators $aggregators, EntryFactory $entryFactory)` | `aggregatedRow(GroupKey $key, Aggregators $aggregators, Schema $output)`                   |
+| `KeyValues::ofRow(Row $row)`                                                                  | `ofRow(Row $row, Schema $schema)`                                                          |
+| `new KeyValues($refs, nullOnMissing: true)`                                                   | parameter removed - a missing key is `null` under a nullable column, throws under NOT NULL |
+| `new HashBucketing(..., nullOnMissing: true)`                                                 | parameter removed                                                                          |
+| `join()` over a row without the join column - threw                                           | the row is unmatched                                                                       |
+
+### 51) `flow-php/etl` - a join producing a duplicate column throws `SchemaDefinitionNotUniqueException`
+
+| Before                                                                                                                                                                                                                      | After                                                                                                                                                    |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$df->join($right, join_on(['id' => 'id']))`, both sides carry `name` - `JoinException` (`RuntimeException`): `Merged entries names must be unique, given: [id, name] + [name] try to use a different join prefix than: ""` | `SchemaDefinitionNotUniqueException` (`InvalidArgumentException`): `Entry definitions must be unique, duplicated entries: [name], all: [id, name, name]` |
+| thrown when the first pair of rows was merged                                                                                                                                                                               | thrown when the pipeline starts, before any row is read                                                                                                  |
+| `$rows->joinCross($right, '')` over shared columns - `InvalidArgumentException`: `... + [id, name]. Please consider using join prefix option`                                                                               | `SchemaDefinitionNotUniqueException`: `Entry definitions must be unique, duplicated entries: [id, name], all: [id, name, id, name]`                      |
+| `catch (JoinException $e)` around a join                                                                                                                                                                                    | `catch (SchemaDefinitionNotUniqueException $e)`, or give the right side a prefix: `join_on(['id' => 'id'], 'joined_')`                                   |
+
+### 52) `flow-php/etl` - `Joiner` takes `JoinSide` and no `EntryFactory`, `Expression` drop helpers removed
+
+| Before                                                                                 | After                                                                                                                          |
+|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\ETL\Join\Expression::dropDuplicateLeftEntries()` / `dropDuplicateRightEntries()` | removed                                                                                                                        |
+| `$joiner->join($left, $right, $nullLeftRow, $nullRightRow, $buildLeft)`                | `$joiner->join(JoinSide::of($left, $nullLeftRow, $leftSchema), JoinSide::of($right, $nullRightRow, $rightSchema), $buildLeft)` |
+| `new Joiner($expression, $type, $entryFactory, $batchSize)`                            | `new Joiner($expression, $type, $batchSize)`                                                                                   |
+
+### 53) `flow-php/etl` - a join against an empty side keeps that side's columns
+
+| Before                                                                                    | After                                  |
+|-------------------------------------------------------------------------------------------|----------------------------------------|
+| `$df->join($emptyRight, $on, Join::left)` - right-hand columns dropped                    | kept, `null`                           |
+| `$df->join($right, $on, Join::right)` with an empty left side - left-hand columns dropped | kept, `null`                           |
+| `$rows->joinCross($empty)` / `$empty->joinCross($rows)` - the non-empty side's rows       | zero rows carrying both sides' columns |
+
+### 54) `flow-php/etl` - a global `aggregate()` over zero rows returns one row
+
+| Before                                                                                                             | After                                        |
+|--------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| `$df->aggregate(sum(ref('a')), count(ref('a')))` over zero rows, or after a `filter()` removed every row - no rows | one row, `['a_sum' => null, 'a_count' => 0]` |
+| `collect()` / `collect_unique()` / `string_agg()` over zero rows - no rows                                         | `[]` / `[]` / `''`                           |
+| `$df->groupBy('k')->aggregate(...)` over zero rows - no rows                                                       | unchanged                                    |
+
+### 55) `flow-php/etl` - `pivot()` takes its values
+
+Before:
+
+```php
+$df->groupBy('date')->pivot(ref('product'))->aggregate(sum(ref('amount')));
+```
+
+After:
+
+```php
+$df->groupBy(['date'])->pivot(ref('product'), pivot_values('A', 'B'))->aggregate(sum(ref('amount')));
+// or
+$df->groupBy(['date'])->pivot(ref('product'), discover_pivot_values())->aggregate(sum(ref('amount')));
+```
+
+| Before                                                           | After                                                                                                          |
+|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `GroupedDataFrame::pivot(Reference $ref)`                        | `pivot(Reference $ref, PivotValues $values)`                                                                   |
+| `GroupBy::pivot(Reference $ref)`                                 | `GroupBy::pivot(Reference $ref, DeclaredPivotValues $values)`                                                  |
+| one column per value found in the data                           | `pivot_values(...)`: one per declared value, `null` where no row carries it, undeclared values dropped         |
+| -                                                                | `discover_pivot_values()`: one per non-null value in the frame, sorted, at most `maxValues` (default `10_000`) |
+| pivot value `0` or `'0'` - column `e00`                          | column `0`                                                                                                     |
+| pivot value `7` - column `e07`                                   | column `7`                                                                                                     |
+| pivot value equal to a group-by column name - its column dropped | throws `InvalidArgumentException`                                                                              |
+| `GroupBy::pivotResult($rows, $context, $batchSize)`              | removed - `(new PivotAggregation($batchSize))->aggregate($rows, $context, $groupBy)`                           |
+
+A custom extractor read by `discover_pivot_values()` must implement `Flow\ETL\Extractor\RewindableExtractor`.
+
+### 56) `flow-php/etl` - `unpack()` / `array_unpack()` take the `Schema` of the columns they produce
+
+Before:
+
+```php
+$df->withEntry('row', ref('row')->unpack(['internal_id']));
+```
+
+After:
+
+```php
+$df->withEntry('row', ref('row')->unpack(schema(int_schema('id'), str_schema('name'))));
+```
+
+| Before                                                         | After                                                |
+|----------------------------------------------------------------|------------------------------------------------------|
+| `ref('x')->unpack($skipKeys, $entryPrefix)`                    | `ref('x')->unpack(Schema $schema)`                   |
+| `array_unpack($array, $skip_keys, $entry_prefix)`              | `array_unpack($array, Schema $schema)`               |
+| every payload key except `$skipKeys` became a column           | only the declared columns; other keys are dropped    |
+| column type inferred from each value                           | the declared type, nullable                          |
+| a declared key missing from one payload - no entry in that row | `null`                                               |
+| `$entryPrefix` prepended to each key                           | removed - columns are named `<withEntry name>.<key>` |
+
+A custom `Flow\ETL\Function\ScalarFunction\UnpackResults` function must return a `StructureType` of its columns from
+`returns()`.
+
+### 57) `flow-php/etl` - `on_each()` requires an operand that declares its element type
+
+| Before                                                                 | After                                                                              |
+|------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `ref('a')->onEach(ref('element'))` with `a` = `[1, 'x']` -> `[1, 'x']` | throws `SchemaNotDerivableException`                                               |
+| -                                                                      | `ref('a')->cast(type_list(type_string()))->onEach(ref('element'))` -> `['1', 'x']` |
+
+### 58) `flow-php/etl` - `isIn()` compares numbers loosely and refuses incomparable types
+
+| Before                                                                                     | After                                     |
+|--------------------------------------------------------------------------------------------|-------------------------------------------|
+| `ref('a')->isIn(lit([1]))` with `a` = `'1'` - `false`                                      | `true`, as `ref('a')->equals(lit(1))`     |
+| `ref('a')->isIn(lit([new DateTimeImmutable('2024-01-01')]))` with `a` a `string` - `false` | throws `Can't compare '(string == date)'` |
+| `ref('a')->isIn(lit([1, 2]))` with `a` = `null` - `false`                                  | `null`, `filter()` drops the row          |
+
+### 59) `flow-php/etl` - `Calculator::divide()` always returns `float`
+
+| Before                                    | After |
+|-------------------------------------------|-------|
+| `(new Calculator())->divide(4, 2)` - `2`  | `2.0` |
+| `ref('a')->divide(lit(2))` over `4` - `2` | `2.0` |
+
+### 60) `flow-php/etl` - `DataFrame::partitionBy()` removed, loaders partition, `Rows` carry no partitions
+
+| Before                                                                                           | After                                                                     |
+|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `$df->partitionBy('year')->write(to_csv($path))`                                                 | `$df->write(to_csv($path)->partitionBy(partition_by('year')))`            |
+| partitioned write - the partition column is written into the file body as well                   | path only; `partition_by('year')->writeColumns()` keeps it in the body    |
+| `$df->partitionBy('year')` without a partitioned write                                           | `$df->repartition('year')`                                                |
+| `$df->dropPartitions()`                                                                          | removed                                                                   |
+| `$df->dropPartitions(true)`                                                                      | `$df->drop('year')`                                                       |
+| `Rows::partitioned()` / `rows_partitioned()`                                                     | removed                                                                   |
+| `Rows::partitionBy()` / `partitions()` / `isPartitioned()` / `dropPartitions()`                  | removed                                                                   |
+| `Flow\ETL\Transformer\DropPartitionsTransformer`                                                 | removed                                                                   |
+| reading `year=2024/month=01/` - partition columns appended in path order (`year`, `month`)       | appended in name order (`month`, `year`)                                  |
+| reading `year=__HIVE_DEFAULT_PARTITION__/` - `year` is the string `'__HIVE_DEFAULT_PARTITION__'` | `null`, and `year` is nullable                                            |
+| same read with `withSchema()` declaring `year` NOT NULL - the string                             | throws `InvalidArgumentException`                                         |
+| reading `year=abc/` with `withSchema()` declaring `year` as `integer` - `0`                      | throws `InvalidArgumentException` naming the column, file, type and value |
+| `display()` / `printRows()` / `to_output()` printed a `Partitions:` footer                       | no footer                                                                 |
+
+### 61) `flow-php/etl` - `filterPartitions()` compares the raw string partition value
+
+| Before                                                                                                        | After                                                                                                                                        |
+|---------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `filterPartitions(ref('date')->equals(lit(new DateTimeImmutable('2024-01-01'))))` - matched `date=2024-01-01` | throws `Can't compare '(string == date)'`; use `lit('2024-01-01')`, or `from_csv($path)->partitionTypes(partition_types(date: type_date()))` |
+| `filterPartitions(ref('active')->equals(lit(false)))` - matched `active=false`                                | throws `Can't compare '(string == boolean)'`; use `lit('false')`, or `partition_types(active: type_boolean())`                               |
+| `filterPartitions(ref('date')->equals(lit('2024-01-01')))` - throws `Can't compare '(date == string)'`        | matches `date=2024-01-01`                                                                                                                    |
+| a `DateTimeImmutable` or `bool` literal over `files()` / `from_path_partitions()` - matched                   | matches nothing; compare a string literal                                                                                                    |
+| `new ScalarFunctionFilter($function, $entryFactory, $caster, $context)`                                       | `new ScalarFunctionFilter($function, Schema $partitions, $context)`                                                                          |
+
+### 62) `flow-php/etl` / `flow-php/types` - missing-column and type-mismatch messages changed
+
+| Before                                                                                               | After                                                                                                               |
+|------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| `Schema definition for entry "x" not found`                                                          | `Schema definition for entry "x" not found.`, plus ` Did you mean one of: [a]?` when up to 3 column names are close |
+| `$row->get('x')`: `Entry "x" does not exist. Did you mean one of the following? ["every", "column"]` | `Column "x" does not exist.`, plus ` Did you mean one of the following? ["a"]` when up to 3 column names are close  |
+| `Can't compare '(?integer > ?date)' due to data type mismatch.`                                      | `Can't compare '(?integer > ?date)' due to data type mismatch - an explicit cast is required.`                      |
+
+### 63) `flow-php/etl` - pipeline and generator extractors and `Schema::fromPipeline()` removed
+
+| Before                                                          | After                            |
+|-----------------------------------------------------------------|----------------------------------|
+| `from_pipeline($pipeline)` / `new PipelineExtractor($pipeline)` | removed - `from_data_frame($df)` |
+| `Flow\ETL\Extractor\GeneratorExtractor`                         | removed                          |
+| `Schema::fromPipeline($pipeline, $context, $maxRows)`           | removed - `$df->schema()`        |
+
+### 64) `flow-php/etl` - `until()` stops at the first row failing its predicate
+
+| Before                                                                                        | After    |
+|-----------------------------------------------------------------------------------------------|----------|
+| `$df->until(ref('v')->lessThan(lit(3)))` over `[1, 2, 5, 1, 2]` in one batch - `[1, 2, 1, 2]` | `[1, 2]` |
+
+### 65) `flow-php/etl` - `UnserializeTransformer` requires the payload schema
+
+| Before                                                                                    | After                                                                |
+|-------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `new UnserializeTransformer($source, $merge, $mergePrefix)`                               | `new UnserializeTransformer($source, $schema, $merge, $mergePrefix)` |
+| payload missing, not a string, not unserializable or not one row - row returned unchanged | declared payload columns added as `null`                             |
+
+### 66) `flow-php/etl` - Floe reader drops `RowPadding`, `conform:` and `lenient:`
+
+| Before                                                          | After                                                         |
+|-----------------------------------------------------------------|---------------------------------------------------------------|
+| `Flow\Floe\RowPadding`                                          | removed                                                       |
+| `FloeStreamReader::rows($batchSize, $offset, $limit, $conform)` | `rows($batchSize, $offset, $limit)`                           |
+| `FrameReader::frames(lenient: true)`                            | `frames()` - a truncated stream always throws `FloeException` |
+
+### 67) `flow-php/etl` / `flow-php/etl-adapter-parquet` - a Floe or Parquet glob checks every file against the first
+
+| Before                                                                                                                      | After                                                                                                   |
+|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `from_parquet($glob)` / `from_floe($glob)`, a later file with other columns or column types - rows kept that file's columns | throws `InferredSchemaException` naming both files - read with `->unionByName()` or `->withSchema(...)` |
+| same read, a later file with the same columns in another order - rows kept that file's order                                | rows follow the first file's column order                                                               |
+| -                                                                                                                           | `->unionByName()` reads every file under the merged schema; a column a file lacks is `null`             |
+
+### 68) `flow-php/etl` and every package with DSL functions - documentation attributes leave the packages
+
+| Before                                    | After                                               |
+|-------------------------------------------|-----------------------------------------------------|
+| `Flow\ETL\Attribute\DocumentationDSL`     | `Flow\Documentation\Attribute\DocumentationDSL`     |
+| `Flow\ETL\Attribute\DocumentationExample` | `Flow\Documentation\Attribute\DocumentationExample` |
+| `Flow\ETL\Attribute\Module`               | `Flow\Documentation\Attribute\Module`               |
+| `Flow\ETL\Attribute\Type`                 | `Flow\Documentation\Attribute\Type`                 |
+
+No installable package ships `Flow\Documentation\Attribute\*`: `ReflectionAttribute::newInstance()` on them throws
+`Attribute class "..." not found`. Read them with `getName()` / `getArguments()`.
+
+### 69) `flow-php/etl` / `flow-php/types` - `TypeMerge` moved to `flow-php/types` as `TypeWidener`
+
+| Before                                               | After                                                |
+|------------------------------------------------------|------------------------------------------------------|
+| `Flow\ETL\Schema\Definition\TypeMerge`               | `Flow\Types\Type\TypeWidener`                        |
+| `merge($left, $right)`                               | `widen($left, $right)`                               |
+| `mergeLists()` / `mergeMaps()` / `mergeStructures()` | `widenLists()` / `widenMaps()` / `widenStructures()` |
+
+### 70) `flow-php/types` - structure optional fields are declared inline with `structure_element()`
+
+| Before                                                                                 | After                                                                                                          |
+|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `type_structure(['id' => type_integer()], ['nick' => type_string()])`                  | `type_structure(['id' => type_integer(), 'nick' => structure_element('nick', type_string(), optional: true)])` |
+| `type_structure($elements, $optionalElements, true)`                                   | `type_structure($elements, true)` - an array second argument throws `TypeError`                                |
+| `new StructureType($elements, $optionalElements, $allowExtra)`                         | `StructureType::fromElements($elements, $allowExtra)`                                                          |
+| `StructureType::elements()` - `array<name, Type>`, required fields only                | `list<StructureElement>`, optional fields included                                                             |
+| `$structure->elements()['id']`                                                         | `$structure->element('id')?->type`                                                                             |
+| `StructureType::optionalElements()`                                                    | removed - read `StructureElement::$optional`                                                                   |
+| `normalize()` - `{"type": "structure", "elements": {...}, "optional_elements": {...}}` | `{"type": "structure_v2", "fields": [{"name": ..., "type": ..., "optional": ...}]}`                            |
+| `type_from_array()` / `schema_from_json()` on a `structure` payload                    | throws `InvalidArgumentException: Unknown type 'structure'`                                                    |
+
+Regenerate any stored `schema_to_json()` output that contains a structure.
+
+### 71) `flow-php/types` - `time`, `date`, `string` and `Json` accept and refuse different values
+
+| Before                                                                          | After                                                                                            |
+|---------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `type_time()->isValid(new DateInterval('P1M'))` - `true`                        | `false`                                                                                          |
+| `type_time()->cast(new DateInterval('P1M'))` - returned as-is                   | throws `CastingException`: `... Relative DateInterval (with months/years) can't be cast to time` |
+| `type_time()->cast('12:34:56')` - throws `CastingException`                     | `DateInterval` of 12h 34m 56s                                                                    |
+| `type_time()->cast('12:34:56.5')` - throws `CastingException`                   | `DateInterval` with `f` = `0.5`                                                                  |
+| `type_union(type_time(), type_integer())->cast('12:34:56')` - `12`              | `DateInterval`                                                                                   |
+| `type_date()->isValid(new DateTimeImmutable('2024-01-02 00:00:00.5'))` - `true` | `false`                                                                                          |
+| `Json::fromArray([1 => 'a'], asObject: true)` - `{"1":"a"}`                     | throws `InvalidArgumentException`: `All keys of a JSON object must be strings`                   |
+| `type_string()->cast(new DateInterval('PT1H2M3S'))` - throws `CastingException` | `'01:02:03'`; `P1DT2H` -> `'26:00:00'`; a fraction adds `.uuuuuu`                                |
+
+### 72) `flow-php/types` - `StringTypeNarrower` types compact digit dates as `integer` and month-only dates as `string`
+
+| Before                                                     | After     |
+|------------------------------------------------------------|-----------|
+| `(new StringTypeNarrower())->narrow('20240101')` -> `date` | `integer` |
+| `(new StringTypeNarrower())->narrow('2024-01')` -> `date`  | `string`  |
+
+### 73) `flow-php/filesystem` - `Partition` takes a value and its type, encodes reserved characters and allows `null`
+
+| Before                                                                                         | After                                                                  |
+|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| `Partition::valueFromRow(Reference $ref, Row $row)`                                            | `Partition::fromValue(string $name, Type $type, mixed $value): string` |
+| `$partition->reference()`                                                                      | removed                                                                |
+| `Flow\ETL\Row\Entry\JsonEntry can't be used as a partition`                                    | `Column "d" of type json can't be used as a partition`                 |
+| `Partition::$value` - `string`                                                                 | `?string`                                                              |
+| `new Partition('path', 'a/b')` - throws `Partition value contains one of forbidden characters` | `->segment()` - `path=a%2Fb`                                           |
+| `new Partition('a/b', '1')` - throws `Partition name contains one of forbidden characters`     | `->segment()` - `a%2Fb=1`                                              |
+| value `New York` written to `city=New York/`                                                   | `city=New%20York/`                                                     |
+| `null` partition value on write - throws `Partition value can't be empty`                      | `year=__HIVE_DEFAULT_PARTITION__/`                                     |
+| `new Partitions(new Partition('a', '1'), new Partition('a', '2'))`                             | throws `InvalidArgumentException`                                      |
+| `Partition` / `Partitions` throw `Flow\ETL\Exception\InvalidArgumentException`                 | throw `Flow\Filesystem\Exception\InvalidArgumentException`             |
+
+### 74) `flow-php/filesystem` - `SourceStream::readLines()` strips the separator and yields nothing for 0 bytes
+
+| Before                                                                                              | After              |
+|-----------------------------------------------------------------------------------------------------|--------------------|
+| `memory_filesystem()` stream: each line kept its trailing `"\n"`                                    | separator stripped |
+| `memory_filesystem()` stream: `$separator` ignored                                                  | honoured           |
+| `memory_filesystem()` stream: 0 bytes yielded one `''`                                              | yields nothing     |
+| `StringSourceStream` / `MemorySourceStream` dropped empty lines                                     | yield them as `''` |
+| `from_text()` over an empty `memory://` file - one empty row                                        | no rows            |
+| `from_json_lines()` over an empty `memory://` file - threw                                          | no rows            |
+| `from_csv()->withCharactersReadInLine($n)` on `memory://` - a line longer than `$n` split into rows | one row per line   |
+
+A custom `SourceStream::readLines()` must strip the separator, yield nothing for a 0-byte stream and yield an empty
+line as `''`.
+
+### 75) `flow-php/parquet` - FLOAT32 values read without `ext-arrow` are no longer rounded to 7 decimals
+
+| FLOAT32 value written | Before (read) | After (read)          |
+|-----------------------|---------------|-----------------------|
+| `0.1`                 | `0.1`         | `0.10000000149011612` |
+| `18.52`               | `18.5200005`  | `18.520000457763672`  |
+| `1.0E-8`              | `0.0`         | `9.99999993922529E-9` |
+
+### 76) `flow-php/parquet` - `FlatColumn::decimal()` sizes `FIXED_LEN_BYTE_ARRAY` by the Parquet spec
+
+| `FlatColumn::decimal($name, $precision)` | Before (bytes) | After (bytes) |
+|------------------------------------------|----------------|---------------|
+| precision 7                              | 3              | 4             |
+| precision 12                             | 5              | 6             |
+| precision 19                             | 8              | 9             |
+| precision 24                             | 10             | 11            |
+| precision 36                             | 15             | 16            |
+
+### 77) `flow-php/postgresql` - `Client` gains `describe()`, and `execute()` accepts `ConvertedParameters`
+
+| Before                                                   | After                                                                                                                    |
+|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| a custom `Flow\PostgreSql\Client\Client` implementation  | adds `describe(Sql\|string $sql, array $parameters = []): array` returning `list<array{name: string, type: ColumnType}>` |
+| `execute(Sql\|string $sql, array $parameters = []): int` | `execute(Sql\|string $sql, array\|ConvertedParameters $parameters = []): int`                                            |
+
+A custom `Client::execute()` binds `ConvertedParameters::$values` as they are, without a converter.
+
+### 78) `flow-php/postgresql` - arrays parsed, `oid` as integer, `timetz` without offset, duplicates cast by name
+
+| Before                                                    | After                                                                         |
+|-----------------------------------------------------------|-------------------------------------------------------------------------------|
+| `ResultCaster::cast()` returns `bool\|float\|int\|string` | returns `array\|bool\|float\|int\|string`                                     |
+| `_int4` value `'{1,NULL,3}'`                              | `[1, null, 3]` - every `_`-prefixed array type, elements cast by element type |
+| `oid` value `'42'`                                        | `42`                                                                          |
+| `timetz` value `'12:34:56+02'`                            | `'12:34:56'`                                                                  |
+| `SELECT 1::int8 AS a, 'x' AS a` - `a` is `0`              | `'x'`                                                                         |
+| `SELECT 'x' AS a, 1::int8 AS a` - `a` is `'1'`            | `1`                                                                           |
+
+Applies to rows returned by `Client::fetch*()` and `Client::cursor()`.
+
+### 79) `flow-php/doctrine-dbal-bulk` - `Dialect` requires `maxBindParameters()`
+
+| Before                                                       | After                                                                                               |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| a custom `Flow\Doctrine\Bulk\Dialect\Dialect` implementation | adds `public function maxBindParameters(): int` - the platform's bind-parameter limit, at least `1` |
+
+### 80) `flow-php/etl-adapter-csv`, `-json`, `-excel`, `-google-sheet` - a read without a schema infers one schema
+
+|                                                                                                   | Before                                                                      | After                                                                                   |
+|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| schema of a read without `withSchema()`                                                           | each yielded `Rows` typed from its own values                               | one schema for the whole read, inferred from a sample                                   |
+| nullability of an inferred column                                                                 | nullable only where that `Rows` held a `null`                               | always nullable (`?integer`, `?string`, ...)                                            |
+| sample                                                                                            | -                                                                           | first 20,480 rows over the first 10 files; Google Sheet: first 100 rows                 |
+| value past the sample that the inferred type refuses                                              | read, typed on its own                                                      | throws `Flow\ETL\Exception\SchemaMismatchException`                                     |
+| CSV/Excel file or Google Sheet whose header differs from the inferred one (header-only files too) | read with its own columns                                                   | throws `Flow\ETL\Exception\InferredSchemaException`                                     |
+| row key order                                                                                     | the row's own; a body column named like a partition is overwritten in place | the schema's: body columns (JSON: first seen across the sample), then partition columns |
+| `flow file:schema` over CSV / Excel                                                               | every column `string`, `nullable: false` unless a value was empty           | typed, every column `nullable: true`                                                    |
+| infer from every row                                                                              | -                                                                           | `->inferSchema(infer_schema()->sampleSize(-1))`                                         |
+| infer from every file                                                                             | -                                                                           | `->inferSchema(infer_schema()->filesToSniff(-1))`                                       |
+| every column `?string`                                                                            | -                                                                           | `->inferSchema(infer_schema()->allStrings())`                                           |
+| files with different columns                                                                      | -                                                                           | `->inferSchema(infer_schema()->unionByName())`                                          |
+| no inference                                                                                      | -                                                                           | `->withSchema($schema)`                                                                 |
+
+On `from_google_sheet()`, `->inferSchema(infer_schema())` without `->sampleSize()` samples 20,480 rows, not 100.
+
+### 81) `flow-php/etl-adapter-csv` - cells are typed, not strings
+
+| Cell                                 | Before   | After                 |
+|--------------------------------------|----------|-----------------------|
+| `1`                                  | `string` | `?integer`            |
+| `1.5`                                | `string` | `?float`              |
+| `true` / `false`                     | `string` | `?boolean`            |
+| `20240101`                           | `string` | `?integer`            |
+| `2024-01-01` / `2024-01-01 10:00:00` | `string` | `?date` / `?datetime` |
+| uuid / JSON text                     | `string` | `?uuid` / `?json`     |
+| `01234`, `2024-01`, ` 12 ` (padded)  | `string` | `?string`             |
+
+Keep every column a string: `from_csv($path)->inferSchema(infer_schema()->allStrings())`.
+
+### 82) `flow-php/etl-adapter-doctrine` - `from_dbal_*()` type columns from the query
+
+| Driver                              | Column                                                                          | Before        | After                                                                                           |
+|-------------------------------------|---------------------------------------------------------------------------------|---------------|-------------------------------------------------------------------------------------------------|
+| `pgsql`                             | `NUMERIC`                                                                       | `string`      | `float`                                                                                         |
+| `pgsql`                             | `DATE`, `TIMESTAMP`, `TIMESTAMPTZ`                                              | `string`      | `DateTimeImmutable`                                                                             |
+| `pgsql`                             | `TIME`                                                                          | `string`      | `DateInterval`                                                                                  |
+| `pgsql`                             | `UUID`                                                                          | `string`      | `Flow\Types\Value\Uuid`                                                                         |
+| `pgsql`                             | `JSON`, `JSONB`                                                                 | `string`      | `Flow\Types\Value\Json`                                                                         |
+| `pgsql`                             | `XML`                                                                           | `string`      | `DOMDocument`                                                                                   |
+| `pgsql`                             | any other type (`INTERVAL`, `INET`, `MONEY`, `OID`, arrays, ranges, enums, ...) | `string`      | throws `SchemaNotDerivableException`                                                            |
+| `mysqli`                            | `DECIMAL`                                                                       | `string`      | `float`                                                                                         |
+| `mysqli`                            | `DATE`, `DATETIME`, `TIMESTAMP`                                                 | `string`      | `DateTimeImmutable`                                                                             |
+| `mysqli`                            | `TIME`                                                                          | `string`      | `DateInterval`                                                                                  |
+| `mysqli`                            | `JSON`                                                                          | `string`      | `Flow\Types\Value\Json`                                                                         |
+| `mysqli`                            | any other type (`BIT`, `GEOMETRY`, ...)                                         | `string`      | throws `SchemaNotDerivableException`                                                            |
+| `sqlite3`, `pdo_sqlite`             | `INTEGER`, `REAL`                                                               | `1`, `1.5`    | `'1'`, `'1.5'` - every column is `?string`                                                      |
+| `pdo_pgsql`, `pdo_mysql`, any other | every column                                                                    | driver values | throws `SchemaNotDerivableException` - use the `pgsql` / `mysqli` driver or `->withSchema(...)` |
+
+Applies to `from_dbal_query()`, `from_dbal_queries()`, `from_dbal_limit_offset()`, `from_dbal_limit_offset_qb()` and
+`from_dbal_key_set_qb()` without `->withSchema()`. A query the driver cannot describe (multi-statement, data-modifying
+CTE, `INSERT ... RETURNING`) also throws. Declare `->withSchema(...)` to pick the types.
+
+### 83) `flow-php/etl-adapter-doctrine`, `-postgresql` - `withPageSize()` / `withFetchSize()` become `withBatchSize()`
+
+| Before                                                                                                | After                                        |
+|-------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| `from_pgsql_cursor(...)->withFetchSize(500)`                                                          | `from_pgsql_cursor(...)->withBatchSize(500)` |
+| `from_pgsql_limit_offset(...)->withPageSize(500)`                                                     | `->withBatchSize(500)`                       |
+| `from_pgsql_key_set(...)->withPageSize(500)`                                                          | `->withBatchSize(500)`                       |
+| `from_dbal_limit_offset(...)->withPageSize(500)`, `from_dbal_limit_offset_qb(...)->withPageSize(500)` | `->withBatchSize(500)`                       |
+| `from_dbal_key_set_qb(...)->withPageSize(500)`                                                        | `->withBatchSize(500)`                       |
+| `Page size must be greater than 0, got 0` / `Fetch size must be greater than 0, got 0`                | `Batch size must be greater than 0, got 0`   |
+
+### 84) `flow-php/etl-adapter-excel` - text cells narrow to uuid, json and timezone, `to_excel()` writes date cells
+
+|                                                             | Before                                                   | After                                                                       |
+|-------------------------------------------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------|
+| text cell holding a uuid / JSON / timezone name             | `string`                                                 | `?uuid` / `?json` / `?timezone`                                             |
+| any other text cell (`TRUE`, `12.9`, `2023-10-02`)          | `string`                                                 | `?string`                                                                   |
+| blank cell under `withConvertEmptyToNull(false)`            | `''` in that row                                         | the whole column is `?string` (`1` reads as `'1'`)                          |
+| `to_excel()` date / datetime value                          | text cell                                                | date cell                                                                   |
+| `to_excel()->withDateFormat()` / `->withDateTimeFormat()`   | PHP `date()` format, default `'Y-m-d'` / `'Y-m-d H:i:s'` | Excel number format, default `'yyyy-mm-dd'` / `'yyyy-mm-dd hh:mm:ss'`       |
+| `to_excel()` then `from_excel()`, date / datetime column    | `string`                                                 | `?date` / `?datetime`                                                       |
+| ZIP-signed file without an extension that is not a workbook | `ValueError: Invalid or uninitialized Zip object`        | `Flow\ETL\Exception\InvalidArgumentException: Unsupported file format: n/a` |
+
+Before:
+
+```php
+to_excel($path)->withDateFormat('Y-m-d')->withDateTimeFormat('Y-m-d H:i:s');
+```
+
+After:
+
+```php
+to_excel($path)->withDateFormat('yyyy-mm-dd')->withDateTimeFormat('yyyy-mm-dd hh:mm:ss');
+```
+
+### 85) `flow-php/etl-adapter-excel` - requires `openspout/openspout` `~5.3.0`
+
+| Dependency            | Before | After    |
+|-----------------------|--------|----------|
+| `openspout/openspout` | `^5.2` | `~5.3.0` |
+
+### 86) `flow-php/etl-adapter-google-sheet` - `FORMATTED_VALUE` cells are typed, and `''` reads as `null`
+
+|                                            | Before   | After                                                                                                   |
+|--------------------------------------------|----------|---------------------------------------------------------------------------------------------------------|
+| cell under `FORMATTED_VALUE` (the default) | `string` | typed as a CSV cell, see 81): `'1234'` -> `?integer`, `'TRUE'` -> `?boolean`, `'2024-01-01'` -> `?date` |
+| `''` cell                                  | `''`     | `null`; keep `''` with `->withEmptyToNull(false)`                                                       |
+
+### 87) `flow-php/etl-adapter-http` - `response_body` and `request_body` hold the raw body text
+
+| Before                                                                      | After        |
+|-----------------------------------------------------------------------------|--------------|
+| `response_body` / `request_body` of a JSON or XML message - decoded `array` | `?string`    |
+| a JSON body that fails to decode - threw `RuntimeException`                 | kept as text |
+
+Decode in the pipeline: `->withEntry('response_body', ref('response_body')->jsonDecode())`.
+
+### 88) `flow-php/etl-adapter-json` - `schema_from_json_schema()` rejects a property with more than one non-null type
+
+| Before                                                                 | After                                                     |
+|------------------------------------------------------------------------|-----------------------------------------------------------|
+| `anyOf` / `oneOf` of `string` and `integer` - `integer\|string` column | throws `Flow\ETL\Exception\UnsupportedUnionTypeException` |
+| `enum: ["a", 1]` - `integer\|string` column                            | throws `UnsupportedUnionTypeException`                    |
+| `type: ["string", "integer"]` - `integer\|string` column               | throws `UnsupportedUnionTypeException`                    |
+| `anyOf` of `string` and `null` - `?string`                             | unchanged                                                 |
+
+Give the property a single type in the JSON Schema, or declare the column by hand: `str_schema('v')`,
+`json_schema('v')`.
+
+### 89) `flow-php/etl-adapter-json` - keys outside the sample are dropped, missing keys are `null`
+
+|                                                        | Before                                              | After                                                                 |
+|--------------------------------------------------------|-----------------------------------------------------|-----------------------------------------------------------------------|
+| key only a later file carries                          | kept in that file's rows                            | dropped; keep it with `->inferSchema(infer_schema()->unionByName())`  |
+| key first seen past the sample                         | kept in that row                                    | dropped; keep it with `->inferSchema(infer_schema()->sampleSize(-1))` |
+| key missing from a record                              | absent from that row                                | `null`                                                                |
+| nested key every sampled record carries, missing later | read                                                | throws `SchemaMismatchException`                                      |
+| nested key first seen past the sample                  | kept                                                | dropped                                                               |
+| 0-byte file, `from_json()`                             | throws `JsonMachine\Exception\SyntaxErrorException` | skipped, no rows                                                      |
+
+Applies to `from_json()` and `from_json_lines()` unless the row names one.
+
+### 90) `flow-php/etl-adapter-json` - `from_json_lines()` skips blank lines
+
+| Before                                                          | After                                  |
+|-----------------------------------------------------------------|----------------------------------------|
+| an empty or whitespace-only line - threw `SyntaxErrorException` | skipped, in `schema()` and `extract()` |
+
+### 91) `flow-php/etl-adapter-parquet` - `to_parquet()` does not validate values against the Parquet schema
+
+| Before                                                        | After                                                                |
+|---------------------------------------------------------------|----------------------------------------------------------------------|
+| `to_parquet($path)` wrote with `Option::VALIDATE_DATA` `true` | `false`                                                              |
+| -                                                             | `to_parquet($path)->withOptions(Options::default())` validates again |
+
+### 92) `flow-php/etl-adapter-postgresql` - `from_pgsql_*()` type columns from the query instead of reading strings
+
+| PostgreSQL column                                                     | Before                  | After                                |
+|-----------------------------------------------------------------------|-------------------------|--------------------------------------|
+| `numeric`                                                             | `string`                | `float`                              |
+| `date`, `timestamp`, `timestamptz`                                    | `string`                | `DateTimeImmutable`                  |
+| `time`                                                                | `string`                | `DateInterval`                       |
+| `timetz`                                                              | `string` with offset    | `DateInterval`, offset dropped       |
+| `uuid`                                                                | `string`                | `Flow\Types\Value\Uuid`              |
+| `json`, `jsonb`                                                       | `string`                | `Flow\Types\Value\Json`              |
+| `xml`                                                                 | `string`                | `DOMDocument`                        |
+| `oid`                                                                 | `string`                | `int`                                |
+| one-dimensional array (`int4[]`, `text[]`, ...)                       | `string` `'{1,NULL,3}'` | `[1, null, 3]`, `null` elements kept |
+| multi-dimensional array                                               | `string`                | throws while hydrating               |
+| `record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle` | `string`                | throws `SchemaNotDerivableException` |
+
+Applies to `from_pgsql_cursor()`, `from_pgsql_limit_offset()` and `from_pgsql_key_set()` without `->withSchema()`. A
+query that cannot run as a subquery (multi-statement, data-modifying CTE, `INSERT ... RETURNING`) also throws
+`SchemaNotDerivableException`. Declare `->withSchema(...)` to pick the types.
+
+### 93) `flow-php/etl-adapter-postgresql` - `pgsql_table_to_flow_schema()` maps arrays, text-like types, `oid`, `timetz`
+
+| PostgreSQL column                                                                                             | Before                        | After            |
+|---------------------------------------------------------------------------------------------------------------|-------------------------------|------------------|
+| `inet`, `cidr`, `macaddr`, `money`, `int4range`, `int8range`, `numrange`, `tsrange`, `tstzrange`, `daterange` | throws `TypeMappingException` | `string`         |
+| `oid`                                                                                                         | throws `TypeMappingException` | `integer`        |
+| `timetz` (`time with time zone`)                                                                              | throws `TypeMappingException` | `time`           |
+| `integer[]`, any array column                                                                                 | its element type, `integer`   | `list<?integer>` |
+
+Applies to `pgsql_table_to_flow_schema()` and `EntryTypesMap::toFlowType()`.
+
+| Before                                                                    | After   |
+|---------------------------------------------------------------------------|---------|
+| `TypeMappingException::ambiguousEntryType()` / `::unsupportedEntryType()` | removed |
+
+### 94) `flow-php/etl-adapter-postgresql` - `InsertQueryBuilder::build()` takes the client's converters
+
+| Before                                        | After                                                                                       |
+|-----------------------------------------------|---------------------------------------------------------------------------------------------|
+| `$builder->build($values, $schema, $options)` | `$builder->build($values, $schema, $client->converters(), $options)`                        |
+| returns `array{Sql, list<?TypedValue>}`       | returns `array{Sql, ConvertedParameters}` - pass the second element to `$client->execute()` |
+
+### 95) `flow-php/etl-adapter-xml` - `from_xml()` keeps each element as the source wrote it
+
+| Before                                                                                         | After                                                                                       |
+|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `node` re-serialized with added indentation; comments dropped                                  | the element's source text, whitespace and comments included                                 |
+| every ancestor namespace declared on `node`                                                    | only the ancestor namespaces the element uses                                               |
+| a truncated document returned the elements before the cut                                      | throws `RuntimeException`                                                                   |
+| expat error messages                                                                           | libxml error messages, e.g. `XML Error: Premature end of data in tag root line 1 at line 1` |
+| `XMLParserExtractor::startElementHandler()` / `endElementHandler()` / `characterDataHandler()` | removed                                                                                     |
+
+### 96) `flow-php/cli` - `--schema-auto-cast` removed, `flow schema` ignores the row window
+
+| Before                                                                                            | After                                          |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------|
+| `--schema-auto-cast` on `file:analyze`, `file:convert`, `file:read`, `file:schema`                | removed                                        |
+| `flow schema <file> --input-file-offset=N` / `--input-file-limit=N` - schema of the selected rows | the file's schema; both options have no effect |
+
+### 97) `flow-php/cli` - command classes name themselves with `#[AsCommand]`
+
+| Before                                             | After                                                                                                 |
+|----------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `new FileConvertCommand()` - named `file:read`     | `file:convert`                                                                                        |
+| `new FileRowsCountCommand()` - named `file:schema` | `file:rows:count`                                                                                     |
+| `new PipelineRunCommand()` - named `run`           | `pipeline:run`                                                                                        |
+| `Flow\CLI\Command\*` classes carried no aliases    | `run`, `read`, `schema`, `count`, `convert`, `analyze`, `format`, as the `flow` binary registers them |
+
+Registering the commands in your own console application: drop the `setName()` / `setAliases()` calls.
+
+### 98) `flow-php/flow-php-ext` - the `flow_php` extension must be reinstalled
+
+| Before                     | After                                  |
+|----------------------------|----------------------------------------|
+| `flow_php` extension 0.1.0 | 0.3.0, required by this `flow-php/etl` |
+
+Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
+
+### 99) `flow-php/etl-adapter-csv` - `withSeparator()`, `withEnclosure()` and `withEscape()` take a single byte
+
+| Before                                                                                                         | After                                                |
+|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| `withSeparator('\|\|')` / `withEnclosure('\|\|')` / `withEscape('ab')` - PHP 8.3: first byte used; PHP 8.4+: `ValueError` on read | throws `Flow\ETL\Exception\InvalidArgumentException` |
+| `withSeparator('')` / `withEnclosure('')` - PHP 8.3: `,` / `"` used; PHP 8.4+: `ValueError` on read            | throws `Flow\ETL\Exception\InvalidArgumentException` |
 
 ---
 
@@ -2540,7 +3853,7 @@ After:
     ->run();
 ```
 
-### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _         (underscore)
+### 4) ConfigBuilder::putInputIntoRows () output is now prefixed with _            (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows ()
 would now be prefixed with `_` (underscore) symbol.

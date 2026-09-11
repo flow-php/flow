@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
@@ -208,6 +209,23 @@ final class TraceableFilesystemTest extends TestCase
 
         static::assertTrue($result);
         static::assertEmpty($spanProcessor->endedSpans());
+    }
+
+    public function test_traceable_filesystem_delegates_supports_to_the_decorated_one(): void
+    {
+        $decorated = memory_filesystem();
+        $fs = new TraceableFilesystem(
+            $decorated,
+            FilesystemTelemetryConfigMother::create(memory_span_processor(void_exporter())),
+        );
+
+        static::assertSame(
+            $decorated->supports(path('memory://orders.csv')),
+            $fs->supports(path('memory://orders.csv')),
+        );
+        static::assertSame($decorated->supports(path('/tmp/orders.csv')), $fs->supports(path('/tmp/orders.csv')));
+        static::assertTrue($fs->supports(path('memory://orders.csv')));
+        static::assertFalse($fs->supports(path('/tmp/orders.csv')));
     }
 
     public function test_status_delegates_to_underlying_filesystem(): void

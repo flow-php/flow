@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -33,7 +34,7 @@ final class UnicodeLengthTest extends FlowTestCase
                 ['text' => '👋🏻'],
                 ['text' => '👨‍👩‍👧‍👦'],
             ]))
-            ->withEntry('unicode_length', ref('text')->unicodeLength())
+            ->withEntry('unicode_length', optional(ref('text')->unicodeLength()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

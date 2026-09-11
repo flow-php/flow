@@ -12,7 +12,7 @@
 
 The factory method **must** have this exact signature:
 
-```php
+```php ignore
 public static function fromRow(array $row) : self;
 ```
 
@@ -22,7 +22,7 @@ For simple 1:1 constructor-parameter mapping, use [`ConstructorMapper`](/documen
 
 ## DSL
 
-```php
+```php ignore
 static_factory_mapper(class-string<T> $class, non-empty-string $method) : StaticFactoryMapper<T>
 ```
 
@@ -102,6 +102,8 @@ foreach ($users as $user) {
 
 ```php
 <?php
+
+function processUser(object $user): void { /* your code */ }
 
 $cursor = $client->cursor('SELECT id, name, email, created_at FROM large_users');
 

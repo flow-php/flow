@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -21,6 +22,11 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         private string $divider,
     ) {}
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
+    }
+
     public static function divideBySemicolon(string $entryName, string $stamp): self
     {
         return new self($entryName, $stamp, ':');
@@ -28,14 +34,20 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        return $rows->map(fn(Row $row): Row => $row->set(string_entry(
-            $this->entryName,
-            sprintf(
-                '%s%s%s',
-                type_string()->assert($row->get($this->entryName)->value()),
-                $this->divider,
-                $this->stamp,
-            ),
-        )));
+        $stamped = [];
+
+        foreach ($rows->all() as $row) {
+            $stamped[] = row([
+                ...$row->values(),
+                $this->entryName => sprintf(
+                    '%s%s%s',
+                    type_string()->assert($row->get($this->entryName)),
+                    $this->divider,
+                    $this->stamp,
+                ),
+            ]);
+        }
+
+        return new Rows($rows->schema(), ...$stamped);
     }
 }

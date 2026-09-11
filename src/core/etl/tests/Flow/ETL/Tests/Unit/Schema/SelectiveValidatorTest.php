@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\schema_validate;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_optional;
 
 final class SelectiveValidatorTest extends FlowTestCase
 {
@@ -61,11 +62,29 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
-    public function test_given_schema_inferred_from_empty_arrays_against_declared_array_type(): void
+    public function test_given_schema_inferred_from_untyped_arrays_against_declared_array_type(): void
     {
         static::assertTrue(
             schema_validate(
-                expected: schema(integer_schema('id'), definition_from_type('a', type_array())),
+                expected: schema(integer_schema('id', true), definition_from_type('a', type_optional(type_array()))),
+                given: data_frame()
+                    ->read(from_array([['id' => 1, 'a' => [1, 'x']], ['id' => 2, 'a' => [2, 'y']]]))
+                    ->schema(),
+                validator: schema_selective_validator(),
+            )->isValid(),
+        );
+    }
+
+    /**
+     * Inverted by 08c R4's floor: a column of nothing but empty arrays used to infer as list<null>, the
+     * bottom, which no declared json column accepted. It now floors to json, which a declared array
+     * column projects onto, so the two agree.
+     */
+    public function test_given_schema_inferred_from_empty_arrays_satisfies_a_declared_array_type(): void
+    {
+        static::assertTrue(
+            schema_validate(
+                expected: schema(integer_schema('id', true), definition_from_type('a', type_optional(type_array()))),
                 given: data_frame()->read(from_array([['id' => 1, 'a' => []], ['id' => 2, 'a' => []]]))->schema(),
                 validator: schema_selective_validator(),
             )->isValid(),

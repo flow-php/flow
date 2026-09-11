@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Rows;
-use Flow\Filesystem\Partition;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
 use Flow\Floe\Section;
@@ -15,13 +12,10 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Mother\FooterMother;
 use PHPUnit\Framework\TestCase;
 
-use function array_map;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -37,7 +31,6 @@ final class FooterTest extends TestCase
     {
         $json = FooterMother::footer()->toJson();
 
-        static::assertStringContainsString('"partitions":[]', $json);
         static::assertStringContainsString('"metadata":{}', $json);
         static::assertStringContainsString('"schema":[]', $json);
         static::assertStringContainsString('"sections":[]', $json);
@@ -127,9 +120,7 @@ final class FooterTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('metadata is malformed');
 
-        Footer::fromJson(
-            '{"version":1,"writer":"x","schema":[],"sections":[],"partitions":{},"totalRows":0,"metadata":{"bad":null}}',
-        );
+        Footer::fromJson('{"version":1,"writer":"x","schema":[],"sections":[],"totalRows":0,"metadata":{"bad":null}}');
     }
 
     public function test_schema_body_re_encodes_stored_schema(): void
@@ -143,28 +134,11 @@ final class FooterTest extends TestCase
         );
     }
 
-    public function test_partitions_for_reads_stored_combination(): void
-    {
-        $footer = FooterMother::footer(partitions: [[], ['country' => 'PL']]);
-
-        static::assertSame([], $footer->partitionsFor(0));
-        static::assertSame(['country' => 'PL'], $footer->partitionsFor(1));
-    }
-
-    public function test_partitions_for_with_unknown_id_throws(): void
-    {
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('does not hold partitions with id 2');
-
-        FooterMother::footer()->partitionsFor(2);
-    }
-
     public function test_to_json_round_trips_every_field(): void
     {
         $footer = FooterMother::footer(
             schema: schema(int_schema('id'))->normalize(),
-            sections: [new Section(6, 0, 2), new Section(120, 0, 3)],
-            partitions: [['country' => 'PL']],
+            sections: [new Section(6, 2), new Section(120, 3)],
             totalRows: 5,
             metadata: ['source' => 'test'],
         );
@@ -176,8 +150,7 @@ final class FooterTest extends TestCase
     {
         $footer = FooterMother::footer(
             schema: schema(int_schema('id'))->normalize(),
-            sections: [new Section(6, 0, 2), new Section(120, 0, 3)],
-            partitions: [['country' => 'PL']],
+            sections: [new Section(6, 2), new Section(120, 3)],
             totalRows: 5,
             metadata: ['source' => 'test'],
         );
@@ -185,58 +158,22 @@ final class FooterTest extends TestCase
         static::assertEquals($footer, Footer::fromArray($footer->normalize()));
     }
 
-    public function test_file_partitions_reads_combination_from_the_first_section(): void
+    public function test_a_footer_carrying_a_partitions_key_is_refused(): void
     {
-        $footer = FooterMother::footer(
-            sections: [new Section(6, 0, 1)],
-            partitions: [['country' => 'PL', 'year' => '2025']],
-            totalRows: 1,
-        );
-
-        static::assertEquals(
-            [new Partition('country', 'PL'), new Partition('year', '2025')],
-            $footer->filePartitions(),
-        );
-    }
-
-    public function test_file_partitions_unpartitioned_returns_empty(): void
-    {
-        $footer = FooterMother::footer(sections: [new Section(6, 0, 1)], partitions: [[]], totalRows: 1);
-
-        static::assertSame([], $footer->filePartitions());
-    }
-
-    public function test_file_partitions_zero_section_value_reads_the_last_non_empty_table_entry(): void
-    {
-        $footer = FooterMother::footer(partitions: [['country' => 'PL']]);
-
-        static::assertEquals([new Partition('country', 'PL')], $footer->filePartitions());
-    }
-
-    public function test_file_partitions_unknown_id_throws(): void
-    {
-        $footer = FooterMother::footer(sections: [new Section(6, 5, 1)], totalRows: 1);
-
+        // partitions come from the path, so a footer has no place to put them
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('does not hold partitions with id 5');
+        $this->expectExceptionMessage('Floe footer is malformed');
 
-        $footer->filePartitions();
-    }
-
-    public function test_reconstruct_rows_builds_rows_from_decoded_rows(): void
-    {
-        $footer = FooterMother::footer(totalRows: 1);
-
-        static::assertEquals(rows(row(int_entry('id', 1))), $footer->reconstructRows([row(int_entry('id', 1))]));
+        Footer::fromArray([...FooterMother::footer()->normalize(), 'partitions' => []]);
     }
 
     public function test_reconstruct_rows_round_trips_unpartitioned_rows(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-rows.floe');
-        $value = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
+        $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);
         $writer->write($value);
         $writer->close();
@@ -248,70 +185,13 @@ final class FooterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-empty.floe');
-        $value = rows();
+        $value = rows(schema());
 
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
+        $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);
         $writer->write($value);
         $writer->close();
 
         static::assertEquals($value, FloeStreamReaderContext::reconstruct($filesystem, $path));
-    }
-
-    public function test_reconstruct_rows_round_trips_partitioned_rows(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://footer-partitioned.floe');
-        $value = Rows::partitioned([row(int_entry('id', 1), str_entry('country', 'PL'))], [new Partition(
-            'country',
-            'PL',
-        )]);
-
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
-        $writer->create($path);
-        $writer->write($value);
-        $writer->close();
-
-        static::assertEquals($value, FloeStreamReaderContext::reconstruct($filesystem, $path));
-    }
-
-    public function test_reconstruct_rows_preserves_non_alphabetical_partition_order(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://footer-partition-order.floe');
-        $value = Rows::partitioned([row(
-            int_entry('id', 1),
-            str_entry('year', '2020'),
-            str_entry('day', '15'),
-            str_entry('month', '03'),
-        )], [new Partition('year', '2020'), new Partition('day', '15'), new Partition('month', '03')]);
-
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($value));
-        $writer->create($path);
-        $writer->write($value);
-        $writer->close();
-
-        $result = FloeStreamReaderContext::reconstruct($filesystem, $path);
-
-        static::assertSame(
-            ['year', 'day', 'month'],
-            array_map(static fn(Partition $p): string => $p->name, $result->partitions()->toArray()),
-        );
-        static::assertEquals($value, $result);
-    }
-
-    public function test_encoding_a_schema_that_is_not_valid_utf8_throws_a_floe_exception(): void
-    {
-        $footer = FooterMother::footer([[
-            'ref' => "bad\xFFname",
-            'type' => ['type' => 'string'],
-            'nullable' => false,
-            'metadata' => [],
-        ]]);
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe failed to encode schema as JSON');
-
-        $footer->toJson();
     }
 }

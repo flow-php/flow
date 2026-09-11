@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Validator;
 
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\SchemaValidator;
 
 /**
@@ -38,6 +39,12 @@ final class EvolvingValidator implements SchemaValidator
                     $missingDefinitions[] = $expectedDefinition;
                 }
 
+                continue;
+            }
+
+            // B27: an all-null batch infers NullDefinition; against a nullable expectation that is a
+            // representable column, and the other two validators already say so
+            if ($givenDefinition instanceof NullDefinition && $expectedDefinition->isNullable()) {
                 continue;
             }
 

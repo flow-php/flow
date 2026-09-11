@@ -18,7 +18,7 @@ use function is_int;
 use function is_string;
 
 /**
- * @phpstan-type ColumnTypeShape = array{name: string, schema?: ?string, precision?: ?int, scale?: ?int, is_array?: bool}
+ * @type ColumnTypeShape = array{name: string, schema?: ?string, precision?: ?int, scale?: ?int, is_array?: bool}
  */
 final readonly class ColumnType
 {

@@ -12,7 +12,7 @@ use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-type ProcedureShape = array{name: string, argument_types: list<string>, language: string, definition: ?string}
+ * @type ProcedureShape = array{name: string, argument_types: list<string>, language: string, definition: ?string}
  */
 final readonly class Procedure
 {

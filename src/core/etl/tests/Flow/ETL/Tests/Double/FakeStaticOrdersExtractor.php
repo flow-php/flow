@@ -29,15 +29,22 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function random_int;
+use function mt_rand;
+use function mt_srand;
 
 final readonly class FakeStaticOrdersExtractor implements Extractor
 {
+    /**
+     * mt_rand() is seeded from entropy per process, so without this the two randomised columns make
+     * a "static" double that is not static.
+     */
+    private const SEED = 20260908;
+
     public function __construct(
         private int $count = 1_000,
     ) {}
 
-    public static function schema(): Schema
+    public function schema(): Schema
     {
         return schema(
             integer_schema('index'),
@@ -70,7 +77,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->hydrator(), schema: $schema);
+            yield array_to_rows($row, $schema, $context->hydrator());
         }
     }
 
@@ -79,6 +86,8 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
      */
     public function rawData(): Generator
     {
+        mt_srand(self::SEED);
+
         $skus = [
             ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => 0.14],
             ['sku' => 'SKU_0002', 'name' => 'Product 2', 'price' => 25.13],
@@ -93,8 +102,8 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
                 'index' => $i,
                 'order_id' => '254d61c5-22c8-4407-83a2-76f1cab53af2',
                 'created_at' => new DateTimeImmutable('2025-01-01 12:00:00'),
-                'updated_at' => random_int(0, 1) === 1 ? new DateTimeImmutable('2025-01-01 12:10:00') : null,
-                'discount' => random_int(0, 1) === 1 ? 24.4 : null,
+                'updated_at' => mt_rand(0, 1) === 1 ? new DateTimeImmutable('2025-01-01 12:10:00') : null,
+                'discount' => mt_rand(0, 1) === 1 ? 24.4 : null,
                 'email' => 'user-' . $i . '@example.com',
                 'customer' => 'John Doe ' . $i,
                 'address' => [
@@ -130,13 +139,18 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
 
     public function toRows(Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
     {
-        $rows = rows();
+        $rows = rows(schema());
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, hydrator: $hydrator, schema: $schema));
+            $rows = $rows->merge(array_to_rows($row, $schema, $hydrator));
         }
 
         return $rows;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        return $this;
     }
 }

@@ -110,7 +110,7 @@ use function Flow\ETL\DSL\{df, from_csv, batch_size};
 df()
     ->read(from_csv('huge_file.csv'))
     ->with(batch_size(100))
-    ->write(to_database('users'))
+    ->write(to_dbal_table_insert($connection, 'users'))
     ->run();
 ```
 
@@ -146,11 +146,12 @@ df()
 Restrict the number of rows processed, useful for debugging or sampling data.
 
 ```php
-use function Flow\ETL\DSL\{df, from_database, limit};
+use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
+use function Flow\ETL\DSL\{df, limit};
 
 // Process only first 1000 rows
 df()
-    ->read(from_database('large_table'))
+    ->read(from_dbal_query($connection, 'SELECT * FROM large_table'))
     ->with(limit(1000))
     ->write(to_csv('sample.csv'))
     ->run();
@@ -249,7 +250,7 @@ use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
 $sortById = new class implements Transformation {
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->sortBy(ref('id'));
+        return $dataFrame->sortBy([ref('id')]);
     }
 };
 
@@ -266,9 +267,9 @@ loader. Three groups:
 
 | Cost                                   | Operations                                                                                                                                                      |
 |----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`                                                         |
+| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`                                        |
 | Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                                                     |
-| Constant                               | `select()`, `withEntry()`, `map()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`, `partitionBy()` |
+| Constant                               | `select()`, `withEntry()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`                           |
 
 The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
 `offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
@@ -276,11 +277,15 @@ batch as it passes. They need the whole stream to answer correctly, not to accum
 
 ### Chunk Shape and Order
 
-`batch_size()`, `batchBy()` and `partitionBy()` change only which rows are grouped into the `Rows` handed to the wrapped
+`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the wrapped
 loader. No row is lost or mis-assigned.
 
-`partitionBy()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
+`repartition()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
 emitting it in input order. `batchBy()` preserves input order and only cuts the batches at the group boundaries.
+
+`repartition()` is not constant memory. It buckets the whole stream before it can guarantee that every row sharing a key
+arrives together, so it belongs in the first group above, alongside `sortBy()` and `join()`. Writing one directory per
+key is a separate thing, declared on the loader: `to_csv(...)->partitionBy('region')`.
 
 To re-batch the pipeline itself rather than what reaches the wrapped loader, call `$df->batchSize(...)` on the frame.
 
@@ -298,7 +303,7 @@ The handler is **not** inherited by the nested pipeline, which always propagates
 transformation's own steps recoverable, set the handler inside it:
 
 ```php
-$dataFrame->onError(ignore_error_handler())->map(/* ... */);
+$dataFrame->onError(ignore_error_handler())->with(/* ... */);
 ```
 
 None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point

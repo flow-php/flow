@@ -1,1 +1,0 @@
-- [Batch Processing](/documentation/components/core/batch-processing)

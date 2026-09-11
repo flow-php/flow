@@ -17,7 +17,7 @@ implementations.
 Sends serialized telemetry data to backends over the network. The signal type is inferred from the batch payload type
 (`LogsBatch`, `MetricsBatch`, `TracesBatch`). Single method:
 
-```php
+```php ignore
 public function send(LogsBatch|MetricsBatch|TracesBatch $batch) : void;
 public function shutdown() : void;
 ```
@@ -37,7 +37,7 @@ public function shutdown() : void;
 Exports telemetry batches to external observability backends. A single exporter handles all three signals via
 `match(true)` instanceof dispatch on `LogsBatch | MetricsBatch | TracesBatch`.
 
-```php
+```php ignore
 public function export(LogsBatch|MetricsBatch|TracesBatch $batch) : bool;
 
 /** @return array<Transport> */

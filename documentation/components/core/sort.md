@@ -21,7 +21,7 @@ data_frame(
     config_builder()->sort(memory_sort())
 )
     ->read(from_parquet('orders.parquet'))
-    ->sortBy(ref('total')->desc())
+    ->sortBy([ref('total')->desc()])
     ->run();
 ```
 
@@ -43,15 +43,41 @@ data_frame(
                 ->runSize(10_000)               // rows buffered and sorted in memory before spilled as one run
                 ->bucketsCount(100)             // how many runs are merged at once (merge fan-in)
                 ->batchSize(1000)               // rows per spill/output batch
-                ->filesystemProtocol('file')    // filesystem protocol used for the default FilesystemBuckets
         )
 )
     ->read(from_parquet('orders.parquet'))
-    ->sortBy(ref('total')->desc())
+    ->sortBy([ref('total')->desc()])
     ->run();
 ```
 
-The storage implementation is swapped with `external_sort()->storage(BucketsStorage $storage)`.
+The storage implementation is swapped with `external_sort()->storage(BucketsStorage $storage)`, which covers
+both phases - the runs spilled during bucketing and the runs written while merging.
+
+## Overriding the algorithm for one sort
+
+`sortBy()` takes an optional second argument, so a single sort can use a different algorithm from the one on the
+config - everything else in the pipeline keeps the configured default:
+
+```php
+<?php
+
+data_frame()
+    ->read(from_parquet('orders.parquet'))
+    ->sortBy([ref('total')->desc()], external_sort()->storage(new MemoryBuckets()))
+    ->write(to_output())
+    ->run();
+```
+
+Passing `null` (or omitting it) uses the configured algorithm.
+
+To keep merged runs somewhere else, add `external_sort()->mergeStorage(BucketsStorage $storage)`. It defaults
+to the spill storage, so `storage()` alone stays sufficient:
+
+```php
+external_sort()
+    ->storage(new MemoryBuckets())                                   // spill runs
+    ->mergeStorage(new FilesystemBuckets($fs, path('/tmp/merge')));  // merged runs only
+```
 
 > While runs are spilled, each bucket is announced downstream as a single metadata row
 > (`BucketShape`: `_bucket_id`, `_bucket_total_rows`). Those rows are an internal pipeline detail consumed
@@ -64,10 +90,10 @@ The storage implementation is swapped with `external_sort()->storage(BucketsStor
 
 data_frame()
     ->read(from_sequence_number('id', 1, 10))
-    ->sortBy(ref('id')->desc())
+    ->sortBy([ref('id')->desc()])
     ->collect()
     ->write(to_output(false))
-    ->run()
+    ->run();
 ```
 
 Output:

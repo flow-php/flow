@@ -12,6 +12,8 @@ use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_desc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_integer;
@@ -51,7 +53,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -70,7 +72,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                     select(col('id'), col('name'))->from(table($this->tableName)),
                     pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 )
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(12),
             )
             ->fetch()
@@ -89,7 +91,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_desc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -107,7 +109,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [5, 15],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -124,7 +126,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName,
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -142,7 +144,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [10],
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -160,7 +162,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2 AND name LIKE $3',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
                 [5, 15, 'User_%'],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -179,11 +181,85 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(star())->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(10))
+            )->withBatchSize(10))
             ->fetch()
             ->toArray();
 
         static::assertSame([], $rows);
+    }
+
+    public function test_schema_and_extract_agree(): void
+    {
+        $extractor = from_pgsql_key_set(
+            $this->client,
+            sprintf('SELECT id, name FROM %s', $this->tableName),
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+        );
+        $batch = df()->read($extractor)->fetch();
+
+        static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+        static::assertTrue($batch->schema()->isSame($extractor->schema()));
+    }
+
+    public function test_schema_comes_from_result_metadata(): void
+    {
+        $schema = from_pgsql_key_set(
+            $this->client,
+            sprintf('SELECT id, name FROM %s', $this->tableName),
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+        )->schema();
+
+        static::assertSame(['id', 'name'], $schema->references()->names());
+        static::assertTrue($schema->findDefinition('id')?->isNullable());
+        static::assertTrue($schema->findDefinition('name')?->isNullable());
+    }
+
+    public function test_a_parameterised_query_describes(): void
+    {
+        $extractor = from_pgsql_key_set(
+            $this->client,
+            sprintf('SELECT id, name FROM %s WHERE id > $1', $this->tableName),
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [20],
+        );
+
+        static::assertSame(['id', 'name'], $extractor->schema()->references()->names());
+        static::assertCount(5, df()->read($extractor)->fetch()->toArray());
+    }
+
+    public function test_a_trailing_semicolon_query_still_describes(): void
+    {
+        static::assertSame(
+            ['id'],
+            from_pgsql_key_set(
+                $this->client,
+                sprintf('SELECT id FROM %s;', $this->tableName),
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )
+                ->schema()
+                ->references()
+                ->names(),
+        );
+    }
+
+    public function test_reads_inside_from_all(): void
+    {
+        // ChainExtractor matches every child batch to its own schema(), so an extractor that derives
+        // schema() but leaves extract() untyped throws SchemaMismatchException here.
+        static::assertCount(
+            26,
+            df()
+                ->read(from_all(
+                    from_pgsql_key_set(
+                        $this->client,
+                        sprintf('SELECT id, name FROM %s', $this->tableName),
+                        pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                    ),
+                    from_array([['id' => 99, 'name' => 'from array']]),
+                ))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     private function insertTestData(int $count): void

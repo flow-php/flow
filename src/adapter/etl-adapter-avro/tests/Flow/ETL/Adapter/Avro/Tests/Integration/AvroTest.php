@@ -13,21 +13,12 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
-use function iterator_to_array;
 
 final class AvroTest extends FlowTestCase
 {
     protected function setUp(): void
     {
         self::markTestSkipped('Avro integration was abandoned due to lack of availability of good Avro libraries.');
-    }
-
-    public function test_limit(): void
-    {
-        $extractor = from_avro(path_real(__DIR__ . '/../Fixtures/orders_flow.avro'));
-        $extractor->changeLimit(2);
-
-        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_signal_stop(): void

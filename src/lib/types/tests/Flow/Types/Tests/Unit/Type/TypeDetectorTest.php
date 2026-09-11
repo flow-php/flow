@@ -10,6 +10,8 @@ use DateTimeZone;
 use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Tests\Double\InvokableObject;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -25,7 +27,6 @@ use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
-use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
@@ -40,11 +41,43 @@ use stdClass;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
 final class TypeDetectorTest extends TestCase
 {
+    public static function provide_detected_type_law_data(): Generator
+    {
+        yield 'empty array' => [[]];
+
+        yield 'homogeneous list' => [[1, 2, 3]];
+
+        yield 'list of int and float' => [[1, 1.5]];
+
+        yield 'list of int and string' => [[1, 'a']];
+
+        yield 'list of nulls and integers' => [[null, 1]];
+
+        yield 'lists of int and float' => [[[1], [1.5]]];
+
+        yield 'structures with conflicting element types' => [[['a' => 1], ['a' => 'x']]];
+
+        yield 'depth three with a conflicting leaf' => [[[['a' => 1], ['a' => 1.5]]]];
+
+        yield 'depth three homogeneous' => [[[['a' => 1], ['a' => 2]]]];
+
+        yield 'map of int to conflicting values' => [[1 => 'a', 2 => 3]];
+
+        yield 'structure holding an empty array' => [['a' => [], 'b' => [1]]];
+
+        yield 'list mixing scalars and arrays' => [[1, [2]]];
+
+        yield 'nested empty arrays' => [[[], []]];
+
+        yield 'string keyed map with mixed nesting' => [['a' => ['b' => 1], 'c' => ['b' => 'x']]];
+    }
+
     public static function provide_logical_types_data(): Generator
     {
         yield 'null' => [
@@ -241,8 +274,8 @@ final class TypeDetectorTest extends TestCase
 
         yield 'empty array' => [
             [],
-            EmptyArrayType::class,
-            'array{}',
+            ListType::class,
+            'list<null>',
         ];
 
         yield 'list with null' => [
@@ -329,8 +362,8 @@ final class TypeDetectorTest extends TestCase
                     'name' => 'Test 2',
                 ],
             ],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<structure{id: integer, name: string, active?: boolean}>',
         ];
 
         yield 'list of lists' => [
@@ -364,8 +397,8 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            // [4.0, 5, 6] detects as array<mixed> (float + integer), which fits no narrower element type.
-            'list<array<mixed>>',
+            // [4.0, 5, 6] mixes float and integer; the element types unify to float.
+            'list<list<float>>',
         ];
 
         yield 'list of lists with null' => [
@@ -401,7 +434,8 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            // The empty element observes no value, so the element type is not known to be present.
+            'list<list<?integer>>',
         ];
 
         yield 'list of lists with array of nulls' => [
@@ -449,10 +483,29 @@ final class TypeDetectorTest extends TestCase
             'array<mixed>',
         ];
 
-        yield 'heterogeneous list of int and float' => [
+        yield 'list of int and float promotes to float' => [
             [1, 1.5],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<float>',
+        ];
+
+        yield 'map of int to int and float promotes to float' => [
+            [1 => 1, 5 => 2.5],
+            MapType::class,
+            'map<integer, float>',
+        ];
+
+        yield 'map of int to structures differing by one field' => [
+            [1 => ['a' => 1], 5 => ['a' => 1, 'b' => 2]],
+            MapType::class,
+            // the element types do not unify; the widener's optional field is what carries them
+            'map<integer, structure{a: integer, b?: integer}>',
+        ];
+
+        yield 'map of int to a list and an untyped array' => [
+            [1 => [1, 2], 5 => [null]],
+            MapType::class,
+            'map<integer, array<mixed>>',
         ];
 
         yield 'heterogeneous map of int to mixed' => [
@@ -481,62 +534,62 @@ final class TypeDetectorTest extends TestCase
 
         yield 'list with only an empty array' => [
             [[]],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<list<null>>',
         ];
 
         yield 'list with only empty arrays' => [
             [[], []],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<list<null>>',
         ];
 
         yield 'empty array before a list' => [
             [[], [1, 2]],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<?integer>>',
         ];
 
         yield 'empty array after a list' => [
             [[1, 2], []],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<?integer>>',
         ];
 
         yield 'empty array before a structure' => [
             [[], ['id' => '1']],
-            ListType::class,
-            'list<array<mixed>>',
+            ArrayType::class,
+            'array<mixed>',
         ];
 
         yield 'empty array after a structure' => [
             [['id' => '1'], []],
-            ListType::class,
-            'list<array<mixed>>',
+            ArrayType::class,
+            'array<mixed>',
         ];
 
         yield 'structure with an empty array element' => [
             ['data' => []],
             StructureType::class,
-            'structure{data: array{}}',
+            'structure{data: list<null>}',
         ];
 
         yield 'structure with an empty array element and a scalar' => [
             ['data' => [], 'x' => 1],
             StructureType::class,
-            'structure{data: array{}, x: integer}',
+            'structure{data: list<null>, x: integer}',
         ];
 
         yield 'non-list integer keys with empty array values' => [
             [1 => [], 2 => []],
-            ArrayType::class,
-            'array<mixed>',
+            MapType::class,
+            'map<integer, list<null>>',
         ];
 
         yield 'null before an empty array' => [
             [null, []],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<?list<null>>',
         ];
 
         yield 'string with an empty array' => [
@@ -571,8 +624,8 @@ final class TypeDetectorTest extends TestCase
 
         yield 'null after an empty array' => [
             [[], null],
-            ArrayType::class,
-            'array<mixed>',
+            ListType::class,
+            'list<?list<null>>',
         ];
     }
 
@@ -610,9 +663,38 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
+    public function test_closure_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Closure is not a supported value type.');
+
+        (new TypeDetector())->detectType(static fn(): int => 1);
+    }
+
+    #[DataProvider('provide_detected_type_law_data')]
+    public function test_detection_is_idempotent_under_its_own_materialization(mixed $data): void
+    {
+        $type = (new TypeDetector())->detectType($data);
+
+        static::assertSame(
+            $type->toString(),
+            (new TypeDetector())
+                ->detectType($type->cast($data))
+                ->toString(),
+        );
+    }
+
     public function test_enum_type(): void
     {
         static::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+    }
+
+    public function test_invokable_object_is_still_detected_as_instance_of(): void
+    {
+        static::assertEquals(
+            type_instance_of(InvokableObject::class),
+            (new TypeDetector())->detectType(new InvokableObject()),
+        );
     }
 
     #[RequiresPhp('>= 8.4.0')]

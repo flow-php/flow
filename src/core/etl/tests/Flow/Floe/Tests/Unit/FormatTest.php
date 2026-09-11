@@ -91,6 +91,14 @@ final class FormatTest extends TestCase
         Format::validateHeader(Format::MAGIC . "\x7F\x00");
     }
 
+    public function test_validate_header_rejects_version_1(): void
+    {
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe does not support format version 1');
+
+        Format::validateHeader(Format::MAGIC . "\x01\x00");
+    }
+
     public function test_validate_truncated_header_throws(): void
     {
         $this->expectException(FloeException::class);

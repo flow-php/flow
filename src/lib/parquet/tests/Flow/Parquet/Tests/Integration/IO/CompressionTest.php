@@ -13,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -20,24 +21,12 @@ use PHPUnit\Framework\Attributes\Group;
 use function array_map;
 use function array_merge;
 use function extension_loaded;
-use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function iterator_to_array;
-use function mkdir;
 use function range;
-use function sys_get_temp_dir;
-use function unlink;
 
 class CompressionTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[Group('brotli-extension')]
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_brotli_compression(ParquetEngine $engine): void
@@ -46,7 +35,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The Brotli extension is not available');
         }
 
-        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::BROTLI, engine: $engine);
 
@@ -93,13 +82,12 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_gzip_compression(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::GZIP, engine: $engine);
 
@@ -146,7 +134,6 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[Group('lz4-extension')]
@@ -157,7 +144,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::LZ4, engine: $engine);
 
@@ -204,7 +191,6 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[Group('lz4-extension')]
@@ -215,7 +201,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::LZ4_RAW, engine: $engine);
 
@@ -262,7 +248,6 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[Group('snappy-extension')]
@@ -273,7 +258,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The snappy extension is not available');
         }
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::SNAPPY, engine: $engine);
 
@@ -320,7 +305,6 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -330,7 +314,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The snappy extension is available');
         }
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::SNAPPY, engine: $engine);
 
@@ -377,13 +361,12 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_uncompressed_compression(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::UNCOMPRESSED, engine: $engine);
 
@@ -430,7 +413,6 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[Group('zstd-extension')]
@@ -441,7 +423,7 @@ class CompressionTest extends ParquetIntegrationTestCase
             static::markTestSkipped('The Zstd extension is not available');
         }
 
-        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::ZSTD, engine: $engine);
 
@@ -488,6 +470,5 @@ class CompressionTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 }

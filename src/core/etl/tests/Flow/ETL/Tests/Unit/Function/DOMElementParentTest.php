@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
@@ -27,13 +26,12 @@ final class DOMElementParentTest extends TestCase
         // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
         ref('value')
             ->domElementParent()
             // @mago-ignore analysis:possibly-null-property-access
-            ->eval(row($context->entryFactory()->create('value', $element->documentElement->parentElement)), $context);
+            ->eval(row(['value' => $element->documentElement->parentElement]), $context);
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -46,12 +44,7 @@ final class DOMElementParentTest extends TestCase
         );
         static::assertEquals(
             $element->documentElement,
-            ref('value')
-                ->domElementParent()
-                ->eval(
-                    row(flow_context(config())->entryFactory()->create('value', $element->querySelector('span'))),
-                    flow_context(),
-                ),
+            ref('value')->domElementParent()->eval(row(['value' => $element->querySelector('span')]), flow_context()),
         );
     }
 
@@ -61,12 +54,7 @@ final class DOMElementParentTest extends TestCase
         // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
         static::assertNull(
-            ref('value')
-                ->domElementParent()
-                ->eval(
-                    row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
-                    flow_context(),
-                ),
+            ref('value')->domElementParent()->eval(row(['value' => $element->documentElement]), flow_context()),
         );
     }
 
@@ -75,12 +63,11 @@ final class DOMElementParentTest extends TestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
         static::assertEquals($xml, ref('value')
             ->domElementParent()
-            ->eval(row($context->entryFactory()->create('value', $xml->parentNode)), $context));
+            ->eval(row(['value' => $xml->parentNode]), $context));
     }
 
     public function test_xml_getting_parent_element(): void
@@ -93,7 +80,7 @@ final class DOMElementParentTest extends TestCase
                 ->domElementParent()
                 ->eval(
                     // @mago-ignore analysis:possibly-null-property-access
-                    row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                    row(['value' => $xml->documentElement->firstChild]),
                     flow_context(),
                 ),
         );
@@ -103,20 +90,15 @@ final class DOMElementParentTest extends TestCase
     {
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
-        static::assertEquals($xml, ref('value')
-            ->domElementParent()
-            ->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement)),
-                flow_context(),
-            ));
+        static::assertNull(
+            ref('value')->domElementParent()->eval(row(['value' => $xml->documentElement]), flow_context()),
+        );
     }
 
     public function test_xml_getting_parent_element_when_passing_document(): void
     {
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
-        static::assertEquals($xml, ref('value')
-            ->domElementParent()
-            ->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context()));
+        static::assertNull(ref('value')->domElementParent()->eval(row(['value' => $xml]), flow_context()));
     }
 }

@@ -19,7 +19,7 @@ data_frame()
         ['id' => 1, 'name' => 'Product 1', 'active' => true],
         ['id' => 2, 'name' => 'Product 2', 'active' => false],
         ['id' => 3, 'name' => 'Product 3', 'active' => true],
-    ]))
+    ], $schema))
     ->match($schema)
     ->collect()
     ->write(to_output(truncate: false, output: Output::rows_and_schema))

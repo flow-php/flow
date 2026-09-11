@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
 use DateTime;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -12,6 +13,7 @@ use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Dialect\SqliteInsertOptions;
+use Flow\Doctrine\Bulk\Tests\Mother\WideTableMother;
 use Flow\Doctrine\Bulk\Tests\SqliteIntegrationTestCase;
 
 use function Flow\ETL\DSL\generate_random_string;
@@ -255,5 +257,40 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
             ],
             $this->databaseContext->selectAll($table),
         );
+    }
+
+    public function test_a_failing_chunk_rolls_back_the_whole_write(): void
+    {
+        $this->databaseContext->createTable(WideTableMother::table($table = 'flow_doctrine_bulk_rollback_test', 40));
+
+        $rows = WideTableMother::rows(40, 2000);
+
+        // 819 rows fit under the cap at 40 columns, so row 1000 sits in the second of three statements
+        $rows[999]['c1'] = null;
+
+        $failure = null;
+
+        try {
+            Bulk::create()->insert($this->databaseContext->connection(), $table, new BulkData($rows));
+        } catch (Exception $e) {
+            $failure = $e;
+        }
+
+        static::assertInstanceOf(Exception::class, $failure);
+        static::assertSame(0, $this->databaseContext->tableCount($table));
+    }
+
+    public function test_insert_of_more_rows_than_the_bind_cap_succeeds(): void
+    {
+        $this->databaseContext->createTable(WideTableMother::table($table = 'flow_doctrine_bulk_wide_test', 40));
+
+        // 1000 rows x 40 columns = 40 000 parameters, past SQLite's 32 766
+        Bulk::create()->insert(
+            $this->databaseContext->connection(),
+            $table,
+            new BulkData(WideTableMother::rows(40, 1000)),
+        );
+
+        static::assertSame(1000, $this->databaseContext->tableCount($table));
     }
 }

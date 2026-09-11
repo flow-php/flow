@@ -1,3 +1,6 @@
+Telemetry instruments a pipeline with traces, metrics and logs.
+
+- [Telemetry](/documentation/components/core/telemetry)
 - [Telemetry Library](/documentation/components/libs/telemetry)
 - [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge) - Export telemetry data to OpenTelemetry Protocol backends
 - [PSR-18 Telemetry Bridge](/documentation/components/bridges/psr18-telemetry-bridge) - HTTP client instrumentation for telemetry

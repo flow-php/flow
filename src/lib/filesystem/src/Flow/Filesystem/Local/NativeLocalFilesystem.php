@@ -230,6 +230,11 @@ final readonly class NativeLocalFilesystem implements Filesystem
         return null;
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
@@ -344,7 +349,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
     private static function statFor(Path $path, string $absolutePath): FileStatus
     {
         $isFile = is_file($absolutePath);
-        $mtime = filemtime($absolutePath);
+        $mtime = $isFile ? filemtime($absolutePath) : false;
 
         return new FileStatus(
             $path,

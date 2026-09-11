@@ -65,15 +65,17 @@ use function Flow\PostgreSql\DSL\alter;
 
 // Change options
 alter()->role('admin')
+    ->set()
     ->superuser()
     ->toSql();
-// ALTER ROLE admin SUPERUSER
+// ALTER ROLE admin WITH SUPERUSER
 
 alter()->role('user')
+    ->set()
     ->noLogin()
     ->connectionLimit(5)
     ->toSql();
-// ALTER ROLE user NOLOGIN CONNECTION LIMIT 5
+// ALTER ROLE user WITH NOLOGIN CONNECTION LIMIT 5
 
 // Rename role
 alter()->role('old_name')

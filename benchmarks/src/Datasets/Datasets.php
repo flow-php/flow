@@ -45,22 +45,4 @@ final class Datasets
 
         $filesystem->rm(path($real));
     }
-
-    public static function isStale(string $target, string $source): bool
-    {
-        $filesystem = native_local_filesystem();
-        $targetStatus = $filesystem->status(path($target));
-
-        if ($targetStatus === null || $targetStatus->lastModifiedAt === null) {
-            return true;
-        }
-
-        $sourceStatus = $filesystem->status(path($source));
-
-        return (
-            $sourceStatus === null
-            || $sourceStatus->lastModifiedAt === null
-            || $targetStatus->lastModifiedAt < $sourceStatus->lastModifiedAt
-        );
-    }
 }

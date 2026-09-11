@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Encoding;
 
+use Flow\Floe\ValueEncoder as ValueEncoderFactory;
+
+/**
+ * @implements ValueEncoder<\Flow\Types\Value\Uuid>
+ */
 final class UuidEncoder implements ValueEncoder
 {
     public function encode(mixed $value): string
     {
-        /** @var \Flow\Types\Value\Uuid $value */
-        return $value->toString();
+        return ValueEncoderFactory::lengthPrefixed($value->toString());
     }
 }

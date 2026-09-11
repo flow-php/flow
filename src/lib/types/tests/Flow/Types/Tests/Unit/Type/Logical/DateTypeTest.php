@@ -10,9 +10,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -151,6 +153,28 @@ final class DateTypeTest extends TestCase
         }
     }
 
+    #[TestWith([''])]
+    #[TestWith(['t'])]
+    #[TestWith(['+12'])]
+    #[TestWith(['now'])]
+    #[TestWith(['yesterday'])]
+    #[TestWith(['12.9'])]
+    #[TestWith(['2024-01'])]
+    #[TestWith(['2024-001'])]
+    #[TestWith(['@1609459200'])]
+    #[TestWith(['10:00:00'])]
+    public function test_a_wall_clock_string_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_date()->cast($value);
+    }
+
+    public function test_a_compact_iso_date_casts(): void
+    {
+        static::assertSame('2024-03-05', type_date()->cast('20240305')->format('Y-m-d'));
+    }
+
     /**
      * @param null|class-string<\Throwable> $exceptionClass
      */
@@ -163,6 +187,17 @@ final class DateTypeTest extends TestCase
         } else {
             static::assertEquals($expected, type_date()->cast($value));
         }
+    }
+
+    public function test_date_type_rejects_non_midnight(): void
+    {
+        static::assertFalse(type_date()->isValid(new DateTimeImmutable('2024-01-02 03:04:05')));
+    }
+
+    public function test_date_type_rejects_sub_second_midnight(): void
+    {
+        static::assertFalse(type_date()->isValid(new DateTimeImmutable('2024-01-02 00:00:00.500000')));
+        static::assertTrue(type_date()->isValid(new DateTimeImmutable('2024-01-02 00:00:00')));
     }
 
     #[DataProvider('is_valid_data_provider')]

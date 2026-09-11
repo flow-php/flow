@@ -53,7 +53,7 @@ final class RowsMinHeap extends SplMinHeap
         $values = [];
 
         foreach ($this->ref as $ref) {
-            $values[] = $row->valueOf($ref->name());
+            $values[] = $row->get($ref->name());
         }
 
         parent::insert(new ComparableBucketRow($values, $row, $bucketId));

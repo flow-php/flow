@@ -10,7 +10,7 @@ final readonly class RawRowValues
 {
     /**
      * @param array<string, mixed> $values
-     * @param array<string, Metadata> $metadata
+     * @param array<array-key, Metadata> $metadata
      */
     public function __construct(
         public array $values,

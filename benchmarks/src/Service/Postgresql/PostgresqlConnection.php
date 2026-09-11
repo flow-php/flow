@@ -11,9 +11,11 @@ use RuntimeException;
 use Throwable;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
+use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\drop;
 use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
+use function Flow\PostgreSql\DSL\primary_key;
 
 final class PostgresqlConnection
 {
@@ -40,10 +42,19 @@ final class PostgresqlConnection
         }
     }
 
-    public static function createTable(Client $client, string $table): void
+    /**
+     * $keyed adds the primary key on order_id, the read scenarios' keyset: without its index every page scans and
+     * sorts the whole table. The write scenarios leave it off - phpbench's warmup inserts the same rows twice per
+     * iteration.
+     */
+    public static function createTable(Client $client, string $table, bool $keyed = false): void
     {
-        foreach (to_pgsql_schema_table(FakeRandomOrdersExtractor::schema(), $table)->toSql() as $sql) {
+        foreach (to_pgsql_schema_table((new FakeRandomOrdersExtractor())->schema(), $table)->toSql() as $sql) {
             $client->execute($sql);
+        }
+
+        if ($keyed) {
+            $client->execute(alter()->table($table)->addConstraint(primary_key('order_id')));
         }
     }
 

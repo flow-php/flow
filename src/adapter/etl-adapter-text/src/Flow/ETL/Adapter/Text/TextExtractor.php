@@ -4,32 +4,67 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Generator;
 
 use function count;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function sprintf;
 
-final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class TextExtractor implements
+    BatchableExtractor,
+    Extractor,
+    FileExtractor,
+    LimitPushDown,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
-    use Limitable;
-    use PathFiltering;
+    private ?Schema $schema = null;
+
+    use Batches;
+    use PushesLimit;
+    use FileReading;
+
+    private readonly Filesystem $filesystem;
 
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
-        $this->resetLimit();
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_text($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -37,93 +72,86 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
         $encoder = new TextEncoder();
 
-        $baseSchema = $this->schema($shouldPutInputIntoRows);
+        $baseSchema = $this->schema ?? schema(str_schema('text'));
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $fileColumns->declare($baseSchema);
 
-            $schema = $baseSchema;
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+            $stream = $this->filesystem->readFrom($source->path);
 
-            foreach ($partitions as $partition) {
-                if ($schema->findDefinition($partition->name) === null) {
-                    $schema = $schema->add(str_schema($partition->name));
-                }
-            }
+            try {
+                $constants = $fileColumns->forFile($source, $schema);
 
-            $rawLines = [];
+                $rawLines = [];
 
-            foreach ($stream->readLines() as $line) {
-                $rawLines[] = $line;
+                foreach ($stream->readLines() as $line) {
+                    $rawLines[] = $line;
 
-                if (count($rawLines) >= $batchSize) {
-                    $batch = [];
+                    if (count($rawLines) >= $batchSize) {
+                        $batch = [];
 
-                    foreach ($encoder->decode($rawLines) as $rowValues) {
-                        $row = $rowValues->values;
-
-                        if ($streamUri !== null) {
-                            $row['_input_file_uri'] = $streamUri;
+                        foreach ($encoder->decode($rawLines) as $rowValues) {
+                            $batch[] = new RawRowValues($constants->fill($rowValues->values));
                         }
 
-                        foreach ($partitions as $partition) {
-                            $row[$partition->name] = $partition->value;
+                        $rawLines = [];
+
+                        $hydrated = $hydrator->hydrate($batch, $schema);
+
+                        $yielded += $hydrated->count();
+
+                        $signal = yield $hydrated;
+
+                        if ($signal === Signal::STOP) {
+                            return;
                         }
 
-                        $batch[] = new RawRowValues($row);
-                    }
+                        $limit = $this->pushedLimit();
 
-                    $rawLines = [];
-
-                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                        $this->incrementReturnedRows();
-
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-
+                        if ($limit !== null && $yielded >= $limit) {
                             return;
                         }
                     }
                 }
-            }
 
-            $batch = [];
+                if ($rawLines !== []) {
+                    $batch = [];
 
-            foreach ($encoder->decode($rawLines) as $rowValues) {
-                $row = $rowValues->values;
+                    foreach ($encoder->decode($rawLines) as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                    }
 
-                if ($streamUri !== null) {
-                    $row['_input_file_uri'] = $streamUri;
+                    $hydrated = $hydrator->hydrate($batch, $schema);
+
+                    $yielded += $hydrated->count();
+
+                    $signal = yield $hydrated;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
                 }
-
-                foreach ($partitions as $partition) {
-                    $row[$partition->name] = $partition->value;
-                }
-
-                $batch[] = new RawRowValues($row);
+            } finally {
+                $stream->close();
             }
-
-            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
-
-                    return;
-                }
-            }
-
-            $stream->close();
         }
+    }
+
+    public function schema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->schema ?? schema(str_schema('text')));
     }
 
     public function source(): Path
@@ -131,12 +159,10 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         return $this->path;
     }
 
-    private function schema(bool $shouldPutInputIntoRows): Schema
+    public function withSchema(Schema $schema): static
     {
-        if ($shouldPutInputIntoRows) {
-            return schema(str_schema('text'), str_schema('_input_file_uri'));
-        }
+        $this->schema = $schema;
 
-        return schema(str_schema('text'));
+        return $this;
     }
 }

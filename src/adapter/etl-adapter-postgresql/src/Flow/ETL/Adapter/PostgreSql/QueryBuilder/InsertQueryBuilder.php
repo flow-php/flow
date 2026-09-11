@@ -7,10 +7,12 @@ namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
 use Flow\ETL\Schema;
-use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Client\ConvertedParameters;
+use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
+use function array_key_exists;
 use function array_keys;
 use function count;
 use function Flow\ETL\DSL\ref;
@@ -26,30 +28,65 @@ final readonly class InsertQueryBuilder
     ) {}
 
     /**
+     * Every value already in PostgreSQL's text form. A column's converter is resolved once, on its first non-null
+     * value - so a column of an unmapped type holding only nulls passes.
+     *
      * @param list<array<string, mixed>> $values pre-sorted dehydrated value maps
      *
-     * @return array{Sql, list<null|TypedValue>}
+     * @return array{Sql, ConvertedParameters}
      */
-    public function build(array $values, Schema $schema, ?InsertOptions $options = null): array
-    {
+    public function build(
+        array $values,
+        Schema $schema,
+        ValueConverters $converters,
+        ?InsertOptions $options = null,
+    ): array {
         $columns = $values === [] ? [] : array_keys($values[0]);
 
         $params = [];
+        $types = [];
+        $columnConverters = [];
+
+        // every row of a gated batch carries the same columns, so each column's type is resolved once
+        foreach ($columns as $column) {
+            $types[$column] = $schema->get(ref($column))->type();
+        }
 
         foreach ($values as $row) {
             /** @var mixed $value */
             foreach ($row as $column => $value) {
-                $params[] = $this->typesMap->map($column, $schema->get(ref($column))->type(), $value);
+                if ($value === null) {
+                    $params[] = null;
+
+                    continue;
+                }
+
+                if (!array_key_exists($column, $columnConverters)) {
+                    $columnConverters[$column] = $converters->forValueType($this->typesMap->valueType(
+                        $column,
+                        $types[$column],
+                    ));
+                }
+
+                $params[] = $columnConverters[$column]->toDatabase($value);
             }
         }
 
-        $query = bulk_insert($this->table, $columns, count($values));
+        return [$this->query($columns, count($values), $options), new ConvertedParameters($params)];
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private function query(array $columns, int $rows, ?InsertOptions $options): BulkInsert
+    {
+        $query = bulk_insert($this->table, $columns, $rows);
 
         if ($options !== null && $options->hasConflictHandling()) {
-            $query = $this->applyConflictHandling($query, $options);
+            return $this->applyConflictHandling($query, $options);
         }
 
-        return [$query, $params];
+        return $query;
     }
 
     private function applyConflictHandling(BulkInsert $query, InsertOptions $options): BulkInsert

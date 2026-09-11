@@ -10,9 +10,9 @@ use Dom\HTMLElement;
 use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparator;
 use Flow\Types\Type\Logical\ClassStringType;
@@ -30,6 +30,7 @@ use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\PositiveIntegerType;
 use Flow\Types\Type\Logical\ScalarType;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
@@ -50,6 +51,7 @@ use Flow\Types\Type\Native\ObjectType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
+use Flow\Types\Type\Nullability;
 use Flow\Types\Type\TypeDetector;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Type\Types;
@@ -60,15 +62,29 @@ use UnitEnum;
 /**
  * @template T
  *
- * @param array<array-key, Type<T>> $elements
- * @param array<array-key, Type<T>> $optional_elements
+ * @param array<array-key, StructureElement<T>|Type<T>> $elements
  *
  * @return StructureType<array<array-key, T>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false): StructureType
+function type_structure(array $elements = [], bool $allow_extra = false): StructureType
 {
-    return new StructureType($elements, $optional_elements, $allow_extra);
+    return StructureType::fromElements($elements, $allow_extra);
+}
+
+/**
+ * @template T
+ * @template TOptional of bool
+ *
+ * @param Type<T> $type
+ * @param TOptional $optional
+ *
+ * @return StructureElement<T, TOptional>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function structure_element(int|string $name, Type $type, bool $optional = false): StructureElement
+{
+    return new StructureElement($name, $type, $optional);
 }
 
 /**
@@ -154,19 +170,23 @@ function type_from_array(array $data): Type
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is_nullable(Type $type): bool
 {
-    if ($type instanceof OptionalType) {
-        return true;
-    }
+    return (new Nullability())->is($type);
+}
 
-    if ($type instanceof UnionType) {
-        foreach ($type->types()->all() as $nextType) {
-            if ($nextType instanceof NullType) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+/**
+ * Strip exactly one level of nullability, whichever of the two spellings carries it
+ * (OptionalType, or a UnionType containing NullType). Total: a NOT NULL type is returned unchanged.
+ *
+ * @template T
+ *
+ * @param Type<T> $type
+ *
+ * @return Type<mixed>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function type_bare(Type $type): Type
+{
+    return (new Nullability())->bare($type);
 }
 
 /**

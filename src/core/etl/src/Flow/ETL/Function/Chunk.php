@@ -7,37 +7,66 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 use Symfony\Component\String\AbstractString;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
 use function Symfony\Component\String\s;
 
-final class Chunk extends ScalarFunctionChain
+final class Chunk implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|string $value,
-        private readonly ScalarFunction|int $size,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $value;
+    private readonly ScalarFunction $size;
+
+    public function __construct(ScalarFunction|string $value, ScalarFunction|int $size)
+    {
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+        $this->size = $size instanceof ScalarFunction ? $size : lit($size);
+    }
 
     /**
-     * @return null|array<int, string>
+     * @return list<ScalarFunction>
      */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function children(): array
+    {
+        return [$this->value, $this->size];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_list(type_string());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function eval(Row $row, FlowContext $context): array
     {
         $value = (new Parameter($this->value))->asString($row, $context);
         $size = (new Parameter($this->size))->asInt($row, $context);
 
         if ($value === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Chunk function requires non-null value'));
+            throw new InvalidArgumentException('Chunk function requires non-null value');
         }
 
         if ($size === null || $size <= 0) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Chunk function requires non-null, positive size'));
-
-            return [];
+            throw new InvalidArgumentException('Chunk function requires non-null, positive size');
         }
 
         $chunks = s($value)->chunk($size);

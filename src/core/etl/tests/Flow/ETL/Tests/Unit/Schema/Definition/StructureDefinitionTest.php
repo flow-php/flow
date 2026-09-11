@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
@@ -15,19 +14,15 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\union_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -75,32 +70,50 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
 
         yield 'declared optional, given present as required' => [
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
             true,
         ];
 
         yield 'declared optional, given present as optional' => [
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             true,
         ];
 
         yield 'declared optional, given absent' => [
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             structure_schema('data', type_structure(['id' => type_integer()])),
             true,
         ];
 
         yield 'declared optional, given present with a different type' => [
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_boolean()])),
             false,
         ];
 
         yield 'declared required, given optional so it may be absent' => [
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             false,
         ];
 
@@ -111,32 +124,38 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
 
         yield 'allow extra accepts an undeclared key' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], true)),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
             true,
         ];
 
         yield 'allow extra accepts an undeclared optional key' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure(['id' => type_integer()], true)),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             true,
         ];
 
         yield 'without allow extra an undeclared key is rejected' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
             false,
         ];
 
         yield 'without allow extra an undeclared optional key is rejected' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], ['nickname' => type_string()])),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ])),
             false,
         ];
 
         yield 'openness is read from the declared side only' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], true)),
             true,
         ];
 
@@ -157,7 +176,10 @@ final class StructureDefinitionTest extends FlowTestCase
 
         yield 'nested structure element compatibility recurses' => [
             structure_schema('data', type_structure([
-                'user' => type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+                'user' => type_structure([
+                    'id' => type_integer(),
+                    'nickname' => structure_element('nickname', type_string(), optional: true),
+                ]),
             ])),
             structure_schema('data', type_structure([
                 'user' => type_structure(['id' => type_integer(), 'nickname' => type_string()]),
@@ -193,8 +215,10 @@ final class StructureDefinitionTest extends FlowTestCase
                 'nickname' => type_string(),
             ])),
             structure_schema('data', type_structure(['id' => type_integer(), 'email' => type_string()])),
-            structure_schema('data', type_structure(['id' => type_integer(), 'email' => type_string()], [
-                'nickname' => type_string(),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'email' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
             ])),
         ];
 
@@ -241,27 +265,36 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
 
         yield 'optional element on either side stays optional' => [
-            structure_schema('data', type_structure(['id' => type_integer()], ['name' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'name' => structure_element('name', type_string(), optional: true),
+            ])),
             structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            structure_schema('data', type_structure(['id' => type_integer()], ['name' => type_string()])),
+            structure_schema('data', type_structure([
+                'id' => type_integer(),
+                'name' => structure_element('name', type_string(), optional: true),
+            ])),
         ];
 
         yield 'allow extra is the union of both sides' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
-            structure_schema('data', type_structure(['id' => type_integer()], [], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], true)),
+            structure_schema('data', type_structure(['id' => type_integer()], true)),
         ];
 
         yield 'allow extra false on both sides stays false' => [
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], [], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
+            structure_schema('data', type_structure(['id' => type_integer()], false)),
         ];
 
         yield 'disjoint keys stay a structure, both optional' => [
             structure_schema('col', type_structure(['name' => type_string()])),
             structure_schema('col', type_structure(['age' => type_integer()])),
-            structure_schema('col', type_structure([], ['name' => type_string(), 'age' => type_integer()])),
+            structure_schema('col', type_structure([
+                'name' => structure_element('name', type_string(), optional: true),
+                'age' => structure_element('age', type_integer(), optional: true),
+            ])),
         ];
 
         yield 'conflicting element widens to string instead of collapsing to json' => [
@@ -288,53 +321,32 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
-    public function test_does_not_match_a_map_entry_holding_a_structure_shaped_value(): void
-    {
-        $def = structure_schema('col', type_structure(['a' => type_integer()]));
-
-        static::assertFalse($def->matches(map_entry('col', ['a' => 1], type_map(type_string(), type_integer()))));
-    }
-
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
-        static::assertFalse($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_an_entry_of_a_different_structure_instantiation(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
-            'b' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['b' => 'x']));
     }
 
     public function test_does_not_match_an_entry_with_extra_elements_when_extra_is_not_allowed(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
-            'a' => type_integer(),
-            'b' => type_string(),
-        ]))));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = structure_schema('data', type_structure(['name' => type_string()]));
-
-        static::assertFalse($def->matches(structure_entry('other', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['a' => 1, 'b' => 'x']));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]));
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
     public function test_array_element_is_projected_to_json(): void
@@ -360,14 +372,6 @@ final class StructureDefinitionTest extends FlowTestCase
             ]))
                 ->type()
                 ->toString(),
-        );
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(
-            StructureEntry::class,
-            structure_schema('data', type_structure(['name' => type_string()]))->entryClass(),
         );
     }
 
@@ -445,21 +449,16 @@ final class StructureDefinitionTest extends FlowTestCase
 
     public function test_matches_an_entry_with_extra_elements_when_extra_is_allowed(): void
     {
-        $def = structure_schema('col', type_structure(['a' => type_integer()], [], true));
+        $def = structure_schema('col', type_structure(['a' => type_integer()], true));
 
-        static::assertTrue($def->matches(structure_entry('col', ['a' => 1, 'b' => 'x'], type_structure([
-            'a' => type_integer(),
-            'b' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['a' => 1, 'b' => 'x']));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
-        static::assertFalse($def->matches(structure_entry('col', ['b' => 'x'], type_structure([
-            'b' => type_string(),
-        ]))));
+        static::assertFalse($def->matches(['b' => 'x']));
         static::assertFalse($def->isCompatible(structure_schema('col', type_structure(['b' => type_string()]))));
     }
 
@@ -467,9 +466,7 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $def = structure_schema('data', type_structure(['name' => type_string()]));
 
-        static::assertTrue($def->matches(structure_entry('data', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['name' => 'John']));
     }
 
     /**
@@ -537,30 +534,21 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertTrue($def->matches(structure_entry('col', null, type_structure(['name' => type_string()]))));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = structure_schema('col', type_structure(['name' => type_string()]), true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = structure_schema('col', type_structure(['name' => type_string()]), true);
 
-        static::assertTrue($def->matches(structure_entry('col', ['name' => 'John'], type_structure([
-            'name' => type_string(),
-        ]))));
+        static::assertTrue($def->matches(['name' => 'John']));
     }
 
     public function test_rename(): void
@@ -595,7 +583,7 @@ final class StructureDefinitionTest extends FlowTestCase
     {
         $merged = structure_schema('col', type_structure([
             'a' => type_integer(),
-        ]))->merge(union_schema('col', type_union(type_structure(['a' => type_integer()]), type_boolean())));
+        ]))->merge(new UnionDefinition('col', type_union(type_structure(['a' => type_integer()]), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|structure{a: integer}', $merged->type()->toString());
@@ -606,7 +594,7 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             structure_schema('col', type_structure(['a' => type_integer()]))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

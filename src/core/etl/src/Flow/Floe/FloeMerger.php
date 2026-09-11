@@ -14,7 +14,6 @@ use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
-use function count;
 use function sprintf;
 
 final readonly class FloeMerger
@@ -62,8 +61,7 @@ final readonly class FloeMerger
      * Splicing copies source row frames verbatim, so it is only valid when every
      * source's schema is structurally identical to the merged footer schema -
      * column order included, since row bytes are laid out in schema order.
-     * Sources that merely reconcile (isSame is order-insensitive) are re-encoded
-     * by the compact path instead.
+     * Sources that merely reconcile are re-encoded by the compact path instead.
      *
      * @param array<int, array{footer: Footer, footerFrameStart: int}> $layouts
      */
@@ -179,12 +177,9 @@ final readonly class FloeMerger
      */
     private function mergeSplice(array $sources, array $layouts, ?Schema $merged, Path $dest, Metadata $metadata): void
     {
-        /** @var array<int, array<string, string>> $partitions */
-        $partitions = [];
         $sections = [];
         $totalRows = 0;
         $mergedMetadata = Metadata::empty();
-        $runningCombo = [];
 
         $frameWriter = new FrameWriter($this->filesystem->writeTo($dest), $this->codec->id(), self::COPY_CHUNK_SIZE);
         $frameWriter->header();
@@ -194,14 +189,6 @@ final readonly class FloeMerger
             $footer = $layout['footer'];
             $copyStart = Format::HEADER_LENGTH;
             $regionLength = $layout['footerFrameStart'] - $copyStart;
-
-            $partitionsIdMap = $this->mergePartitions($footer->partitions, $partitions);
-
-            $firstCombo = $footer->sections === [] ? [] : $footer->partitionsFor($footer->sections[0]->partitionsId);
-
-            if ($firstCombo !== $runningCombo && $firstCombo === []) {
-                $frameWriter->partitions($firstCombo);
-            }
 
             $outputStart = $frameWriter->position();
 
@@ -225,15 +212,7 @@ final readonly class FloeMerger
             }
 
             foreach ($footer->sections as $section) {
-                $sections[] = new Section(
-                    $section->offset - $copyStart + $outputStart,
-                    $partitionsIdMap[$section->partitionsId],
-                    $section->rowCount,
-                );
-            }
-
-            if ($footer->sections !== []) {
-                $runningCombo = $footer->partitionsFor($footer->sections[count($footer->sections) - 1]->partitionsId);
+                $sections[] = new Section($section->offset - $copyStart + $outputStart, $section->rowCount);
             }
 
             $totalRows += $footer->totalRows;
@@ -248,48 +227,12 @@ final readonly class FloeMerger
             FloeStreamWriter::writerVersion(),
             $schema,
             $sections,
-            $partitions,
             $totalRows,
             $mergedMetadata->merge($metadata),
         ))->toJson();
 
         $frameWriter->footer($footerJson);
         $frameWriter->close();
-    }
-
-    /**
-     * Adds a source's partition combinations to the merged table (order-sensitive
-     * dedup) and returns its old->new partitionsId mapping.
-     *
-     * @param array<int, array<string, string>> $sourceTable
-     * @param array<int, array<string, string>> $table combined table, updated in place
-     *
-     * @return array<int, int>
-     */
-    private function mergePartitions(array $sourceTable, array &$table): array
-    {
-        $map = [];
-
-        foreach ($sourceTable as $oldId => $combo) {
-            $newId = null;
-
-            foreach ($table as $id => $known) {
-                if ($known === $combo) {
-                    $newId = $id;
-
-                    break;
-                }
-            }
-
-            if ($newId === null) {
-                $newId = count($table);
-                $table[] = $combo;
-            }
-
-            $map[$oldId] = $newId;
-        }
-
-        return $map;
     }
 
     /**

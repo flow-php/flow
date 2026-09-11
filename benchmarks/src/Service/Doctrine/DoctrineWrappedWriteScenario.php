@@ -7,15 +7,10 @@ namespace Flow\Benchmarks\Service\Doctrine;
 use Flow\Benchmarks\Datasets\Datasets;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use function Flow\ETL\DSL\batches;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\write_with_retries;
 use function Flow\Floe\DSL\from_floe;
 
-/**
- * Rows are re-batched to one per Rows because a floe file arrives pre-chunked, which would hide the
- * BatchSizeOptimization that from_csv()/from_json() sources trigger.
- */
 final readonly class DoctrineWrappedWriteScenario
 {
     public function __construct(
@@ -42,7 +37,8 @@ final readonly class DoctrineWrappedWriteScenario
         $connection = DoctrineConnection::open();
 
         data_frame()
-            ->read(batches(from_floe(Datasets::orders($this->rows)->floe()), 1))
+            ->read(from_floe(Datasets::orders($this->rows)->floe()))
+            ->batchSize(1000)
             ->write(write_with_retries(to_dbal_table_insert($connection, $this->table())))
             ->run();
 

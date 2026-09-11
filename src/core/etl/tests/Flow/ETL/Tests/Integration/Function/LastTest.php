@@ -22,7 +22,7 @@ final class LastTest extends FlowTestCase
                 ['id' => 4, 'value' => 40, 'group' => 'C'],
                 ['id' => 5, 'value' => 50, 'group' => 'B'],
             ]))
-            ->groupBy('group')
+            ->groupBy(['group'])
             ->aggregate(last('value'))
             ->fetch()
             ->toArray();
@@ -47,7 +47,7 @@ final class LastTest extends FlowTestCase
                 ['id' => 4, 'value' => 40, 'group' => 'C'],
                 ['id' => 5, 'value' => 50, 'group' => 'B'],
             ]))
-            ->groupBy('value')
+            ->groupBy(['value'])
             ->aggregate(last('value'))
             ->fetch()
             ->toArray();
@@ -74,7 +74,7 @@ final class LastTest extends FlowTestCase
                 ['id' => 4, 'value' => 40],
                 ['id' => 5, 'value' => 50],
             ]))
-            ->aggregate(last('value'))
+            ->aggregate([last('value')])
             ->fetch()
             ->toArray();
 

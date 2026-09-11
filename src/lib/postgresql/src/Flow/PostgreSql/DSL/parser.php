@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\PostgreSql\AST\Transformers\CountModifier;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\AST\Transformers\ExplainModifier;

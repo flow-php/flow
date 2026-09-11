@@ -7,72 +7,58 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\QueryBuilder;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
 use Flow\ETL\Adapter\PostgreSql\QueryBuilder\InsertQueryBuilder;
-use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Client\Types\ValueConverters;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
 final class InsertQueryBuilderTest extends TestCase
 {
-    public function test_build_returns_typed_values(): void
+    public function test_build_converts_each_value_with_its_columns_converter(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$_query, $params] = $builder->build(
-            [['id' => 1, 'name' => 'Alice']],
-            schema(int_schema('id'), str_schema('name')),
+        [$_query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
+            [['id' => 1, 'name' => 'Alice', 'active' => true], ['id' => 2, 'name' => 'Bob', 'active' => false]],
+            schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+            ValueConverters::create(),
         );
 
-        static::assertCount(2, $params);
-
-        $first = $params[0];
-        $second = $params[1];
-        static::assertInstanceOf(TypedValue::class, $first);
-        static::assertInstanceOf(TypedValue::class, $second);
-        static::assertSame(1, $first->value);
-        static::assertSame(ValueType::INT8, $first->targetType);
-        static::assertSame('Alice', $second->value);
-        static::assertSame(ValueType::TEXT, $second->targetType);
+        static::assertSame(['1', 'Alice', 't', '2', 'Bob', 'f'], $params->values);
     }
 
     public function test_build_simple_insert(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$query, $params] = $builder->build(
+        [$query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
             [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
             schema(int_schema('id'), str_schema('name')),
+            ValueConverters::create(),
         );
 
         static::assertStringContainsString('INSERT INTO "users"', $query->toSql());
         static::assertStringContainsString('("id", "name")', $query->toSql());
         static::assertStringContainsString('($1, $2), ($3, $4)', $query->toSql());
-        static::assertCount(4, $params);
+        static::assertCount(4, $params->values);
     }
 
     public function test_build_with_null_values(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$_query, $params] = $builder->build(
+        [$_query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
             [['id' => 1, 'name' => null]],
             schema(int_schema('id'), str_schema('name', nullable: true)),
+            ValueConverters::create(),
         );
 
-        static::assertCount(2, $params);
-        static::assertNull($params[1]);
+        static::assertSame(['1', null], $params->values);
     }
 
     public function test_build_with_skip_conflicts(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$query, $_params] = $builder->build(
+        [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
             [['id' => 1, 'name' => 'Alice']],
             schema(int_schema('id'), str_schema('name')),
+            ValueConverters::create(),
             InsertOptions::skipConflicts(),
         );
 
@@ -81,11 +67,10 @@ final class InsertQueryBuilderTest extends TestCase
 
     public function test_build_with_upsert_on_columns(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$query, $_params] = $builder->build(
+        [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
             [['id' => 1, 'name' => 'Alice']],
             schema(int_schema('id'), str_schema('name')),
+            ValueConverters::create(),
             InsertOptions::upsertOnColumns(['id']),
         );
 
@@ -96,11 +81,10 @@ final class InsertQueryBuilderTest extends TestCase
 
     public function test_build_with_upsert_on_constraint(): void
     {
-        $builder = new InsertQueryBuilder('users', new EntryTypesMap());
-
-        [$query, $_params] = $builder->build(
+        [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
             [['id' => 1, 'name' => 'Alice']],
             schema(int_schema('id'), str_schema('name')),
+            ValueConverters::create(),
             InsertOptions::upsertOnConstraint('users_pkey'),
         );
 

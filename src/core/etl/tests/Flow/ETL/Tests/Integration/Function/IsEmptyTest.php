@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -29,7 +30,7 @@ final class IsEmptyTest extends FlowTestCase
                 ['text' => 'a'],
                 ['text' => '!@#$%'],
             ]))
-            ->withEntry('is_empty', ref('text')->isEmpty())
+            ->withEntry('is_empty', optional(ref('text')->isEmpty()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

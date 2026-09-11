@@ -6,7 +6,6 @@ namespace Flow\ETL\Config\Join;
 
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
-use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 
 final class HashJoinBuilder implements JoinAlgorithmBuilder
@@ -28,9 +27,9 @@ final class HashJoinBuilder implements JoinAlgorithmBuilder
         return $this;
     }
 
-    public function build(FilesystemTable $filesystemTable, Path $localFilesystemCacheDir): HashJoinConfig
+    public function build(Path $spillRoot): HashJoinConfig
     {
-        return new HashJoinConfig($this->bucketing->build($filesystemTable, $localFilesystemCacheDir));
+        return new HashJoinConfig($this->bucketing->build($spillRoot));
     }
 
     /**
@@ -39,13 +38,6 @@ final class HashJoinBuilder implements JoinAlgorithmBuilder
     public function bucketsCount(int $bucketsCount): self
     {
         $this->bucketing->bucketsCount($bucketsCount);
-
-        return $this;
-    }
-
-    public function filesystemProtocol(string $protocol): self
-    {
-        $this->bucketing->filesystemProtocol($protocol);
 
         return $this;
     }

@@ -7,14 +7,26 @@ namespace Flow\ETL\Adapter\Excel;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Row;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
@@ -22,14 +34,33 @@ use Throwable;
 
 use function array_keys;
 use function is_string;
+use function sprintf;
 
-final class ExcelLoader implements Closure, FileLoader, Loader
+final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
+    private readonly Filesystem $filesystem;
+
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
+
+    private ?FilesSink $files = null;
+
+    private ?WorkbookManager $workbook = null;
+
     private ?CellStyler $cellStyler = null;
 
-    private string $dateFormat = 'Y-m-d';
+    private string $dateFormat = 'yyyy-mm-dd';
 
-    private string $dateTimeFormat = 'Y-m-d H:i:s';
+    private string $dateTimeFormat = 'yyyy-mm-dd hh:mm:ss';
+
+    /**
+     * OpenSpout registers every Style instance as its own cell format, so a Style built per cell grows styles.xml
+     * by one entry per cell - which every reader of the workbook then has to parse.
+     *
+     * @var array<string, Style>
+     */
+    private array $formatStyles = [];
 
     private ?ExcelEncoder $encoder = null;
 
@@ -45,14 +76,25 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     private bool $withHeader = true;
 
-    private ?WorkbookManager $workbookManager = null;
-
     private OdsOptions|XlsxOptions|null $writerOptions = null;
 
     private ?ExcelWriter $writerType = null;
 
-    public function __construct(Path $path)
+    public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. to_excel($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
+
         if (!$path->isLocal()) {
             throw new InvalidArgumentException(
                 'Only local filesystem paths are supported by ExcelLoader due to OpenSpout limitations.',
@@ -62,14 +104,29 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         $this->path = $path;
     }
 
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
+    }
+
     public function closure(FlowContext $context): void
     {
-        if ($this->workbookManager !== null) {
-            $this->workbookManager->close();
-            $this->workbookManager = null;
-        }
+        $this->workbook?->close();
+        $this->workbook = null;
 
-        $context->streams()->closeStreams($this->path);
+        $this->files?->publish();
+        $this->files = null;
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        $this->workbook?->close();
+        $this->workbook = null;
+
+        $this->files?->abandon();
+        $this->files = null;
     }
 
     public function destination(): Path
@@ -88,42 +145,55 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
-            $dehydrated = $context->hydrator()->dehydrate($rows);
             $encoder = $this->encoder();
 
-            $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $dehydrated = $context->hydrator()->dehydrate($group);
 
-            $manager = $this->getWorkbookManager();
-            $manager->open($stream->path()->path());
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
 
-            foreach ($rows as $rowIndex => $row) {
-                $sheetName = $this->resolveSheetName($row);
-
-                $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
-                    ? $row->remove($this->sheetNameEntryName)
-                    : $row;
-
-                $typed = $dehydrated[$rowIndex];
-                $values = $typed->values;
-                $types = $typed->types;
-                $metadata = $typed->metadata;
-
-                if ($this->sheetNameEntryName !== null) {
-                    unset(
-                        $values[$this->sheetNameEntryName],
-                        $types[$this->sheetNameEntryName],
-                        $metadata[$this->sheetNameEntryName],
+                $manager =
+                    $this->workbook ??= new WorkbookManager(
+                        writerType: $this->resolveWriterType(),
+                        options: $this->writerOptions,
                     );
-                }
+                $manager->open($stream->path()->path());
 
-                if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
-                    $manager->writeHeader($sheetName, $encoder->encodeHeader(array_keys($values)), $this->headerStyle);
-                }
+                foreach ($group as $rowIndex => $row) {
+                    $sheetName = $this->resolveSheetName($row);
 
-                $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
-                /** @var array<int, null|bool|float|int|string> $cells */
-                $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
-                $manager->writeRow($sheetName, $cells, $styles);
+                    $rowSchema = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
+                        ? $group->schema()->gracefulRemove($this->sheetNameEntryName)
+                        : $group->schema();
+
+                    $typed = $dehydrated[$rowIndex];
+                    $values = $typed->values;
+                    $types = $typed->types;
+                    $metadata = $typed->metadata;
+
+                    if ($this->sheetNameEntryName !== null) {
+                        unset(
+                            $values[$this->sheetNameEntryName],
+                            $types[$this->sheetNameEntryName],
+                            $metadata[$this->sheetNameEntryName],
+                        );
+                    }
+
+                    if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
+                        $manager->writeHeader(
+                            $sheetName,
+                            $encoder->encodeHeader(array_keys($values)),
+                            $this->headerStyle,
+                        );
+                    }
+
+                    $styles = $this->resolveCellStyles($row, $rowSchema, $rowIndex, $sheetName);
+                    /** @var array<int, null|bool|float|int|string> $cells */
+                    $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
+                    $manager->writeRow($sheetName, $cells, $styles);
+                }
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -132,6 +202,13 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
             throw $e;
         }
+    }
+
+    public function saveMode(SaveMode $mode): static
+    {
+        $this->saveMode = $mode;
+
+        return $this;
     }
 
     public function withCellStyler(CellStyler $styler): self
@@ -220,41 +297,43 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
-    private function encoder(): ExcelEncoder
+    /**
+     * A date cell carries no type of its own - the reader decides from the number format, so a column written
+     * without one comes back as a number.
+     *
+     * @param Definition<mixed> $definition
+     */
+    private function temporalStyle(Definition $definition): ?Style
     {
-        return $this->encoder ??= new ExcelEncoder(
-            dateTimeFormat: $this->dateTimeFormat,
-            dateFormat: $this->dateFormat,
-            timeFormat: $this->timeFormat,
-        );
+        return match ($definition->type()::class) {
+            DateTimeType::class
+                => $this->formatStyles[$this->dateTimeFormat] ??= (new Style())->withFormat($this->dateTimeFormat),
+            DateType::class => $this->formatStyles[$this->dateFormat] ??= (new Style())->withFormat($this->dateFormat),
+            default => null,
+        };
     }
 
-    private function getWorkbookManager(): WorkbookManager
+    private function encoder(): ExcelEncoder
     {
-        if ($this->workbookManager === null) {
-            $this->workbookManager = new WorkbookManager(
-                writerType: $this->resolveWriterType(),
-                options: $this->writerOptions,
-            );
-        }
-
-        return $this->workbookManager;
+        return $this->encoder ??= new ExcelEncoder(timeFormat: $this->timeFormat);
     }
 
     /**
      * @return null|array<int, null|Style>
      */
-    private function resolveCellStyles(Row $row, int $rowIndex, string $sheetName): ?array
+    private function resolveCellStyles(Row $row, Schema $schema, int $rowIndex, string $sheetName): ?array
     {
-        if ($this->cellStyler === null) {
-            return null;
-        }
-
         $styles = [];
         $columnIndex = 0;
 
-        foreach ($row->entries() as $entry) {
-            $styles[$columnIndex] = $this->cellStyler->style($entry, $rowIndex + 1, $columnIndex, $sheetName);
+        foreach ($schema->definitions() as $definition) {
+            $styles[$columnIndex] = $this->cellStyler?->style(
+                $row->get($definition->entry()->name()),
+                $definition,
+                $rowIndex + 1,
+                $columnIndex,
+                $sheetName,
+            ) ?? $this->temporalStyle($definition);
             $columnIndex++;
         }
 
@@ -264,8 +343,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
     private function resolveSheetName(Row $row): string
     {
         if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
-            // @mago-expect analysis:mixed-assignment
-            $value = $row->get($this->sheetNameEntryName)->value();
+            $value = $row->get($this->sheetNameEntryName);
 
             if (is_string($value) && $value !== '') {
                 SheetNameAssertion::assert($value);

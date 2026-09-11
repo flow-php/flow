@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -31,6 +35,16 @@ final readonly class OffsetProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
+    }
+
+    /**
+     * @param Generator<int, Rows> $rows
+     *
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
         if ($this->offset === 0) {
@@ -41,12 +55,15 @@ final readonly class OffsetProcessor implements Processor
 
         $skippedRows = 0;
 
-        foreach ($rows as $batch) {
+        while ($rows->valid()) {
+            /** @var Rows $batch */
+            $batch = $rows->current();
             $currentBatchSize = $batch->count();
             $remainingToSkip = $this->offset - $skippedRows;
 
             if ($remainingToSkip >= $currentBatchSize) {
                 $skippedRows += $currentBatchSize;
+                $rows->next();
 
                 continue;
             }
@@ -57,8 +74,16 @@ final readonly class OffsetProcessor implements Processor
             }
 
             if ($batch->count() > 0) {
-                yield $batch;
+                $signal = yield $batch;
+
+                if ($signal === Signal::STOP) {
+                    $rows->send(Signal::STOP);
+
+                    return;
+                }
             }
+
+            $rows->next();
         }
     }
 }

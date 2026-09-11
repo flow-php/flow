@@ -16,9 +16,10 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function str_contains;
 
 final class TransactionalPostgreSqlLoaderTest extends TestCase
@@ -100,7 +101,7 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $client->expects(self::once())->method('commit');
         $client->expects(self::never())->method('rollBack');
 
-        $rows = rows(row(int_entry('id', 1)));
+        $rows = rows(schema(int_schema('id')), row(['id' => 1]));
 
         $first = $this->createMock(Loader::class);
         $first->expects(self::once())->method('load')->with($rows);
@@ -123,7 +124,10 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('loader failed');
 
-        (new TransactionalPostgreSqlLoader($client, $failing))->load(rows(row(int_entry('id', 1))), flow_context());
+        (new TransactionalPostgreSqlLoader($client, $failing))->load(
+            rows(schema(int_schema('id')), row(['id' => 1])),
+            flow_context(),
+        );
     }
 
     public function test_exposing_the_wrapped_loaders(): void
@@ -164,7 +168,7 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
 
         (new TransactionalPostgreSqlLoader($client, $loader))
             ->withIsolationLevel(IsolationLevel::SERIALIZABLE)
-            ->load(rows(row(int_entry('id', 1))), flow_context());
+            ->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
     }
 
     public function test_skips_transaction_for_empty_rows(): void
@@ -177,6 +181,6 @@ final class TransactionalPostgreSqlLoaderTest extends TestCase
         $loader = $this->createMock(Loader::class);
         $loader->expects(self::never())->method('load');
 
-        (new TransactionalPostgreSqlLoader($client, $loader))->load(rows(), flow_context());
+        (new TransactionalPostgreSqlLoader($client, $loader))->load(rows(schema()), flow_context());
     }
 }

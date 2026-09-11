@@ -18,7 +18,7 @@ use function getenv;
 use function str_starts_with;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 abstract class IntegrationTestCase extends FlowTestCase
 {

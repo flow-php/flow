@@ -6,6 +6,7 @@ namespace Flow\Parquet;
 
 use Flow\Parquet\Dremel\ColumnData\NullLevel;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Generator;
 
 use function get_debug_type;
 use function is_array;
@@ -127,4 +128,9 @@ function array_flatten(array $array): array
     $flatten($array);
 
     return $result;
+}
+
+function empty_generator(): Generator
+{
+    yield from [];
 }

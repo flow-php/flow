@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Exception;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
-
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
 
 final readonly class SelectEntriesTransformer implements Transformer
 {
@@ -26,27 +24,18 @@ final readonly class SelectEntriesTransformer implements Transformer
         $this->refs = References::init(...$refs);
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input->keep(...$this->refs)->reorder(...$this->refs));
+    }
+
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $newRows = [];
-
-            foreach ($rows as $row) {
-                $newRowEntries = [];
-
-                foreach ($this->refs as $ref) {
-                    try {
-                        $newRowEntries[] = $row->get($ref);
-                    } catch (Exception) {
-                        $newRowEntries[] = str_entry($ref->name(), null);
-                    }
-                }
-                $newRows[] = row(...$newRowEntries);
-            }
-
-            $result = rows(...$newRows);
+            $schema = $rows->schema()->keep(...$this->refs)->reorder(...$this->refs);
+            $result = $rows->project($schema);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

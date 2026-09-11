@@ -1,0 +1,39 @@
+{
+  "spreadsheetId": "eae3913a86de8d5ccfe841fd3c7ec50dba3902045232",
+  "valueRanges": [
+    {
+      "range": "Sheet!A1:Z20",
+      "majorDimension": "ROWS",
+      "values": [
+        [
+          "id",
+          "price",
+          "active",
+          "day",
+          "note"
+        ],
+        [
+          "1",
+          "1.5",
+          "TRUE",
+          "2024-01-01",
+          ""
+        ],
+        [
+          "2",
+          "2.5",
+          "FALSE",
+          "2024-01-02",
+          "x"
+        ],
+        [
+          "3",
+          "3.5",
+          "TRUE",
+          "2024-01-03",
+          ""
+        ]
+      ]
+    }
+  ]
+}

@@ -26,12 +26,14 @@ final class NotTest extends FlowTestCase
                 ['id' => 3],
                 ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('result', when(not(ref('array')->exists()), lit('not found'), lit('found')))
+            ->withEntry('result', when(not(ref('array')->isNotNull()), lit('not found'), lit('found')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
+            // A ragged source now yields one column set, so `array` exists on every row and
+            // `exists()` no longer discriminates - `isNotNull()` is what distinguishes the rows.
             [
                 ['id' => 1, 'result' => 'found'],
                 ['id' => 2, 'result' => 'not found'],

@@ -9,17 +9,34 @@ use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use Flow\ETL\Window\PeerComparator;
 use Flow\ETL\Window\WindowContext;
+use Flow\Types\Type;
 use RuntimeException as BaseRuntimeException;
 
 use function count;
+use function Flow\Types\DSL\type_integer;
 
 final class DenseRank implements PartitionRanking, WindowFunction
 {
-    private ?Window $window;
+    use ResolvesFromChildren;
 
-    public function __construct()
+    public function __construct(
+        private readonly ?Window $window = null,
+    ) {}
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
     {
-        $this->window = null;
+        return [];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        return $this;
     }
 
     public function apply(WindowContext $window): mixed
@@ -27,6 +44,9 @@ final class DenseRank implements PartitionRanking, WindowFunction
         return $this->rankPartition($window->partition())[$window->index()];
     }
 
+    /**
+     * @return list<int>
+     */
     public function rankPartition(Rows $partition): array
     {
         $orderBy = $this->window()->order();
@@ -41,7 +61,7 @@ final class DenseRank implements PartitionRanking, WindowFunction
         $previous = null;
 
         foreach ($partition as $row) {
-            if ($previous !== null && !$comparator->arePeers($previous, $row)) {
+            if ($previous !== null && !$comparator->arePeers($previous, $row, $partition->schema())) {
                 $rank++;
             }
 
@@ -54,9 +74,17 @@ final class DenseRank implements PartitionRanking, WindowFunction
 
     public function over(Window $window): static
     {
-        $this->window = $window;
+        return new self($window);
+    }
 
-        return $this;
+    /**
+     * NOT NULL - every row of a partition has a dense rank
+     *
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_integer();
     }
 
     public function toString(): string

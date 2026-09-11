@@ -38,11 +38,11 @@ final class SortedRunBucketing implements BucketingStrategy
     public function bucketize(Generator $rows, BucketsStorage $storage): Generator
     {
         $runId = $this->random->string(16);
-        $buffer = new Rows();
+        $buffer = null;
         $index = 0;
 
         foreach ($rows as $batch) {
-            $buffer = $buffer->merge($batch);
+            $buffer = $buffer === null ? $batch : $buffer->merge($batch);
 
             while ($buffer->count() >= $this->runSize) {
                 yield $this->spill($buffer->take($this->runSize), $storage, $runId, $index++);
@@ -50,7 +50,7 @@ final class SortedRunBucketing implements BucketingStrategy
             }
         }
 
-        if (!$buffer->empty()) {
+        if ($buffer !== null && !$buffer->empty()) {
             yield $this->spill($buffer, $storage, $runId, $index);
         }
     }

@@ -144,6 +144,28 @@ final readonly class UnionType implements Type
     }
 
     /**
+     * @return null|Type<mixed> the first non-null member this value is valid for
+     */
+    public function memberFor(mixed $value): ?Type
+    {
+        foreach ($this->types()->all() as $member) {
+            if ($member instanceof OptionalType) {
+                $member = $member->base();
+            }
+
+            if ($member instanceof NullType) {
+                continue;
+            }
+
+            if ($member->isValid($value)) {
+                return $member;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return array{type: 'union', left: array<string, mixed>, right: array<string, mixed>}
      */
     public function normalize(): array

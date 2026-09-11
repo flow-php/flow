@@ -8,7 +8,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\CustomDateTime;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\Tests\Context\FloeEngineContext;
 use Flow\Floe\Tests\Double\PrefixingCodecStub;
@@ -16,11 +15,12 @@ use Flow\Floe\Tests\Mother\RowsMother;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 /**
  * With the flow_php extension loaded, FloeWriter encodes ROW frame bodies through
@@ -34,8 +34,7 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         return [
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'heterogeneous' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
-            'empty' => [rows()],
+            'empty' => [rows(schema())],
         ];
     }
 
@@ -51,8 +50,8 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
 
     public function test_extension_and_pure_php_reject_datetime_subclass_identically(): void
     {
-        $rows = rows(row(datetime_entry('at', new CustomDateTime('2025-01-01 00:00:00 UTC'))));
-        $schema = FloeStreamWriter::unionSchema($rows);
+        $rows = rows(schema(datetime_schema('at')), row(['at' => new CustomDateTime('2025-01-01 00:00:00 UTC')]));
+        $schema = $rows->schema();
 
         $writers = [
             'php' => FloeEngineContext::phpWriter($this->fs(), $schema),
@@ -77,7 +76,7 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         $purePath = $this->cacheDir->suffix('write-pure.floe');
         $extPath = $this->cacheDir->suffix('write-ext.floe');
 
-        $schema = FloeStreamWriter::unionSchema($rows);
+        $schema = $rows->schema();
 
         FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs(), $schema), $purePath, [$rows]);
         FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs(), $schema), $extPath, [$rows]);
@@ -88,21 +87,23 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
     public function test_extension_and_pure_php_write_byte_identical_files_across_multiple_writes(): void
     {
         $batches = [
-            rows(row(int_entry('id', 1), str_entry('name', 'a')), row(int_entry('id', 2), str_entry('name', 'b'))),
-            rows(row(int_entry('id', 3), str_entry('name', 'c'))),
-            rows(row(int_entry('id', 4), str_entry('name', 'd')), row(int_entry('id', 5), str_entry('name', 'e'))),
+            rows(
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 1, 'name' => 'a']),
+                row(['id' => 2, 'name' => 'b']),
+            ),
+            rows(schema(int_schema('id'), str_schema('name')), row(['id' => 3, 'name' => 'c'])),
+            rows(
+                schema(int_schema('id'), str_schema('name')),
+                row(['id' => 4, 'name' => 'd']),
+                row(['id' => 5, 'name' => 'e']),
+            ),
         ];
 
         $purePath = $this->cacheDir->suffix('multi-write-pure.floe');
         $extPath = $this->cacheDir->suffix('multi-write-ext.floe');
 
-        $allRows = new Rows();
-
-        foreach ($batches as $batch) {
-            $allRows = $allRows->merge($batch);
-        }
-
-        $schema = FloeStreamWriter::unionSchema($allRows);
+        $schema = schema(int_schema('id'), str_schema('name'));
 
         FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs(), $schema), $purePath, $batches);
         FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs(), $schema), $extPath, $batches);
@@ -123,7 +124,7 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         $purePath = $this->cacheDir->suffix('write-codec-pure.floe');
         $extPath = $this->cacheDir->suffix('write-codec-ext.floe');
 
-        $schema = FloeStreamWriter::unionSchema($rows);
+        $schema = $rows->schema();
 
         FloeEngineContext::writeAll(FloeEngineContext::phpWriter($this->fs(), $schema, $codec), $purePath, [$rows]);
         FloeEngineContext::writeAll(FloeEngineContext::nativeWriter($this->fs(), $schema, $codec), $extPath, [$rows]);
@@ -136,9 +137,12 @@ final class FloeWriterExtensionParityTest extends FlowIntegrationTestCase
         $purePath = $this->cacheDir->suffix('append-pure.floe');
         $extPath = $this->cacheDir->suffix('append-ext.floe');
 
-        $createRows = rows(row(int_entry('id', 1), str_entry('email', null)));
-        $appendRows = rows(row(int_entry('id', 2), str_entry('email', 'x')));
-        $schema = FloeStreamWriter::unionSchema($createRows->merge($appendRows));
+        $createRows = rows(
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 1, 'email' => null]),
+        );
+        $appendRows = rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x']));
+        $schema = $createRows->schema()->merge($appendRows->schema());
 
         foreach ([[$purePath, false], [$extPath, true]] as [$path, $native]) {
             $create = $native

@@ -8,11 +8,9 @@ use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Options;
 use Generator;
@@ -45,21 +43,21 @@ final class FilesystemBuckets implements BucketsStorage
         $this->reader = new FloeReader($this->filesystem);
     }
 
+    /**
+     * SCHEMA EVOLUTION: the bucket's schema is fixed by the first batch, so a later batch carrying
+     * a column the first one lacked is rejected. Reachable from group-by and join whenever rows
+     * with different column sets hash into one bucket. Proper evolution - adding an optional
+     * column, relaxing not-null - would remove this limitation.
+     */
     public function append(string $bucketId, Rows $rows): void
     {
-        foreach ($rows->chunks($this->batchSize) as $batch) {
-            if (!isset($this->writers[$bucketId])) {
-                $writer = new FloeWriter(
-                    $this->filesystem,
-                    FloeStreamWriter::unionSchema($batch),
-                    new Options(validateData: false),
-                );
-                $writer->append($this->keyPath($bucketId));
-                $this->writers[$bucketId] = $writer;
-            }
-
-            $this->writers[$bucketId]->write($batch);
+        if (!isset($this->writers[$bucketId])) {
+            $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
+            $writer->append($this->keyPath($bucketId));
+            $this->writers[$bucketId] = $writer;
         }
+
+        $this->writers[$bucketId]->write($rows);
     }
 
     public function get(string $bucketId): Generator
@@ -77,7 +75,7 @@ final class FilesystemBuckets implements BucketsStorage
         // finally, not a trailing close(): PHP runs it on generator destruction too, and a KWayMerge cursor is
         // destroyed rather than exhausted when a merge throws
         try {
-            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+            foreach ($reader->rows($this->batchSize) as $batch) {
                 yield $batch;
             }
         } finally {
@@ -97,26 +95,10 @@ final class FilesystemBuckets implements BucketsStorage
     {
         $this->closeWriter($bucketId);
 
-        $writer = null;
-
-        foreach ($rows->chunks($this->batchSize) as $batch) {
-            if ($writer === null) {
-                $writer = new FloeWriter(
-                    $this->filesystem,
-                    FloeStreamWriter::unionSchema($batch),
-                    new Options(validateData: false),
-                );
-                $writer->create($this->keyPath($bucketId));
-            }
-
-            $writer->write($batch);
-        }
-
-        if ($writer === null) {
-            $writer = new FloeWriter($this->filesystem, new Schema(), new Options(validateData: false));
-            $writer->create($this->keyPath($bucketId));
-        }
-
+        // validation stays on until an upstream mechanism guarantees Rows match their schema
+        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
+        $writer->create($this->keyPath($bucketId));
+        $writer->write($rows);
         $writer->close();
     }
 

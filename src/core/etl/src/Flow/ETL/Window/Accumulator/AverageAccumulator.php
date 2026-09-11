@@ -26,7 +26,7 @@ final class AverageAccumulator implements FrameAccumulator
         private readonly Reference $ref,
         private readonly int $scale,
         private readonly Rounding $rounding,
-        private readonly FlowContext $context,
+        FlowContext $context,
     ) {
         $this->calculator = $context->calculator();
     }
@@ -35,7 +35,7 @@ final class AverageAccumulator implements FrameAccumulator
     {
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->ref);
+            $value = $row->get($this->ref);
 
             if (is_numeric($value)) {
                 // @mago-ignore analysis:possibly-invalid-argument
@@ -43,15 +43,11 @@ final class AverageAccumulator implements FrameAccumulator
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
-            $this->context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e),
-                );
+            throw new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e);
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         if (0 === $this->count) {
             return null;

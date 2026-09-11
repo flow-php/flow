@@ -118,7 +118,7 @@ to_seal_delete($engine, 'products')->withIdentifierEntry('sku');
 
 Before saving, rows are normalized into search documents:
 
-| Flow Entry                | Document Value                                  |
+| Flow Type                 | Document Value                                  |
 |---------------------------|-------------------------------------------------|
 | `string`, `int`, `float`, `bool` | unchanged                                 |
 | `uuid`                    | string representation                           |

@@ -7,13 +7,7 @@ namespace Flow\ETL;
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Function\ExecutionMode;
-use Flow\ETL\Function\Functions;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Hydrator;
-use Flow\Filesystem\Filesystem;
-use Flow\Filesystem\Path;
 
 /**
  * Mutable Flow execution context.
@@ -23,17 +17,12 @@ final class FlowContext
 {
     private ErrorHandler $errorHandler;
 
-    private readonly Functions $functions;
-
-    private ?FilesystemStreams $streams = null;
-
     private ?TelemetryContext $telemetryContext = null;
 
     public function __construct(
         public readonly Config $config,
     ) {
         $this->errorHandler = new ThrowError();
-        $this->functions = new Functions(ExecutionMode::LENIENT);
     }
 
     public function cache(): Cache
@@ -46,24 +35,9 @@ final class FlowContext
         return $this->config->calculator();
     }
 
-    public function entryFactory(): EntryFactory
-    {
-        return $this->config->entryFactory();
-    }
-
     public function errorHandler(): ErrorHandler
     {
         return $this->errorHandler;
-    }
-
-    public function filesystem(Path|string $path): Filesystem
-    {
-        return $this->config->fstab()->for($path);
-    }
-
-    public function functions(): Functions
-    {
-        return $this->functions;
     }
 
     /**
@@ -79,11 +53,6 @@ final class FlowContext
         $this->errorHandler = $handler;
 
         return $this;
-    }
-
-    public function streams(): FilesystemStreams
-    {
-        return $this->streams ??= new FilesystemStreams($this->config->fstab());
     }
 
     public function telemetry(): TelemetryContext

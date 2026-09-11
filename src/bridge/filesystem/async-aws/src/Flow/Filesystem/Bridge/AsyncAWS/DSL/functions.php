@@ -6,9 +6,9 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\DSL;
 
 use AsyncAws\Core\Configuration;
 use AsyncAws\S3\S3Client;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type;
 use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3Filesystem;
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Mount;

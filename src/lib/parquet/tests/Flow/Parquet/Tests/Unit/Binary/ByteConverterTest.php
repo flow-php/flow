@@ -7,6 +7,7 @@ namespace Flow\Parquet\Tests\Unit\Binary;
 use Flow\Parquet\Binary\ByteOrder;
 use OverflowException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Parquet\Binary\decode_decimal;
@@ -31,7 +32,9 @@ use function Flow\Parquet\Binary\encode_u16;
 use function Flow\Parquet\Binary\encode_u32;
 use function Flow\Parquet\Binary\encode_u64;
 use function Flow\Parquet\Binary\encode_u8;
+use function pack;
 use function strlen;
+use function unpack;
 
 final class ByteConverterTest extends TestCase
 {
@@ -151,7 +154,7 @@ final class ByteConverterTest extends TestCase
         $encoded = encode_f32(ByteOrder::BIG_ENDIAN, [$value]);
         $decoded = decode_f32(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
-        static::assertEqualsWithDelta($value, $decoded, 0.0001);
+        static::assertSame(unpack('G', pack('G', $value))[1], $decoded);
     }
 
     public function test_encode_decode_f32_little_endian(): void
@@ -160,7 +163,23 @@ final class ByteConverterTest extends TestCase
         $encoded = encode_f32(ByteOrder::LITTLE_ENDIAN, [$value]);
         $decoded = decode_f32(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
-        static::assertEqualsWithDelta($value, $decoded, 0.0001);
+        static::assertSame(unpack('g', pack('g', $value))[1], $decoded);
+    }
+
+    #[TestWith([0.1])]
+    #[TestWith([18.52])]
+    #[TestWith([1 / 3])]
+    #[TestWith([-0.1])]
+    #[TestWith([3.14159265358979])]
+    #[TestWith([1.0e-8])]
+    #[TestWith([1234567.75])]
+    #[TestWith([-2.5e10])]
+    public function test_f32_decodes_to_the_exact_widened_binary32(float $value): void
+    {
+        static::assertSame(
+            unpack('g', pack('g', $value))[1],
+            decode_f32(ByteOrder::LITTLE_ENDIAN, pack('g', $value))[0],
+        );
     }
 
     public function test_encode_decode_f64_big_endian(): void

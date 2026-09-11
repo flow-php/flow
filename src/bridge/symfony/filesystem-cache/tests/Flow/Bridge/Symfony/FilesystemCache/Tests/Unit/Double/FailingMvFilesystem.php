@@ -60,6 +60,11 @@ final readonly class FailingMvFilesystem implements Filesystem
         return $this->inner->status($path);
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount()->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         return $this->inner->writeTo($path);

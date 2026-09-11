@@ -10,6 +10,7 @@ use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -41,6 +42,16 @@ final class CacheTest extends FlowIntegrationTestCase
     public function test_cache(): void
     {
         $spyExtractor = new class(20) implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return $this->extractor->schema();
+            }
+
             public int $extractions = 0;
 
             private readonly Extractor $extractor;
@@ -174,12 +185,13 @@ final class CacheTest extends FlowIntegrationTestCase
 
         $cacheIndex = CacheIndex::fromRows('test', $indexRows);
 
-        static::assertCount(100, $cacheIndex->values());
+        // no batch size was set, so each cache entry is one batch the extractor yielded
+        static::assertCount(1, $cacheIndex->values());
 
         foreach ($cacheIndex->values() as $cacheRowsKey) {
             $rows = $cache->get($cacheRowsKey);
             static::assertInstanceOf(Rows::class, $rows);
-            static::assertCount(1, $rows);
+            static::assertCount(100, $rows);
         }
     }
 }

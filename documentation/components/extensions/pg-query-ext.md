@@ -11,7 +11,7 @@ package: flow-php/pg-query-ext
 A compiled PHP extension for PostgreSQL query parsing using [libpg_query](https://github.com/pganalyze/libpg_query).
 
 This extension provides low-level functions for parsing PostgreSQL SQL queries. For a higher-level, object-oriented
-interface with strongly-typed AST nodes, see the [pg-query library](/documentation/components/libs/pg-query.md).
+interface with strongly-typed AST nodes, see the [PostgreSQL library](/documentation/components/libs/postgresql.md).
 
 ## Features
 
@@ -139,7 +139,7 @@ $isUtility = pg_query_is_utility_stmt('SELECT * FROM users');
 
 ### pg_query_deparse_opts Parameters
 
-```php
+```php ignore
 pg_query_deparse_opts(
     string $protobuf,           // Protobuf AST from pg_query_parse_protobuf()
     bool $pretty_print = false, // Enable pretty printing
@@ -211,7 +211,7 @@ Key implementation details:
 
 ## See Also
 
-- [pg-query library](/documentation/components/libs/pg-query.md) - Higher-level PHP wrapper with strongly-typed AST
+- [PostgreSQL library](/documentation/components/libs/postgresql.md) - Higher-level PHP wrapper with strongly-typed AST
   nodes
 - [libpg_query](https://github.com/pganalyze/libpg_query) - The underlying C library
 - [Nix Development Environment](/documentation/contributing/nix.md) - Using nix-shell for development

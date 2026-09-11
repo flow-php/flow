@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -91,8 +92,22 @@ final class FlowToParquetSchemaTest extends FlowTestCase
             'Parquet schema does not support structure optional elements, given: structure{a: string, b?: string}',
         );
 
-        (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure(['a' => type_string()], [
-            'b' => type_string(),
+        (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure([
+            'a' => type_string(),
+            'b' => structure_element('b', type_string(), optional: true),
+        ]))));
+    }
+
+    public function test_converting_structure_with_an_interleaved_optional_element_throws(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Parquet schema does not support structure optional elements, given: structure{b?: string, a: string}',
+        );
+
+        (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure([
+            'b' => structure_element('b', type_string(), optional: true),
+            'a' => type_string(),
         ]))));
     }
 
@@ -104,7 +119,7 @@ final class FlowToParquetSchemaTest extends FlowTestCase
         );
 
         (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure([
-            'a' => type_structure(['b' => type_string()], ['c' => type_string()]),
+            'a' => type_structure(['b' => type_string(), 'c' => structure_element('c', type_string(), optional: true)]),
         ]))));
     }
 }

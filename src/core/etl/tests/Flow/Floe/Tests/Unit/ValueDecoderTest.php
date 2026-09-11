@@ -7,26 +7,26 @@ namespace Flow\Floe\Tests\Unit;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Tests\Mother\DateTimeDecoderMother;
-use Flow\Floe\Tests\Mother\DynamicDecoderMother;
 use Flow\Floe\ValueDecoder;
 use Flow\Floe\ValueEncoder;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\TestCase;
 
-use function chr;
 use function class_exists;
-use function Flow\Types\DSL\type_callable;
-use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_enum;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function Flow\Types\DSL\type_time;
-use function Flow\Types\DSL\type_uuid;
-use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_union;
 use function pack;
 use function strlen;
 
@@ -35,42 +35,11 @@ use const PHP_INT_MIN;
 
 final class ValueDecoderTest extends TestCase
 {
-    public function test_decoding_datetime_with_legacy_class_flag_throws(): void
-    {
-        $encoded = chr(0x02) . pack('V', 11) . 'NoSuchClass' . pack('P', 0) . pack('V', 0) . pack('V', 3) . 'UTC';
-        $position = 0;
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe found unknown datetime flag 0x02');
-
-        DateTimeDecoderMother::create()->decode($encoded, $position);
-    }
-
-    public function test_decoding_datetime_with_unknown_flag_throws(): void
-    {
-        $position = 0;
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('unknown datetime flag 0xEE');
-
-        DateTimeDecoderMother::create()->decode("\xEE", $position);
-    }
-
-    public function test_decoding_dynamic_value_with_unknown_tag_throws(): void
-    {
-        $position = 0;
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('unknown dynamic value tag');
-
-        DynamicDecoderMother::create()->decode("\xEE", $position);
-    }
-
     public function test_decoding_enum_of_unknown_case_throws(): void
     {
         $class = BackedStringEnum::class;
         $encoded = pack('V', strlen($class)) . $class . pack('V', 4) . 'nope';
-        $decoder = (new ValueDecoder())->decoderFor(type_enum(BackedStringEnum::class));
+        $decoder = (new ValueDecoder())->decoderFor(enum_schema('c', BackedStringEnum::class));
         $position = 0;
 
         $this->expectException(FloeException::class);
@@ -82,7 +51,7 @@ final class ValueDecoderTest extends TestCase
     public function test_decoding_enum_of_unknown_class_throws(): void
     {
         $encoded = pack('V', 10) . 'NoSuchEnum' . pack('V', 3) . 'one';
-        $decoder = (new ValueDecoder())->decoderFor(type_enum(BackedStringEnum::class));
+        $decoder = (new ValueDecoder())->decoderFor(enum_schema('c', BackedStringEnum::class));
         $position = 0;
 
         $this->expectException(FloeException::class);
@@ -117,7 +86,7 @@ final class ValueDecoderTest extends TestCase
 
     public function test_decoding_structure_with_unknown_element_flag_throws(): void
     {
-        $decoder = (new ValueDecoder())->decoderFor(type_structure(['name' => type_string()]));
+        $decoder = (new ValueDecoder())->decoderFor(structure_schema('c', type_structure(['name' => type_string()])));
         $position = 0;
 
         $this->expectException(FloeException::class);
@@ -129,7 +98,7 @@ final class ValueDecoderTest extends TestCase
     public function test_decoding_invalid_xml_throws(): void
     {
         $encoded = pack('V', 9) . 'not < xml';
-        $decoder = (new ValueDecoder())->decoderFor(type_xml());
+        $decoder = (new ValueDecoder())->decoderFor(xml_schema('c'));
         $position = 0;
 
         $this->expectException(FloeException::class);
@@ -141,22 +110,22 @@ final class ValueDecoderTest extends TestCase
     public function test_decoding_value_of_unsupported_type_throws(): void
     {
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('does not support values of type');
+        $this->expectExceptionMessage('Floe does not support columns of type "integer|string"');
 
-        (new ValueDecoder())->decoderFor(type_callable());
+        (new ValueDecoder())->decoderFor(new UnionDefinition('c', type_union(type_integer(), type_string())));
     }
 
     public function test_round_trip_of_datetime_preserves_timezone_and_microseconds(): void
     {
         $value = new DateTimeImmutable('2025-06-15 12:30:45.987654', new DateTimeZone('Australia/Eucla'));
         $encoded = (new ValueEncoder())
-            ->encoderFor(type_datetime())
+            ->encoderFor(datetime_schema('c'))
             ->encode($value);
         $position = 0;
 
         // @mago-ignore analysis:mixed-assignment
         $decoded = (new ValueDecoder())
-            ->decoderFor(type_datetime())
+            ->decoderFor(datetime_schema('c'))
             ->decode($encoded, $position);
 
         static::assertInstanceOf(DateTimeImmutable::class, $decoded);
@@ -170,19 +139,19 @@ final class ValueDecoderTest extends TestCase
     {
         $value = new DateTimeImmutable('1969-07-20 20:17:00.500000 UTC');
         $encoded = (new ValueEncoder())
-            ->encoderFor(type_datetime())
+            ->encoderFor(datetime_schema('c'))
             ->encode($value);
         $position = 0;
 
         static::assertEquals($value, (new ValueDecoder())
-            ->decoderFor(type_datetime())
+            ->decoderFor(datetime_schema('c'))
             ->decode($encoded, $position));
     }
 
     public function test_round_trip_of_integer_signed_edges(): void
     {
-        $encoder = (new ValueEncoder())->encoderFor(type_integer());
-        $decoder = (new ValueDecoder())->decoderFor(type_integer());
+        $encoder = (new ValueEncoder())->encoderFor(int_schema('c'));
+        $decoder = (new ValueDecoder())->decoderFor(int_schema('c'));
 
         foreach ([PHP_INT_MIN, PHP_INT_MAX, -1, 0, 42] as $value) {
             $position = 0;
@@ -200,13 +169,13 @@ final class ValueDecoderTest extends TestCase
         $value->f = 0.5;
 
         $encoded = (new ValueEncoder())
-            ->encoderFor(type_time())
+            ->encoderFor(time_schema('c'))
             ->encode($value);
         $position = 0;
 
         // @mago-ignore analysis:mixed-assignment
         $decoded = (new ValueDecoder())
-            ->decoderFor(type_time())
+            ->decoderFor(time_schema('c'))
             ->decode($encoded, $position);
 
         static::assertInstanceOf(DateInterval::class, $decoded);
@@ -229,13 +198,13 @@ final class ValueDecoderTest extends TestCase
     {
         $uuid = new Uuid('0196aecb-b568-7e57-a381-8ec8d3e4a531');
         $encoded = (new ValueEncoder())
-            ->encoderFor(type_uuid())
+            ->encoderFor(uuid_schema('c'))
             ->encode($uuid);
         $position = 0;
 
         // @mago-ignore analysis:mixed-assignment
         $decoded = (new ValueDecoder())
-            ->decoderFor(type_uuid())
+            ->decoderFor(uuid_schema('c'))
             ->decode($encoded, $position);
 
         static::assertInstanceOf(Uuid::class, $decoded);

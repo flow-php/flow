@@ -25,12 +25,13 @@ final class CSVHydratorParityTest extends FlowTestCase
             ->withSchema(schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true),
-                bool_schema('active'),
-            ));
+                bool_schema('active', nullable: true),
+            ))
+            ->withMetadataColumns(true);
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())) as $rows) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
             foreach ($rows as $row) {
                 $actual[] = $row->toArray();
             }
@@ -51,7 +52,7 @@ final class CSVHydratorParityTest extends FlowTestCase
             ->withSchema(schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true),
-                bool_schema('active'),
+                bool_schema('active', nullable: true),
             ));
 
         $actual = [];
@@ -73,6 +74,36 @@ final class CSVHydratorParityTest extends FlowTestCase
         );
     }
 
+    public function test_honours_a_hydrator_configured_on_the_context_without_a_declared_schema(): void
+    {
+        $default = [];
+
+        foreach (from_csv(path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
+            ->extract(flow_context(Config::builder()->build())) as $rows) {
+            foreach ($rows as $row) {
+                $default[] = $row->toArray();
+            }
+        }
+
+        $adaptive = [];
+
+        foreach (from_csv(path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
+            ->extract(flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build())) as $rows) {
+            foreach ($rows as $row) {
+                $adaptive[] = $row->toArray();
+            }
+        }
+
+        static::assertSame($default, $adaptive);
+        static::assertSame(
+            [
+                ['id' => null, 'name' => null, 'active' => false],
+                ['id' => 1, 'name' => 'Norbert', 'active' => null],
+            ],
+            $default,
+        );
+    }
+
     public function test_reads_partitioned_files_with_schema_typed_partition_values(): void
     {
         $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
@@ -82,15 +113,10 @@ final class CSVHydratorParityTest extends FlowTestCase
         ));
 
         $actual = [];
-        $partitions = [];
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
             foreach ($rows as $row) {
                 $actual[] = $row->toArray();
-            }
-
-            foreach ($rows->partitions() as $partition) {
-                $partitions[$partition->name] = true;
             }
         }
 
@@ -98,18 +124,17 @@ final class CSVHydratorParityTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['group' => 1, 'id' => 1, 'value' => 'a'],
-                ['group' => 1, 'id' => 2, 'value' => 'b'],
-                ['group' => 1, 'id' => 3, 'value' => 'c'],
-                ['group' => 1, 'id' => 4, 'value' => 'd'],
-                ['group' => 2, 'id' => 5, 'value' => 'e'],
-                ['group' => 2, 'id' => 6, 'value' => 'f'],
-                ['group' => 2, 'id' => 7, 'value' => 'g'],
-                ['group' => 2, 'id' => 8, 'value' => 'h'],
+                ['id' => 1, 'value' => 'a', 'group' => 1],
+                ['id' => 2, 'value' => 'b', 'group' => 1],
+                ['id' => 3, 'value' => 'c', 'group' => 1],
+                ['id' => 4, 'value' => 'd', 'group' => 1],
+                ['id' => 5, 'value' => 'e', 'group' => 2],
+                ['id' => 6, 'value' => 'f', 'group' => 2],
+                ['id' => 7, 'value' => 'g', 'group' => 2],
+                ['id' => 8, 'value' => 'h', 'group' => 2],
             ],
             $actual,
         );
-        static::assertArrayHasKey('group', $partitions);
     }
 
     public function test_appends_partition_columns_absent_from_the_schema(): void

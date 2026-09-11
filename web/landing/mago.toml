@@ -8,7 +8,7 @@ paths = [
 ]
 includes = [
     "vendor",
-    "tools/phpunit/vendor",
+    "../../tools/phpunit/vendor",
 ]
 excludes = [
     "**/var/**",

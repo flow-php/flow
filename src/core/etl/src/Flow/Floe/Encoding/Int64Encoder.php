@@ -6,6 +6,9 @@ namespace Flow\Floe\Encoding;
 
 use function pack;
 
+/**
+ * @implements ValueEncoder<int>
+ */
 final class Int64Encoder implements ValueEncoder
 {
     public function encode(mixed $value): string

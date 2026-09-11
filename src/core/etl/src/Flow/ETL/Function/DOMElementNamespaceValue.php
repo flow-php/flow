@@ -14,20 +14,55 @@ use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
 use function class_exists;
 use function count;
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 use function is_array;
 use function reset;
 
-final class DOMElementNamespaceValue extends ScalarFunctionChain
+final class DOMElementNamespaceValue implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DOMNode|HTMLElement $domElement,
-        private readonly ScalarFunction|string|null $attribute,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $domElement;
+    private readonly ScalarFunction $attribute;
+
+    public function __construct(ScalarFunction|DOMNode|HTMLElement $domElement, ScalarFunction|string|null $attribute)
+    {
+        $this->domElement = $domElement instanceof ScalarFunction ? $domElement : lit($domElement);
+        $this->attribute = $attribute instanceof ScalarFunction ? $attribute : lit($attribute);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->domElement, $this->attribute];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_string());
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -52,9 +87,7 @@ final class DOMElementNamespaceValue extends ScalarFunctionChain
         }
 
         if ($node === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('DOMElementNamespaceValue requires non-null DOMNode'));
+            throw new InvalidArgumentException('DOMElementNamespaceValue requires non-null DOMNode');
         }
 
         if (!$node instanceof DOMNode && !$node instanceof Element) {

@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Explain\Plan;
 use function array_filter;
 
 /**
- * @phpstan-import-type PlanNodeShape from PlanNode
+ * @import-type PlanNodeShape from PlanNode
  */
 final readonly class Plan
 {

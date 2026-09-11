@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Constraint;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 
 /**
- * @phpstan-type ForeignKeyShape = array{name: ?string, columns: non-empty-list<string>, reference_schema: string, reference_table: string, reference_columns: non-empty-list<string>, on_update?: string, on_delete?: string, deferrable?: bool, initially_deferred?: bool}
+ * @type ForeignKeyShape = array{name: ?string, columns: non-empty-list<string>, reference_schema: string, reference_table: string, reference_columns: non-empty-list<string>, on_update?: string, on_delete?: string, deferrable?: bool, initially_deferred?: bool}
  */
 final readonly class ForeignKey
 {

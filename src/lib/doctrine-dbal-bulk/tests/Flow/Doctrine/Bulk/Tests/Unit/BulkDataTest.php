@@ -114,6 +114,20 @@ final class BulkDataTest extends TestCase
         ]);
     }
 
+    public function test_prevents_creating_bulk_data_whose_rows_share_an_integer_key(): void
+    {
+        $this->expectExceptionMessage('Each row must be an array');
+
+        new BulkData([[0 => 'a', 'title' => 'One'], [0 => 'b', 'title' => 'Two']]);
+    }
+
+    public function test_an_invalid_row_is_reported_before_an_earlier_key_mismatch(): void
+    {
+        $this->expectExceptionMessage('Each row must be an array');
+
+        new BulkData([['title' => 'One'], ['date' => 'today'], [0 => 'three']]);
+    }
+
     public function test_prevents_creating_empty_bulk_data(): void
     {
         $this->expectExceptionMessage('Bulk data cannot be empty');
@@ -763,5 +777,27 @@ final class BulkDataTest extends TestCase
         ]);
 
         $connection->createSchemaManager()->createTable($table);
+    }
+
+    public function test_chunk_returns_self_when_it_fits(): void
+    {
+        $bulkData = new BulkData([['id' => 1], ['id' => 2]]);
+
+        static::assertSame([$bulkData], $bulkData->chunk(2));
+    }
+
+    public function test_chunk_splits_and_preserves_types_and_parameters_style(): void
+    {
+        $types = ['id' => Type::getType(Types::INTEGER)];
+        $chunks = (new BulkData([['id' => 1], ['id' => 2], ['id' => 3]], $types, SQLParametersStyle::NAMED))->chunk(2);
+
+        static::assertCount(2, $chunks);
+        static::assertSame([['id' => 1], ['id' => 2]], $chunks[0]->rows());
+        static::assertSame([['id' => 3]], $chunks[1]->rows());
+
+        foreach ($chunks as $chunk) {
+            static::assertSame($types, $chunk->types());
+            static::assertSame(SQLParametersStyle::NAMED, $chunk->parametersStyle());
+        }
     }
 }

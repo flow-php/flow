@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
@@ -11,9 +14,6 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
 use Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy\TypeStrategy;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;

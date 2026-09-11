@@ -4,51 +4,81 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\InfersSchema;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
+use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Generator;
 
-use function count;
-use function Flow\ETL\DSL\str_schema;
+use function array_diff;
+use function array_keys;
+use function array_values;
+use function iterator_to_array;
+use function sprintf;
 
-final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class CSVExtractor implements
+    BatchableExtractor,
+    Extractor,
+    FileExtractor,
+    InfersSchema,
+    LimitPushDown,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
-    use Limitable;
-    use PathFiltering;
+    use Batches;
+    use PushesLimit;
+    use FileReading;
 
-    /**
-     * @var null|int<1, max>
-     */
-    private ?int $charactersReadInLine = null;
+    private SchemaInference $inference;
 
-    private bool $emptyToNull = true;
-
-    private ?string $enclosure = null;
-
-    private ?string $escape = null;
-
-    private bool $removeBOM = true;
+    private CSVReadOptions $readOptions;
 
     private ?Schema $schema = null;
 
-    private ?string $separator = null;
-
-    private bool $withHeader = true;
+    private readonly Filesystem $filesystem;
 
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
-        $this->resetLimit();
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_csv($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+        $this->inference = new SchemaInference();
+        $this->readOptions = new CSVReadOptions();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -56,124 +86,133 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
      */
     public function extract(FlowContext $context): Generator
     {
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
-        $baseSchema = $this->schema;
+        $batchSize = $this->batchSize();
+        $yielded = 0;
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $reader = new CSVFileReader(new CSVSourceOpener($this->filesystem, $this->readOptions), $sources);
 
-        if (
-            $baseSchema !== null
-            && $shouldPutInputIntoRows
-            && $baseSchema->findDefinition('_input_file_uri') === null
-        ) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
+        if ($this->schema !== null) {
+            $base = $this->schema;
+        } else {
+            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+            $derived = $this->derivedSchema;
+
+            if ($derived === null) {
+                $derived =
+                    $this->derivedSchema = (new SchemaInferrer(
+                        $this->inference,
+                        new StringTypeNarrower($this->inference->candidates()->toArray()),
+                    ))->infer($reader->header()->names, $reader->samples($this->inference->sampleSize));
+            }
+
+            $base = $fileColumns->withoutTail($derived);
         }
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $option = csv_detect_separator($stream);
+        $schema = $fileColumns->declare($base);
+        $tail = $fileColumns->tail();
+        $expected = $base->references()->names();
 
-            $separator = $this->separator ?? $option->separator;
-            $enclosure = $this->enclosure ?? $option->enclosure;
-            $escape = $this->escape ?? $option->escape;
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
+        foreach ($sources as $source) {
+            // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
+            $constants = $fileColumns->forFile($source, $schema);
+            $columns = null;
 
-            $schema = $baseSchema;
+            foreach ($reader->batches($source, $batchSize) as $rawBatch) {
+                if ($columns === null) {
+                    $columns = array_values(array_diff(array_keys($rawBatch[0]->values), $tail));
 
-            if ($schema !== null) {
-                foreach ($partitions as $partition) {
-                    if ($schema->findDefinition($partition->name) === null) {
-                        $schema = $schema->add(str_schema($partition->name));
-                    }
-                }
-            }
-
-            $lines = (new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM))->readLines($stream);
-
-            if (!$lines->valid()) {
-                $stream->close();
-
-                continue;
-            }
-
-            $encoder = new CSVEncoder(
-                withHeader: $this->withHeader,
-                separator: $separator,
-                enclosure: $enclosure,
-                escape: $escape,
-                emptyToNull: $this->emptyToNull,
-            );
-
-            $rawLines = [];
-
-            while (($line = $lines->current()) !== null) {
-                $rawLines[] = $line;
-
-                if (count($rawLines) >= $batchSize) {
-                    $batch = [];
-
-                    foreach ($encoder->decode($rawLines) as $rowValues) {
-                        $row = $rowValues->values;
-
-                        if ($streamUri !== null) {
-                            $row['_input_file_uri'] = $streamUri;
-                        }
-
-                        foreach ($partitions as $partition) {
-                            $row[$partition->name] = $partition->value;
-                        }
-
-                        $batch[] = new RawRowValues($row);
-                    }
-
-                    $rawLines = [];
-
-                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                        $this->incrementReturnedRows();
-
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeStreams($this->path);
-
-                            return;
-                        }
+                    if (
+                        $this->schema === null
+                        && !$this->inference->unionByName
+                        && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
+                    ) {
+                        throw InferredSchemaException::columnsDiverge(
+                            $source->uri(),
+                            $reader->header()->source ?? '',
+                            $base,
+                            $columns,
+                            $this->inference,
+                        );
                     }
                 }
 
-                $lines->next();
-            }
+                $batch = [];
 
-            $batch = [];
-
-            foreach ($encoder->decode($rawLines) as $rowValues) {
-                $row = $rowValues->values;
-
-                if ($streamUri !== null) {
-                    $row['_input_file_uri'] = $streamUri;
+                foreach ($rawBatch as $values) {
+                    $batch[] = new RawRowValues($constants->fill($values->values));
                 }
 
-                foreach ($partitions as $partition) {
-                    $row[$partition->name] = $partition->value;
+                $hydrated = $hydrator->hydrate($batch, $schema);
+
+                $yielded += $hydrated->count();
+
+                $signal = yield $hydrated;
+
+                if ($signal === Signal::STOP) {
+                    return;
                 }
 
-                $batch[] = new RawRowValues($row);
-            }
+                $limit = $this->pushedLimit();
 
-            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
-
+                if ($limit !== null && $yielded >= $limit) {
                     return;
                 }
             }
 
-            $stream->close();
+            if ($columns === null && $this->schema === null && !$this->inference->unionByName) {
+                $columns = array_values(array_diff($reader->columns($source), $tail));
+
+                if (
+                    $columns !== []
+                    && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
+                ) {
+                    throw InferredSchemaException::columnsDiverge(
+                        $source->uri(),
+                        $reader->header()->source ?? '',
+                        $base,
+                        $columns,
+                        $this->inference,
+                    );
+                }
+            }
         }
+    }
+
+    public function inferSchema(SchemaInferenceBuilder $builder): static
+    {
+        $this->inference = $builder->build();
+        $this->derivedSchema = null;
+
+        return $this;
+    }
+
+    public function schema(): Schema
+    {
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
+        if ($this->schema !== null) {
+            return $fileColumns->declare($this->schema);
+        }
+
+        // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+        $derived = $this->derivedSchema;
+
+        if ($derived === null) {
+            $reader = new CSVFileReader(
+                new CSVSourceOpener($this->filesystem, $this->readOptions),
+                iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
+            );
+
+            $derived =
+                $this->derivedSchema = (new SchemaInferrer(
+                    $this->inference,
+                    new StringTypeNarrower($this->inference->candidates()->toArray()),
+                ))->infer($reader->header()->names, $reader->samples($this->inference->sampleSize));
+        }
+
+        return $fileColumns->declare($fileColumns->withoutTail($derived));
     }
 
     public function source(): Path
@@ -183,51 +222,60 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     public function withBOMRemoval(bool $removeBOM): self
     {
-        $this->removeBOM = $removeBOM;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withRemoveBOM($removeBOM);
 
         return $this;
     }
 
+    /**
+     * @param int $charactersReadInLine - bytes read per step from a remote stream (S3, Azure); never splits a line
+     */
     public function withCharactersReadInLine(int $charactersReadInLine): self
     {
         if ($charactersReadInLine < 1) {
             throw new InvalidArgumentException('Characters read in line must be greater than 0');
         }
 
-        $this->charactersReadInLine = $charactersReadInLine;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withCharactersReadInLine($charactersReadInLine);
 
         return $this;
     }
 
     public function withEmptyToNull(bool $emptyToNull): self
     {
-        $this->emptyToNull = $emptyToNull;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withEmptyToNull($emptyToNull);
 
         return $this;
     }
 
     public function withEnclosure(string $enclosure): self
     {
-        $this->enclosure = $enclosure;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withEnclosure($enclosure);
 
         return $this;
     }
 
     public function withEscape(string $escape): self
     {
-        $this->escape = $escape;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withEscape($escape);
 
         return $this;
     }
 
     public function withHeader(bool $withHeader): self
     {
-        $this->withHeader = $withHeader;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withHeader($withHeader);
 
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 
@@ -236,7 +284,8 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     public function withSeparator(string $separator): self
     {
-        $this->separator = $separator;
+        $this->derivedSchema = null;
+        $this->readOptions = $this->readOptions->withSeparator($separator);
 
         return $this;
     }

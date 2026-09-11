@@ -11,10 +11,11 @@ use Psr\Log\Test\TestLogger;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
 
 final class PsrLoggerLoaderTest extends FlowTestCase
 {
@@ -24,7 +25,10 @@ final class PsrLoggerLoaderTest extends FlowTestCase
 
         $loader = new PsrLoggerLoader($logger, 'row log', LogLevel::ERROR);
 
-        $loader->load(rows(row(int_entry('id', 12345), string_entry('name', 'Norbert'))), flow_context(config()));
+        $loader->load(
+            rows(schema(int_schema('id'), string_schema('name')), row(['id' => 12345, 'name' => 'Norbert'])),
+            flow_context(config()),
+        );
 
         static::assertTrue($logger->hasErrorRecords());
         static::assertTrue($logger->hasError('row log'));

@@ -1,1 +1,0 @@
-Read data from databases using Doctrine DBAL. This example demonstrates reading from a single table with pagination. Multiple extraction strategies are available including limit/offset pagination, query builders, and parameterized queries.

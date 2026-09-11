@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -25,8 +26,8 @@ final class TruncateTest extends FlowTestCase
                 ['text' => '', 'length' => 5],
                 ['text' => null, 'length' => 5],
             ]))
-            ->withEntry('truncated', ref('text')->truncate(ref('length')))
-            ->withEntry('truncated_custom', ref('text')->truncate(ref('length'), '>>'))
+            ->withEntry('truncated', optional(ref('text')->truncate(ref('length'))))
+            ->withEntry('truncated_custom', optional(ref('text')->truncate(ref('length'), '>>')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

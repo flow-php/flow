@@ -12,18 +12,51 @@ use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
 use function class_exists;
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_xml_element;
 
-final class DOMElementPreviousSibling extends ScalarFunctionChain
+final class DOMElementPreviousSibling implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DOMNode|CharacterData|HTMLElement $element,
-        private readonly bool $allowOnlyElement,
-    ) {}
+    use ScalarFunctionChain;
 
-    public function eval(Row $row, FlowContext $context): DOMNode|CharacterData|HTMLElement|null
+    private readonly ScalarFunction $element;
+
+    public function __construct(ScalarFunction|DOMNode|CharacterData|HTMLElement $element)
+    {
+        $this->element = $element instanceof ScalarFunction ? $element : lit($element);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->element];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_xml_element());
+    }
+
+    public function eval(Row $row, FlowContext $context): ?DOMElement
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -40,32 +73,15 @@ final class DOMElementPreviousSibling extends ScalarFunctionChain
             $node = $node->documentElement;
         }
 
-        if ($this->allowOnlyElement) {
-            if (!$node instanceof DOMElement) {
-                return $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException(
-                            'DOMElementPreviousSibling with option $allowOnlyElement requires DOMElement.',
-                        ),
-                    );
-            }
-
-            // @mago-ignore analysis:impossible-condition
-            if ($node instanceof CharacterData) {
-                return $context
-                    ->functions()
-                    ->invalidResult(
-                        new InvalidArgumentException(
-                            'DOMElementPreviousSibling with option $allowOnlyElement requires HTMLElement.',
-                        ),
-                    );
-            }
-
-            return $node->previousElementSibling;
+        if (!$node instanceof DOMElement) {
+            throw new InvalidArgumentException('DOMElementPreviousSibling requires DOMElement.');
         }
 
-        // @mago-ignore analysis:less-specific-return-statement,possibly-null-property-access
-        return $node->previousSibling;
+        // @mago-ignore analysis:impossible-condition
+        if ($node instanceof CharacterData) {
+            throw new InvalidArgumentException('DOMElementPreviousSibling requires HTMLElement.');
+        }
+
+        return $node->previousElementSibling;
     }
 }

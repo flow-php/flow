@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Loader;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
+use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
+use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
@@ -24,12 +26,14 @@ use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ignore_error_handler;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\skip_rows_handler;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_branch;
 
@@ -42,8 +46,8 @@ final class BranchingLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $loader = to_branch(lit(true), $spy)->withTransformation(add_row_index('n', StartFrom::ONE));
 
-        $loader->load(rows(row(int_entry('id', 1))), $first);
-        $loader->load(rows(row(int_entry('id', 2))), $second);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $first);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $second);
 
         static::assertSame(
             [[['id' => 1, 'n' => 1]], [['id' => 2, 'n' => 1]]],
@@ -56,7 +60,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy, $sortById);
 
         foreach (RowsMother::descendingIdBatches() as $batch) {
@@ -78,7 +82,7 @@ final class BranchingLoaderTest extends FlowTestCase
             static fn(DataFrame $df): DataFrame => $df->collect(),
         ));
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
 
         static::assertSame(0, $sink->loadsCount);
 
@@ -95,7 +99,7 @@ final class BranchingLoaderTest extends FlowTestCase
         static::assertSame(1, $sink->loadsCount);
 
         // The throwing closure() must still have reset the stream - the next round on the same context starts fresh.
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
 
         $thrown = null;
 
@@ -121,7 +125,7 @@ final class BranchingLoaderTest extends FlowTestCase
             $thrown = null;
 
             try {
-                $loader->load(rows(row(int_entry('id', $id))), $context);
+                $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
             } catch (RuntimeException $e) {
                 $thrown = $e;
             }
@@ -138,8 +142,8 @@ final class BranchingLoaderTest extends FlowTestCase
         $context = flow_context(config());
         $loader = to_branch(lit(false), $spy)->withTransformation(select('id'));
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
         $loader->closure($context);
 
         static::assertSame(0, $spy->loadsCount);
@@ -152,8 +156,8 @@ final class BranchingLoaderTest extends FlowTestCase
         $sink = new ThrowingLoader(new LimitReachedException(1));
         $loader = to_branch(lit(true), $sink)->withTransformation(select('id'));
 
-        $loader->load(rows(row(int_entry('id', 1))), $telemetry->flowContext);
-        $loader->load(rows(row(int_entry('id', 2))), $telemetry->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $telemetry->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $telemetry->flowContext);
 
         static::assertCount(1, $telemetry->logs->entriesContaining('Limit reached'));
         static::assertEmpty($telemetry->logs->entriesContaining('Loading failed'));
@@ -166,8 +170,8 @@ final class BranchingLoaderTest extends FlowTestCase
         $sink = new ThrowingLoader(new LimitReachedException(1));
         $loader = to_branch(lit(true), $sink)->withTransformation(select('id'));
 
-        $loader->load(rows(row(int_entry('id', 1))), $first->flowContext);
-        $loader->load(rows(row(int_entry('id', 2))), $second->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $first->flowContext);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $second->flowContext);
 
         static::assertCount(1, $first->logs->entriesContaining('Limit reached'));
         static::assertCount(1, $second->logs->entriesContaining('Limit reached'));
@@ -198,7 +202,7 @@ final class BranchingLoaderTest extends FlowTestCase
         ));
 
         foreach ([1, 2, 3, 4] as $id) {
-            $loader->load(rows(row(int_entry('id', $id))), $context);
+            $loader->load(rows(schema(int_schema('id')), row(['id' => $id])), $context);
         }
 
         $loader->closure($context);
@@ -211,7 +215,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy)->withTransformation($sortById);
 
         foreach (RowsMother::descendingIdBatches() as $batch) {
@@ -234,7 +238,7 @@ final class BranchingLoaderTest extends FlowTestCase
         $loader = to_branch(lit(true), new SpyLoader())->withTransformation($trigger);
 
         try {
-            $loader->load(rows(row(int_entry('id', 1))), flow_context(config()));
+            $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()));
 
             static::fail('Expected a Transformation triggering the nested frame to be refused.');
         } catch (InvalidLogicException $e) {
@@ -248,7 +252,7 @@ final class BranchingLoaderTest extends FlowTestCase
         $context = flow_context(config());
         $loader = to_branch(lit(true), $spy);
         $batches = RowsMother::descendingIdBatches();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
 
         $loader->load($batches[0], $context);
         $loader->withTransformation($sortById);
@@ -264,16 +268,55 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config())->setErrorHandler(ignore_error_handler());
-        $throwOnDrain = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->map(
-            static fn(Row $row): Row => throw new RuntimeException('boom'),
-        ));
+        $throwOnDrain =
+            new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+                new RuntimeException('boom'),
+            )));
         $loader = to_branch(lit(true), $spy)->withTransformation($throwOnDrain);
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
         $loader->closure($context);
 
         static::assertSame(0, $spy->loadsCount);
         static::assertSame(1, $spy->closureCount);
+    }
+
+    public function test_closure_reports_a_drain_failure_as_a_loading_error(): void
+    {
+        $handler = new RecordingErrorHandler();
+        $context = flow_context(config())->setErrorHandler($handler);
+        $loader = to_branch(
+            lit(true),
+            new SpyLoader(),
+        )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+            new RuntimeException('boom'),
+        ))));
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->closure($context);
+
+        static::assertCount(1, $handler->errors);
+        static::assertInstanceOf(LoadingError::class, $handler->errors[0]);
+        static::assertSame($loader, $handler->errors[0]->loader);
+        static::assertSame('boom', $handler->errors[0]->cause->getMessage());
+    }
+
+    public function test_closure_rethrows_a_drain_failure_under_skip_rows(): void
+    {
+        $context = flow_context(config())->setErrorHandler(skip_rows_handler());
+        $loader = to_branch(
+            lit(true),
+            new SpyLoader(),
+        )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->collect()->with(new ThrowingTransformer(
+            new RuntimeException('boom'),
+        ))));
+
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('boom');
+
+        $loader->closure($context);
     }
 
     public function test_closure_for_a_new_run_does_not_drain_a_dead_runs_drive(): void
@@ -286,7 +329,7 @@ final class BranchingLoaderTest extends FlowTestCase
         ));
 
         // Run 1 buffers a batch in the stream and dies without closure(); run 2 routes no batches to this loader.
-        $loader->load(rows(row(int_entry('id', 1))), $dead);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $dead);
         $loader->closure($next);
 
         static::assertSame(0, $spy->loadsCount);
@@ -310,10 +353,10 @@ final class BranchingLoaderTest extends FlowTestCase
         $context = flow_context(config());
         $loader = to_branch(lit(true), $spy)->withTransformation(add_row_index('n', StartFrom::ONE));
 
-        $loader->load(rows(row(int_entry('id', 1))), $context);
-        $loader->load(rows(row(int_entry('id', 2))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 2])), $context);
         $loader->closure($context);
-        $loader->load(rows(row(int_entry('id', 3))), $context);
+        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
 
         static::assertSame(
             [[['id' => 1, 'n' => 1]], [['id' => 2, 'n' => 2]], [['id' => 3, 'n' => 1]]],
@@ -325,7 +368,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $telemetry = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
         $loader = to_branch(lit(true), new ThrowingLoader(new LimitReachedException(1)));
-        $batch = rows(row(int_entry('id', 1)));
+        $batch = rows(schema(int_schema('id')), row(['id' => 1]));
 
         $loader->load($batch, $telemetry->flowContext);
         $loader->load($batch, $telemetry->flowContext);
@@ -355,7 +398,7 @@ final class BranchingLoaderTest extends FlowTestCase
         $spy = new SpyLoader();
         $context = flow_context(config());
         $batches = RowsMother::descendingIdBatches();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy)->withTransformation($sortById);
 
         $loader->load($batches[0], $context);
@@ -440,7 +483,7 @@ final class BranchingLoaderTest extends FlowTestCase
     {
         $spy = new SpyLoader();
         $context = flow_context(config());
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
         $loader = to_branch(lit(true), $spy, $sortById)->withTransformation(select('id'));
 
         foreach (RowsMother::descendingIdBatches() as $batch) {

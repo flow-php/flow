@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Formatter;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Formatter\AsciiTableFormatter;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
@@ -12,14 +14,15 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
 use function array_merge;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\rename_replace;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function implode;
+use function json_encode;
 use function ksort;
 use function str_repeat;
+
+use const JSON_THROW_ON_ERROR;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
@@ -31,28 +34,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
     public function format(Schema $schema): string
     {
         if ($this->asTable) {
-            ob_start();
-            $df = df()
-                ->read(from_array($schema->normalize()))
-                ->withEntry('type', ref('type')->unpack())
-                ->renameEach(rename_replace('type.', ''))
-                ->rename('ref', 'name')
-                ->collect()
-                ->select('name', 'type', 'nullable', 'metadata');
-
-            if (!$this->withMetadata) {
-                $df->drop('metadata');
-            }
-
-            $df->write(to_output(false))->run();
-
-            $content = ob_get_clean();
-
-            if ($content === false) {
-                throw new RuntimeException('Failed to get output buffer content');
-            }
-
-            return $content;
+            return (new AsciiTableFormatter())->format($this->table($schema), false);
         }
 
         /** @var array<string, string> $buffer */
@@ -68,6 +50,34 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
         $output .= implode("\n", $buffer);
 
         return $output . "\n";
+    }
+
+    private function table(Schema $schema): Rows
+    {
+        $rows = [];
+
+        foreach ($schema->definitions() as $definition) {
+            $values = [
+                'name' => $definition->entry()->name(),
+                'type' => $definition->type()->normalize()['type'],
+                'nullable' => $definition->isNullable(),
+            ];
+
+            if ($this->withMetadata) {
+                // a json column holds a Json value, not a raw array, and the table only prints it
+                $values['metadata'] = json_encode($definition->metadata()->normalize(), JSON_THROW_ON_ERROR);
+            }
+
+            $rows[] = new Row($values);
+        }
+
+        $columns = [str_schema('name'), str_schema('type'), bool_schema('nullable')];
+
+        if ($this->withMetadata) {
+            $columns[] = str_schema('metadata');
+        }
+
+        return new Rows(schema(...$columns), ...$rows);
     }
 
     /**
@@ -90,12 +100,13 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $fields = [];
 
-            foreach ($structureType->elements() as $name => $type) {
-                $fields += $this->formatStructureElement($name, $type, $fields, 1);
-            }
-
-            foreach ($structureType->optionalElements() as $name => $type) {
-                $fields += $this->formatStructureElement($name . '?', $type, $fields, 1);
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    1,
+                );
             }
 
             $buffer = array_merge($buffer, $fields);
@@ -132,12 +143,13 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $fields = [];
 
-            foreach ($structureType->elements() as $nextName => $nextType) {
-                $fields += $this->formatStructureElement($nextName, $nextType, $fields, $level + 1);
-            }
-
-            foreach ($structureType->optionalElements() as $nextName => $nextType) {
-                $fields += $this->formatStructureElement($nextName . '?', $nextType, $fields, $level + 1);
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    $level + 1,
+                );
             }
 
             $buffer = array_merge($buffer, $fields);

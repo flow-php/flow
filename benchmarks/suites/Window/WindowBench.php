@@ -4,44 +4,72 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Window;
 
+use Flow\Benchmarks\BenchmarkRows;
+use Flow\Benchmarks\Datasets\Datasets;
+use Flow\Benchmarks\Partitioning\PartitionCardinality;
 use Generator;
 use PhpBench\Attributes as Bench;
 
+#[Bench\BeforeMethods('warm')]
 final class WindowBench
 {
-    #[Bench\ParamProviders('rows')]
+    public function warm(array $params): void
+    {
+        Datasets::orders((int) $params['rows'])->floe();
+    }
+
+    #[Bench\ParamProviders(['rows', 'cardinalities'])]
     #[Bench\Groups(['window'])]
     public function bench_moving_average(array $params): void
     {
-        (new MovingAverageScenario((int) $params['rows']))->run();
+        (new MovingAverageScenario(
+            (int) $params['rows'],
+            PartitionCardinality::from((string) $params['cardinality']),
+        ))->run();
     }
 
-    #[Bench\ParamProviders('rows')]
+    #[Bench\ParamProviders(['rows', 'cardinalities'])]
     #[Bench\Groups(['window'])]
     public function bench_rank(array $params): void
     {
-        (new RankScenario((int) $params['rows']))->run();
+        (new RankScenario((int) $params['rows'], PartitionCardinality::from((string) $params['cardinality'])))->run();
     }
 
-    #[Bench\ParamProviders('rows')]
+    #[Bench\ParamProviders(['rows', 'cardinalities'])]
     #[Bench\Groups(['window'])]
     public function bench_row_number(array $params): void
     {
-        (new RowNumberScenario((int) $params['rows']))->run();
+        (new RowNumberScenario(
+            (int) $params['rows'],
+            PartitionCardinality::from((string) $params['cardinality']),
+        ))->run();
     }
 
-    #[Bench\ParamProviders('rows')]
+    #[Bench\ParamProviders(['rows', 'cardinalities'])]
     #[Bench\Groups(['window'])]
     public function bench_running_total(array $params): void
     {
-        (new RunningTotalScenario((int) $params['rows']))->run();
+        (new RunningTotalScenario(
+            (int) $params['rows'],
+            PartitionCardinality::from((string) $params['cardinality']),
+        ))->run();
     }
 
-    #[Bench\ParamProviders('rows')]
+    #[Bench\ParamProviders(['rows', 'cardinalities'])]
     #[Bench\Groups(['window'])]
     public function bench_whole_partition(array $params): void
     {
-        (new WholePartitionScenario((int) $params['rows']))->run();
+        (new WholePartitionScenario(
+            (int) $params['rows'],
+            PartitionCardinality::from((string) $params['cardinality']),
+        ))->run();
+    }
+
+    public function cardinalities(): Generator
+    {
+        foreach (PartitionCardinality::cases() as $cardinality) {
+            yield $cardinality->value => ['cardinality' => $cardinality->value];
+        }
     }
 
     /**
@@ -51,7 +79,7 @@ final class WindowBench
      */
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_WINDOW_ROWS') ?: 10_000);
+        $rows = BenchmarkRows::windowCount();
 
         yield number_format($rows) => ['rows' => $rows];
     }

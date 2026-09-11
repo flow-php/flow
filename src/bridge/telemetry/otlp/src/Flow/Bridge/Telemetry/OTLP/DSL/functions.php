@@ -14,9 +14,9 @@ use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\ErrorHandler\ErrorHandler;
@@ -161,7 +161,7 @@ function otlp_async_curl_transport(
     AsyncCurlTransportOptions $options = new AsyncCurlTransportOptions(),
     ?Transport $failover = null,
     ErrorHandler $error_handler = new ErrorLogHandler(),
-): Transport {
+): AsyncCurlTransport {
     return new AsyncCurlTransport($endpoint, $serializer, $options, $failover, $error_handler);
 }
 

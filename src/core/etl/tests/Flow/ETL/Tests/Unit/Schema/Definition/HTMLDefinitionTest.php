@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\HTMLDefinition;
@@ -16,12 +15,9 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
-use function Flow\ETL\DSL\html_entry;
 use function Flow\ETL\DSL\html_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_integer;
@@ -93,27 +89,15 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('col');
 
-        static::assertFalse($def->matches(html_entry('col', null)));
+        static::assertFalse($def->matches(null));
     }
 
     #[RequiresPhp('>= 8.4.0')]
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = html_schema('content');
-
-        static::assertFalse($def->matches(html_entry('other', '<html><body></body></html>')));
-    }
-
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = html_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(HTMLEntry::class, html_schema('content')->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     /**
@@ -173,7 +157,7 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('content');
 
-        static::assertTrue($def->matches(html_entry('content', '<html><body></body></html>')));
+        static::assertTrue($def->matches(type_html()->cast('<!DOCTYPE html><html><head></head><body></body></html>')));
     }
 
     /**
@@ -236,21 +220,14 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = html_schema('col', true);
 
-        static::assertTrue($def->matches(html_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = html_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -258,7 +235,7 @@ final class HTMLDefinitionTest extends FlowTestCase
     {
         $def = html_schema('col', true);
 
-        static::assertTrue($def->matches(html_entry('col', '<html><body></body></html>')));
+        static::assertTrue($def->matches(type_html()->cast('<!DOCTYPE html><html><head></head><body></body></html>')));
     }
 
     public function test_rename(): void
@@ -291,7 +268,7 @@ final class HTMLDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = html_schema('col')->merge(union_schema('col', type_union(type_html(), type_boolean())));
+        $merged = html_schema('col')->merge(new UnionDefinition('col', type_union(type_html(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|html', $merged->type()->toString());
@@ -302,7 +279,7 @@ final class HTMLDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             html_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

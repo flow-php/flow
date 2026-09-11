@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\EnumDefinition;
@@ -20,13 +19,9 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use UnitEnum;
 
-use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_integer;
@@ -98,40 +93,28 @@ final class EnumDefinitionTest extends FlowTestCase
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        static::assertFalse($def->matches(enum_entry('col', null)));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_a_string_entry_holding_the_enum_class_name(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        static::assertFalse($def->matches(str_entry('col', BackedStringEnum::class)));
+        static::assertFalse($def->matches(BackedStringEnum::class));
     }
 
     public function test_does_not_match_an_entry_holding_a_different_enum(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        static::assertFalse($def->matches(enum_entry('col', BackedIntEnum::one)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = enum_schema('status', BackedStringEnum::class);
-
-        static::assertFalse($def->matches(enum_entry('other', BackedStringEnum::one)));
+        static::assertFalse($def->matches(BackedIntEnum::one));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(EnumEntry::class, enum_schema('status', BackedStringEnum::class)->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     public function test_enum_class_accessor(): void
@@ -197,14 +180,14 @@ final class EnumDefinitionTest extends FlowTestCase
     {
         $def = enum_schema('col', UnitEnum::class);
 
-        static::assertTrue($def->matches(enum_entry('col', BackedStringEnum::one)));
+        static::assertTrue($def->matches(BackedStringEnum::one));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_enum(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        static::assertFalse($def->matches(enum_entry('col', BackedIntEnum::one)));
+        static::assertFalse($def->matches(BackedIntEnum::one));
         static::assertFalse($def->isCompatible(enum_schema('col', BackedIntEnum::class)));
     }
 
@@ -212,7 +195,7 @@ final class EnumDefinitionTest extends FlowTestCase
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
-        static::assertTrue($def->matches(enum_entry('status', BackedStringEnum::one)));
+        static::assertTrue($def->matches(BackedStringEnum::one));
     }
 
     /**
@@ -308,28 +291,21 @@ final class EnumDefinitionTest extends FlowTestCase
     {
         $def = enum_schema('col', BackedStringEnum::class, true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = enum_schema('col', BackedStringEnum::class, true);
 
-        static::assertTrue($def->matches(enum_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = enum_schema('col', BackedStringEnum::class, true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = enum_schema('col', BackedStringEnum::class, true);
 
-        static::assertTrue($def->matches(enum_entry('col', BackedStringEnum::one)));
+        static::assertTrue($def->matches(BackedStringEnum::one));
     }
 
     public function test_rename(): void
@@ -370,10 +346,9 @@ final class EnumDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = enum_schema('col', BackedStringEnum::class)->merge(union_schema('col', type_union(
-            type_enum(BackedStringEnum::class),
-            type_boolean(),
-        )));
+        $merged = enum_schema('col', BackedStringEnum::class)->merge(
+            new UnionDefinition('col', type_union(type_enum(BackedStringEnum::class), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|enum<Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum>', $merged->type()->toString());
@@ -384,7 +359,7 @@ final class EnumDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             enum_schema('col', BackedStringEnum::class)
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

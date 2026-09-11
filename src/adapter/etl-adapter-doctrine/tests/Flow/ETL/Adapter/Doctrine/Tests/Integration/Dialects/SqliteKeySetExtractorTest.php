@@ -79,14 +79,14 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
 
         static::assertSame(
             [
-                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
-                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
-                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
-                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
-                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
-                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
-                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
-                ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
+                ['id' => '1', 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => '2', 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => '3', 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => '4', 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => '5', 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => '6', 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => '7', 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => '8', 'name' => 'name_8', 'description' => 'description_8'],
             ],
             $data->toArray(),
         );
@@ -133,7 +133,7 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -177,7 +177,7 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -221,7 +221,7 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withPageSize(1),
+                    ->withBatchSize(1),
             )
             ->fetch()
             ->toArray();
@@ -257,18 +257,18 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                 $this->sqliteDatabaseContext->connection(),
                 $this->sqliteDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
                 pagination_key_set(pagination_key_asc('created_at'), pagination_key_asc('id')),
-            )->withPageSize(2))
+            )->withBatchSize(2))
             ->fetch()
             ->toArray();
 
         static::assertCount(5, $rows);
         static::assertSame(
             [
-                ['id' => 1, 'created_at' => $createdAt, 'name' => 'name_1'],
-                ['id' => 2, 'created_at' => $createdAt, 'name' => 'name_2'],
-                ['id' => 3, 'created_at' => $createdAt, 'name' => 'name_3'],
-                ['id' => 4, 'created_at' => $createdAt, 'name' => 'name_4'],
-                ['id' => 5, 'created_at' => $createdAt, 'name' => 'name_5'],
+                ['id' => '1', 'created_at' => $createdAt, 'name' => 'name_1'],
+                ['id' => '2', 'created_at' => $createdAt, 'name' => 'name_2'],
+                ['id' => '3', 'created_at' => $createdAt, 'name' => 'name_3'],
+                ['id' => '4', 'created_at' => $createdAt, 'name' => 'name_4'],
+                ['id' => '5', 'created_at' => $createdAt, 'name' => 'name_5'],
             ],
             $rows,
         );
@@ -321,7 +321,7 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                     pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
                 )
                     ->withSchema(schema(int_schema('id')))
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(5),
             )
             ->fetch()
@@ -387,7 +387,7 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
                 )
                     ->withKeyAliasSuffix('_something_custom')
                     ->withSchema(schema(int_schema('id')))
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(5),
             )
             ->fetch()

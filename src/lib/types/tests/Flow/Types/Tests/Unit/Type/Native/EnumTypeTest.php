@@ -57,6 +57,12 @@ final class EnumTypeTest extends TestCase
             'class' => ColorsEnum::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
+
+        yield 'invalid class-string of the enum itself' => [
+            'value' => SomeEnum::class,
+            'class' => SomeEnum::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
     public static function cast_data_provider(): Generator
@@ -85,6 +91,13 @@ final class EnumTypeTest extends TestCase
         yield 'invalid string to enum' => [
             'value' => 'not_a_color',
             'class' => ColorsEnum::class,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'invalid class-string of the enum itself' => [
+            'value' => SomeEnum::class,
+            'class' => SomeEnum::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
@@ -119,6 +132,12 @@ final class EnumTypeTest extends TestCase
         yield 'invalid integer value' => [
             'value' => 123,
             'class' => ColorsEnum::class,
+            'expected' => false,
+        ];
+
+        yield 'invalid class-string of the enum itself' => [
+            'value' => SomeEnum::class,
+            'class' => SomeEnum::class,
             'expected' => false,
         ];
     }

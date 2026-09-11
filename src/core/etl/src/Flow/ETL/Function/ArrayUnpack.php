@@ -8,56 +8,77 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
+use Flow\ETL\Schema;
+use Flow\Types\Type;
 
-use function in_array;
+use function count;
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_structure;
 
-final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
+final class ArrayUnpack implements ScalarFunction, UnpackResults
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $array;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $array
-     * @param array<array-key, mixed>|ScalarFunction $skipKeys
-     * @param null|ScalarFunction|string $entryPrefix
      */
     public function __construct(
-        private readonly ScalarFunction|array $array,
-        private readonly ScalarFunction|array $skipKeys = [],
-        private readonly ScalarFunction|string|null $entryPrefix = null,
-    ) {}
+        ScalarFunction|array $array,
+        private readonly Schema $schema,
+    ) {
+        if (!count($schema)) {
+            throw new InvalidArgumentException('array_unpack() requires at least one declared column');
+        }
+
+        $this->array = $array instanceof ScalarFunction ? $array : lit($array);
+    }
 
     /**
-     * @return array<string, mixed>
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->array];
+    }
+
+    /**
+     * @return array<array-key, mixed>
      */
     public function eval(Row $row, FlowContext $context): array
     {
-        $array = (new Parameter($this->array))->asArray($row, $context);
-        $skipKeys = (new Parameter($this->skipKeys))->asArray($row, $context);
-        $entryPrefix = (new Parameter($this->entryPrefix))->asString($row, $context);
+        return (
+            (new Parameter($this->array))->asArray($row, $context) ?? throw new InvalidArgumentException(
+                'array_unpack() requires a non-null array',
+            )
+        );
+    }
 
-        if ($array === null || $skipKeys === null) {
-            $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ArrayUnpack requires non-null array and skipKeys'));
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        $elements = [];
 
-            return [];
+        // every declared column is nullable - a payload that omits a key still has to produce it
+        foreach ($this->schema->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $elements[$name] = structure_element($name, type_optional($definition->type()));
         }
 
-        $values = [];
+        return type_structure($elements);
+    }
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($array as $key => $value) {
-            $entryName = (string) $key;
-
-            if (in_array($entryName, $skipKeys, true)) {
-                continue;
-            }
-
-            if ($entryPrefix && $entryName) {
-                $entryName = $entryPrefix . $entryName;
-            }
-
-            $values[$entryName] = $value;
-        }
-
-        return $values;
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $this->schema);
     }
 }

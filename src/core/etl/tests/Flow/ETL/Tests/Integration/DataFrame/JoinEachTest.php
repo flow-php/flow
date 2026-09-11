@@ -14,11 +14,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class JoinEachTest extends FlowTestCase
 {
@@ -29,14 +30,15 @@ final class JoinEachTest extends FlowTestCase
 
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country', 'PL')),
-                row(int_entry('id', 2), str_entry('country', 'PL')),
-                row(int_entry('id', 3), str_entry('country', 'PL')),
-                row(int_entry('id', 4), str_entry('country', 'PL')),
-                row(int_entry('id', 5), str_entry('country', 'US')),
-                row(int_entry('id', 6), str_entry('country', 'US')),
-                row(int_entry('id', 7), str_entry('country', 'US')),
-                row(int_entry('id', 9), str_entry('country', 'US')),
+                schema(int_schema('id'), str_schema('country')),
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 2, 'country' => 'PL']),
+                row(['id' => 3, 'country' => 'PL']),
+                row(['id' => 4, 'country' => 'PL']),
+                row(['id' => 5, 'country' => 'US']),
+                row(['id' => 6, 'country' => 'US']),
+                row(['id' => 7, 'country' => 'US']),
+                row(['id' => 9, 'country' => 'US']),
             )))
             ->batchSize(4)
             ->joinEach(
@@ -44,8 +46,9 @@ final class JoinEachTest extends FlowTestCase
                     public function from(Rows $rows): DataFrame
                     {
                         return data_frame()->process(rows(
-                            row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                            row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                            schema(str_schema('code'), str_schema('name')),
+                            row(['code' => 'PL', 'name' => 'Poland']),
+                            row(['code' => 'US', 'name' => 'United States']),
                         ));
                     }
                 },
@@ -76,14 +79,15 @@ final class JoinEachTest extends FlowTestCase
 
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), str_entry('country_code', 'PL')),
-                row(int_entry('id', 2), str_entry('country_code', 'PL')),
-                row(int_entry('id', 3), str_entry('country_code', 'PL')),
-                row(int_entry('id', 4), str_entry('country_code', 'PL')),
-                row(int_entry('id', 5), str_entry('country_code', 'US')),
-                row(int_entry('id', 6), str_entry('country_code', 'US')),
-                row(int_entry('id', 7), str_entry('country_code', 'US')),
-                row(int_entry('id', 9), str_entry('country_code', 'US')),
+                schema(int_schema('id'), str_schema('country_code')),
+                row(['id' => 1, 'country_code' => 'PL']),
+                row(['id' => 2, 'country_code' => 'PL']),
+                row(['id' => 3, 'country_code' => 'PL']),
+                row(['id' => 4, 'country_code' => 'PL']),
+                row(['id' => 5, 'country_code' => 'US']),
+                row(['id' => 6, 'country_code' => 'US']),
+                row(['id' => 7, 'country_code' => 'US']),
+                row(['id' => 9, 'country_code' => 'US']),
             )))
             ->batchSize(4)
             ->joinEach(
@@ -91,8 +95,9 @@ final class JoinEachTest extends FlowTestCase
                     public function from(Rows $rows): DataFrame
                     {
                         return data_frame()->process(rows(
-                            row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
-                            row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
+                            schema(str_schema('country_code'), str_schema('name')),
+                            row(['country_code' => 'PL', 'name' => 'Poland']),
+                            row(['country_code' => 'US', 'name' => 'United States']),
                         ));
                     }
                 },

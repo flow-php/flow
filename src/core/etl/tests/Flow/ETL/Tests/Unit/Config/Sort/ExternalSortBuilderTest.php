@@ -11,14 +11,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 
 use function Flow\ETL\DSL\external_sort;
-use function Flow\Filesystem\DSL\fstab;
-use function Flow\Filesystem\DSL\native_local_filesystem;
 
 final class ExternalSortBuilderTest extends FlowTestCase
 {
     public function test_bucketing_options_are_set(): void
     {
-        $config = external_sort()->bucketsCount(10)->batchSize(250)->build(fstab(), Path::realpath(__DIR__));
+        $config = external_sort()->bucketsCount(10)->batchSize(250)->build(Path::realpath(__DIR__));
 
         static::assertSame(10, $config->bucketing->bucketsCount);
         static::assertSame(250, $config->bucketing->batchSize);
@@ -26,7 +24,7 @@ final class ExternalSortBuilderTest extends FlowTestCase
 
     public function test_default_builds_a_filesystem_buckets_storage(): void
     {
-        $config = external_sort()->build(fstab(), Path::realpath(__DIR__));
+        $config = external_sort()->build(Path::realpath(__DIR__));
 
         static::assertInstanceOf(FilesystemBuckets::class, $config->bucketing->storage);
         static::assertSame(100, $config->bucketing->bucketsCount);
@@ -34,14 +32,16 @@ final class ExternalSortBuilderTest extends FlowTestCase
         static::assertSame(10_000, $config->runSize);
     }
 
-    public function test_filesystem_protocol_is_used_for_the_default_storage(): void
+    public function test_merge_storage_defaults_to_null_so_the_spill_storage_is_reused(): void
     {
-        // the fstab has no 'file' mount, a successful build proves the custom protocol was used
-        $config = external_sort()
-            ->filesystemProtocol('custom-sort')
-            ->build(fstab(native_local_filesystem('custom-sort')), Path::realpath(__DIR__));
+        static::assertNull(external_sort()->storage(new MemoryBuckets())->build(Path::realpath(__DIR__))->merge);
+    }
 
-        static::assertInstanceOf(FilesystemBuckets::class, $config->bucketing->storage);
+    public function test_merge_storage_is_carried_into_the_config(): void
+    {
+        $merge = new MemoryBuckets();
+
+        static::assertSame($merge, external_sort()->mergeStorage($merge)->build(Path::realpath(__DIR__))->merge);
     }
 
     public function test_injected_storage_wins_over_the_default(): void
@@ -50,7 +50,7 @@ final class ExternalSortBuilderTest extends FlowTestCase
 
         static::assertSame(
             $storage,
-            external_sort()->storage($storage)->build(fstab(), Path::realpath(__DIR__))->bucketing->storage,
+            external_sort()->storage($storage)->build(Path::realpath(__DIR__))->bucketing->storage,
         );
     }
 
@@ -65,6 +65,6 @@ final class ExternalSortBuilderTest extends FlowTestCase
 
     public function test_run_size_is_set(): void
     {
-        static::assertSame(500, external_sort()->runSize(500)->build(fstab(), Path::realpath(__DIR__))->runSize);
+        static::assertSame(500, external_sort()->runSize(500)->build(Path::realpath(__DIR__))->runSize);
     }
 }

@@ -19,30 +19,20 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
 use function array_map;
-use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
-use function mkdir;
 use function range;
-use function unlink;
 
 class WriterTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[DataProvider('engine_provider')]
     public function test_closing_not_open_writer(ParquetEngine $engine): void
     {
@@ -58,7 +48,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = Writer::php();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -77,7 +67,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
 
@@ -143,7 +133,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ],
         ];
 
-        $path = __DIR__ . '/var/all-types-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         (new Writer(engine: $engine))->write($path, $schema, $rows);
 
@@ -155,8 +145,6 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->values(),
             ),
         );
-
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -175,7 +163,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(options: Options::default()->set(Option::WRITER_VERSION, 1), engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -195,7 +183,6 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(0, $statistics->nullCount());
 
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -213,7 +200,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ['all_null' => null, 'all_string' => 'c', 'mixed' => 'z'],
         ];
 
-        $path = __DIR__ . '/var/test-writer-parquet-null-stats-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         (new Writer(engine: $engine))->write($path, $schema, $rows);
 
@@ -229,8 +216,6 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(3, $chunks['all_null']->statistics()?->nullCount());
         static::assertSame(0, $chunks['all_string']->statistics()?->nullCount());
         static::assertSame(1, $chunks['mixed']->statistics()?->nullCount());
-
-        unlink($path);
     }
 
     public function test_writing_data_page_v2_statistics(): void
@@ -238,7 +223,7 @@ class WriterTest extends ParquetIntegrationTestCase
         $options = Options::default()->set(Option::WRITER_VERSION, 2);
         $writer = Writer::php(options: $options);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -259,8 +244,6 @@ class WriterTest extends ParquetIntegrationTestCase
             static::assertNull($statistics->distinctCount());
             static::assertSame(0, $statistics->nullCount());
         }
-
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -268,7 +251,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
 
@@ -292,7 +275,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -300,7 +282,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
 
@@ -323,7 +305,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -331,7 +312,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
 
@@ -356,7 +337,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -366,7 +346,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $schema = Schema::with($column = FlatColumn::int32('id'));
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer->write($path, $schema, [
             [
@@ -400,7 +380,6 @@ class WriterTest extends ParquetIntegrationTestCase
         );
 
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -419,7 +398,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -435,7 +414,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -443,7 +421,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(options: Options::default()->set(Option::WRITER_VERSION, 2), engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -466,7 +444,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -474,7 +451,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -503,7 +480,6 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -518,7 +494,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ['a' => null, 'b' => null, 'c' => null],
         ];
 
-        $path = __DIR__ . '/var/nullable-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         (new Writer(engine: $engine))->write($path, $schema, $rows);
 
@@ -530,8 +506,6 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->values(),
             ),
         );
-
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -545,7 +519,7 @@ class WriterTest extends ParquetIntegrationTestCase
             $rows[] = ['id' => $i, 'category' => 'cat_' . ($i % 5)];
         }
 
-        $path = __DIR__ . '/var/dict-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         (new Writer(engine: $engine))->write($path, $schema, $rows);
 
@@ -557,8 +531,6 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->values(),
             ),
         );
-
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -577,7 +549,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ['id' => 4, 'items' => null, 'props' => null],
         ];
 
-        $path = __DIR__ . '/var/empty-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         (new Writer(engine: $engine))->write($path, $schema, $rows);
 
@@ -589,8 +561,6 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->values(),
             ),
         );
-
-        unlink($path);
     }
 
     /**

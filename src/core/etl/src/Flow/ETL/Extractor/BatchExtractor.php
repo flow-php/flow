@@ -7,60 +7,82 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
-final readonly class BatchExtractor implements Extractor, OverridingExtractor
+use function count;
+
+final class BatchExtractor implements BatchableExtractor, Extractor, OverridingExtractor, RewindableExtractor
 {
-    /**
-     * @param int<1, max> $chunkSize
-     */
+    use Batches;
+
+    private ?Schema $schema = null;
+
     public function __construct(
         private Extractor $extractor,
-        private int $chunkSize,
-    ) {}
+        int $batchSize,
+    ) {
+        $this->withBatchSize($batchSize);
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
-        $chunk = new Rows();
-        $chunkSize = 0;
+        // pinned from the declaration or the first child batch, then every later batch is matched to
+        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
+        $schema = $this->schema;
+
+        $buffer = [];
 
         foreach ($this->extractor->extract($context) as $rows) {
+            $schema ??= $rows->schema();
+            $rows = $rows->matchTo($schema);
+
             foreach ($rows->all() as $row) {
-                $chunk = $chunk->add($row);
-                $chunkSize++;
+                $buffer[] = $row;
 
-                if ($chunkSize === $this->chunkSize) {
-                    $signal = yield $chunk;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-                    $chunkSize = 0;
-                    $chunk = new Rows();
-                }
-
-                if ($chunkSize > $this->chunkSize) {
-                    $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+                if (count($buffer) === $this->batchSize) {
+                    $signal = yield Rows::trusted($schema, $buffer);
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
-                    $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
-                    $chunkSize = $chunk->count();
+
+                    $buffer = [];
                 }
             }
         }
 
-        if ($chunkSize) {
-            yield $chunk;
+        if ($buffer !== []) {
+            yield Rows::trusted($schema ?? $this->schema(), $buffer);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function extractors(): array
     {
         return [$this->extractor];
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        return $this->extractor->schema();
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

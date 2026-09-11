@@ -13,7 +13,7 @@ For coercion (e.g. JSONB string → array, date string → `\DateTimeImmutable`)
 
 ## DSL
 
-```php
+```php ignore
 constructor_mapper(class-string<T> $class) : ConstructorMapper<T>
 ```
 
@@ -198,6 +198,8 @@ $summary = $client->fetchInto(
 
 ```php
 <?php
+
+function processUser(object $user): void { /* your code */ }
 
 $cursor = $client->cursor('SELECT id, name, email, active FROM large_users');
 

@@ -207,7 +207,7 @@ final class PhpParquetEngine implements ParquetEngine
                 if (is_array($columnData)) {
                     // @mago-ignore analysis:mixed-assignment
                     foreach ($columnData as $key => $value) {
-                        $row[$key] = $value;
+                        $row[(string) $key] = $value;
                     }
                 }
             }
@@ -364,14 +364,14 @@ final class PhpParquetEngine implements ParquetEngine
             $skipRows = $offset !== null ? $offset - $rowGroupOffset : 0;
 
             if ($column instanceof FlatColumn) {
+                $rowsSkipped = 0;
+
                 foreach ($chunkReader->read(
                     $rowGroup->getColumnChunk($column),
                     $column,
                     $stream,
                 ) as $flatColumnValues) {
                     $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
-
-                    $rowsSkipped = 0;
 
                     // @mago-ignore analysis:mixed-assignment
                     foreach ($dremelAssembler->assemble($column, $columnData) as $row) {

@@ -6,14 +6,14 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeStreamReader;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 
@@ -24,8 +24,8 @@ final class FloeStreamReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://close.floe');
 
-        $data = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($filesystem, FloeStreamWriter::unionSchema($data));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]));
+        $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

@@ -38,19 +38,10 @@ final class FloeSerializer implements Serializer
     public function serialize(Rows $rows, DestinationStream $destination): void
     {
         try {
-            // the whole-Rows union is the schema for every chunk, so no chunk can drift from it -
-            // per-write validation is a provable no-op here and is skipped
-            $writer = new FloeStreamWriter(
-                FloeStreamWriter::unionSchema($rows),
-                new Options(validateData: false),
-                hydrator: $this->hydrator,
-            );
+            // validation stays on until an upstream mechanism guarantees Rows match their schema
+            $writer = new FloeStreamWriter($rows->schema(), new Options(), hydrator: $this->hydrator);
             $writer->create($destination);
-
-            foreach ($rows->count() === 0 ? [$rows] : $rows->chunks($this->batchSize) as $chunk) {
-                $writer->write($chunk);
-            }
-
+            $writer->write($rows);
             $writer->close();
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
@@ -66,7 +57,7 @@ final class FloeSerializer implements Serializer
 
             $rows = [];
 
-            foreach ($reader->rows($this->batchSize, conform: false) as $batch) {
+            foreach ($reader->rows($this->batchSize) as $batch) {
                 foreach ($batch->all() as $row) {
                     $rows[] = $row;
                 }
@@ -80,7 +71,8 @@ final class FloeSerializer implements Serializer
                 ));
             }
 
-            return $footer->reconstructRows($rows);
+            // every row came out of a reader batch already conformed to this schema
+            return Rows::trusted($reader->schema(), $rows);
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

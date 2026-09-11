@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Loader;
 
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
@@ -210,6 +211,24 @@ final class TransformerLoaderTest extends FlowIntegrationTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_an_unresolved_column_inside_a_transformation_fails_at_the_first_batch(): void
+    {
+        $sink = new SpyLoader();
+
+        try {
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2]]))
+                ->write(to_transformation(select('nope'), $sink))
+                ->run();
+
+            static::fail('Expected the nested plan to refuse to bind against the fed shape.');
+        } catch (SchemaDefinitionNotFoundException $e) {
+            static::assertSame('Schema definition for entry "nope" not found.', $e->getMessage());
+        }
+
+        static::assertSame(0, $sink->loadsCount);
     }
 
     public function test_nested_transformer_loader_applies_the_inner_limit_across_the_stream(): void

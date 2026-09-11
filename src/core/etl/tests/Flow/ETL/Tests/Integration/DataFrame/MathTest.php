@@ -9,83 +9,35 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\sum;
 
 final class MathTest extends FlowTestCase
 {
     public function test_aggregations_on_floats(): void
     {
-        $rows = rows();
+        $rows = rows(schema());
         df()
             ->read(from_rows(rows(
-                row(
-                    integer_entry('id', 1),
-                    float_entry('price', 29.39),
-                    integer_entry('quantity', 2),
-                    float_entry('weight', 1.5),
-                ),
-                row(
-                    integer_entry('id', 2),
-                    float_entry('price', 19.3),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.5),
-                ),
-                row(
-                    integer_entry('id', 3),
-                    float_entry('price', 39.1),
-                    integer_entry('quantity', 3),
-                    float_entry('weight', 2.0),
-                ),
-                row(
-                    integer_entry('id', 4),
-                    float_entry('price', 49.9),
-                    integer_entry('quantity', 4),
-                    float_entry('weight', 2.1284),
-                ),
-                row(
-                    integer_entry('id', 5),
-                    float_entry('price', 15.0),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.3),
-                ),
-                row(
-                    integer_entry('id', 6),
-                    float_entry('price', 30.0),
-                    integer_entry('quantity', 2),
-                    float_entry('weight', 1.0),
-                ),
-                row(
-                    integer_entry('id', 7),
-                    float_entry('price', 25.0),
-                    integer_entry('quantity', 3),
-                    float_entry('weight', 1.8),
-                ),
-                row(
-                    integer_entry('id', 8),
-                    float_entry('price', 20.0),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.8),
-                ),
-                row(
-                    integer_entry('id', 9),
-                    float_entry('price', 35.0),
-                    integer_entry('quantity', 4),
-                    float_entry('weight', 2.2),
-                ),
-                row(
-                    integer_entry('id', 10),
-                    float_entry('price', 45.0),
-                    integer_entry('quantity', 5),
-                    float_entry('weight', 3.0),
-                ),
+                schema(integer_schema('id'), float_schema('price'), integer_schema('quantity'), float_schema('weight')),
+                row(['id' => 1, 'price' => 29.39, 'quantity' => 2, 'weight' => 1.5]),
+                row(['id' => 2, 'price' => 19.3, 'quantity' => 1, 'weight' => 0.5]),
+                row(['id' => 3, 'price' => 39.1, 'quantity' => 3, 'weight' => 2.0]),
+                row(['id' => 4, 'price' => 49.9, 'quantity' => 4, 'weight' => 2.1284]),
+                row(['id' => 5, 'price' => 15.0, 'quantity' => 1, 'weight' => 0.3]),
+                row(['id' => 6, 'price' => 30.0, 'quantity' => 2, 'weight' => 1.0]),
+                row(['id' => 7, 'price' => 25.0, 'quantity' => 3, 'weight' => 1.8]),
+                row(['id' => 8, 'price' => 20.0, 'quantity' => 1, 'weight' => 0.8]),
+                row(['id' => 9, 'price' => 35.0, 'quantity' => 4, 'weight' => 2.2]),
+                row(['id' => 10, 'price' => 45.0, 'quantity' => 5, 'weight' => 3.0]),
             )))
-            ->aggregate(sum(ref('price')), sum(ref('weight')))
+            ->aggregate([sum(ref('price')), sum(ref('weight'))])
             ->run(static function (Rows $r) use (&$rows): void {
                 $rows = $rows->merge($r);
             }, analyze: analyze()->withSchema());
@@ -100,69 +52,20 @@ final class MathTest extends FlowTestCase
 
     public function test_mathematical_operations_on_floats(): void
     {
-        $rows = rows();
+        $rows = rows(schema());
         df()
             ->read(from_rows(rows(
-                row(
-                    integer_entry('id', 1),
-                    float_entry('price', 29.39),
-                    integer_entry('quantity', 2),
-                    float_entry('weight', 1.5),
-                ),
-                row(
-                    integer_entry('id', 2),
-                    float_entry('price', 19.3),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.5),
-                ),
-                row(
-                    integer_entry('id', 3),
-                    float_entry('price', 39.1),
-                    integer_entry('quantity', 3),
-                    float_entry('weight', 2.0),
-                ),
-                row(
-                    integer_entry('id', 4),
-                    float_entry('price', 49.9),
-                    integer_entry('quantity', 4),
-                    float_entry('weight', 2.1284),
-                ),
-                row(
-                    integer_entry('id', 5),
-                    float_entry('price', 15.0),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.3),
-                ),
-                row(
-                    integer_entry('id', 6),
-                    float_entry('price', 30.0),
-                    integer_entry('quantity', 2),
-                    float_entry('weight', 1.0),
-                ),
-                row(
-                    integer_entry('id', 7),
-                    float_entry('price', 25.0),
-                    integer_entry('quantity', 3),
-                    float_entry('weight', 1.8),
-                ),
-                row(
-                    integer_entry('id', 8),
-                    float_entry('price', 20.0),
-                    integer_entry('quantity', 1),
-                    float_entry('weight', 0.8),
-                ),
-                row(
-                    integer_entry('id', 9),
-                    float_entry('price', 35.0),
-                    integer_entry('quantity', 4),
-                    float_entry('weight', 2.2),
-                ),
-                row(
-                    integer_entry('id', 10),
-                    float_entry('price', 45.0),
-                    integer_entry('quantity', 5),
-                    float_entry('weight', 3.0),
-                ),
+                schema(integer_schema('id'), float_schema('price'), integer_schema('quantity'), float_schema('weight')),
+                row(['id' => 1, 'price' => 29.39, 'quantity' => 2, 'weight' => 1.5]),
+                row(['id' => 2, 'price' => 19.3, 'quantity' => 1, 'weight' => 0.5]),
+                row(['id' => 3, 'price' => 39.1, 'quantity' => 3, 'weight' => 2.0]),
+                row(['id' => 4, 'price' => 49.9, 'quantity' => 4, 'weight' => 2.1284]),
+                row(['id' => 5, 'price' => 15.0, 'quantity' => 1, 'weight' => 0.3]),
+                row(['id' => 6, 'price' => 30.0, 'quantity' => 2, 'weight' => 1.0]),
+                row(['id' => 7, 'price' => 25.0, 'quantity' => 3, 'weight' => 1.8]),
+                row(['id' => 8, 'price' => 20.0, 'quantity' => 1, 'weight' => 0.8]),
+                row(['id' => 9, 'price' => 35.0, 'quantity' => 4, 'weight' => 2.2]),
+                row(['id' => 10, 'price' => 45.0, 'quantity' => 5, 'weight' => 3.0]),
             )))
             ->withEntry('discount', ref('price')->multiply(-0.1))
             ->withEntry('total_weight', ref('weight')->multiply(ref('quantity')))

@@ -23,7 +23,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use function array_fill;
 use function array_key_exists;
 use function count;
-use function Flow\ETL\Adapter\Parquet\empty_generator;
+use function Flow\Parquet\empty_generator;
 use function iterator_to_array;
 use function ord;
 

@@ -7,6 +7,7 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\SchemaFormatCommand;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class SchemaFormatCommandTest extends TestCase
@@ -74,22 +75,37 @@ final class SchemaFormatCommandTest extends TestCase
                 {
                     "ref": "address",
                     "type": {
-                        "type": "structure",
-                        "elements": {
-                            "street": {
-                                "type": "string"
+                        "type": "structure_v2",
+                        "fields": [
+                            {
+                                "name": "street",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             },
-                            "city": {
-                                "type": "string"
+                            {
+                                "name": "city",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             },
-                            "zip": {
-                                "type": "string"
+                            {
+                                "name": "zip",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             },
-                            "country": {
-                                "type": "string"
+                            {
+                                "name": "country",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             }
-                        },
-                        "optional_elements": [],
+                        ],
                         "allow_extra": false
                     },
                     "nullable": false,
@@ -111,19 +127,30 @@ final class SchemaFormatCommandTest extends TestCase
                     "type": {
                         "type": "list",
                         "element": {
-                            "type": "structure",
-                            "elements": {
-                                "sku": {
-                                    "type": "string"
+                            "type": "structure_v2",
+                            "fields": [
+                                {
+                                    "name": "sku",
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "optional": false
                                 },
-                                "quantity": {
-                                    "type": "integer"
+                                {
+                                    "name": "quantity",
+                                    "type": {
+                                        "type": "integer"
+                                    },
+                                    "optional": false
                                 },
-                                "price": {
-                                    "type": "float"
+                                {
+                                    "name": "price",
+                                    "type": {
+                                        "type": "float"
+                                    },
+                                    "optional": false
                                 }
-                            },
-                            "optional_elements": [],
+                            ],
                             "allow_extra": false
                         }
                     },
@@ -195,21 +222,29 @@ final class SchemaFormatCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            +------------+-----------+----------+----------+
-            |       name |      type | nullable | metadata |
-            +------------+-----------+----------+----------+
-            |   order_id |      uuid |    false |       [] |
-            | created_at |  datetime |    false |       [] |
-            | updated_at |  datetime |    false |       [] |
-            |   discount |     float |     true |       [] |
-            |      email |    string |    false |       [] |
-            |   customer |    string |    false |       [] |
-            |    address | structure |    false |       [] |
-            |      notes |      list |    false |       [] |
-            |      items |      list |    false |       [] |
-            +------------+-----------+----------+----------+
+            +------------+--------------+----------+----------+
+            |       name |         type | nullable | metadata |
+            +------------+--------------+----------+----------+
+            |   order_id |         uuid |    false |       [] |
+            | created_at |     datetime |    false |       [] |
+            | updated_at |     datetime |    false |       [] |
+            |   discount |        float |     true |       [] |
+            |      email |       string |    false |       [] |
+            |   customer |       string |    false |       [] |
+            |    address | structure_v2 |    false |       [] |
+            |      notes |         list |    false |       [] |
+            |      items |         list |    false |       [] |
+            +------------+--------------+----------+----------+
             9 rows
 
             OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_schema_format_command_registers_the_format_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new SchemaFormatCommand()]);
+
+        static::assertInstanceOf(SchemaFormatCommand::class, $application->find('format'));
     }
 }

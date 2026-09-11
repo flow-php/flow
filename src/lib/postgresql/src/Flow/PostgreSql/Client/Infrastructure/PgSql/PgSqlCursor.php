@@ -12,12 +12,10 @@ use Generator;
 use PgSql\Result;
 use Traversable;
 
+use function array_filter;
 use function max;
 use function pg_fetch_assoc;
-use function pg_field_name;
-use function pg_field_type;
 use function pg_free_result;
-use function pg_num_fields;
 use function pg_num_rows;
 
 final class PgSqlCursor implements Cursor
@@ -26,6 +24,15 @@ final class PgSqlCursor implements Cursor
      * @var null|list<array{name: string, type: string}>
      */
     private ?array $columnMetaCache = null;
+
+    /**
+     * The columns whose values ResultCaster converts, by name. pg_fetch_assoc() collapses duplicate output
+     * names last-wins, so the type lookup collapses the same way. Cached beside the meta list because
+     * convertRow() needs it for every row.
+     *
+     * @var null|array<string, string>
+     */
+    private ?array $convertingColumnsCache = null;
 
     private int $position = 0;
 
@@ -112,20 +119,7 @@ final class PgSqlCursor implements Cursor
             return [];
         }
 
-        $result = $this->result;
-        $meta = [];
-        $count = pg_num_fields($result);
-
-        for ($i = 0; $i < $count; $i++) {
-            $meta[] = [
-                'name' => pg_field_name($result, $i),
-                'type' => pg_field_type($result, $i),
-            ];
-        }
-
-        $this->columnMetaCache = $meta;
-
-        return $meta;
+        return $this->columnMetaCache = (new ResultColumns())->of($this->result);
     }
 
     /**
@@ -135,20 +129,25 @@ final class PgSqlCursor implements Cursor
      */
     private function convertRow(array $row): array
     {
-        $meta = $this->columnMeta();
-        $converted = [];
+        if ($this->convertingColumnsCache === null) {
+            $types = [];
 
-        $i = 0;
-
-        foreach ($row as $column => $value) {
-            $key = (string) $column;
-
-            if ($value === null) {
-                $converted[$key] = null;
-            } else {
-                $converted[$key] = $this->resultCaster->cast($value, $meta[$i]['type'] ?? null);
+            foreach ($this->columnMeta() as $column) {
+                $types[$column['name']] = $column['type'];
             }
-            $i++;
+
+            $this->convertingColumnsCache = array_filter($types, $this->resultCaster->converts(...));
+        }
+
+        /** @var array<string, mixed> $converted */
+        $converted = $row;
+
+        foreach ($this->convertingColumnsCache as $column => $type) {
+            $value = $row[$column] ?? null;
+
+            if ($value !== null) {
+                $converted[$column] = $this->resultCaster->cast($value, $type);
+            }
         }
 
         return $converted;

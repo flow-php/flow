@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Psr18\Telemetry\DSL;
 
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\Telemetry\Telemetry;
 use Psr\Http\Client\ClientInterface;
 

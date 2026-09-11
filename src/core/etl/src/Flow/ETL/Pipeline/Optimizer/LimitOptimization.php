@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
@@ -13,17 +13,20 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
+use Flow\ETL\Transformer\PruneEntriesTransformer;
 use Flow\ETL\Transformer\RenameEachEntryTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
-use function count;
 use function in_array;
 
+/**
+ * The limit operator stays in the plan, so a step missing from the allow-lists only costs the push; a step
+ * that changes the row count on them would make the source read too few rows.
+ */
 final class LimitOptimization implements Optimization
 {
     /**
@@ -41,9 +44,9 @@ final class LimitOptimization implements Optimization
      * @var array<int, class-string>
      */
     private array $nonExpandingTransformers = [
-        CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,
         SelectEntriesTransformer::class,
+        PruneEntriesTransformer::class,
         DropEntriesTransformer::class,
         RenameEachEntryTransformer::class,
         RenameEntryTransformer::class,
@@ -52,48 +55,23 @@ final class LimitOptimization implements Optimization
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline): bool
     {
-        if (!$element instanceof LimitTransformer) {
-            return false;
-        }
-
-        if (!$pipeline->extractor() instanceof LimitableExtractor) {
-            return false;
-        }
-
-        return $this->hasOnlyNonExpandingSteps($pipeline);
+        return $element instanceof LimitTransformer;
     }
 
     public function optimize(Loader|Transformer $element, Pipeline $pipeline): Pipeline
     {
-        /** @var LimitableExtractor $extractor */
         $extractor = $pipeline->extractor();
 
-        if ($extractor->isLimited()) {
-            return $pipeline->add($element);
-        }
-
-        if ($element instanceof LimitTransformer && !count($pipeline->segments()->steps())) {
-            $extractor->changeLimit($element->limit);
-
-            return $pipeline;
-        }
-
-        foreach ($pipeline->segments()->steps() as $pipelineElement) {
-            if ($pipelineElement instanceof ScalarFunctionTransformer) {
-                if ($pipelineElement->function instanceof ExpandResults) {
-                    break;
-                }
-            }
-
-            if (!$this->isNonExpandingStep($pipelineElement)) {
-                break;
-            }
-
-            if ($element instanceof LimitTransformer) {
-                $extractor->changeLimit($element->limit);
-
-                return $pipeline;
-            }
+        if (
+            $element instanceof LimitTransformer
+            && $extractor instanceof LimitPushDown
+            && $this->hasOnlyNonExpandingSteps($pipeline)
+        ) {
+            // a hint only: the source may read less. The operator below still enforces the count.
+            // Pushed into a copy the plan owns - the caller may read the same extractor again without a limit.
+            $pushed = clone $extractor;
+            $pushed->pushLimit($element->limit);
+            $pipeline->replaceExtractor($pushed);
         }
 
         return $pipeline->add($element);
@@ -117,20 +95,12 @@ final class LimitOptimization implements Optimization
     private function hasOnlyNonExpandingSteps(Pipeline $pipeline): bool
     {
         foreach ($pipeline->segments()->steps() as $step) {
-            if ($step instanceof Processor) {
-                $isNonExpanding = false;
+            if ($step instanceof ScalarFunctionTransformer && $step->function instanceof ExpandResults) {
+                return false;
+            }
 
-                foreach ($this->nonExpandingProcessors as $nonExpandingProcessor) {
-                    if ($step instanceof $nonExpandingProcessor) {
-                        $isNonExpanding = true;
-
-                        break;
-                    }
-                }
-
-                if (!$isNonExpanding) {
-                    return false;
-                }
+            if (!$this->isNonExpandingStep($step)) {
+                return false;
             }
         }
 

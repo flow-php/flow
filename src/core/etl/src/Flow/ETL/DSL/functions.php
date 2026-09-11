@@ -4,32 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Brick\Math\BigDecimal;
 use DateInterval;
 use DatePeriod;
-use DateTime;
-use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Dom\Element;
-use Dom\HTMLDocument;
-use Dom\HTMLElement;
-use Dom\XMLDocument;
-use DOMDocument;
-use DOMElement;
-use Exception;
 use Flow\Calculator\Rounding;
 use Flow\Clock\SystemClock;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\DocumentationExample;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Analyze;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\DocumentationExample;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
 use Flow\ETL\Config\Join\HashJoinBuilder;
+use Flow\ETL\Config\Repartition\HashRepartitionBuilder;
 use Flow\ETL\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Config\Sort\MemorySortBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
@@ -42,6 +34,7 @@ use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\BatchByExtractor;
@@ -51,8 +44,8 @@ use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
+use Flow\ETL\Extractor\PartitionTypes;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
-use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Extractor\SequenceExtractor;
 use Flow\ETL\Extractor\SequenceGenerator\DatePeriodSequenceGenerator;
@@ -94,7 +87,6 @@ use Flow\ETL\Function\DateTimeFormat;
 use Flow\ETL\Function\DenseRank;
 use Flow\ETL\Function\EnumName;
 use Flow\ETL\Function\EnumValue;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\Exists;
 use Flow\ETL\Function\First;
 use Flow\ETL\Function\Greatest;
@@ -136,6 +128,8 @@ use Flow\ETL\Function\ToUpper;
 use Flow\ETL\Function\Ulid;
 use Flow\ETL\Function\Uuid;
 use Flow\ETL\Function\When;
+use Flow\ETL\GroupBy\DeclaredPivotValues;
+use Flow\ETL\GroupBy\DiscoveredPivotValues;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\Comparison;
@@ -145,15 +139,14 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\ArrayLoader;
 use Flow\ETL\Loader\BranchingLoader;
-use Flow\ETL\Loader\CallbackLoader;
 use Flow\ETL\Loader\MemoryLoader;
+use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\RetryLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Pipeline;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Retry\DelayFactory;
 use Flow\ETL\Retry\DelayFactory\Exponential;
@@ -167,34 +160,14 @@ use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\HTMLElementEntry;
-use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\TimeEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
-use Flow\ETL\Row\Entry\XMLElementEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -213,7 +186,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Schema\Definition\UuidDefinition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Definition\XMLElementDefinition;
@@ -221,6 +194,7 @@ use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPFormatter\TypeFormatter;
 use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\SortingStrategy;
@@ -247,12 +221,6 @@ use Flow\ETL\Transformation\Limit;
 use Flow\ETL\Transformation\MaskColumns;
 use Flow\ETL\Transformation\Select;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\OrderEntries\CombinedComparator;
-use Flow\ETL\Transformer\OrderEntries\Comparator;
-use Flow\ETL\Transformer\OrderEntries\NameComparator;
-use Flow\ETL\Transformer\OrderEntries\Order;
-use Flow\ETL\Transformer\OrderEntries\TypeComparator;
-use Flow\ETL\Transformer\OrderEntries\TypePriorities;
 use Flow\ETL\Transformer\Rename\RenameCaseEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
 use Flow\ETL\Transformer\Rename\RenameReplaceEntryStrategy;
@@ -266,7 +234,6 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
-use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Types\Type;
@@ -277,8 +244,10 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -292,10 +261,7 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
-use Flow\Types\Value\Json;
-use Flow\Types\Value\Uuid as FlowUuid;
 use Psr\Clock\ClockInterface;
-use ReflectionProperty;
 use Throwable;
 use UnitEnum;
 
@@ -307,6 +273,7 @@ use function enum_exists;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_null;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -315,23 +282,22 @@ use function is_object;
 use function is_string;
 use function json_decode;
 use function json_encode;
-use function str_pad;
 use function strtolower;
 
 /**
  * Alias for data_frame() : Flow.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function df(Config|ConfigBuilder|null $config = null): Flow
 {
     return data_frame($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function data_frame(Config|ConfigBuilder|null $config = null): Flow
 {
     return new Flow($config);
@@ -343,20 +309,13 @@ function telemetry_options(
     bool $trace_transformations = false,
     bool $trace_cache = false,
     bool $collect_metrics = false,
-    ?FilesystemTelemetryOptions $filesystem = null,
 ): TelemetryOptions {
-    return new TelemetryOptions(
-        $trace_loading,
-        $trace_transformations,
-        $trace_cache,
-        $collect_metrics,
-        $filesystem ?? new FilesystemTelemetryOptions(),
-    );
+    return new TelemetryOptions($trace_loading, $trace_transformations, $trace_cache, $collect_metrics);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+#[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function from_rows(Rows ...$rows): RowsExtractor
 {
     return new RowsExtractor(...$rows);
@@ -364,21 +323,29 @@ function from_rows(Rows ...$rows): RowsExtractor
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'partitioning', example: 'path_partitions')]
-function from_path_partitions(Path|string $path): PathPartitionsExtractor
-{
-    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path);
+function from_path_partitions(
+    Path|string $path,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+): PathPartitionsExtractor {
+    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path, $filesystem);
 }
 
 /**
  * @param iterable<array<mixed>> $array
  * @param null|Schema $schema - @deprecated use withSchema() method instead
+ * @param null|Path $spillRoot - where a non-array $array is spilled while it is described; null resolves to
+ *                          $filesystem->getSystemTmpDir() and only on that path
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'array')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
-function from_array(iterable $array, ?Schema $schema = null): ArrayExtractor
-{
-    $extractor = new ArrayExtractor($array);
+#[DocumentationExample(topic: 'reading', example: 'array')]
+#[DocumentationExample(topic: 'reading', example: 'data_frame')]
+function from_array(
+    iterable $array,
+    ?Schema $schema = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
+    ?Path $spillRoot = null,
+): ArrayExtractor {
+    $extractor = new ArrayExtractor($array, $filesystem, $spillRoot);
 
     if ($schema !== null) {
         $extractor->withSchema($schema);
@@ -393,9 +360,13 @@ function from_array(iterable $array, ?Schema $schema = null): ArrayExtractor
  * @param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false): CacheExtractor
-{
-    $extractor = new CacheExtractor($id);
+function from_cache(
+    string $id,
+    ?Extractor $fallback_extractor = null,
+    bool $clear = false,
+    ?Cache $cache = null,
+): CacheExtractor {
+    $extractor = new CacheExtractor($id, $cache);
 
     if ($fallback_extractor !== null) {
         $extractor->withFallbackExtractor($fallback_extractor);
@@ -421,9 +392,9 @@ function from_memory(Memory $memory): MemoryExtractor
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function files(string|Path $directory): FilesExtractor
+function files(string|Path $directory, Filesystem $filesystem = new NativeLocalFilesystem()): FilesExtractor
 {
-    return new FilesExtractor(is_string($directory) ? path($directory) : $directory);
+    return new FilesExtractor(is_string($directory) ? path($directory) : $directory, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -446,7 +417,7 @@ function batched_by(Extractor $extractor, string|Reference $column, ?int $min_si
         throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
     }
 
-    return new BatchByExtractor($extractor, EntryReference::init($column), $min_size);
+    return new BatchByExtractor($extractor, UnresolvedReference::init($column), $min_size);
 }
 
 /**
@@ -456,12 +427,6 @@ function batched_by(Extractor $extractor, string|Reference $column, ?int $min_si
 function batches(Extractor $extractor, int $size): BatchExtractor
 {
     return new BatchExtractor($extractor, $size);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_pipeline(Pipeline $pipeline): PipelineExtractor
-{
-    return new PipelineExtractor($pipeline);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -509,12 +474,6 @@ function from_sequence_number(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_callable(callable $callable): CallbackLoader
-{
-    return new CallbackLoader($callable);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
 function to_memory(Memory $memory): MemoryLoader
 {
     return new MemoryLoader($memory);
@@ -528,11 +487,11 @@ function to_memory(Memory $memory): MemoryLoader
  * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'array')]
+#[DocumentationExample(topic: 'writing', example: 'array')]
 function to_array(array &$array): ArrayLoader
 {
     // @mago-ignore analysis:redundant-docblock-type
-    /** @phpstan-var array<array<mixed>> $array */
+    /** @var array<array<mixed>> $array */
     return new ArrayLoader($array);
 }
 
@@ -624,503 +583,48 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 /**
- * @return ($value is null ? Entry<null> : Entry<bool>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function bool_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
-{
-    return new BooleanEntry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<bool>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
-{
-    return bool_entry($name, $value, $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new DateTimeEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateTime) {
-        return new DateTimeEntry($name, DateTimeImmutable::createFromMutable($value), $metadata);
-    }
-
-    if ($value instanceof DateTimeInterface) {
-        return new DateTimeEntry($name, $value, $metadata);
-    }
-
-    try {
-        return new DateTimeEntry($name, new DateTimeImmutable($value), $metadata);
-    } catch (Exception $e) {
-        throw new InvalidArgumentException(
-            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-            previous: $e,
-        );
-    }
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateInterval>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, DateInterval|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new TimeEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateInterval) {
-        return new TimeEntry($name, $value, $metadata);
-    }
-
-    try {
-        return new TimeEntry($name, new DateInterval($value), $metadata);
-    } catch (Throwable $dateIntervalException) {
-        try {
-            $dateTime = new DateTimeImmutable($value);
-            $hours = (int) $dateTime->format('H');
-            $minutes = (int) $dateTime->format('i');
-            $seconds = (int) $dateTime->format('s');
-            $fraction = (int) $dateTime->format('u') / 1_000_000;
-
-            $interval = new DateInterval('PT' . $hours . 'H' . $minutes . 'M' . $seconds . 'S');
-            (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
-
-            return new TimeEntry($name, $interval, $metadata);
-        } catch (Throwable) {
-            throw new InvalidArgumentException(
-                "Invalid value given: '{$value}', reason: " . $dateIntervalException->getMessage(),
-                previous: $dateIntervalException,
-            );
-        }
-    }
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new DateEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DateTimeImmutable) {
-        return new DateEntry($name, $value->setTime(0, 0, 0, 0), $metadata);
-    }
-
-    if ($value instanceof DateTimeInterface) {
-        return new DateEntry($name, DateTimeImmutable::createFromInterface($value)->setTime(0, 0, 0, 0), $metadata);
-    }
-
-    try {
-        return new DateEntry($name, (new DateTimeImmutable($value))->setTime(0, 0, 0, 0), $metadata);
-    } catch (Exception $e) {
-        throw new InvalidArgumentException(
-            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-            previous: $e,
-        );
-    }
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<int>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function int_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
-{
-    return new IntegerEntry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<int>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
-{
-    return int_entry($name, $value, $metadata);
-}
-
-/**
- * @return ($enum is null ? Entry<null> : Entry<\UnitEnum>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?UnitEnum $enum, ?Metadata $metadata = null): Entry
-{
-    return new EnumEntry($name, $enum, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<float>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, float|int|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new FloatEntry($name, null, $metadata);
-    }
-
-    return new FloatEntry($name, BigDecimal::of((string) $value)->toFloat(), $metadata);
-}
-
-/**
- * @param null|array<array-key, mixed>|Json|string $data
- *
- * @throws InvalidArgumentException
- *
- * @return ($data is null ? Entry<null> : Entry<Json>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
-{
-    if ($data === null) {
-        return new JsonEntry($name, null, $metadata);
-    }
-
-    if ($data instanceof Json) {
-        return new JsonEntry($name, $data, $metadata);
-    }
-
-    if (is_array($data)) {
-        return new JsonEntry($name, Json::fromArray($data), $metadata);
-    }
-
-    try {
-        return new JsonEntry($name, new Json($data), $metadata);
-    } catch (Throwable $e) {
-        throw new InvalidArgumentException("Invalid value given: '{$data}', reason: " . $e->getMessage(), previous: $e);
-    }
-}
-
-/**
- * @param null|array<array-key, mixed>|Json|string $data
- *
- * @throws InvalidArgumentException
- *
- * @return ($data is null ? Entry<null> : Entry<Json>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
-{
-    if ($data instanceof Json) {
-        return new JsonEntry($name, $data, $metadata);
-    }
-
-    if (is_string($data)) {
-        try {
-            return new JsonEntry($name, new Json($data), $metadata);
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException(
-                "Invalid value given: '{$data}', reason: " . $e->getMessage(),
-                previous: $e,
-            );
-        }
-    }
-
-    return JsonEntry::object($name, $data, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<string>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function str_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
-{
-    return new StringEntry($name, $value, $metadata);
-}
-
-/**
- * Creates an entry of the null type. Used when a column value is null and its final type is not yet known.
- * When guessing a schema from rows, a null column stays a NullDefinition until a later row reveals a real type,
- * at which point the schema merge turns it into that type made nullable.
- *
- * @return Entry<null>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function null_entry(string $name, ?Metadata $metadata = null): Entry
-{
-    return new NullEntry($name, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<string>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function string_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
-{
-    return str_entry($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<\Flow\Types\Value\Uuid>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new UuidEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof FlowUuid) {
-        return new UuidEntry($name, $value, $metadata);
-    }
-
-    return new UuidEntry($name, FlowUuid::fromString($value), $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DOMDocument|XMLDocument>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, DOMDocument|XMLDocument|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new XMLEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DOMDocument || $value instanceof XMLDocument) {
-        return new XMLEntry($name, $value, $metadata);
-    }
-
-    $doc = new DOMDocument();
-
-    if (!@$doc->loadXML($value)) {
-        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
-    }
-
-    return new XMLEntry($name, $doc, $metadata);
-}
-
-/**
- * @throws InvalidArgumentException
- *
- * @return ($value is null ? Entry<null> : Entry<\DOMElement|Element>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, DOMElement|Element|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new XMLElementEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof DOMElement || $value instanceof Element) {
-        return new XMLElementEntry($name, $value, $metadata);
-    }
-
-    $doc = new DOMDocument();
-
-    if (!@$doc->loadXML($value)) {
-        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
-    }
-
-    $element = $doc->documentElement;
-
-    if (!$element instanceof DOMElement) {
-        throw new InvalidArgumentException("Given string \"{$value}\" does not contain a root XML element");
-    }
-
-    return new XMLElementEntry($name, $element, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<HTMLDocument>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new HTMLEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof HTMLDocument) {
-        return new HTMLEntry($name, $value, $metadata);
-    }
-
-    return HTMLEntry::fromString($name, $value, $metadata);
-}
-
-/**
- * @return ($value is null ? Entry<null> : Entry<HTMLElement>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null): Entry
-{
-    if ($value === null) {
-        return new HTMLElementEntry($name, null, $metadata);
-    }
-
-    if ($value instanceof HTMLElement) {
-        return new HTMLElementEntry($name, $value, $metadata);
-    }
-
-    return HTMLElementEntry::fromString($name, $value, $metadata);
-}
-
-/**
- * @param Entry<mixed> ...$entries
+ * @param array<string, mixed> $values
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function entries(Entry ...$entries): Entries
+function row(array $values): Row
 {
-    return new Entries(...$entries);
-}
-
-/**
- * @template TShape of array<array-key, mixed>
- *
- * @param ?TShape $value
- * @param StructureType<array<array-key, mixed>>|Type<TShape> $type
- *
- * @return ($value is null ? Entry<null> : Entry<TShape>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof StructureType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Structure entry "%s" requires a StructureType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new StructureEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @template TShape of array<array-key, mixed>
- *
- * @param ?TShape $value
- * @param StructureType<array<array-key, mixed>>|Type<TShape> $type
- *
- * @return ($value is null ? Entry<null> : Entry<TShape>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof StructureType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Structure entry "%s" requires a StructureType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new StructureEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @param null|list<mixed> $value
- * @param Type<mixed> $type
- *
- * @return ($value is null ? Entry<null> : Entry<list<mixed>>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
-{
-    if (!$type instanceof ListType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'List entry "%s" requires a ListType, got %s',
-            $name,
-            $type::class,
-        ));
-    }
-
-    return new ListEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @param ?array<array-key, mixed> $value
- * @param Type<mixed> $mapType
- *
- * @return ($value is null ? Entry<null> : Entry<array<array-key, mixed>>)
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
-{
-    if (!$mapType instanceof MapType) {
-        // @mago-expect linter:no-fully-qualified-global-function
-        throw new InvalidArgumentException(\sprintf(
-            'Map entry "%s" requires a MapType, got %s',
-            $name,
-            $mapType::class,
-        ));
-    }
-
-    return new MapEntry($name, $value, $mapType, $metadata);
-}
-
-/**
- * @param Entry<mixed> ...$entry
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function row(Entry ...$entry): Row
-{
-    return Row::create(...$entry);
+    return new Row($values);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows(Row ...$row): Rows
+function rows(Schema $schema, Row ...$row): Rows
 {
-    return new Rows(...$row);
+    return new Rows($schema, ...$row);
 }
 
 /**
  * @param array<Row> $rows
  * @param array<Partition|string>|Partitions $partitions
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows_partitioned(array $rows, array|Partitions $partitions): Rows
-{
-    return Rows::partitioned($rows, $partitions);
-}
-
 /**
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function col(string $entry): EntryReference
+function col(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 /**
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
-function entry(string $entry): EntryReference
+#[DocumentationExample(topic: 'columns', example: 'create')]
+function entry(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
-function ref(string $entry): EntryReference
+#[DocumentationExample(topic: 'columns', example: 'create')]
+function ref(string $entry): UnresolvedReference
 {
-    return new EntryReference($entry);
+    return new UnresolvedReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1190,7 +694,7 @@ function optional(ScalarFunction $function): Optional
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
+#[DocumentationExample(topic: 'columns', example: 'create')]
 function lit(mixed $value): Literal
 {
     return new Literal($value);
@@ -1209,7 +713,7 @@ function when(mixed $condition, mixed $then, mixed $else = null): When
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_get(ScalarFunction $ref, ScalarFunction|string $path): ArrayGet
+function array_get(ScalarFunction $ref, string $path): ArrayGet
 {
     return new ArrayGet($ref, $path);
 }
@@ -1258,11 +762,8 @@ function array_merge_collection(ScalarFunction|array $array): ArrayMergeCollecti
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_key_rename(
-    ScalarFunction $ref,
-    ScalarFunction|string $path,
-    ScalarFunction|string $newName,
-): ArrayKeyRename {
+function array_key_rename(ScalarFunction $ref, string $path, string $newName): ArrayKeyRename
+{
     return new ArrayKeyRename($ref, $path, $newName);
 }
 
@@ -1277,22 +778,18 @@ function array_keys_style_convert(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_sort(
     ScalarFunction $function,
-    ScalarFunction|Sort|null $sort_function = null,
+    ?Sort $sort_function = null,
     ScalarFunction|int|null $flags = null,
     ScalarFunction|bool $recursive = true,
 ): ArraySort {
-    if ($sort_function === null) {
-        $sort_function = Sort::sort;
-    }
-
-    return new ArraySort($function, $sort_function, $flags, $recursive);
+    return new ArraySort($function, $sort_function ?? Sort::sort, $flags, $recursive);
 }
 
 /**
  * @param array<array-key, mixed>|ScalarFunction $function
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_reverse(ScalarFunction|array $function, ScalarFunction|bool $preserveKeys = false): ArrayReverse
+function array_reverse(ScalarFunction|array $function, bool $preserveKeys = false): ArrayReverse
 {
     return new ArrayReverse($function, $preserveKeys);
 }
@@ -1408,7 +905,7 @@ function enum_value(mixed $value): EnumValue
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(?EntryReference $function = null): Count
+function count(?Reference $function = null): Count
 {
     return new Count($function);
 }
@@ -1416,14 +913,13 @@ function count(?EntryReference $function = null): Count
 /**
  * Calls a user-defined function with the given parameters.
  *
- * @param callable|ScalarFunction $callable
+ * @param Type<mixed> $return_type
  * @param array<mixed> $parameters
- * @param null|Type<mixed> $return_type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $return_type = null): CallUserFunc
+function call(ScalarFunction $callable, Type $return_type, array $parameters = []): CallUserFunc
 {
-    return new CallUserFunc($callable, $parameters, $return_type);
+    return new CallUserFunc($callable, $return_type, $parameters);
 }
 
 /**
@@ -1447,15 +943,11 @@ function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $
  */
 /**
  * @param array<array-key, mixed>|ScalarFunction $array
- * @param array<array-key, mixed>|ScalarFunction $skip_keys
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_unpack(
-    ScalarFunction|array $array,
-    ScalarFunction|array $skip_keys = [],
-    ScalarFunction|string|null $entry_prefix = null,
-): ArrayUnpack {
-    return new ArrayUnpack($array, $skip_keys, $entry_prefix);
+function array_unpack(ScalarFunction|array $array, Schema $schema): ArrayUnpack
+{
+    return new ArrayUnpack($array, $schema);
 }
 
 /**
@@ -1497,7 +989,7 @@ function uuid_v4(): Uuid
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function uuid_v7(ScalarFunction|DateTimeInterface|null $value = null): Uuid
+function uuid_v7(ScalarFunction|DateTimeInterface $value): Uuid
 {
     return Uuid::uuid7($value);
 }
@@ -1602,7 +1094,7 @@ function regex_match(
 function regex(
     ScalarFunction|string $pattern,
     ScalarFunction|string $subject,
-    ScalarFunction|int $flags = 0,
+    int $flags = 0,
     ScalarFunction|int $offset = 0,
 ): Regex {
     return new Regex($pattern, $subject, $flags, $offset);
@@ -1612,7 +1104,7 @@ function regex(
 function regex_all(
     ScalarFunction|string $pattern,
     ScalarFunction|string $subject,
-    ScalarFunction|int $flags = 0,
+    int $flags = 0,
     ScalarFunction|int $offset = 0,
 ): RegexAll {
     return new RegexAll($pattern, $subject, $flags, $offset);
@@ -1653,34 +1145,21 @@ function number_format(
 }
 
 /**
- * @param array<mixed> $data
- *
- * @return Entry<mixed>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new EntryFactory()): Entry
-{
-    return $entryFactory->create($name, $data);
-}
-
-/**
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|Partitions $partitions
- * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_row(
     array $data,
+    Schema $schema,
     Hydrator $hydrator = new AdaptiveRowHydrator(),
     array|Partitions $partitions = [],
-    ?Schema $schema = null,
 ): Row {
     $map = [];
 
     // @mago-ignore analysis:mixed-assignment
     foreach ($data as $key => $value) {
-        $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-        $map[$name] = $value;
+        $map[(new ColumnName())->of($key)] = $value;
     }
 
     foreach ($partitions as $partition) {
@@ -1689,23 +1168,15 @@ function array_to_row(
         }
     }
 
-    return $hydrator->cast([new RawRowValues($map)], $schema)->first();
+    return $hydrator->hydrate([new RawRowValues($map)], $schema)->first();
 }
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition>|Partitions $partitions
- * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(
-    array $data,
-    Hydrator $hydrator = new AdaptiveRowHydrator(),
-    array|Partitions $partitions = [],
-    ?Schema $schema = null,
-): Rows {
-    $partitions = is_array($partitions) ? new Partitions(...$partitions) : $partitions;
-
+function array_to_rows(array $data, Schema $schema, Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
+{
     $isRows = true;
 
     // @mago-ignore analysis:mixed-assignment
@@ -1727,20 +1198,17 @@ function array_to_rows(
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($row as $key => $value) {
-            $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-            $map[$name] = $value;
-        }
+            // PHP gives back a numeric-string column name as an int key, which the positional rule
+            // would rename to eNN. A declared schema naming that column settles which one it is.
+            $declared = $schema->findDefinition((string) $key);
 
-        foreach ($partitions as $partition) {
-            if (!array_key_exists($partition->name, $map)) {
-                $map[$partition->name] = $partition->value;
-            }
+            $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
         }
 
         $maps[] = new RawRowValues($map);
     }
 
-    return Rows::partitioned($hydrator->cast($maps, $schema)->all(), $partitions);
+    return $hydrator->hydrate($maps, $schema);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]
@@ -1762,7 +1230,7 @@ function dense_rank(): DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(EntryReference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
+function average(Reference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
 {
     return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
 }
@@ -1780,19 +1248,19 @@ function least(mixed ...$values): Least
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect(EntryReference|string $ref): Collect
+function collect(Reference|string $ref): Collect
 {
     return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function string_agg(EntryReference|string $ref, string $separator = ', ', ?SortOrder $sort = null): StringAggregate
+function string_agg(Reference|string $ref, string $separator = ', ', ?SortOrder $sort = null): StringAggregate
 {
     return new StringAggregate(is_string($ref) ? ref($ref) : $ref, $separator, $sort);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect_unique(EntryReference|string $ref): CollectUnique
+function collect_unique(Reference|string $ref): CollectUnique
 {
     return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
@@ -1834,31 +1302,31 @@ function unbounded_following(): FrameBound
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(EntryReference|string $ref, ScalarFunction|bool $exact = false): Sum
+function sum(Reference|string $ref, ScalarFunction|bool $exact = false): Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref, $exact);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function first(EntryReference|string $ref): First
+function first(Reference|string $ref): First
 {
     return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function last(EntryReference|string $ref): Last
+function last(Reference|string $ref): Last
 {
     return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function max(EntryReference|string $ref): Max
+function max(Reference|string $ref): Max
 {
     return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function min(EntryReference|string $ref): Min
+function min(Reference|string $ref): Min
 {
     return new Min(is_string($ref) ? ref($ref) : $ref);
 }
@@ -2125,6 +1593,10 @@ function structure_schema(
 
 /**
  * @param Type<mixed>|UnionType<mixed, mixed> $type
+ *
+ * @deprecated a column holds exactly one type - use definition_from_type() instead
+ *
+ * @return Definition<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function union_schema(
@@ -2132,15 +1604,20 @@ function union_schema(
     UnionType|Type $type,
     bool $nullable = false,
     ?Metadata $metadata = null,
-): UnionDefinition {
-    /** @var UnionType<mixed, mixed> $type */
-    return new UnionDefinition($name, $type, $nullable, $metadata);
+): Definition {
+    return definition_from_type($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): UuidDefinition
 {
     return new UuidDefinition($name, $nullable, $metadata);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function time_zone_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): TimeZoneDefinition
+{
+    return new TimeZoneDefinition($name, $nullable, $metadata);
 }
 
 /**
@@ -2200,21 +1677,45 @@ function definition_from_type(
         $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
         $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
         $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),
-        $type instanceof EmptyArrayType => new JsonDefinition($ref, $nullable, $metadata),
+        // @mago-expect linter:no-fully-qualified-global-function
+        $type instanceof EmptyArrayType => throw new RuntimeException(\sprintf(
+            'Column "%s" cannot be typed as array{} - an empty array is a value, not a column type. '
+            . 'Declare the element type, e.g. type_list(type_string()).',
+            UnresolvedReference::init($ref)->name(),
+        )),
         $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
+        $type instanceof TimeZoneType => new TimeZoneDefinition($ref, $nullable, $metadata),
         $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
         $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
         $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
-        $type instanceof UnionType => new UnionDefinition($ref, $type, $nullable, $metadata),
+        // Iceberg's rule: ["null", T] is the one legal union and it means ?T, not a sum type.
+        $type instanceof UnionType => $type->isOptionalType()
+            ? definition_from_type(
+                $ref,
+                $type->types()->without(type_null())->first() ?? throw UnsupportedUnionTypeException::forColumn(
+                    UnresolvedReference::init($ref),
+                    $type,
+                ),
+                nullable: true,
+                metadata: $metadata,
+            )
+            : throw UnsupportedUnionTypeException::forColumn(UnresolvedReference::init($ref), $type),
         $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
         $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
         $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof NullType => new NullDefinition($ref, $metadata),
+        $type instanceof OptionalType => definition_from_type($ref, $type->base(), nullable: true, metadata: $metadata),
         // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function infer_schema(): SchemaInferenceBuilder
+{
+    return new SchemaInferenceBuilder();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -2263,6 +1764,47 @@ function hash_join(): HashJoinBuilder
 function hash_group_by(): HashGroupByBuilder
 {
     return new HashGroupByBuilder();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function hash_repartition(): HashRepartitionBuilder
+{
+    return new HashRepartitionBuilder();
+}
+
+/**
+ * Declares the pivot columns a groupBy()->pivot() produces, so the plan can name them before a row flows.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function pivot_values(int|string ...$values): DeclaredPivotValues
+{
+    return new DeclaredPivotValues(...$values);
+}
+
+/**
+ * Reads the pivot column once at build time and turns what it finds into declared values. Refuses a
+ * source that cannot be read twice.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function discover_pivot_values(int $maxValues = 10_000): DiscoveredPivotValues
+{
+    return new DiscoveredPivotValues($maxValues);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
+function partition_by(string|Reference $entry, string|Reference ...$entries): Partitioning
+{
+    return Partitioning::by($entry, ...$entries);
+}
+
+/**
+ * @param Type<mixed> ...$types partition column name => type, passed as named arguments
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+function partition_types(Type ...$types): PartitionTypes
+{
+    /** @var array<string, Type<mixed>> $types */
+    return new PartitionTypes($types);
 }
 
 /**
@@ -2325,25 +1867,6 @@ function save_mode_append(): SaveMode
     return SaveMode::Append;
 }
 
-/**
- * In this mode, functions throws exceptions if the given entry is not found
- * or passed parameters are invalid.
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function execution_strict(): ExecutionMode
-{
-    return ExecutionMode::STRICT;
-}
-
-/**
- * In this mode, functions returns nulls instead of throwing exceptions.
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function execution_lenient(): ExecutionMode
-{
-    return ExecutionMode::LENIENT;
-}
-
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null): string
 {
@@ -2378,55 +1901,11 @@ function compare_any(Comparison $comparison, Comparison ...$comparisons): Compar
  * @param array<Comparison|string>|Comparison $comparisons
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'join', example: 'join')]
-#[DocumentationExample(topic: 'join', example: 'join_each')]
+#[DocumentationExample(topic: 'joins', example: 'join')]
+#[DocumentationExample(topic: 'joins', example: 'join_each')]
 function join_on(array|Comparison $comparisons, string $join_prefix = ''): Expression
 {
     return Expression::on($comparisons, $join_prefix);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name(Order $order = Order::ASC): Comparator
-{
-    return new NameComparator($order);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name_desc(): Comparator
-{
-    return new NameComparator(Order::DESC);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type(array $priorities = TypePriorities::PRIORITIES, Order $order = Order::ASC): Comparator
-{
-    return new TypeComparator(new TypePriorities($priorities), $order);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_desc(array $priorities = TypePriorities::PRIORITIES): Comparator
-{
-    return new TypeComparator(new TypePriorities($priorities), Order::DESC);
-}
-
-/**
- * @param array<class-string<Entry<mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_and_name(
-    array $priorities = TypePriorities::PRIORITIES,
-    Order $order = Order::ASC,
-): Comparator {
-    return new CombinedComparator(
-        new TypeComparator(new TypePriorities($priorities), $order),
-        new NameComparator($order),
-    );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -2595,7 +2074,9 @@ function constraint_unique(string $reference, string ...$references): UniqueCons
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function constraint_sorted_by(string|Reference $column, string|Reference ...$columns): SortedByConstraint
 {
-    $references = array_map(static fn(string|Reference $ref) => EntryReference::init($ref), [$column, ...$columns]);
+    $references = array_map(static fn(string|Reference $ref) => UnresolvedReference::init(
+        $ref,
+    ), [$column, ...$columns]);
 
     return new SortedByConstraint(...$references);
 }

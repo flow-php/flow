@@ -8,6 +8,7 @@ use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Types\Exception\InvalidTypeException;
 
+use function array_chunk;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -19,6 +20,8 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function implode;
+use function is_array;
+use function is_string;
 use function sprintf;
 use function str_repeat;
 
@@ -44,22 +47,56 @@ final readonly class BulkData
             throw new RuntimeException('Bulk data cannot be empty');
         }
 
-        try {
-            $rows = type_list(type_map(type_string(), type_mixed()))->assert(array_values($rows));
-        } catch (InvalidTypeException) {
-            throw new RuntimeException('Each row must be an array');
-        }
+        $rows = array_values($rows);
+        $columns = is_array($rows[0]) ? array_keys($rows[0]) : [];
+        $names = [];
 
-        $columns = array_keys($rows[0]);
-
-        foreach ($rows as $row) {
-            if ($columns !== array_keys($row)) {
-                throw new RuntimeException('Each row must be have the same keys in the same order');
+        foreach ($columns as $column) {
+            if (!is_string($column)) {
+                throw new RuntimeException('Each row must be an array');
             }
+
+            $names[] = $column;
         }
 
-        $this->columns = new Columns(...$columns);
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows as $row) {
+            if (is_array($row) && $columns === array_keys($row)) {
+                continue;
+            }
+
+            try {
+                type_list(type_map(type_string(), type_mixed()))->assert($rows);
+            } catch (InvalidTypeException) {
+                throw new RuntimeException('Each row must be an array');
+            }
+
+            throw new RuntimeException('Each row must be have the same keys in the same order');
+        }
+
+        /** @var array<int, array<string, mixed>> $rows */
+        $this->columns = new Columns(...$names);
         $this->rows = $rows;
+    }
+
+    /**
+     * @param int<1, max> $rows
+     *
+     * @return list<self>
+     */
+    public function chunk(int $rows): array
+    {
+        if (count($this->rows) <= $rows) {
+            return [$this];
+        }
+
+        $chunks = [];
+
+        foreach (array_chunk($this->rows, $rows) as $chunk) {
+            $chunks[] = new self($chunk, $this->types, $this->parametersStyle);
+        }
+
+        return $chunks;
     }
 
     public function columns(): Columns
@@ -178,15 +215,19 @@ final readonly class BulkData
     public function toSqlNamedParameters(TableDefinition $table): array
     {
         $rows = [];
+        $platform = $table->platform();
+        $types = [];
 
         foreach ($this->rows as $index => $row) {
             /**
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                $rows[$index][$column . '_' . $index] = array_key_exists($column, $this->types)
-                    ? $this->types[$column]->convertToDatabaseValue($entry, $table->platform())
-                    : $table->dbalColumn($column)->getType()->convertToDatabaseValue($entry, $table->platform());
+                $type =
+                    $types[$column] ??= array_key_exists($column, $this->types)
+                        ? $this->types[$column]
+                        : $table->dbalColumn($column)->getType();
+                $rows[$index][$column . '_' . $index] = $type->convertToDatabaseValue($entry, $platform);
             }
         }
 
@@ -265,15 +306,19 @@ final readonly class BulkData
     public function toSqlPositionalParameters(TableDefinition $table): array
     {
         $parameters = [];
+        $platform = $table->platform();
+        $types = [];
 
         foreach ($this->rows as $row) {
             /**
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                $parameters[] = array_key_exists($column, $this->types)
-                    ? $this->types[$column]->convertToDatabaseValue($entry, $table->platform())
-                    : $table->dbalColumn($column)->getType()->convertToDatabaseValue($entry, $table->platform());
+                $type =
+                    $types[$column] ??= array_key_exists($column, $this->types)
+                        ? $this->types[$column]
+                        : $table->dbalColumn($column)->getType();
+                $parameters[] = $type->convertToDatabaseValue($entry, $platform);
             }
         }
 

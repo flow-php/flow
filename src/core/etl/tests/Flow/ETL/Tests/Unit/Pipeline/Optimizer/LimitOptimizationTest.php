@@ -12,40 +12,103 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Processor\RepartitionProcessor;
+use Flow\ETL\Row\References;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
+use function count;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path_real;
 
 final class LimitOptimizationTest extends FlowTestCase
 {
+    public function test_limit_is_not_pushed_past_a_filter(): void
+    {
+        $filtered = from_csv(path_real('file.csv'));
+        $filteredPipeline = new Pipeline($filtered);
+        $filteredPipeline->add(new ScalarFunctionFilterTransformer(ref('id')->equals(lit(1))));
+
+        (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $filteredPipeline);
+
+        $selectedThenFiltered = from_csv(path_real('file.csv'));
+        $selectedThenFilteredPipeline = new Pipeline($selectedThenFiltered);
+        $selectedThenFilteredPipeline->add(new SelectEntriesTransformer(ref('id')));
+        $selectedThenFilteredPipeline->add(new ScalarFunctionFilterTransformer(ref('id')->equals(lit(1))));
+
+        (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $selectedThenFilteredPipeline);
+
+        static::assertNull($filtered->pushedLimit());
+        static::assertNull($selectedThenFiltered->pushedLimit());
+    }
+
+    public function test_limit_transformer_stays_in_the_pipeline_after_push_down(): void
+    {
+        $accepted = new Pipeline(from_csv(path_real('file.csv')));
+        $accepted->add(new SelectEntriesTransformer(ref('id')));
+
+        $refused = new Pipeline(from_csv(path_real('file.csv')));
+        $refused->add(new DropDuplicatesTransformer(ref('id')));
+
+        $expanding = new Pipeline(from_csv(path_real('file.csv')));
+        $expanding->add(new ScalarFunctionTransformer('expanded', ref('data')->expand()));
+
+        $notPushing = new Pipeline(from_rows(rows(schema())));
+
+        foreach ([$accepted, $refused, $expanding, $notPushing] as $pipeline) {
+            $steps = (new Optimizer(new LimitOptimization()))
+                ->optimize(new LimitTransformer(10), $pipeline)
+                ->segments()
+                ->steps();
+
+            static::assertInstanceOf(LimitTransformer::class, $steps[count($steps) - 1]);
+        }
+    }
+
+    public function test_push_down_leaves_the_callers_extractor_untouched(): void
+    {
+        $extractor = from_csv(path_real('file.csv'));
+        $pipeline = new Pipeline($extractor);
+
+        (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
+
+        $pushed = $pipeline->extractor();
+
+        static::assertInstanceOf(CSVExtractor::class, $pushed);
+        static::assertNotSame($extractor, $pushed);
+        static::assertSame(10, $pushed->pushedLimit());
+        static::assertNull($extractor->pushedLimit());
+    }
+
     public function test_optimization_against_pipelines_with_expanding_processors(): void
     {
-        // Pipeline with GroupByAggregationProcessor - should not optimize
-        $pipelineWithGroupBy = new Pipeline(from_csv(path_real('file.csv')));
+        $groupedExtractor = from_csv(path_real('file.csv'));
+        $pipelineWithGroupBy = new Pipeline($groupedExtractor);
         $pipelineWithGroupBy->add(new GroupByAggregationProcessor(new GroupBy(), new Buckets(new MemoryBuckets())));
 
-        static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithGroupBy));
+        (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipelineWithGroupBy);
 
-        // Pipeline with PartitioningProcessor - should not optimize
-        $pipelineWithPartitioning = new Pipeline(from_csv(path_real('file.csv')));
-        $pipelineWithPartitioning->add(new PartitioningProcessor([ref('group')]));
+        static::assertNull($groupedExtractor->pushedLimit());
 
-        static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithPartitioning));
+        $partitionedExtractor = from_csv(path_real('file.csv'));
+        $pipelineWithPartitioning = new Pipeline($partitionedExtractor);
+        $pipelineWithPartitioning->add(
+            new RepartitionProcessor(References::init(ref('group')), new Buckets(new MemoryBuckets())),
+        );
 
-        // Pipeline with empty rows extractor - should not optimize
-        $pipelineWithEmptyExtractor = new Pipeline(from_rows(rows()));
+        (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipelineWithPartitioning);
 
-        static::assertFalse((new LimitOptimization())->isFor(new LimitTransformer(10), $pipelineWithEmptyExtractor));
+        static::assertNull($partitionedExtractor->pushedLimit());
     }
 
     public function test_optimization_for_a_pipeline_with_expanding_expression_transformations(): void
@@ -57,7 +120,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $extractor = $pipeline->extractor();
         static::assertInstanceOf(CSVExtractor::class, $extractor);
-        static::assertFalse($extractor->isLimited());
+        static::assertNull($extractor->pushedLimit());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
@@ -70,14 +133,14 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $extractor = $pipeline->extractor();
         static::assertInstanceOf(CSVExtractor::class, $extractor);
-        static::assertFalse($extractor->isLimited());
+        static::assertNull($extractor->pushedLimit());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
     public function test_optimization_for_a_pipeline_with_limited_extractor(): void
     {
         $extractor = from_csv(path_real('file.csv'));
-        $extractor->changeLimit(10);
+        $extractor->pushLimit(10);
         $pipeline = new Pipeline($extractor);
         $pipeline->add(new RenameEntryTransformer('id', 'new_id'));
 
@@ -85,7 +148,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $extractor = $pipeline->extractor();
         static::assertInstanceOf(CSVExtractor::class, $extractor);
-        static::assertTrue($extractor->isLimited());
+        static::assertNotNull($extractor->pushedLimit());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
         static::assertInstanceOf(LimitTransformer::class, $optimizedPipeline->segments()->steps()[1]);
     }
@@ -99,8 +162,8 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $extractor = $pipeline->extractor();
         static::assertInstanceOf(CSVExtractor::class, $extractor);
-        static::assertTrue($extractor->isLimited());
-        static::assertCount(1, $optimizedPipeline->segments()->steps());
+        static::assertNotNull($extractor->pushedLimit());
+        static::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
     public function test_optimization_of_limit_on_empty_pipeline(): void
@@ -111,7 +174,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $extractor = $pipeline->extractor();
         static::assertInstanceOf(CSVExtractor::class, $extractor);
-        static::assertTrue($extractor->isLimited());
-        static::assertCount(0, $optimizedPipeline->segments()->steps());
+        static::assertNotNull($extractor->pushedLimit());
+        static::assertCount(1, $optimizedPipeline->segments()->steps());
     }
 }

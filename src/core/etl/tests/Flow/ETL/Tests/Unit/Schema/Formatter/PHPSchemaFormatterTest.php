@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
@@ -145,6 +146,15 @@ final class PHPSchemaFormatterTest extends FlowTestCase
                 ],
             ]),
         ))));
+    }
+
+    public function test_php_schema_formatter_renders_a_timezone_column(): void
+    {
+        static::assertEquals(<<<'PHP'
+            \Flow\ETL\DSL\schema(
+                \Flow\ETL\DSL\time_zone_schema("tz", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+            );
+            PHP, (new PHPSchemaFormatter())->format(schema(time_zone_schema('tz'))));
     }
 
     public function test_formatting_structure_schema(): void

@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\ErrorHandler\LoadingAction;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Throwable;
 
-final class BranchingLoader implements Closure, Loader, OverridingLoader, ReplayAware
+final class BranchingLoader implements Closure, Discardable, Loader, OverridingLoader, ReplayAware
 {
     private ?TransformationStream $stream = null;
 
@@ -41,7 +44,10 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
             } catch (Throwable $failure) {
                 // Same ruling as TransformerLoader::closure(): a drain failure never reached load(), so the
                 // ErrorHandler rules here; declining means the run continues and the loader must still close.
-                if ($context->errorHandler()->throw($failure, new Rows())) {
+                if (
+                    $context->errorHandler()->onLoading(new LoadingError($failure, $this, new Rows(new Schema())))
+                    === LoadingAction::propagate
+                ) {
                     throw $failure;
                 }
             }
@@ -54,6 +60,15 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
             $this->limitReached = false;
             $this->runContext = null;
         }
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        // The stream is never drained here - draining would commit the dead run's buffered rows. The wrapped loader
+        // is discarded by the pipeline, which walks the whole loader tree.
+        $this->stream = null;
+        $this->limitReached = false;
+        $this->runContext = null;
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -74,7 +89,12 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader, Replay
                 $this->loader->load($branchRows, $context);
             } else {
                 if ($this->stream === null || !$this->stream->drivenBy($context)) {
-                    $this->stream = new TransformationStream($this->transformation, $this->loader, $context);
+                    $this->stream = new TransformationStream(
+                        $this->transformation,
+                        $branchRows->schema(),
+                        $this->loader,
+                        $context,
+                    );
                 }
 
                 try {

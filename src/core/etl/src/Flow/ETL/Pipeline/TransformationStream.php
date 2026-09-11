@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\FeedExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation;
 
 use function Flow\ETL\DSL\df;
@@ -26,10 +27,11 @@ final readonly class TransformationStream
 
     public function __construct(
         Transformation $transformation,
+        Schema $schema,
         private Loader $sink,
         private FlowContext $context,
     ) {
-        $this->source = new FeedExtractor();
+        $this->source = new FeedExtractor($schema);
 
         try {
             $frame = $transformation->transform(df($context->config)->from($this->source));
@@ -38,8 +40,8 @@ final readonly class TransformationStream
         } catch (FiberError $error) {
             throw new InvalidLogicException(
                 'A Transformation given to to_transformation() or to_branch()->withTransformation() must only '
-                . 'build the DataFrame, not trigger it - count(), fetch(), schema() and the other trigger '
-                . 'methods read from a source that only exists while the nested pipeline runs.',
+                . 'build the DataFrame, not trigger it - count(), fetch() and the other trigger methods read '
+                . 'from a source that only exists while the nested pipeline runs.',
                 previous: $error,
             );
         }

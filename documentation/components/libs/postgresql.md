@@ -298,6 +298,9 @@ $users = $client->fetchAll('SELECT * FROM users WHERE active = $1', [true]);
 // Execute INSERT/UPDATE/DELETE
 $affected = $client->execute('UPDATE users SET active = $1 WHERE id = $2', [false, 1]);
 
+// The same, with parameters already in PostgreSQL text form - no converter runs
+$affected = $client->execute('UPDATE users SET active = $1 WHERE id = $2', converted_parameters(['f', '1']));
+
 // Transaction with automatic commit/rollback
 $result = $client->transaction(function ($client) {
     $client->execute('INSERT INTO users (name) VALUES ($1)', ['John']);
@@ -315,20 +318,20 @@ PostgreSQL arrays are supported through type-specific converters. Use `typed()` 
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, typed, pgsql_type_int4_array, pgsql_type_text_array};
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, typed, value_type_int4_array, value_type_text_array};
 
 $client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
 
 // Integer array
 $client->execute(
     'INSERT INTO scores (values) VALUES ($1)',
-    [typed([100, 200, 300], pgsql_type_int4_array())]
+    [typed([100, 200, 300], value_type_int4_array())]
 );
 
 // Text array
 $client->execute(
     'INSERT INTO tags (names) VALUES ($1)',
-    [typed(['php', 'postgresql'], pgsql_type_text_array())]
+    [typed(['php', 'postgresql'], value_type_text_array())]
 );
 ```
 

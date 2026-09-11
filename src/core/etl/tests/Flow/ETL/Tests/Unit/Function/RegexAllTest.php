@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,16 +16,19 @@ final class RegexAllTest extends FlowTestCase
 {
     public function test_regex_all_expression_on_invalid_subject(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
+
         $pregMatch = regex_all(lit('/\d+/'), lit(2));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        $pregMatch->eval(row([]), flow_context());
     }
 
     public function test_regex_all_expression_on_no_match(): void
     {
         $pregMatch = regex_all(lit('/\d+/'), lit('apples and oranges'));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        static::assertNull($pregMatch->eval(row([]), flow_context()));
     }
 
     public function test_regex_all_expression_on_valid_strings(): void
@@ -37,14 +41,17 @@ final class RegexAllTest extends FlowTestCase
                 ['124.23',     '12',     '45'],
                 ['EUR',        'USD',    'PLN'],
             ],
-            $pregMatch->eval(row(), flow_context()),
+            $pregMatch->eval(row([]), flow_context()),
         );
     }
 
     public function test_regex_expression_on_invalid_pattern(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
+
         $pregMatch = regex_all(lit(1), lit('12 apples and 45 oranges'));
 
-        static::assertNull($pregMatch->eval(row(), flow_context()));
+        $pregMatch->eval(row([]), flow_context());
     }
 }

@@ -7,7 +7,6 @@ namespace Flow\Floe\Tests\Unit;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\FooterReader;
 use Flow\Floe\Format;
@@ -15,7 +14,8 @@ use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Flow\Floe\Tests\Double\UnsizedSourceStream;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\int_entry;
+use function chr;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -30,8 +30,8 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://footer.floe');
-        $data = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-        $writer = new FloeWriter($fs, FloeStreamWriter::unionSchema($data));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+        $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -70,7 +70,10 @@ final class FooterReaderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('written with codec 0x05, expected 0x00');
 
-        (new FooterReader())->read(new MemorySourceStream("FLOE\x01\x05" . str_repeat("\0", 10)), new NoopCodec());
+        (new FooterReader())->read(
+            new MemorySourceStream('FLOE' . chr(Format::VERSION) . "\x05" . str_repeat("\0", 10)),
+            new NoopCodec(),
+        );
     }
 
     public function test_footer_that_does_not_fit_throws(): void
@@ -92,8 +95,8 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://close-ok.floe');
-        $data = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($fs, FloeStreamWriter::unionSchema($data));
+        $data = rows(schema(int_schema('id')), row(['id' => 1]));
+        $writer = new FloeWriter($fs, $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

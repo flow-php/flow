@@ -31,7 +31,7 @@ abstract class SqliteIntegrationTestCase extends IntegrationTestCase
             (new DsnParser(['sqlite' => 'sqlite3']))->parse(
                 'sqlite3://' . (str_starts_with($path, '/') ? '/' : '') . $path,
             ),
-            (new Configuration())->setMiddlewares([new Middleware($this->logger)]),
+            (new Configuration())->setMiddlewares([new Middleware($this->logger), $this->spy]),
         ));
     }
 }

@@ -23,6 +23,12 @@ final readonly class SqliteDialect implements Dialect
         private AbstractPlatform $platform,
     ) {}
 
+    public function maxBindParameters(): int
+    {
+        // SQLITE_MAX_VARIABLE_NUMBER since SQLite 3.32.0 (999 before)
+        return 32_766;
+    }
+
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData

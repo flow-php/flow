@@ -54,4 +54,9 @@ final class ColumnsTest extends TestCase
 
         static::assertEquals(new Columns(':date', ':title', ':description', ':quantity'), $columns->prefix(':'));
     }
+
+    public function test_counts_its_columns(): void
+    {
+        static::assertSame(3, (new Columns('id', 'name', 'age'))->count());
+    }
 }

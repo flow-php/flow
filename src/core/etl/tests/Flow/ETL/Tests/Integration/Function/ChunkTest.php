@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -28,8 +29,8 @@ final class ChunkTest extends FlowTestCase
                 ['text' => 'chunk', 'size' => 0],
                 ['text' => null, 'size' => 3],
             ]))
-            ->withEntry('chunked', ref('text')->chunk(ref('size')))
-            ->withEntry('chunked_fixed', ref('text')->chunk(2))
+            ->withEntry('chunked', optional(ref('text')->chunk(ref('size'))))
+            ->withEntry('chunked_fixed', optional(ref('text')->chunk(2)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -57,7 +58,7 @@ final class ChunkTest extends FlowTestCase
                     'chunked' => ['longtext'],
                     'chunked_fixed' => ['lo', 'ng', 'te', 'xt'],
                 ],
-                ['text' => 'chunk', 'size' => 0, 'chunked' => [], 'chunked_fixed' => ['ch', 'un', 'k']],
+                ['text' => 'chunk', 'size' => 0, 'chunked' => null, 'chunked_fixed' => ['ch', 'un', 'k']],
                 ['text' => null, 'size' => 3, 'chunked' => null, 'chunked_fixed' => null],
             ],
             $memory->dump(),

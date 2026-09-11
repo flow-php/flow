@@ -54,7 +54,7 @@ final class TransactionalPostgreSqlLoaderTransformationIntegrationTest extends I
             ->onError(ignore_error_handler())
             ->batchSize(2)
             ->write(to_pgsql_transaction($this->client, to_transformation(
-                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                 $sink,
             )))
             ->run();
@@ -83,7 +83,7 @@ final class TransactionalPostgreSqlLoaderTransformationIntegrationTest extends I
                 ->write(to_pgsql_transaction(
                     $this->client,
                     to_transformation(
-                        new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                        new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                         to_pgsql_table($this->client, 'flow_pgsql_tx_drain'),
                     ),
                     new ClosureThrowingLoader(new RuntimeException('closure failed')),
@@ -117,7 +117,7 @@ final class TransactionalPostgreSqlLoaderTransformationIntegrationTest extends I
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 4], ['id' => 2]]))
             ->batchSize(2)
             ->write(to_pgsql_transaction($this->client, to_transformation(
-                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id'))),
+                new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                 $spy,
             )))
             ->run();
@@ -137,9 +137,9 @@ final class TransactionalPostgreSqlLoaderTransformationIntegrationTest extends I
             ->write(to_pgsql_transaction($this->client, to_branch(
                 lit(true),
                 $spy,
-            )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref(
+            )->withTransformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref(
                 'id',
-            ))))))
+            )])))))
             ->run();
 
         static::assertSame([['rows' => 4, 'nestingLevel' => $baseline + 1]], $spy->deliveries);

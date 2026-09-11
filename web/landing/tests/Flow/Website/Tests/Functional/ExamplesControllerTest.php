@@ -15,7 +15,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_back_to_example_link_exists_on_playground_page(): void
     {
         $client = self::createClient();
-        $crawler = $client->request('GET', '/playground/data_frame/cache');
+        $crawler = $client->request('GET', '/playground/caching/cache');
 
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a:contains("Back to Example")');
@@ -25,7 +25,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_code_is_displayed_on_example_page(): void
     {
         $client = self::createClient();
-        $crawler = $client->request('GET', '/data_frame/cache/');
+        $crawler = $client->request('GET', '/caching/cache/');
 
         self::assertResponseIsSuccessful();
         $code = $crawler->filter('#code-php');
@@ -36,7 +36,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_example_option_page_returns_200(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/data_frame/data_reading/csv/');
+        $client->request('GET', '/reading/csv/');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href*="/playground/"]');
@@ -45,7 +45,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_example_option_playground_page_returns_200(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/playground/data_frame/data_reading/csv');
+        $client->request('GET', '/playground/reading/csv');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Playground');
@@ -54,7 +54,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_example_page_displays_correct_title(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/data_frame/cache/');
+        $client->request('GET', '/caching/cache/');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('title', 'Flow PHP');
@@ -64,7 +64,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_example_page_returns_200(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/data_frame/cache/');
+        $client->request('GET', '/caching/cache/');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href*="/playground/"]');
@@ -73,17 +73,17 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_example_playground_page_returns_200(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/playground/data_frame/cache');
+        $client->request('GET', '/playground/caching/cache');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Playground');
-        self::assertSelectorExists('a[href="/data_frame/cache/"]');
+        self::assertSelectorExists('a[href="/caching/cache/"]');
     }
 
     public function test_options_navigation_shows_on_example_with_options(): void
     {
         $client = self::createClient();
-        $crawler = $client->request('GET', '/data_frame/data_reading/');
+        $crawler = $client->request('GET', '/reading/');
 
         self::assertResponseIsSuccessful();
         $options = $crawler->filter('a:contains("Csv")');
@@ -93,7 +93,7 @@ final class ExamplesControllerTest extends WebTestCase
     public function test_try_it_in_playground_link_exists_on_example_page(): void
     {
         $client = self::createClient();
-        $crawler = $client->request('GET', '/data_frame/cache/');
+        $crawler = $client->request('GET', '/caching/cache/');
 
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a[title="Try in Playground"]');

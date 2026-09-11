@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema;
 use Flow\PostgreSql\Parser\ExpressionParser;
 
 /**
- * @phpstan-type IndexShape = array{name: string, columns: non-empty-list<string>, unique: bool, method: string, primary: bool, predicate: ?string}
+ * @type IndexShape = array{name: string, columns: non-empty-list<string>, unique: bool, method: string, primary: bool, predicate: ?string}
  */
 final readonly class Index
 {

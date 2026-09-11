@@ -6,16 +6,17 @@ RowValues pipeline decodes streamed frame bodies identically to the pure-PHP pip
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+
 use Flow\Floe\RustFloeEncoderNative;
 
-use function Flow\ETL\DSL\{row, rows, int_entry, str_entry, float_entry, datetime_entry};
-
-$rows = rows(
-    row(int_entry('id', 1), str_entry('name', 'a')),
-    row(int_entry('id', 2), str_entry('name', null)),
-    row(int_entry('id', 3), float_entry('price', 1.5)),
-    row(int_entry('id', 4), datetime_entry('at', new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw')))),
-);
+$rows = rows(schema(int_schema('id'), str_schema('name', nullable: true), float_schema('price', nullable: true), datetime_schema('at', nullable: true)), row(['id' => 1, 'name' => 'a']), row(['id' => 2, 'name' => null]), row(['id' => 3, 'price' => 1.5]), row(['id' => 4, 'at' => new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw'))]));
 
 $frames = php_frames($rows);
 $decoded = ext_decode_frames($frames);

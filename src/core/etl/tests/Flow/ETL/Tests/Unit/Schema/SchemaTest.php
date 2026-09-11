@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -62,6 +62,12 @@ final class SchemaTest extends FlowTestCase
 
     public static function provide_is_same_cases(): Generator
     {
+        yield 'same columns in a different order' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(str_schema('name'), int_schema('id')),
+            false,
+        ];
+
         yield 'identical simple schemas' => [
             schema(int_schema('id'), str_schema('name')),
             schema(int_schema('id'), str_schema('name')),
@@ -355,7 +361,10 @@ final class SchemaTest extends FlowTestCase
     {
         $schema = schema(integer_schema('id'), integer_schema('Id'));
 
-        static::assertEquals(refs(EntryReference::init('id'), EntryReference::init('Id')), $schema->references());
+        static::assertEquals(
+            refs(UnresolvedReference::init('id'), UnresolvedReference::init('Id')),
+            $schema->references(),
+        );
     }
 
     public function test_creating_schema_from_corrupted_json(): void
@@ -800,16 +809,23 @@ final class SchemaTest extends FlowTestCase
                 {
                     "ref": "struct",
                     "type": {
-                        "type": "structure",
-                        "elements": {
-                            "street": {
-                                "type": "string"
+                        "type": "structure_v2",
+                        "fields": [
+                            {
+                                "name": "street",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             },
-                            "city": {
-                                "type": "string"
+                            {
+                                "name": "city",
+                                "type": {
+                                    "type": "string"
+                                },
+                                "optional": false
                             }
-                        },
-                        "optional_elements": [],
+                        ],
                         "allow_extra": false
                     },
                     "nullable": false,
@@ -876,5 +892,42 @@ final class SchemaTest extends FlowTestCase
     public function test_sort_empty_schema(): void
     {
         static::assertSame([], array_keys(schema()->sort()->definitions()));
+    }
+
+    public function test_match_order_to_reorders_columns_but_not_the_fields_inside_a_type(): void
+    {
+        $schema = schema(
+            structure_schema('s', type_structure(['b' => type_string(), 'a' => type_integer()])),
+            int_schema('id'),
+        );
+        $authority = schema(
+            int_schema('id'),
+            structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_string()])),
+        );
+
+        $matched = $schema->matchOrderTo($authority);
+
+        static::assertSame(['id', 's'], array_keys($matched->definitions()));
+        static::assertSame('structure{b: string, a: integer}', $matched->get('s')->type()->toString());
+    }
+
+    public function test_match_order_to_appends_columns_the_authority_does_not_know(): void
+    {
+        static::assertSame(
+            ['id', 'extra'],
+            array_keys(
+                schema(int_schema('id'), str_schema('extra'))->matchOrderTo(schema(int_schema('id')))->definitions(),
+            ),
+        );
+    }
+
+    public function test_match_order_to_adds_and_drops_nothing(): void
+    {
+        static::assertSame(
+            ['id'],
+            array_keys(
+                schema(int_schema('id'))->matchOrderTo(schema(int_schema('id'), str_schema('name')))->definitions(),
+            ),
+        );
     }
 }

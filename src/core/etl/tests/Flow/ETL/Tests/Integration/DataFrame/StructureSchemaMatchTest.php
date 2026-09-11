@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_selective_validator;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -42,31 +43,39 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         ];
 
         yield 'declared optional, key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'email' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             $withNickname,
             true,
         ];
 
         yield 'declared optional, key absent' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'email' => type_string(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             $withoutNickname,
             true,
         ];
 
         yield 'allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], true),
+            type_structure(['id' => type_integer(), 'email' => type_string()], true),
             $withNickname,
             true,
         ];
 
         yield 'allow extra, undeclared key absent' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], true),
+            type_structure(['id' => type_integer(), 'email' => type_string()], true),
             $withoutNickname,
             true,
         ];
 
         yield 'without allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], [], false),
+            type_structure(['id' => type_integer(), 'email' => type_string()], false),
             $withNickname,
             false,
         ];
@@ -105,7 +114,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         try {
             data_frame()
                 ->read(from_array([['user' => $value]]))
-                ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+                ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
                 ->run();
         } catch (SchemaValidationException) {
             $matched = false;
@@ -123,7 +132,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 2]]]]))
             ->match(
-                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema(structure_schema('user', type_structure(['data' => type_array()]), true)),
                 schema_selective_validator(),
             )
             ->run();
@@ -136,7 +145,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 'a']]]]))
             ->match(
-                schema(structure_schema('user', type_structure(['data' => type_array()]))),
+                schema(structure_schema('user', type_structure(['data' => type_array()]), true)),
                 schema_selective_validator(),
             )
             ->run();
@@ -154,7 +163,7 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['user' => ['data' => []]]]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
     }
 
@@ -171,20 +180,24 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['user' => ['data' => [1, 'a']]]]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
     }
 
     public function test_mixed_shapes_in_one_batch_stay_a_structure(): void
     {
-        $declared = type_structure(['id' => type_integer(), 'email' => type_string()], ['nickname' => type_string()]);
+        $declared = type_structure([
+            'id' => type_integer(),
+            'email' => type_string(),
+            'nickname' => structure_element('nickname', type_string(), optional: true),
+        ]);
 
         data_frame()
             ->read(from_array([
                 ['user' => ['id' => 1, 'email' => 'a@b.c', 'nickname' => 'norbert']],
                 ['user' => ['id' => 2, 'email' => 'c@d.e']],
             ]))
-            ->match(schema(structure_schema('user', $declared)), schema_selective_validator())
+            ->match(schema(structure_schema('user', $declared, true)), schema_selective_validator())
             ->run();
 
         static::assertSame(

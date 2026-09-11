@@ -17,7 +17,7 @@ final class ManifestTest extends FlowTestCase
         static::assertNotFalse($json);
 
         $manifest = Manifest::fromJson($json);
-        static::assertCount(52, $manifest->packages);
+        static::assertCount(53, $manifest->packages);
 
         foreach ($manifest->packages as $package) {
             static::assertFileExists($this->repositoryRoot() . '/' . $package->path);

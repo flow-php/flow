@@ -34,7 +34,7 @@ Adapter for [ETL](https://github.com/flow-php/etl) using bulk operations from [D
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 
 data_frame()
-    ->read(from_())
+    ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_table_insert(['url' => \getenv('PGSQL_DATABASE_URL')], 'your-table-name'))
     ->run();
 ```
@@ -51,7 +51,7 @@ You can also configure bulk operations with platform-specific options:
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, postgresql_insert_options};
 
 data_frame()
-    ->read(from_())
+    ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_table_insert(
         $connection,
         'users',
@@ -72,7 +72,7 @@ By default, `DbalLoader` automatically detects column types from the Flow Schema
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 
 data_frame()
-    ->read(from_())
+    ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_table_insert($connection, 'users'))
     ->run();
 // Types are automatically detected from the Flow Schema
@@ -93,7 +93,7 @@ $customTypesMap = new TypesMap([
 ]);
 
 data_frame()
-    ->read(from_())
+    ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_table_insert($connection, 'users')
         ->withTypesMap($customTypesMap))
     ->run();
@@ -113,8 +113,8 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 
 data_frame()
     ->read(from_array([
-        ['id' => 1, 'data' => xml_entry('data', $domDocument)],
-        ['id' => 2, 'data' => xml_entry('data', $domElement)],
+        ['id' => 1, 'data' => $domDocument],
+        ['id' => 2, 'data' => $domElement],
     ]))
     ->write(to_dbal_table_insert($connection, 'xml_table'))
     ->run();
@@ -171,27 +171,33 @@ This simple but powerful extractor let you extract data from a single or multipl
 
 ### Single Query
 ```php 
+use function Flow\ETL\DSL\{data_frame, to_output};
+
 data_frame()
     ->read(DbalQueryExtractor::singleQuery($connection, "SELECT * FROM {$table} ORDER BY id"))
-    ->write(to_())
-    ->run()
+    ->write(to_output())
+    ->run();
 ```
 
 ### Single Parametrized Query
 
 ```php 
+use function Flow\ETL\DSL\{data_frame, to_output};
+
 data_frame()
     ->read(DbalQueryExtractor::singleQuery($connection, "SELECT * FROM {$table} WHERE id = :id", ['id' => 1]))
-    ->write(to_())
-    ->run()
+    ->write(to_output())
+    ->run();
 ```
 ### Multiple Parametrized Query
 
-```php 
+```php ignore
+use function Flow\ETL\DSL\{data_frame, to_output};
+
 data_frame()
     ->read(
         new DbalQueryExtractor(
-            $connection
+            $connection,
             "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
             new ParametersSet(
                 ['limit' => 2, 'offset' => 0],
@@ -202,7 +208,7 @@ data_frame()
             )
         )
     )
-    ->write(to_())
+    ->write(to_output())
     ->run()
 ```
 
@@ -251,7 +257,7 @@ Can be converted to Doctrine DBAL Schema Table like this:
 ```php
 use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
 
-to_dbal_schema_table($flowSchema, 'test')
+to_dbal_schema_table($flowSchema, 'test');
 ```
 
 Will generate:
@@ -288,7 +294,7 @@ new Table(
 
 When types map is not provided, the default one will be used:
 
-```php
+```php ignore
 public const FLOW_TYPES = [
     StringType::class => \Doctrine\DBAL\Types\StringType::class,
     IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,

@@ -47,9 +47,8 @@ final class StatisticsCollector
     ) {
         // @mago-ignore analysis:invalid-property-assignment-value
         $this->analyze = match (true) {
-            // @mago-ignore analysis:redundant-comparison,unreachable-match-arm
             $analyze === true => new Analyze(),
-            // @mago-ignore analysis:impossible-type-comparison,redundant-comparison,redundant-logical-operation
+            // @mago-ignore analysis:impossible-type-comparison
             $analyze === false || $analyze === null => null,
             default => $analyze,
         };
@@ -83,8 +82,12 @@ final class StatisticsCollector
 
         if ($this->columnStatistics !== null) {
             foreach ($rows->all() as $row) {
-                foreach ($row->entries()->all() as $entry) {
-                    $this->columnStatistics->add($entry);
+                foreach ($rows->schema()->definitions() as $definition) {
+                    $name = $definition->entry()->name();
+
+                    if ($row->has($name)) {
+                        $this->columnStatistics->add($definition, $row->get($name));
+                    }
                 }
             }
         }

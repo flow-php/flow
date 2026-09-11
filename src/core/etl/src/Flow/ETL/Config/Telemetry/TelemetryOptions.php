@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
-use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
-
 final readonly class TelemetryOptions
 {
     public function __construct(
@@ -13,7 +11,6 @@ final readonly class TelemetryOptions
         public bool $traceTransformations = false,
         public bool $traceCache = false,
         public bool $collectMetrics = false,
-        public FilesystemTelemetryOptions $filesystem = new FilesystemTelemetryOptions(),
     ) {}
 
     public function collectMetrics(bool $collect = true): self
@@ -23,18 +20,6 @@ final readonly class TelemetryOptions
             traceTransformations: $this->traceTransformations,
             traceCache: $this->traceCache,
             collectMetrics: $collect,
-            filesystem: $this->filesystem,
-        );
-    }
-
-    public function filesystem(FilesystemTelemetryOptions $options): self
-    {
-        return new self(
-            traceLoading: $this->traceLoading,
-            traceTransformations: $this->traceTransformations,
-            traceCache: $this->traceCache,
-            collectMetrics: $this->collectMetrics,
-            filesystem: $options,
         );
     }
 
@@ -45,7 +30,6 @@ final readonly class TelemetryOptions
             traceTransformations: $this->traceTransformations,
             traceCache: $trace,
             collectMetrics: $this->collectMetrics,
-            filesystem: $this->filesystem,
         );
     }
 
@@ -56,7 +40,6 @@ final readonly class TelemetryOptions
             traceTransformations: $this->traceTransformations,
             traceCache: $this->traceCache,
             collectMetrics: $this->collectMetrics,
-            filesystem: $this->filesystem,
         );
     }
 
@@ -67,7 +50,6 @@ final readonly class TelemetryOptions
             traceTransformations: $trace,
             traceCache: $this->traceCache,
             collectMetrics: $this->collectMetrics,
-            filesystem: $this->filesystem,
         );
     }
 }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Excel;
 use BackedEnum;
 use DateInterval;
 use DateTimeInterface;
+use DateTimeZone;
 use Dom\XMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\RuntimeException;
@@ -20,6 +21,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
@@ -52,8 +54,6 @@ final class ExcelEncoder implements Encoder
     public function __construct(
         private readonly bool $withHeader = true,
         private readonly bool $convertEmptyToNull = true,
-        private readonly string $dateTimeFormat = 'Y-m-d H:i:s',
-        private readonly string $dateFormat = 'Y-m-d',
         private readonly string $timeFormat = '%H:%I:%S',
     ) {}
 
@@ -115,6 +115,16 @@ final class ExcelEncoder implements Encoder
     }
 
     /**
+     * The names decode() resolved from the first row it saw; null before the first decode().
+     *
+     * @return null|list<string>
+     */
+    public function headers(): ?array
+    {
+        return $this->headers;
+    }
+
+    /**
      * @return list<string>
      */
     private function generateAutoHeaders(int $count): array
@@ -140,15 +150,16 @@ final class ExcelEncoder implements Encoder
             : '', $cells));
     }
 
-    private function renderValue(Type $type, mixed $value): bool|float|int|string|null
+    private function renderValue(Type $type, mixed $value): bool|DateTimeInterface|float|int|string|null
     {
         if ($value === null) {
             return null;
         }
 
         return match ($type::class) {
-            DateTimeType::class => $value instanceof DateTimeInterface ? $value->format($this->dateTimeFormat) : null,
-            DateType::class => $value instanceof DateTimeInterface ? $value->format($this->dateFormat) : null,
+            // a real DateTimeCell, not text: the reader types a cell from its style, and a formatted string is
+            // indistinguishable from any other text
+            DateTimeType::class, DateType::class => $value instanceof DateTimeInterface ? $value : null,
             TimeType::class => $value instanceof DateInterval ? $value->format($this->timeFormat) : null,
             EnumType::class => match (true) {
                 $value instanceof BackedEnum => (string) $value->value,
@@ -157,6 +168,7 @@ final class ExcelEncoder implements Encoder
             },
             JsonType::class => $value instanceof Json ? $value->toString() : null,
             UuidType::class => $value instanceof Uuid ? $value->toString() : null,
+            TimeZoneType::class => $value instanceof DateTimeZone ? $value->getName() : null,
             XMLType::class => $value instanceof XMLDocument || $value instanceof DOMDocument
                 ? $this->xmlToString($value)
                 : null,

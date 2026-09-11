@@ -9,7 +9,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class CapitalizeTest extends FlowTestCase
 {
@@ -17,6 +16,6 @@ final class CapitalizeTest extends FlowTestCase
     {
         static::assertSame('This Is A Value', ref('string')
             ->capitalize()
-            ->eval(row(str_entry('string', 'this is a value')), flow_context()));
+            ->eval(row(['string' => 'this is a value']), flow_context()));
     }
 }

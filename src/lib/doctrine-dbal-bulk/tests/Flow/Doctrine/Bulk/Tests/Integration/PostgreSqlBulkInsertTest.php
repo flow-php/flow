@@ -19,6 +19,39 @@ use function json_encode;
 
 final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
+    public function test_consecutive_inserts_of_one_shape_prepare_the_statement_once(): void
+    {
+        // @mago-expect analysis:deprecated-method
+        $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]))->setPrimaryKey(['id']));
+
+        $bulk = Bulk::create();
+        $connection = $this->databaseContext->connection();
+
+        $bulk->insert($connection, $table, new BulkData([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]));
+        $preparedByFirstInsert = $this->preparedStatementsCount();
+
+        $bulk->insert($connection, $table, new BulkData([['id' => 3, 'name' => 'c'], ['id' => 4, 'name' => 'd']]));
+        static::assertSame($preparedByFirstInsert, $this->preparedStatementsCount());
+
+        // one row is another placeholder list, so another statement
+        $bulk->insert($connection, $table, new BulkData([['id' => 5, 'name' => 'e']]));
+        static::assertSame($preparedByFirstInsert + 1, $this->preparedStatementsCount());
+
+        static::assertSame(
+            [
+                ['id' => 1, 'name' => 'a'],
+                ['id' => 2, 'name' => 'b'],
+                ['id' => 3, 'name' => 'c'],
+                ['id' => 4, 'name' => 'd'],
+                ['id' => 5, 'name' => 'e'],
+            ],
+            $this->databaseContext->selectAll($table),
+        );
+    }
+
     public function test_inserts_multiple_rows_at_once(): void
     {
         // @mago-expect analysis:deprecated-method

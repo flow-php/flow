@@ -87,7 +87,7 @@ final class TypeFactory
             'literal' => LiteralType::fromArray($data),
             'list' => ListType::fromArray($data),
             'map' => MapType::fromArray($data),
-            'structure' => StructureType::fromArray($data),
+            'structure_v2' => StructureType::fromArray($data),
             'xml_element' => type_xml_element(),
             'xml' => type_xml(),
             'union' => UnionType::fromArray($data),
@@ -111,7 +111,7 @@ final class TypeFactory
     {
         return match (mb_strtolower($name)) {
             'int', 'integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
-            'float' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),
+            'float', 'double', 'real' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),
             'string' => self::fromArray(['type' => 'string', 'scalar_type' => 'string']),
             'bool', 'boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
             default => self::fromArray(['type' => $name]),

@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 /**
  * Base interface for all table references in FROM clause.
  *
- * @phpstan-type ColumnAliases array<string>
+ * @type ColumnAliases = array<string>
  */
 interface TableReference extends AstConvertible
 {

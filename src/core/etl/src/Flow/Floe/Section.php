@@ -14,7 +14,6 @@ final readonly class Section
 {
     public function __construct(
         public int $offset,
-        public int $partitionsId,
         public int $rowCount,
     ) {}
 
@@ -28,24 +27,22 @@ final readonly class Section
         try {
             $data = type_structure([
                 'offset' => type_integer(),
-                'partitionsId' => type_integer(),
                 'rowCount' => type_integer(),
             ])->assert($data);
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer section is malformed: ' . $e->getMessage(), 0, $e);
         }
 
-        return new self($data['offset'], $data['partitionsId'], $data['rowCount']);
+        return new self($data['offset'], $data['rowCount']);
     }
 
     /**
-     * @return array{offset: int, partitionsId: int, rowCount: int}
+     * @return array{offset: int, rowCount: int}
      */
     public function normalize(): array
     {
         return [
             'offset' => $this->offset,
-            'partitionsId' => $this->partitionsId,
             'rowCount' => $this->rowCount,
         ];
     }

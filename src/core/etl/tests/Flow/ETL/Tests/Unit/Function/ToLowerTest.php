@@ -15,6 +15,6 @@ final class ToLowerTest extends FlowTestCase
 {
     public function test_string_to_lower(): void
     {
-        static::assertSame('lower', lower(lit('LOWER'))->eval(row(), flow_context()));
+        static::assertSame('lower', lower(lit('LOWER'))->eval(row([]), flow_context()));
     }
 }

@@ -74,6 +74,14 @@ final class AzureBlobFilesystemTest extends TestCase
         azure_filesystem($this->createStub(BlobServiceInterface::class))->status(path('file:///var/foo.txt'));
     }
 
+    public function test_supports_only_its_own_scheme(): void
+    {
+        $filesystem = azure_filesystem($this->createStub(BlobServiceInterface::class));
+
+        static::assertTrue($filesystem->supports(path('azure-blob://container/orders.csv')));
+        static::assertFalse($filesystem->supports(path('file:///var/foo.txt')));
+    }
+
     public function test_write_to_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);

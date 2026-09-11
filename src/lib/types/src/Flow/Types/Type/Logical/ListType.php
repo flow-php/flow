@@ -71,6 +71,16 @@ final readonly class ListType implements Type
      */
     public function cast(mixed $value): array
     {
+        // hoisted above the try: the catch below re-wraps without the reason
+        if (
+            !is_array($value)
+            && $value !== null
+            && !$value instanceof Json
+            && !(is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '[')))
+        ) {
+            throw new CastingException($value, $this, reason: 'wrap the value first, e.g. type_list(type_string())');
+        }
+
         try {
             if ($value instanceof Json) {
                 $value = $value->toArray();
@@ -85,7 +95,7 @@ final readonly class ListType implements Type
             }
 
             if (!is_array($value)) {
-                return $this->assert([$this->element()->cast($value)]);
+                throw new CastingException($value, $this);
             }
 
             $castedList = [];

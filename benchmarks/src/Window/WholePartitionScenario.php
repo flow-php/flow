@@ -6,6 +6,7 @@ namespace Flow\Benchmarks\Window;
 
 use Flow\Benchmarks\BenchmarkConfig;
 use Flow\Benchmarks\Datasets\Datasets;
+use Flow\Benchmarks\Partitioning\PartitionCardinality;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\ref;
@@ -17,13 +18,16 @@ final readonly class WholePartitionScenario
 {
     public function __construct(
         private int $rows,
+        private PartitionCardinality $cardinality,
     ) {}
 
     public function run(): void
     {
-        data_frame(BenchmarkConfig::builder())
-            ->read(from_floe(Datasets::orders($this->rows)->floe()))
-            ->withEntry('seller_total', sum(ref('discount'))->over(window()->partitionBy(ref('seller_id'))))
+        $partitioning = new WindowPartitioning($this->cardinality);
+
+        $partitioning
+            ->derive(data_frame(BenchmarkConfig::builder())->read(from_floe(Datasets::orders($this->rows)->floe())))
+            ->withEntry('seller_total', sum(ref('discount'))->over(window()->partitionBy($partitioning->reference())))
             ->run();
     }
 }

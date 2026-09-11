@@ -6,19 +6,54 @@ namespace Flow\ETL\Function;
 
 use Dom\HTMLElement;
 use DOMDocument;
+use DOMElement;
 use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
 use function class_exists;
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_xml_element;
 
-final class DOMElementParent extends ScalarFunctionChain
+final class DOMElementParent implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DOMNode|HTMLElement $element,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $element;
+
+    public function __construct(ScalarFunction|DOMNode|HTMLElement $element)
+    {
+        $this->element = $element instanceof ScalarFunction ? $element : lit($element);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->element];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_xml_element());
+    }
 
     public function eval(Row $row, FlowContext $context): DOMNode|HTMLElement|null
     {
@@ -37,11 +72,7 @@ final class DOMElementParent extends ScalarFunctionChain
         }
 
         if ($node === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('DOMElementParent requires non-null DOMNode or HTMLElement.'),
-                );
+            throw new InvalidArgumentException('DOMElementParent requires non-null DOMNode or HTMLElement.');
         }
 
         if ($node instanceof HTMLElement) {
@@ -49,6 +80,7 @@ final class DOMElementParent extends ScalarFunctionChain
             return $node->parentElement;
         }
 
-        return $node->parentNode;
+        // parentNode of a root element is the DOMDocument, which is not an xml_element.
+        return $node->parentNode instanceof DOMElement ? $node->parentNode : null;
     }
 }

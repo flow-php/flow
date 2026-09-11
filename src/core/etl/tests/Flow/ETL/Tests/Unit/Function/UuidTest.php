@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
@@ -34,17 +35,17 @@ final class UuidTest extends FlowTestCase
         }
 
         $expression = uuid_v4();
-        $result = $expression->eval(row(), flow_context());
-        static::assertInstanceOf(FlowUuid::class, $result->value);
-        static::assertTrue(Uuid::isValid($result->value->toString()));
-        static::assertNotSame($expression->eval(row(), flow_context()), $expression->eval(row(), flow_context()));
+        $result = $expression->eval(row([]), flow_context());
+        static::assertInstanceOf(FlowUuid::class, $result);
+        static::assertTrue(Uuid::isValid($result->toString()));
+        static::assertNotSame($expression->eval(row([]), flow_context()), $expression->eval(row([]), flow_context()));
     }
 
     public function test_uuid4_is_unique(): void
     {
         $expression = uuid_v4();
 
-        static::assertNotEquals($expression->eval(row(), flow_context()), $expression->eval(row(), flow_context()));
+        static::assertNotEquals($expression->eval(row([]), flow_context()), $expression->eval(row([]), flow_context()));
     }
 
     public function test_uuid7(): void
@@ -54,22 +55,25 @@ final class UuidTest extends FlowTestCase
         }
 
         $result = uuid_v7(lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC'))))
-            ->eval(row(), flow_context());
-        static::assertInstanceOf(FlowUuid::class, $result->value);
-        static::assertTrue(Uuid::isValid($result->value->toString()));
+            ->eval(row([]), flow_context());
+        static::assertInstanceOf(FlowUuid::class, $result);
+        static::assertTrue(Uuid::isValid($result->toString()));
     }
 
     public function test_uuid7_is_unique(): void
     {
         $dateTime = lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')));
         static::assertNotEquals(
-            uuid_v7($dateTime)->eval(row(), flow_context()),
-            uuid_v7($dateTime)->eval(row(), flow_context()),
+            uuid_v7($dateTime)->eval(row([]), flow_context()),
+            uuid_v7($dateTime)->eval(row([]), flow_context()),
         );
     }
 
-    public function test_uuid7_return_null_for_non_datetime_interface(): void
+    public function test_uuid_v7_requires_a_date_time(): void
     {
-        static::assertNull(uuid_v7(lit(''))->eval(row(), flow_context())->value);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Uuid uuid7 function requires a DateTimeInterface value');
+
+        uuid_v7(lit(''))->eval(row([]), flow_context());
     }
 }

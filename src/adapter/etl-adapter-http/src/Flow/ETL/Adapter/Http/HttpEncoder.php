@@ -12,7 +12,7 @@ use Flow\ETL\Row\TypedRowValues;
 use Flow\Types\Type\Logical\XML\XMLConverter;
 use JsonException;
 use Psr\Http\Message\MessageInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 use function Flow\Types\DSL\type_array;
 use function json_decode;
@@ -20,9 +20,8 @@ use function mb_substr;
 use function sprintf;
 
 /**
- * Decodes an HTTP exchange into raw row values. The response/request body is decoded once, content-type aware,
- * into a navigable nested map (JSON via json_decode, XML via {@see XMLConverter}); the extractor's Hydrator types
- * the Row from it and pagination reads the same map.
+ * A row carries the body as raw text, so response_body holds one type whatever the content type is.
+ * Pagination, which needs to navigate into a structured body, calls structuredBody() instead.
  *
  * @implements Encoder<HttpExchange>
  */
@@ -44,16 +43,12 @@ final class HttpEncoder implements Encoder
             $request = $exchange->request;
 
             $rows[] = new RawRowValues([
-                'response_body' => $this->body(
-                    $response,
-                    ContentTypeDetector::detectFromResponse($response),
-                    $response->getStatusCode(),
-                ),
+                'response_body' => $this->body($response),
                 'response_headers' => $response->getHeaders(),
                 'response_status_code' => $response->getStatusCode(),
                 'response_protocol_version' => $response->getProtocolVersion(),
                 'response_reason_phrase' => $response->getReasonPhrase(),
-                'request_body' => $this->body($request, $this->requestType($request), null),
+                'request_body' => $this->body($request),
                 'request_uri' => (string) $request->getUri(),
                 'request_headers' => $request->getHeaders(),
                 'request_protocol_version' => $request->getProtocolVersion(),
@@ -74,7 +69,30 @@ final class HttpEncoder implements Encoder
         );
     }
 
-    private function body(MessageInterface $message, ResponseType $type, ?int $statusCode): array|string|null
+    /**
+     * @return array<mixed>
+     */
+    public function structuredBody(ResponseInterface $response): array
+    {
+        $content = $this->content($response);
+
+        if ($content === null) {
+            return [];
+        }
+
+        return match (ContentTypeDetector::detectFromResponse($response)) {
+            ResponseType::JSON => $this->decodeJson($content, $response->getStatusCode()),
+            ResponseType::XML => $this->decodeXml($content),
+            default => [],
+        };
+    }
+
+    private function body(MessageInterface $message): ?string
+    {
+        return $this->content($message);
+    }
+
+    private function content(MessageInterface $message): ?string
     {
         $body = $message->getBody();
 
@@ -92,15 +110,7 @@ final class HttpEncoder implements Encoder
             $body->seek(0);
         }
 
-        if ($content === '') {
-            return null;
-        }
-
-        return match ($type) {
-            ResponseType::JSON => $this->decodeJson($content, $statusCode),
-            ResponseType::XML => $this->decodeXml($content),
-            default => $content,
-        };
+        return $content === '' ? null : $content;
     }
 
     /**
@@ -139,18 +149,5 @@ final class HttpEncoder implements Encoder
         }
 
         return (new XMLConverter())->toArray($document);
-    }
-
-    private function requestType(RequestInterface $request): ResponseType
-    {
-        foreach ($request->getHeader('Content-Type') as $header) {
-            $type = ContentTypeDetector::detectFromHeader($header);
-
-            if ($type !== null) {
-                return $type;
-            }
-        }
-
-        return ResponseType::TEXT;
     }
 }

@@ -53,7 +53,7 @@ final class NativeFloeEncoder implements Encoder
     public function encode(array $batch): array
     {
         try {
-            return $this->native->encode($batch, $this->schemaBody());
+            return $this->native->encode($batch, $this->schemaBody(), $this->schema);
         } catch (ExtensionException $e) {
             throw new FloeException($e->getMessage(), 0, $e);
         }

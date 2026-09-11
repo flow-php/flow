@@ -15,7 +15,7 @@ final class MethodCollector
     public array $methods = [];
 
     /**
-     * @param class-string $className
+     * @param class-string|trait-string $className
      */
     public function collect(string $className): void
     {

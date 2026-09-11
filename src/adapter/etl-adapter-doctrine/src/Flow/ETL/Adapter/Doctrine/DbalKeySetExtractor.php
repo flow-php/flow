@@ -11,6 +11,11 @@ use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -18,7 +23,10 @@ use Flow\ETL\Schema;
 use Generator;
 
 use function array_key_exists;
+use function array_key_last;
+use function array_map;
 use function count;
+use function min;
 use function sha1;
 
 /**
@@ -29,15 +37,18 @@ use function sha1;
  * and sort orders for pagination. The key columns must be non-null and provide a unique
  * ordering to ensure correct pagination.
  */
-final class DbalKeySetExtractor implements Extractor
+final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private string $keyAliasSuffix = '_previous';
 
     private ?int $maximum = null;
 
-    private int $pageSize = 1000;
-
     private ?Schema $schema = null;
+
+    private ?Schema $derived = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -55,6 +66,14 @@ final class DbalKeySetExtractor implements Extractor
         if (empty($this->keySet->keys)) {
             throw new InvalidArgumentException('KeySet must contain at least one key for pagination');
         }
+
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     /**
@@ -62,13 +81,25 @@ final class DbalKeySetExtractor implements Extractor
      */
     public function extract(FlowContext $context): Generator
     {
-        $totalFetched = 0;
+        $schema = $this->schema();
+        $yielded = 0;
         $lastRow = null;
         $encoder = new DbalEncoder();
+        $pushed = $this->pushedLimit();
+        $maximum = match (true) {
+            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null => $this->maximum,
+            default => $pushed,
+        };
+        $keyAliases = array_map($this->keyAlias(...), $this->keySet->keys);
 
         while (true) {
+            if ($maximum !== null && $yielded >= $maximum) {
+                return;
+            }
+
             $qb = clone $this->queryBuilder;
-            $qb->setMaxResults($this->pageSize);
+            $qb->setMaxResults($maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded));
 
             foreach ($this->keySet->keys as $key) {
                 $qb->addOrderBy($key->column, $key->order->value);
@@ -126,44 +157,48 @@ final class DbalKeySetExtractor implements Extractor
                 }
             }
 
-            $stmt = $this->connection->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes());
+            // the pgsql driver resolves the result's column types on every fetchAssociative(), but once per
+            // fetchAllAssociative(); a page is buffered whole either way
+            $rawBatch = $this->connection
+                ->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes())
+                ->fetchAllAssociative();
 
-            $hasRows = false;
-            $rawBatch = [];
-
-            while ($row = $stmt->fetchAssociative()) {
-                $hasRows = true;
-                $lastRow = $row;
-
-                foreach ($this->keySet->keys as $key) {
-                    $keyAlias = $this->keyAlias($key);
-
-                    if (array_key_exists($keyAlias, $row)) {
-                        unset($row[$keyAlias]);
-                    }
-                }
-
-                $rawBatch[] = $row;
-            }
-
-            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
-                $signal = yield new Rows($hydratedRow);
-
-                $totalFetched++;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if (null !== $this->maximum && $totalFetched >= $this->maximum) {
-                    return;
-                }
-            }
-
-            if (!$hasRows) {
+            if ($rawBatch === []) {
                 break;
             }
+
+            $lastRow = $rawBatch[array_key_last($rawBatch)];
+
+            foreach ($rawBatch as $index => $row) {
+                foreach ($keyAliases as $keyAlias) {
+                    unset($row[$keyAlias]);
+                }
+
+                $rawBatch[$index] = $row;
+            }
+
+            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+
+            $yielded += $hydrated->count();
+
+            $signal = yield $hydrated;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
+    }
+
+    public function schema(): Schema
+    {
+        // The base builder, never the page SQL: the key_<sha1> alias lives on a per-page clone.
+        return (
+            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
+                $this->connection,
+                $this->queryBuilder->getSQL(),
+                self::class,
+            ))
+        );
     }
 
     public function withKeyAliasSuffix(string $keyAliasSuffix): self
@@ -194,33 +229,13 @@ final class DbalKeySetExtractor implements Extractor
     }
 
     /**
-     * Sets the number of rows per page.
-     *
-     * @param int $pageSize the page size (must be > 0)
-     *
-     * @throws InvalidArgumentException if page size is <= 0
-     *
-     * @return $this
-     */
-    public function withPageSize(int $pageSize): self
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
-        }
-
-        $this->pageSize = $pageSize;
-
-        return $this;
-    }
-
-    /**
      * Sets the schema for the extracted rows.
      *
      * @param Schema $schema the schema to apply to rows
      *
      * @return $this
      */
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

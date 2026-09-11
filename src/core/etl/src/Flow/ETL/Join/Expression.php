@@ -73,48 +73,6 @@ final readonly class Expression
         return $this->comparison;
     }
 
-    public function dropDuplicateLeftEntries(Row $left): Row
-    {
-        if ($this->joinPrefix !== '') {
-            return $left;
-        }
-
-        $dropLeft = [];
-
-        foreach ($this->left() as $leftReference) {
-            foreach ($this->right() as $rightReference) {
-                if ($leftReference->name() === $rightReference->name()) {
-                    $dropLeft[] = $leftReference->name();
-
-                    continue 2;
-                }
-            }
-        }
-
-        return $left->remove(...$dropLeft);
-    }
-
-    public function dropDuplicateRightEntries(Row $right): Row
-    {
-        if ($this->joinPrefix !== '') {
-            return $right;
-        }
-
-        $dropRight = [];
-
-        foreach ($this->right() as $rightReference) {
-            foreach ($this->left() as $leftReference) {
-                if ($rightReference->name() === $leftReference->name()) {
-                    $dropRight[] = $rightReference->name();
-
-                    continue 2;
-                }
-            }
-        }
-
-        return $right->remove(...$dropRight);
-    }
-
     /**
      * @return array<Reference>
      */

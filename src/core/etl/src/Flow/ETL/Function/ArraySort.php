@@ -8,17 +8,81 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
 
+use function array_values;
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function is_array;
+use function krsort;
+use function ksort;
 
-final class ArraySort extends ScalarFunctionChain
+final class ArraySort implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $flags;
+    private readonly ScalarFunction $recursive;
+
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly ScalarFunction|Sort $sortFunction,
-        private readonly ScalarFunction|int|null $flags,
-        private readonly ScalarFunction|bool $recursive,
-    ) {}
+        private readonly Sort $sortFunction,
+        ScalarFunction|int|null $flags,
+        ScalarFunction|bool $recursive,
+    ) {
+        $this->flags = $flags instanceof ScalarFunction ? $flags : lit($flags);
+        $this->recursive = $recursive instanceof ScalarFunction ? $recursive : lit($recursive);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->ref, $this->flags, $this->recursive];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $this->sortFunction, $children[1], $children[2]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        $array = type_bare($this->ref->returns());
+
+        // Only a key sort reorders a structure's fields deterministically at bind time; a value sort's
+        // field order is data-dependent, so the operand's declared order stands. Sorting by array key
+        // rather than by a string comparator reproduces PHP's key order for integer element names.
+        if (
+            $array instanceof StructureType
+            && ($this->sortFunction === Sort::ksort || $this->sortFunction === Sort::krsort)
+        ) {
+            $byName = [];
+
+            foreach ($array->elements() as $element) {
+                $byName[$element->name] = $element;
+            }
+
+            if ($this->sortFunction === Sort::ksort) {
+                ksort($byName);
+            } else {
+                krsort($byName);
+            }
+
+            return new StructureType(array_values($byName));
+        }
+
+        return $array;
+    }
 
     /**
      * @return null|array<mixed>
@@ -27,18 +91,13 @@ final class ArraySort extends ScalarFunctionChain
     {
         $array = (new Parameter($this->ref))->asArray($row, $context);
         $flags = (new Parameter($this->flags))->asInt($row, $context);
-        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context);
-        $sortFunction = (new Parameter($this->sortFunction))->asEnum($row, $context, Sort::class);
+        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context) ?? false;
 
-        if ($array === null || $sortFunction === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('ArraySort function requires non-null array and sort function'),
-                );
+        if ($array === null) {
+            throw new InvalidArgumentException('ArraySort function requires non-null array');
         }
 
-        $this->recursiveSort($array, $sortFunction->value, $flags, $recursive);
+        $this->recursiveSort($array, $this->sortFunction->value, $flags, $recursive);
 
         return $array;
     }

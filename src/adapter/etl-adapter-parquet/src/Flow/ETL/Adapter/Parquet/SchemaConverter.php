@@ -21,8 +21,10 @@ use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -32,7 +34,6 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 
-use function array_keys;
 use function array_map;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -96,11 +97,15 @@ final class SchemaConverter
      */
     private function flowToParquet(string $name, Type $type, bool $nullable): Column
     {
-        if ($type instanceof StructureType && count($type->optionalElements())) {
-            throw new RuntimeException(sprintf(
-                'Parquet schema does not support structure optional elements, given: %s',
-                $type->toString(),
-            ));
+        if ($type instanceof StructureType) {
+            foreach ($type->elements() as $element) {
+                if ($element->optional) {
+                    throw new RuntimeException(sprintf(
+                        'Parquet schema does not support structure optional elements, given: %s',
+                        $type->toString(),
+                    ));
+                }
+            }
         }
 
         $repetition = $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED;
@@ -120,6 +125,9 @@ final class SchemaConverter
             DateType::class => FlatColumn::date($name, $repetition),
             DateTimeType::class => FlatColumn::datetime($name, $repetition),
             UuidType::class => FlatColumn::uuid($name, $repetition),
+            // Parquet has no TIMEZONE logical type, so there is no marker to read back:
+            // a timezone column written to parquet returns as a plain string.
+            TimeZoneType::class => FlatColumn::string($name, $repetition),
             JsonType::class => FlatColumn::json($name, $repetition),
             ListType::class => NestedColumn::list(
                 $name,
@@ -140,20 +148,15 @@ final class SchemaConverter
                 )),
                 $repetition,
             ),
-            StructureType::class => NestedColumn::struct(
-                $name,
-                array_map(
-                    function (int|string $elementName, Type $elementType) {
-                        $elementOptional = $elementType instanceof OptionalType;
-                        $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
+            StructureType::class => NestedColumn::struct($name, array_map(function (StructureElement $element) {
+                $elementNullable = $element->type instanceof OptionalType;
 
-                        return $this->flowToParquet((string) $elementName, $elementType, $elementOptional);
-                    },
-                    array_keys($type->elements()),
-                    $type->elements(),
-                ),
-                $repetition,
-            ),
+                return $this->flowToParquet(
+                    (string) $element->name,
+                    $elementNullable ? $element->type->base() : $element->type,
+                    $elementNullable,
+                );
+            }, $type->elements()), $repetition),
             default => throw new RuntimeException($type::class . ' is not supported.'),
         };
     }

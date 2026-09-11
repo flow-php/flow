@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -42,7 +43,7 @@ final class PhpFloeEncoder implements Encoder
     public function __construct(
         private readonly Schema $schema,
     ) {
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
+        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder());
     }
 
     public function decode(array $batch): array
@@ -58,10 +59,6 @@ final class PhpFloeEncoder implements Encoder
 
             foreach ($decodePlan as $column) {
                 $flag = ord($body[$position++]);
-
-                if ($flag === Format::VALUE_ABSENT) {
-                    continue;
-                }
 
                 if ($flag === Format::VALUE_PRESENT) {
                     $values[$column->name] = $column->decoder->decode($body, $position);
@@ -94,14 +91,15 @@ final class PhpFloeEncoder implements Encoder
 
         $bodies = [];
 
-        foreach ($batch as $rowValues) {
+        foreach ($batch as $rowIndex => $rowValues) {
             $body = '';
 
             foreach ($this->schema->definitions() as $name => $definition) {
                 if (!array_key_exists($name, $rowValues->values)) {
-                    $body .= Format::VALUE_ABSENT_BYTE;
-
-                    continue;
+                    throw new FloeException(sprintf(
+                        'Floe found a row that does not carry the declared column "%s"',
+                        $name,
+                    ));
                 }
 
                 // @mago-ignore analysis:mixed-assignment
@@ -113,6 +111,13 @@ final class PhpFloeEncoder implements Encoder
                     : !$metadata->isEqual($columnMetadata);
 
                 if ($value === null) {
+                    if (!$definition->isNullable()) {
+                        throw new SchemaMismatchException($rowIndex, ColumnMismatchException::valueDoesNotMatch(
+                            $definition,
+                            null,
+                        ));
+                    }
+
                     $body .= $diverges
                         ? Format::VALUE_NULL_WITH_META_BYTE . Format::metadataBytes($metadata)
                         : Format::VALUE_NULL_BYTE;
@@ -142,7 +147,7 @@ final class PhpFloeEncoder implements Encoder
         $encoders = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
-            $encoders[$name] = $valueEncoder->encoderFor($definition->type());
+            $encoders[$name] = $valueEncoder->encoderFor($definition);
         }
 
         return $encoders;

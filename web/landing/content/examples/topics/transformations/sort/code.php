@@ -8,7 +8,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_sequence_number('id', 0, 10))
-    ->sortBy(ref('id')->desc())
+    ->sortBy([ref('id')->desc()])
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

@@ -6,8 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -18,6 +20,15 @@ final readonly class RenameEntryTransformer implements Transformer
         private string $to,
     ) {}
 
+    public function bind(Schema $input): BoundStep
+    {
+        if ($this->from === $this->to) {
+            return new BoundStep($this, $input);
+        }
+
+        return new BoundStep($this, $input->rename($this->from, $this->to));
+    }
+
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         if ($this->from === $this->to) {
@@ -27,7 +38,14 @@ final readonly class RenameEntryTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(fn(Row $row): Row => $row->rename($this->from, $this->to));
+            $renaming = RowRenaming::of([$this->from => $this->to]);
+            $renamed = [];
+
+            foreach ($rows->all() as $row) {
+                $renamed[] = $renaming->apply($row);
+            }
+
+            $result = new Rows($rows->schema()->rename($this->from, $this->to), ...$renamed);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

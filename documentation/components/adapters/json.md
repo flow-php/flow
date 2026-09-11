@@ -43,6 +43,9 @@ data_frame()
     ->run();
 ```
 
+In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped, as DuckDB does; this is not
+configurable.
+
 ## Loader - JsonLoader
 
 ```php

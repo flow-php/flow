@@ -70,15 +70,6 @@ pub enum HtKey<'a> {
     Str(&'a ZendStr),
 }
 
-impl<'a> HtKey<'a> {
-    pub fn from_zend_str(name: &'a ZendStr) -> Self {
-        match array_key_index(name.as_bytes()) {
-            Some(index) => Self::Index(index),
-            None => Self::Str(name),
-        }
-    }
-}
-
 pub fn ht_find_key<'a>(ht: &'a ZendHashTable, key: &HtKey<'_>) -> Option<&'a Zval> {
     match key {
         HtKey::Index(index) => ht.get_index(*index),
@@ -152,6 +143,30 @@ pub fn zval_long(value: i64) -> Zval {
     let mut zv = Zval::new();
     zv.set_long(value);
     zv
+}
+
+pub fn null_zval() -> Zval {
+    let mut zv = Zval::new();
+    zv.set_null();
+    zv
+}
+
+/// `throw new SchemaMismatchException($rowIndex, <cause>)`, where the cause comes from a
+/// `ColumnMismatchException` factory - the PHP side authors every schema-mismatch message.
+pub fn schema_mismatch(
+    schema_mismatch_ce: &'static ClassEntry,
+    factory: &'static Function,
+    row_index: u64,
+    args: &mut [Zval],
+) -> Result<PhpException, PhpException> {
+    let cause = call_handle_transparent(factory, None, args)?;
+    let mut wrapped = construct_with_zvals(
+        schema_mismatch_ce,
+        &mut [zval_long(row_index as i64), cause],
+        "a SchemaMismatchException",
+    )?;
+
+    Ok(transparent_exception(&mut wrapped))
 }
 
 pub fn find_class(name: &str) -> Result<&'static ClassEntry, PhpException> {
@@ -353,15 +368,15 @@ pub fn call_handle_on(
     Ok(retval)
 }
 
-/// [`call_handle`] that surfaces a PHP exception thrown by the callee as the
-/// ORIGINAL exception object instead of wrapping it in an `ExtensionException` -
-/// the cast paths either propagate it verbatim (`Type::cast` fallback) or
-/// discard it and bail (mirroring the `catch (Throwable)` in the PHP casts).
-pub fn call_handle_transparent(
+/// [`call_handle`] that hands a PHP exception thrown by the callee back to the
+/// caller as the exception OBJECT, so the caller can surface it verbatim or
+/// replace it with one of its own. Taking it also clears the pending exception,
+/// leaving the engine ready for the next call.
+pub fn call_handle_catching(
     func: &Function,
     object: Option<&ZendObject>,
     args: &mut [Zval],
-) -> Result<Zval, PhpException> {
+) -> Result<Zval, ZBox<ZendObject>> {
     let mut retval = Zval::new();
 
     let (object_ptr, called_scope) = match object {
@@ -381,14 +396,32 @@ pub fn call_handle_transparent(
         );
     }
 
-    if let Some(mut exception) = ExecutorGlobals::take_exception() {
-        let mut zv = Zval::new();
-        zv.set_object(&mut exception);
-
-        return Err(PhpException::default(String::new()).with_object(zv));
+    match ExecutorGlobals::take_exception() {
+        Some(exception) => Err(exception),
+        None => Ok(retval),
     }
+}
 
-    Ok(retval)
+/// Surfaces a PHP exception object as ITSELF rather than wrapped in an
+/// `ExtensionException`, so the class and message PHP sees are the ones thrown.
+pub fn transparent_exception(exception: &mut ZendObject) -> PhpException {
+    let mut zv = Zval::new();
+    zv.set_object(exception);
+
+    PhpException::default(String::new()).with_object(zv)
+}
+
+/// [`call_handle_catching`] with the exception object already re-raised as
+/// itself, ready to propagate via `?` or to discard with `let Ok(x) = .. else`.
+/// Callers that only need the bail branch can use [`call_handle_catching`]
+/// directly instead.
+pub fn call_handle_transparent(
+    func: &Function,
+    object: Option<&ZendObject>,
+    args: &mut [Zval],
+) -> Result<Zval, PhpException> {
+    call_handle_catching(func, object, args)
+        .map_err(|mut exception| transparent_exception(&mut exception))
 }
 
 /// Calls a pre-resolved function handle. Argument zvals stay caller-owned
@@ -445,7 +478,6 @@ pub struct Ctx {
     timezone_ce: Option<&'static ClassEntry>,
     datetime_immutable: Option<DateTimeFns>,
     datetime_mutable: Option<DateTimeFns>,
-    datetime_interface_ce: Option<&'static ClassEntry>,
     timezones: HashMap<Vec<u8>, Zval>,
     enums: HashMap<Vec<u8>, Zval>,
     fn_defined: Option<Function>,
@@ -458,6 +490,8 @@ pub struct Ctx {
     metadata_from_array: Option<&'static Function>,
     metadata_map_slot: Option<u32>,
     typed_row_values_slots: Option<(u32, u32)>,
+    schema_set_metadata: Option<&'static Function>,
+    schema_find_definition: Option<&'static Function>,
     timezone_get_name: Option<&'static Function>,
     datetime_encode: HashMap<usize, DateTimeEncFns>,
     datetime_cast: HashMap<usize, DateTimeCastFns>,
@@ -488,7 +522,6 @@ impl Ctx {
             timezone_ce: None,
             datetime_immutable: None,
             datetime_mutable: None,
-            datetime_interface_ce: None,
             timezones: HashMap::new(),
             enums: HashMap::new(),
             fn_defined: None,
@@ -501,6 +534,8 @@ impl Ctx {
             metadata_from_array: None,
             metadata_map_slot: None,
             typed_row_values_slots: None,
+            schema_set_metadata: None,
+            schema_find_definition: None,
             timezone_get_name: None,
             datetime_encode: HashMap::new(),
             datetime_cast: HashMap::new(),
@@ -523,6 +558,25 @@ impl Ctx {
         Ok(self.typed_row_values_slots.expect("just initialized"))
     }
 
+    /// `Schema::setMetadata` / `Schema::findDefinition` - the native hydrate and cast paths fold
+    /// `RawRowValues::metadata` into the batch Schema exactly like `HydratedBatch` does in PHP.
+    pub fn schema_set_metadata(&mut self) -> Result<&'static Function, PhpException> {
+        if self.schema_set_metadata.is_none() {
+            self.schema_set_metadata = Some(method_handle_ref("Flow\\ETL\\Schema", "setMetadata")?);
+        }
+
+        Ok(self.schema_set_metadata.expect("just initialized"))
+    }
+
+    pub fn schema_find_definition(&mut self) -> Result<&'static Function, PhpException> {
+        if self.schema_find_definition.is_none() {
+            self.schema_find_definition =
+                Some(method_handle_ref("Flow\\ETL\\Schema", "findDefinition")?);
+        }
+
+        Ok(self.schema_find_definition.expect("just initialized"))
+    }
+
     pub fn metadata_map_slot(&mut self) -> Result<u32, PhpException> {
         if self.metadata_map_slot.is_none() {
             self.metadata_map_slot = Some(property_offset(
@@ -540,14 +594,6 @@ impl Ctx {
         }
 
         Ok(self.timezone_get_name.expect("just initialized"))
-    }
-
-    pub fn datetime_interface(&mut self) -> Result<&'static ClassEntry, PhpException> {
-        if self.datetime_interface_ce.is_none() {
-            self.datetime_interface_ce = Some(find_class("DateTimeInterface")?);
-        }
-
-        Ok(self.datetime_interface_ce.expect("just initialized"))
     }
 
     /// Per-datetime-class encode handles (getTimestamp/format/getTimezone).

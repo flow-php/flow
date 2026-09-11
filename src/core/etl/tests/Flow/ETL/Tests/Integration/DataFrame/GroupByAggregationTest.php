@@ -43,9 +43,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('seller'))
+                ->groupBy([ref('seller')])
                 ->aggregate(count(ref('seller')), sum(ref('amount')))
-                ->sortBy(ref('seller')->asc())
+                ->sortBy([ref('seller')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -63,9 +63,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [
-                'a' => ['count' => 3, 'sum' => 33],
-                'b' => ['count' => 2, 'sum' => 12],
-                'c' => ['count' => 1, 'sum' => 1],
+                'a' => ['count' => 3, 'sum' => 33.0],
+                'b' => ['count' => 2, 'sum' => 12.0],
+                'c' => ['count' => 1, 'sum' => 1.0],
             ],
             $bySeller,
         );
@@ -82,9 +82,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('a'), ref('b'))
+                ->groupBy([ref('a'), ref('b')])
                 ->aggregate(sum(ref('v')))
-                ->sortBy(ref('a')->asc())
+                ->sortBy([ref('a')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -96,8 +96,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
             $byGroup[(string) $row['a'] . '|' . (string) $row['b']] = $row['v_sum'];
         }
 
-        static::assertSame(2, $byGroup['x|yz']);
-        static::assertSame(1, $byGroup['xy|z']);
+        static::assertSame(2.0, $byGroup['x|yz']);
+        static::assertSame(1.0, $byGroup['xy|z']);
     }
 
     public function test_mixed_presence_columns_survive_the_filesystem_round_trip(): void
@@ -112,7 +112,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('seller'))
+                ->groupBy([ref('seller')])
                 ->aggregate(sum(ref('amount')))
                 ->getEachAsArray(),
         );
@@ -127,8 +127,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
         static::assertSame(10.5, $bySeller['a']);
         static::assertSame(2.5, $bySeller['b']);
-        // Sum narrows whole-number float sums to int
-        static::assertSame(7, $bySeller['__null__']);
+        // the aggregate's type follows the column, so a float column stays float
+        static::assertSame(7.0, $bySeller['__null__']);
     }
 
     public function test_chained_filesystem_group_by_stages_do_not_corrupt_each_other(): void
@@ -145,11 +145,11 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('seller'), ref('region'))
+                ->groupBy([ref('seller'), ref('region')])
                 ->aggregate(count(ref('seller')))
-                ->groupBy(ref('region'))
+                ->groupBy([ref('region')])
                 ->aggregate(count(ref('region')))
-                ->sortBy(ref('region')->asc())
+                ->sortBy([ref('region')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -173,9 +173,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(first(ref('v')), last(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -197,9 +197,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(collect(ref('v')), collect_unique(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -241,9 +241,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($input))
-                ->groupBy(ref('k'))
+                ->groupBy([ref('k')])
                 ->aggregate(average(ref('v')))
-                ->sortBy(ref('k')->asc())
+                ->sortBy([ref('k')->asc()])
                 ->getEachAsArray(),
         );
 
@@ -258,7 +258,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
             $byKey[$row['k']] = $row['v_avg'];
         }
 
-        static::assertSame(['a' => 3, 'b' => 20, 'c' => 7], $byKey);
+        static::assertSame(['a' => 3.0, 'b' => 20.0, 'c' => 7.0], $byKey);
     }
 
     public function test_partition_count_does_not_affect_a_realistic_dataset(): void
@@ -278,9 +278,9 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $pipeline = static fn(ConfigBuilder $config): array => iterator_to_array(
             data_frame($config)
                 ->read(from_array($data, $schema))
-                ->groupBy(ref('email'))
+                ->groupBy([ref('email')])
                 ->aggregate(count(ref('email')), sum(ref('discount')))
-                ->sortBy(ref('email')->asc())
+                ->sortBy([ref('email')->asc()])
                 ->getEachAsArray(),
         );
 

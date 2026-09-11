@@ -15,6 +15,6 @@ final class ToUpperTest extends FlowTestCase
 {
     public function test_string_to_upper(): void
     {
-        static::assertSame('UPPER', upper(lit('upper'))->eval(row(), flow_context()));
+        static::assertSame('UPPER', upper(lit('upper'))->eval(row([]), flow_context()));
     }
 }

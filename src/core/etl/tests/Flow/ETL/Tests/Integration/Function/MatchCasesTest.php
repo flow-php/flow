@@ -14,7 +14,9 @@ use function Flow\ETL\DSL\match_condition;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 
 final class MatchCasesTest extends FlowTestCase
@@ -22,18 +24,22 @@ final class MatchCasesTest extends FlowTestCase
     public function test_case_match(): void
     {
         $rows = rows(
-            row(string_entry('string', 'string-with-dashes')),
-            row(string_entry('string', '123')),
-            row(string_entry('string', '14%')),
-            row(string_entry('string', '+14')),
-            row(string_entry('string', '')),
+            schema(string_schema('string')),
+            row(['string' => 'string-with-dashes']),
+            row(['string' => '123']),
+            row(['string' => '14%']),
+            row(['string' => '+14']),
+            row(['string' => '']),
         );
 
         $output = df()
             ->read(from_rows($rows))
             ->withEntry('string', match_cases([
                 match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
-                match_condition(ref('string')->call('is_numeric'), ref('string')->cast(type_integer())),
+                match_condition(
+                    ref('string')->call(lit('is_numeric'), type_boolean()),
+                    ref('string')->cast(type_integer()),
+                ),
                 match_condition(ref('string')->endsWith('%'), ref('string')->strReplace('%', '')->cast(type_integer())),
                 match_condition(
                     ref('string')->startsWith('+'),
@@ -46,9 +52,9 @@ final class MatchCasesTest extends FlowTestCase
         static::assertSame(
             [
                 ['string' => 'string with dashes'],
-                ['string' => 123],
-                ['string' => 14],
-                ['string' => 14],
+                ['string' => '123'],
+                ['string' => '14'],
+                ['string' => '14'],
                 ['string' => 'DEFAULT'],
             ],
             $output,

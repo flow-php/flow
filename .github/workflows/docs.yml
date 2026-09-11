@@ -2,9 +2,9 @@ on:
   pull_request:
     paths:
       - 'src/**'
-      - 'docs/**'
-      - 'examples/**'
+      - 'documentation/**'
       - 'web/landing/**'
+      - 'Justfile'
       - 'README.md'
   push:
     branches:
@@ -35,7 +35,7 @@ jobs:
           php-version: "8.3"
           dependencies: "locked"
           coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+          extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib'
           cache-key-suffix: "-locked"
 
       - name: "Build Docs"

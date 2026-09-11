@@ -6,13 +6,11 @@ namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\EntryTypeResolver;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
 
 use function Flow\ETL\DSL\definition_from_type;
@@ -34,7 +32,10 @@ final readonly class UnionDefinition implements Definition
     private UnionType $type;
 
     /**
-     * @param UnionType<mixed, mixed> $type
+     * @template TLeft
+     * @template TRight
+     *
+     * @param UnionType<TLeft, TRight> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -42,7 +43,7 @@ final readonly class UnionDefinition implements Definition
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = (new UnionTypeNormalizer())->normalize($type);
     }
@@ -100,17 +101,9 @@ final readonly class UnionDefinition implements Definition
         return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $this->type->isValid($entry->value());
+        return (new ValueMatch())->matches($this, $value);
     }
 
     /**
@@ -205,19 +198,5 @@ final readonly class UnionDefinition implements Definition
     public function type(): UnionType
     {
         return $this->type;
-    }
-
-    public function entryClass(): string
-    {
-        $left = $this->type->types()->first() ?? throw new RuntimeException(sprintf(
-            'Union type of "%s" has no member types',
-            $this->ref->name(),
-        ));
-
-        if ($left instanceof OptionalType) {
-            $left = $left->base();
-        }
-
-        return definition_from_type($this->ref, $left)->entryClass();
     }
 }

@@ -13,12 +13,14 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\binary_expr;
 use function Flow\PostgreSql\DSL\cast;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column_type_double_precision;
 use function Flow\PostgreSql\DSL\column_type_integer;
 use function Flow\PostgreSql\DSL\constructor_mapper;
+use function Flow\PostgreSql\DSL\converted_parameters;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\func;
@@ -30,6 +32,7 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\row_expr;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\values_table;
 
 final class PgSqlClientTest extends PostgreSqlTestCase
@@ -67,6 +70,32 @@ final class PgSqlClientTest extends PostgreSqlTestCase
             ->execute(delete()->from('test_execute')->where(gt(col('id'), literal(1))));
 
         static::assertSame(2, $affected);
+    }
+
+    public function test_execute_sends_converted_parameters_as_they_are(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $client->execute(
+            create()
+                ->temporaryTable('test_execute_converted')
+                ->column(ColumnDefinition::create('id', ColumnType::integer()))
+                ->column(ColumnDefinition::create('active', ColumnType::boolean())),
+        );
+
+        $affected = $client->execute(
+            insert()
+                ->into('test_execute_converted')
+                ->columns('id', 'active')
+                ->values(param(1), param(2))
+                ->values(param(3), param(4)),
+            converted_parameters(['1', 't', '2', null]),
+        );
+
+        static::assertSame(2, $affected);
+        static::assertSame(
+            [['id' => 1, 'active' => true], ['id' => 2, 'active' => null]],
+            $client->fetchAll(select(star())->from(table('test_execute_converted'))->orderBy(asc(col('id')))),
+        );
     }
 
     public function test_fetch_all_into_maps_to_objects(): void

@@ -7,11 +7,16 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Throwable;
+
+use function array_search;
+use function is_string;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -29,18 +34,47 @@ final readonly class RenameEachEntryTransformer implements Transformer
         $this->strategies = $strategies;
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        $output = $input;
+
+        foreach ($this->strategies as $strategy) {
+            foreach ($strategy->renames($output) as $from => $to) {
+                $output = $output->rename($from, $to);
+            }
+        }
+
+        return new BoundStep($this, $output);
+    }
+
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row): Row {
-                foreach ($this->strategies as $strategy) {
-                    $row = $strategy->rename($row);
-                }
+            $schema = $rows->schema();
+            $renames = [];
 
-                return $row;
-            });
+            foreach ($this->strategies as $strategy) {
+                foreach ($strategy->renames($schema) as $from => $to) {
+                    $schema = $schema->rename($from, $to);
+
+                    // strategies chain, so a later one renames what an earlier one produced; the map
+                    // has to stay keyed by the row's original name or the projection lands short
+                    $original = array_search($from, $renames, true);
+
+                    $renames[is_string($original) ? $original : $from] = $to;
+                }
+            }
+
+            $renaming = RowRenaming::of($renames);
+            $renamed = [];
+
+            foreach ($rows->all() as $row) {
+                $renamed[] = $renaming->apply($row);
+            }
+
+            $result = new Rows($schema, ...$renamed);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

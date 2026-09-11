@@ -22,7 +22,7 @@ data_frame()
         ['id' => 9, 'group' => 'A'],
         ['id' => 10, 'group' => 'B'],
     ]))
-    ->groupBy(ref('group'))
+    ->groupBy([ref('group')])
     ->write(to_output(truncate: false))
     ->run();
 ```
@@ -52,6 +52,13 @@ spilled to the local filesystem cache directory (as Floe files), so memory usage
 largest bucket instead of the whole grouped dataset. Other implementations are `MemoryBuckets`
 (buckets kept in memory) and `PSRCacheBuckets` (buckets in any PSR-16 cache).
 
+`groupBy()` and `aggregate()` each take an optional trailing `GroupByAlgorithmBuilder`, so one operation can
+override the configured algorithm:
+
+```php ignore
+->groupBy([ref('country')], hash_group_by()->storage(new MemoryBuckets()))
+```
+
 The algorithm is configured through `config_builder()->groupBy(hash_group_by())` - all its options
 live on the `hash_group_by()` builder:
 
@@ -68,7 +75,7 @@ data_frame(
         )
 )
     ->read(from_parquet('orders.parquet'))
-    ->groupBy(ref('country'))
+    ->groupBy([ref('country')])
     ->aggregate(sum(ref('total')))
     ->run();
 ```

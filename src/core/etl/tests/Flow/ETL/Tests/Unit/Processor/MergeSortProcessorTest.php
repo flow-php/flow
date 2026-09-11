@@ -4,32 +4,51 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\SortedRunBucketing;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
+use Flow\ETL\Tests\Double\ThrowingRemoveBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 
 use function array_map;
 use function array_merge;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 use function range;
 
 final class MergeSortProcessorTest extends FlowTestCase
 {
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $storage = new MemoryBuckets();
+        $input = schema(int_schema('id'));
+        $processor = new MergeSortProcessor(
+            refs(ref('id')),
+            new Buckets($storage),
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+        );
+
+        static::assertEquals($input, $processor->bind($input)->output);
+    }
+
     public function test_descending_single_column(): void
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
@@ -43,6 +62,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         $merge = new MergeSortProcessor(
             refs(ref('id')->desc()),
             $buckets,
+            new Buckets($storage),
             new NativePHPRandomValueGenerator(),
             10,
             1000,
@@ -50,10 +70,11 @@ final class MergeSortProcessorTest extends FlowTestCase
 
         $input = (static function () {
             yield rows(
-                row(int_entry('id', 3)),
-                row(int_entry('id', 1)),
-                row(int_entry('id', 4)),
-                row(int_entry('id', 2)),
+                schema(int_schema('id')),
+                row(['id' => 3]),
+                row(['id' => 1]),
+                row(['id' => 4]),
+                row(['id' => 2]),
             );
         })();
 
@@ -76,7 +97,14 @@ final class MergeSortProcessorTest extends FlowTestCase
             new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
             $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(
+            refs('id'),
+            $buckets,
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+            10,
+            1000,
+        );
 
         $input = (static function () {
             yield from [];
@@ -99,10 +127,26 @@ final class MergeSortProcessorTest extends FlowTestCase
             new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
             $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(
+            refs('id'),
+            $buckets,
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+            10,
+            1000,
+        );
 
         $input = (static function () {
-            yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), [0, 10, 1, 11, 2, 12, 3, 13]));
+            yield rows(schema(int_schema('id')), ...array_map(static fn(int $i): Row => row(['id' => $i]), [
+                0,
+                10,
+                1,
+                11,
+                2,
+                12,
+                3,
+                13,
+            ]));
         })();
 
         $result = iterator_to_array($merge->process($bucketing->process($input, $context), $context), false);
@@ -124,14 +168,22 @@ final class MergeSortProcessorTest extends FlowTestCase
             new SortedRunBucketing([ref('a'), ref('b')], 2, new NativePHPRandomValueGenerator()),
             $buckets,
         );
-        $merge = new MergeSortProcessor(refs('a', 'b'), $buckets, new NativePHPRandomValueGenerator(), 10, 1000);
+        $merge = new MergeSortProcessor(
+            refs('a', 'b'),
+            $buckets,
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+            10,
+            1000,
+        );
 
         $input = (static function () {
             yield rows(
-                row(int_entry('a', 1), int_entry('b', 2)),
-                row(int_entry('a', 1), int_entry('b', 1)),
-                row(int_entry('a', 0), int_entry('b', 5)),
-                row(int_entry('a', 0), int_entry('b', 3)),
+                schema(int_schema('a'), int_schema('b')),
+                row(['a' => 1, 'b' => 2]),
+                row(['a' => 1, 'b' => 1]),
+                row(['a' => 0, 'b' => 5]),
+                row(['a' => 0, 'b' => 3]),
             );
         })();
 
@@ -159,10 +211,20 @@ final class MergeSortProcessorTest extends FlowTestCase
             new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
             $buckets,
         );
-        $merge = new MergeSortProcessor(refs('id'), $buckets, new NativePHPRandomValueGenerator(), 2, 1000);
+        $merge = new MergeSortProcessor(
+            refs('id'),
+            $buckets,
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+            2,
+            1000,
+        );
 
         $input = (static function () {
-            yield rows(...array_map(static fn(int $i): Row => row(int_entry('id', $i)), range(19, 0)));
+            yield rows(
+                schema(int_schema('id')),
+                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(19, 0)),
+            );
         })();
 
         $result = iterator_to_array($merge->process($bucketing->process($input, $context), $context), false);
@@ -174,6 +236,50 @@ final class MergeSortProcessorTest extends FlowTestCase
         static::assertSame([], $storage->liveBucketIds());
     }
 
+    public function test_both_storages_are_cleared_when_the_first_clear_throws(): void
+    {
+        $spillStorage = new SpyBucketsStorage(new MemoryBuckets());
+        $mergeStorage = new SpyBucketsStorage(new MemoryBuckets());
+        $spill = new Buckets(new ThrowingRemoveBucketsStorage($spillStorage));
+        $merge = new Buckets($mergeStorage);
+        $context = flow_context(config());
+
+        // the upstream throws during the drain, so reduce() never writes a merged run - seed one, or the
+        // merge-side assertion is true whether or not the nested finally ran
+        $mergeStorage->append('pre-existing', rows(schema(int_schema('id')), row(['id' => 1])));
+        $merge->add(new Bucket('pre-existing', 1, 0));
+
+        $bucketing = new BucketingProcessor(
+            new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator()),
+            $spill,
+        );
+        $processor = new MergeSortProcessor(refs('id'), $spill, $merge, new NativePHPRandomValueGenerator(), 2, 1000);
+
+        $upstream = (static function (): Generator {
+            yield rows(
+                schema(int_schema('id')),
+                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
+            );
+
+            throw new RuntimeException('upstream failed');
+        })();
+
+        try {
+            iterator_to_array($processor->process($bucketing->process($upstream, $context), $context), false);
+            static::fail('The upstream failure must escape.');
+        } catch (RuntimeException $escaped) {
+            static::assertSame('spill clear failed', $escaped->getMessage());
+
+            $previous = $escaped->getPrevious();
+
+            static::assertInstanceOf(RuntimeException::class, $previous);
+            static::assertSame('upstream failed', $previous->getMessage());
+        }
+
+        // the nested finally runs the merge clear even though the spill clear threw
+        static::assertSame([], $mergeStorage->liveBucketIds());
+    }
+
     public function test_throws_when_batch_size_below_one(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -182,6 +288,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         // @mago-ignore analysis:invalid-argument
         new MergeSortProcessor(
             refs('id'),
+            new Buckets(new MemoryBuckets()),
             new Buckets(new MemoryBuckets()),
             new NativePHPRandomValueGenerator(),
             10,
@@ -197,6 +304,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         // @mago-ignore analysis:invalid-argument
         new MergeSortProcessor(
             refs('id'),
+            new Buckets(new MemoryBuckets()),
             new Buckets(new MemoryBuckets()),
             new NativePHPRandomValueGenerator(),
             0,

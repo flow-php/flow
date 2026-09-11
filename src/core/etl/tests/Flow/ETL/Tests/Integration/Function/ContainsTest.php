@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\not;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -59,13 +60,13 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('contains', ref('id')->contains(lit('1')))
+            ->withEntry('contains', optional(ref('id')->contains(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
             [
-                ['id' => 1, 'contains' => false],
+                ['id' => 1, 'contains' => null],
             ],
             $memory->dump(),
         );
@@ -77,13 +78,13 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('contains', ref('id')->contains(lit(1)))
+            ->withEntry('contains', optional(ref('id')->contains(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
             [
-                ['id' => '1', 'contains' => false],
+                ['id' => '1', 'contains' => null],
             ],
             $memory->dump(),
         );

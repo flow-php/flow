@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
+use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
+use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Execution\StatisticsCollector;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\GroupBy\GroupBySteps;
@@ -29,29 +31,24 @@ use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
-use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Repartition\RepartitionSteps;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Sort\SortSteps;
-use Flow\ETL\Transformer\AutoCastTransformer;
-use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\DropEntriesTransformer;
-use Flow\ETL\Transformer\DropPartitionsTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\OrderEntries\Comparator;
-use Flow\ETL\Transformer\OrderEntries\TypeComparator;
-use Flow\ETL\Transformer\OrderEntriesTransformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Flow\ETL\Transformer\RenameEachEntryTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
@@ -60,7 +57,6 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 use Flow\ETL\Transformer\UntilTransformer;
 use Flow\Filesystem\Path\Filter;
-use Flow\Types\Type\AutoCaster;
 use Generator;
 use Throwable;
 
@@ -71,6 +67,11 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\to_output;
 use function is_string;
 
+/**
+ * @type Aggregations      = list<AggregatingFunction>
+ * @type GroupByReferences = list<string|Reference>
+ * @type SortReferences    = list<string|Reference>
+ */
 final class DataFrame
 {
     private readonly FlowContext $context;
@@ -85,22 +86,17 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param Aggregations $aggregations
+     * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+     *                                               algorithm for this operation and skips any automatic choice
      */
-    public function aggregate(AggregatingFunction ...$aggregations): self
+    public function aggregate(array $aggregations, ?GroupByAlgorithmBuilder $algorithm = null): self
     {
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        foreach (GroupBySteps::of($groupBy, $this->context->config) as $step) {
-            $this->pipeline->add($step);
-        }
-
-        return $this;
-    }
-
-    public function autoCast(): self
-    {
-        $this->pipeline->add(new AutoCastTransformer(new AutoCaster()));
+        $this->registerGroupBy($groupBy, $algorithm);
 
         return $this;
     }
@@ -122,7 +118,7 @@ final class DataFrame
      */
     public function batchBy(string|Reference $column, ?int $minSize = null): self
     {
-        $this->pipeline->add(new BatchingByProcessor(EntryReference::init($column), $minSize));
+        $this->pipeline->add(new BatchingByProcessor(UnresolvedReference::init($column), $minSize));
 
         return $this;
     }
@@ -168,10 +164,11 @@ final class DataFrame
      * @lazy
      *
      * @param null|string $id
+     * @param null|Cache $cache reads of this cache must pass the same instance to from_cache()
      *
      * @throws InvalidArgumentException
      */
-    public function cache(?string $id = null, ?int $cacheBatchSize = null): self
+    public function cache(?string $id = null, ?int $cacheBatchSize = null, ?Cache $cache = null): self
     {
         if ($cacheBatchSize !== null && $cacheBatchSize < 1) {
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
@@ -181,7 +178,7 @@ final class DataFrame
             $this->pipeline->add(new BatchingProcessor($cacheBatchSize));
         }
 
-        $this->pipeline->add(new CachingProcessor($id));
+        $this->pipeline->add(new CachingProcessor($id, $cache));
 
         return $this;
     }
@@ -213,13 +210,7 @@ final class DataFrame
      */
     public function collectRefs(References $references): self
     {
-        $this->with(new CallbackRowTransformer(static function (Row $row) use ($references): Row {
-            foreach ($row->entries()->all() as $entry) {
-                $references->add($entry->ref());
-            }
-
-            return $row;
-        }));
+        $this->with(new CollectReferencesTransformer($references));
 
         return $this;
     }
@@ -281,6 +272,7 @@ final class DataFrame
         Formatter $formatter = new AsciiTableFormatter(),
     ): string {
         $this->limit($limit);
+        $this->collect();
 
         $output = '';
 
@@ -324,19 +316,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are
-     * also removed.
-     *
-     * @lazy
-     */
-    public function dropPartitions(bool $dropPartitionColumns = false): self
-    {
-        $this->pipeline->add(new DropPartitionsTransformer($dropPartitionColumns));
-
-        return $this;
-    }
-
     public function duplicateRow(mixed $condition, WithEntry ...$entries): self
     {
         $this->pipeline->add(new DuplicateRowTransformer($condition, ...$entries));
@@ -363,11 +342,11 @@ final class DataFrame
             $this->limit($limit);
         }
 
-        $rows = new Rows();
+        $rows = null;
 
         try {
             foreach ($this->pipeline->process($this->context) as $nextRows) {
-                $rows = $rows->merge($nextRows);
+                $rows = $rows === null ? $nextRows : $rows->merge($nextRows);
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
         } catch (Throwable $e) {
@@ -376,7 +355,13 @@ final class DataFrame
             throw $e;
         }
 
-        return $rows;
+        if ($rows !== null) {
+            return $rows;
+        }
+
+        // the plan already describes what it would have produced; only a plan the bind refused has
+        // nothing to answer with
+        return new Rows($this->pipeline->boundOrNull()->schema ?? new Schema());
     }
 
     /**
@@ -387,6 +372,14 @@ final class DataFrame
         $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
 
         return $this;
+    }
+
+    /**
+     * @internal engine paths only - a build-time scan has to know whether the source can be read twice
+     */
+    public function extractor(): Extractor
+    {
+        return $this->pipeline->extractor();
     }
 
     /**
@@ -406,13 +399,13 @@ final class DataFrame
 
         if ($filter instanceof Filter) {
             $extractor->withPathFilter($filter);
+            $this->pipeline->invalidateBind();
 
             return $this;
         }
 
-        $extractor->withPathFilter(
-            new ScalarFunctionFilter($filter, $this->context->entryFactory(), new AutoCaster(), $this->context),
-        );
+        $extractor->withPathFilter(new ScalarFunctionFilter($filter, $extractor->schema(), $this->context));
+        $this->pipeline->invalidateBind();
 
         return $this;
     }
@@ -531,22 +524,37 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param GroupByReferences|Reference|string $entries a single column is grouped by on its own
+     * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+     *                                               algorithm for this operation and skips any automatic choice
      */
-    public function groupBy(string|Reference ...$entries): GroupedDataFrame
-    {
-        return new GroupedDataFrame($this, new GroupBy(...$entries));
+    public function groupBy(
+        array|Reference|string $entries,
+        ?GroupByAlgorithmBuilder $algorithm = null,
+    ): GroupedDataFrame {
+        $references = is_array($entries) ? $entries : [$entries];
+
+        return new GroupedDataFrame($this, new GroupBy(...$references), $algorithm);
     }
 
     /**
      * @lazy
+     *
+     * @param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+     *                                            for this operation and skips any automatic choice
      */
-    public function join(self $dataFrame, Expression $on, string|Join $type = Join::left): self
-    {
+    public function join(
+        self $dataFrame,
+        Expression $on,
+        string|Join $type = Join::left,
+        ?JoinAlgorithmBuilder $algorithm = null,
+    ): self {
         if (is_string($type)) {
             $type = Join::from($type);
         }
 
-        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config) as $step) {
+        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 
@@ -554,9 +562,11 @@ final class DataFrame
     }
 
     /**
+     * Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.
+     *
      * @lazy
      *
-     * @psalm-param string|Join $type
+     * @param string|Join $type
      */
     public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left): self
     {
@@ -605,45 +615,11 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param callable(Row $row) : Row $callback
-     */
-    public function map(callable $callback): self
-    {
-        $this->pipeline->add(new CallbackRowTransformer($callback));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
     public function match(Schema $schema, ?SchemaValidator $validator = null): self
     {
         $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new StrictValidator()));
-
-        return $this;
-    }
-
-    /**
-     * This method is used to set the behavior of the DataFrame.
-     *
-     * Available modes:
-     * - SaveMode defines how Flow should behave when writing to a file/files that already exists.
-     * - ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).
-     *
-     * @lazy
-     *
-     * @return $this
-     */
-    public function mode(SaveMode|ExecutionMode $mode): self
-    {
-        if ($mode instanceof ExecutionMode) {
-            $this->context->functions()->setMode($mode);
-        } else {
-            $this->context->streams()->setMode($mode);
-        }
 
         return $this;
     }
@@ -685,12 +661,16 @@ final class DataFrame
 
     /**
      * @lazy
+     * Shuffles the stream so every row sharing the given columns arrives in one batch. It does not
+     * write directories - that is declared on the loader, `to_csv(...)->partitionBy('region')`.
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries): self
+    public function repartition(string|Reference $entry, string|Reference ...$entries): self
     {
         array_unshift($entries, $entry);
 
-        $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
+        foreach (RepartitionSteps::of(References::init(...$entries), $this->context->config) as $step) {
+            $this->pipeline->add($step);
+        }
 
         return $this;
     }
@@ -707,22 +687,30 @@ final class DataFrame
             $this->limit($limit);
         }
 
+        $this->collect();
         $this->load(to_output($truncate, Output::rows, $formatter));
 
         $this->run();
     }
 
     /**
-     * @trigger
+     * @lazy
+     *
+     * @throws SchemaNotDerivableException
      */
-    public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()): void
+    public function printSchema(SchemaFormatter $formatter = new ASCIISchemaFormatter()): void
     {
-        if ($limit !== null) {
-            $this->limit($limit);
-        }
-        $this->load(to_output(false, Output::schema, schemaFormatter: $formatter));
+        echo $formatter->format($this->schema());
+    }
 
-        $this->run();
+    /**
+     * @internal engine paths only - GroupedDataFrame builds its steps against this frame's plan
+     */
+    public function registerGroupBy(GroupBy $groupBy, ?GroupByAlgorithmBuilder $algorithm = null): void
+    {
+        foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
+            $this->pipeline->add($step);
+        }
     }
 
     /**
@@ -738,13 +726,6 @@ final class DataFrame
     public function renameEach(RenameEntryStrategy ...$strategies): self
     {
         $this->pipeline->add(new RenameEachEntryTransformer(...$strategies));
-
-        return $this;
-    }
-
-    public function reorderEntries(Comparator $comparator = new TypeComparator()): self
-    {
-        $this->pipeline->add(new OrderEntriesTransformer($comparator));
 
         return $this;
     }
@@ -799,36 +780,13 @@ final class DataFrame
     }
 
     /**
-     * Alias for DataFrame::mode.
-     *
      * @lazy
-     */
-    public function saveMode(SaveMode $mode): self
-    {
-        return $this->mode($mode);
-    }
-
-    /**
-     * @trigger
      *
-     * @return Schema
+     * @throws SchemaNotDerivableException
      */
     public function schema(): Schema
     {
-        $schema = new Schema();
-
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                $schema = $schema->merge($rows->schema());
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
-        }
-
-        return $schema;
+        return $this->pipeline->bind()->schema;
     }
 
     /**
@@ -844,10 +802,16 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param Reference|SortReferences|string $entries a single column is sorted by on its own
+     * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+     *                                            for this operation and skips any automatic choice
      */
-    public function sortBy(Reference ...$entries): self
+    public function sortBy(array|Reference|string $entries, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        foreach (SortSteps::of(refs(...$entries), $this->context->config) as $step) {
+        $references = is_array($entries) ? $entries : [$entries];
+
+        foreach (SortSteps::of(refs(...$references), $this->context->config, $algorithm) as $step) {
             $this->pipeline->add($step);
         }
 
@@ -943,10 +907,12 @@ final class DataFrame
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
         if ($reference instanceof WindowFunction) {
-            if (count($reference->window()->partitions())) {
-                $this->pipeline->add(
-                    new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order()),
-                );
+            if ($reference->window()->partitions()->count()) {
+                foreach (RepartitionSteps::of($reference->window()->partitions(), $this->context->config) as $step) {
+                    $this->pipeline->add($step);
+                }
+            } else {
+                $this->pipeline->add(new CollectingProcessor());
             }
 
             $this->pipeline->add(new WindowProcessor($entry, $reference));

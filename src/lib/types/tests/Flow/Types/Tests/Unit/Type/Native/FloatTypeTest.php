@@ -9,6 +9,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -97,7 +98,13 @@ final class FloatTypeTest extends TestCase
     {
         yield 'string' => [
             'value' => 'string',
-            'expected' => 0.0,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'numeric string' => [
+            'value' => '12.9',
+            'expected' => 12.9,
             'exceptionClass' => null,
         ];
 
@@ -119,21 +126,33 @@ final class FloatTypeTest extends TestCase
             'exceptionClass' => null,
         ];
 
+        yield 'bool false' => [
+            'value' => false,
+            'expected' => 0.0,
+            'exceptionClass' => null,
+        ];
+
         yield 'array' => [
             'value' => [1, 2, 3],
-            'expected' => 1.0,
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'null' => [
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DateTimeInterface' => [
             'value' => new DateTimeImmutable('2021-01-01 00:00:00'),
-            'expected' => 1609459200000000.0,
+            'expected' => 1609459200.0,
             'exceptionClass' => null,
         ];
 
         yield 'DateInterval' => [
             'value' => new DateInterval('P1D'),
-            'expected' => 86400000000.0,
+            'expected' => 86400.0,
             'exceptionClass' => null,
         ];
 

@@ -25,9 +25,9 @@ use function str_replace;
  * non-constant defaults (functions, sequences, `now()`) keep comparing by their normalized
  * expression string exactly as before.
  *
- * @phpstan-import-type ColumnTypeShape from ColumnType
+ * @import-type ColumnTypeShape from ColumnType
  *
- * @phpstan-type ColumnDefaultShape = array{literal: string, type: ?ColumnTypeShape, kind: string}
+ * @type ColumnDefaultShape = array{literal: string, type: ?ColumnTypeShape, kind: string}
  */
 final readonly class ColumnDefault
 {

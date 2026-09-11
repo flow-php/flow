@@ -109,6 +109,16 @@ final class JsonTest extends TestCase
         static::assertTrue(Json::isValid('[1, 2, 3]'));
     }
 
+    public function test_json_object_rejects_non_string_keys(): void
+    {
+        static::assertSame('{"1":"a"}', Json::fromArray([1 => 'a'])->toString());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('All keys of a JSON object must be strings');
+
+        Json::fromArray([1 => 'a'], asObject: true);
+    }
+
     public function test_json_serialize_returns_array(): void
     {
         $json = new Json('{"key": "value"}');

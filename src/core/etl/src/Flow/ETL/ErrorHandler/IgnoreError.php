@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\ErrorHandler;
 
 use Flow\ETL\ErrorHandler;
-use Flow\ETL\Rows;
-use Throwable;
 
 final class IgnoreError implements ErrorHandler
 {
-    public function skipRows(Throwable $error, Rows $rows): bool
+    public function onExtraction(ExtractionError $error): ExtractionAction
     {
-        return false;
+        return ExtractionAction::endSource;
     }
 
-    public function throw(Throwable $error, Rows $rows): bool
+    public function onLoading(LoadingError $error): LoadingAction
     {
-        return false;
+        return LoadingAction::skipLoader;
+    }
+
+    public function onTransformation(TransformationError $error): TransformationAction
+    {
+        return TransformationAction::skipBatch;
     }
 }

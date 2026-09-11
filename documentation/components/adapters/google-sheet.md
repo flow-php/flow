@@ -8,17 +8,8 @@ package: flow-php/etl-adapter-google-sheet
 
 [TOC]
 
-Flow PHP's Adapter Google Sheet is a comprehensive library engineered to enable smooth interactions with Google Sheets
-within your ETL (Extract, Transform, Load) workflows. This adapter is indispensable for developers looking to seamlessly
-extract from or load data into Google Sheets, ensuring a coherent and reliable data transformation journey. By
-leveraging the Adapter Google Sheet library, developers can utilize a robust set of features designed for precise
-interaction with Google Sheets, simplifying complex data transformations and enhancing data processing efficiency. The
-Adapter Google Sheet library encapsulates a wide range of functionalities, providing a streamlined API for managing
-Google Sheets tasks, which is essential in modern data processing and transformation scenarios. This library reflects
-Flow PHP's dedication to offering versatile and effective data processing solutions, making it an optimal choice for
-developers dealing with Google Sheets in large-scale and data-intensive projects. With Flow PHP's Adapter Google Sheet,
-managing Google Sheets data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning
-with the robust and adaptable nature of the Flow PHP ecosystem.
+Flow PHP's Google Sheet adapter reads a sheet of a Google Spreadsheet through the Sheets API v4 as a Flow extractor,
+with the schema either declared or inferred from the sheet's first rows. The adapter is read-only: there is no loader.
 
 ## Installation
 
@@ -29,13 +20,13 @@ For detailed installation instructions, see the [installation page](/documentati
 ```php
 <?php
 
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetRange;
-use Flow\ETL\DSL\GoogleSheet;
-use Flow\ETL\Flow;
+use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
+use function Flow\ETL\DSL\{data_frame, to_output};
 
-$rows = (new Flow())
-    ->read(GoogleSheet::from($auth_config, $spreadsheet_document_id, $sheet_name)))
-    ->fetch();
+data_frame()
+    ->read(from_google_sheet($auth_config, $spreadsheet_document_id, $sheet_name))
+    ->write(to_output())
+    ->run();
 ```
 
 ## Needed parameters
@@ -49,3 +40,14 @@ $rows = (new Flow())
 
 - `$spreadsheet_document_id` ID needs to be readded from the document we want to use, example URL `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` ID is `xyzID-for-documentxyz`
 - `$sheet_name` - Name of sheet from document you want to read.
+
+## Schema
+
+Declare it with `->withSchema(schema(...))`, or let the extractor infer it: without a declaration `schema()` reads the
+first rows of the sheet (100 by default) through one `spreadsheets.values.get` and every batch carries that schema.
+A sheet the sample already read in full is not fetched again. Every inferred column is nullable; strings that look like numbers, booleans and dates become
+those types under the API's default `FORMATTED_VALUE`; with `->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE'])`
+the API's own numbers and booleans are used as they are (dates arrive as serial numbers unless
+`dateTimeRenderOption` is `FORMATTED_STRING`). `->inferSchema(infer_schema()->sampleSize(-1))` reads the whole sheet;
+`->allStrings()` keeps every column a string. Empty cells are `null` (`->withEmptyToNull(false)` keeps them `""`).
+A value past the sample that does not fit the inferred type fails the read with the column and row.

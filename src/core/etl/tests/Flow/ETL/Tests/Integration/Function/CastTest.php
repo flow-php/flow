@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
@@ -37,15 +37,18 @@ final class CastTest extends FlowTestCase
         );
     }
 
-    public function test_cast_to_array_produces_json_entry(): void
+    public function test_cast_to_array(): void
     {
         $rows = df()
             ->read(from_array([['a' => '[1,2,3]']]))
             ->withEntry('b', ref('a')->cast('array'))
             ->fetch();
 
-        static::assertInstanceOf(JsonEntry::class, $rows->first()->entries()->get('b'));
-        static::assertSame('[1,2,3]', $rows->first()->entries()->get('b')->toString());
+        // Cast declares type_array (a json column) and the bind enforces that declaration.
+        $json = $rows->first()->get('b');
+
+        static::assertInstanceOf(Json::class, $json);
+        static::assertSame([1, 2, 3], $json->toArray());
     }
 
     public function test_cast_non_deterministic_values(): void
@@ -59,6 +62,6 @@ final class CastTest extends FlowTestCase
             ->fetch()
             ->first();
 
-        static::assertEquals(type_list(type_integer()), $row->get('list_int')->type());
+        static::assertSame([], $row->get('list_int'));
     }
 }

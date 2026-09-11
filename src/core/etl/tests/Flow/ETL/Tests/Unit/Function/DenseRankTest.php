@@ -9,10 +9,11 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\WindowContextMother;
 
 use function Flow\ETL\DSL\dense_rank;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\window;
 
 final class DenseRankTest extends FlowTestCase
@@ -70,7 +71,7 @@ final class DenseRankTest extends FlowTestCase
     {
         $this->expectExceptionMessage('Dens Rank window function requires to be ordered by one column');
 
-        dense_rank()->over(window())->rankPartition(rows(row(int_entry('salary', 6000))));
+        dense_rank()->over(window())->rankPartition(rows(schema(int_schema('salary')), row(['salary' => 6000])));
     }
 
     public function test_dense_rank_without_over_clause(): void
@@ -80,5 +81,13 @@ final class DenseRankTest extends FlowTestCase
         $partition = RankingContext::salariesDescending();
 
         dense_rank()->apply(WindowContextMother::atIndex($partition, 0));
+    }
+
+    public function test_with_children_returns_the_same_leaf(): void
+    {
+        $function = dense_rank();
+
+        static::assertSame([], $function->children());
+        static::assertSame($function, $function->withChildren([]));
     }
 }

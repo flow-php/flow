@@ -6,9 +6,28 @@ namespace Flow\Floe;
 
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\DateDefinition;
+use Flow\ETL\Schema\Definition\DateTimeDefinition;
+use Flow\ETL\Schema\Definition\EnumDefinition;
+use Flow\ETL\Schema\Definition\FloatDefinition;
+use Flow\ETL\Schema\Definition\HTMLDefinition;
+use Flow\ETL\Schema\Definition\HTMLElementDefinition;
+use Flow\ETL\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Schema\Definition\JsonDefinition;
+use Flow\ETL\Schema\Definition\ListDefinition;
+use Flow\ETL\Schema\Definition\MapDefinition;
+use Flow\ETL\Schema\Definition\NullDefinition;
+use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Schema\Definition\StructureDefinition;
+use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Definition\TimeZoneDefinition;
+use Flow\ETL\Schema\Definition\UuidDefinition;
+use Flow\ETL\Schema\Definition\XMLDefinition;
+use Flow\ETL\Schema\Definition\XMLElementDefinition;
 use Flow\Floe\Encoding\BooleanEncoder;
 use Flow\Floe\Encoding\DateTimeEncoder;
-use Flow\Floe\Encoding\DynamicEncoder;
 use Flow\Floe\Encoding\EnumEncoder;
 use Flow\Floe\Encoding\Float64Encoder;
 use Flow\Floe\Encoding\HtmlDocumentEncoder;
@@ -37,28 +56,23 @@ use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\Logical\LiteralType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\NonEmptyStringType;
 use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\PositiveIntegerType;
-use Flow\Types\Type\Logical\ScalarType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
-use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
-use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
-use Flow\Types\Type\Native\UnionType;
 
 use function is_string;
 use function pack;
@@ -84,11 +98,47 @@ final class ValueEncoder
     }
 
     /**
+     * @throws FloeException
+     */
+    public function encoderFor(Definition $definition): Encoding\ValueEncoder
+    {
+        return match ($definition::class) {
+            IntegerDefinition::class,
+            FloatDefinition::class,
+            BooleanDefinition::class,
+            StringDefinition::class,
+            DateTimeDefinition::class,
+            DateDefinition::class,
+            TimeDefinition::class,
+            UuidDefinition::class,
+            TimeZoneDefinition::class,
+            JsonDefinition::class,
+            EnumDefinition::class,
+            XMLDefinition::class,
+            XMLElementDefinition::class,
+            HTMLDefinition::class,
+            HTMLElementDefinition::class,
+            ListDefinition::class,
+            MapDefinition::class,
+            StructureDefinition::class,
+            NullDefinition::class,
+                => $this->elementEncoderFor($definition->type()),
+            default => throw new FloeException(sprintf(
+                'Floe does not support columns of type "%s"',
+                $definition->type()->toString(),
+            )),
+        };
+    }
+
+    /**
+     * Types reachable only inside containers - list elements, map keys and values,
+     * structure elements - where no Definition exists.
+     *
      * @param Type<mixed> $type
      *
      * @throws FloeException
      */
-    public function encoderFor(Type $type): Encoding\ValueEncoder
+    private function elementEncoderFor(Type $type): Encoding\ValueEncoder
     {
         return match ($type::class) {
             IntegerType::class, PositiveIntegerType::class => new Int64Encoder(),
@@ -112,14 +162,8 @@ final class ValueEncoder
             ListType::class => $this->listEncoder($type),
             MapType::class => $this->mapEncoder($type),
             StructureType::class => $this->structureEncoder($type),
-            OptionalType::class => new OptionalEncoder($this->encoderFor($type->base())),
+            OptionalType::class => new OptionalEncoder($this->elementEncoderFor($type->base())),
             NullType::class => new NullEncoder(),
-            MixedType::class,
-            UnionType::class,
-            ScalarType::class,
-            LiteralType::class,
-            ArrayType::class,
-                => $this->dynamicEncoder(),
             default => throw new FloeException(sprintf('Floe does not support values of type "%s"', $type->toString())),
         };
     }
@@ -165,11 +209,6 @@ final class ValueEncoder
         return $xml;
     }
 
-    private function dynamicEncoder(): DynamicEncoder
-    {
-        return new DynamicEncoder($this->dateTimeEncoder);
-    }
-
     /**
      * @param Type<mixed> $type
      */
@@ -186,7 +225,7 @@ final class ValueEncoder
             return new PackedListEncoder('e');
         }
 
-        return new ListEncoder($this->encoderFor($element));
+        return new ListEncoder($this->elementEncoderFor($element));
     }
 
     /**
@@ -200,10 +239,13 @@ final class ValueEncoder
         $keyEncoder = match (true) {
             $key instanceof IntegerType => new Int64Encoder(),
             $key instanceof StringType => new StringKeyEncoder(),
-            default => $this->dynamicEncoder(),
+            default => throw new FloeException(sprintf(
+                'Floe does not support map keys of type "%s"',
+                $key->toString(),
+            )),
         };
 
-        return new MapEncoder($keyEncoder, $this->encoderFor($type->value()));
+        return new MapEncoder($keyEncoder, $this->elementEncoderFor($type->value()));
     }
 
     /**
@@ -212,16 +254,16 @@ final class ValueEncoder
     private function structureEncoder(Type $type): Encoding\ValueEncoder
     {
         /** @var StructureType<array<array-key, mixed>> $type */
+        if ($type->allowsExtra()) {
+            throw new FloeException('Floe does not support structures that allow extra values');
+        }
+
         $elements = [];
 
-        foreach ($type->elements() as $name => $elementType) {
-            $elements[$name] = $this->encoderFor($elementType);
+        foreach ($type->elements() as $element) {
+            $elements[$element->name] = $this->elementEncoderFor($element->type);
         }
 
-        foreach ($type->optionalElements() as $name => $elementType) {
-            $elements[$name] = $this->encoderFor($elementType);
-        }
-
-        return new StructureEncoder($elements, $type->allowsExtra(), $this->dynamicEncoder());
+        return new StructureEncoder($elements);
     }
 }

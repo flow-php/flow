@@ -4,252 +4,277 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlCursorExtractor;
-use Flow\ETL\Config;
+use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
+use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
+use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Schema;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Client\Cursor;
-use Generator;
-use PHPUnit\Framework\MockObject\MockObject;
+
+use function array_map;
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function iterator_to_array;
+use function range;
 
 final class PostgreSqlCursorExtractorTest extends FlowTestCase
 {
-    public function test_cursor_loop_breaks_immediately_when_empty_result(): void
+    public function test_a_declared_schema_runs_no_query(): void
     {
-        $client = $this->createClientMock();
-        $cursor = $this->createCursorMock(rows: [], count: 0);
+        $client = new SpyClient();
 
-        $client->expects(self::once())->method('getTransactionNestingLevel')->willReturn(1);
+        from_pgsql_cursor($client, 'SELECT id FROM t')->withSchema(schema(int_schema('id')))->schema();
 
-        $client->expects(self::exactly(2))->method('execute');
-
-        $client->expects(self::once())->method('cursor')->willReturn($cursor);
-
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-        $extractor = $extractor->withFetchSize(10);
-
-        $rows = [];
-
-        foreach ($extractor->extract($this->createFlowContext()) as $rowsData) {
-            $rows[] = $rowsData;
-        }
-
-        static::assertSame([], $rows);
+        static::assertSame([], $client->calls);
     }
 
-    public function test_cursor_loop_breaks_when_rows_less_than_fetch_size(): void
+    public function test_a_declared_schema_wins_over_the_probe(): void
     {
-        $client = $this->createClientMock();
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_pgsql_cursor(
+                (new SpyClient())->willDescribe(ColumnMother::of(['other' => 'text'])),
+                'SELECT id FROM t',
+            )
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
+        );
+    }
 
-        $cursor = $this->createCursorMock(rows: [
-            ['id' => 1, 'name' => 'User 1'],
-            ['id' => 2, 'name' => 'User 2'],
-            ['id' => 3, 'name' => 'User 3'],
-        ], count: 3);
+    public function test_cursor_loop_breaks_immediately_when_empty_result(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor());
 
-        $client->expects(self::once())->method('getTransactionNestingLevel')->willReturn(1);
+        static::assertSame(
+            [],
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context())),
+        );
+        static::assertSame(1, $client->callsTo('cursor'));
+    }
 
-        $client->expects(self::exactly(2))->method('execute');
+    public function test_cursor_loop_breaks_when_rows_less_than_batch_size(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]));
 
-        $client->expects(self::once())->method('cursor')->willReturn($cursor);
-
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-        $extractor = $extractor->withFetchSize(10);
-
-        $rows = [];
-
-        foreach ($extractor->extract($this->createFlowContext()) as $rowsData) {
-            $rows = [...$rows, ...$rowsData->toArray()];
-        }
-
-        static::assertCount(3, $rows);
+        self::assertExtractedRowsCount(2, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(5));
+        static::assertSame(1, $client->callsTo('cursor'));
     }
 
     public function test_cursor_loop_fetches_multiple_batches_when_needed(): void
     {
-        $client = $this->createClientMock();
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
 
-        $cursor1 = $this->createCursorMock(rows: [
-            ['id' => 1, 'name' => 'User 1'],
-            ['id' => 2, 'name' => 'User 2'],
-        ], count: 2);
+        self::assertExtractedRowsCount(3, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2));
+        static::assertSame(2, $client->callsTo('cursor'));
+    }
 
-        $cursor2 = $this->createCursorMock(rows: [
-            ['id' => 3, 'name' => 'User 3'],
-        ], count: 1);
+    public function test_cursor_loop_with_exact_batch_size_multiple_does_extra_fetch(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor());
 
-        $client->expects(self::once())->method('getTransactionNestingLevel')->willReturn(1);
+        self::assertExtractedRowsCount(2, from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2));
+        static::assertSame(2, $client->callsTo('cursor'));
+    }
 
-        $client->expects(self::exactly(2))->method('execute');
+    public function test_extract_declares_and_closes_its_own_cursor_in_its_own_transaction(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1']]));
 
-        $client->expects(self::exactly(2))->method('cursor')->willReturnOnConsecutiveCalls($cursor1, $cursor2);
+        iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
 
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-        $extractor = $extractor->withFetchSize(2);
+        // The two execute() calls are DECLARE CURSOR and the finally block's CLOSE; dropping either
+        // leaks a server-side cursor inside the caller's transaction.
+        static::assertSame(['describe', 'beginTransaction', 'execute', 'cursor', 'execute', 'commit'], $client->calls);
+    }
 
-        $rows = [];
+    public function test_extract_joins_a_callers_transaction_instead_of_opening_its_own(): void
+    {
+        $client = (new SpyClient(transactionNestingLevel: 1))
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1']]));
 
-        foreach ($extractor->extract($this->createFlowContext()) as $rowsData) {
-            $rows = [...$rows, ...$rowsData->toArray()];
+        iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+
+        // Already nested, so the extractor neither begins nor commits; the probe takes a savepoint
+        // and releases it, which is the beginTransaction/rollBack pair at the front.
+        static::assertSame(
+            ['beginTransaction', 'describe', 'rollBack', 'execute', 'cursor', 'execute'],
+            $client->calls,
+        );
+    }
+
+    public function test_extract_casts_an_array_column_through_the_derived_schema(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['tags' => '_text']))
+            ->willReturnCursors(new StubCursor([['tags' => ['a', 'b']]]));
+
+        $batches = iterator_to_array(from_pgsql_cursor($client, 'SELECT tags FROM t')->extract(flow_context()));
+
+        static::assertSame(['a', 'b'], $batches[0]->first()->get('tags'));
+    }
+
+    public function test_extract_casts_through_the_derived_schema(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8', 'amount' => 'numeric']))
+            ->willReturnCursors(new StubCursor([['id' => '1', 'amount' => '10.5']]));
+
+        $row = iterator_to_array(
+            from_pgsql_cursor($client, 'SELECT id, amount FROM t')->extract(flow_context()),
+        )[0]->first();
+
+        static::assertSame(1, $row->get('id'));
+        static::assertSame(10.5, $row->get('amount'));
+    }
+
+    public function test_extract_derives_the_schema_once_and_reuses_it_across_batches(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t')->withBatchSize(2);
+        $batches = iterator_to_array($extractor->extract(flow_context()));
+
+        static::assertSame(1, $client->callsTo('describe'));
+
+        // Never identity: the hydrator may hand back a fresh Schema per batch, so what this pins is
+        // that every batch carries the same shape as the one schema() promised.
+        foreach ($batches as $batch) {
+            static::assertTrue($batch->schema()->isSame($extractor->schema()));
         }
-
-        static::assertCount(3, $rows);
     }
 
-    public function test_cursor_loop_with_exact_fetch_size_multiple_does_extra_fetch(): void
+    public function test_extract_refuses_to_read_when_the_schema_cannot_be_derived(): void
     {
-        $client = $this->createClientMock();
+        $client = (new SpyClient())->willDescribe(ColumnMother::of(['location' => 'point']));
 
-        $cursor1 = $this->createCursorMock(rows: [
-            ['id' => 1, 'name' => 'User 1'],
-            ['id' => 2, 'name' => 'User 2'],
-        ], count: 2);
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('column "location" has PostgreSQL type "point", which Flow has no type for');
 
-        $cursor2 = $this->createCursorMock(rows: [
-            ['id' => 3, 'name' => 'User 3'],
-            ['id' => 4, 'name' => 'User 4'],
-        ], count: 2);
-
-        $cursor3 = $this->createCursorMock(rows: [], count: 0);
-
-        $client->expects(self::once())->method('getTransactionNestingLevel')->willReturn(1);
-
-        $client->expects(self::exactly(2))->method('execute');
-
-        $client
-            ->expects(self::exactly(3))
-            ->method('cursor')
-            ->willReturnOnConsecutiveCalls($cursor1, $cursor2, $cursor3);
-
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-        $extractor = $extractor->withFetchSize(2);
-
-        $rows = [];
-
-        foreach ($extractor->extract($this->createFlowContext()) as $rowsData) {
-            $rows = [...$rows, ...$rowsData->toArray()];
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT location FROM t')->extract(flow_context()));
+        } finally {
+            // The derivation happens before the transaction opens, so a refused probe leaves
+            // nothing to unwind. Deriving inside the try block would fail this.
+            static::assertSame(['describe'], $client->calls);
         }
-
-        static::assertCount(4, $rows);
     }
 
-    public function test_with_fetch_size_returns_self(): void
+    public function test_pushed_limit_issues_no_query_once_satisfied(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1, 1000))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1001, 1500))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1501, 2500))),
+            );
+        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t');
+        $extractor->pushLimit(1500);
 
-        $result = $extractor->withFetchSize(500);
-
-        static::assertSame($extractor, $result);
+        self::assertExtractedRowsCount(1500, $extractor);
+        // FETCH 1000, then FETCH 500 - a full narrowed fetch, which only the limit itself can stop
+        static::assertSame(2, $client->callsTo('cursor'));
     }
 
-    public function test_with_fetch_size_validates_positive_value(): void
+    public function test_schema_is_derived_from_result_metadata(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
+        $schema = from_pgsql_cursor(
+            (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8', 'label' => 'text'])),
+            'SELECT id, label FROM t',
+        )->schema();
 
+        static::assertSame(['id', 'label'], $schema->references()->names());
+        static::assertTrue($schema->findDefinition('id')?->isNullable());
+    }
+
+    public function test_the_derived_schema_is_memoised(): void
+    {
+        $client = (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8']));
+        $extractor = from_pgsql_cursor($client, 'SELECT id FROM t');
+
+        $extractor->schema();
+        $extractor->schema();
+
+        static::assertSame(['describe'], $client->calls);
+    }
+
+    public function test_with_batch_size_validates_negative_value(): void
+    {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Fetch size must be greater than 0, got 0');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got -1');
 
-        $extractor->withFetchSize(0);
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withBatchSize(-1);
     }
 
-    public function test_with_fetch_size_validates_positive_value_negative(): void
+    public function test_with_batch_size_validates_positive_value(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Fetch size must be greater than 0, got -10');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
 
-        $extractor->withFetchSize(-10);
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withBatchSize(0);
     }
 
-    public function test_with_maximum_returns_self(): void
+    public function test_with_batch_size_returns_the_same_extractor(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
+        $extractor = from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t');
 
-        $result = $extractor->withMaximum(100);
+        static::assertSame($extractor, $extractor->withBatchSize(10));
+    }
 
-        static::assertSame($extractor, $result);
+    public function test_with_maximum_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t');
+
+        static::assertSame($extractor, $extractor->withMaximum(10));
+    }
+
+    public function test_with_cursor_name_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t');
+
+        static::assertSame($extractor, $extractor->withCursorName('c'));
+    }
+
+    public function test_with_schema_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t');
+
+        static::assertSame($extractor, $extractor->withSchema(schema(int_schema('id'))));
+    }
+
+    public function test_with_maximum_validates_negative_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Maximum must be greater than 0, got -1');
+
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withMaximum(-1);
     }
 
     public function test_with_maximum_validates_positive_value(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Maximum must be greater than 0, got 0');
 
-        $extractor->withMaximum(0);
+        from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->withMaximum(0);
     }
 
-    public function test_with_maximum_validates_positive_value_negative(): void
+    public function test_is_repeatable(): void
     {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Maximum must be greater than 0, got -5');
-
-        $extractor->withMaximum(-5);
-    }
-
-    public function test_with_schema_returns_self(): void
-    {
-        $client = $this->createClientStub();
-        $extractor = new PostgreSqlCursorExtractor($client, 'SELECT * FROM users');
-
-        $schema = new Schema();
-        $result = $extractor->withSchema($schema);
-
-        static::assertSame($extractor, $result);
-    }
-
-    /**
-     * @return Client&MockObject
-     */
-    private function createClientMock(): Client
-    {
-        return $this->createMock(Client::class);
-    }
-
-    private function createClientStub(): Client
-    {
-        return $this->createStub(Client::class);
-    }
-
-    /**
-     * @param array<array<string, mixed>> $rows
-     *
-     * @return Cursor&MockObject
-     */
-    private function createCursorMock(array $rows, int $count): Cursor
-    {
-        $cursor = $this->createMock(Cursor::class);
-
-        $cursor->expects(self::once())->method('count')->willReturn($count);
-
-        $cursor
-            ->method('iterate')
-            ->willReturnCallback(static function () use ($rows): Generator {
-                foreach ($rows as $row) {
-                    yield $row;
-                }
-            });
-
-        $cursor->expects(self::once())->method('free');
-
-        return $cursor;
-    }
-
-    private function createFlowContext(): FlowContext
-    {
-        return new FlowContext(Config::default());
+        static::assertTrue(from_pgsql_cursor(new SpyClient(), 'SELECT id FROM t')->isRepeatable());
     }
 }

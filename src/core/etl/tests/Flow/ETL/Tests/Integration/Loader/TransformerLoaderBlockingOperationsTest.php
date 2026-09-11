@@ -21,11 +21,13 @@ use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\window;
@@ -47,11 +49,11 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
     {
         // A2 - one result row for the stream, not one per batch.
         $spy = new SpyLoader();
-        $sumV = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->aggregate(sum(ref('v'))));
+        $sumV = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->aggregate([sum(ref('v'))]));
 
         df()->read(from_rows(...RowsMother::interleavedGroupBatches()))->write(to_transformation($sumV, $spy))->run();
 
-        static::assertSame([['v_sum' => 66]], $spy->loadedRowsToArray());
+        static::assertSame([['v_sum' => 66.0]], $spy->loadedRowsToArray());
         static::assertSame(1, $spy->loadsCount);
     }
 
@@ -152,7 +154,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         // A3 - groups are merged across batches, giving the 2 rows the outer frame gives.
         $spy = new SpyLoader();
         $sumVByGroup = new CallbackTransformation(static function (DataFrame $df): DataFrame {
-            return $df->groupBy(ref('g'))->aggregate(sum(ref('v')));
+            return $df->groupBy([ref('g')])->aggregate(sum(ref('v')));
         });
 
         df()
@@ -161,7 +163,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
             ->run();
 
         static::assertSame([1, 1], $spy->loadedRowCounts());
-        static::assertSame([['g' => 'a', 'v_sum' => 6], ['g' => 'b', 'v_sum' => 60]], $spy->loadedRowsToArray());
+        static::assertSame([['g' => 'a', 'v_sum' => 6.0], ['g' => 'b', 'v_sum' => 60.0]], $spy->loadedRowsToArray());
     }
 
     public function test_join_inside_a_transformation_matches_every_row(): void
@@ -172,8 +174,9 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         $spy = new SpyLoader();
         $joinNames = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->join(
             data_frame()->process(rows(
-                row(str_entry('code', 'a'), str_entry('n', 'Alpha')),
-                row(str_entry('code', 'b'), str_entry('n', 'Bravo')),
+                schema(str_schema('code'), str_schema('n')),
+                row(['code' => 'a', 'n' => 'Alpha']),
+                row(['code' => 'b', 'n' => 'Bravo']),
             )),
             join_on(['g' => 'code'], 'j_'),
             Join::inner,
@@ -230,12 +233,12 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         static::assertSame([3, 2, 1, 0], array_column($spy->loadedRowsToArray(), 'id'));
     }
 
-    public function test_partition_by_inside_a_transformation_partitions_the_whole_stream(): void
+    public function test_repartition_inside_a_transformation_regroups_the_whole_stream(): void
     {
-        // Partitions are cut over the stream now, so each partition arrives as one chunk instead of one per
+        // Groups are cut over the stream, so each key arrives as one chunk instead of one per
         // incoming batch.
         $spy = new SpyLoader();
-        $partitionByGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->partitionBy(ref(
+        $partitionByGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->repartition(ref(
             'g',
         )));
 
@@ -260,12 +263,12 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_pivot_inside_a_transformation_pivots_the_whole_stream(): void
     {
-        // A6 - one pivoted set for the stream. The key order differs per group because each group's own column is
-        // filled first and the missing one is appended as null.
+        // A6 - one pivoted set for the stream. Every row carries both pivoted columns in Schema order,
+        // the group's own value and null for the other.
         $spy = new SpyLoader();
         $pivotGroupSums = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df
-            ->groupBy(ref('g'))
-            ->pivot(ref('g'))
+            ->groupBy([ref('g')])
+            ->pivot(ref('g'), pivot_values('a', 'b'))
             ->aggregate(sum(ref('v'))));
 
         df()
@@ -275,7 +278,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
 
         static::assertSame([2], $spy->loadedRowCounts());
         static::assertSame(
-            [['g' => 'a', 'a' => 6, 'b' => null], ['g' => 'b', 'b' => 60, 'a' => null]],
+            [['g' => 'a', 'a' => 6.0, 'b' => null], ['g' => 'b', 'a' => null, 'b' => 60.0]],
             $spy->loadedRowsToArray(),
         );
     }
@@ -312,7 +315,7 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
     {
         // A1 - the stream is sorted, not each batch on its own.
         $spy = new SpyLoader();
-        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy(ref('id')));
+        $sortById = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')]));
 
         df()->read(from_rows(...RowsMother::descendingIdBatches()))->write(to_transformation($sortById, $spy))->run();
 
@@ -373,12 +376,12 @@ final class TransformerLoaderBlockingOperationsTest extends FlowIntegrationTestC
         static::assertSame([3, 3], $spy->loadedRowCounts());
         static::assertSame(
             [
-                ['g' => 'a', 'v' => 1, 'avg' => 2],
-                ['g' => 'a', 'v' => 2, 'avg' => 2],
-                ['g' => 'a', 'v' => 3, 'avg' => 2],
-                ['g' => 'b', 'v' => 10, 'avg' => 20],
-                ['g' => 'b', 'v' => 20, 'avg' => 20],
-                ['g' => 'b', 'v' => 30, 'avg' => 20],
+                ['g' => 'a', 'v' => 1, 'avg' => 2.0],
+                ['g' => 'a', 'v' => 2, 'avg' => 2.0],
+                ['g' => 'a', 'v' => 3, 'avg' => 2.0],
+                ['g' => 'b', 'v' => 10, 'avg' => 20.0],
+                ['g' => 'b', 'v' => 20, 'avg' => 20.0],
+                ['g' => 'b', 'v' => 30, 'avg' => 20.0],
             ],
             $spy->loadedRowsToArray(),
         );

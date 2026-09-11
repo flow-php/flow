@@ -279,13 +279,14 @@ use Monolog\Level;
 use function Flow\Telemetry\DSL\{
     telemetry,
     resource,
-    logger_provider,
     batching_log_processor,
 };
+use Flow\Telemetry\Provider\Clock\SystemClock;
 use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_json_serializer,
     otlp_exporter,
+    otlp_logger_provider,
 };
 use function Flow\Bridge\Monolog\Telemetry\DSL\telemetry_handler;
 
@@ -303,8 +304,9 @@ $transport = otlp_curl_transport(
 
 $telemetry = telemetry(
     $resource,
-    loggerProvider: logger_provider(
-        batching_log_processor(otlp_exporter($transport))
+    loggerProvider: otlp_logger_provider(
+        batching_log_processor(otlp_exporter($transport)),
+        new SystemClock(),
     ),
 );
 

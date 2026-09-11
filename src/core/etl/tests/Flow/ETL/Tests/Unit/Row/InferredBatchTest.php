@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Row;
+
+use Flow\ETL\Row\InferredBatch;
+use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+
+final class InferredBatchTest extends FlowTestCase
+{
+    public function test_a_column_absent_from_one_row_is_nullable(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            (new InferredBatch())->of([
+                new RawRowValues(['id' => 1, 'name' => 'a']),
+                new RawRowValues(['id' => 2]),
+            ])->schema(),
+        );
+    }
+
+    public function test_an_empty_batch_infers_an_empty_schema(): void
+    {
+        static::assertEquals(rows(schema()), (new InferredBatch())->of([]));
+    }
+
+    public function test_an_explicit_null_makes_the_column_nullable(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            (new InferredBatch())->of([
+                new RawRowValues(['id' => 1, 'name' => 'a']),
+                new RawRowValues(['id' => 2, 'name' => null]),
+            ])->schema(),
+        );
+    }
+
+    public function test_a_numeric_column_name_is_a_string_column(): void
+    {
+        // PHP hands a numeric array key back as an int, and definition_from_type() takes
+        // Reference|string - a pivot names its columns by their own values, so this is reachable
+        $values = [];
+
+        foreach ([0, 7] as $pivotValue) {
+            $values[(string) $pivotValue] = $pivotValue + 1;
+        }
+
+        // PHP cannot hold '0' as a string key, which is precisely the shape under test
+        // @mago-ignore analysis:possibly-invalid-argument
+        $inferred = (new InferredBatch())->of([new RawRowValues($values)]);
+
+        static::assertSame(['0', '7'], $inferred->schema()->references()->names());
+        static::assertSame([['0' => 1, '7' => 8]], $inferred->toArray());
+    }
+
+    public function test_metadata_travels_from_the_raw_values_onto_the_definition(): void
+    {
+        static::assertSame(
+            ['origin' => 'csv'],
+            (new InferredBatch())
+                ->of([
+                    new RawRowValues(['id' => 1], ['id' => Metadata::fromArray(['origin' => 'csv'])]),
+                ])
+                ->schema()
+                ->get('id')
+                ->metadata()
+                ->normalize(),
+        );
+    }
+
+    public function test_rows_keep_their_values_verbatim(): void
+    {
+        static::assertEquals(
+            rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])),
+            (new InferredBatch())->of([new RawRowValues(['id' => 1, 'name' => 'a'])]),
+        );
+    }
+
+    /**
+     * Widening derives one column type from values of two, so the values follow the schema it just
+     * derived - otherwise the batch would contradict its own declaration at the door.
+     */
+    public function test_widening_folds_int_and_string_into_one_column_and_converts_the_values(): void
+    {
+        $rows = (new InferredBatch())->of([
+            new RawRowValues(['v' => 1]),
+            new RawRowValues(['v' => 'text']),
+        ]);
+
+        static::assertSame('string', $rows->schema()->get('v')->type()->toString());
+        static::assertSame([['v' => '1'], ['v' => 'text']], $rows->toArray());
+    }
+}

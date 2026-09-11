@@ -12,31 +12,22 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function array_merge;
-use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function iterator_to_array;
-use function mkdir;
 use function range;
 
 class MapsWritingTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[DataProvider('engine_provider')]
     public function test_writing_empty_map_of_int_int(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -65,7 +56,7 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_map_of_int_int(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -98,7 +89,7 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_map_of_int_int_with_all_maps_null(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -127,7 +118,7 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_map_of_int_string(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_string', MapKey::int32(), MapValue::string()));
@@ -158,9 +149,31 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
+    public function test_writing_map_of_string_decimal(ParquetEngine $engine): void
+    {
+        $path = TestParquetFile::path($this);
+
+        $writer = new Writer(engine: $engine);
+        $schema = Schema::with(NestedColumn::map('rates', MapKey::string(), MapValue::decimal(18, 2)));
+
+        $inputData = [['rates' => ['usd' => 123.45]]];
+
+        $writer->write($path, $schema, $inputData);
+
+        static::assertSame(
+            $inputData,
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read($path)
+                    ->values(),
+            ),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
     public function test_writing_nullable_map_of_int_int(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));

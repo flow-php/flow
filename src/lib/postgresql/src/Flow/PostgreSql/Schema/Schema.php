@@ -15,16 +15,16 @@ use function array_values;
 use function sprintf;
 
 /**
- * @phpstan-import-type TableShape from Table
- * @phpstan-import-type SequenceShape from Sequence
- * @phpstan-import-type ViewShape from View
- * @phpstan-import-type MaterializedViewShape from MaterializedView
- * @phpstan-import-type FuncShape from Func
- * @phpstan-import-type ProcedureShape from Procedure
- * @phpstan-import-type DomainShape from Domain
- * @phpstan-import-type ExtensionShape from Extension
+ * @import-type TableShape from Table
+ * @import-type SequenceShape from Sequence
+ * @import-type ViewShape from View
+ * @import-type MaterializedViewShape from MaterializedView
+ * @import-type FuncShape from Func
+ * @import-type ProcedureShape from Procedure
+ * @import-type DomainShape from Domain
+ * @import-type ExtensionShape from Extension
  *
- * @phpstan-type SchemaShape = array{name: string, tables?: list<TableShape>, sequences?: list<SequenceShape>, views?: list<ViewShape>, materialized_views?: list<MaterializedViewShape>, functions?: list<FuncShape>, procedures?: list<ProcedureShape>, domains?: list<DomainShape>, extensions?: list<ExtensionShape>}
+ * @type SchemaShape = array{name: string, tables?: list<TableShape>, sequences?: list<SequenceShape>, views?: list<ViewShape>, materialized_views?: list<MaterializedViewShape>, functions?: list<FuncShape>, procedures?: list<ProcedureShape>, domains?: list<DomainShape>, extensions?: list<ExtensionShape>}
  */
 final readonly class Schema
 {

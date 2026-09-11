@@ -4,27 +4,82 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Pipeline\BoundPlan;
+use Flow\ETL\Pipeline\PlanBinder;
 use Flow\ETL\Pipeline\Segments;
 use Generator;
 
 /**
  * @internal
  */
-final readonly class Pipeline
+final class Pipeline
 {
-    private Segments $segments;
+    private ?SchemaNotDerivableException $bindRefusal = null;
+
+    private bool $binding = false;
+
+    private ?BoundPlan $bound = null;
+
+    private bool $running = false;
+
+    private readonly Segments $segments;
 
     public function __construct(
         private Extractor $extractor,
     ) {
-        $this->segments = new Segments();
+        $this->segments = new Segments($extractor);
     }
 
     public function add(Transformer|Loader|Processor $step): self
     {
+        $this->invalidateBind();
         $this->segments->add($step);
 
         return $this;
+    }
+
+    /**
+     * Walk the plan once and memoise the result, refusal included.
+     *
+     * @throws InvalidLogicException
+     * @throws SchemaNotDerivableException
+     */
+    public function bind(): BoundPlan
+    {
+        if ($this->bindRefusal !== null) {
+            throw $this->bindRefusal;
+        }
+
+        if ($this->bound !== null) {
+            return $this->bound;
+        }
+
+        if ($this->binding) {
+            throw InvalidLogicException::cyclicPlanOnDescribe();
+        }
+
+        $this->binding = true;
+
+        try {
+            return $this->bound = (new PlanBinder())->bind($this->extractor, $this->segments);
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->bindRefusal = $refusal;
+
+            throw $refusal;
+        } finally {
+            $this->binding = false;
+        }
+    }
+
+    public function boundOrNull(): ?BoundPlan
+    {
+        try {
+            return $this->bind();
+        } catch (SchemaNotDerivableException) {
+            return null;
+        }
     }
 
     /**
@@ -46,27 +101,61 @@ final readonly class Pipeline
     }
 
     /**
+     * Drop the memo. Call after any mutation of the plan or of its extractor - both change what the
+     * walk would compute.
+     */
+    public function invalidateBind(): void
+    {
+        $this->bound = null;
+        $this->bindRefusal = null;
+    }
+
+    /**
      * Process the pipeline and yield Rows batches.
      *
      * @return \Generator<int, Rows>
      */
     public function process(FlowContext $context): Generator
     {
-        $generator = $this->extractor->extract($context);
+        if ($this->running) {
+            throw InvalidLogicException::cyclicPlanOnRun();
+        }
 
-        foreach ($this->segments->all() as $segment) {
-            $generator = $segment->execute($generator, $context);
+        $this->running = true;
 
-            $processor = $segment->processor();
+        try {
+            $generator = $this->extractor->extract($context);
 
-            if ($processor !== null) {
-                $generator = $processor->process($generator, $context);
+            foreach (($this->boundOrNull()?->segments() ?? $this->segments)->all() as $segment) {
+                $generator = $segment->execute($generator, $context);
+
+                $processor = $segment->processor();
+
+                if ($processor !== null) {
+                    $generator = $processor->process($generator, $context);
+                }
             }
-        }
 
-        foreach ($generator as $rows) {
-            yield $rows;
+            // disarmed across our own yield: while parked we are not advancing, so a second read
+            // arriving here is another reader of the same plan, not recursion. Only a re-entry during
+            // the advance is a cycle - every step is pulled from inside this foreach.
+            foreach ($generator as $rows) {
+                $this->running = false;
+
+                yield $rows;
+
+                $this->running = true;
+            }
+        } finally {
+            $this->running = false;
         }
+    }
+
+    public function replaceExtractor(Extractor $extractor): void
+    {
+        $this->extractor = $extractor;
+        $this->segments->replaceExtractor($extractor);
+        $this->invalidateBind();
     }
 
     /**

@@ -6,16 +6,19 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Function\ExecutionMode;
+use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_structure;
 use function json_decode;
 
 final class ArraySortTest extends FlowTestCase
@@ -23,12 +26,10 @@ final class ArraySortTest extends FlowTestCase
     public function test_array_sort_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArraySort function requires non-null array and sort function');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
-        ref('array')->arraySort()->eval(row(str_entry('array', 'string')), $context);
+        ref('array')->arraySort()->eval(row(['array' => 'string']), $context);
     }
 
     public function test_sorting_big_arrays(): void
@@ -36,22 +37,20 @@ final class ArraySortTest extends FlowTestCase
         static::assertSame(
             ref('array')
                 ->arraySort()
-                ->eval(
-                    row(json_entry(
-                        'array',
-                        type_array()->assert(json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)),
-                    )),
-                    flow_context(),
-                ),
+                ->eval(row(['array' => type_array()->assert(json_decode(
+                    $this->jsonDifferentOrder(),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR,
+                ))]), flow_context()),
             ref('array')
                 ->arraySort()
-                ->eval(
-                    row(json_entry(
-                        'array',
-                        type_array()->assert(json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)),
-                    )),
-                    flow_context(),
-                ),
+                ->eval(row(['array' => type_array()->assert(json_decode(
+                    $this->json(),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR,
+                ))]), flow_context()),
         );
     }
 
@@ -69,8 +68,8 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::asort)
-                ->eval(
-                    row(json_entry('array', [
+                ->eval(row([
+                    'array' => [
                         'a' => [
                             'b' => [
                                 'e' => 'f',
@@ -78,9 +77,8 @@ final class ArraySortTest extends FlowTestCase
                             ],
                             'g' => 'h',
                         ],
-                    ])),
-                    flow_context(),
-                ),
+                    ],
+                ]), flow_context()),
         );
     }
 
@@ -98,8 +96,8 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::ksort)
-                ->eval(
-                    row(json_entry('array', [
+                ->eval(row([
+                    'array' => [
                         'a' => [
                             'g' => 'h',
                             'b' => [
@@ -107,15 +105,17 @@ final class ArraySortTest extends FlowTestCase
                                 'c' => 'd',
                             ],
                         ],
-                    ])),
-                    flow_context(),
-                ),
+                    ],
+                ]), flow_context()),
         );
     }
 
     public function test_sorting_non_array_value(): void
     {
-        static::assertNull(ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
+
+        ref('array')->arraySort()->eval(row(['array' => 'string']), flow_context());
     }
 
     private function json(): string
@@ -214,5 +214,62 @@ final class ArraySortTest extends FlowTestCase
               }
             ]
             JSON;
+    }
+
+    public function test_ksort_declares_key_sorted_structure_fields(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::ksort),
+            schema(structure_schema('structure', type_structure(['b' => type_integer(), 'a' => type_integer()]))),
+        );
+
+        static::assertSame('structure{a: integer, b: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_a_value_sort_keeps_the_declared_field_order(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::asort),
+            schema(structure_schema('structure', type_structure(['b' => type_integer(), 'a' => type_integer()]))),
+        );
+
+        static::assertSame('structure{b: integer, a: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_krsort_declares_reverse_key_sorted_structure_fields(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::krsort),
+            schema(structure_schema('structure', type_structure(['a' => type_integer(), 'b' => type_integer()]))),
+        );
+
+        static::assertSame('structure{b: integer, a: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_ksort_orders_across_the_required_and_optional_buckets(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::ksort),
+            schema(structure_schema('structure', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_integer(), optional: true),
+            ]))),
+        );
+
+        static::assertSame('structure{a?: integer, z: integer}', $resolved->returns()->toString());
+    }
+
+    public function test_ksort_reproduces_php_key_order_for_numeric_element_names(): void
+    {
+        $resolved = (new ReferenceResolver())->resolve(
+            ref('structure')->arraySort(Sort::ksort),
+            schema(structure_schema('structure', type_structure([
+                10 => type_integer(),
+                9 => type_integer(),
+                'b' => type_integer(),
+            ]))),
+        );
+
+        static::assertSame('structure{9: integer, 10: integer, b: integer}', $resolved->returns()->toString());
     }
 }

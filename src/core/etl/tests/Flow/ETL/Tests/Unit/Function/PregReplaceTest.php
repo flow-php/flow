@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -15,29 +16,38 @@ final class PregReplaceTest extends FlowTestCase
 {
     public function test_preg_replace_expression_on_invalid_pattern(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
+
         $pregReplace = regex_replace(lit(1), lit('bar'), lit('foo is awesome'));
 
-        static::assertNull($pregReplace->eval(row(), flow_context()));
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_invalid_replacement(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
+
         $pregReplace = regex_replace(lit('/(foo)/'), lit(2), lit('foo is awesome'));
 
-        static::assertNull($pregReplace->eval(row(), flow_context()));
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_invalid_subject(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "string", got "integer".');
+
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit(3));
 
-        static::assertNull($pregReplace->eval(row(), flow_context()));
+        $pregReplace->eval(row([]), flow_context());
     }
 
     public function test_preg_replace_expression_on_valid_strings(): void
     {
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit('foo is awesome'));
 
-        static::assertSame('bar is awesome', $pregReplace->eval(row(), flow_context()));
+        static::assertSame('bar is awesome', $pregReplace->eval(row([]), flow_context()));
     }
 }

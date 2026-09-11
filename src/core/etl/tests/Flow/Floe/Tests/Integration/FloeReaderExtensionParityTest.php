@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Integration;
 
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeMerger;
-use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\Options;
@@ -19,10 +19,12 @@ use Flow\Floe\Tests\Mother\RowsMother;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
+use function array_reduce;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 /**
@@ -37,8 +39,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         return [
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'heterogeneous' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
-            'empty' => [rows()],
+            'empty' => [rows(schema())],
         ];
     }
 
@@ -57,7 +58,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('parity.floe');
 
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows));
+        $writer = new FloeWriter($this->fs(), $rows->schema());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -73,14 +74,15 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('parity-offset.floe');
 
         $data = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4), str_entry('email', null)),
-            row(int_entry('id', 5), str_entry('email', 'x')),
-            row(int_entry('id', 6)),
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 1]),
+            row(['id' => 2]),
+            row(['id' => 3]),
+            row(['id' => 4, 'email' => null]),
+            row(['id' => 5, 'email' => 'x']),
+            row(['id' => 6]),
         );
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($data));
+        $writer = new FloeWriter($this->fs(), $data->schema());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -108,7 +110,7 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $codec = new PrefixingCodecStub();
         $path = $this->cacheDir->suffix('read-codec.floe');
 
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($rows), new Options(codec: $codec));
+        $writer = new FloeWriter($this->fs(), $rows->schema(), new Options(codec: $codec));
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
@@ -129,21 +131,18 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
     {
         $cases = [
             'plain' => [RowsMother::heterogeneous()],
-            'partitioned' => [RowsMother::partitioned()],
             'multi-write' => [
-                rows(row(int_entry('id', 1), str_entry('email', 'a'))),
-                rows(row(int_entry('id', 2), str_entry('email', 'x'))),
+                rows(schema(int_schema('id'), str_schema('email')), row(['id' => 1, 'email' => 'a'])),
+                rows(schema(int_schema('id'), str_schema('email')), row(['id' => 2, 'email' => 'x'])),
             ],
         ];
 
         foreach ($cases as $name => $batches) {
-            $allRows = new Rows();
-
-            foreach ($batches as $batch) {
-                $allRows = $allRows->merge($batch);
-            }
-
-            $schema = FloeStreamWriter::unionSchema($allRows);
+            $schema = array_reduce(
+                $batches,
+                static fn(Schema $carry, Rows $batch): Schema => $carry->merge($batch->schema()),
+                schema(),
+            );
 
             $purePath = $this->cacheDir->suffix("matrix-{$name}-pure.floe");
             $extPath = $this->cacheDir->suffix("matrix-{$name}-ext.floe");
@@ -183,14 +182,17 @@ final class FloeReaderExtensionParityTest extends FlowIntegrationTestCase
         $base = $this->cacheDir->suffix('parity-base.floe');
         $evolved = $this->cacheDir->suffix('parity-new.floe');
 
-        $baseRows = rows(row(int_entry('id', 1)));
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($baseRows));
+        $baseRows = rows(schema(int_schema('id')), row(['id' => 1]));
+        $writer = new FloeWriter($this->fs(), $baseRows->schema());
         $writer->create($base);
         $writer->write($baseRows);
         $writer->close();
 
-        $evolvedRows = rows(row(int_entry('id', 2), str_entry('email', null)));
-        $writer = new FloeWriter($this->fs(), FloeStreamWriter::unionSchema($evolvedRows));
+        $evolvedRows = rows(
+            schema(int_schema('id'), str_schema('email', nullable: true)),
+            row(['id' => 2, 'email' => null]),
+        );
+        $writer = new FloeWriter($this->fs(), $evolvedRows->schema());
         $writer->create($evolved);
         $writer->write($evolvedRows);
         $writer->close();

@@ -26,7 +26,7 @@ use SensitiveParameter;
 use Throwable;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 final class TracingDriver extends AbstractDriverMiddleware
 {

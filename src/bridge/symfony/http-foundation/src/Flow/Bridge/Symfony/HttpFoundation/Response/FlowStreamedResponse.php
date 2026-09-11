@@ -11,6 +11,8 @@ use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformations;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\StdOutFilesystem;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function bin2hex;
@@ -33,7 +35,7 @@ class FlowStreamedResponse extends StreamedResponse
         array $headers = [],
         Config|ConfigBuilder|null $config = null,
         private readonly ?StreamClosure $streamClosure = null,
-        private readonly string $filesystem = 'stdout',
+        private readonly Filesystem $filesystem = new StdOutFilesystem(),
     ) {
         $this->config = $config ?? Config::default();
 
@@ -46,13 +48,14 @@ class FlowStreamedResponse extends StreamedResponse
 
     private function stream(): void
     {
-        $stdoutPath = path($this->filesystem . '://' . bin2hex(random_bytes(16)) . '.stdout', ['stream' => 'output']);
+        $stdoutPath = path($this->filesystem->mount()->protocol . '://' . bin2hex(random_bytes(16)) . '.stdout', [
+            'stream' => 'output',
+        ]);
 
         $report = df($this->config)
             ->read($this->extractor)
             ->with($this->transformations)
-            ->dropPartitions()
-            ->write($this->output->loader($stdoutPath))
+            ->write($this->output->loader($stdoutPath, $this->filesystem))
             ->run();
 
         if ($this->streamClosure !== null) {

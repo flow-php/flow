@@ -42,7 +42,6 @@ final class MemorySortTest extends FlowTestCase
 
         $sortedOutput = iterator_to_array($processor->process($pipeline->process($context), $context));
 
-        // @mago-ignore analysis:mixed-argument,mixed-method-access
         static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));
     }
 }

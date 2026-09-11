@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\DataDependentSchemaException;
+use Flow\ETL\Pipeline\BoundStep;
 use Generator;
 
 /**
@@ -17,6 +19,11 @@ use Generator;
  */
 interface Processor
 {
+    /**
+     * @throws DataDependentSchemaException
+     */
+    public function bind(Schema $input): BoundStep;
+
     /**
      * Process a stream of Rows and return a new stream.
      *

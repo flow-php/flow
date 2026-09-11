@@ -5,56 +5,76 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateTimeInterface;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\Types\Type;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\Types\DSL\type_optional;
 use function is_numeric;
 use function max;
 
 final class Max implements AggregatingFunction
 {
+    use ResolvesFromChildren;
+
     private float|DateTimeInterface|null $max;
+
+    private readonly string $outputName;
 
     public function __construct(
         private readonly Reference $ref,
     ) {
+        $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_max';
         $this->max = null;
+    }
+
+    /**
+     * @return list<FunctionTree>
+     */
+    public function children(): array
+    {
+        return [$this->ref];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<Reference> $children */
+        return new self($children[0]);
     }
 
     public function aggregate(Row $row, FlowContext $context): void
     {
-        try {
-            /** @var mixed $value */
-            $value = $row->valueOf($this->ref);
+        if (!$row->has($this->ref)) {
+            return;
+        }
 
-            if ($this->max === null) {
-                if (is_numeric($value)) {
-                    $this->max = (float) $value;
-                } elseif ($value instanceof DateTimeInterface) {
-                    $this->max = $value;
-                }
-            } else {
-                if (is_numeric($value)) {
-                    $this->max = max($this->max, (float) $value);
-                } elseif ($value instanceof DateTimeInterface) {
-                    $this->max = max($this->max, $value);
-                }
+        /** @var mixed $value */
+        $value = $row->get($this->ref);
+
+        if ($this->max === null) {
+            if (is_numeric($value)) {
+                $this->max = (float) $value;
+            } elseif ($value instanceof DateTimeInterface) {
+                $this->max = $value;
             }
-        } catch (InvalidArgumentException $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('Max error: ' . $e->getMessage()));
+        } else {
+            if (is_numeric($value)) {
+                $this->max = max($this->max, (float) $value);
+            } elseif ($value instanceof DateTimeInterface) {
+                $this->max = max($this->max, $value);
+            }
         }
     }
 
-    /**
-     * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
-     */
+    public function outputName(): string
+    {
+        return $this->outputName;
+    }
+
     /**
      * @return list<Reference>
      */
@@ -63,26 +83,18 @@ final class Max implements AggregatingFunction
         return [$this->ref];
     }
 
-    public function result(EntryFactory $entryFactory): Entry
+    /**
+     * Exactly the argument type, nullable - an all-null or ref-less group leaves no maximum
+     *
+     * @return Type<mixed>
+     */
+    public function returns(): Type
     {
-        if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_max');
-        }
+        return type_optional($this->ref->returns());
+    }
 
-        if ($this->max === null) {
-            return int_entry($this->ref->name(), null);
-        }
-
-        if ($this->max instanceof DateTimeInterface) {
-            return datetime_entry($this->ref->name(), $this->max);
-        }
-
-        $resultInt = (int) $this->max;
-
-        if (($this->max - $resultInt) === 0.0) {
-            return int_entry($this->ref->name(), (int) $this->max);
-        }
-
-        return float_entry($this->ref->name(), $this->max);
+    public function value(): float|DateTimeInterface|null
+    {
+        return $this->max;
     }
 }

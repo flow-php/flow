@@ -10,16 +10,16 @@ use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
-use Flow\Types\Type\AutoCaster;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
 use function file_exists;
 use function file_get_contents;
 use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
@@ -312,8 +312,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
                         ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
-                flow_context(config())->entryFactory(),
-                new AutoCaster(),
+                schema(),
                 flow_context(),
             ),
         ));
@@ -351,12 +350,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         $statuses = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-            new ScalarFunctionFilter(
-                ref('partition_01')->equals(lit('b')),
-                flow_context(config())->entryFactory(),
-                new AutoCaster(),
-                flow_context(),
-            ),
+            new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), schema(), flow_context()),
         ));
 
         $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
@@ -581,6 +575,25 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $this->expectException(InvalidSchemeException::class);
 
         native_local_filesystem()->status(path('memory:///var/foo.txt'));
+    }
+
+    #[TestWith(['aws-s3://bucket/orders.csv'])]
+    #[TestWith(['memory://orders.csv'])]
+    #[TestWith(['stdout://orders.csv'])]
+    public function test_local_filesystem_does_not_support_remote_paths(string $uri): void
+    {
+        static::assertFalse(native_local_filesystem()->supports(path($uri)));
+    }
+
+    #[TestWith(['/tmp/orders.csv'])]
+    #[TestWith(['file:///tmp/orders.csv'])]
+    #[TestWith(['orders.csv'])]
+    #[TestWith(['./orders.csv'])]
+    #[TestWith(['/tmp/date={date}/orders.csv'])]
+    #[TestWith(['/tmp/**/*.csv'])]
+    public function test_local_filesystem_supports_local_paths(string $uri): void
+    {
+        static::assertTrue(native_local_filesystem()->supports(path($uri)));
     }
 
     public function test_tmp_dir_status(): void

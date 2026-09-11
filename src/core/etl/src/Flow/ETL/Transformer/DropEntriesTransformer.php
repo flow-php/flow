@@ -6,10 +6,12 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
@@ -22,14 +24,18 @@ final readonly class DropEntriesTransformer implements Transformer
         $this->refs = References::init(...$names);
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input->gracefulRemove(...$this->refs));
+    }
+
     public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $transformer = fn(Row $row): Row => $row->remove(...$this->refs);
-
-            $result = $rows->map($transformer);
+            $schema = $rows->schema()->gracefulRemove(...$this->refs);
+            $result = $rows->project($schema);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

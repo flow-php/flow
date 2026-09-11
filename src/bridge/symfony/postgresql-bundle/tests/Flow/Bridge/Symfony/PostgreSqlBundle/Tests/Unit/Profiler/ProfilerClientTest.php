@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\Profiler;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\QueryRecorder;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\FakeClient;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
 use Flow\PostgreSql\Client\Exception\QueryException;
@@ -41,6 +42,24 @@ final class ProfilerClientTest extends TestCase
         static::assertStringNotContainsString('Debug/ProfilerClient.php', $query->caller);
     }
 
+    public function test_execute_records_converted_parameters_as_their_values(): void
+    {
+        $recorder = new QueryRecorder();
+        $inner = new FakeClient();
+        $inner->executeReturn = 2;
+
+        $affected = (new ProfilerClient($inner, $recorder))->execute(
+            'DELETE FROM users WHERE id = $1',
+            new ConvertedParameters(['42']),
+        );
+
+        static::assertSame(2, $affected);
+        static::assertCount(1, $recorder->queries());
+        static::assertSame('DELETE FROM users WHERE id = $1', $recorder->queries()[0]->sql);
+        static::assertSame(['42'], $recorder->queries()[0]->parameters);
+        static::assertSame(2, $recorder->queries()[0]->rowCount);
+    }
+
     public function test_records_the_configured_connection_name(): void
     {
         $recorder = new QueryRecorder();
@@ -72,8 +91,9 @@ final class ProfilerClientTest extends TestCase
         $client->fetchSingle('SELECT 1');
         $client->fetchSingleInto($mapper, 'SELECT 1');
         $client->cursor('SELECT 1');
+        $client->describe('SELECT 1');
 
-        static::assertCount(16, $recorder->queries());
+        static::assertCount(17, $recorder->queries());
     }
 
     public function test_failed_cursor_records_failure_and_rethrows(): void

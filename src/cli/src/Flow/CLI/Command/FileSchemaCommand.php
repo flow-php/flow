@@ -10,6 +10,7 @@ use Flow\CLI\Command\Traits\CSVOptions;
 use Flow\CLI\Command\Traits\ExcelOptions;
 use Flow\CLI\Command\Traits\JSONOptions;
 use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\SchemaInferenceOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\ConfigOption;
@@ -20,6 +21,7 @@ use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,6 +34,11 @@ use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\schema_to_json;
 
+#[AsCommand(
+    name: 'file:schema',
+    description: 'Read and print (json by default) data schema from a file.',
+    aliases: ['schema'],
+)]
 final class FileSchemaCommand extends Command
 {
     use ConfigOptions;
@@ -39,6 +46,7 @@ final class FileSchemaCommand extends Command
     use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
+    use SchemaInferenceOptions;
     use XMLOptions;
 
     private ?FileFormat $fileFormat = null;
@@ -50,8 +58,6 @@ final class FileSchemaCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:schema')
-            ->setDescription('Read and print (json by default) data schema from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,
@@ -68,7 +74,7 @@ final class FileSchemaCommand extends Command
                 'input-file-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                'Limit number of rows read from the file.',
                 null,
             )
             ->addOption(
@@ -81,14 +87,7 @@ final class FileSchemaCommand extends Command
             ->addOption('output-pretty', null, InputOption::VALUE_NONE, 'Print schema as pretty json')
             ->addOption('output-php', null, InputOption::VALUE_NONE, 'Print schema as PHP code')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
-            ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list')
-            ->addOption(
-                'schema-auto-cast',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
-                false,
-            );
+            ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list');
 
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
@@ -96,6 +95,7 @@ final class FileSchemaCommand extends Command
         $this->addExcelInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addSchemaInferenceOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -106,11 +106,13 @@ final class FileSchemaCommand extends Command
 
         $style = new SymfonyStyle($input, $output);
 
-        $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
+        $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
 
-        if (option_bool('schema-auto-cast', $input)) {
-            $df->autoCast();
+        if (!$this->applySchemaInference($extractor, $input, $style)) {
+            return Command::FAILURE;
         }
+
+        $df = df($this->flowConfig)->read($extractor);
 
         $limit = option_int_nullable('input-file-limit', $input);
 
@@ -152,7 +154,7 @@ final class FileSchemaCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

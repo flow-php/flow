@@ -12,9 +12,9 @@ use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\parsed_select;
 
 /**
- * @phpstan-import-type IndexShape from Index
+ * @import-type IndexShape from Index
  *
- * @phpstan-type MaterializedViewShape = array{name: string, definition: string, indexes: list<IndexShape>}
+ * @type MaterializedViewShape = array{name: string, definition: string, indexes: list<IndexShape>}
  */
 final readonly class MaterializedView
 {

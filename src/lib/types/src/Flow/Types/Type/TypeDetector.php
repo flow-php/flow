@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
+use Closure;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
+use Flow\Types\Type\Unifier\NullabilityRule;
+use Flow\Types\Type\Unifier\StrictUnifier;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use UnitEnum;
@@ -18,7 +21,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
@@ -48,6 +50,15 @@ use function is_string;
 
 final class TypeDetector
 {
+    /**
+     * @param null|TypeWidener $widener built on the first array value: get_type() constructs a detector per call,
+     *                                  and most of them never see an array
+     */
+    public function __construct(
+        private TypeUnifier $unifier = new StrictUnifier(),
+        private ?TypeWidener $widener = null,
+    ) {}
+
     /**
      * @return Type<mixed>
      */
@@ -83,29 +94,41 @@ final class TypeDetector
 
         if (is_array($value)) {
             if ([] === $value) {
-                return type_empty_array();
+                return type_list(type_null());
             }
+
+            // each value is detected once - the structure arm reads back the same types the unification used
+            $detected = array_map($this->detectType(...), $value);
+            $valueTypes = types(...array_values($detected))->deduplicate();
 
             $detector = new ArrayContentDetector(
                 types(...array_map($this->detectType(...), array_keys($value)))->deduplicate(),
-                types(...array_map($this->detectType(...), array_values($value)))->deduplicate(),
+                $valueTypes,
                 array_is_list($value),
+                $this->widener ??= new TypeWidener(),
             );
 
+            $unifies = fn(): bool => $this->unifier->unifyAll(NullabilityRule::ANY, ...$valueTypes->all()) !== null;
+
+            $accepted = static fn(Type $candidate, mixed $raw): bool => $unifies() || $candidate->isValid($raw);
+
             if ($detector->isList()) {
-                return type_list($detector->valueType());
+                $candidate = type_list($detector->valueType());
+
+                return $accepted($candidate, $value) ? $candidate : type_array();
             }
 
             if ($detector->isMap()) {
-                return type_map($detector->firstKeyType(), $detector->valueType());
+                $candidate = type_map($detector->firstKeyType(), $detector->valueType());
+
+                return $accepted($candidate, $value) ? $candidate : type_array();
             }
 
             if ($detector->isStructure()) {
                 $elements = [];
 
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($value as $key => $item) {
-                    $elements[type_string()->assert($key)] = $this->detectType($item);
+                foreach ($detected as $key => $type) {
+                    $elements[type_string()->assert($key)] = $type;
                 }
 
                 return type_structure($elements);
@@ -119,6 +142,10 @@ final class TypeDetector
         }
 
         if (is_object($value)) {
+            if ($value instanceof Closure) {
+                throw new InvalidArgumentException('Closure is not a supported value type.');
+            }
+
             foreach (['Ramsey\Uuid\UuidInterface', 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
                 if (is_a($value, $uuidClass, true)) {
                     return type_uuid();

@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Mother;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
@@ -16,6 +17,7 @@ use Flow\PostgreSql\Explain\Plan\Cost;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 
@@ -30,6 +32,9 @@ final class FakeClient implements Client
 {
     /** @var list<string> */
     public array $delegated = [];
+
+    /** @var list<array{name: string, type: ColumnType}> */
+    public array $describeReturn = [];
 
     public int $executeReturn = 1;
 
@@ -85,7 +90,17 @@ final class FakeClient implements Client
         return $this->cursor;
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        $this->guard();
+
+        return $this->describeReturn;
+    }
+
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         $this->guard();
 

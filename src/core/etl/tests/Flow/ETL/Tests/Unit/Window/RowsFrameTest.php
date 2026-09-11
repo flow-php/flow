@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\current_row;
 use function Flow\ETL\DSL\following;
 use function Flow\ETL\DSL\preceding;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\unbounded_following;
 use function Flow\ETL\DSL\unbounded_preceding;
 
@@ -35,7 +36,10 @@ final class RowsFrameTest extends FlowTestCase
 
     public function test_empty_partition_yields_an_empty_frame(): void
     {
-        static::assertSame([1, 0], (new RowsFrame(unbounded_preceding(), unbounded_following()))->bounds(0, rows()));
+        static::assertSame(
+            [1, 0],
+            (new RowsFrame(unbounded_preceding(), unbounded_following()))->bounds(0, rows(schema())),
+        );
     }
 
     public function test_frame_entirely_after_the_partition_end_is_empty(): void

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Seal\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use DOMDocument;
 use Flow\ETL\Adapter\Seal\SealEncoder;
 use Flow\ETL\Row\TypedRowValues;
@@ -29,6 +30,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 
@@ -46,6 +48,7 @@ final class SealEncoderTest extends FlowTestCase
             'f47ac10b-58cc-4372-a567-0e02b2c3d479',
             type_uuid(),
         ];
+        yield 'timezone' => [new DateTimeZone('Europe/Warsaw'), 'Europe/Warsaw', type_time_zone()];
         yield 'datetime' => [
             new DateTimeImmutable('2023-10-01 12:02:01'),
             '2023-10-01T12:02:01+00:00',

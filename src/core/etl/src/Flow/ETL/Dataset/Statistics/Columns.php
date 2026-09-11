@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\Definition;
 use InvalidArgumentException;
 
 use function array_key_exists;
@@ -24,15 +24,20 @@ final class Columns
     /**
      * @param Entry<mixed> $entry
      */
-    public function add(Entry $entry): void
+    /**
+     * @param Definition<mixed> $definition
+     */
+    public function add(Definition $definition, mixed $value): void
     {
-        if (!array_key_exists($entry->name(), $this->columns)) {
-            $this->columns[$entry->name()] = new Column($entry);
+        $name = $definition->entry()->name();
+
+        if (!array_key_exists($name, $this->columns)) {
+            $this->columns[$name] = new Column($definition, $value);
 
             return;
         }
 
-        $this->columns[$entry->name()]->calculate($entry);
+        $this->columns[$name]->add($definition, $value);
     }
 
     /**
@@ -43,9 +48,9 @@ final class Columns
         return array_values($this->columns);
     }
 
-    public function get(string|EntryReference $ref): Column
+    public function get(string|Reference $ref): Column
     {
-        if ($ref instanceof EntryReference) {
+        if ($ref instanceof Reference) {
             $ref = $ref->name();
         }
 

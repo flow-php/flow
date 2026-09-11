@@ -26,6 +26,7 @@ use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
 use function log;
+use function pack;
 use function strlen;
 use function unpack;
 
@@ -141,12 +142,13 @@ final class BinaryReaderWriterTest extends TestCase
         }
 
         $reader = new BinaryBufferReader($buffer);
+        $widened = [];
 
-        static::assertEqualsWithDelta(
-            $floats,
-            decode_f32($byteOrder, $reader->readBytes(count($floats) * 4)),
-            0.000001,
-        );
+        foreach ($floats as $float) {
+            $widened[] = unpack('g', pack('g', $float))[1];
+        }
+
+        static::assertSame($widened, decode_f32($byteOrder, $reader->readBytes(count($floats) * 4)));
     }
 
     public function test_writing_and_reading_integers_with_functions(): void

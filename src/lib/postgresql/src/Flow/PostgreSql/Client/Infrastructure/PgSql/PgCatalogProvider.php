@@ -72,9 +72,11 @@ use function Flow\PostgreSql\DSL\sub_select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\PostgreSql\DSL\when;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -149,17 +151,20 @@ final readonly class PgCatalogProvider implements CatalogProvider
     }
 
     /**
+     * array_agg() columns arrive already parsed - ResultCaster turns every pg array type into a
+     * PHP list - so this only asserts the shape the catalog queries promise.
+     *
      * @return non-empty-list<string>
      */
-    private function parseArrayLiteral(string $literal): array
+    private function assertColumnList(mixed $value): array
     {
-        $trimmed = trim($literal, '{}');
+        $columns = type_list(type_string())->assert($value);
 
-        if ($trimmed === '') {
-            throw new RuntimeException(sprintf('Expected non-empty array literal, got "%s".', $literal));
+        if ($columns === []) {
+            throw new RuntimeException('Expected a non-empty column list from the catalog.');
         }
 
-        return array_values(array_map('trim', explode(',', $trimmed)));
+        return $columns;
     }
 
     /**
@@ -218,8 +223,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'identity' => type_string(),
                 'generated' => type_string(),
                 'ordinal_position' => type_integer(),
-            ], [
-                'default_value' => type_union(type_string(), type_null()),
+                'default_value' => structure_element(
+                    'default_value',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('attname', 'a')->as('name'),
@@ -339,8 +347,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'base_type' => type_string(),
                 'nullable' => type_boolean(),
-            ], [
-                'default_value' => type_union(type_string(), type_null()),
+                'default_value' => structure_element(
+                    'default_value',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('typname', 't')->as('name'),
@@ -423,8 +434,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
-            ], [
-                'version' => type_union(type_string(), type_null()),
+                'version' => structure_element('version', type_union(type_string(), type_null()), optional: true),
             ])),
             select(col('extname', 'e')->as('name'), col('extversion', 'e')->as('version'))
                 ->from(table('pg_extension', 'pg_catalog')->as('e'))
@@ -454,10 +464,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
-                'columns' => type_string(),
+                'columns' => type_list(type_string()),
                 'reference_schema' => type_string(),
                 'reference_table' => type_string(),
-                'reference_columns' => type_string(),
+                'reference_columns' => type_list(type_string()),
                 'on_update' => type_string(),
                 'on_delete' => type_string(),
                 'deferrable' => type_boolean(),
@@ -521,10 +531,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
             $foreignKeys[] = new ForeignKey(
                 type_string()->assert($row['name']),
-                $this->parseArrayLiteral(type_string()->assert($row['columns'])),
+                $this->assertColumnList($row['columns']),
                 type_string()->assert($row['reference_schema']),
                 type_string()->assert($row['reference_table']),
-                $this->parseArrayLiteral(type_string()->assert($row['reference_columns'])),
+                $this->assertColumnList($row['reference_columns']),
                 $this->mapReferentialAction(type_string()->assert($row['on_update'])),
                 $this->mapReferentialAction(type_string()->assert($row['on_delete'])),
                 type_boolean()->assert($row['deferrable']),
@@ -548,8 +558,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'language' => type_string(),
                 'definition' => type_string(),
                 'is_strict' => type_boolean(),
-            ], [
-                'volatility' => type_union(type_string(), type_null()),
+                'volatility' => structure_element('volatility', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('proname', 'p')->as('name'),
@@ -606,9 +615,8 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'is_unique' => type_boolean(),
                 'is_primary' => type_boolean(),
                 'method' => type_string(),
-                'columns' => type_string(),
-            ], [
-                'predicate' => type_union(type_string(), type_null()),
+                'columns' => type_list(type_string()),
+                'predicate' => structure_element('predicate', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('relname', 'i')->as('name'),
@@ -663,7 +671,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
             $indexes[] = new Index(
                 type_string()->assert($row['name']),
-                $this->parseArrayLiteral(type_string()->assert($row['columns'])),
+                $this->assertColumnList($row['columns']),
                 type_boolean()->assert($row['is_unique']),
                 $this->mapIndexMethod(type_string()->assert($row['method'])),
                 type_boolean()->assert($row['is_primary']),
@@ -775,7 +783,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
-                'columns' => type_string(),
+                'columns' => type_list(type_string()),
             ])),
             select(
                 col('conname', 'con')->as('name'),
@@ -809,10 +817,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         $firstRow = type_array()->assert($rows[0]);
 
-        return new PrimaryKey(
-            $this->parseArrayLiteral(type_string()->assert($firstRow['columns'])),
-            type_string()->assert($firstRow['name']),
-        );
+        return new PrimaryKey($this->assertColumnList($firstRow['columns']), type_string()->assert($firstRow['name']));
     }
 
     /**
@@ -825,8 +830,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'arguments' => type_string(),
                 'language' => type_string(),
-            ], [
-                'definition' => type_union(type_string(), type_null()),
+                'definition' => structure_element('definition', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('proname', 'p')->as('name'),
@@ -939,10 +943,21 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'increment_by' => $intOrString,
                 'cycle' => type_boolean(),
                 'cache_value' => $intOrString,
-            ], [
-                'max_value' => type_union(type_integer(), type_string(), type_null()),
-                'owned_by_table' => type_union(type_string(), type_null()),
-                'owned_by_column' => type_union(type_string(), type_null()),
+                'max_value' => structure_element(
+                    'max_value',
+                    type_union(type_integer(), type_string(), type_null()),
+                    optional: true,
+                ),
+                'owned_by_table' => structure_element(
+                    'owned_by_table',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
+                'owned_by_column' => structure_element(
+                    'owned_by_column',
+                    type_union(type_string(), type_null()),
+                    optional: true,
+                ),
             ])),
             select(
                 col('relname', 'c')->as('name'),
@@ -1054,8 +1069,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'relname' => type_string(),
                 'relpersistence' => type_string(),
                 'relkind' => type_string(),
-            ], [
-                'tablespace' => type_union(type_string(), type_null()),
+                'tablespace' => structure_element('tablespace', type_union(type_string(), type_null()), optional: true),
             ])),
             select(
                 col('relname', 'c'),
@@ -1183,7 +1197,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
-                'columns' => type_string(),
+                'columns' => type_list(type_string()),
                 'nulls_not_distinct' => type_boolean(),
             ])),
             select(
@@ -1219,7 +1233,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         foreach ($rows as $row) {
             $row = type_array()->assert($row);
             $constraints[] = new UniqueConstraint(
-                $this->parseArrayLiteral(type_string()->assert($row['columns'])),
+                $this->assertColumnList($row['columns']),
                 type_string()->assert($row['name']),
                 type_boolean()->assert($row['nulls_not_distinct']),
             );

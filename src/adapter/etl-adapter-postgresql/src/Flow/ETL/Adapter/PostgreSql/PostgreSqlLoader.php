@@ -20,10 +20,14 @@ use Flow\ETL\Rows;
 use Flow\PostgreSql\Client\Client;
 use Throwable;
 
+use function intdiv;
+use function max;
+
 /**
  * PostgreSQL loader for ETL pipelines.
  *
- * Supports INSERT, UPDATE, and DELETE operations.
+ * Supports INSERT, UPDATE, and DELETE operations. UPDATE and DELETE issue one statement per row, so only
+ * INSERT can reach the bind-parameter cap and is chunked.
  */
 final class PostgreSqlLoader implements Loader
 {
@@ -128,12 +132,51 @@ final class PostgreSqlLoader implements Loader
 
     private function insertRows(Rows $rows, FlowContext $context): void
     {
-        $sorted = $rows->sortEntries();
-        $builder = new InsertQueryBuilder($this->table, $this->typesMap);
-        $values = $this->encoder()->encode($context->hydrator()->dehydrate($sorted));
+        // PQ_QUERY_PARAM_MAX_LIMIT: an INSERT binds one parameter per column per row
+        $maxRows = max(1, intdiv(65_535, $rows->schema()->count()));
 
-        [$query, $params] = $builder->build($values, $sorted->schema(), $this->insertOptions);
-        $this->client->execute($query, $params);
+        if ($rows->count() <= $maxRows) {
+            $builder = new InsertQueryBuilder($this->table, $this->typesMap);
+            [$query, $params] = $builder->build(
+                $this->encoder()->encode($context->hydrator()->dehydrate($rows)),
+                $rows->schema(),
+                $this->client->converters(),
+                $this->insertOptions,
+            );
+            $this->client->execute($query, $params);
+
+            return;
+        }
+
+        // the same nesting check the cursor extractor uses, so a transactional wrapper keeps owning its transaction
+        $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
+
+        if ($ownTransaction) {
+            $this->client->beginTransaction();
+        }
+
+        try {
+            foreach ($rows->chunks($maxRows) as $chunk) {
+                $builder = new InsertQueryBuilder($this->table, $this->typesMap);
+                [$query, $params] = $builder->build(
+                    $this->encoder()->encode($context->hydrator()->dehydrate($chunk)),
+                    $chunk->schema(),
+                    $this->client->converters(),
+                    $this->insertOptions,
+                );
+                $this->client->execute($query, $params);
+            }
+
+            if ($ownTransaction) {
+                $this->client->commit();
+            }
+        } catch (Throwable $failure) {
+            if ($ownTransaction) {
+                $this->client->rollBack();
+            }
+
+            throw $failure;
+        }
     }
 
     private function updateRows(Rows $rows, FlowContext $context): void

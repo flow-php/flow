@@ -95,7 +95,7 @@ final readonly class Types implements Countable, Stringable
     public function has(Type $type): bool
     {
         foreach ($this->types as $existingType) {
-            if (type_equals($existingType, $type)) {
+            if ($existingType::class === $type::class && type_equals($existingType, $type)) {
                 return true;
             }
         }
@@ -124,7 +124,7 @@ final readonly class Types implements Countable, Stringable
     {
         foreach ($this->types as $existingType) {
             foreach ($types as $type) {
-                if (type_equals($existingType, $type)) {
+                if ($existingType::class === $type::class && type_equals($existingType, $type)) {
                     return true;
                 }
             }
@@ -142,7 +142,7 @@ final readonly class Types implements Countable, Stringable
     {
         $filteredTypes = array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $keepType) {
-                if (type_equals($type, $keepType)) {
+                if ($type::class === $keepType::class && type_equals($type, $keepType)) {
                     return true;
                 }
             }
@@ -184,7 +184,7 @@ final readonly class Types implements Countable, Stringable
     {
         $filteredTypes = array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $withoutType) {
-                if (type_equals($type, $withoutType)) {
+                if ($type::class === $withoutType::class && type_equals($type, $withoutType)) {
                     return false;
                 }
             }

@@ -8,18 +8,19 @@ use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\PeerFrame;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class PeerFrameTest extends FlowTestCase
 {
     public function test_all_rows_tied_covers_the_whole_partition(): void
     {
-        $partition = rows(row(int_entry('d', 1)), row(int_entry('d', 1)), row(int_entry('d', 1)));
+        $partition = rows(schema(int_schema('d')), row(['d' => 1]), row(['d' => 1]), row(['d' => 1]));
 
         $frame = new PeerFrame([ref('d')]);
 
@@ -31,9 +32,10 @@ final class PeerFrameTest extends FlowTestCase
     public function test_datetime_peers_are_matched_by_value_not_identity(): void
     {
         $partition = rows(
-            row(datetime_entry('d', new DateTimeImmutable('2024-01-01 00:00:00'))),
-            row(datetime_entry('d', new DateTimeImmutable('2024-01-01 00:00:00'))),
-            row(datetime_entry('d', new DateTimeImmutable('2024-01-02 00:00:00'))),
+            schema(datetime_schema('d')),
+            row(['d' => new DateTimeImmutable('2024-01-01 00:00:00')]),
+            row(['d' => new DateTimeImmutable('2024-01-01 00:00:00')]),
+            row(['d' => new DateTimeImmutable('2024-01-02 00:00:00')]),
         );
 
         $frame = new PeerFrame([ref('d')]);
@@ -45,15 +47,16 @@ final class PeerFrameTest extends FlowTestCase
 
     public function test_index_past_the_partition_end_is_empty(): void
     {
-        static::assertSame([1, 0], (new PeerFrame([ref('d')]))->bounds(0, rows()));
+        static::assertSame([1, 0], (new PeerFrame([ref('d')]))->bounds(0, rows(schema())));
     }
 
     public function test_multiple_order_by_references_must_all_match(): void
     {
         $partition = rows(
-            row(str_entry('a', 'x'), int_entry('b', 1)),
-            row(str_entry('a', 'x'), int_entry('b', 1)),
-            row(str_entry('a', 'x'), int_entry('b', 2)),
+            schema(str_schema('a'), int_schema('b')),
+            row(['a' => 'x', 'b' => 1]),
+            row(['a' => 'x', 'b' => 1]),
+            row(['a' => 'x', 'b' => 2]),
         );
 
         $frame = new PeerFrame([ref('a'), ref('b')]);
@@ -64,12 +67,7 @@ final class PeerFrameTest extends FlowTestCase
 
     public function test_ties_extend_the_frame_to_the_last_peer(): void
     {
-        $partition = rows(
-            row(int_entry('d', 1)),
-            row(int_entry('d', 1)),
-            row(int_entry('d', 2)),
-            row(int_entry('d', 3)),
-        );
+        $partition = rows(schema(int_schema('d')), row(['d' => 1]), row(['d' => 1]), row(['d' => 2]), row(['d' => 3]));
 
         $frame = new PeerFrame([ref('d')]);
 
@@ -81,7 +79,7 @@ final class PeerFrameTest extends FlowTestCase
 
     public function test_without_ties_the_frame_ends_at_the_current_row(): void
     {
-        $partition = rows(row(int_entry('d', 1)), row(int_entry('d', 2)), row(int_entry('d', 3)));
+        $partition = rows(schema(int_schema('d')), row(['d' => 1]), row(['d' => 2]), row(['d' => 3]));
 
         $frame = new PeerFrame([ref('d')]);
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\UnionDefinition;
@@ -15,11 +14,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
-use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
@@ -92,26 +88,14 @@ final class XMLDefinitionTest extends FlowTestCase
     {
         $def = xml_schema('col');
 
-        static::assertFalse($def->matches(xml_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = xml_schema('document');
-
-        static::assertFalse($def->matches(xml_entry('other', '<?xml version="1.0"?><root></root>')));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = xml_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(XMLEntry::class, xml_schema('document')->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     /**
@@ -170,7 +154,7 @@ final class XMLDefinitionTest extends FlowTestCase
     {
         $def = xml_schema('document');
 
-        static::assertTrue($def->matches(xml_entry('document', '<?xml version="1.0"?><root></root>')));
+        static::assertTrue($def->matches(type_xml()->cast('<?xml version="1.0"?><root></root>')));
     }
 
     /**
@@ -233,28 +217,21 @@ final class XMLDefinitionTest extends FlowTestCase
     {
         $def = xml_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = xml_schema('col', true);
 
-        static::assertTrue($def->matches(xml_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = xml_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = xml_schema('col', true);
 
-        static::assertTrue($def->matches(xml_entry('col', '<?xml version="1.0"?><root></root>')));
+        static::assertTrue($def->matches(type_xml()->cast('<?xml version="1.0"?><root></root>')));
     }
 
     public function test_rename(): void
@@ -287,7 +264,7 @@ final class XMLDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = xml_schema('col')->merge(union_schema('col', type_union(type_xml(), type_boolean())));
+        $merged = xml_schema('col')->merge(new UnionDefinition('col', type_union(type_xml(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|xml', $merged->type()->toString());
@@ -298,7 +275,7 @@ final class XMLDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             xml_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

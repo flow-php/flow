@@ -18,9 +18,6 @@ final readonly class SchemaInferenceScenario
 
     public function run(): Schema
     {
-        return data_frame()
-            ->read(from_floe(Datasets::orders($this->rows)->floe()))
-            ->batchSize(1000)
-            ->schema();
+        return data_frame()->read(from_floe(Datasets::orders($this->rows)->floe()))->schema();
     }
 }

@@ -44,16 +44,15 @@ $rows = (new Flow())
 ```php
 <?php
 
-use Flow\ETL\DSL\Text;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{row, rows, schema, str_schema};
 
 (new Flow())
     ->process(
-        new Rows(
-            Row::create(new Row\Entry\StringEntry('name', 'Norbert')),
-            Row::create(new Row\Entry\StringEntry('name', 'Tomek')),
-            Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
+        rows(
+            schema(str_schema('name')),
+            row(['name' => 'Norbert']),
+            row(['name' => 'Tomek']),
+            row(['name' => 'Dawid']),
         )
     )
     ->load(to_text($path))

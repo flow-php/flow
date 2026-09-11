@@ -6,8 +6,12 @@ xml and xml_element columns decode through the ValueDecoder static fallback
 <?php
 require __DIR__ . '/bootstrap.php';
 
-
-use function Flow\ETL\DSL\{row, rows, int_entry, xml_entry, xml_element_entry};
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 
 $document = new DOMDocument();
 $document->loadXML('<root attr="1"><item>a</item><item>b</item></root>');
@@ -15,26 +19,22 @@ $document->loadXML('<root attr="1"><item>a</item><item>b</item></root>');
 $element = (new DOMDocument());
 $element->loadXML('<item id="7">value</item>');
 
-$rows = rows(
-    row(
-        int_entry('id', 1),
-        xml_entry('doc', $document),
-        xml_element_entry('el', $element->documentElement),
-    ),
-);
+$schema = schema(int_schema('id'), xml_schema('doc'), xml_element_schema('el'));
 
-$frames = php_frames($rows);
+$frames = php_frames(rows($schema, row(['id' => 1, 'doc' => $document, 'el' => $element->documentElement])));
 $actual = ext_decode_frames($frames);
 
-assert_rows_identical(php_decode_frames($frames), $actual);
+// DOM values are not serializable on their own, so the decoded rows are compared
+// through their re-encoded frame bodies instead of through serialize().
+var_dump(php_frames(rows($schema, ...$actual)) === php_frames(rows($schema, ...php_decode_frames($frames))));
 
-var_dump(get_class($actual[0]->get('doc')->value()));
-var_dump(trim($actual[0]->get('doc')->value()->saveXML()));
-var_dump(get_class($actual[0]->get('el')->value()));
-var_dump($actual[0]->get('el')->value()->getAttribute('id'));
+var_dump(get_class($actual[0]->get('doc')));
+var_dump(trim($actual[0]->get('doc')->saveXML()));
+var_dump(get_class($actual[0]->get('el')));
+var_dump($actual[0]->get('el')->getAttribute('id'));
 ?>
 --EXPECT--
-identical
+bool(true)
 string(11) "DOMDocument"
 string(72) "<?xml version="1.0"?>
 <root attr="1"><item>a</item><item>b</item></root>"

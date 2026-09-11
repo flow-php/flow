@@ -1,1 +1,0 @@
-- [Aggregations](/documentation/components/core/aggregations)

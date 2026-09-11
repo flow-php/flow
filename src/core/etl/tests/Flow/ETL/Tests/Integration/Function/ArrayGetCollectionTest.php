@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -28,7 +29,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
                 ],
                 ['id' => 2],
             ]))
-            ->withEntry('result', ref('array')->arrayGetCollection(['a', 'c']))
+            ->withEntry('result', optional(ref('array')->arrayGetCollection(['a', 'c'])))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

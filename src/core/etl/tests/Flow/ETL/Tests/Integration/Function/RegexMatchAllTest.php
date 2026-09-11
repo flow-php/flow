@@ -10,6 +10,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -39,7 +40,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('preg_match', ref('key')->regexMatchAll(lit('1'), lit('1')))
+            ->withEntry('preg_match', optional(ref('key')->regexMatchAll(lit('1'), lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -57,7 +58,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('preg_match', ref('id')->regexMatchAll(lit('1')))
+            ->withEntry('preg_match', optional(ref('id')->regexMatchAll(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -75,7 +76,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('preg_match', ref('id')->regexMatchAll(lit(1)))
+            ->withEntry('preg_match', optional(ref('id')->regexMatchAll(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

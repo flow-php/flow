@@ -15,6 +15,7 @@ use Flow\CLI\Command\DatabaseTableSchemaCommand;
 use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function method_exists;
@@ -153,6 +154,14 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
         static::assertStringContainsString(<<<'PHP'
             [ERROR] Column "not_existing_one" not found in table "table_01".
             PHP, $tester->getDisplay());
+    }
+
+    public function test_database_table_schema_command_registers_as_db_table_schema(): void
+    {
+        $application = new Application();
+        $application->addCommands([new DatabaseTableSchemaCommand()]);
+
+        static::assertInstanceOf(DatabaseTableSchemaCommand::class, $application->find('db:table:schema'));
     }
 
     protected function dbContext(): DatabaseContext

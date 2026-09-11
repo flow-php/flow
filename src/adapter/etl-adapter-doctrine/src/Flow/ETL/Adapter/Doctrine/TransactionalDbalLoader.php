@@ -19,7 +19,7 @@ use Throwable;
 use function count;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 final class TransactionalDbalLoader implements Closure, Loader, OverridingLoader
 {

@@ -10,6 +10,7 @@ use Flow\Types\Type;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -63,7 +64,10 @@ final class ElementCompatibilityTest extends FlowTestCase
         ];
 
         yield 'nested structure with an optional element' => [
-            type_structure(['id' => type_integer()], ['nickname' => type_string()]),
+            type_structure([
+                'id' => type_integer(),
+                'nickname' => structure_element('nickname', type_string(), optional: true),
+            ]),
             type_structure(['id' => type_integer(), 'nickname' => type_string()]),
             true,
         ];

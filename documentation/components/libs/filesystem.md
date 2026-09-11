@@ -37,7 +37,7 @@ you need by specifying the byte range.
 
 - `SourceStream` - source streams interface represents readonly data streams
 
-```php
+```php ignore
 <?php
 
 SourceStream::content() : string;
@@ -49,7 +49,7 @@ SourceStream::size() : ?int;
 
 - `DestinationStream` - destination streams interface represents writable data streams
 
-```php
+```php ignore
 DestinationStream::append(string $data) : self;
 DestinationStream::fromResource($resource) : self;
 ```
@@ -70,7 +70,7 @@ final readonly class Mount
 
 - `Filesystem` - filesystem interface represents a remote/local filesystem
 
-```php
+```php ignore
 <?php
 
 Filesystem::appendTo(Path $path) : DestinationStream;
@@ -107,7 +107,7 @@ opened, no extra HTTP call made. They're `null` when the backend can't provide t
 
 - `FilesystemTable` - a registry of filesystems keyed by mount protocol
 
-```php
+```php ignore
 <?php
 
 FilesystemTable::for(Path|string $protocol) : Filesystem;

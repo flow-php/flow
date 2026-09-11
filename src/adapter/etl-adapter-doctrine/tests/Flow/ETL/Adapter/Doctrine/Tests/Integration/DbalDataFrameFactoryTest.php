@@ -14,7 +14,6 @@ use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
@@ -71,10 +70,11 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
             new LiteralParameter('name', 'Name 1'),
         )
             ->from(rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 55)),
+                schema(int_schema('id')),
+                row(['id' => 1]),
+                row(['id' => 2]),
+                row(['id' => 3]),
+                row(['id' => 55]),
             ))
             ->select('id')
             ->fetch();
@@ -135,10 +135,11 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
                 map_schema('tags', type_map(type_string(), type_integer())),
             ))
             ->from(rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3)),
-                row(int_entry('id', 55)),
+                schema(int_schema('id')),
+                row(['id' => 1]),
+                row(['id' => 2]),
+                row(['id' => 3]),
+                row(['id' => 55]),
             ))
             ->schema();
 

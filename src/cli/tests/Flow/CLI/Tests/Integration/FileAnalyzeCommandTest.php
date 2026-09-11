@@ -7,6 +7,7 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\FileAnalyzeCommand;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
@@ -22,7 +23,6 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             '--input-file-limit' => 5,
             '--stats-schema' => true,
             '--stats-columns' => true,
-            '--schema-auto-cast' => true,
         ]);
 
         $tester->assertCommandIsSuccessful();
@@ -38,13 +38,13 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             ┌────────────┬──────────┬──────────┬──────────┐
             │ Name       │ Type     │ Nullable │ Metadata │
             ├────────────┼──────────┼──────────┼──────────┤
-            │ order_id   │ uuid     │ false    │ {}       │
-            │ created_at │ datetime │ false    │ {}       │
-            │ updated_at │ datetime │ false    │ {}       │
+            │ order_id   │ uuid     │ true     │ {}       │
+            │ created_at │ datetime │ true     │ {}       │
+            │ updated_at │ datetime │ true     │ {}       │
             │ discount   │ float    │ true     │ {}       │
-            │ address    │ json     │ false    │ {}       │
-            │ notes      │ json     │ false    │ {}       │
-            │ items      │ json     │ false    │ {}       │
+            │ address    │ json     │ true     │ {}       │
+            │ notes      │ json     │ true     │ {}       │
+            │ items      │ json     │ true     │ {}       │
             └────────────┴──────────┴──────────┴──────────┘
 
             Columns
@@ -68,6 +68,34 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
     }
 
+    public function test_read_rows_csv_with_all_strings(): void
+    {
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 5,
+            '--stats-schema' => true,
+            '--schema-all-strings' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            ┌────────────┬────────┬──────────┬──────────┐
+            │ Name       │ Type   │ Nullable │ Metadata │
+            ├────────────┼────────┼──────────┼──────────┤
+            │ order_id   │ string │ true     │ {}       │
+            │ created_at │ string │ true     │ {}       │
+            │ updated_at │ string │ true     │ {}       │
+            │ discount   │ string │ true     │ {}       │
+            │ address    │ string │ true     │ {}       │
+            │ notes      │ string │ true     │ {}       │
+            │ items      │ string │ true     │ {}       │
+            └────────────┴────────┴──────────┴──────────┘
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_read_rows_csv_without_schema(): void
     {
         $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
@@ -76,7 +104,6 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 5,
             '--stats-columns' => true,
-            '--schema-auto-cast' => true,
         ]);
 
         $tester->assertCommandIsSuccessful();
@@ -108,5 +135,13 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
 
         self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
+    }
+
+    public function test_file_analyze_command_registers_the_analyze_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileAnalyzeCommand()]);
+
+        static::assertInstanceOf(FileAnalyzeCommand::class, $application->find('analyze'));
     }
 }

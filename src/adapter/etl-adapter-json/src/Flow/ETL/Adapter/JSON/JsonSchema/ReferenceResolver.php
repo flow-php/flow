@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\JSON\JsonSchema;
 
 use Flow\ETL\Adapter\JSON\JsonSchema\Exception\UnresolvableReferenceException;
 use Flow\ETL\Adapter\JSON\JsonSchema\Exception\UnsupportedKeywordException;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -14,7 +16,6 @@ use function array_key_exists;
 use function array_map;
 use function array_pop;
 use function explode;
-use function Flow\Filesystem\DSL\fstab;
 use function implode;
 use function is_array;
 use function is_string;
@@ -39,6 +40,7 @@ final class ReferenceResolver
     public function __construct(
         private readonly ?ClientInterface $client = null,
         private readonly ?RequestFactoryInterface $requestFactory = null,
+        private readonly Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {}
 
     /**
@@ -155,7 +157,17 @@ final class ReferenceResolver
             $content = $this->fetch($uri, $ref ?? $uri);
         } else {
             $path ??= Path::from($uri);
-            $content = fstab()->for($path)->readFrom($path)->content();
+
+            if (!$this->filesystem->supports($path)) {
+                throw new UnresolvableReferenceException($ref ?? $uri, sprintf(
+                    'filesystem %s serves "%s://" paths, given: "%s"',
+                    $this->filesystem::class,
+                    $this->filesystem->mount()->protocol,
+                    $path->uri(),
+                ));
+            }
+
+            $content = $this->filesystem->readFrom($path)->content();
         }
 
         // @mago-ignore analysis:mixed-assignment

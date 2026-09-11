@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateInterval;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Native\UnionType;
 use Generator;
@@ -19,6 +20,7 @@ use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\types;
 
@@ -191,6 +193,24 @@ final class UnionTypeTest extends TestCase
         }
     }
 
+    public function test_cast_of_clock_time_resolves_to_the_time_member(): void
+    {
+        // Deliberate behaviour change: TimeType::cast() learned HH:MM:SS, so the time member now
+        // answers a clock string the union as a whole rejects. Before, both members threw on it
+        // and the union threw with them.
+        static::assertEquals(
+            new DateInterval('PT12H34M56S'),
+            type_union(type_time(), type_integer())->cast('12:34:56'),
+        );
+    }
+
+    public function test_cast_of_clock_time_leaves_a_valid_string_member_untouched(): void
+    {
+        // cast() returns early whenever the union already accepts the value, so a member that
+        // validates the raw string still wins over the time member, so nothing changes here.
+        static::assertSame('12:34:56', type_union(type_time(), type_string())->cast('12:34:56'));
+    }
+
     public function test_is_optional_type(): void
     {
         static::assertTrue((new UnionType(type_integer(), type_null()))->isOptionalType());
@@ -262,6 +282,29 @@ final class UnionTypeTest extends TestCase
                 ->types()
                 ->deduplicate(),
         );
+    }
+
+    public function test_union_member_for_picks_first_valid(): void
+    {
+        $type = type_union(type_string(), type_integer());
+
+        static::assertEquals(type_string(), $type->memberFor('5'));
+        static::assertEquals(type_integer(), $type->memberFor(5));
+    }
+
+    public function test_union_member_for_returns_null_when_no_member_matches(): void
+    {
+        static::assertNull(type_union(type_string(), type_integer())->memberFor(new stdClass()));
+    }
+
+    public function test_union_member_for_skips_the_null_member(): void
+    {
+        static::assertNull(type_union(type_null(), type_string())->memberFor(null));
+    }
+
+    public function test_union_member_for_unwraps_optional_members(): void
+    {
+        static::assertEquals(type_integer(), type_union(type_optional(type_integer()), type_string())->memberFor(5));
     }
 
     public function test_union_with_mixed_type(): void

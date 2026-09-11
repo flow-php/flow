@@ -9,12 +9,13 @@ use Flow\ETL\Function\WindowFunction;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function is_float;
 use function is_int;
 
 final class WindowFrameContext
 {
     /**
-     * @return list<int|null>
+     * @return list<float|int|null>
      */
     public static function results(DataFrame $frame): array
     {
@@ -22,9 +23,9 @@ final class WindowFrameContext
 
         foreach ($frame->get() as $batch) {
             foreach ($batch as $row) {
-                $value = $row->valueOf('result');
+                $value = $row->get('result');
 
-                $results[] = is_int($value) ? $value : null;
+                $results[] = is_int($value) || is_float($value) ? $value : null;
             }
         }
 
@@ -35,7 +36,7 @@ final class WindowFrameContext
      * Five ascending salaries in a single department, the dataset every frame expectation
      * in WindowFunctionsTest was derived from against PostgreSQL.
      *
-     * @return list<int|null>
+     * @return list<float|int|null>
      */
     public static function salaries(WindowFunction $function): array
     {
@@ -55,7 +56,7 @@ final class WindowFrameContext
     /**
      * Two rows tied on date, the peer-awareness fixture.
      *
-     * @return list<int|null>
+     * @return list<float|int|null>
      */
     public static function tiedDates(WindowFunction $function): array
     {

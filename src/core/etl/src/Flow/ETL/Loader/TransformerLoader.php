@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\ErrorHandler\LoadingAction;
+use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\TransformationStream;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use Throwable;
 
-final class TransformerLoader implements Closure, Loader, OverridingLoader, ReplayAware
+final class TransformerLoader implements Closure, Discardable, Loader, OverridingLoader, ReplayAware
 {
     private ?TransformationStream $stream = null;
 
@@ -35,7 +38,10 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
                     $this->stream->drain();
                 }
             } catch (Throwable $failure) {
-                if ($context->errorHandler()->throw($failure, new Rows())) {
+                if (
+                    $context->errorHandler()->onLoading(new LoadingError($failure, $this, new Rows(new Schema())))
+                    === LoadingAction::propagate
+                ) {
                     throw $failure;
                 }
             }
@@ -48,6 +54,15 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
             $this->limitReached = false;
             $this->runContext = null;
         }
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        // The stream is never drained here - draining would commit the dead run's buffered rows. The wrapped loader
+        // is discarded by the pipeline, which walks the whole loader tree.
+        $this->stream = null;
+        $this->limitReached = false;
+        $this->runContext = null;
     }
 
     public function load(Rows $rows, FlowContext $context): void
@@ -63,11 +78,22 @@ final class TransformerLoader implements Closure, Loader, OverridingLoader, Repl
             $transformer = $this->transformer;
 
             if ($transformer instanceof Transformer) {
-                // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
-                $this->loader->load($transformer->transform($rows, $context), $context);
+                try {
+                    // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
+                    $transformed = $transformer->transform($rows, $context);
+                } catch (LimitReachedException $limit) {
+                    // the batch that fills the limit rides the exception, and still belongs in the sink
+                    if ($limit->rows !== null && $limit->rows->count()) {
+                        $this->loader->load($limit->rows, $context);
+                    }
+
+                    throw $limit;
+                }
+
+                $this->loader->load($transformed, $context);
             } else {
                 if ($this->stream === null || !$this->stream->drivenBy($context)) {
-                    $this->stream = new TransformationStream($transformer, $this->loader, $context);
+                    $this->stream = new TransformationStream($transformer, $rows->schema(), $this->loader, $context);
                 }
 
                 try {

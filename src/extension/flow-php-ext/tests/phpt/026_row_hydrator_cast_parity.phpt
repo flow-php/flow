@@ -6,14 +6,38 @@ NativeRowHydrator cast is serialize-identical to PhpRowHydrator
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_non_empty_string;
+use function Flow\Types\DSL\type_numeric_string;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
-
-use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, json_schema, xml_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional, type_positive_integer, type_non_empty_string, type_numeric_string};
 
 enum CastSuit: string
 {
@@ -24,12 +48,12 @@ $shared = new DateTimeImmutable('2025-01-01 12:00:00.123456', new DateTimeZone('
 
 $datasets = [
     'scalars' => [
-        schema(int_schema('id'), float_schema('p'), bool_schema('a'), str_schema('n')),
+        schema(int_schema('id'), float_schema('p'), bool_schema('a'), str_schema('n', nullable: true)),
         [
             new RawRowValues(['id' => '42', 'p' => '3.14', 'a' => 'yes', 'n' => 7]),
             new RawRowValues(['id' => ' 7', 'p' => '1e3', 'a' => 'OFF', 'n' => 1.5]),
-            new RawRowValues(['id' => 'abc', 'p' => '0x1A', 'a' => 'weird', 'n' => true]),
-            new RawRowValues(['id' => '9223372036854775808', 'p' => true, 'a' => 3.5, 'n' => null]),
+            new RawRowValues(['id' => '007', 'p' => '.5', 'a' => 'ON', 'n' => true]),
+            new RawRowValues(['id' => '9223372036854775807', 'p' => true, 'a' => 3.5, 'n' => null]),
             new RawRowValues(['id' => 5, 'p' => 2.5, 'a' => true, 'n' => 'text']),
         ],
     ],
@@ -53,7 +77,7 @@ $datasets = [
         ],
     ],
     'uuid_json' => [
-        schema(uuid_schema('u'), json_schema('j')),
+        schema(uuid_schema('u', nullable: true), json_schema('j')),
         [
             new RawRowValues(['u' => '01234567-89ab-4def-8123-456789abcdef', 'j' => '["a","b"]']),
             new RawRowValues(['u' => new Flow\Types\Value\Uuid('01234567-89ab-4def-8123-456789abcdef'), 'j' => '{"a":1}']),
@@ -67,7 +91,8 @@ $datasets = [
             map_schema('m', type_map(type_string(), type_integer())),
             map_schema('mi', type_map(type_integer(), type_string())),
             list_schema('lo', type_list(type_optional(type_integer()))),
-            structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()], true)),
+            list_schema('lf', type_list(type_float())),
+            structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true)),
         ),
         [
             new RawRowValues([
@@ -75,9 +100,10 @@ $datasets = [
                 'm' => ['a' => '1', 'b' => 2],
                 'mi' => [0 => 'x', 5 => 7],
                 'lo' => ['1', null, 3],
+                'lf' => [33, 65.5],
                 'st' => ['a' => '5', 'extra' => 'dropped'],
             ]),
-            new RawRowValues(['l' => [], 'm' => [], 'mi' => [], 'lo' => [], 'st' => ['a' => 1, 'b' => 'kept']]),
+            new RawRowValues(['l' => [], 'm' => [], 'mi' => [], 'lo' => [], 'lf' => [], 'st' => ['a' => 1, 'b' => 'kept']]),
         ],
     ],
     'exotic_fallback' => [
@@ -88,7 +114,7 @@ $datasets = [
         ],
     ],
     'fill_and_metadata' => [
-        schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('flag')),
+        schema(int_schema('id', nullable: true), str_schema('name', nullable: true), bool_schema('flag', nullable: true)),
         [
             new RawRowValues(['id' => '1'], ['id' => Metadata::fromArray(['k' => 'v1'])]),
             new RawRowValues([]),
@@ -97,8 +123,15 @@ $datasets = [
         ],
     ],
     'all_optional_st' => [
-        schema(structure_schema('st', type_structure([], ['b' => type_string()]))),
+        schema(structure_schema('st', type_structure(['b' => structure_element('b', type_string(), optional: true)]))),
         [new RawRowValues(['st' => ['other' => 1]])],
+    ],
+    'interleaved_st' => [
+        schema(structure_schema('st', type_structure(['z' => type_integer(), 'a' => structure_element('a', type_string(), optional: true), 'b' => type_string()]))),
+        [
+            new RawRowValues(['st' => ['b' => 'x', 'z' => '5']]),
+            new RawRowValues(['st' => ['z' => 1, 'a' => 'present', 'b' => 'y']]),
+        ],
     ],
     'empty' => [schema(int_schema('id')), []],
 ];
@@ -107,40 +140,45 @@ $php = new PhpRowHydrator();
 $native = new NativeRowHydrator();
 
 foreach ($datasets as $label => [$s, $batch]) {
-    $castOk = serialize($php->cast($batch, $s)) === serialize($native->cast($batch, $s));
-    printf("%-16s cast:%s\n", $label, $castOk ? 'yes' : 'NO');
+    $hydrateOk = serialize($php->hydrate($batch, $s)) === serialize($native->hydrate($batch, $s));
+    printf("%-16s hydrate:%s\n", $label, $hydrateOk ? 'yes' : 'NO');
 }
 
-$mutated = schema(int_schema('id'));
-$php->cast([new RawRowValues(['id' => '1'])], $mutated);
-$native->cast([new RawRowValues(['id' => '1'])], $mutated);
-$mutated->add(str_schema('name', nullable: true))->makeNullable();
-$batch = [new RawRowValues(['id' => null, 'name' => 7])];
+// TypeDetector types [33, 65.5] as list<float>; both hydrators must materialize it as floats.
+$promotion = schema(list_schema('lf', type_list(type_float())));
+$promotionBatch = [new RawRowValues(['lf' => [33, 65.5]])];
 printf(
-    "%-16s cast:%s\n",
-    'schema_mutation',
-    serialize($php->cast($batch, $mutated)) === serialize($native->cast($batch, $mutated)) ? 'yes' : 'NO',
+    "%-16s php:%s native:%s\n",
+    'list_promotion',
+    json_encode($php->hydrate($promotionBatch, $promotion)->first()->get('lf'), JSON_PRESERVE_ZERO_FRACTION),
+    json_encode($native->hydrate($promotionBatch, $promotion)->first()->get('lf'), JSON_PRESERVE_ZERO_FRACTION),
 );
 
-$inferBatch = [new RawRowValues(['id' => 1, 'name' => null])];
+$mutated = schema(int_schema('id'));
+$php->hydrate([new RawRowValues(['id' => '1'])], $mutated);
+$native->hydrate([new RawRowValues(['id' => '1'])], $mutated);
+$mutated->add(str_schema('name', nullable: true))->makeNullable();
+// Schema is immutable, so $mutated never gained "name" - the column is simply not cast
+$batch = [new RawRowValues(['id' => '1', 'name' => 7])];
 printf(
-    "%-16s cast:%s\n",
-    'null_schema',
-    serialize($php->cast($inferBatch)) === serialize($native->cast($inferBatch)) ? 'yes' : 'NO',
+    "%-16s hydrate:%s\n",
+    'schema_mutation',
+    serialize($php->hydrate($batch, $mutated)) === serialize($native->hydrate($batch, $mutated)) ? 'yes' : 'NO',
 );
 
 printf("native class registered:%s\n", class_exists(RustRowHydratorNative::class, false) ? 'yes' : 'NO');
 ?>
 --EXPECT--
-scalars          cast:yes
-nested_families  cast:yes
-temporal         cast:yes
-uuid_json        cast:yes
-containers       cast:yes
-exotic_fallback  cast:yes
-fill_and_metadata cast:yes
-all_optional_st  cast:yes
-empty            cast:yes
-schema_mutation  cast:yes
-null_schema      cast:yes
+scalars          hydrate:yes
+nested_families  hydrate:yes
+temporal         hydrate:yes
+uuid_json        hydrate:yes
+containers       hydrate:yes
+exotic_fallback  hydrate:yes
+fill_and_metadata hydrate:yes
+all_optional_st  hydrate:yes
+interleaved_st   hydrate:yes
+empty            hydrate:yes
+list_promotion   php:[33.0,65.5] native:[33.0,65.5]
+schema_mutation  hydrate:yes
 native class registered:yes

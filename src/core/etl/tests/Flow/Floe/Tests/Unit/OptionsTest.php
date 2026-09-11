@@ -15,7 +15,6 @@ final class OptionsTest extends TestCase
     {
         $options = new Options();
 
-        static::assertTrue($options->validateData);
         static::assertSame(65_536, $options->bufferSize);
         static::assertInstanceOf(NoopCodec::class, $options->codec);
     }
@@ -24,21 +23,8 @@ final class OptionsTest extends TestCase
     {
         $options = Options::default();
 
-        static::assertTrue($options->validateData);
         static::assertSame(65_536, $options->bufferSize);
         static::assertInstanceOf(NoopCodec::class, $options->codec);
-    }
-
-    public function test_with_validate_data_returns_a_new_instance_and_keeps_the_rest(): void
-    {
-        $original = new Options();
-        $modified = $original->withValidateData(false);
-
-        static::assertNotSame($original, $modified);
-        static::assertTrue($original->validateData);
-        static::assertFalse($modified->validateData);
-        static::assertSame($original->bufferSize, $modified->bufferSize);
-        static::assertSame($original->codec, $modified->codec);
     }
 
     public function test_with_buffer_size_returns_a_new_instance_and_keeps_the_rest(): void
@@ -49,7 +35,6 @@ final class OptionsTest extends TestCase
         static::assertNotSame($original, $modified);
         static::assertSame(65_536, $original->bufferSize);
         static::assertSame(4_096, $modified->bufferSize);
-        static::assertSame($original->validateData, $modified->validateData);
         static::assertSame($original->codec, $modified->codec);
     }
 
@@ -62,7 +47,6 @@ final class OptionsTest extends TestCase
         static::assertNotSame($original, $modified);
         static::assertInstanceOf(NoopCodec::class, $original->codec);
         static::assertSame($codec, $modified->codec);
-        static::assertSame($original->validateData, $modified->validateData);
         static::assertSame($original->bufferSize, $modified->bufferSize);
     }
 }

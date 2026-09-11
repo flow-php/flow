@@ -10,7 +10,7 @@ use function getenv;
 
 final class Paths
 {
-    public static function root(): string
+    public static function projectRoot(): string
     {
         $root = getenv('FLOW_MONOREPO_PROJECT_ROOT');
 
@@ -18,7 +18,12 @@ final class Paths
             throw new RuntimeException('FLOW_MONOREPO_PROJECT_ROOT is not set; bootstrap.php must be loaded.');
         }
 
-        return $root . '/benchmarks';
+        return $root;
+    }
+
+    public static function root(): string
+    {
+        return self::projectRoot() . '/benchmarks';
     }
 
     public static function datasets(): string

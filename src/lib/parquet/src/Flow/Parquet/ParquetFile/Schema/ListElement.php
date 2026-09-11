@@ -40,10 +40,10 @@ final readonly class ListElement
     public static function decimal(int $precision, int $scale, bool $required = false): self
     {
         if ($required) {
-            return new self(FlatColumn::decimal('element', $scale, $precision)->makeRequired());
+            return new self(FlatColumn::decimal('element', $precision, $scale)->makeRequired());
         }
 
-        return new self(FlatColumn::decimal('element', $scale, $precision));
+        return new self(FlatColumn::decimal('element', $precision, $scale));
     }
 
     public static function double(bool $required = false): self

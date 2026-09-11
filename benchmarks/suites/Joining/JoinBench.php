@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Joining;
 
+use Flow\Benchmarks\BenchmarkRows;
+use Flow\Benchmarks\Datasets\Datasets;
 use Flow\ETL\Join\Join;
 use Generator;
 use PhpBench\Attributes as Bench;
 
+#[Bench\BeforeMethods('warm')]
 final class JoinBench
 {
+    public function warm(array $params): void
+    {
+        Datasets::orders((int) $params['rows'])->floe();
+        Datasets::sellers((int) $params['rows'])->parquet();
+    }
+
     #[Bench\ParamProviders('rows')]
     #[Bench\Groups(['joining'])]
     public function bench_join_inner(array $params): void
@@ -54,7 +63,7 @@ final class JoinBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

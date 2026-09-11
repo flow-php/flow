@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-interface Reference
+use Flow\ETL\Function\ScalarFunction;
+
+interface Reference extends ScalarFunction
 {
     public function __toString(): string;
 

@@ -60,6 +60,11 @@ final class UnsizedFilesystem implements Filesystem
         return $this->filesystem->status($path);
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount()->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         return $this->filesystem->writeTo($path);

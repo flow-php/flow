@@ -6,9 +6,11 @@ namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Schema\Definition\TypeProjection;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Native\UnionType;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
@@ -194,7 +196,10 @@ final class TypeProjectionTest extends FlowTestCase
     public function test_structure_optional_array_element_is_projected(): void
     {
         /** @var StructureType<array<array-key, mixed>> $type */
-        $type = type_structure(['id' => type_integer()], ['data' => type_array()]);
+        $type = type_structure([
+            'id' => type_integer(),
+            'data' => structure_element('data', type_array(), optional: true),
+        ]);
 
         static::assertSame(
             'structure{id: integer, data?: json}',
@@ -207,12 +212,29 @@ final class TypeProjectionTest extends FlowTestCase
     public function test_structure_optional_element_is_projected(): void
     {
         /** @var StructureType<array<array-key, mixed>> $type */
-        $type = type_structure(['id' => type_integer()], ['data' => type_empty_array()]);
+        $type = type_structure([
+            'id' => type_integer(),
+            'data' => structure_element('data', type_empty_array(), optional: true),
+        ]);
 
         static::assertSame(
             'structure{id: integer, data?: json}',
             (new TypeProjection())
                 ->structure($type)
+                ->toString(),
+        );
+    }
+
+    public function test_interleaved_structure_keeps_every_position_and_flag(): void
+    {
+        static::assertSame(
+            'structure{z: integer, a?: json, b: string}',
+            (new TypeProjection())
+                ->structure(new StructureType([
+                    new StructureElement('z', type_integer()),
+                    new StructureElement('a', type_array(), optional: true),
+                    new StructureElement('b', type_string()),
+                ]))
                 ->toString(),
         );
     }

@@ -6,10 +6,11 @@ namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Rows;
 
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class RowsMother
 {
@@ -21,9 +22,9 @@ final class RowsMother
     public static function descendingIdBatches(): array
     {
         return [
-            rows(row(int_entry('id', 5)), row(int_entry('id', 4))),
-            rows(row(int_entry('id', 3)), row(int_entry('id', 2))),
-            rows(row(int_entry('id', 1)), row(int_entry('id', 0))),
+            rows(schema(int_schema('id')), row(['id' => 5]), row(['id' => 4])),
+            rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 2])),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 0])),
         ];
     }
 
@@ -35,9 +36,9 @@ final class RowsMother
     public static function interleavedGroupBatches(): array
     {
         return [
-            rows(row(str_entry('g', 'a'), int_entry('v', 1)), row(str_entry('g', 'b'), int_entry('v', 10))),
-            rows(row(str_entry('g', 'a'), int_entry('v', 2)), row(str_entry('g', 'b'), int_entry('v', 20))),
-            rows(row(str_entry('g', 'a'), int_entry('v', 3)), row(str_entry('g', 'b'), int_entry('v', 30))),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 1]), row(['g' => 'b', 'v' => 10])),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 2]), row(['g' => 'b', 'v' => 20])),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 3]), row(['g' => 'b', 'v' => 30])),
         ];
     }
 
@@ -50,9 +51,9 @@ final class RowsMother
     public static function sortedGroupBatches(): array
     {
         return [
-            rows(row(str_entry('g', 'a'), int_entry('v', 1)), row(str_entry('g', 'a'), int_entry('v', 2))),
-            rows(row(str_entry('g', 'a'), int_entry('v', 3)), row(str_entry('g', 'b'), int_entry('v', 10))),
-            rows(row(str_entry('g', 'b'), int_entry('v', 20)), row(str_entry('g', 'b'), int_entry('v', 30))),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 1]), row(['g' => 'a', 'v' => 2])),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 3]), row(['g' => 'b', 'v' => 10])),
+            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'b', 'v' => 20]), row(['g' => 'b', 'v' => 30])),
         ];
     }
 
@@ -61,9 +62,9 @@ final class RowsMother
         $sequence = [];
 
         for ($id = 1; $id <= $count; $id++) {
-            $sequence[] = row(int_entry('id', $id));
+            $sequence[] = row(['id' => $id]);
         }
 
-        return rows(...$sequence);
+        return rows(schema(int_schema('id')), ...$sequence);
     }
 }

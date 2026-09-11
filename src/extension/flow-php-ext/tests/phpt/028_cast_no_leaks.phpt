@@ -6,12 +6,30 @@ repeated native cast does not leak memory, including the throwing fallback path
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
-
-use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, uuid_schema, list_schema, map_schema, structure_schema, json_schema, enum_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional};
 
 enum LeakSuit: string
 {
@@ -20,7 +38,7 @@ enum LeakSuit: string
 
 $schema = schema(
     int_schema('id'),
-    str_schema('name'),                       // non-nullable - null values force makeNullable
+    str_schema('name', nullable: true),       // the batch carries nulls, so the declaration admits them
     float_schema('price'),
     bool_schema('active'),
     datetime_schema('created_at'),
@@ -28,7 +46,8 @@ $schema = schema(
     uuid_schema('uuid'),
     list_schema('ints', type_list(type_optional(type_integer()))),
     map_schema('metrics', type_map(type_string(), type_integer())),
-    structure_schema('nested', type_structure(['a' => type_integer()], ['b' => type_string()])),
+    structure_schema('nested', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)])),
+    list_schema('names', type_list(type_string())),
     json_schema('json'),
     enum_schema('suit', LeakSuit::class),     // exotic - per-value PHP fallback
 );
@@ -39,7 +58,7 @@ for ($i = 1; $i <= 100; $i++) {
     $batch[] = new RawRowValues(
         [
             'id' => (string) $i,
-            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // exercises the makeNullable path
+            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // null values under a nullable declaration
             'price' => \sprintf('%d.%02d', $i, $i % 100),
             'active' => $i % 2 === 0 ? 'yes' : 'off',
             'created_at' => \sprintf('2024-03-%02d 10:20:%02d', 1 + $i % 28, $i % 60),
@@ -48,6 +67,7 @@ for ($i = 1; $i <= 100; $i++) {
             'ints' => [(string) $i, null, $i],
             'metrics' => ['cpu' => (string) $i, 'mem' => $i],
             'nested' => ['a' => (string) $i, 'b' => $i],
+            'names' => ['a', 'b'],
             'json' => '["a","b"]',
             'suit' => 'h',
         ],
@@ -55,16 +75,30 @@ for ($i = 1; $i <= 100; $i++) {
     );
 }
 
-$throwingBatch = [new RawRowValues(['id' => 1]), new RawRowValues(['uuid' => 'not-a-uuid', 'id' => 2])];
+// a container column carrying a null element is the only way the deleted CastKind::String null arm
+// is reachable, so the leak check has to exercise the List/Map recursion too
+$throwingBatch = [
+    new RawRowValues(['id' => 1]),
+    new RawRowValues(['uuid' => 'not-a-uuid', 'id' => 2, 'names' => ['a', null]]),
+];
 
-$cycle = static function () use ($batch, $throwingBatch, $schema): void {
+// an absent NOT-NULL column aborts before any row_values insertion - a different leak path
+$missingBatch = [new RawRowValues(['name' => 'no id here'])];
+
+$cycle = static function () use ($batch, $throwingBatch, $missingBatch, $schema): void {
     $native = new RustRowHydratorNative();
-    $native->cast($batch, $schema);
+    $native->hydrate($batch, $schema);
 
     try {
-        $native->cast($throwingBatch, $schema);
+        $native->hydrate($throwingBatch, $schema);
     } catch (Throwable) {
         // the aborted batch must not leak its partially built rows
+    }
+
+    try {
+        $native->hydrate($missingBatch, $schema);
+    } catch (Throwable) {
+        // the same, aborted before the first insertion
     }
 };
 

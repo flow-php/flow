@@ -7,19 +7,60 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
 
 use function array_reverse;
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 
-final class ArrayReverse extends ScalarFunctionChain
+final class ArrayReverse implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $array;
+
     /**
      * @param array<array-key, mixed>|ScalarFunction $array
-     * @param bool|ScalarFunction $preserveKeys
      */
     public function __construct(
-        private readonly ScalarFunction|array $array,
-        private readonly ScalarFunction|bool $preserveKeys,
-    ) {}
+        ScalarFunction|array $array,
+        private readonly bool $preserveKeys,
+    ) {
+        $this->array = $array instanceof ScalarFunction ? $array : lit($array);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->array];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $this->preserveKeys);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        $array = type_bare($this->array->returns());
+
+        // Field order is part of a structure type - the reversed value carries a reversed type.
+        if ($array instanceof StructureType) {
+            return new StructureType(array_reverse($array->elements()));
+        }
+
+        return $array;
+    }
 
     /**
      * @return null|array<mixed>
@@ -27,14 +68,11 @@ final class ArrayReverse extends ScalarFunctionChain
     public function eval(Row $row, FlowContext $context): mixed
     {
         $array = (new Parameter($this->array))->asArray($row, $context);
-        $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row, $context);
 
         if ($array === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ArrayReverse function requires non-null array'));
+            throw new InvalidArgumentException('ArrayReverse function requires non-null array');
         }
 
-        return array_reverse($array, $preserveKeys);
+        return array_reverse($array, $this->preserveKeys);
     }
 }

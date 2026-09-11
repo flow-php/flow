@@ -1,1 +1,0 @@
-- [Types Library](/documentation/components/libs/types)

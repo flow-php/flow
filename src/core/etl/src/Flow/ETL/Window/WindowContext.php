@@ -37,8 +37,8 @@ final class WindowContext
             [$start, $end] = $this->windowFrame->bounds($this->index, $this->partition);
 
             $this->frame = $start > $end
-                ? rows()
-                : rows(...array_slice($this->partition->all(), $start, $end - $start + 1));
+                ? rows($this->partition->schema())
+                : rows($this->partition->schema(), ...array_slice($this->partition->all(), $start, $end - $start + 1));
         }
 
         return $this->frame;

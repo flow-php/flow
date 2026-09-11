@@ -12,9 +12,12 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\xml_element_entry;
-use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_xml_element;
 
 final class DOMElementValueTest extends FlowTestCase
 {
@@ -24,7 +27,7 @@ final class DOMElementValueTest extends FlowTestCase
         $document->loadXml('<b>User Name 01</b>');
 
         $rows = df()
-            ->read(from_rows(rows(row(xml_entry('html_raw', $document)))))
+            ->read(from_rows(rows(schema(xml_schema('html_raw')), row(['html_raw' => $document]))))
             ->withEntry('html', ref('html_raw')->cast(type_string()))
             ->drop('html_raw')
             ->fetch();
@@ -40,7 +43,10 @@ final class DOMElementValueTest extends FlowTestCase
     public function test_dom_element_value(): void
     {
         $rows = df()
-            ->read(from_rows(rows(row(xml_element_entry('node', '<name>User Name 01</name>')))))
+            ->read(from_rows(rows(
+                schema(xml_element_schema('node')),
+                row(['node' => type_xml_element()->cast('<name>User Name 01</name>')]),
+            )))
             ->withEntry('user_name', ref('node')->domElementValue())
             ->drop('node')
             ->fetch();
@@ -56,7 +62,10 @@ final class DOMElementValueTest extends FlowTestCase
     public function test_dom_element_value_from_dom_document(): void
     {
         $rows = df()
-            ->read(from_rows(rows(row(xml_entry('node', '<name>User Name 01</name>')))))
+            ->read(from_rows(rows(
+                schema(xml_schema('node')),
+                row(['node' => type_xml()->cast('<name>User Name 01</name>')]),
+            )))
             ->withEntry('user_name', ref('node')->domElementValue())
             ->drop('node')
             ->fetch();
@@ -75,7 +84,7 @@ final class DOMElementValueTest extends FlowTestCase
         $document->loadXml('<b>User Name 01</b>');
 
         $rows = df()
-            ->read(from_rows(rows(row(xml_entry('html_raw', $document)))))
+            ->read(from_rows(rows(schema(xml_schema('html_raw')), row(['html_raw' => $document]))))
             ->withEntry('html', ref('html_raw')->domElementValue())
             ->drop('html_raw')
             ->fetch();
@@ -91,7 +100,10 @@ final class DOMElementValueTest extends FlowTestCase
     public function test_dom_element_value_on_xpath_result(): void
     {
         $rows = df()
-            ->read(from_rows(rows(row(xml_entry('node', '<user><name>User Name 01</name></user>')))))
+            ->read(from_rows(rows(
+                schema(xml_schema('node')),
+                row(['node' => type_xml()->cast('<user><name>User Name 01</name></user>')]),
+            )))
             ->withEntry('user_name', ref('node')->xpath('name')->domElementValue())
             ->drop('node')
             ->fetch();

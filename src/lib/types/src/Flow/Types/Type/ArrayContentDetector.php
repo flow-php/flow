@@ -35,7 +35,10 @@ final readonly class ArrayContentDetector
 
     private int $uniqueKeysTypeCount;
 
-    private int $uniqueValuesTypeCount;
+    /**
+     * @var null|Type<mixed>
+     */
+    private ?Type $unifiedValueType;
 
     private bool $valueTypesConsistent;
 
@@ -48,6 +51,7 @@ final readonly class ArrayContentDetector
         Types $uniqueKeysType,
         private Types $uniqueValuesType,
         private bool $isList = false,
+        private TypeWidener $unifier = new TypeWidener(),
     ) {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
@@ -56,16 +60,20 @@ final readonly class ArrayContentDetector
             ->without(type_array(), type_empty_array(), type_null())
             ->count();
 
-        $countedValueTypes = $this->uniqueValuesType->reduceOptionals()->without(
-            type_array(),
-            type_empty_array(),
-            type_null(),
-        );
-        $this->uniqueValuesTypeCount = $countedValueTypes->count();
-        // Ignoring array<mixed>/array{} values in the count is only sound when the counted type
-        // is an array itself - a scalar mixed with arrays has no common list/map value type.
+        $reducedValueTypes = $this->uniqueValuesType->reduceOptionals();
+        $countedValueTypes = $reducedValueTypes->without(type_array(), type_empty_array(), type_null());
+
+        $unified = null;
+
+        foreach ($countedValueTypes->all() as $valueType) {
+            $unified = $unified === null ? $valueType : $this->unifier->widen($unified, $valueType);
+        }
+
+        $this->unifiedValueType = $unified;
+        // Ignoring array<mixed>/array{} values in the unification is only sound when the unified
+        // type is an array itself - a scalar mixed with arrays has no common list/map value type.
         $this->valueTypesConsistent =
-            !$this->uniqueValuesType->reduceOptionals()->hasAny(type_array(), type_empty_array())
+            !$reducedValueTypes->hasAny(type_array(), type_empty_array())
             || $countedValueTypes->first() instanceof ListType
             || $countedValueTypes->first() instanceof MapType
             || $countedValueTypes->first() instanceof StructureType;
@@ -101,7 +109,7 @@ final readonly class ArrayContentDetector
     public function isList(): bool
     {
         return (
-            1 === $this->uniqueValuesTypeCount
+            null !== $this->unifiedValueType
             && $this->valueTypesConsistent
             && $this->firstKeyType() instanceof IntegerType
             && $this->isList
@@ -118,7 +126,7 @@ final readonly class ArrayContentDetector
         }
 
         return (
-            1 === $this->uniqueValuesTypeCount
+            null !== $this->unifiedValueType
             && 1 === $this->uniqueKeysTypeCount
             && $this->valueTypesConsistent
             && !$this->isList
@@ -139,7 +147,7 @@ final readonly class ArrayContentDetector
      */
     public function valueType(): Type
     {
-        $type = null;
+        $type = $this->unifiedValueType;
         $nullable = false;
         $hasUntypedArray = false;
         $hasEmptyArray = false;
@@ -151,8 +159,6 @@ final readonly class ArrayContentDetector
                 $hasEmptyArray = true;
             } elseif ($nextType instanceof ArrayType) {
                 $hasUntypedArray = true;
-            } elseif (null === $type) {
-                $type = $nextType;
             }
         }
 

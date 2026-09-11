@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Flow\ETL\Schema\Metadata;
 
+use function array_filter;
+
 enum DbalMetadata: string
 {
     case COLUMN_DEFINITION = 'dbal_column_column_definition';
@@ -63,7 +65,9 @@ enum DbalMetadata: string
      */
     public static function platformOptions(array $options): Metadata
     {
-        return Metadata::with(self::PLATFORM_OPTIONS->value, $options);
+        $options = array_filter($options, static fn(mixed $value): bool => $value !== null);
+
+        return $options === [] ? Metadata::empty() : Metadata::with(self::PLATFORM_OPTIONS->value, $options);
     }
 
     public static function precision(int $precision): Metadata

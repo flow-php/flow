@@ -24,6 +24,12 @@ final readonly class MySQLDialect implements Dialect
         private AbstractPlatform $platform,
     ) {}
 
+    public function maxBindParameters(): int
+    {
+        // COM_STMT_EXECUTE carries the parameter count in 2 bytes
+        return 65_535;
+    }
+
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData

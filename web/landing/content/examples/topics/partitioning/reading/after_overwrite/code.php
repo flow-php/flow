@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref, to_output};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -16,9 +16,7 @@ data_frame()
             ['id' => 2, 'color' => 'blue', 'name' => 'Gadget'],
         ]
     ))
-    ->partitionBy(ref('color'))
-    ->mode(overwrite())
-    ->write(to_csv($outputPath . '/products.csv'))
+    ->write(to_csv($outputPath . '/products.csv')->saveMode(overwrite())->partitionBy(partition_by(ref('color'))))
     ->run();
 
 data_frame()

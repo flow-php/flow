@@ -6,14 +6,34 @@ NativeRowHydrator hydrate/dehydrate are serialize-identical to PhpRowHydrator
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\null_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
-
-use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, date_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, enum_schema, null_schema, json_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_optional};
 
 enum PhptSuit: string
 {
@@ -29,7 +49,7 @@ $datasets = [
         ],
     ],
     'null_nonnullable' => [
-        schema(int_schema('id'), str_schema('name')),
+        schema(int_schema('id'), str_schema('name', nullable: true)),
         [new RawRowValues(['id' => 1, 'name' => null]), new RawRowValues(['id' => 2, 'name' => null])],
     ],
     'absent' => [
@@ -56,7 +76,7 @@ $datasets = [
         schema(
             list_schema('l', type_list(type_integer())),
             map_schema('m', type_map(type_string(), type_integer())),
-            structure_schema('st', type_structure(['a' => type_integer()], ['b' => type_string()], true)),
+            structure_schema('st', type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true)),
             list_schema('opt', type_list(type_optional(type_integer()))),
             json_schema('j'),
         ),
@@ -69,7 +89,7 @@ $datasets = [
         ])],
     ],
     'enum_and_null' => [
-        schema(enum_schema('s', PhptSuit::class), null_schema('n')),
+        schema(enum_schema('s', PhptSuit::class, nullable: true), null_schema('n')),
         [new RawRowValues(['s' => PhptSuit::Hearts, 'n' => null]), new RawRowValues(['s' => null, 'n' => null])],
     ],
     'empty' => [schema(int_schema('id')), []],
@@ -89,7 +109,8 @@ $mutated = schema(int_schema('id'));
 $php->hydrate([new RawRowValues(['id' => 1])], $mutated);
 $native->hydrate([new RawRowValues(['id' => 1])], $mutated);
 $mutated->add(str_schema('name', nullable: true))->makeNullable();
-$batch = [new RawRowValues(['id' => null, 'name' => 'x'])];
+// Schema is immutable, so $mutated never gained "name" - the column is simply not hydrated
+$batch = [new RawRowValues(['id' => 1, 'name' => 'x'])];
 printf(
     "%-16s hydrate:%s\n",
     'schema_mutation',

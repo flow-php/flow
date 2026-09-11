@@ -13,11 +13,11 @@ use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\UnionType;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_structure;
 
 final readonly class TypeProjection
 {
@@ -90,25 +90,18 @@ final readonly class TypeProjection
     {
         $changed = false;
         $elements = [];
-        $optionalElements = [];
 
-        foreach ($type->elements() as $name => $element) {
-            $elements[$name] = $this->project($element);
+        foreach ($type->elements() as $element) {
+            $projected = $this->project($element->type);
 
-            if ($elements[$name] !== $element) {
+            if ($projected !== $element->type) {
                 $changed = true;
             }
+
+            $elements[] = structure_element($element->name, $projected, $element->optional);
         }
 
-        foreach ($type->optionalElements() as $name => $element) {
-            $optionalElements[$name] = $this->project($element);
-
-            if ($optionalElements[$name] !== $element) {
-                $changed = true;
-            }
-        }
-
-        return $changed ? type_structure($elements, $optionalElements, $type->allowsExtra()) : $type;
+        return $changed ? new StructureType($elements, $type->allowsExtra()) : $type;
     }
 
     /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
@@ -15,21 +14,17 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 
 final class MapDefinitionTest extends FlowTestCase
@@ -123,39 +118,25 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
-    public function test_does_not_match_a_list_entry_holding_a_map_shaped_value(): void
-    {
-        $def = map_schema('col', type_map(type_integer(), type_integer()));
-
-        static::assertFalse($def->matches(list_entry('col', [1, 2], type_list(type_integer()))));
-    }
-
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        static::assertFalse($def->matches(map_entry('col', null, type_map(type_string(), type_integer()))));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_an_entry_of_a_different_map_instantiation(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        static::assertFalse($def->matches(map_entry('col', ['a' => 'x'], type_map(type_string(), type_string()))));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = map_schema('data', type_map(type_string(), type_integer()));
-
-        static::assertFalse($def->matches(map_entry('other', ['a' => 1], type_map(type_string(), type_integer()))));
+        static::assertFalse($def->matches(['a' => 'x']));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
     public function test_array_value_is_projected_to_json(): void
@@ -172,11 +153,6 @@ final class MapDefinitionTest extends FlowTestCase
             'map<string, json>',
             map_schema('data', type_map(type_string(), type_empty_array()))->type()->toString(),
         );
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(MapEntry::class, map_schema('data', type_map(type_string(), type_integer()))->entryClass());
     }
 
     /**
@@ -221,6 +197,20 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertTrue($def->isSame($other));
     }
 
+    public function test_is_same_is_field_order_sensitive_for_nested_structures(): void
+    {
+        $def = map_schema('data', type_map(type_string(), type_structure([
+            'a' => type_integer(),
+            'b' => type_string(),
+        ])));
+        $other = map_schema('data', type_map(type_string(), type_structure([
+            'b' => type_string(),
+            'a' => type_integer(),
+        ])));
+
+        static::assertFalse($def->isSame($other));
+    }
+
     public function test_make_nullable(): void
     {
         $def = map_schema('data', type_map(type_string(), type_integer()), false);
@@ -235,14 +225,14 @@ final class MapDefinitionTest extends FlowTestCase
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        static::assertTrue($def->matches(map_entry('col', [], type_map(type_string(), type_string()))));
+        static::assertTrue($def->matches([]));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()));
 
-        static::assertFalse($def->matches(map_entry('col', ['a' => 'x'], type_map(type_string(), type_string()))));
+        static::assertFalse($def->matches(['a' => 'x']));
         static::assertFalse($def->isCompatible(map_schema('col', type_map(type_string(), type_string()))));
     }
 
@@ -250,11 +240,7 @@ final class MapDefinitionTest extends FlowTestCase
     {
         $def = map_schema('data', type_map(type_string(), type_integer()));
 
-        static::assertTrue($def->matches(map_entry(
-            'data',
-            ['a' => 1, 'b' => 2],
-            type_map(type_string(), type_integer()),
-        )));
+        static::assertTrue($def->matches(['a' => 1, 'b' => 2]));
     }
 
     /**
@@ -317,28 +303,21 @@ final class MapDefinitionTest extends FlowTestCase
     {
         $def = map_schema('col', type_map(type_string(), type_integer()), true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()), true);
 
-        static::assertTrue($def->matches(map_entry('col', null, type_map(type_string(), type_integer()))));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = map_schema('col', type_map(type_string(), type_integer()), true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = map_schema('col', type_map(type_string(), type_integer()), true);
 
-        static::assertTrue($def->matches(map_entry('col', ['a' => 1], type_map(type_string(), type_integer()))));
+        static::assertTrue($def->matches(['a' => 1]));
     }
 
     public function test_rename(): void
@@ -371,10 +350,9 @@ final class MapDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = map_schema('col', type_map(type_string(), type_integer()))->merge(union_schema('col', type_union(
-            type_map(type_string(), type_integer()),
-            type_boolean(),
-        )));
+        $merged = map_schema('col', type_map(type_string(), type_integer()))->merge(
+            new UnionDefinition('col', type_union(type_map(type_string(), type_integer()), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|map<string, integer>', $merged->type()->toString());
@@ -385,7 +363,7 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             map_schema('col', type_map(type_string(), type_integer()))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

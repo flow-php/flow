@@ -6,6 +6,7 @@ namespace Flow\Doctrine\Bulk\Dialect;
 
 use Flow\Doctrine\Bulk\UpdateOptions;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
@@ -26,10 +27,14 @@ final readonly class PostgreSQLUpdateOptions implements UpdateOptions
 
     public static function fromArray(array $options): UpdateOptions
     {
-        $options = type_structure(optional_elements: [
-            'primary_key_columns' => type_list(type_string()),
-            'update_columns' => type_list(type_string()),
-            'preserve_existing_values' => type_optional(type_boolean()),
+        $options = type_structure([
+            'primary_key_columns' => structure_element('primary_key_columns', type_list(type_string()), optional: true),
+            'update_columns' => structure_element('update_columns', type_list(type_string()), optional: true),
+            'preserve_existing_values' => structure_element(
+                'preserve_existing_values',
+                type_optional(type_boolean()),
+                optional: true,
+            ),
         ])->assert($options);
 
         return new self(

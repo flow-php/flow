@@ -11,7 +11,8 @@ use Flow\ETL\Rows;
 use function array_map;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function get_debug_type;
 use function is_string;
 use function sprintf;
@@ -35,7 +36,7 @@ final class CacheIndex
         $index = new self($key);
 
         foreach ($rows->all() as $row) {
-            $value = $row->valueOf('key');
+            $value = $row->get('key');
 
             if (!is_string($value)) {
                 throw new InvalidArgumentException(sprintf(
@@ -57,7 +58,10 @@ final class CacheIndex
 
     public function toRows(): Rows
     {
-        return rows(...array_map(static fn(string $value): Row => row(str_entry('key', $value)), $this->index));
+        return rows(
+            schema(str_schema('key')),
+            ...array_map(static fn(string $value): Row => row(['key' => $value]), $this->index),
+        );
     }
 
     /**

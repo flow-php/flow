@@ -13,6 +13,7 @@ use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -22,20 +23,42 @@ use function extension_loaded;
 use function file_exists;
 use function floatval;
 use function Flow\ETL\DSL\generate_random_int;
-use function Flow\ETL\DSL\generate_random_string;
 use function iterator_to_array;
 use function json_encode;
 use function max;
 use function min;
-use function mkdir;
 use function mt_rand;
+use function pack;
 use function range;
 use function round;
 use function sprintf;
-use function unlink;
+use function unpack;
 
 class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 {
+    /**
+     * 100 rows cycling values that are NOT exactly representable in binary32, paired with what
+     * reading them back must produce. `10.25` is the exactly-representable control.
+     *
+     * @param callable(int, float): ?float $pick
+     *
+     * @return array{0: list<array{float: null|float}>, 1: list<array{float: null|float}>}
+     */
+    public static function float32Cases(callable $pick): array
+    {
+        $values = [10.25, 0.1, 1 / 3, 1.0e-8, 18.52, -0.1];
+        $input = [];
+        $widened = [];
+
+        foreach (range(1, 100) as $i) {
+            $value = $pick($i, $values[$i % count($values)]);
+            $input[] = ['float' => $value];
+            $widened[] = ['float' => $value === null ? null : unpack('g', pack('g', $value))[1]];
+        }
+
+        return [$input, $widened];
+    }
+
     public static function decimalPrecisionProvider(): array
     {
         $precisions = [
@@ -67,17 +90,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         return $result;
     }
 
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     #[DataProvider('engine_provider')]
     public function test_writing_bool_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -103,13 +119,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_bool_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -135,13 +150,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_date_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
@@ -169,13 +183,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_date_column_before_1970(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
@@ -206,13 +219,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_date_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
@@ -242,13 +254,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_decimal_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -276,7 +287,6 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('decimalPrecisionProvider')]
@@ -286,7 +296,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         int $scale,
         float $maxValue,
     ): void {
-        $path = __DIR__ . '/var/test-writer-parquet-decimal-precision-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal', $precision, $scale));
@@ -318,13 +328,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_decimal_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -352,13 +361,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_double_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::double('double'));
@@ -386,13 +394,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_double_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::double('double'));
@@ -420,13 +427,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_enum_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::enum('enum'));
@@ -454,30 +460,22 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_float_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = array_merge(...array_map(
-            static fn(int $i): array => [
-                [
-                    'float' => 10.25,
-                ],
-            ],
-            range(1, 100),
-        ));
+        [$inputData, $widened] = self::float32Cases(static fn(int $i, float $value): float => $value);
 
         $writer->write($path, $schema, $inputData);
 
-        static::assertEquals(
-            $inputData,
+        static::assertSame(
+            $widened,
             iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
@@ -486,30 +484,24 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_float_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = array_merge(...array_map(
-            static fn(int $i): array => [
-                [
-                    'float' => ($i % 2) === 0 ? 10.25 : null,
-                ],
-            ],
-            range(1, 100),
-        ));
+        [$inputData, $widened] = self::float32Cases(static fn(int $i, float $value): ?float => ($i % 2) === 0
+            ? $value
+            : null);
 
         $writer->write($path, $schema, $inputData);
 
-        static::assertEquals(
-            $inputData,
+        static::assertSame(
+            $widened,
             iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
@@ -518,13 +510,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_int32_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -552,13 +543,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_int32_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -586,13 +576,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         );
 
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_int64(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -619,13 +608,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_int64_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -652,13 +640,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_json_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::json('json'));
@@ -690,13 +677,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_json_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::json('json'));
@@ -730,13 +716,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_string_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::string('string'));
@@ -763,13 +748,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_string_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::string('string'));
@@ -796,13 +780,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_time_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
@@ -829,13 +812,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_time_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
@@ -864,13 +846,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_timestamp_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -897,13 +878,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_timestamp_column_for_years_before_1970(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -930,13 +910,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_timestamp_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -963,13 +942,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_uuid_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::uuid('uuid'));
@@ -996,13 +974,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_uuid_nullable_column(ParquetEngine $engine): void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::uuid('uuid'));
@@ -1029,6 +1006,5 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertTrue(file_exists($path));
-        unlink($path);
     }
 }

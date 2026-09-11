@@ -7,11 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Profiler;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Throwable;
 
@@ -85,11 +87,20 @@ final class ProfilerClient implements Client
         return $cursor;
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        // A zero-row probe has no row count to record, exactly as explain() has none.
+        return $this->record($sql, $parameters, fn(): array => $this->client->describe($sql, $parameters), null);
+    }
+
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         return $this->record(
             $sql,
-            $parameters,
+            $parameters instanceof ConvertedParameters ? $parameters->values : $parameters,
             fn(): int => $this->client->execute($sql, $parameters),
             static fn(int $affected): int => $affected,
         );

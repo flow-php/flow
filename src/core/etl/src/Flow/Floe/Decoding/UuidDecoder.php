@@ -9,6 +9,7 @@ use Flow\Types\Value\Uuid;
 use ReflectionClass;
 
 use function substr;
+use function unpack;
 
 final class UuidDecoder implements ValueDecoder
 {
@@ -38,8 +39,9 @@ final class UuidDecoder implements ValueDecoder
 
     public function decode(string $data, int &$position): Uuid
     {
-        $value = ($this->create)(substr($data, $position, 36));
-        $position += 36;
+        $length = unpack('V', $data, $position)[1];
+        $value = ($this->create)(substr($data, $position + 4, $length));
+        $position += 4 + $length;
 
         return $value;
     }

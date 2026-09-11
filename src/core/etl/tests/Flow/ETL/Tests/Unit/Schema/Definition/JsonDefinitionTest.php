@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\JsonDefinition;
@@ -16,12 +15,9 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\definition_from_type;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_integer;
@@ -94,31 +90,22 @@ final class JsonDefinitionTest extends FlowTestCase
     {
         $def = json_schema('col');
 
-        static::assertFalse($def->matches(json_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = json_schema('data');
-
-        static::assertFalse($def->matches(json_entry('other', ['key' => 'value'])));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = json_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_empty_array_type_produces_json_definition(): void
+    public function test_empty_array_type_is_refused_rather_than_typed_as_json(): void
     {
-        static::assertInstanceOf(JsonDefinition::class, definition_from_type('data', type_empty_array()));
-    }
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Column "data" cannot be typed as array{}');
 
-    public function test_entry_class(): void
-    {
-        static::assertSame(JsonEntry::class, json_schema('data')->entryClass());
+        definition_from_type('data', type_empty_array());
     }
 
     /**
@@ -177,7 +164,7 @@ final class JsonDefinitionTest extends FlowTestCase
     {
         $def = json_schema('data');
 
-        static::assertTrue($def->matches(json_entry('data', ['key' => 'value'])));
+        static::assertTrue($def->matches(type_json()->cast(['key' => 'value'])));
     }
 
     /**
@@ -240,28 +227,21 @@ final class JsonDefinitionTest extends FlowTestCase
     {
         $def = json_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = json_schema('col', true);
 
-        static::assertTrue($def->matches(json_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = json_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = json_schema('col', true);
 
-        static::assertTrue($def->matches(json_entry('col', ['key' => 'value'])));
+        static::assertTrue($def->matches(type_json()->cast(['key' => 'value'])));
     }
 
     public function test_rename(): void
@@ -294,7 +274,7 @@ final class JsonDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = json_schema('col')->merge(union_schema('col', type_union(type_json(), type_boolean())));
+        $merged = json_schema('col')->merge(new UnionDefinition('col', type_union(type_json(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|json', $merged->type()->toString());
@@ -305,7 +285,7 @@ final class JsonDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             json_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

@@ -4,17 +4,62 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
+use Flow\ETL\ErrorHandler\ExtractionError;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Pipeline\Segments;
 use Flow\ETL\Processor;
+use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer;
 use Generator;
+use PHPUnit\Framework\Attributes\TestWith;
+use RuntimeException;
+
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function iterator_to_array;
 
 final class SegmentsTest extends FlowTestCase
 {
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function test_replacing_the_extractor_reaches_the_segment_that_reads_it(bool $behindProcessor): void
+    {
+        $segments = new Segments(from_rows(rows(schema())));
+
+        if ($behindProcessor) {
+            $segments->add(new BatchingProcessor(10));
+        }
+
+        $replacement = from_rows(rows(schema()));
+        $segments->replaceExtractor($replacement);
+
+        $handler = new RecordingErrorHandler();
+
+        iterator_to_array($segments->all()[0]->execute(
+            (static function (): Generator {
+                yield RowsMother::sequentialIds(1);
+
+                throw new RuntimeException('source failed');
+            })(),
+            flow_context(config())->setErrorHandler($handler),
+        ));
+
+        $error = $handler->errors[0];
+
+        static::assertInstanceOf(ExtractionError::class, $error);
+        static::assertSame($replacement, $error->extractor);
+    }
+
     public function test_add_loader_to_current_segment(): void
     {
         $segments = new Segments();
@@ -273,6 +318,11 @@ final class SegmentsTest extends FlowTestCase
     private function createStubProcessor(): Processor
     {
         return new class implements Processor {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function process(Generator $rows, FlowContext $context): Generator
             {
                 yield from $rows;
@@ -283,6 +333,11 @@ final class SegmentsTest extends FlowTestCase
     private function createStubTransformer(): Transformer
     {
         return new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 return $rows;

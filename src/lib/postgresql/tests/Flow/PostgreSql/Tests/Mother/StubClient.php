@@ -7,11 +7,13 @@ namespace Flow\PostgreSql\Tests\Mother;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 
@@ -46,7 +48,15 @@ final class StubClient implements Client
         throw new RuntimeException('StubClient is inert');
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        throw new RuntimeException('StubClient is inert');
+    }
+
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         throw new RuntimeException('StubClient is inert');
     }

@@ -1,0 +1,4 @@
+priority: 1
+hidden: false
+run:
+  skip: "reads the GitHub API over HTTP; the playground sandbox has no network"

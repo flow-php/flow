@@ -15,6 +15,7 @@ use Throwable;
 
 use function Flow\Types\DSL\type_time;
 use function is_string;
+use function strlen;
 
 /**
  * @template T of \DateInterval
@@ -48,10 +49,36 @@ final readonly class TimeType implements Type
 
         try {
             if (is_string($value)) {
+                $matches = [];
+
+                if (preg_match('/^(\d{1,3}):([0-5]\d):([0-5]\d)(?:\.(\d{1,6}))?$/', $value, $matches) === 1) {
+                    $interval = new DateInterval(sprintf(
+                        'PT%dH%dM%dS',
+                        (int) $matches[1],
+                        (int) $matches[2],
+                        (int) $matches[3],
+                    ));
+
+                    if (array_key_exists(4, $matches) && $matches[4] !== '') {
+                        // @mago-ignore analysis:invalid-property-write
+                        $interval->f = (int) $matches[4] / (10 ** strlen($matches[4]));
+                    }
+
+                    return $interval;
+                }
+
                 return new DateInterval($value);
             }
         } catch (Throwable) {
             throw new CastingException($value, type_time());
+        }
+
+        if ($value instanceof DateInterval) {
+            throw new CastingException(
+                $value,
+                $this,
+                reason: "Relative DateInterval (with months/years) can't be cast to time",
+            );
         }
 
         throw new CastingException($value, $this);
@@ -59,7 +86,7 @@ final readonly class TimeType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return $value instanceof DateInterval;
+        return $value instanceof DateInterval && $value->y === 0 && $value->m === 0;
     }
 
     public function normalize(): array

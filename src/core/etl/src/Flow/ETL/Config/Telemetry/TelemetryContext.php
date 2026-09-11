@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
+use Flow\ETL\Config\Sort\ExternalSortConfig;
+use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Dataset\Memory\Consumption;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
@@ -11,7 +13,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Optimizer\Optimization;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\Filesystem\Filesystem;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\Scope;
@@ -32,7 +33,7 @@ use function array_merge;
 use function round;
 
 /**
- * @phpstan-import-type TAttributeValueMap from Attributes
+ * @import-type TAttributeValueMap from Attributes
  */
 final class TelemetryContext
 {
@@ -234,10 +235,13 @@ final class TelemetryContext
                     'trace_transformations' => $this->options->traceTransformations,
                     'collect_metrics' => $this->options->collectMetrics,
                 ],
-                'fstab' => array_map(
-                    static fn(Filesystem $filesystem) => $filesystem::class,
-                    $context->config->fstab()->filesystems(),
-                ),
+                'spill' => [
+                    'sort' => $context->config->sort instanceof ExternalSortConfig
+                        ? $context->config->sort->bucketing->storage::class
+                        : MemorySortConfig::class,
+                    'group_by' => $context->config->grouping->bucketing->storage::class,
+                    'join' => $context->config->join->bucketing->storage::class,
+                ],
             ],
             spanContext: $dataFrameSpan->context(),
         );

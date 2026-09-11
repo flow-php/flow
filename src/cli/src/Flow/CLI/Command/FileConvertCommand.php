@@ -10,6 +10,7 @@ use Flow\CLI\Command\Traits\CSVOptions;
 use Flow\CLI\Command\Traits\ExcelOptions;
 use Flow\CLI\Command\Traits\JSONOptions;
 use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\SchemaInferenceOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Factory\LoaderFactory;
@@ -19,6 +20,7 @@ use Flow\CLI\Options\FileFormatOption;
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,6 +35,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\overwrite;
 use function number_format;
 
+#[AsCommand(name: 'file:convert', description: 'Convert data from one file format to another.', aliases: ['convert'])]
 final class FileConvertCommand extends Command
 {
     use ConfigOptions;
@@ -40,6 +43,7 @@ final class FileConvertCommand extends Command
     use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
+    use SchemaInferenceOptions;
     use XMLOptions;
 
     private const int DEFAULT_BATCH_SIZE = 100;
@@ -57,8 +61,6 @@ final class FileConvertCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:read')
-            ->setDescription('Read data from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,
@@ -76,14 +78,14 @@ final class FileConvertCommand extends Command
                 'input-file-batch-size',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once',
+                'Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once',
                 self::DEFAULT_BATCH_SIZE,
             )
             ->addOption(
                 'input-file-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                'Limit number of rows read from the file.',
                 null,
             )
             ->addOption(
@@ -107,13 +109,6 @@ final class FileConvertCommand extends Command
                 'When set output file will be overwritten if exists',
             )
             ->addOption(
-                'schema-auto-cast',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
-                false,
-            )
-            ->addOption(
                 'analyze',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -130,6 +125,7 @@ final class FileConvertCommand extends Command
         $this->addXMLInputOptions($this);
         $this->addXMLOutputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addSchemaInferenceOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -146,8 +142,18 @@ final class FileConvertCommand extends Command
 
         $style = new SymfonyStyle($input, $output);
 
-        $df = df($this->flowConfig)
-            ->read((new ExtractorFactory($this->inputFile, $this->inputFileFormat))->get($input));
+        // Hoisted: applySchemaInference() is a method call on $this, which drops the null-narrowing
+        // the guard above established on these properties.
+        $outputFile = $this->outputFile;
+        $outputFileFormat = $this->outputFileFormat;
+
+        $extractor = (new ExtractorFactory($this->inputFile, $this->inputFileFormat))->get($input);
+
+        if (!$this->applySchemaInference($extractor, $input, $style)) {
+            return Command::FAILURE;
+        }
+
+        $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
 
@@ -158,10 +164,6 @@ final class FileConvertCommand extends Command
         }
 
         $df->batchSize($batchSize);
-
-        if (option_bool('schema-auto-cast', $input)) {
-            $df->autoCast();
-        }
 
         $limit = option_int_nullable('input-file-limit', $input);
 
@@ -175,18 +177,16 @@ final class FileConvertCommand extends Command
             $df->offset($offset);
         }
 
-        $overwrite = option_bool('output-overwrite', $input);
+        $loader = (new LoaderFactory($outputFile, $outputFileFormat))->get($input);
 
-        if ($overwrite) {
-            $df->saveMode(overwrite());
+        if (option_bool('output-overwrite', $input)) {
+            $loader->saveMode(overwrite());
         }
 
-        $report = $df->write((new LoaderFactory($this->outputFile, $this->outputFileFormat))->get(
-            $input,
-        ))->run(analyze: option_bool('analyze', $input));
+        $report = $df->write($loader)->run(analyze: option_bool('analyze', $input));
 
         $style->success('File has been converted.');
-        $style->note('File has been saved to: ' . $this->outputFile->uri());
+        $style->note('File has been saved to: ' . $outputFile->uri());
 
         if ($report !== null) {
             $style->writeln(
@@ -200,7 +200,7 @@ final class FileConvertCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->inputFile = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->inputFile = (new FilePathArgument('input-file'))->getExisting($input);
         $this->outputFile = (new FilePathArgument('output-file'))->get($input);
         $this->inputFileFormat = (new FileFormatOption($this->inputFile, 'input-file-format'))->get($input);
         $this->outputFileFormat = (new FileFormatOption($this->outputFile, 'output-file-format'))->get($input);

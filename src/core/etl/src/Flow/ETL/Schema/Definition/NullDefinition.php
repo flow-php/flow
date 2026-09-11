@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
@@ -17,6 +16,12 @@ use function Flow\Types\DSL\type_null;
 use function sprintf;
 
 /**
+ * The bottom of the type lattice: the column's type is not known. Absorbed by merge() in both
+ * directions - null ⊔ T = ?T, T ⊔ null = ?T, null ⊔ null = null. Reaches a materialized Schema
+ * only when a column is null in every observed row and no type was declared; that is Parquet's
+ * UNKNOWN and Iceberg's unknown. A column that holds strings and sometimes null is
+ * StringDefinition(nullable: true), never this.
+ *
  * @implements Definition<null>
  */
 final readonly class NullDefinition implements Definition
@@ -32,7 +37,7 @@ final readonly class NullDefinition implements Definition
 
     public function __construct(string|Reference $ref, ?Metadata $metadata = null)
     {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = type_null();
     }
@@ -56,7 +61,7 @@ final readonly class NullDefinition implements Definition
             return false;
         }
 
-        return type_equals($this->type, $definition->type());
+        return $definition->isNullable() || type_equals($this->type, $definition->type());
     }
 
     public function isNullable(): bool
@@ -82,9 +87,9 @@ final readonly class NullDefinition implements Definition
         return new self($this->ref, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        return $entry->is($this->ref) && $entry->value() === null;
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -135,13 +140,5 @@ final readonly class NullDefinition implements Definition
     public function type(): Type
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\NullEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\NullEntry::class;
     }
 }

@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
 use Flow\Types\Type\TypeFactory;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -71,6 +72,13 @@ final class TypeFactoryTest extends TestCase
         $emptyArray = type_empty_array();
         static::assertEquals($emptyArray, type_from_array($emptyArray->normalize()));
         static::assertEquals($emptyArray, TypeFactory::fromString('empty_array'));
+    }
+
+    #[TestWith(['double'])]
+    #[TestWith(['real'])]
+    public function test_double_and_real_resolve_to_float(string $alias): void
+    {
+        static::assertEquals(type_float(), TypeFactory::fromString($alias));
     }
 
     public function test_normalizing_and_creating_enum_type(): void

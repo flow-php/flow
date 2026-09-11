@@ -1,1 +1,0 @@
-- [Excel Adapter](/documentation/components/adapters/excel)

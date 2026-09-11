@@ -145,7 +145,7 @@ $schema = $reader->schema();
 $metadata = $reader->metadata();
 
 // Read row groups (with optional column projection)
-while ($batch = $reader->readNextRowGroup(['id', 'name'])) {
+while ($batch = $reader->readRowGroup(['id', 'name'])) {
     // $batch is ['column_name' => [values...], ...]
     foreach ($batch['id'] as $i => $id) {
         echo "$id: {$batch['name'][$i]}\n";
@@ -260,7 +260,7 @@ $writer = new Writer($stream, $schema, 'SNAPPY', [
 | `__construct` | `RandomAccessFile $source, array $options = []` | - | Open a Parquet source for reading |
 | `schema` | - | `array` | Return the file schema as nested arrays |
 | `metadata` | - | `array` | Return file-level metadata (row count, row groups, key-value metadata) |
-| `readNextRowGroup` | `?array $columns = null` | `?array` | Read next row group as columnar batch, or `null` when exhausted |
+| `readRowGroup` | `?array $columns = null` | `?array` | Read next row group as columnar batch, or `null` when exhausted |
 | `close` | - | `void` | Release resources |
 
 **`Flow\Arrow\Parquet\Writer`**
@@ -285,7 +285,7 @@ use Flow\Arrow\Parquet\Reader;
 
 try {
     $reader = new Reader(new FileSource('data.parquet'));
-    while ($batch = $reader->readNextRowGroup()) {
+    while ($batch = $reader->readRowGroup()) {
         // process batch
     }
     $reader->close();

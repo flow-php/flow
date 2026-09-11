@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Stream;
 
 use Flow\Filesystem\Stream\StringSourceStream;
+use Flow\Filesystem\Tests\Context\ReadLinesContext;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;
@@ -46,11 +48,25 @@ final class StringSourceStreamTest extends TestCase
         static::assertSame(['foo', 'bar'], iterator_to_array($stream->iterate(3)));
     }
 
-    public function test_read_lines_splits_on_the_separator_and_skips_empty_lines(): void
-    {
-        $stream = new StringSourceStream(path('memory://lines.bin'), "a\nb\n\nc");
-
-        static::assertSame(['a', 'b', 'c'], iterator_to_array($stream->readLines()));
+    /**
+     * @param non-empty-string $separator
+     * @param null|int<1, max> $length
+     * @param list<string> $expected
+     */
+    #[DataProviderExternal(ReadLinesContext::class, 'cases')]
+    public function test_read_lines_conforms_to_the_source_stream_contract(
+        string $content,
+        string $separator,
+        ?int $length,
+        array $expected,
+    ): void {
+        static::assertSame(
+            $expected,
+            iterator_to_array((new StringSourceStream(path('memory://lines.bin'), $content))->readLines(
+                $separator,
+                $length,
+            )),
+        );
     }
 
     public function test_is_open_is_always_true(): void

@@ -9,6 +9,8 @@ use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 use function array_column;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
 use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
@@ -48,7 +50,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -66,7 +68,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                     $this->client,
                     select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
                 )
-                    ->withPageSize(5)
+                    ->withBatchSize(5)
                     ->withMaximum(12),
             )
             ->fetch()
@@ -85,7 +87,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2 ORDER BY id',
                 [5, 15],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -101,7 +103,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' ORDER BY id',
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -118,7 +120,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1 ORDER BY id',
                 [10],
-            )->withPageSize(5))
+            )->withBatchSize(5))
             ->fetch()
             ->toArray();
 
@@ -137,7 +139,7 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
                 . $this->tableName
                 . ' WHERE id >= $1 AND id <= $2 AND name LIKE $3 ORDER BY id',
                 [5, 15, 'User_%'],
-            )->withPageSize(3))
+            )->withBatchSize(3))
             ->fetch()
             ->toArray();
 
@@ -155,11 +157,77 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
             ->read(from_pgsql_limit_offset(
                 $this->client,
                 select(star())->from(table($this->tableName))->orderBy(asc(col('id'))),
-            )->withPageSize(10))
+            )->withBatchSize(10))
             ->fetch()
             ->toArray();
 
         static::assertSame([], $rows);
+    }
+
+    public function test_schema_and_extract_agree(): void
+    {
+        $extractor = from_pgsql_limit_offset(
+            $this->client,
+            sprintf('SELECT id, name FROM %s ORDER BY id', $this->tableName),
+        );
+        $batch = df()->read($extractor)->fetch();
+
+        static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+        static::assertTrue($batch->schema()->isSame($extractor->schema()));
+    }
+
+    public function test_schema_comes_from_result_metadata(): void
+    {
+        $schema = from_pgsql_limit_offset(
+            $this->client,
+            sprintf('SELECT id, name FROM %s ORDER BY id', $this->tableName),
+        )->schema();
+
+        static::assertSame(['id', 'name'], $schema->references()->names());
+        static::assertTrue($schema->findDefinition('id')?->isNullable());
+        static::assertTrue($schema->findDefinition('name')?->isNullable());
+    }
+
+    public function test_a_parameterised_query_describes(): void
+    {
+        $extractor = from_pgsql_limit_offset(
+            $this->client,
+            sprintf('SELECT id, name FROM %s WHERE id > $1 ORDER BY id', $this->tableName),
+            [20],
+        );
+
+        static::assertSame(['id', 'name'], $extractor->schema()->references()->names());
+        static::assertCount(5, df()->read($extractor)->fetch()->toArray());
+    }
+
+    public function test_a_trailing_semicolon_query_still_describes(): void
+    {
+        static::assertSame(
+            ['id'],
+            from_pgsql_limit_offset($this->client, sprintf('SELECT id FROM %s ORDER BY id;', $this->tableName))
+                ->schema()
+                ->references()
+                ->names(),
+        );
+    }
+
+    public function test_reads_inside_from_all(): void
+    {
+        // ChainExtractor matches every child batch to its own schema(), so an extractor that derives
+        // schema() but leaves extract() untyped throws SchemaMismatchException here.
+        static::assertCount(
+            26,
+            df()
+                ->read(from_all(
+                    from_pgsql_limit_offset(
+                        $this->client,
+                        sprintf('SELECT id, name FROM %s ORDER BY id', $this->tableName),
+                    ),
+                    from_array([['id' => 99, 'name' => 'from array']]),
+                ))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     private function insertTestData(int $count): void

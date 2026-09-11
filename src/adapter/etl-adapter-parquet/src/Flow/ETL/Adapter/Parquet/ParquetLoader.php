@@ -5,28 +5,49 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 use Throwable;
 
-use function array_key_exists;
-use function count;
+use function sprintf;
 
-final class ParquetLoader implements Closure, FileLoader, Loader
+final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
+    private readonly Filesystem $filesystem;
+
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
+
+    private ?FilesSink $files = null;
+
+    /** @var array<string, Writer> */
+    private array $writers = [];
+
     private Compressions $compressions = Compressions::SNAPPY;
 
     private readonly SchemaConverter $converter;
@@ -43,28 +64,48 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     private ?Schema $schema = null;
 
-    /**
-     * @var array<string, Writer>
-     */
-    private array $writers = [];
-
-    public function __construct(Path $path)
+    public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. to_parquet($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->converter = new SchemaConverter();
-        $this->options = Options::default();
+        // every row reaching a loader was validated where it entered the pipeline, so the writer does not validate
+        // each value against the column again - withOptions() can still turn it back on
+        $this->options = Options::default()->set(ParquetOption::VALIDATE_DATA, false);
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
     {
-        if (count($this->writers)) {
-            foreach ($this->writers as $writer) {
-                $writer->close();
-            }
-        }
+        $this->closeWriters();
 
-        $context->streams()->closeStreams($this->path);
-        $this->writers = [];
+        $this->files?->publish();
+        $this->files = null;
+    }
+
+    public function discard(FlowContext $context): void
+    {
+        $this->closeWriters();
+
+        $this->files?->abandon();
+        $this->files = null;
     }
 
     public function destination(): Path
@@ -83,44 +124,15 @@ final class ParquetLoader implements Closure, FileLoader, Loader
                 $this->inferSchema($rows);
             }
 
-            $encoded = $this->encoder()->encode($context->hydrator()->dehydrate($rows));
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
 
-            $streams = $context->streams();
-
-            if ($rows->partitions()->count()) {
-                $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
-
-                if (!array_key_exists($stream->path()->uri(), $this->writers)) {
-                    $this->writers[$stream->path()->uri()] = new Writer(
-                        compression: $this->compressions,
-                        options: $this->options,
-                        engine: $this->engine ?? new AdaptiveParquetEngine(),
-                    );
-
-                    $this->writers[$stream->path()->uri()]->openForStream(
-                        $stream,
-                        $this->converter->toParquet($this->schema()),
-                    );
-                }
-
-                $this->writers[$stream->path()->uri()]->writeBatch($encoded);
-            } else {
-                $stream = $streams->writeTo($this->path);
-
-                if (!array_key_exists($stream->path()->uri(), $this->writers)) {
-                    $this->writers[$stream->path()->uri()] = new Writer(
-                        compression: $this->compressions,
-                        options: $this->options,
-                        engine: $this->engine ?? new AdaptiveParquetEngine(),
-                    );
-
-                    $this->writers[$stream->path()->uri()]->openForStream(
-                        $stream,
-                        $this->converter->toParquet($this->schema()),
-                    );
-                }
-
-                $this->writers[$stream->path()->uri()]->writeBatch($encoded);
+                ($this->writers[$stream->path()->uri()] ??=
+                    $this->openWriter($stream))->writeBatch($this->encoder()->encode(
+                    $context->hydrator()->dehydrate($group),
+                ));
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -129,6 +141,13 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
             throw $e;
         }
+    }
+
+    public function saveMode(SaveMode $mode): static
+    {
+        $this->saveMode = $mode;
+
+        return $this;
     }
 
     public function withCompressions(Compressions $compressions): self
@@ -152,11 +171,19 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 
         return $this;
+    }
+
+    private function closeWriters(): void
+    {
+        foreach ($this->writers as $uri => $writer) {
+            unset($this->writers[$uri]);
+            $writer->close();
+        }
     }
 
     private function encoder(): ParquetEncoder
@@ -171,6 +198,18 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         } else {
             $this->inferredSchema = $this->inferredSchema->merge($rows->schema())->makeNullable();
         }
+    }
+
+    private function openWriter(DestinationStream $stream): Writer
+    {
+        $writer = new Writer(
+            compression: $this->compressions,
+            options: $this->options,
+            engine: $this->engine ?? new AdaptiveParquetEngine(),
+        );
+        $writer->openForStream($stream, $this->converter->toParquet($this->schema()));
+
+        return $writer;
     }
 
     private function schema(): Schema

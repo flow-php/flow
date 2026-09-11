@@ -11,6 +11,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Schema;
+use Flow\Types\Type\TypedValueFormatter;
 
 use function implode;
 use function is_array;
@@ -34,11 +36,11 @@ final class SortedByConstraint implements Constraint
         $this->references = new References($column, ...$columns);
     }
 
-    public function isSatisfiedBy(Row $row): bool
+    public function isSatisfiedBy(Row $row, Schema $schema): bool
     {
         if ($this->firstRow) {
             foreach ($this->references->all() as $reference) {
-                $this->previousValues[$reference->name()] = $row->valueOf($reference);
+                $this->previousValues[$reference->name()] = $row->get($reference);
             }
             $this->firstRow = false;
 
@@ -46,7 +48,7 @@ final class SortedByConstraint implements Constraint
         }
 
         foreach ($this->references->all() as $reference) {
-            $currentValue = $row->valueOf($reference);
+            $currentValue = $row->get($reference);
             $previousValue = $this->previousValues[$reference->name()];
 
             $direction = $reference->sort();
@@ -83,7 +85,7 @@ final class SortedByConstraint implements Constraint
 
             if ($comparison < 0) {
                 foreach ($this->references->all() as $ref) {
-                    $this->previousValues[$ref->name()] = $row->valueOf($ref);
+                    $this->previousValues[$ref->name()] = $row->get($ref);
                 }
 
                 return true;
@@ -95,7 +97,7 @@ final class SortedByConstraint implements Constraint
         }
 
         foreach ($this->references->all() as $reference) {
-            $this->previousValues[$reference->name()] = $row->valueOf($reference);
+            $this->previousValues[$reference->name()] = $row->get($reference);
         }
 
         return true;
@@ -112,20 +114,21 @@ final class SortedByConstraint implements Constraint
         return sprintf('Sorted constraint on [%s]', implode(', ', $columns));
     }
 
-    public function violation(Row $row): string
+    public function violation(Row $row, Schema $schema): string
     {
+        $formatter = new TypedValueFormatter();
         $violations = [];
 
         foreach ($this->references->all() as $reference) {
-            $entry = $row->get($reference);
+            $definition = $schema->get($reference);
             $previousValue = $this->previousValues[$reference->name()] ?? null;
 
             $violations[] = sprintf(
                 '%s<%s> expected %s order, current: %s, previous: %s',
-                $entry->name(),
-                $entry->type()->toString(),
+                $reference->name(),
+                $definition->type()->toString(),
                 $reference->sort()->name,
-                $entry->toString(),
+                $formatter->format($definition->type(), $row->get($reference)),
                 $previousValue === null ? 'null' : var_export($previousValue, true),
             );
         }

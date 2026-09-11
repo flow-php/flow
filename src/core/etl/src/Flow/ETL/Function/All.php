@@ -6,9 +6,17 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
+use Flow\Types\Type\Nullability;
+
+use function array_map;
+use function array_values;
+use function Flow\Types\DSL\type_boolean;
 
 final readonly class All implements ScalarFunction
 {
+    use ResolvesFromChildren;
+
     /**
      * @var array<ScalarFunction>
      */
@@ -29,15 +37,53 @@ final readonly class All implements ScalarFunction
         return new self(...$this->functions, ...[new Not($scalarFunction)]);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
     {
+        return array_values($this->functions);
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self(...$children);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return (new Nullability())->any(type_boolean(), ...array_map(
+            static fn(ScalarFunction $function): Type => $function->returns(),
+            array_values($this->functions),
+        ));
+    }
+
+    public function eval(Row $row, FlowContext $context): ?bool
+    {
+        $sawNull = false;
+
         foreach ($this->functions as $ref) {
-            if (!(new Parameter($ref))->eval($row, $context)) {
+            $value = (new Parameter($ref))->eval($row, $context);
+
+            if ($value === null) {
+                $sawNull = true;
+
+                continue;
+            }
+
+            if (!$value) {
                 return false;
             }
         }
 
-        return true;
+        return $sawNull ? null : true;
     }
 
     public function or(ScalarFunction $scalarFunction): Any

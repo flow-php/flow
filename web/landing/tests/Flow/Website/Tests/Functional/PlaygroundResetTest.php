@@ -8,9 +8,8 @@ final class PlaygroundResetTest extends EndToEndTestCase
 {
     public function test_reset_clears_custom_code_and_restores_default(): void
     {
-        $client = self::navigateWithRetry('/playground');
-
-        $this->waitForWasmReady($client);
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
 
         $customCode = <<<'PHP'
             <?php
@@ -18,18 +17,15 @@ final class PlaygroundResetTest extends EndToEndTestCase
             echo "Custom code for reset test - " . uniqid();
             PHP;
 
-        $this->setPlaygroundCode($client, $customCode);
+        $this->setPlaygroundCode($page, $customCode);
 
-        $codeBeforeReset = $this->getPlaygroundCode($client);
-        static::assertStringContainsString('Custom code for reset test', $codeBeforeReset);
+        static::assertStringContainsString('Custom code for reset test', $this->getPlaygroundCode($page));
 
-        $client->executeScript('document.getElementById("action-reset").click();');
+        $this->acceptDialogs($page);
+        $page->evaluate('() => document.getElementById("action-reset").click()');
 
-        $client->switchTo()->alert()->accept();
-
-        $this->waitForWasmReady($client);
-
-        $codeAfterReset = $this->getPlaygroundCode($client);
+        $this->waitForWasmReady($page);
+        $codeAfterReset = $this->getPlaygroundCode($page);
 
         static::assertStringNotContainsString('Custom code for reset test', $codeAfterReset);
         static::assertNotEquals($customCode, $codeAfterReset);

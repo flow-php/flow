@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -65,7 +66,7 @@ final class ConcatTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat(ref('id'), '-', array_get(ref('array'), 'field')))
+            ->withEntry('concat', optional(concat(ref('id'), '-', array_get(ref('array'), 'field'))))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -73,7 +74,7 @@ final class ConcatTest extends FlowTestCase
         static::assertSame(
             [
                 ['id' => 1, 'concat' => '1-value'],
-                ['id' => 2, 'concat' => '2-'],
+                ['id' => 2, 'concat' => null],
             ],
             $memory->dump(),
         );

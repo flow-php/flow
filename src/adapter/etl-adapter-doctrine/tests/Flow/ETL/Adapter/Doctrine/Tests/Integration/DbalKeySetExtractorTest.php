@@ -63,7 +63,7 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
             ->fetch();
     }
 
-    public function test_throws_exception_for_invalid_page_size(): void
+    public function test_throws_exception_for_invalid_batch_size(): void
     {
         $this->pgsqlDatabaseContext->createTable(to_dbal_schema_table(
             schema(
@@ -76,14 +76,14 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->insert($table, ['id' => 1, 'name' => 'name_1']);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Page size must be greater than 0, got 0');
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
 
         data_frame()
             ->extract(from_dbal_key_set_qb(
                 $this->pgsqlDatabaseContext->connection(),
                 $this->pgsqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
                 pagination_key_set(pagination_key_asc('id')),
-            )->withPageSize(0))
+            )->withBatchSize(0))
             ->fetch();
     }
 

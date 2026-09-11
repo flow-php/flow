@@ -14,6 +14,5 @@ final readonly class CacheConfig
     public function __construct(
         public Cache $cache,
         public Path $localFilesystemCacheDir,
-        public string $filesystemMount = 'file',
     ) {}
 }

@@ -65,7 +65,7 @@ echo $cache->getItem('greeting')->get();
 
 ## Constructor
 
-```php
+```php ignore
 new FlowPostgreSqlCacheAdapter(
     ConnectionParameters|Client $connection,
     string $namespace = '',

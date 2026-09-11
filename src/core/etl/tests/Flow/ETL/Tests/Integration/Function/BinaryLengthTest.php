@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
@@ -29,7 +30,7 @@ final class BinaryLengthTest extends FlowTestCase
                 ['text' => 'é'],
                 ['text' => "\x00\x01\x02\xFF"],
             ]))
-            ->withEntry('binary_length', ref('text')->binaryLength())
+            ->withEntry('binary_length', optional(ref('text')->binaryLength()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

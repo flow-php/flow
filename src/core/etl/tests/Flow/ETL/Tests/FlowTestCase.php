@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -12,8 +15,9 @@ use RuntimeException;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function getenv;
-use function iterator_to_array;
+use function max;
 
 /**
  * Base test case for testing FLow, designed mostly for unit tests.
@@ -21,34 +25,82 @@ use function iterator_to_array;
  */
 abstract class FlowTestCase extends TestCase
 {
-    final public static function assertExtractedBatchesCount(
-        int $expectedCount,
-        Extractor $extractor,
-        ?FlowContext $flowContext = null,
+    /**
+     * $factory returns a FRESH extractor per call, because every check below drains its own.
+     *
+     * @param callable(): (BatchableExtractor&Extractor) $factory
+     */
+    final public static function assertExtractorHonoursBatchContract(
+        callable $factory,
+        Rows $expected,
         string $message = '',
     ): void {
-        $flowContext ??= flow_context();
+        foreach ([1, 3, 1000] as $size) {
+            $collected = rows(schema());
+            $extractor = $factory()->withBatchSize($size);
 
-        static::assertCount($expectedCount, iterator_to_array($extractor->extract($flowContext)), $message);
+            foreach ($extractor->extract(flow_context()) as $batch) {
+                static::assertLessThanOrEqual($extractor->batchSize(), $batch->count(), $message);
+                $collected = $collected->merge($batch);
+            }
+
+            static::assertEquals($expected->toArray(), $collected->toArray(), $message);
+        }
+
+        // the assertion an unbatched extractor fails
+        if ($expected->count() > 1) {
+            $largest = 0;
+
+            foreach ($factory()->withBatchSize(1000)->extract(flow_context()) as $batch) {
+                $largest = max($largest, $batch->count());
+            }
+
+            static::assertGreaterThan(1, $largest, $message);
+        }
+
+        // size 1, so any fixture of two rows or more yields a second batch that STOP must prevent
+        $generator = $factory()->withBatchSize(1)->extract(flow_context());
+        static::assertTrue($generator->valid(), $message);
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid(), $message);
+
+        $extractor = $factory();
+
+        if ($extractor instanceof RewindableExtractor && $extractor->isRepeatable()) {
+            $first = rows(schema());
+            $second = rows(schema());
+
+            foreach ($extractor->extract(flow_context()) as $batch) {
+                $first = $first->merge($batch);
+            }
+
+            foreach ($extractor->extract(flow_context()) as $batch) {
+                $second = $second->merge($batch);
+            }
+
+            static::assertEquals($first->toArray(), $second->toArray(), $message);
+        }
     }
 
-    final public static function assertExtractedBatchesSize(
-        int $expectedCount,
-        Extractor $extractor,
-        ?FlowContext $flowContext = null,
+    /**
+     * withMaximum() is source configuration, not a plan operator, so nothing downstream can enforce it.
+     *
+     * @param callable(int): (BatchableExtractor&Extractor) $factory
+     */
+    final public static function assertExtractorHonoursMaximum(
+        callable $factory,
+        int $maximum,
         string $message = '',
     ): void {
-        $flowContext ??= flow_context();
-        $extractorContainsBatches = false;
+        $extractor = $factory($maximum)->withBatchSize(1000);
+        $total = 0;
 
-        foreach ($extractor->extract($flowContext) as $rows) {
-            static::assertCount($expectedCount, $rows, $message);
-            $extractorContainsBatches = true;
+        foreach ($extractor->extract(flow_context()) as $batch) {
+            static::assertLessThanOrEqual(1000, $batch->count(), $message);
+            $total += $batch->count();
         }
 
-        if (!$extractorContainsBatches) {
-            static::fail('Extractor does not contain any batches');
-        }
+        static::assertSame($maximum, $total, $message);
     }
 
     /**
@@ -61,7 +113,7 @@ abstract class FlowTestCase extends TestCase
         string $message = '',
     ): void {
         $flowContext ??= flow_context();
-        $extractedRows = rows();
+        $extractedRows = rows(schema());
 
         foreach ($extractor->extract($flowContext) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);
@@ -93,7 +145,7 @@ abstract class FlowTestCase extends TestCase
         string $message = '',
     ): void {
         $flowContext ??= flow_context();
-        $extractedRows = rows();
+        $extractedRows = rows(schema());
 
         foreach ($extractor->extract($flowContext) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);

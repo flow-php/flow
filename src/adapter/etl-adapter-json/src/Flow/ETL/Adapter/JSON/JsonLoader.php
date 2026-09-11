@@ -6,13 +6,21 @@ namespace Flow\ETL\Adapter\JSON;
 
 use DateTimeInterface;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesSink;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\Discardable;
 use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\Partitioning;
+use Flow\ETL\Loader\PartitioningLoader;
+use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
-use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
@@ -20,10 +28,18 @@ use Flow\Filesystem\Path\Option\ContentType;
 use JsonException;
 use Throwable;
 
-use function array_key_exists;
+use function sprintf;
 
-final class JsonLoader implements Closure, FileLoader, Loader
+final class JsonLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private PartitionRouter $router;
+
+    private readonly Filesystem $filesystem;
+
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
+
+    private ?JsonDocuments $documents = null;
+
     private string $dateFormat = 'Y-m-d';
 
     private string $dateTimeFormat = DateTimeInterface::ATOM;
@@ -36,23 +52,40 @@ final class JsonLoader implements Closure, FileLoader, Loader
 
     private bool $putRowsInNewLines = false;
 
-    /**
-     * @var array<string, int>
-     */
-    private array $writes = [];
-
-    public function __construct(Path $path)
+    public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. to_json($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::JSON);
+    }
+
+    public function partitionBy(Partitioning $partitioning): static
+    {
+        $this->router = new PartitionRouter($partitioning);
+
+        return $this;
     }
 
     public function closure(FlowContext $context): void
     {
-        foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
-            $stream->append($this->putRowsInNewLines ? "\n]" : ']');
-        }
+        $this->documents?->publish();
+        $this->documents = null;
+    }
 
-        $context->streams()->closeStreams($this->path);
+    public function discard(FlowContext $context): void
+    {
+        $this->documents?->abandon();
+        $this->documents = null;
     }
 
     public function destination(): Path
@@ -67,10 +100,8 @@ final class JsonLoader implements Closure, FileLoader, Loader
         ]);
 
         try {
-            if ($rows->partitions()->count()) {
-                $this->write($rows, $rows->partitions()->toArray(), $context);
-            } else {
-                $this->write($rows, [], $context);
+            foreach ($this->router->route($rows) as [$partitions, $group]) {
+                $this->write($group, $partitions->toArray(), $context);
             }
 
             $context->telemetry()->loadingCompleted($this, [
@@ -81,6 +112,13 @@ final class JsonLoader implements Closure, FileLoader, Loader
 
             throw $e;
         }
+    }
+
+    public function saveMode(SaveMode $mode): static
+    {
+        $this->saveMode = $mode;
+
+        return $this;
     }
 
     public function withDateFormat(string $dateFormat): self
@@ -116,43 +154,28 @@ final class JsonLoader implements Closure, FileLoader, Loader
      */
     public function write(Rows $nextRows, array $partitions, FlowContext $context): void
     {
-        $streams = $context->streams();
-
-        if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->writeTo($this->path, $partitions);
-
-            if (!array_key_exists($stream->path()->path(), $this->writes)) {
-                $this->writes[$stream->path()->path()] = 0;
-            }
-
-            $stream->append($this->putRowsInNewLines ? "[\n" : '[');
-        } else {
-            $stream = $streams->writeTo($this->path, $partitions);
-        }
-
-        $this->writeJSON($this->encoder()->encode($context->hydrator()->dehydrate($nextRows)), $stream);
-    }
-
-    private function encoder(): JSONEncoder
-    {
-        return $this->encoder ??= new JSONEncoder($this->dateTimeFormat, $this->dateFormat);
+        ($this->documents ??= new JsonDocuments(
+            new FilesSink($this->filesystem, $this->path, $this->saveMode),
+            $this->putRowsInNewLines,
+        ))->append(
+            $this->encodeJSON($this->encoder()->encode($context->hydrator()->dehydrate($nextRows))),
+            $partitions,
+        );
     }
 
     /**
-     * @param list<array<string, mixed>> $encodedRows
+     * @param list<array<string, mixed>> $normalizedRows
      *
      * @throws RuntimeException
      * @throws \JsonException
+     *
+     * @return list<string>
      */
-    private function writeJSON(array $encodedRows, DestinationStream $stream): void
+    private function encodeJSON(array $normalizedRows): array
     {
-        if ($encodedRows === []) {
-            return;
-        }
+        $documents = [];
 
-        $separator = $this->putRowsInNewLines ? ",\n" : ',';
-
-        foreach ($encodedRows as $normalizedRow) {
+        foreach ($normalizedRows as $normalizedRow) {
             try {
                 $json = json_encode($normalizedRow, $this->flags);
 
@@ -163,11 +186,14 @@ final class JsonLoader implements Closure, FileLoader, Loader
                 throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 
-            $json = $this->writes[$stream->path()->path()] > 0 ? $separator . $json : $json;
-
-            $stream->append($json);
-
-            $this->writes[$stream->path()->path()]++;
+            $documents[] = $json;
         }
+
+        return $documents;
+    }
+
+    private function encoder(): JSONEncoder
+    {
+        return $this->encoder ??= new JSONEncoder($this->dateTimeFormat, $this->dateFormat);
     }
 }

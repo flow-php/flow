@@ -11,10 +11,10 @@ use Flow\Parquet\ThriftModel\SchemaElement;
 use function array_filter;
 use function array_reverse;
 use function array_values;
-use function ceil;
 use function explode;
+use function floor;
 use function implode;
-use function log;
+use function log10;
 
 final class FlatColumn implements Column
 {
@@ -81,11 +81,15 @@ final class FlatColumn implements Column
         }
 
         if ($precision < 1 || $precision > 38) {
-            throw new InvalidArgumentException('Scale must be between 1 and 38, ' . $scale . ' given.');
+            throw new InvalidArgumentException('Precision must be between 1 and 38, ' . $precision . ' given.');
         }
 
-        $bitsNeeded = ceil(log(10 ** $precision, 2));
-        $byteLength = (int) ceil($bitsNeeded / 8);
+        // Parquet LogicalTypes.md, DECIMAL
+        $byteLength = 1;
+
+        while ((int) floor(log10(2 ** ((8 * $byteLength) - 1) - 1)) < $precision) {
+            $byteLength++;
+        }
 
         return new self(
             $name,

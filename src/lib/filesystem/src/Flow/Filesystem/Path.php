@@ -48,7 +48,8 @@ final readonly class Path
 
     public function addPartitions(Partition $partition, Partition ...$partitions): self
     {
-        return new self($this->implementation->addPartitions($partition, ...$partitions));
+        // B16: dropping $this->partitions here silently detached anything withPartitions() had attached
+        return new self($this->implementation->addPartitions($partition, ...$partitions), $this->partitions);
     }
 
     public function basename(): string

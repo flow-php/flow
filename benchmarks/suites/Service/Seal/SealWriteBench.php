@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Service\Seal;
 
+use Flow\Benchmarks\BenchmarkRows;
 use Generator;
 use PhpBench\Attributes as Bench;
 
@@ -22,7 +23,7 @@ final class SealWriteBench
     {
         (new SealWriteScenario(100_000))->dropIndex();
 
-        (new SealWriteScenario((int) (getenv('FLOW_BENCH_ROWS') ?: 100_000)))->dropIndex();
+        (new SealWriteScenario(BenchmarkRows::count()))->dropIndex();
     }
 
     #[Bench\ParamProviders('rows')]
@@ -35,7 +36,7 @@ final class SealWriteBench
 
     public function rows(): Generator
     {
-        $rows = (int) (getenv('FLOW_BENCH_ROWS') ?: 100_000);
+        $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
     }

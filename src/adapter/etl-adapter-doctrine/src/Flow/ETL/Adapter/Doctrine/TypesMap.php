@@ -37,6 +37,7 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -93,6 +94,7 @@ final class TypesMap
         TimeType::class => TimeImmutableType::class,
         DateTimeType::class => DateTimeImmutableType::class,
         UuidType::class => GuidType::class,
+        TimeZoneType::class => DoctrineStringType::class,
         JsonType::class => DoctrineJsonType::class,
         XMLType::class => DoctrineStringType::class,
         XMLElementType::class => DoctrineStringType::class,

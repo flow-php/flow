@@ -56,17 +56,19 @@ $_ENV['FLOW_PHAR_APP'] = 1;
 
 $application = new Application('Flow PHP - Data processing framework', $pharRuntime ? FlowVersion::getVersion() : 'UNKNOWN');
 
-$application->add((new ReadDataCommand())->setName('parquet:read')->setAliases(['parquet:read:data']));
-$application->add((new ReadMetadataCommand())->setName('parquet:read:metadata'));
-$application->add((new ReadDDLCommand())->setName('parquet:read:ddl'));
-$application->add((new PipelineRunCommand())->setName('pipeline:run')->setAliases(['run']));
-$application->add((new FileReadCommand())->setName('file:read')->setAliases(['read']));
-$application->add((new FileSchemaCommand())->setName('file:schema')->setAliases(['schema']));
-$application->add((new FileRowsCountCommand())->setName('file:rows:count')->setAliases(['count']));
-$application->add((new FileConvertCommand())->setName('file:convert')->setAliases(['convert']));
-$application->add((new FileAnalyzeCommand())->setName('file:analyze')->setAliases(['analyze']));
-$application->add((new SchemaFormatCommand())->setName('schema:format'))->setAliases(['format']);
-$application->add((new DatabaseTableListCommand())->setName('db:table:list'));
-$application->add((new DatabaseTableSchemaCommand())->setName('db:table:schema'));
+$application->addCommands([
+    (new ReadDataCommand())->setName('parquet:read')->setAliases(['parquet:read:data']),
+    (new ReadMetadataCommand())->setName('parquet:read:metadata'),
+    (new ReadDDLCommand())->setName('parquet:read:ddl'),
+    new PipelineRunCommand(),
+    new FileReadCommand(),
+    new FileSchemaCommand(),
+    new FileRowsCountCommand(),
+    new FileConvertCommand(),
+    new FileAnalyzeCommand(),
+    new SchemaFormatCommand(),
+    new DatabaseTableListCommand(),
+    new DatabaseTableSchemaCommand(),
+]);
 
 $application->run();

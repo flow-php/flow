@@ -8,7 +8,7 @@ use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\CatalogProvider;
 
 /**
- * @phpstan-import-type CatalogShape from Catalog
+ * @import-type CatalogShape from Catalog
  */
 final readonly class ArrayCatalogProvider implements CatalogProvider
 {

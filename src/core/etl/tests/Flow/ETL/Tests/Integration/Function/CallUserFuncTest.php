@@ -25,9 +25,9 @@ final class CallUserFuncTest extends FlowTestCase
             ]))
             ->withEntry('integers', ref('integers')->call(
                 lit('explode'),
+                type_list(type_integer()),
                 ['separator' => ','],
                 refAlias: 'string',
-                returnType: type_list(type_integer()),
             ))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

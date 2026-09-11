@@ -18,8 +18,9 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function unlink;
 
@@ -37,9 +38,10 @@ final class TextTest extends FlowTestCase
 
         data_frame()
             ->process(rows(
-                row(string_entry('name', 'Norbert')),
-                row(string_entry('name', 'Tomek')),
-                row(string_entry('name', 'Dawid')),
+                schema(string_schema('name')),
+                row(['name' => 'Norbert']),
+                row(['name' => 'Tomek']),
+                row(['name' => 'Dawid']),
             ))
             ->write(to_text($path))
             ->run();
@@ -63,8 +65,10 @@ final class TextTest extends FlowTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_text($path = __DIR__ . '/var/test_transformation_loader.txt')))
+            ->write(to_transformation(
+                select('id'),
+                to_text($path = __DIR__ . '/var/test_transformation_loader.txt')->saveMode(overwrite()),
+            ))
             ->run();
 
         $content = file_get_contents($path);

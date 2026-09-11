@@ -14,6 +14,14 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+
 final class PsrHttpClientStaticExtractor implements Extractor
 {
     /**
@@ -55,17 +63,36 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            foreach ($hydrator->cast($encoder->decode([new HttpExchange(
-                $request,
-                $response,
-            )]), $this->schema) as $row) {
-                $signal = yield new Rows($row);
+            $hydrated = $hydrator->hydrate($encoder->decode([new HttpExchange($request, $response)]), $this->schema());
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            $signal = yield $hydrated;
+
+            if ($signal === Signal::STOP) {
+                return;
             }
         }
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        $headers = type_map(type_string(), type_list(type_string()));
+
+        return schema(
+            str_schema('response_body', nullable: true),
+            map_schema('response_headers', $headers),
+            int_schema('response_status_code'),
+            str_schema('response_protocol_version'),
+            str_schema('response_reason_phrase'),
+            str_schema('request_body', nullable: true),
+            str_schema('request_uri'),
+            map_schema('request_headers', $headers),
+            str_schema('request_protocol_version'),
+            str_schema('request_method'),
+        );
     }
 
     /**
@@ -88,7 +115,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

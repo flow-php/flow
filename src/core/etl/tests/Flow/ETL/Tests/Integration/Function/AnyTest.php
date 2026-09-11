@@ -25,12 +25,18 @@ final class AnyTest extends FlowTestCase
                 ['id' => 3],
                 ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('result', when(ref('id')->isEven()->or(ref('array')->exists()), lit('found'), lit('not found')))
+            ->withEntry('result', when(
+                ref('id')->isEven()->or(ref('array')->isNotNull()),
+                lit('found'),
+                lit('not found'),
+            ))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertSame(
+            // A ragged source now yields one column set, so `array` exists on every row and
+            // `exists()` no longer discriminates - `isNull()` is what distinguishes the rows.
             [
                 ['id' => 1, 'result' => 'found'],
                 ['id' => 2, 'result' => 'found'],

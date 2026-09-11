@@ -6,6 +6,11 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -18,6 +23,7 @@ use function bin2hex;
 use function Flow\PostgreSql\DSL\close_cursor;
 use function Flow\PostgreSql\DSL\declare_cursor;
 use function Flow\PostgreSql\DSL\fetch;
+use function min;
 use function random_bytes;
 
 /**
@@ -29,13 +35,16 @@ use function random_bytes;
  *
  * Note: Requires a transaction context (auto-started if not in one).
  */
-final class PostgreSqlCursorExtractor implements Extractor
+final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private ?string $cursorName = null;
 
-    private int $fetchSize = 1000;
-
     private ?int $maximum = null;
+
+    private ?Schema $derivedSchema = null;
 
     private ?Schema $schema = null;
 
@@ -46,7 +55,10 @@ final class PostgreSqlCursorExtractor implements Extractor
         private readonly Client $client,
         private readonly string|Sql $query,
         private readonly array $parameters = [],
-    ) {}
+    ) {
+        // a fetch is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -55,6 +67,8 @@ final class PostgreSqlCursorExtractor implements Extractor
     {
         $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
+
+        $schema = $this->schema();
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
 
@@ -65,10 +79,21 @@ final class PostgreSqlCursorExtractor implements Extractor
         try {
             $this->client->execute(declare_cursor($cursorName, $this->query), $this->parameters);
 
-            $totalFetched = 0;
+            $pushed = $this->pushedLimit();
+            $maximum = match (true) {
+                $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+                $this->maximum !== null => $this->maximum,
+                default => $pushed,
+            };
+            $yielded = 0;
 
             while (true) {
-                $cursor = $this->client->cursor(fetch($cursorName)->forward($this->fetchSize));
+                if ($maximum !== null && $yielded >= $maximum) {
+                    return;
+                }
+
+                $pageSize = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
+                $cursor = $this->client->cursor(fetch($cursorName)->forward($pageSize));
                 $rowCount = $cursor->count();
 
                 if ($rowCount === 0) {
@@ -85,21 +110,18 @@ final class PostgreSqlCursorExtractor implements Extractor
 
                 $cursor->free();
 
-                foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
-                    $signal = yield new Rows($hydratedRow);
+                $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
 
-                    $totalFetched++;
+                $yielded += $hydrated->count();
 
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
+                $signal = yield $hydrated;
 
-                    if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                        return;
-                    }
+                if ($signal === Signal::STOP) {
+                    return;
                 }
 
-                if ($rowCount < $this->fetchSize) {
+                // compared against what was asked for, so a narrowed final fetch is not read as exhausted
+                if ($rowCount < $pageSize) {
                     break;
                 }
             }
@@ -112,20 +134,26 @@ final class PostgreSqlCursorExtractor implements Extractor
         }
     }
 
+    public function isRepeatable(): bool
+    {
+        return true;
+    }
+
+    public function schema(): Schema
+    {
+        return (
+            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->query,
+                $this->parameters,
+                self::class,
+            ))
+        );
+    }
+
     public function withCursorName(string $cursorName): self
     {
         $this->cursorName = $cursorName;
-
-        return $this;
-    }
-
-    public function withFetchSize(int $fetchSize): self
-    {
-        if ($fetchSize <= 0) {
-            throw new InvalidArgumentException('Fetch size must be greater than 0, got ' . $fetchSize);
-        }
-
-        $this->fetchSize = $fetchSize;
 
         return $this;
     }
@@ -141,7 +169,7 @@ final class PostgreSqlCursorExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

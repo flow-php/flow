@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, exception_if_exists, from_array, ref};
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{data_frame, exception_if_exists, from_array, partition_by, ref, to_output};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -20,7 +20,12 @@ data_frame()
             ['id' => 8, 'color' => 'blue', 'sku' => 'PRODUCT02'],
         ]
     ))
-    ->partitionBy(ref('color'), ref('sku'))
-    ->mode(exception_if_exists())
-    ->write(to_csv(__DIR__ . '/output/products.csv'))
+    ->write(to_csv(__DIR__ . '/output/products.csv')->saveMode(exception_if_exists())->partitionBy(partition_by(ref('color'), ref('sku'))))
+    ->run();
+
+// the directory layout is the lesson, so read the partitions back and show them
+data_frame()
+    ->read(from_csv(__DIR__ . '/output/color=*/sku=*/*.csv'))
+    ->collect()
+    ->write(to_output(truncate: false))
     ->run();

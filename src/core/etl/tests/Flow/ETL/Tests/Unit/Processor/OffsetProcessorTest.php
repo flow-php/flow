@@ -5,27 +5,49 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\OffsetProcessor;
-use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class OffsetProcessorTest extends FlowTestCase
 {
+    public function test_offset_processor_forwards_stop_to_its_upstream(): void
+    {
+        $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
+        $processed = (new OffsetProcessor(1))->process($upstream->extract(flow_context()), flow_context());
+
+        static::assertTrue($processed->valid());
+
+        $processed->send(Signal::STOP);
+
+        static::assertFalse($processed->valid());
+        static::assertSame(2, $upstream->batchesYielded);
+    }
+
+    public function test_bind_returns_the_input_schema(): void
+    {
+        $input = schema(int_schema('id'));
+
+        static::assertEquals($input, (new OffsetProcessor(1))->bind($input)->output);
+    }
+
     public function test_offset_greater_than_total_rows_yields_nothing(): void
     {
         $processor = new OffsetProcessor(10);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
 
-        /** @var Rows $batch */
         foreach ($result as $batch) {
             $totalRows += $batch->count();
         }
@@ -37,12 +59,11 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(1);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
-        /** @var Rows $batch */
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
@@ -62,12 +83,11 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(0);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
 
-        /** @var Rows $batch */
         foreach ($result as $batch) {
             $totalRows += $batch->count();
         }
@@ -79,13 +99,12 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $processor = new OffsetProcessor(2);
         $generator = (static function () {
-            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
-            yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
-        /** @var Rows $batch */
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;

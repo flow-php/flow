@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\JSON\JSONEncoder;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -27,6 +28,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 
 final class JSONEncoderTest extends FlowTestCase
@@ -201,6 +203,16 @@ final class JSONEncoderTest extends FlowTestCase
             [['duration' => 3600000000]],
             (new JSONEncoder())->encode([
                 new TypedRowValues(['duration' => new DateInterval('PT1H')], ['duration' => type_time()]),
+            ]),
+        );
+    }
+
+    public function test_encode_renders_a_timezone_as_its_iana_name(): void
+    {
+        static::assertSame(
+            [['tz' => 'Europe/Warsaw']],
+            (new JSONEncoder())->encode([
+                new TypedRowValues(['tz' => new DateTimeZone('Europe/Warsaw')], ['tz' => type_time_zone()]),
             ]),
         );
     }

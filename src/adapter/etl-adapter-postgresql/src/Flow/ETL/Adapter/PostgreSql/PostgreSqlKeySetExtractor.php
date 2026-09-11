@@ -9,6 +9,11 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -27,13 +32,17 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
+use function min;
 use function sprintf;
 
-final class PostgreSqlKeySetExtractor implements Extractor
+final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
 {
+    use Batches;
+    use PushesLimit;
+
     private ?int $maximum = null;
 
-    private int $pageSize = 1000;
+    private ?Schema $derivedSchema = null;
 
     private ?Schema $schema = null;
 
@@ -45,7 +54,10 @@ final class PostgreSqlKeySetExtractor implements Extractor
         private readonly string|Sql $query,
         private readonly KeySet $keySet,
         private readonly array $parameters = [],
-    ) {}
+    ) {
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = 1_000;
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
@@ -54,12 +66,28 @@ final class PostgreSqlKeySetExtractor implements Extractor
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
+        $schema = $this->schema();
+
         $encoder = new PostgreSqlEncoder();
-        $totalFetched = 0;
+        $yielded = 0;
         $cursorValues = null;
+        $pushed = $this->pushedLimit();
+        $maximum = match (true) {
+            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null => $this->maximum,
+            default => $pushed,
+        };
 
         while (true) {
-            $paginatedSql = $this->applyKeysetPagination($sql, $this->pageSize, $cursorValues);
+            if ($maximum !== null && $yielded >= $maximum) {
+                return;
+            }
+
+            $paginatedSql = $this->applyKeysetPagination(
+                $sql,
+                $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded),
+                $cursorValues,
+            );
 
             $cursor = $this->client->cursor($paginatedSql, array_merge($this->parameters, $cursorValues ?? []));
 
@@ -75,26 +103,39 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
             $cursor->free();
 
-            foreach ($context->hydrator()->cast($encoder->decode($rawBatch), $this->schema) as $hydratedRow) {
-                $signal = yield new Rows($hydratedRow);
-
-                $totalFetched++;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if ($this->maximum !== null && $totalFetched >= $this->maximum) {
-                    return;
-                }
-            }
-
             if (!$hasRows || $lastRow === null) {
                 break;
             }
 
+            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+
+            $yielded += $hydrated->count();
+
+            $signal = yield $hydrated;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
+
             $cursorValues = $this->extractCursorValues($lastRow);
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
+    }
+
+    public function schema(): Schema
+    {
+        return (
+            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->query,
+                $this->parameters,
+                self::class,
+            ))
+        );
     }
 
     public function withMaximum(int $maximum): self
@@ -108,18 +149,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         return $this;
     }
 
-    public function withPageSize(int $pageSize): self
-    {
-        if ($pageSize <= 0) {
-            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
-        }
-
-        $this->pageSize = $pageSize;
-
-        return $this;
-    }
-
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

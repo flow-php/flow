@@ -76,7 +76,7 @@ The same code works against `flow-php/filesystem-async-aws-bridge` or `flow-php/
 
 ## Constructor
 
-```php
+```php ignore
 new FlowFilesystemCacheAdapter(
     Flow\Filesystem\Filesystem $filesystem,
     Flow\Filesystem\Path $directory,

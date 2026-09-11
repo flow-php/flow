@@ -16,9 +16,13 @@ use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 
@@ -33,9 +37,21 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [['id' => 1], ['id' => 2]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_02', array_to_rows(
+            [['id' => 3], ['id' => 4]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_03', array_to_rows(
+            [['id' => 5]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
 
         $cache->set('key', $index->toRows());
 
@@ -59,9 +75,21 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->hydrator()));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->hydrator()));
-        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [['id' => 1], ['id' => 2]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_02', array_to_rows(
+            [['id' => 3], ['id' => 4]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
+        $cache->set('rows_03', array_to_rows(
+            [['id' => 5]],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
 
         $cache->set('key', $index->toRows());
 
@@ -84,13 +112,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index = new CacheIndex($cacheKey = 'key');
         $index->add('rows_01');
 
-        $cache->set('rows_01', array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
         $cache->set('key', $index->toRows());
 
         $extractor = from_cache($cacheKey);
@@ -114,13 +146,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index = new CacheIndex($cacheKey = 'key');
         $index->add('rows_01');
 
-        $cache->set('rows_01', array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], flow_context(config())->hydrator()));
+        $cache->set('rows_01', array_to_rows(
+            [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ],
+            schema(int_schema('id')),
+            flow_context(config())->hydrator(),
+        ));
         $cache->set('key', $index->toRows());
 
         $generator = from_cache($cacheKey)
@@ -163,16 +199,52 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 3],
             ]));
 
-        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
-
-        static::assertCount(3, $rows);
-        static::assertEquals(
+        self::assertExtractedRowsAsArrayEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
             ],
-            array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
+            $extractor,
+            flow_context(config_builder()->cache($cache)->build()),
         );
+    }
+
+    /**
+     * A cache entry that has not been written yet has no columns, which is an answer. Reaching into
+     * the FlowContext for a cache would make describing a source need a running pipeline.
+     */
+    public function test_schema_returns_empty_schema_on_cache_id_miss(): void
+    {
+        static::assertEquals(schema(), from_cache('non_existing_cache_key')->schema());
+    }
+
+    public function test_schema_returns_empty_schema_when_the_injected_cache_does_not_hold_the_id(): void
+    {
+        static::assertEquals(schema(), from_cache('non_existing_cache_key', cache: new InMemoryCache())->schema());
+    }
+
+    public function test_a_cache_hit_is_not_matched_to_the_fallback_extractors_schema(): void
+    {
+        // the cache is normally written after transformations, so the fallback's shape says nothing
+        // about what a hit holds
+        $input = [['a' => 1, 'b' => 'x'], ['a' => 2, 'b' => 'y']];
+        $cache = new InMemoryCache();
+
+        df(config_builder()->cache($cache))->read(from_array($input))->drop(ref('b'))->cache('hit-vs-fallback')->run();
+
+        static::assertSame(
+            [['a' => 1], ['a' => 2]],
+            df(config_builder()->cache($cache))
+                ->read(from_cache('hit-vs-fallback', from_array($input)))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_is_repeatable_unless_it_clears_on_finish(): void
+    {
+        static::assertTrue(from_cache('key')->isRepeatable());
+        static::assertFalse(from_cache('key')->withClearOnFinish(true)->isRepeatable());
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -14,7 +13,6 @@ use PHPUnit\Framework\Attributes\TestWith;
 use UnitEnum;
 
 use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\enum_entry;
 use function Flow\ETL\DSL\enum_name;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
@@ -26,23 +24,17 @@ final class EnumNameTest extends FlowTestCase
 {
     public function test_enum_name_accepts_literal_enum(): void
     {
-        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(row(), flow_context())?->value);
+        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(row([]), flow_context()));
     }
 
     public function test_enum_name_carries_string_type(): void
     {
-        $result = enum_name(ref('e'))->eval(row(enum_entry('e', BackedIntEnum::one)), flow_context());
-
-        static::assertNotNull($result);
-        static::assertTrue(type_equals(type_string(), $result->type));
+        static::assertTrue(type_equals(type_string(), enum_name(ref('e'))->returns()));
     }
 
     public function test_enum_name_from_scalar_function_chain(): void
     {
-        static::assertSame(
-            'one',
-            ref('e')->enumName()->eval(row(enum_entry('e', BackedIntEnum::one)), flow_context())?->value,
-        );
+        static::assertSame('one', ref('e')->enumName()->eval(row(['e' => BackedIntEnum::one]), flow_context()));
     }
 
     #[TestWith([BackedStringEnum::one])]
@@ -50,15 +42,7 @@ final class EnumNameTest extends FlowTestCase
     #[TestWith([BasicEnum::one])]
     public function test_enum_name_returns_case_name(UnitEnum $enum): void
     {
-        static::assertSame('one', enum_name(ref('e'))->eval(row(enum_entry('e', $enum)), flow_context())?->value);
-    }
-
-    #[TestWith([null])]
-    #[TestWith(['foo'])]
-    #[TestWith([42])]
-    public function test_enum_name_returns_null_in_permissive_mode(mixed $input): void
-    {
-        static::assertNull(enum_name($input)->eval(row(), flow_context()));
+        static::assertSame('one', enum_name(ref('e'))->eval(row(['e' => $enum]), flow_context()));
     }
 
     #[TestWith([null])]
@@ -70,8 +54,6 @@ final class EnumNameTest extends FlowTestCase
         $this->expectExceptionMessage('EnumName function requires a UnitEnum value');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
-        enum_name($input)->eval(row(), $context);
+        enum_name($input)->eval(row([]), $context);
     }
 }

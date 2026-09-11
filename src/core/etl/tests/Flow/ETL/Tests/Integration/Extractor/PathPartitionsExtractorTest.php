@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
+use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_path_partitions;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path_real;
 use function iterator_to_array;
 use function str_replace;
@@ -26,7 +29,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         $extractedData = iterator_to_array($extractor->extract(flow_context()));
 
-        $rows = rows();
+        $rows = rows(schema());
 
         foreach ($extractedData as $nextRows) {
             static::assertInstanceOf(Rows::class, $nextRows);
@@ -91,6 +94,37 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 ],
             ],
             $actualData,
+        );
+    }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(
+            from_path_partitions(path_real(__DIR__ . '/Fixtures/multi_partitioned/**/*'))->isRepeatable(),
+        );
+    }
+
+    public function test_batches_at_the_configured_batch_size(): void
+    {
+        $sizes = [];
+
+        foreach (from_path_partitions(path_real(__DIR__ . '/Fixtures/multi_partitioned/**/*'))
+            ->withBatchSize(2)
+            ->extract(flow_context()) as $rows) {
+            $sizes[] = $rows->count();
+        }
+
+        static::assertSame([2, 2, 2, 1], $sizes);
+    }
+
+    public function test_path_partitions_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): PathPartitionsExtractor => from_path_partitions(path_real(__DIR__
+            . '/Fixtures/multi_partitioned/**/*')),
+            ExtractedRows::of(
+                from_path_partitions(path_real(__DIR__ . '/Fixtures/multi_partitioned/**/*'))->withBatchSize(1),
+            ),
         );
     }
 }

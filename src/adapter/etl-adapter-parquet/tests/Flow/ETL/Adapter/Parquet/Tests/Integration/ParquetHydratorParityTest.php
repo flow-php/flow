@@ -45,8 +45,7 @@ final class ParquetHydratorParityTest extends FlowTestCase
         data_frame(config())
             ->read(new FakeExtractor(50))
             ->drop('null', 'enum')
-            ->mode(overwrite())
-            ->write(to_parquet(path($this->path)))
+            ->write(to_parquet(path($this->path))->saveMode(overwrite()))
             ->run();
 
         $file = (new Reader())->read($this->path);
@@ -57,7 +56,7 @@ final class ParquetHydratorParityTest extends FlowTestCase
         $decodedRows = $encoder->decode($rawRows);
 
         $trusted = (new AdaptiveRowHydrator())->hydrate($decodedRows, $flowSchema);
-        $cast = (new AdaptiveRowHydrator())->cast(
+        $cast = (new AdaptiveRowHydrator())->hydrate(
             array_map(static fn(array $values): RawRowValues => new RawRowValues($values), $rawRows),
             $flowSchema,
         );

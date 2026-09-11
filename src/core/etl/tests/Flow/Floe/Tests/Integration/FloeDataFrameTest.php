@@ -4,29 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use DateTimeZone;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeEngine;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Types\Value\Json;
 
+use function array_keys;
 use function Flow\ETL\DSL\append;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
-use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_time_zone;
 
 final class FloeDataFrameTest extends FlowIntegrationTestCase
 {
@@ -36,14 +43,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite()))
             ->run();
 
         data_frame()
             ->read(from_array([['id' => 2]]))
-            ->saveMode(append())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(append()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
@@ -59,8 +64,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path, engine: FloeEngine::native))
+            ->write(to_floe($path, engine: FloeEngine::native)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($path, engine: FloeEngine::native))->count());
@@ -72,8 +76,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame(config_builder()->hydrator(new PhpRowHydrator()))
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path, engine: FloeEngine::php))
+            ->write(to_floe($path, engine: FloeEngine::php)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(
@@ -82,6 +85,32 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ->read(from_floe($path, engine: FloeEngine::php))
                 ->count(),
         );
+    }
+
+    public function test_a_timezone_column_round_trips_through_floe(): void
+    {
+        $path = $this->cacheDir->suffix('timezones.floe');
+
+        data_frame()
+            ->read(from_rows(rows(
+                schema(time_zone_schema('tz')),
+                row(['tz' => type_time_zone()->cast('Europe/Warsaw')]),
+                row(['tz' => type_time_zone()->cast('UTC')]),
+            )))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $read = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('timezone', $read->schema()->get('tz')->type()->toString());
+
+        $names = [];
+
+        foreach ($read as $row) {
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row->get('tz'))->getName();
+        }
+
+        static::assertSame(['Europe/Warsaw', 'UTC'], $names);
     }
 
     public function test_inferred_nested_arrays_are_projected_to_json_and_round_trip(): void
@@ -94,21 +123,22 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['body' => ['data' => [], 'id' => 2]],
             ]))
             ->collect()
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
-        static::assertFalse($rows->schema()->get('body')->isNullable());
+        // Nullable, and round-tripped as such: from_array infers it, and 08c R2 makes every inferred
+        // column nullable - NOT NULL is a declaration, never an inference.
+        static::assertTrue($rows->schema()->get('body')->isNullable());
 
-        $first = $rows[0]->valueOf('body');
+        $first = $rows[0]->get('body');
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->valueOf('body');
+        $second = $rows[1]->get('body');
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -119,25 +149,45 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('list-json.floe');
 
         data_frame()
-            ->read(from_rows(rows(row(list_entry(
-                'json_list',
-                [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])],
-                type_list(type_json()),
-            )))))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->read(from_rows(rows(
+                schema(list_schema('json_list', type_list(type_json()))),
+                row(['json_list' => [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])]]),
+            )))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
 
-        $list = $rows[0]->valueOf('json_list');
+        $list = $rows[0]->get('json_list');
         static::assertIsArray($list);
         static::assertInstanceOf(Json::class, $list[0]);
         static::assertSame(['a' => 1], $list[0]->toArray());
         static::assertInstanceOf(Json::class, $list[1]);
         static::assertSame([1, 'b'], $list[1]->toArray());
+    }
+
+    /**
+     * schema() used to never declare the column extract() adds, so the two disagreed.
+     */
+    public function test_schema_and_extract_agree_in_both_metadata_states(): void
+    {
+        $path = $this->cacheDir->suffix('metadata-agreement.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        foreach ([false, true] as $enabled) {
+            $extractor = from_floe($path)->withMetadataColumns($enabled);
+
+            static::assertSame(
+                array_keys($extractor->schema()->definitions()),
+                array_keys(data_frame()->read($extractor)->fetch()->first()->toArray()),
+            );
+        }
     }
 
     public function test_input_file_uri_is_added_when_configured(): void
@@ -146,13 +196,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
-        $rows = data_frame(config_builder()->putInputIntoRows())->read(from_floe($path))->fetch();
+        $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
 
-        static::assertTrue($rows->first()->entries()->has('_input_file_uri'));
+        static::assertTrue($rows->first()->has('_input_file_uri'));
     }
 
     public function test_offset_and_limit_pushdown(): void
@@ -161,8 +210,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(2, data_frame()->read(from_floe($path))->limit(2)->fetch()->count());
@@ -175,14 +223,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         data_frame()
             ->read(from_array([['id' => 9]]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         static::assertSame(1, data_frame()->read(from_floe($path))->count());
@@ -196,8 +242,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
             ->read(from_sequence_number('id', 1, 12))
             ->withEntry('name', lit('dropped by the transformation'))
             ->batchSize(4)
-            ->saveMode(overwrite())
-            ->write(to_transformation(select('id'), to_floe($path)))
+            ->write(to_transformation(select('id'), to_floe($path)->saveMode(overwrite())))
             ->run();
 
         $rows = data_frame()->read(from_floe($path))->fetch();
@@ -216,9 +261,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['id' => 2, 'country' => 'US'],
                 ['id' => 3, 'country' => 'PL'],
             ]))
-            ->partitionBy('country')
-            ->saveMode(overwrite())
-            ->write(to_floe($dir . '/data.floe'))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite())->partitionBy(partition_by('country')))
             ->run();
 
         static::assertFileExists($dir . '/country=PL/data.floe');
@@ -234,13 +277,12 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         data_frame()
             ->read(from_array([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]))
-            ->saveMode(overwrite())
-            ->write(to_floe($path))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
         $result = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame(2, $result->count());
-        static::assertSame(['id', 'name'], $result->first()->entries()->names());
+        static::assertSame(['id', 'name'], $result->first()->names());
     }
 }

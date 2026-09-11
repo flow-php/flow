@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
@@ -24,5 +25,10 @@ abstract class ParquetIntegrationTestCase extends TestCase
         }
 
         return $engines;
+    }
+
+    protected function tearDown(): void
+    {
+        TestParquetFile::remove($this);
     }
 }

@@ -14,13 +14,14 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 final class JoinStepsTest extends FlowTestCase
 {
     public function test_builds_a_hash_join_processor(): void
     {
         $steps = JoinSteps::of(
-            df()->read(from_rows(rows())),
+            df()->read(from_rows(rows(schema()))),
             Expression::on(['id' => 'user_id']),
             Join::left,
             config_builder()->build(),

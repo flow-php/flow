@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Config;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
 
 final class TextHydratorParityTest extends FlowTestCase
 {
@@ -22,8 +22,9 @@ final class TextHydratorParityTest extends FlowTestCase
         $actual = [];
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            static::assertEquals(type_string(), $rows->schema()->get('text')->type());
+
             foreach ($rows as $row) {
-                static::assertInstanceOf(StringEntry::class, $row->get('text'));
                 $actual[] = $row->toArray();
             }
         }
@@ -31,13 +32,13 @@ final class TextHydratorParityTest extends FlowTestCase
         static::assertSame([['text' => 'alpha'], ['text' => 'beta'], ['text' => 'gamma']], $actual);
     }
 
-    public function test_appends_input_file_uri_when_put_input_into_rows_is_enabled(): void
+    public function test_appends_input_file_uri_when_metadata_columns_are_enabled(): void
     {
-        $extractor = from_text($path = path_real(__DIR__ . '/../Fixtures/parity_lines.txt'));
+        $extractor = from_text($path = path_real(__DIR__ . '/../Fixtures/parity_lines.txt'))->withMetadataColumns(true);
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())) as $rows) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
             foreach ($rows as $row) {
                 $actual[] = $row->toArray();
             }

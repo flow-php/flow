@@ -11,12 +11,12 @@ use function Flow\ETL\Adapter\Seal\to_seal_delete;
 use function Flow\ETL\Adapter\Seal\to_seal_schema;
 use function Flow\ETL\Adapter\Seal\to_seal_upsert;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
@@ -30,7 +30,7 @@ final class SealLoaderTest extends SealTestCase
         $this->expectExceptionMessage('Entry "id" cannot be used as a document identifier for DELETE operation');
 
         to_seal_delete($engine, 'users')->load(
-            rows(row(list_entry('id', ['1', '2'], type_list(type_string())))),
+            rows(schema(list_schema('id', type_list(type_string()))), row(['id' => ['1', '2']])),
             flow_context(),
         );
     }
@@ -39,8 +39,8 @@ final class SealLoaderTest extends SealTestCase
     {
         $engine = $this->sealContext()->engine(to_seal_schema(schema(str_schema('id')), 'users', 'id'));
 
-        to_seal_upsert($engine, 'users')->load(rows(row(string_entry('id', '1'))), flow_context());
-        to_seal_delete($engine, 'users')->load(rows(), flow_context());
+        to_seal_upsert($engine, 'users')->load(rows(schema(string_schema('id')), row(['id' => '1'])), flow_context());
+        to_seal_delete($engine, 'users')->load(rows(schema()), flow_context());
 
         static::assertSame(1, $engine->countDocuments('users'));
     }
@@ -49,7 +49,7 @@ final class SealLoaderTest extends SealTestCase
     {
         $engine = $this->sealContext()->engine(to_seal_schema(schema(str_schema('id')), 'users', 'id'));
 
-        to_seal_upsert($engine, 'users')->load(rows(), flow_context());
+        to_seal_upsert($engine, 'users')->load(rows(schema()), flow_context());
 
         static::assertSame(0, $engine->countDocuments('users'));
     }

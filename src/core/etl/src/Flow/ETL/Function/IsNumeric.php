@@ -6,15 +6,57 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
+use Flow\Types\Type\Nullability;
 
-final class IsNumeric extends ScalarFunctionChain
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_boolean;
+use function is_numeric;
+
+final class IsNumeric implements ScalarFunction
 {
-    public function __construct(
-        private readonly mixed $value,
-    ) {}
+    use ScalarFunctionChain;
 
-    public function eval(Row $row, FlowContext $context): bool
+    private readonly ScalarFunction $value;
+
+    public function __construct(mixed $value)
     {
-        return (new Parameter($this->value))->asNumber($row, $context) !== null;
+        $this->value = $value instanceof ScalarFunction ? $value : lit($value);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->value];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return (new Nullability())->any(type_boolean(), $this->value->returns());
+    }
+
+    public function eval(Row $row, FlowContext $context): ?bool
+    {
+        $value = (new Parameter($this->value))->eval($row, $context);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return is_numeric($value);
     }
 }

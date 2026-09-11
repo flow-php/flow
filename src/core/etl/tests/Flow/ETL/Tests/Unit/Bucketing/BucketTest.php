@@ -23,8 +23,8 @@ final class BucketTest extends FlowTestCase
     {
         $row = (new Bucket('bucket-1', 4, 0))->toRow();
 
-        static::assertSame('bucket-1', $row->valueOf(BucketShape::id->value));
-        static::assertSame(4, $row->valueOf(BucketShape::totalRows->value));
-        static::assertCount(2, $row->entries());
+        static::assertSame('bucket-1', $row->get(BucketShape::id->value));
+        static::assertSame(4, $row->get(BucketShape::totalRows->value));
+        static::assertCount(2, $row->values());
     }
 }

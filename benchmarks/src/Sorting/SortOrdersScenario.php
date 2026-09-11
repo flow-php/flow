@@ -25,7 +25,7 @@ final readonly class SortOrdersScenario
         data_frame($config)
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->sortBy(ref('created_at')->desc())
+            ->sortBy([ref('created_at')->desc()])
             ->run();
     }
 }

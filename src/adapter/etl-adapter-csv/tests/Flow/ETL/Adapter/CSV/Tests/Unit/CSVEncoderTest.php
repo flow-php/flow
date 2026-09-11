@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Adapter\CSV\CSVEncoder;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\FlowTestCase;
@@ -18,6 +19,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 
 final class CSVEncoderTest extends FlowTestCase
@@ -138,6 +140,16 @@ final class CSVEncoderTest extends FlowTestCase
         );
     }
 
+    public function test_encode_renders_a_timezone_as_its_iana_name(): void
+    {
+        static::assertSame(
+            ["Europe/Warsaw\n"],
+            (new CSVEncoder(newLineSeparator: "\n"))->encode([
+                new TypedRowValues(['tz' => new DateTimeZone('Europe/Warsaw')], ['tz' => type_time_zone()]),
+            ]),
+        );
+    }
+
     public function test_encode_renders_uuid_as_string(): void
     {
         static::assertSame(
@@ -146,5 +158,34 @@ final class CSVEncoderTest extends FlowTestCase
                 new TypedRowValues(['id' => new Uuid('f47ac10b-58cc-4372-a567-0e02b2c3d479')], ['id' => type_uuid()]),
             ]),
         );
+    }
+
+    public function test_headers_are_null_before_any_line_is_decoded(): void
+    {
+        static::assertNull((new CSVEncoder())->headers());
+    }
+
+    public function test_the_generated_headers_are_exposed_without_a_header_line(): void
+    {
+        $encoder = new CSVEncoder(withHeader: false);
+        $encoder->decode(['1,a']);
+
+        static::assertSame(['e00', 'e01'], $encoder->headers());
+    }
+
+    public function test_the_resolved_headers_are_exposed(): void
+    {
+        $encoder = new CSVEncoder();
+
+        static::assertSame([], $encoder->decode(['id,name']));
+        static::assertSame(['id', 'name'], $encoder->headers());
+    }
+
+    public function test_an_empty_header_cell_is_named_by_position(): void
+    {
+        $encoder = new CSVEncoder();
+        $encoder->decode([',name']);
+
+        static::assertSame(['e00', 'name'], $encoder->headers());
     }
 }

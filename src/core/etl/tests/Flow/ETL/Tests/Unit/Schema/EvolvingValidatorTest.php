@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_evolving_validator;
 use function Flow\ETL\DSL\schema_validate;
@@ -121,5 +122,22 @@ final class EvolvingValidatorTest extends FlowTestCase
         $given = schema(int_schema('not_id'), str_schema('surname'), bool_schema('active'));
 
         static::assertFalse(schema_validate($expected, $given, schema_evolving_validator())->isValid());
+    }
+
+    public function test_an_all_null_batch_is_representable_under_a_nullable_declaration(): void
+    {
+        // B27: the other two validators already accept this; the evolving one had no NullDefinition arm
+        static::assertTrue(
+            schema_evolving_validator()
+                ->validate(schema(str_schema('name', nullable: true)), schema(null_schema('name')))
+                ->isValid(),
+        );
+    }
+
+    public function test_an_all_null_batch_is_still_refused_under_a_not_null_declaration(): void
+    {
+        static::assertFalse(
+            schema_evolving_validator()->validate(schema(str_schema('name')), schema(null_schema('name')))->isValid(),
+        );
     }
 }

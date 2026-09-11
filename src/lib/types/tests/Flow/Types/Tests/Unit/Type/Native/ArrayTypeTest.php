@@ -70,8 +70,8 @@ final class ArrayTypeTest extends TestCase
 
         yield 'boolean to array' => [
             'value' => true,
-            'expected' => [true],
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'datetime to array' => [
@@ -82,14 +82,14 @@ final class ArrayTypeTest extends TestCase
 
         yield 'float to array' => [
             'value' => 1.1,
-            'expected' => [1.1],
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'integer to array' => [
             'value' => 1,
-            'expected' => [1],
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'json string to array' => [
@@ -171,6 +171,14 @@ final class ArrayTypeTest extends TestCase
         }
     }
 
+    public function test_a_scalar_is_not_wrapped_into_a_container(): void
+    {
+        $this->expectException(CastingException::class);
+        $this->expectExceptionMessage('wrap the value first, e.g. type_list(type_string())');
+
+        type_array()->cast('abc');
+    }
+
     public function test_casting_xml_document_to_array(): void
     {
         $xml = new DOMDocument();
@@ -180,6 +188,13 @@ final class ArrayTypeTest extends TestCase
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
             type_array()->cast($xml),
         );
+    }
+
+    public function test_null_does_not_become_an_empty_array(): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_array()->cast(null);
     }
 
     #[DataProvider('is_valid_data_provider')]

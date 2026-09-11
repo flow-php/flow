@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5bb3a33041c806a8d4f61f83f50ce135",
+    "content-hash": "f11495056bd1a0023e38ae1fe14b5007",
     "packages": [
         {
             "name": "brick/math",
@@ -402,10 +402,10 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/core/etl",
-                "reference": "1acdb1965e7f1970b18033e3d3cde46ff2ad4771"
+                "reference": "ff00b794ccb2f0c424d0f36f48abc8fe35785024"
             },
             "require": {
-                "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17",
+                "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17 || ^0.18",
                 "composer-runtime-api": "^2.2",
                 "ext-json": "*",
                 "flow-php/array-dot": "self.version",
@@ -424,12 +424,15 @@
                 "symfony/uid": "^6.4 || ^7.4 || ^8.0"
             },
             "suggest": {
+                "ext-apcu": "Allows using ApcuCache as a pipeline cache implementation",
                 "ext-bcmath": "BCMath extension for PHP for more precise calculations"
             },
             "type": "library",
             "autoload": {
                 "files": [
-                    "src/Flow/ETL/DSL/functions.php"
+                    "src/Flow/ETL/DSL/functions.php",
+                    "src/Flow/Floe/DSL/functions.php",
+                    "src/Flow/Serializer/DSL/functions.php"
                 ],
                 "psr-4": {
                     "Flow\\": [
@@ -463,13 +466,15 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-http",
-                "reference": "a653aa0bdc76bccd4fcf54f98ddea12af4b5ecf4"
+                "reference": "d1a91dc67c6fe67996c3bed8223ef5ba35347f5e"
             },
             "require": {
                 "ext-json": "*",
+                "flow-php/array-dot": "self.version",
                 "flow-php/etl": "self.version",
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-                "psr/http-client": "^1.0"
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0"
             },
             "require-dev": {
                 "nyholm/psr7": "^1.8",
@@ -513,13 +518,16 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-json",
-                "reference": "217c1e19fab49a81aaa7aae1670eb243684b4ec5"
+                "reference": "ac4f812884e8bfa524eec172336d450c466413b0"
             },
             "require": {
                 "ext-json": "*",
                 "flow-php/etl": "self.version",
+                "flow-php/filesystem": "self.version",
                 "halaxa/json-machine": "^1.1",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0"
             },
             "type": "library",
             "autoload": {
@@ -657,13 +665,16 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/psr18/telemetry",
-                "reference": "16327e6a08df7eb8071b8136657879648ab15051"
+                "reference": "5e771f57e8d1c0a8ec73fc74b80b9c11a58d8f4c"
             },
             "require": {
                 "flow-php/telemetry": "self.version",
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "psr/http-client": "^1.0",
                 "psr/http-message": "^1.0 || ^2.0"
+            },
+            "require-dev": {
+                "nyholm/psr7": "^1.8"
             },
             "type": "library",
             "autoload": {
@@ -743,62 +754,15 @@
             }
         },
         {
-            "name": "flow-php/symfony-http-foundation-telemetry-bridge",
-            "version": "1.x-dev",
-            "dist": {
-                "type": "path",
-                "url": "../../src/bridge/symfony/http-foundation-telemetry",
-                "reference": "8f677b177ec67171bfeb6a8c4c35227a47016754"
-            },
-            "require": {
-                "flow-php/telemetry": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-                "symfony/http-foundation": "^6.4 || ^7.4 || ^8.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                },
-                "files": [
-                    "src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php"
-                ]
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Flow\\": "tests/Flow"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "Flow PHP - Symfony Http Foundation Telemetry Bridge",
-            "homepage": "https://github.com/flow-php/flow",
-            "keywords": [
-                "bridge",
-                "flow-php",
-                "http-foundation",
-                "symfony",
-                "telemetry"
-            ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
-        },
-        {
             "name": "flow-php/symfony-telemetry-bundle",
             "version": "1.x-dev",
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/symfony/telemetry-bundle",
-                "reference": "859e019ccb6864818776eb4b350bc0b18026c537"
+                "reference": "def82423597fcc21d3634c559188e378870de8ea"
             },
             "require": {
                 "flow-php/psr3-telemetry-bridge": "self.version",
-                "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
                 "flow-php/telemetry": "self.version",
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "psr/clock": "^1.0",
@@ -810,20 +774,32 @@
                 "symfony/polyfill-mbstring": "^1.33"
             },
             "require-dev": {
+                "composer-runtime-api": "^2.2",
+                "composer/semver": "^3.4",
                 "doctrine/dbal": "^4.4",
                 "flow-php/psr18-telemetry-bridge": "self.version",
+                "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
                 "flow-php/telemetry-otlp-bridge": "self.version",
                 "nyholm/psr7": "^1.8",
                 "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
                 "symfony/messenger": "^6.4 || ^7.4 || ^8.0",
                 "symfony/routing": "^6.4 || ^7.4 || ^8.0",
+                "symfony/security-core": "^6.4 || ^7.4 || ^8.0",
+                "symfony/security-http": "^6.4 || ^7.4 || ^8.0",
+                "symfony/serializer": "^6.4 || ^7.4 || ^8.0",
+                "symfony/var-dumper": "^6.4 || ^7.4 || ^8.0",
+                "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0",
                 "twig/twig": "^3.0"
             },
             "suggest": {
                 "doctrine/dbal": "Required for Doctrine DBAL tracing (^4.4)",
                 "flow-php/psr18-telemetry-bridge": "Required for PSR-18 HTTP client tracing",
+                "flow-php/symfony-http-foundation-telemetry-bridge": "Required for HTTP trace context propagation (extract incoming / inject outgoing W3C trace headers)",
                 "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
                 "symfony/messenger": "Required for Messenger tracing middleware",
+                "symfony/security-core": "Required for authenticated-user span decoration (security instrumentation)",
+                "symfony/security-http": "Required to capture mid-request/programmatic logins (LoginSuccessEvent) in security instrumentation",
+                "symfony/web-profiler-bundle": "Required for the dev-only Flow Telemetry Web Profiler panel",
                 "twig/twig": "Required for Twig template tracing"
             },
             "type": "symfony-bundle",
@@ -6634,53 +6610,71 @@
             "time": "2025-12-08T14:43:58+00:00"
         },
         {
-            "name": "dbrekelmans/bdi",
-            "version": "1.4.1",
+            "name": "behat/mink",
+            "version": "v1.13.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/dbrekelmans/bdi.git",
-                "reference": "c2b77127d7aa3fad25d57575c207b54b108ab300"
+                "url": "https://github.com/minkphp/Mink.git",
+                "reference": "9b08f62937c173affe070c04bb072d7ea1db1be5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dbrekelmans/bdi/zipball/c2b77127d7aa3fad25d57575c207b54b108ab300",
-                "reference": "c2b77127d7aa3fad25d57575c207b54b108ab300",
+                "url": "https://api.github.com/repos/minkphp/Mink/zipball/9b08f62937c173affe070c04bb072d7ea1db1be5",
+                "reference": "9b08f62937c173affe070c04bb072d7ea1db1be5",
                 "shasum": ""
             },
             "require": {
-                "ext-json": "*",
-                "ext-zip": "*",
-                "ext-zlib": "*",
-                "php": "^8.1"
+                "php": ">=7.2",
+                "symfony/css-selector": "^4.4 || ^5.0 || ^6.0 || ^7.0 || ^8.0"
             },
-            "bin": [
-                "bdi",
-                "bdi.phar"
-            ],
+            "require-dev": {
+                "jetbrains/phpstorm-attributes": "*",
+                "phpstan/phpstan": "^1.12.32",
+                "phpstan/phpstan-phpunit": "^1.3",
+                "phpunit/phpunit": "^8.5.22 || ^9.5.11",
+                "symfony/error-handler": "^4.4 || ^5.0 || ^6.0 || ^7.0 || ^8.0",
+                "symfony/phpunit-bridge": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+            },
+            "suggest": {
+                "behat/mink-browserkit-driver": "fast headless driver for any app without JS emulation",
+                "behat/mink-selenium2-driver": "slow, but JS-enabled driver for any app (requires Selenium2)",
+                "behat/mink-zombie-driver": "fast and JS-enabled headless driver for any app (requires node.js)",
+                "dmore/chrome-mink-driver": "fast and JS-enabled driver for any app (requires chromium or google chrome)"
+            },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Behat\\Mink\\": "src/"
+                }
+            },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "authors": [
                 {
-                    "name": "Daniël Brekelmans",
-                    "homepage": "https://github.com/dbrekelmans"
-                },
-                {
-                    "name": "Contributors",
-                    "homepage": "https://github.com/dbrekelmans/bdi/graphs/contributors"
+                    "name": "Konstantin Kudryashov",
+                    "email": "ever.zet@gmail.com",
+                    "homepage": "http://everzet.com"
                 }
             ],
-            "description": "PHAR distribution of dbrekelmans/browser-driver-installer.",
-            "homepage": "https://github.com/dbrekelmans/bdi",
+            "description": "Browser controller/emulator abstraction for PHP",
+            "homepage": "https://mink.behat.org/",
             "keywords": [
-                "browser-driver-installer"
+                "browser",
+                "testing",
+                "web"
             ],
             "support": {
-                "source": "https://github.com/dbrekelmans/bdi/tree/1.4.1"
+                "issues": "https://github.com/minkphp/Mink/issues",
+                "source": "https://github.com/minkphp/Mink/tree/v1.13.0"
             },
-            "time": "2025-11-03T11:32:28+00:00"
+            "time": "2025-11-22T12:18:15+00:00"
         },
         {
             "name": "masterminds/html5",
@@ -6847,70 +6841,175 @@
             "time": "2025-05-02T10:00:44+00:00"
         },
         {
-            "name": "php-webdriver/webdriver",
-            "version": "1.16.0",
+            "name": "playwright-php/playwright",
+            "version": "v1.4.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/php-webdriver/php-webdriver.git",
-                "reference": "ac0662863aa120b4f645869f584013e4c4dba46a"
+                "url": "https://github.com/playwright-php/playwright.git",
+                "reference": "9162aa438cbd519a4498b493c0a9e047c7aec99e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-webdriver/php-webdriver/zipball/ac0662863aa120b4f645869f584013e4c4dba46a",
-                "reference": "ac0662863aa120b4f645869f584013e4c4dba46a",
+                "url": "https://api.github.com/repos/playwright-php/playwright/zipball/9162aa438cbd519a4498b493c0a9e047c7aec99e",
+                "reference": "9162aa438cbd519a4498b493c0a9e047c7aec99e",
                 "shasum": ""
             },
             "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-zip": "*",
-                "php": "^7.3 || ^8.0",
-                "symfony/polyfill-mbstring": "^1.12",
-                "symfony/process": "^5.0 || ^6.0 || ^7.0 || ^8.0"
-            },
-            "replace": {
-                "facebook/webdriver": "*"
+                "php": "^8.2",
+                "psr/clock": "^1.0",
+                "psr/log": "^2.0 || ^3.0",
+                "symfony/console": "^6.4 || ^7.3 || ^8.0",
+                "symfony/process": "^6.4 || ^7.3 || ^8.0"
             },
             "require-dev": {
-                "ergebnis/composer-normalize": "^2.20.0",
-                "ondram/ci-detector": "^4.0",
-                "php-coveralls/php-coveralls": "^2.4",
-                "php-mock/php-mock-phpunit": "^2.0",
-                "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.5",
-                "symfony/var-dumper": "^5.0 || ^6.0 || ^7.0 || ^8.0"
+                "friendsofphp/php-cs-fixer": "^3.40",
+                "monolog/monolog": "^3.9",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.5",
+                "symfony/var-dumper": "^6.4 || ^7.3 || ^8.0"
             },
-            "suggest": {
-                "ext-simplexml": "For Firefox profile creation"
-            },
+            "bin": [
+                "bin/playwright-install"
+            ],
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
             "autoload": {
                 "files": [
-                    "lib/Exception/TimeoutException.php"
+                    "src/Testing/functions.php"
                 ],
                 "psr-4": {
-                    "Facebook\\WebDriver\\": "lib/"
+                    "Playwright\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
-            "description": "A PHP client for Selenium WebDriver. Previously facebook/webdriver.",
-            "homepage": "https://github.com/php-webdriver/php-webdriver",
+            "authors": [
+                {
+                    "name": "Simon André",
+                    "email": "smn.andre@gmail.com",
+                    "homepage": "https://github.com/smnandre"
+                },
+                {
+                    "name": "Playwright PHP Contributors",
+                    "homepage": "https://github.com/playwright-php"
+                }
+            ],
+            "description": "Modern PHP library for Playwright automation: browsing, scraping, screenshots, testing, and more.",
             "keywords": [
-                "Chromedriver",
-                "geckodriver",
+                "automation",
+                "browser",
+                "chromium",
+                "firefox",
+                "headless",
                 "php",
-                "selenium",
-                "webdriver"
+                "playwright",
+                "scraping",
+                "screenshots",
+                "test",
+                "testing",
+                "web",
+                "webkit"
             ],
             "support": {
-                "issues": "https://github.com/php-webdriver/php-webdriver/issues",
-                "source": "https://github.com/php-webdriver/php-webdriver/tree/1.16.0"
+                "issues": "https://github.com/playwright-php/playwright/issues",
+                "source": "https://github.com/playwright-php/playwright/tree/v1.4.0"
             },
-            "time": "2025-12-28T23:57:40+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/smnandre",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-08-10T19:39:55+00:00"
+        },
+        {
+            "name": "playwright-php/playwright-symfony",
+            "version": "v0.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/playwright-php/playwright-symfony.git",
+                "reference": "703cd6ac18e4d679b507d84edfd15659274221bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/playwright-php/playwright-symfony/zipball/703cd6ac18e4d679b507d84edfd15659274221bb",
+                "reference": "703cd6ac18e4d679b507d84edfd15659274221bb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "playwright-php/playwright": "^1.4",
+                "symfony/browser-kit": "^6.4 || ^7.0 || ^8.0",
+                "symfony/framework-bundle": "^6.4 || ^7.0 || ^8.0",
+                "symfony/http-foundation": "^6.4 || ^7.0 || ^8.0",
+                "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.40",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.5",
+                "symfony/asset": "^6.4 || ^7.0 || ^8.0",
+                "symfony/asset-mapper": "^6.4 || ^7.0 || ^8.0",
+                "symfony/css-selector": "^6.4 || ^7.0 || ^8.0",
+                "symfony/event-dispatcher": "^6.4 || ^7.0 || ^8.0",
+                "symfony/mime": "^6.4 || ^7.0 || ^8.0",
+                "symfony/phpunit-bridge": "^6.4 || ^7.0 || ^8.0",
+                "symfony/security-bundle": "^6.4 || ^7.0 || ^8.0",
+                "symfony/stopwatch": "^6.4 || ^7.0 || ^8.0",
+                "symfony/ux-live-component": "^2.33 || ^3.0",
+                "symfony/ux-turbo": "^2.33 || ^3.0",
+                "symfony/web-profiler-bundle": "^6.4 || ^7.0 || ^8.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Playwright\\Symfony\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Simon André",
+                    "email": "smn.andre@gmail.com",
+                    "homepage": "https://github.com/smnandre"
+                },
+                {
+                    "name": "Playwright PHP Contributors",
+                    "homepage": "https://github.com/playwright-php/playwright"
+                }
+            ],
+            "description": "Playwright PHP integration for Symfony BrowserKit, DomCrawler and WebTestCase",
+            "keywords": [
+                "browserkit",
+                "domcrawler",
+                "e2e",
+                "playwright",
+                "symfony",
+                "symfony-bundle",
+                "symfony-e2e",
+                "symfony-test",
+                "test"
+            ],
+            "support": {
+                "issues": "https://github.com/playwright-php/playwright-symfony/issues",
+                "source": "https://github.com/playwright-php/playwright-symfony/tree/v0.10.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/smnandre",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-08-22T23:49:41+00:00"
         },
         {
             "name": "symfony/browser-kit",
@@ -7127,48 +7226,39 @@
             "time": "2026-05-20T07:20:23+00:00"
         },
         {
-            "name": "symfony/panther",
-            "version": "v2.4.0",
+            "name": "symfony/polyfill-php81",
+            "version": "v1.38.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/symfony/panther.git",
-                "reference": "2d810395942e71aea2f7ea8e8b5f82326bb4b8b4"
+                "url": "https://github.com/symfony/polyfill-php81.git",
+                "reference": "6bfb9c766cacffbc8e118cb87217d08ed84e5cd7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/panther/zipball/2d810395942e71aea2f7ea8e8b5f82326bb4b8b4",
-                "reference": "2d810395942e71aea2f7ea8e8b5f82326bb4b8b4",
+                "url": "https://api.github.com/repos/symfony/polyfill-php81/zipball/6bfb9c766cacffbc8e118cb87217d08ed84e5cd7",
+                "reference": "6bfb9c766cacffbc8e118cb87217d08ed84e5cd7",
                 "shasum": ""
             },
             "require": {
-                "ext-dom": "*",
-                "ext-libxml": "*",
-                "php": ">=8.1",
-                "php-webdriver/webdriver": "^1.8.2",
-                "symfony/browser-kit": "^6.4 || ^7.3 || ^8.0",
-                "symfony/dependency-injection": "^6.4 || ^7.3 || ^8.0",
-                "symfony/deprecation-contracts": "^2.4 || ^3",
-                "symfony/dom-crawler": "^6.4 || ^7.3 || ^8.0",
-                "symfony/http-client": "^6.4 || ^7.0 || ^8.0",
-                "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0",
-                "symfony/process": "^6.4 || ^7.3 || ^8.0"
-            },
-            "require-dev": {
-                "symfony/css-selector": "^6.4 || ^7.3 || ^8.0",
-                "symfony/framework-bundle": "^6.4 || ^7.3 || ^8.0",
-                "symfony/mime": "^6.4 || ^7.3 || ^8.0",
-                "symfony/phpunit-bridge": ">=7.3.4"
+                "php": ">=7.2"
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-main": "2.0.x-dev"
+                "thanks": {
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
                 "psr-4": {
-                    "Symfony\\Component\\Panther\\": "src/"
-                }
+                    "Symfony\\Polyfill\\Php81\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -7176,44 +7266,44 @@
             ],
             "authors": [
                 {
-                    "name": "Kévin Dunglas",
-                    "email": "kevin@dunglas.dev",
-                    "homepage": "https://dunglas.dev"
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
                 },
                 {
                     "name": "Symfony Community",
                     "homepage": "https://symfony.com/contributors"
                 }
             ],
-            "description": "A browser testing and web scraping library for PHP and Symfony.",
-            "homepage": "https://symfony.com/packages/Panther",
+            "description": "Symfony polyfill backporting some PHP 8.1+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
             "keywords": [
-                "e2e",
-                "scraping",
-                "selenium",
-                "symfony",
-                "testing",
-                "webdriver"
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
             ],
             "support": {
-                "issues": "https://github.com/symfony/panther/issues",
-                "source": "https://github.com/symfony/panther/tree/v2.4.0"
+                "source": "https://github.com/symfony/polyfill-php81/tree/v1.38.1"
             },
             "funding": [
                 {
-                    "url": "https://www.panthera.org/donate",
+                    "url": "https://symfony.com/sponsor",
                     "type": "custom"
                 },
                 {
-                    "url": "https://github.com/dunglas",
+                    "url": "https://github.com/fabpot",
                     "type": "github"
                 },
                 {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/panther",
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-08T05:29:21+00:00"
+            "time": "2026-05-26T12:45:58+00:00"
         },
         {
             "name": "symfony/process",
@@ -7421,6 +7511,206 @@
                 "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.8.0"
             },
             "time": "2025-03-04T15:35:32+00:00"
+        },
+        {
+            "name": "zenstruck/assert",
+            "version": "v1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zenstruck/assert.git",
+                "reference": "1e32d48847d4e82c345112ca226b21a1a792af0a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zenstruck/assert/zipball/1e32d48847d4e82c345112ca226b21a1a792af0a",
+                "reference": "1e32d48847d4e82c345112ca226b21a1a792af0a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "symfony/polyfill-php81": "^1.23",
+                "symfony/var-exporter": "^5.4|^6.0|^7.0|^8.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1.4",
+                "phpunit/phpunit": "^9.5.21",
+                "symfony/phpunit-bridge": "^6.3|^7.0|^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Zenstruck\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Bond",
+                    "email": "kevinbond@gmail.com"
+                }
+            ],
+            "description": "Standalone, lightweight, framework agnostic, test assertion library.",
+            "homepage": "https://github.com/zenstruck/assert",
+            "keywords": [
+                "assertion",
+                "phpunit",
+                "test"
+            ],
+            "support": {
+                "issues": "https://github.com/zenstruck/assert/issues",
+                "source": "https://github.com/zenstruck/assert/tree/v1.7.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/kbond",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nikophil",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-12-07T01:59:12+00:00"
+        },
+        {
+            "name": "zenstruck/browser",
+            "version": "v1.12.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zenstruck/browser.git",
+                "reference": "26c1b6d1e052dfdd9a2eef13d4f7134e824da00c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zenstruck/browser/zipball/26c1b6d1e052dfdd9a2eef13d4f7134e824da00c",
+                "reference": "26c1b6d1e052dfdd9a2eef13d4f7134e824da00c",
+                "shasum": ""
+            },
+            "require": {
+                "behat/mink": "^1.8",
+                "php": ">=8.2",
+                "symfony/browser-kit": "^6.4|^7.0|^8.0",
+                "symfony/css-selector": "^6.4|^7.0|^8.0",
+                "symfony/dom-crawler": "^6.4|^7.0|^8.0",
+                "symfony/framework-bundle": "^6.4|^7.0|^8.0",
+                "zenstruck/assert": "^1.1",
+                "zenstruck/callback": "^1.4.2"
+            },
+            "require-dev": {
+                "brianium/paratest": "^6.11|^7.0",
+                "justinrainbow/json-schema": "^5.3",
+                "mtdowling/jmespath.php": "^2.6",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^9.6.21|^10.4|^11.5|^12.0|^13.0",
+                "playwright-php/playwright": "^1.4",
+                "playwright-php/playwright-symfony": "^0.10",
+                "symfony/console": "^6.4|^7.0|^8.0",
+                "symfony/mime": "^6.4|^7.0|^8.0",
+                "symfony/panther": "^1.1|^2.0.1",
+                "symfony/phpunit-bridge": "^6.4|^7.0|^8.0",
+                "symfony/security-bundle": "^6.4|^7.0|^8.0"
+            },
+            "suggest": {
+                "justinrainbow/json-schema": "Json schema validator. Needed to use Json::assertMatchesSchema().",
+                "mtdowling/jmespath.php": "PHP implementation for JMESPath. Needed to use Json assertions."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Zenstruck\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Bond",
+                    "email": "kevinbond@gmail.com"
+                }
+            ],
+            "description": "A fluent interface for your Symfony functional tests.",
+            "homepage": "https://github.com/zenstruck/browser",
+            "keywords": [
+                "dev",
+                "symfony",
+                "test"
+            ],
+            "support": {
+                "issues": "https://github.com/zenstruck/browser/issues",
+                "source": "https://github.com/zenstruck/browser/tree/v1.12.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/kbond",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nikophil",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-08-24T16:02:16+00:00"
+        },
+        {
+            "name": "zenstruck/callback",
+            "version": "v1.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zenstruck/callback.git",
+                "reference": "eed9a532fd8974368e60c4a2550ed65eab7e5432"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zenstruck/callback/zipball/eed9a532fd8974368e60c4a2550ed65eab7e5432",
+                "reference": "eed9a532fd8974368e60c4a2550ed65eab7e5432",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2.5",
+                "symfony/polyfill-php80": "^1.14"
+            },
+            "require-dev": {
+                "symfony/phpunit-bridge": "^5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Zenstruck\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Bond",
+                    "email": "kevinbond@gmail.com"
+                }
+            ],
+            "description": "Callable wrapper to validate and inject arguments.",
+            "homepage": "https://github.com/zenstruck/callback",
+            "keywords": [
+                "callable",
+                "callback",
+                "utility"
+            ],
+            "support": {
+                "issues": "https://github.com/zenstruck/callback/issues",
+                "source": "https://github.com/zenstruck/callback/tree/v1.5.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/kbond",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-08-31T14:56:15+00:00"
         }
     ],
     "aliases": [],

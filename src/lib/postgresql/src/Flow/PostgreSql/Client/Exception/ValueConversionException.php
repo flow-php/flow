@@ -25,6 +25,13 @@ final class ValueConversionException extends ClientException
         return new self(sprintf('Cannot convert value of type "%s" to "%s"', $valueType, $targetType));
     }
 
+    public static function invalidArrayLiteral(string $literal, string $reason): self
+    {
+        $preview = strlen($literal) > 20 ? substr($literal, 0, 20) . '...' : $literal;
+
+        return new self(sprintf('Invalid PostgreSQL array literal (%s): %s', $reason, $preview));
+    }
+
     public static function invalidByteaData(string $value): self
     {
         $preview = strlen($value) > 20 ? substr($value, 0, 20) . '...' : $value;

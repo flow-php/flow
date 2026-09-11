@@ -22,7 +22,7 @@ final class WindowContextTest extends FlowTestCase
 
         static::assertSame(2, $context->index());
         static::assertSame($partition, $context->partition());
-        static::assertTrue($partition[2]->isEqual($context->row()));
+        static::assertSame($partition[2]->values(), $context->row()->values());
     }
 
     public function test_empty_bounds_produce_an_empty_frame(): void
@@ -67,8 +67,8 @@ final class WindowContextTest extends FlowTestCase
         )->frame();
 
         static::assertCount(3, $frame);
-        static::assertSame(2, $frame[0]->valueOf('id'));
-        static::assertSame(3, $frame[1]->valueOf('id'));
-        static::assertSame(4, $frame[2]->valueOf('id'));
+        static::assertSame(2, $frame[0]->get('id'));
+        static::assertSame(3, $frame[1]->get('id'));
+        static::assertSame(4, $frame[2]->get('id'));
     }
 }

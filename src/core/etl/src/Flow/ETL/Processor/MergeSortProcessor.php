@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Bucketing\Bucket;
+use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\References;
+use Flow\ETL\Schema;
 use Flow\ETL\Sort\Merge\KWayMerge;
 use Generator;
 
@@ -27,7 +30,8 @@ final class MergeSortProcessor implements Processor
      */
     public function __construct(
         private readonly References $refs,
-        private readonly Buckets $buckets,
+        private readonly Buckets $spill,
+        private readonly Buckets $merge,
         private readonly RandomValueGenerator $random,
         private readonly int $mergeFanIn = 10,
         private readonly int $batchSize = 1000,
@@ -45,59 +49,69 @@ final class MergeSortProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
+    }
+
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        /** @var list<string> $bucketIds */
-        $bucketIds = [];
-
-        foreach ($rows as $batch) {
-            foreach ($batch as $row) {
-                /** @var string $bucketId */
-                $bucketId = $row->valueOf(BucketShape::id->value);
-                $bucketIds[] = $bucketId;
-            }
-        }
-
-        $merger = new KWayMerge($this->buckets->storage(), $this->refs, $this->batchSize);
+        /** @var list<BucketRun> $runs */
+        $runs = [];
 
         try {
-            $mergedIndex = 0;
-
-            while (count($bucketIds) > $this->mergeFanIn) {
-                $bucketIds[] = $this->reduce(array_slice($bucketIds, 0, $this->mergeFanIn), $merger, $mergedIndex++);
-                array_splice($bucketIds, 0, $this->mergeFanIn);
+            // draining upstream inside the try is what makes a mid-stream failure release the spilled runs
+            foreach ($rows as $batch) {
+                foreach ($batch as $row) {
+                    /** @var string $bucketId */
+                    $bucketId = $row->get(BucketShape::id->value);
+                    $runs[] = new BucketRun($bucketId, $this->spill);
+                }
             }
 
-            yield from $merger->merge($bucketIds);
+            $merger = new KWayMerge($this->refs, $this->batchSize);
+            $mergedIndex = 0;
+
+            while (count($runs) > $this->mergeFanIn) {
+                $runs[] = $this->reduce(array_slice($runs, 0, $this->mergeFanIn), $merger, $mergedIndex++);
+                array_splice($runs, 0, $this->mergeFanIn);
+            }
+
+            yield from $merger->merge($runs);
         } finally {
-            $this->buckets->clear();
+            // nested, so a throwing spill clear still leaves the merge storage cleared - and chains as previous
+            try {
+                $this->spill->clear();
+            } finally {
+                $this->merge->clear();
+            }
         }
     }
 
     /**
-     * @param list<string> $group
+     * @param list<BucketRun> $group
      *
-     * @return string id of the bucket holding the merged runs
+     * @return BucketRun the merged run, bound to the merge storage that wrote it
      */
-    private function reduce(array $group, KWayMerge $merger, int $index): string
+    private function reduce(array $group, KWayMerge $merger, int $index): BucketRun
     {
         $bucketId = 'sort-merge-' . $this->random->string(16);
 
         // registered before the spill so clear() covers a partially written merged run
-        $this->buckets->add(new Bucket($bucketId, 0, $index));
+        $this->merge->add(new Bucket($bucketId, 0, $index));
         $totalRows = 0;
 
         foreach ($merger->merge($group) as $batch) {
-            $this->buckets->storage()->append($bucketId, $batch);
+            $this->merge->storage()->append($bucketId, $batch);
             $totalRows += $batch->count();
         }
 
-        foreach ($group as $id) {
-            $this->buckets->remove($id);
+        foreach ($group as $run) {
+            $run->remove();
         }
 
-        $this->buckets->add(new Bucket($bucketId, $totalRows, $index));
+        $this->merge->add(new Bucket($bucketId, $totalRows, $index));
 
-        return $bucketId;
+        return new BucketRun($bucketId, $this->merge);
     }
 }

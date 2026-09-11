@@ -26,6 +26,7 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
@@ -51,6 +52,7 @@ use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -439,7 +441,6 @@ final class SchemaConverter
                 : [];
 
             $elements = [];
-            $optionalElements = [];
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($schema['properties'] as $name => $propertySchema) {
@@ -453,14 +454,12 @@ final class SchemaConverter
                 /** @var array<string, mixed>|bool $propertySchema */
                 $type = $this->convert($this->booleanSchema($propertySchema, $path . '.' . $name), $path . '.' . $name);
 
-                if (in_array($name, $required, true)) {
-                    $elements[$name] = $type;
-                } else {
-                    $optionalElements[$name] = $type;
-                }
+                $elements[$name] = in_array($name, $required, true)
+                    ? $type
+                    : structure_element($name, $type, optional: true);
             }
 
-            return type_structure($elements, $optionalElements);
+            return type_structure($elements);
         }
 
         if (array_key_exists('additionalProperties', $schema) && is_array($schema['additionalProperties'])) {
@@ -1000,6 +999,7 @@ final class SchemaConverter
             $type instanceof DateTimeType => ['type' => 'string', 'format' => 'date-time'],
             $type instanceof TimeType => ['type' => 'string', 'format' => 'time'],
             $type instanceof UuidType => ['type' => 'string', 'format' => 'uuid'],
+            $type instanceof TimeZoneType => ['type' => 'string'],
             $type instanceof HTMLType, $type instanceof HTMLElementType => ['type' => 'string', 'format' => 'html'],
             $type instanceof XMLType, $type instanceof XMLElementType => ['type' => 'string', 'format' => 'xml'],
             $type instanceof EnumType => $this->enumToJsonSchema($type),
@@ -1050,13 +1050,12 @@ final class SchemaConverter
         $properties = [];
         $required = [];
 
-        foreach ($type->elements() as $name => $elementType) {
-            $properties[$name] = $this->typeToJsonSchema($elementType);
-            $required[] = $name;
-        }
+        foreach ($type->elements() as $element) {
+            $properties[$element->name] = $this->typeToJsonSchema($element->type);
 
-        foreach ($type->optionalElements() as $name => $elementType) {
-            $properties[$name] = $this->typeToJsonSchema($elementType);
+            if (!$element->optional) {
+                $required[] = $element->name;
+            }
         }
 
         $jsonSchema = ['type' => 'object', 'properties' => $properties];

@@ -21,14 +21,14 @@ final class CountingFrameAccumulator implements FrameAccumulator
     {
         $this->spy->accumulateCalls++;
 
-        $value = $row->valueOf($this->ref);
+        $value = $row->get($this->ref);
 
         if (is_int($value) || is_float($value)) {
             $this->sum += $value;
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         $this->spy->valueCalls++;
 

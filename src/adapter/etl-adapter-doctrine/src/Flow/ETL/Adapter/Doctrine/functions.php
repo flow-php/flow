@@ -16,13 +16,13 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLUpdateOptions;
 use Flow\Doctrine\Bulk\Dialect\SqliteInsertOptions;
 use Flow\Doctrine\Bulk\InsertOptions;
 use Flow\Doctrine\Bulk\UpdateOptions;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\DocumentationExample;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Adapter\Doctrine\Pagination\Order;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\DocumentationExample;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
@@ -50,7 +50,7 @@ function dbal_dataframe_factory(
  * @param Connection $connection
  * @param string|Table $table
  * @param array<OrderBy>|OrderBy $order_by
- * @param int $page_size
+ * @param int $page_size - becomes the extractor's batch size: rows per page
  * @param null|int $maximum
  *
  * @throws InvalidArgumentException
@@ -67,7 +67,7 @@ function from_dbal_limit_offset(
         $connection,
         is_string($table) ? new Table($table) : $table,
         $order_by instanceof OrderBy ? [$order_by] : $order_by,
-    )->withPageSize($page_size);
+    )->withBatchSize($page_size);
 
     if ($maximum !== null) {
         $loader->withMaximum($maximum);
@@ -78,7 +78,7 @@ function from_dbal_limit_offset(
 
 /**
  * @param Connection $connection
- * @param int $page_size
+ * @param int $page_size - becomes the extractor's batch size: rows per page
  * @param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it's set
  * @param int $offset - offset can also be taken from a query builder, $offset however is used regardless of the query builder if it's set to non 0 value
  */
@@ -91,7 +91,7 @@ function from_dbal_limit_offset_qb(
     int $offset = 0,
 ): DbalLimitOffsetExtractor {
     $loader = (new DbalLimitOffsetExtractor($connection, $queryBuilder))
-        ->withPageSize($page_size)
+        ->withBatchSize($page_size)
         ->withOffset($offset);
 
     if ($maximum !== null) {
@@ -193,7 +193,7 @@ function dbal_from_query(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
+#[DocumentationExample(topic: 'writing', example: 'dbal', option: 'upsert')]
 function to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null): DbalLoader
 {
     return is_array($connection)
@@ -272,7 +272,7 @@ function table_schema_to_flow_schema(DoctrineTable $table, array $types_map = []
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
+#[DocumentationExample(topic: 'writing', example: 'dbal', option: 'upsert')]
 function postgresql_insert_options(
     ?bool $skip_conflicts = null,
     ?string $constraint = null,

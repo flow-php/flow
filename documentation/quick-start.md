@@ -25,15 +25,14 @@ data_frame()
     ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
     ->select('created_at', 'revenue')
-    ->groupBy('created_at')
+    ->groupBy(['created_at'])
     ->aggregate(sum(ref('revenue')))
-    ->sortBy(ref('created_at')->desc())
+    ->sortBy([ref('created_at')->desc()])
     ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
     ->write(to_output(truncate: false))
     ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/daily_revenue.csv'))
+    ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
     ->run();
 ```
 
@@ -63,7 +62,7 @@ All extractors return \Generator and by design will return rows one by one - thi
 
 ```php
 data_frame()
-    ->read(from_csv(__DIR__ . '/orders_flow.csv'))
+    ->read(from_csv(__DIR__ . '/orders_flow.csv'));
 ```
 
 In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\CSVExtractor` class.
@@ -72,7 +71,7 @@ All file-based extractors accept [glob path patterns](https://github.com/webmoza
 
 ```php
 data_frame()
-    ->read(from_csv(__DIR__ . '/reports/*.csv'))
+    ->read(from_csv(__DIR__ . '/reports/*.csv'));
 ```  
 
 [Extractors Examples](/data_reading/#example)
@@ -82,13 +81,13 @@ data_frame()
 Extractors by default are going to read all columns from the data source, you can use the `select()` function to select only the columns you need.
 Alternatively you can use the `drop()` function to drop columns you don't need.
 
-```php
+```php ignore
     ->select('created_at', 'total_price', 'discount')
 ```
 
 One of the most powerful features of Flow ETL is the ability to transform data using the `withEntry()` function.
 
-```php
+```php ignore
     ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
 ```
@@ -114,18 +113,16 @@ You can find all available functions in the [DSL](/src/core/etl/src/Flow/ETL/DSL
 Loading, also writing to a data source, is the last step in the data processing pipeline.
 There can be more than one writer in the pipeline
 
-```php
+```php ignore
     ->write(to_output(truncate: false))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/daily_revenue.csv'))
+    ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
 ```
 
 In this example we're first using the `to_output()` which just prints the data to the console as a simple ASCII table without
 truncating the output.
 
-```php
-    ->mode(SaveMode::Overwrite)
-    ->write(to_csv(__DIR__ . '/daily_revenue.csv'))
+```php ignore
+    ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
 ```
 
 Second write is writing the data to a CSV file, we're using the `mode()` function to set the save mode to `overwrite`.
@@ -146,7 +143,7 @@ There are three save modes available:
 
 Flow ETL is using lazy execution, which means that the pipeline will not be executed until you call the `run()` function.
 
-```php
+```php ignore
     ->run();
 ```
 

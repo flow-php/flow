@@ -62,6 +62,11 @@ final class ThrowingSourceFilesystem implements Filesystem
         return $this->wrapped->status($path);
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount()->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         return $this->wrapped->writeTo($path);

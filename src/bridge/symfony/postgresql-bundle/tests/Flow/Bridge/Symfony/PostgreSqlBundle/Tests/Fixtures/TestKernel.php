@@ -6,9 +6,11 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
 use Override;
+use Psr\Log\NullLogger;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -139,6 +141,13 @@ final class TestKernel extends Kernel
                         $alias->setPublic(true);
                     }
                 }
+
+                // Registered unconditionally, and that is the point: FrameworkBundle's LoggerPass
+                // runs later (priority -32) and only registers its stderr-writing default when no
+                // 'logger' exists yet. Without this, a test that deliberately provokes a 500 to
+                // assert the profiler recorded the failed query prints a [critical] line into the
+                // suite output. The exception is still thrown, handled and asserted.
+                $container->setDefinition('logger', new Definition(NullLogger::class));
             }
         });
     }

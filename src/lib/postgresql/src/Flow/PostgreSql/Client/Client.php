@@ -12,6 +12,7 @@ use Flow\PostgreSql\Client\Exception\TooManyRowsException;
 use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface Client
@@ -55,15 +56,29 @@ interface Client
     public function cursor(Sql|string $sql, array $parameters = []): Cursor;
 
     /**
+     * Describe the columns a query would produce, by executing a zero-row probe of it.
+     * Column order is the query's select order. Duplicate output names are returned as many
+     * times as the query projects them - see pg_fetch_assoc(), which collapses them last-wins.
+     *
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param list<mixed> $parameters Only the count is used
+     *
+     * @throws QueryException
+     *
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array;
+
+    /**
      * Execute a statement that modifies data (INSERT, UPDATE, DELETE).
      * Returns the number of affected rows.
      *
      * @param Sql|string $sql SQL statement or query builder with $1, $2, ... placeholders
-     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
+     * @param ConvertedParameters|list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap one with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type, or pass {@see ConvertedParameters} already in PostgreSQL's text form to skip the converters
      *
      * @throws QueryException
      */
-    public function execute(Sql|string $sql, array $parameters = []): int;
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int;
 
     /**
      * Execute EXPLAIN ANALYZE on a query and return the execution plan.

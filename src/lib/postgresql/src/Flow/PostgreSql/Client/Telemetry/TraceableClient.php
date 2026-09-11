@@ -8,12 +8,14 @@ use Closure;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\Logger\Logger;
@@ -206,15 +208,30 @@ final class TraceableClient implements Client
         return new TraceableCursor($cursor, $this->telemetryConfig, $this->client->parameters(), $query, $parameters);
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
+    {
+        $columns = $this->client->describe($sql, $parameters);
+
+        if ($this->telemetryConfig->options->traceQueries || $this->telemetryConfig->options->collectMetrics) {
+            $this->logQuery($sql instanceof Sql ? $sql->toSql() : $sql, $parameters);
+        }
+
+        return $columns;
+    }
+
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
+        $logged = $parameters instanceof ConvertedParameters ? $parameters->values : $parameters;
 
         return $this->traceQuery(
             $query,
-            $parameters,
-            function () use ($sql, $parameters, $query): int {
-                $this->logQuery($query, $parameters);
+            $logged,
+            function () use ($sql, $parameters, $query, $logged): int {
+                $this->logQuery($query, $logged);
 
                 return $this->client->execute($sql, $parameters);
             },

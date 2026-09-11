@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Sanitization;
 
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_string;
@@ -30,9 +31,10 @@ final readonly class Mask implements Sanitizer
      */
     public static function fromArray(array $data): self
     {
-        $data = type_structure(['type' => type_literal('mask')], [
-            'character' => type_string(),
-            'offset' => type_integer(),
+        $data = type_structure([
+            'type' => type_literal('mask'),
+            'character' => structure_element('character', type_string(), optional: true),
+            'offset' => structure_element('offset', type_integer(), optional: true),
         ])->assert($data);
 
         return new self($data['character'] ?? '*', $data['offset'] ?? 0);

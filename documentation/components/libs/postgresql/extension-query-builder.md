@@ -133,22 +133,6 @@ echo $query->toSql();
 // ALTER EXTENSION postgis UPDATE TO "3.0"
 ```
 
-### Set Schema
-
-Move extension objects to a different schema:
-
-```php
-<?php
-
-use function Flow\PostgreSql\DSL\alter;
-
-$query = alter()->extension('uuid-ossp')
-    ->setSchema('public');
-
-echo $query->toSql();
-// ALTER EXTENSION "uuid-ossp" SET SCHEMA public
-```
-
 ### Add Objects to Extension
 
 Add a function to an extension:

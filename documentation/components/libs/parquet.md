@@ -681,7 +681,7 @@ $schema = Schema::with(
 
 **Understanding Flat Paths:**
 
-```php
+```php ignore
 // STRUCT: Direct field access with dot notation
 'user.id'              // user struct → id field
 'user.name'            // user struct → name field  

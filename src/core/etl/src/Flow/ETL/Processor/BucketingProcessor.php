@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\BucketingStrategy;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 /**
@@ -31,7 +34,12 @@ final class BucketingProcessor implements Processor
         foreach ($this->strategy->bucketize($rows, $this->buckets->storage()) as $bucket) {
             $this->buckets->add($bucket);
 
-            yield new Rows($bucket->toRow());
+            yield new Rows(Bucket::schema(), $bucket->toRow());
         }
+    }
+
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
     }
 }

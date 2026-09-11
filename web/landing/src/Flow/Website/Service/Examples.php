@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\Website\Service;
 
 use FilesystemIterator;
+use Flow\Website\Service\Examples\ExampleMeta;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use SplFileInfo;
-use Symfony\Component\Yaml\Yaml;
 
 use function array_diff;
 use function array_keys;
@@ -19,12 +19,8 @@ use function count;
 use function current;
 use function file_exists;
 use function file_get_contents;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function is_dir;
 use function is_file;
@@ -210,12 +206,12 @@ final readonly class Examples
             ));
         }
 
-        $examples = array_values(array_diff(type_list(type_string())->assert(scandir($path)), [
-            '..',
-            '.',
-            '.gitignore',
-            '_meta.yaml',
-        ]));
+        // an example is always a directory; a loose file beside them (a topic-level description.md,
+        // say) would otherwise be walked as one and scandir() would return false on it
+        $examples = array_values(array_filter(
+            array_diff(type_list(type_string())->assert(scandir($path)), ['..', '.']),
+            fn(string $entry): bool => is_dir(sprintf('%s/%s', $path, $entry)),
+        ));
 
         if (0 === count($examples)) {
             throw new RuntimeException(sprintf(
@@ -551,19 +547,8 @@ final readonly class Examples
      */
     private function readMeta(string $path): array
     {
-        $metaPath = $path . '/_meta.yaml';
+        $meta = ExampleMeta::fromDirectory($path);
 
-        if (!file_exists($metaPath)) {
-            return ['priority' => 99, 'hidden' => false];
-        }
-
-        $meta = type_map(type_string(), type_mixed())->assert(Yaml::parse(type_string()->assert(file_get_contents(
-            $metaPath,
-        ))));
-
-        return [
-            'priority' => type_integer()->assert($meta['priority'] ?? 99),
-            'hidden' => type_boolean()->assert($meta['hidden'] ?? false),
-        ];
+        return ['priority' => $meta->priority, 'hidden' => $meta->hidden];
     }
 }

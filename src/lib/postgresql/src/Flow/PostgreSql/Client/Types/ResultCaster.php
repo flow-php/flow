@@ -6,8 +6,13 @@ namespace Flow\PostgreSql\Client\Types;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 
+use function array_map;
+use function array_values;
 use function floatval;
 use function hex2bin;
+use function is_array;
+use function preg_replace;
+use function str_starts_with;
 use function substr;
 
 use const INF;
@@ -18,30 +23,66 @@ use const PHP_INT_SIZE;
  * Casts PostgreSQL result values to unambiguous PHP types.
  *
  * Uses string type names from pg_field_type() for portability (OIDs can vary with extensions).
- *
- * Only converts types that have a clear, unambiguous mapping:
- * - bool → bool
- * - int2, int4 → int
- * - int8 → int (on 64-bit) or string (on 32-bit to avoid overflow)
- * - float4, float8 → float (including Infinity, -Infinity, NaN)
- * - bytea → string (decoded binary)
- * - timestamp → string with a +00:00 offset appended (values are stored in UTC)
- *
- * All other types remain as strings for higher layers to interpret.
+ * Anything without an explicit arm stays a string for higher layers to interpret.
  */
 final readonly class ResultCaster
 {
-    public function cast(string $value, ?string $typeName): bool|float|int|string
+    private ArrayLiteralParser $arrayLiteralParser;
+
+    public function __construct()
+    {
+        $this->arrayLiteralParser = new ArrayLiteralParser();
+    }
+
+    /**
+     * @return list<mixed>|bool|float|int|string
+     */
+    public function cast(string $value, ?string $typeName): array|bool|float|int|string
     {
         return match ($typeName) {
             'bool' => $value === 't',
-            'int2', 'int4' => (int) $value,
+            'int2', 'int4', 'oid' => (int) $value,
             'int8' => PHP_INT_SIZE >= 8 ? (int) $value : $value,
             'float4', 'float8' => $this->castFloat($value),
             'bytea' => $this->castBytea($value),
             'timestamp' => $this->castTimestamp($value),
-            default => $value,
+            'timetz' => $this->castTimeTz($value),
+            // Checked last so a typed column never pays for it. No array type name can reach an
+            // explicit arm above: every one of them starts with an underscore.
+            default => $typeName !== null && str_starts_with($typeName, '_')
+                ? $this->castElements($this->arrayLiteralParser->parse($value), substr($typeName, 1))
+                : $value,
         };
+    }
+
+    /**
+     * Whether cast() changes a value of this type at all - every other type's text is its value already, so a
+     * reader can skip those columns for a whole result.
+     */
+    public function converts(?string $typeName): bool
+    {
+        return match ($typeName) {
+            'bool', 'int2', 'int4', 'oid', 'int8', 'float4', 'float8', 'bytea', 'timestamp', 'timetz' => true,
+            null => false,
+            default => str_starts_with($typeName, '_'),
+        };
+    }
+
+    /**
+     * pg carries an array's element type once, for every dimension, so a nested list re-enters the
+     * same conversion rather than being re-parsed.
+     *
+     * @param array<array-key, mixed> $elements
+     *
+     * @return list<mixed>
+     */
+    private function castElements(array $elements, string $elementType): array
+    {
+        return array_map(fn(mixed $element): mixed => match (true) {
+            $element === null => null,
+            is_array($element) => $this->castElements($element, $elementType),
+            default => $this->cast((string) $element, $elementType),
+        }, array_values($elements));
     }
 
     private function castBytea(string $value): string
@@ -67,6 +108,15 @@ final readonly class ResultCaster
         }
 
         return $value . '+00:00';
+    }
+
+    /**
+     * TimeType is DateInterval-backed and carries no offset, so timetz keeps its clock time and
+     * drops the zone. A stated, accepted loss.
+     */
+    private function castTimeTz(string $value): string
+    {
+        return preg_replace('/[+-]\d{2}(:\d{2}){0,2}$/', '', $value) ?? $value;
     }
 
     private function castFloat(string $value): float

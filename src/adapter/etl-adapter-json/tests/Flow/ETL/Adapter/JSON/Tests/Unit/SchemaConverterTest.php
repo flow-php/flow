@@ -11,6 +11,8 @@ use Flow\ETL\Adapter\JSON\JsonSchema\JsonSchemaMetadata;
 use Flow\ETL\Adapter\JSON\SchemaConverter;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
+use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -32,9 +34,9 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
@@ -83,17 +85,17 @@ final class SchemaConverterTest extends FlowTestCase
         ]);
     }
 
-    public function test_to_flow_any_of_with_heterogeneous_members_becomes_union(): void
+    public function test_to_flow_any_of_with_heterogeneous_members_is_refused(): void
     {
-        $flowSchema = (new SchemaConverter())->toFlow([
+        $this->expectException(UnsupportedUnionTypeException::class);
+
+        (new SchemaConverter())->toFlow([
             'type' => 'object',
             'required' => ['value'],
             'properties' => [
                 'value' => ['anyOf' => [['type' => 'string'], ['type' => 'integer']]],
             ],
         ]);
-
-        static::assertEquals(schema(union_schema('value', type_union(type_string(), type_integer()))), $flowSchema);
     }
 
     public function test_to_flow_any_of_with_null_member_becomes_nullable(): void
@@ -257,24 +259,17 @@ final class SchemaConverterTest extends FlowTestCase
         );
     }
 
-    public function test_to_flow_enum_with_heterogeneous_values_becomes_union(): void
+    public function test_to_flow_enum_with_heterogeneous_values_is_refused(): void
     {
-        $flowSchema = (new SchemaConverter())->toFlow([
+        $this->expectException(UnsupportedUnionTypeException::class);
+
+        (new SchemaConverter())->toFlow([
             'type' => 'object',
             'required' => ['value'],
             'properties' => [
                 'value' => ['enum' => ['auto', 1, 2]],
             ],
         ]);
-
-        static::assertEquals(
-            schema(union_schema(
-                'value',
-                type_union(type_string(), type_integer()),
-                metadata: Metadata::with(JsonSchemaMetadata::ENUM->value, ['auto', 1, 2]),
-            )),
-            $flowSchema,
-        );
     }
 
     public function test_to_flow_enum_with_homogeneous_values_becomes_scalar(): void
@@ -356,8 +351,9 @@ final class SchemaConverterTest extends FlowTestCase
         ]);
 
         static::assertEquals(
-            schema(structure_schema('money', type_structure(['amount' => type_float()], [
-                'currency' => type_string(),
+            schema(structure_schema('money', type_structure([
+                'amount' => type_float(),
+                'currency' => structure_element('currency', type_string(), optional: true),
             ]))),
             $flowSchema,
         );
@@ -414,7 +410,8 @@ final class SchemaConverterTest extends FlowTestCase
                 type_list(type_structure([
                     'sku' => type_string(),
                     'attributes' => type_map(type_string(), type_string()),
-                ], ['quantity' => type_integer()])),
+                    'quantity' => structure_element('quantity', type_integer(), optional: true),
+                ])),
             )),
             $flowSchema,
         );
@@ -519,7 +516,8 @@ final class SchemaConverterTest extends FlowTestCase
                 structure_schema('address', type_structure([
                     'street' => type_string(),
                     'city' => type_string(),
-                ], ['zip' => type_string()])),
+                    'zip' => structure_element('zip', type_string(), optional: true),
+                ])),
                 structure_schema(
                     'location',
                     type_structure([
@@ -624,20 +622,17 @@ final class SchemaConverterTest extends FlowTestCase
         static::assertEquals(schema(float_schema('score', true)), $flowSchema);
     }
 
-    public function test_to_flow_type_list_with_null_and_multiple_types_becomes_nullable_union(): void
+    public function test_to_flow_type_list_with_null_and_multiple_types_is_refused(): void
     {
-        $flowSchema = (new SchemaConverter())->toFlow([
+        $this->expectException(UnsupportedUnionTypeException::class);
+
+        (new SchemaConverter())->toFlow([
             'type' => 'object',
             'required' => ['value'],
             'properties' => [
                 'value' => ['type' => ['string', 'integer', 'null']],
             ],
         ]);
-
-        static::assertEquals(
-            schema(union_schema('value', type_union(type_integer(), type_string()), true)),
-            $flowSchema,
-        );
     }
 
     public function test_to_flow_type_null_becomes_null_definition(): void
@@ -699,10 +694,10 @@ final class SchemaConverterTest extends FlowTestCase
             datetime_schema('created_at'),
             list_schema('tags', type_list(type_string())),
             map_schema('attributes', type_map(type_string(), type_string()), true),
-            structure_schema('address', type_structure(['street' => type_string()], [
-                'zip' => type_optional(type_string()),
+            structure_schema('address', type_structure([
+                'street' => type_string(),
+                'zip' => structure_element('zip', type_optional(type_string()), optional: true),
             ])),
-            union_schema('value', type_union(type_integer(), type_string()), true),
             json_schema('document'),
             json_schema('anything', true, Metadata::with(JsonSchemaMetadata::ANY->value, true)),
             null_schema('nothing'),
@@ -711,6 +706,45 @@ final class SchemaConverterTest extends FlowTestCase
         $converter = new SchemaConverter();
 
         static::assertEquals($flowSchema, $converter->toFlow($converter->toJsonSchema($flowSchema)));
+    }
+
+    public function test_to_json_schema_interleaved_structure_lists_required_fields_regardless_of_declaration_order(): void
+    {
+        static::assertSame(
+            [
+                '$schema' => 'https://json-schema.org/draft/2020-12/schema',
+                'type' => 'object',
+                'properties' => [
+                    's' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'z' => ['type' => 'integer'],
+                            'a' => ['type' => 'string'],
+                            'b' => ['type' => 'string'],
+                        ],
+                        'required' => ['z', 'b'],
+                    ],
+                ],
+                'required' => ['s'],
+            ],
+            (new SchemaConverter())->toJsonSchema(schema(structure_schema('s', type_structure([
+                'z' => type_integer(),
+                'a' => structure_element('a', type_string(), optional: true),
+                'b' => type_string(),
+            ])))),
+        );
+    }
+
+    public function test_a_union_column_cannot_round_trip_because_it_cannot_be_read_back(): void
+    {
+        $converter = new SchemaConverter();
+        $jsonSchema = $converter->toJsonSchema(schema(
+            new UnionDefinition('value', type_union(type_integer(), type_string()), true),
+        ));
+
+        $this->expectException(UnsupportedUnionTypeException::class);
+
+        $converter->toFlow($jsonSchema);
     }
 
     public function test_round_trip_json_schema_to_flow_and_back(): void
@@ -941,11 +975,9 @@ final class SchemaConverterTest extends FlowTestCase
 
     public function test_to_json_schema_nullable_union_appends_null_member(): void
     {
-        $jsonSchema = (new SchemaConverter())->toJsonSchema(schema(union_schema(
-            'value',
-            type_union(type_integer(), type_string()),
-            true,
-        )));
+        $jsonSchema = (new SchemaConverter())->toJsonSchema(schema(
+            new UnionDefinition('value', type_union(type_integer(), type_string()), true),
+        ));
 
         static::assertSame(
             [
@@ -983,7 +1015,8 @@ final class SchemaConverterTest extends FlowTestCase
     {
         $jsonSchema = (new SchemaConverter())->toJsonSchema(schema(structure_schema('address', type_structure([
             'street' => type_string(),
-        ], ['zip' => type_optional(type_string())]))));
+            'zip' => structure_element('zip', type_optional(type_string()), optional: true),
+        ]))));
 
         static::assertSame(
             [

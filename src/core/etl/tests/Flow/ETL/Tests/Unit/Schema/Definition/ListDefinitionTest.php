@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
@@ -15,21 +14,17 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 
 final class ListDefinitionTest extends FlowTestCase
@@ -111,46 +106,32 @@ final class ListDefinitionTest extends FlowTestCase
         static::assertFalse($def->metadata()->has('key'));
     }
 
-    public function test_does_not_match_a_map_entry_holding_a_list_shaped_value(): void
-    {
-        $def = list_schema('col', type_list(type_integer()));
-
-        static::assertFalse($def->matches(map_entry('col', [1, 2], type_map(type_integer(), type_integer()))));
-    }
-
     public function test_does_not_match_a_null_entry_when_not_nullable(): void
     {
         $def = list_schema('col', type_list(type_integer()));
 
-        static::assertFalse($def->matches(list_entry('col', null, type_list(type_integer()))));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_an_entry_of_a_different_list_instantiation(): void
     {
         $def = list_schema('col', type_list(type_integer()));
 
-        static::assertFalse($def->matches(list_entry('col', ['x'], type_list(type_string()))));
+        static::assertFalse($def->matches(['x']));
     }
 
     public function test_does_not_match_an_entry_of_a_different_nested_list_instantiation(): void
     {
         $def = list_schema('col', type_list(type_list(type_integer())));
 
-        static::assertFalse($def->matches(list_entry('col', [['x']], type_list(type_list(type_string())))));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = list_schema('items', type_list(type_integer()));
-
-        static::assertFalse($def->matches(list_entry('other', [1, 2, 3], type_list(type_integer()))));
+        static::assertFalse($def->matches([['x']]));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = list_schema('col', type_list(type_integer()));
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
     public function test_array_element_is_projected_to_json(): void
@@ -161,11 +142,6 @@ final class ListDefinitionTest extends FlowTestCase
     public function test_empty_array_element_is_projected_to_json(): void
     {
         static::assertSame('list<json>', list_schema('items', type_list(type_empty_array()))->type()->toString());
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(ListEntry::class, list_schema('items', type_list(type_integer()))->entryClass());
     }
 
     /**
@@ -210,6 +186,14 @@ final class ListDefinitionTest extends FlowTestCase
         static::assertTrue($def->isSame($other));
     }
 
+    public function test_is_same_is_field_order_sensitive_for_nested_structures(): void
+    {
+        $def = list_schema('items', type_list(type_structure(['a' => type_integer(), 'b' => type_string()])));
+        $other = list_schema('items', type_list(type_structure(['b' => type_string(), 'a' => type_integer()])));
+
+        static::assertFalse($def->isSame($other));
+    }
+
     public function test_make_nullable(): void
     {
         $def = list_schema('items', type_list(type_integer()), false);
@@ -224,14 +208,14 @@ final class ListDefinitionTest extends FlowTestCase
     {
         $def = list_schema('col', type_list(type_integer()));
 
-        static::assertTrue($def->matches(list_entry('col', [], type_list(type_string()))));
+        static::assertTrue($def->matches([]));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
     {
         $def = list_schema('col', type_list(type_integer()));
 
-        static::assertFalse($def->matches(list_entry('col', ['x'], type_list(type_string()))));
+        static::assertFalse($def->matches(['x']));
         static::assertFalse($def->isCompatible(list_schema('col', type_list(type_string()))));
     }
 
@@ -239,7 +223,7 @@ final class ListDefinitionTest extends FlowTestCase
     {
         $def = list_schema('items', type_list(type_integer()));
 
-        static::assertTrue($def->matches(list_entry('items', [1, 2, 3], type_list(type_integer()))));
+        static::assertTrue($def->matches([1, 2, 3]));
     }
 
     /**
@@ -302,28 +286,21 @@ final class ListDefinitionTest extends FlowTestCase
     {
         $def = list_schema('col', type_list(type_integer()), true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = list_schema('col', type_list(type_integer()), true);
 
-        static::assertTrue($def->matches(list_entry('col', null, type_list(type_integer()))));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = list_schema('col', type_list(type_integer()), true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = list_schema('col', type_list(type_integer()), true);
 
-        static::assertTrue($def->matches(list_entry('col', [1, 2, 3], type_list(type_integer()))));
+        static::assertTrue($def->matches([1, 2, 3]));
     }
 
     public function test_rename(): void
@@ -356,10 +333,9 @@ final class ListDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = list_schema('col', type_list(type_integer()))->merge(union_schema('col', type_union(
-            type_list(type_integer()),
-            type_boolean(),
-        )));
+        $merged = list_schema('col', type_list(type_integer()))->merge(
+            new UnionDefinition('col', type_union(type_list(type_integer()), type_boolean())),
+        );
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|list<integer>', $merged->type()->toString());
@@ -370,7 +346,7 @@ final class ListDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             list_schema('col', type_list(type_integer()))
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

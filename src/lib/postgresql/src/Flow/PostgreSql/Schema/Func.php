@@ -12,7 +12,7 @@ use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string}
+ * @type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string}
  */
 final readonly class Func
 {

@@ -8,13 +8,12 @@ use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Formatter\PipelineReportFormatter;
-use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\PipelineFactory;
-use Flow\ETL\Config;
 use Flow\ETL\Exception\Exception;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,20 +25,17 @@ use function Flow\CLI\option_bool;
 use function Flow\ETL\DSL\analyze;
 use function is_string;
 
+#[AsCommand(name: 'pipeline:run', description: 'Execute data processing pipeline from a php file.', aliases: ['run'])]
 final class PipelineRunCommand extends Command
 {
     use ConfigOptions;
     use StatisticsOptions;
-
-    private ?Config $flowConfig = null;
 
     private ?Path $pipelinePath = null;
 
     public function configure(): void
     {
         $this
-            ->setName('run')
-            ->setDescription('Execute data processing pipeline from a php file.')
             ->setHelp(<<<'HELP'
                 <info>pipeline-file</info> argument must point to a valid php file that returns DataFrame instance.
                 <comment>Make sure to not execute run() or any other trigger function.</comment>
@@ -113,7 +109,6 @@ final class PipelineRunCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->pipelinePath = (new FilePathArgument('pipeline-file'))->getExisting($input, $this->flowConfig);
+        $this->pipelinePath = (new FilePathArgument('pipeline-file'))->getExisting($input);
     }
 }

@@ -89,6 +89,8 @@ jobs:
             split_repository: 'monolog-telemetry-bridge'
           - local_path: 'src/bridge/openapi/specification'
             split_repository: 'openapi-specification-bridge'
+          - local_path: 'src/bridge/mago/types'
+            split_repository: 'mago-types-bridge'
           - local_path: 'src/bridge/phpstan/types'
             split_repository: 'phpstan-types-bridge'
           - local_path: 'src/bridge/postgresql/valinor'

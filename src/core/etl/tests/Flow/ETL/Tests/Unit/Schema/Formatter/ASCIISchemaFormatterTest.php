@@ -20,6 +20,7 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -82,8 +83,12 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
     {
         $schema = schema(structure_schema('user', type_structure([
             'id' => type_integer(),
-            'address' => type_structure(['city' => type_string()], ['zip' => type_string()]),
-        ], ['nickname' => type_string()])));
+            'address' => type_structure([
+                'city' => type_string(),
+                'zip' => structure_element('zip', type_string(), optional: true),
+            ]),
+            'nickname' => structure_element('nickname', type_string(), optional: true),
+        ])));
 
         self::assertCommandOutputIdentical(<<<'SCHEMA'
             schema
@@ -122,21 +127,21 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
         );
 
         self::assertCommandOutputIdentical(<<<'SCHEMA'
-            +-------------+-------------+----------+----------+
-            |        name |        type | nullable | metadata |
-            +-------------+-------------+----------+----------+
-            |     integer |     integer |     true |       [] |
-            |       float |     integer |    false |       [] |
-            |        user |   structure |    false |       [] |
-            |        name |      string |     true |       [] |
-            |        tags |        list |    false |       [] |
-            |      active |     boolean |    false |       [] |
-            |         xml |         xml |    false |       [] |
-            | xml_element | xml_element |    false |       [] |
-            |        json |        json |    false |       [] |
-            |        uuid |        uuid |    false |       [] |
-            |    datetime |    datetime |    false |       [] |
-            +-------------+-------------+----------+----------+
+            +-------------+--------------+----------+----------+
+            |        name |         type | nullable | metadata |
+            +-------------+--------------+----------+----------+
+            |     integer |      integer |     true |       [] |
+            |       float |      integer |    false |       [] |
+            |        user | structure_v2 |    false |       [] |
+            |        name |       string |     true |       [] |
+            |        tags |         list |    false |       [] |
+            |      active |      boolean |    false |       [] |
+            |         xml |          xml |    false |       [] |
+            | xml_element |  xml_element |    false |       [] |
+            |        json |         json |    false |       [] |
+            |        uuid |         uuid |    false |       [] |
+            |    datetime |     datetime |    false |       [] |
+            +-------------+--------------+----------+----------+
             11 rows
 
             SCHEMA, (new ASCIISchemaFormatter(true, true))->format($schema));
@@ -167,21 +172,21 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
         );
 
         self::assertCommandOutputIdentical(<<<'SCHEMA'
-            +-------------+-------------+----------+
-            |        name |        type | nullable |
-            +-------------+-------------+----------+
-            |     integer |     integer |     true |
-            |       float |     integer |    false |
-            |        user |   structure |    false |
-            |        name |      string |     true |
-            |        tags |        list |    false |
-            |      active |     boolean |    false |
-            |         xml |         xml |    false |
-            | xml_element | xml_element |    false |
-            |        json |        json |    false |
-            |        uuid |        uuid |    false |
-            |    datetime |    datetime |    false |
-            +-------------+-------------+----------+
+            +-------------+--------------+----------+
+            |        name |         type | nullable |
+            +-------------+--------------+----------+
+            |     integer |      integer |     true |
+            |       float |      integer |    false |
+            |        user | structure_v2 |    false |
+            |        name |       string |     true |
+            |        tags |         list |    false |
+            |      active |      boolean |    false |
+            |         xml |          xml |    false |
+            | xml_element |  xml_element |    false |
+            |        json |         json |    false |
+            |        uuid |         uuid |    false |
+            |    datetime |     datetime |    false |
+            +-------------+--------------+----------+
             11 rows
 
             SCHEMA, (new ASCIISchemaFormatter(true, false))->format($schema));

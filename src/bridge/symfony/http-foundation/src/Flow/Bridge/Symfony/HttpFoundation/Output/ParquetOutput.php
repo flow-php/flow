@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -28,9 +29,9 @@ final readonly class ParquetOutput implements Output
         private ?Schema $schema = null,
     ) {}
 
-    public function loader(Path $path): Loader
+    public function loader(Path $path, Filesystem $filesystem): Loader
     {
-        $loader = to_parquet($path)->withCompressions($this->compressions);
+        $loader = to_parquet($path, filesystem: $filesystem)->withCompressions($this->compressions);
 
         if ($this->options !== null) {
             $loader->withOptions($this->options);

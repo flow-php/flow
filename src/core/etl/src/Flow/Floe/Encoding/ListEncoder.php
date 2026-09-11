@@ -7,6 +7,9 @@ namespace Flow\Floe\Encoding;
 use function count;
 use function pack;
 
+/**
+ * @implements ValueEncoder<array<int, mixed>>
+ */
 final class ListEncoder implements ValueEncoder
 {
     public function __construct(
@@ -15,7 +18,6 @@ final class ListEncoder implements ValueEncoder
 
     public function encode(mixed $value): string
     {
-        /** @var array<int, mixed> $value */
         $buffer = pack('V', count($value));
 
         // @mago-ignore analysis:mixed-assignment

@@ -15,7 +15,7 @@ use function count;
 use function Flow\ETL\DSL\df;
 
 /**
- * @phpstan-import-type Params from DriverManager
+ * @import-type Params from DriverManager
  */
 final class DbalDataFrameFactory implements DataFrameFactory
 {
@@ -84,7 +84,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
     /**
      * @param Schema $schema
      */
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 

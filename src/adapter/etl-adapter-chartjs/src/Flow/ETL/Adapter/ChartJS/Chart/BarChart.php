@@ -46,17 +46,17 @@ final class BarChart implements Chart
     public function collect(Rows $rows): void
     {
         foreach ($rows as $row) {
-            $labelValue = $row->valueOf($this->label);
+            $labelValue = $row->get($this->label);
             $this->data['labels'][] = is_scalar($labelValue) ? (string) $labelValue : '';
 
             foreach ($this->datasets as $dataset) {
                 if (!array_key_exists($dataset->name(), $this->data['datasets'])) {
                     $this->data['datasets'][$dataset->name()] = [
                         'label' => $dataset->name(),
-                        'data' => [$row->valueOf($dataset)],
+                        'data' => [$row->get($dataset)],
                     ];
                 } else {
-                    $this->data['datasets'][$dataset->name()]['data'][] = $row->valueOf($dataset);
+                    $this->data['datasets'][$dataset->name()]['data'][] = $row->get($dataset);
                 }
             }
         }

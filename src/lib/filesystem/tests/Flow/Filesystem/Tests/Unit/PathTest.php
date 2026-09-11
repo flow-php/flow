@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
+use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
@@ -12,6 +13,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function file_exists;
 use function Flow\Filesystem\DSL\partition;
 use function Flow\Filesystem\DSL\partitions;
@@ -351,6 +353,19 @@ final class PathTest extends TestCase
         static::assertEquals(
             partitions(partition('order-year', '2024'), partition('order-name', '123456-PL')),
             $path->partitions(),
+        );
+    }
+
+    public function test_add_partitions_keeps_partitions_attached_with_with_partitions(): void
+    {
+        // B16: addPartitions() used to construct a fresh Path without the explicitly attached ones
+        $path = path('/data/file.csv')
+            ->withPartitions(new Partitions(new Partition('region', 'eu')))
+            ->addPartitions(new Partition('year', '2024'));
+
+        static::assertSame(
+            ['year', 'region'],
+            array_map(static fn(Partition $p): string => $p->name, $path->partitions()->toArray()),
         );
     }
 }

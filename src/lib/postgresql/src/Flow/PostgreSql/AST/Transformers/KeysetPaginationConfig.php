@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\AST\Transformers;
 /**
  * Configuration for keyset (cursor-based) pagination.
  *
- * @psalm-type CursorValue = string|int|float|bool|null
+ * @type CursorValue = string|int|float|bool|null
  */
 final readonly class KeysetPaginationConfig
 {

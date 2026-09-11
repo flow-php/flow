@@ -5,41 +5,38 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
-use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\DestinationStream;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
-use Flow\Types\Type\Native\NullType;
 
-use function count;
-use function Flow\Types\DSL\type_equals;
-use function implode;
+use function array_key_exists;
 use function sprintf;
 
 final class FloeStreamWriter
 {
+    /**
+     * SCHEMA EVOLUTION: the session schema is fixed for the writer's life, so any batch that adds
+     * a column - even an optional one - or turns a not-null column nullable is rejected rather
+     * than evolving the schema. Prior art (BigQuery ALLOW_FIELD_ADDITION / ALLOW_FIELD_RELAXATION,
+     * Iceberg, Delta mergeSchema) allows both of those, and safe type widening, on append.
+     */
+    private const string BATCH_MISMATCH = 'Floe write session schema is fixed and this batch does not fit it: %s.';
+
+    /**
+     * Sections exist to bound a seek, so they are cut by size. Nothing else breaks one.
+     */
+    private const int SECTION_MAX_ROWS = 100_000;
+
     private Metadata $metadata;
 
     private bool $open = false;
-
-    /**
-     * @var array<int, array<string, string>>
-     */
-    private array $partitions = [];
-
-    private ?int $lastSectionPartitionsId = null;
-
-    private ?int $sectionPartitionsId = null;
-
-    private ?int $pendingPartitionsId = null;
-
-    private bool $forcePartitionBreak = false;
 
     /**
      * @var array<int, Section>
@@ -99,8 +96,6 @@ final class FloeStreamWriter
     {
         $this->guardNotOpen();
 
-        $lastSection = $footer->sections === [] ? null : $footer->sections[count($footer->sections) - 1];
-
         $this->frameWriter = new FrameWriter(
             $stream,
             $this->options->codec->id(),
@@ -110,15 +105,16 @@ final class FloeStreamWriter
         $this->metadata = $footer->metadata->merge($metadata ?? Metadata::empty());
         $this->sections = $footer->sections;
 
-        if ($footer->schema !== [] && $this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
-            throw new IncompatibleSchemaException(
-                'Floe append schema does not match the existing file schema. '
-                . 'Align the pipeline with DataFrame::match($schema) before appending.',
-            );
+        if ($footer->schema !== []) {
+            // A batch carrying the same columns or struct fields in a different order must append,
+            // not throw - match the order instead of loosening the guard below.
+            $this->sessionSchema = $this->sessionSchema->matchOrderTo($footer->schema());
+
+            if ($this->sessionSchema->normalize() !== $footer->schema()->normalize()) {
+                throw new IncompatibleSchemaException('Floe append schema does not match the existing file schema.');
+            }
         }
 
-        $this->lastSectionPartitionsId = $lastSection?->partitionsId;
-        $this->partitions = $footer->partitions;
         $this->totalRows = $footer->totalRows;
         $this->open = true;
     }
@@ -140,7 +136,6 @@ final class FloeStreamWriter
             self::writerVersion(),
             $schema,
             $this->sections,
-            $this->partitions,
             $this->totalRows,
             $this->metadata,
         ))->toJson();
@@ -157,23 +152,23 @@ final class FloeStreamWriter
     public function write(Rows $rows): void
     {
         $this->guardOpen();
-        $this->trackPartitions($rows);
 
         if ($rows->count() === 0) {
             return;
         }
 
         $this->openSession();
+        $this->assertBatchFitsSession($rows->schema());
 
-        if ($this->options->validateData) {
-            $this->assertFitsSession(self::unionSchema($rows));
-        }
+        $typed = $this->hydrator->dehydrate(
+            $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema),
+        );
 
-        if (!$this->sectionOpen || $this->forcePartitionBreak) {
+        if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
             $this->startSection();
         }
 
-        $this->emitBatch($this->hydrator->dehydrate($rows));
+        $this->emitBatch($typed);
     }
 
     public static function writerVersion(): string
@@ -181,29 +176,6 @@ final class FloeStreamWriter
         return InstalledVersions::isInstalled('flow-php/etl')
             ? InstalledVersions::getPrettyVersion('flow-php/etl') ?? 'unknown'
             : 'unknown';
-    }
-
-    public static function unionSchema(Rows $rows): Schema
-    {
-        $schema = null;
-
-        foreach ($rows->all() as $row) {
-            $rowSchema = self::rowSchema($row);
-            $schema = $schema === null ? $rowSchema : $schema->merge($rowSchema);
-        }
-
-        return $schema ?? new Schema();
-    }
-
-    private static function rowSchema(Row $row): Schema
-    {
-        $definitions = [];
-
-        foreach ($row->entries()->all() as $entry) {
-            $definitions[] = $entry->definition();
-        }
-
-        return new Schema(...$definitions);
     }
 
     /**
@@ -221,42 +193,22 @@ final class FloeStreamWriter
     /**
      * @throws IncompatibleSchemaException
      */
-    private function assertFitsSession(Schema $batchSchema): void
+    private function assertBatchFitsSession(Schema $batch): void
     {
-        $session = $this->sessionSchema;
+        $definitions = $this->sessionSchema->definitions();
 
-        $violations = [];
-
-        foreach ($batchSchema->definitions() as $batchDefinition) {
-            $name = $batchDefinition->entry()->name();
-            $sessionDefinition = $session->findDefinition($batchDefinition->entry());
-
-            if ($sessionDefinition === null) {
-                $violations[] = sprintf('new column "%s"', $name);
-
-                continue;
-            }
-
-            if ($batchDefinition->type() instanceof NullType) {
-                continue;
-            }
-
-            if (
-                !$sessionDefinition->isNullable() && $batchDefinition->isNullable()
-                || !type_equals($sessionDefinition->type(), $batchDefinition->type())
-            ) {
-                $violations[] = sprintf(
-                    'column "%s" (%s) is not compatible with the session type (%s)',
-                    $name,
-                    $batchDefinition->type()->toString(),
-                    $sessionDefinition->type()->toString(),
-                );
+        // unconditional, and before the validator: EvolvingValidator admits a nullable extra column,
+        // which the session encoder would then drop - silent column loss is not unlockable here
+        foreach ($batch->definitions() as $name => $_) {
+            if (!array_key_exists($name, $definitions)) {
+                throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf('new column "%s"', $name)));
             }
         }
 
-        if ($violations !== []) {
-            throw new IncompatibleSchemaException(sprintf('Floe write session schema is fixed and this batch does not fit it: %s. '
-            . 'Align the pipeline with DataFrame::match($schema) before writing.', implode('; ', $violations)));
+        $validation = (new EvolvingValidator())->validate($this->sessionSchema, $batch);
+
+        if (!$validation->isValid()) {
+            throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, $validation->toString()));
         }
     }
 
@@ -277,44 +229,10 @@ final class FloeStreamWriter
     private function closeSection(): void
     {
         if ($this->sectionOpen) {
-            $this->sections[] = new Section(
-                $this->sectionOffset,
-                $this->sectionPartitionsId ?? throw new FloeException(
-                    'Floe writer has no active section partitions id',
-                ),
-                $this->sectionRowCount,
-            );
-            $this->lastSectionPartitionsId = $this->sectionPartitionsId;
+            $this->sections[] = new Section($this->sectionOffset, $this->sectionRowCount);
             $this->sectionOpen = false;
             $this->sectionRowCount = 0;
         }
-    }
-
-    private function trackPartitions(Rows $rows): void
-    {
-        $combo = [];
-
-        foreach ($rows->partitions() as $partition) {
-            $combo[$partition->name] = $partition->value;
-        }
-
-        $partitionsId = null;
-
-        foreach ($this->partitions as $id => $known) {
-            if ($known === $combo) {
-                $partitionsId = $id;
-
-                break;
-            }
-        }
-
-        if ($partitionsId === null) {
-            $partitionsId = count($this->partitions);
-            $this->partitions[] = $combo;
-        }
-
-        $this->pendingPartitionsId = $partitionsId;
-        $this->forcePartitionBreak = $partitionsId !== $this->sectionPartitionsId;
     }
 
     /**
@@ -344,29 +262,9 @@ final class FloeStreamWriter
     {
         $this->closeSection();
 
-        $partitionsId = $this->pendingPartitionsId ?? throw new FloeException(
-            'Floe writer starting a section before its partitions were tracked',
-        );
-
         $this->sectionOffset = $this->frameWriter()->position();
-
-        if ($this->partitionsFrameChanged($partitionsId)) {
-            $this->frameWriter()->partitions($this->partitions[$partitionsId]);
-        }
-
         $this->sectionOpen = true;
-        $this->sectionPartitionsId = $partitionsId;
         $this->sectionRowCount = 0;
-        $this->forcePartitionBreak = false;
-    }
-
-    private function partitionsFrameChanged(int $partitionsId): bool
-    {
-        if ($this->lastSectionPartitionsId === null) {
-            return $this->partitions[$partitionsId] !== [];
-        }
-
-        return $partitionsId !== $this->lastSectionPartitionsId;
     }
 
     /**

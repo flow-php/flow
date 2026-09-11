@@ -10,9 +10,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -149,6 +151,63 @@ final class DateTimeTypeTest extends TestCase
         } else {
             static::assertInstanceOf(DateTimeInterface::class, type_datetime()->assert($value));
         }
+    }
+
+    #[TestWith([''])]
+    #[TestWith(['t'])]
+    #[TestWith(['+12'])]
+    #[TestWith(['now'])]
+    #[TestWith(['yesterday'])]
+    #[TestWith(['12.9'])]
+    #[TestWith(['2024-01'])]
+    #[TestWith(['2024-001'])]
+    #[TestWith(['@1609459200'])]
+    #[TestWith(['10:00:00'])]
+    public function test_a_wall_clock_string_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
+    }
+
+    #[TestWith(['2024-01-01'])]
+    #[TestWith(['02-Jun-2022'])]
+    public function test_a_date_only_string_lands_at_midnight(string $value): void
+    {
+        static::assertSame('00:00:00', type_datetime()->cast($value)->format('H:i:s'));
+    }
+
+    public function test_a_compact_iso_date_casts(): void
+    {
+        static::assertSame('2024-03-05', type_datetime()->cast('20240305')->format('Y-m-d'));
+    }
+
+    #[TestWith(['2024-03-05 12:34:56'])]
+    #[TestWith(['2024-03-05T12:34:56'])]
+    #[TestWith(['2024-03-05 12:34'])]
+    #[TestWith(['2024-03-05 12:34:56.123456'])]
+    #[TestWith(['2024-03-05 12:34:56.123456789'])]
+    #[TestWith(['2024-03-05T12:34:56Z'])]
+    #[TestWith(['2024-03-05 12:34:56+02:00'])]
+    #[TestWith(['2024-03-05 12:34:56-0530'])]
+    #[TestWith(['2024-03-05 12:34:56+02'])]
+    #[TestWith(['2024-02-29 00:00:00'])]
+    #[TestWith(['2024-03-05 24:00:00'])]
+    public function test_an_iso_date_time_casts_to_the_instant_it_names(string $value): void
+    {
+        static::assertEquals(new DateTimeImmutable($value), type_datetime()->cast($value));
+    }
+
+    #[TestWith(['2023-02-29 10:00:00'])]
+    #[TestWith(['2024-04-31T10:00:00Z'])]
+    #[TestWith(['2024-13-01 10:00:00'])]
+    #[TestWith(['2024-03-05 25:00:00'])]
+    #[TestWith(['2024-03-05 12:60:00'])]
+    public function test_an_iso_date_time_off_the_calendar_or_clock_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
     }
 
     /**

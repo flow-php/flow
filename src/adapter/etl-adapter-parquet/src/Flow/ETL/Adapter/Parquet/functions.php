@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\DocumentationExample;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\DocumentationExample;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
@@ -19,6 +21,7 @@ use Generator;
 
 use function count;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Parquet\empty_generator as parquet_empty_generator;
 use function is_string;
 
 /**
@@ -29,7 +32,7 @@ use function is_string;
  * @param null|int $offset - @deprecated use `withOffset` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'parquet')]
+#[DocumentationExample(topic: 'reading', example: 'parquet')]
 function from_parquet(
     string|Path $path,
     array $columns = [],
@@ -37,8 +40,9 @@ function from_parquet(
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
     ?ParquetEngine $engine = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): ParquetExtractor {
-    $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path))
+    $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withOptions($options)
         ->withByteOrder($byte_order)
         ->withEngine($engine);
@@ -61,15 +65,16 @@ function from_parquet(
  * @param null|Schema $schema - @deprecated use `withSchema` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'parquet')]
+#[DocumentationExample(topic: 'writing', example: 'parquet')]
 function to_parquet(
     string|Path $path,
     ?Options $options = null,
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
     ?ParquetEngine $engine = null,
+    Filesystem $filesystem = new NativeLocalFilesystem(),
 ): ParquetLoader {
-    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path))
+    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path, $filesystem))
         ->withCompressions($compressions)
         ->withEngine($engine);
 
@@ -99,10 +104,13 @@ function array_to_generator(array $data): Generator
     }
 }
 
+/**
+ * @deprecated use Flow\Parquet\empty_generator() instead
+ */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function empty_generator(): Generator
 {
-    yield from [];
+    return parquet_empty_generator();
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]

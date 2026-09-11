@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\FloatDefinition;
@@ -15,13 +14,10 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\float_schema;
-use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -102,26 +98,14 @@ final class FloatDefinitionTest extends FlowTestCase
     {
         $def = float_schema('col');
 
-        static::assertFalse($def->matches(float_entry('col', null)));
-    }
-
-    public function test_does_not_match_entry_with_different_name(): void
-    {
-        $def = float_schema('amount');
-
-        static::assertFalse($def->matches(float_entry('other', 1.5)));
+        static::assertFalse($def->matches(null));
     }
 
     public function test_does_not_match_entry_with_different_type(): void
     {
         $def = float_schema('col');
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
-    }
-
-    public function test_entry_class(): void
-    {
-        static::assertSame(FloatEntry::class, float_schema('amount')->entryClass());
+        static::assertFalse($def->matches(1));
     }
 
     /**
@@ -180,7 +164,7 @@ final class FloatDefinitionTest extends FlowTestCase
     {
         $def = float_schema('amount');
 
-        static::assertTrue($def->matches(float_entry('amount', 1.5)));
+        static::assertTrue($def->matches(1.5));
     }
 
     /**
@@ -257,28 +241,21 @@ final class FloatDefinitionTest extends FlowTestCase
     {
         $def = float_schema('col', true);
 
-        static::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(1));
     }
 
-    public function test_nullable_matches_a_null_entry_with_same_name(): void
+    public function test_nullable_matches_null(): void
     {
         $def = float_schema('col', true);
 
-        static::assertTrue($def->matches(float_entry('col', null)));
-    }
-
-    public function test_nullable_matches_a_null_value_carried_by_an_entry_of_a_different_type(): void
-    {
-        $def = float_schema('col', true);
-
-        static::assertTrue($def->matches(int_entry('col', null)));
+        static::assertTrue($def->matches(null));
     }
 
     public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
     {
         $def = float_schema('col', true);
 
-        static::assertTrue($def->matches(float_entry('col', 1.5)));
+        static::assertTrue($def->matches(1.5));
     }
 
     public function test_rename(): void
@@ -311,7 +288,7 @@ final class FloatDefinitionTest extends FlowTestCase
 
     public function test_merge_with_union_containing_this_type_returns_union(): void
     {
-        $merged = float_schema('col')->merge(union_schema('col', type_union(type_float(), type_boolean())));
+        $merged = float_schema('col')->merge(new UnionDefinition('col', type_union(type_float(), type_boolean())));
 
         static::assertInstanceOf(UnionDefinition::class, $merged);
         static::assertSame('boolean|float', $merged->type()->toString());
@@ -322,7 +299,7 @@ final class FloatDefinitionTest extends FlowTestCase
         static::assertSame(
             'string',
             float_schema('col')
-                ->merge(union_schema('col', type_union(type_integer(), type_string())))
+                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
                 ->type()
                 ->toString(),
         );

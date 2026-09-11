@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function\Between;
 
 use DateInterval;
+use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 
@@ -20,76 +21,72 @@ enum Boundary
     case LEFT_INCLUSIVE;
     case RIGHT_INCLUSIVE;
 
-    public function compare(mixed $value, mixed $lowerBound, mixed $upperbound): bool
+    public function compare(mixed $value, mixed $lowerBound, mixed $upperbound): ?bool
     {
-        if (is_numeric($value) && is_numeric($lowerBound) && is_numeric($upperbound)) {
-            $v = (float) $value;
-            $l = (float) $lowerBound;
-            $u = (float) $upperbound;
+        if ($value === null) {
+            return null;
+        }
 
-            return match ($this) {
-                self::INCLUSIVE => $v >= $l && $v <= $u,
-                self::EXCLUSIVE => $v > $l && $v < $u,
-                self::LEFT_INCLUSIVE => $v >= $l && $v < $u,
-                self::RIGHT_INCLUSIVE => $v > $l && $v <= $u,
+        $aboveLower = null;
+
+        if ($lowerBound !== null) {
+            $aboveLower = match ($this) {
+                self::INCLUSIVE, self::LEFT_INCLUSIVE => $this->compareValues($value, $lowerBound) >= 0,
+                self::EXCLUSIVE, self::RIGHT_INCLUSIVE => $this->compareValues($value, $lowerBound) > 0,
             };
         }
 
-        if (is_string($value) && is_string($lowerBound) && is_string($upperbound)) {
-            return match ($this) {
-                self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,
-                self::EXCLUSIVE => $value > $lowerBound && $value < $upperbound,
-                self::LEFT_INCLUSIVE => $value >= $lowerBound && $value < $upperbound,
-                self::RIGHT_INCLUSIVE => $value > $lowerBound && $value <= $upperbound,
+        $belowUpper = null;
+
+        if ($upperbound !== null) {
+            $belowUpper = match ($this) {
+                self::INCLUSIVE, self::RIGHT_INCLUSIVE => $this->compareValues($value, $upperbound) <= 0,
+                self::EXCLUSIVE, self::LEFT_INCLUSIVE => $this->compareValues($value, $upperbound) < 0,
             };
         }
 
-        if (
-            $value instanceof DateTimeInterface
-            && $lowerBound instanceof DateTimeInterface
-            && $upperbound instanceof DateTimeInterface
-        ) {
-            return match ($this) {
-                self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,
-                self::EXCLUSIVE => $value > $lowerBound && $value < $upperbound,
-                self::LEFT_INCLUSIVE => $value >= $lowerBound && $value < $upperbound,
-                self::RIGHT_INCLUSIVE => $value > $lowerBound && $value <= $upperbound,
-            };
+        // SQL AND: a definite FALSE short-circuits past a NULL bound (5 BETWEEN 10 AND NULL is FALSE).
+        if ($aboveLower === false || $belowUpper === false) {
+            return false;
         }
 
-        if (
-            $value instanceof DateInterval
-            && $lowerBound instanceof DateInterval
-            && $upperbound instanceof DateInterval
-        ) {
-            return match ($this) {
-                self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,
-                self::EXCLUSIVE => $value > $lowerBound && $value < $upperbound,
-                self::LEFT_INCLUSIVE => $value >= $lowerBound && $value < $upperbound,
-                self::RIGHT_INCLUSIVE => $value > $lowerBound && $value <= $upperbound,
-            };
+        if ($aboveLower === null || $belowUpper === null) {
+            return null;
         }
 
-        if (is_bool($value) && is_bool($lowerBound) && is_bool($upperbound)) {
-            return match ($this) {
-                self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,
-                self::EXCLUSIVE => $value > $lowerBound && $value < $upperbound,
-                self::LEFT_INCLUSIVE => $value >= $lowerBound && $value < $upperbound,
-                self::RIGHT_INCLUSIVE => $value > $lowerBound && $value <= $upperbound,
-            };
+        return true;
+    }
+
+    public function compareValues(mixed $left, mixed $right): int
+    {
+        if (is_numeric($left) && is_numeric($right)) {
+            return (float) $left <=> (float) $right;
         }
 
-        if (is_array($value) && is_array($lowerBound) && is_array($upperbound)) {
-            return match ($this) {
-                self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,
-                self::EXCLUSIVE => $value > $lowerBound && $value < $upperbound,
-                self::LEFT_INCLUSIVE => $value >= $lowerBound && $value < $upperbound,
-                self::RIGHT_INCLUSIVE => $value > $lowerBound && $value <= $upperbound,
-            };
+        if (is_string($left) && is_string($right)) {
+            return $left <=> $right;
+        }
+
+        if ($left instanceof DateTimeInterface && $right instanceof DateTimeInterface) {
+            return $left <=> $right;
+        }
+
+        if ($left instanceof DateInterval && $right instanceof DateInterval) {
+            $reference = new DateTimeImmutable('@0');
+
+            return $reference->add($left) <=> $reference->add($right);
+        }
+
+        if (is_bool($left) && is_bool($right)) {
+            return $left <=> $right;
+        }
+
+        if (is_array($left) && is_array($right)) {
+            return $left <=> $right;
         }
 
         throw new InvalidArgumentException(
-            'Boundary::compare requires value, lowerBound and upperBound to be of a comparable type (numeric, string, DateTimeInterface, DateInterval, bool, or array).',
+            'Boundary::compare requires value and bounds to be of a comparable type (numeric, string, DateTimeInterface, DateInterval, bool, or array).',
         );
     }
 }

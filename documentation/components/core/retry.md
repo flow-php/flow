@@ -27,6 +27,11 @@ destination as they normally would.
 Only `load()` is retried. A failure while closing is not retried, because closing publishes the destination and cannot
 be resumed from a partial state.
 
+A run that never reaches its last batch - it threw, or the caller walked away from the generator - ends through
+`Loader\Discardable::discard()` instead of `closure()`, so a half-written destination is removed rather than
+published. The pipeline walks the whole loader tree to do it, so a wrapped file loader is discarded whether or not
+`RetryLoader` forwards anything.
+
 ```php
 <?php
 
@@ -36,7 +41,8 @@ use function Flow\ETL\DSL\{
     write_with_retries,
     retry_any_throwable,
     delay_fixed,
-    duration_milliseconds
+    duration_milliseconds,
+    to_output
 };
 
 $dataFrame = data_frame()
@@ -45,7 +51,7 @@ $dataFrame = data_frame()
         ['id' => 2, 'name' => 'Jane']
     ]))
     ->write(write_with_retries(
-        to_some_service(...),
+        to_output(),
         retry_any_throwable(3),           // Retry up to 3 times
         delay_fixed(duration_milliseconds(500)) // Wait 500ms between retries
     ))
@@ -199,9 +205,8 @@ roll back, so a batch that fails after part of it reached the stream is written 
 data_frame()
     ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
     ->batchSize(2)
-    ->saveMode(overwrite())
     // a transient failure in the first batch leaves ids 1 and 2 in the file twice
-    ->write(write_with_retries(to_csv($path)))
+    ->write(write_with_retries(to_csv($path)->saveMode(overwrite())))
     ->run();
 ```
 
@@ -264,7 +269,7 @@ use function Flow\ETL\DSL\{
 $result = data_frame()
     ->read(from_array($largeDataset))
     ->write(write_with_retries(
-        to_database($connection, 'transactions'),
+        to_dbal_table_insert($connection, 'transactions'),
 
         // Only retry on specific transient failures
         retry_on_exception_types([
@@ -295,10 +300,10 @@ use Flow\ETL\Exception\FailedRetryException;
 try {
     $dataFrame->write($retryLoader)->run();
 } catch (FailedRetryException $e) {
-    echo "Failed after {$e->getRetriesRecord()->count()} attempts\n";
+    echo "Failed after {$e->record->count()} attempts\n";
 
     // Access individual retry attempts
-    foreach ($e->getRetriesRecord()->all() as $retry) {
+    foreach ($e->record->all() as $retry) {
         echo "Attempt {$retry->attempt()}: {$retry->exception()->getMessage()}\n";
         echo "Timestamp: {$retry->timestamp()->format('Y-m-d H:i:s')}\n";
     }

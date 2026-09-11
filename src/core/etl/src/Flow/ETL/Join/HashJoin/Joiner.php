@@ -12,16 +12,19 @@ use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\JoinSchema;
+use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 final class Joiner
 {
     private readonly Hasher $hasher;
+
+    private readonly JoinSchema $joinSchema;
 
     private readonly ?JoinKeys $keys;
 
@@ -37,7 +40,6 @@ final class Joiner
     public function __construct(
         private readonly Expression $expression,
         private readonly Join $type,
-        private readonly EntryFactory $entryFactory = new EntryFactory(),
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -53,77 +55,59 @@ final class Joiner
         $this->leftValues = new KeyValues($this->keys?->leftRefs() ?? []);
         $this->rightValues = new KeyValues($this->keys?->rightRefs() ?? []);
 
-        $duplicates = [];
-
-        if ($expression->prefix() === '') {
-            foreach ($expression->left() as $leftRef) {
-                foreach ($expression->right() as $rightRef) {
-                    if ($leftRef->name() === $rightRef->name()) {
-                        $duplicates[] = $leftRef->name();
-
-                        continue 2;
-                    }
-                }
-            }
-        }
-
-        $this->merger = new RowMerger(
-            $expression->prefix(),
-            $this->type === Join::right ? $duplicates : [],
-            $this->type === Join::right ? [] : $duplicates,
-        );
+        $shape = JoinShape::of($expression, $type);
+        $this->merger = $shape->merger();
+        $this->joinSchema = $shape->schema();
     }
 
     /**
-     * @param Generator<Rows> $left
-     * @param Generator<Rows> $right
-     * @param null|Row $nullLeftRow - pre-computed row used to null-pad unmatched right rows, collected from left rows when null
-     * @param null|Row $nullRightRow - pre-computed row used to null-pad unmatched left rows, collected from right rows when null
      * @param bool $buildLeft - build the hash table from the left side and stream the right one, memory is then bounded by the left side
      *
      * @throws DuplicatedEntriesException
      *
      * @return Generator<Rows>
      */
-    public function join(
-        Generator $left,
-        Generator $right,
-        ?Row $nullLeftRow = null,
-        ?Row $nullRightRow = null,
-        bool $buildLeft = false,
-    ): Generator {
+    public function join(JoinSide $left, JoinSide $right, bool $buildLeft = false): Generator
+    {
         if ($buildLeft) {
-            yield from $this->joinBuildingLeft($left, $right, $nullLeftRow, $nullRightRow);
+            yield from $this->joinBuildingLeft($left, $right);
 
             return;
         }
 
+        $nullLeftRow = $left->nullRow;
+        $nullRightRow = $right->nullRow;
+        $leftSideSchema = $left->schema;
+        $rightSideSchema = $right->schema;
+
         $hashTable = new HashTable(trackUnmatched: $this->type === Join::right);
+        $rightSchema = $rightSideSchema;
 
-        $nullRightBuilder =
-            $this->type === Join::left && $nullRightRow === null ? new NullRowBuilder($this->entryFactory) : null;
-
-        foreach ($right as $batch) {
+        foreach ($right->rows as $batch) {
+            $rightSchema ??= $batch->schema();
             $hashes = $this->hasher->hash($this->rightValues->of($batch));
 
             foreach ($batch as $i => $row) {
                 $hashTable->add($hashes[$i], $row);
-                $nullRightBuilder?->collect($row);
             }
         }
 
-        $nullRightRow ??= $nullRightBuilder?->row();
+        $rightSchema ??= new Schema();
 
-        $nullLeftBuilder =
-            $this->type === Join::right && $nullLeftRow === null ? new NullRowBuilder($this->entryFactory) : null;
+        if ($this->type === Join::left) {
+            $nullRightRow ??= (new NullRowBuilder($rightSchema))->row();
+        }
 
-        foreach ($left as $batch) {
+        $leftSchema = $leftSideSchema;
+        $outputSchema = null;
+
+        foreach ($left->rows as $batch) {
+            $leftSchema ??= $batch->schema();
+            $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
             $hashes = $this->hasher->hash($this->leftValues->of($batch));
             $joined = [];
 
             foreach ($batch as $i => $leftRow) {
-                $nullLeftBuilder?->collect($leftRow);
-
                 $matched = false;
 
                 foreach ($hashTable->candidatesFor($hashes[$i]) as $index => $rightRow) {
@@ -155,16 +139,28 @@ final class Joiner
             }
 
             if ($joined !== []) {
-                yield new Rows(...$joined);
+                // a later batch can be wider than the side schema the output was derived from, and
+                // every arm answers for the same declared output - so all of them project, not one
+                $projected = [];
+
+                foreach ($joined as $joinedRow) {
+                    $projected[] = $joinedRow->project($outputSchema);
+                }
+
+                // every joined value passed the gate on its own side - conforming checks the joined shape and the
+                // nulls the join introduced, not the values again
+                yield Rows::conformed($outputSchema, $projected);
             }
         }
 
         if ($this->type === Join::right) {
-            $nullLeftRow ??= $nullLeftBuilder?->row() ?? new Row(Entries::recreate([]));
-            $buffer = new RowsBuffer($this->batchSize);
+            $leftSchema ??= new Schema();
+            $nullLeftRow ??= (new NullRowBuilder($leftSchema))->row();
+            $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
+            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
 
             foreach ($hashTable->unmatchedRows() as $rightRow) {
-                if (null !== ($batch = $buffer->add($this->merge($nullLeftRow, $rightRow)))) {
+                if (null !== ($batch = $buffer->add($this->merge($nullLeftRow, $rightRow)->project($outputSchema)))) {
                     yield $batch;
                 }
             }
@@ -183,47 +179,50 @@ final class Joiner
         return $this->keys;
     }
 
+    public function schema(Schema $left, Schema $right): Schema
+    {
+        return $this->joinSchema->of($this->type, $left, $right);
+    }
+
     /**
      * Mirror of the default execution - roles swap, output rows do not: merge($left, $right)
      * argument order is preserved, unmatched-row tracking moves to whichever side sits in the table.
      *
-     * @param Generator<Rows> $left
-     * @param Generator<Rows> $right
      *
      * @return Generator<Rows>
      */
-    private function joinBuildingLeft(
-        Generator $left,
-        Generator $right,
-        ?Row $nullLeftRow,
-        ?Row $nullRightRow,
-    ): Generator {
+    private function joinBuildingLeft(JoinSide $left, JoinSide $right): Generator
+    {
+        $nullLeftRow = $left->nullRow;
+        $nullRightRow = $right->nullRow;
+        $leftSideSchema = $left->schema;
+        $rightSideSchema = $right->schema;
+
         $hashTable = new HashTable(trackUnmatched: $this->type === Join::left || $this->type === Join::left_anti);
+        $leftSchema = $leftSideSchema;
 
-        $nullLeftBuilder =
-            $this->type === Join::right && $nullLeftRow === null ? new NullRowBuilder($this->entryFactory) : null;
-
-        foreach ($left as $batch) {
+        foreach ($left->rows as $batch) {
+            $leftSchema ??= $batch->schema();
             $hashes = $this->hasher->hash($this->leftValues->of($batch));
 
             foreach ($batch as $i => $row) {
                 $hashTable->add($hashes[$i], $row);
-                $nullLeftBuilder?->collect($row);
             }
         }
 
-        $nullLeftRow ??= $nullLeftBuilder?->row();
+        $leftSchema ??= new Schema();
+        $nullLeftRow ??= (new NullRowBuilder($leftSchema))->row();
 
-        $nullRightBuilder =
-            $this->type === Join::left && $nullRightRow === null ? new NullRowBuilder($this->entryFactory) : null;
+        $rightSchema = $rightSideSchema;
+        $outputSchema = null;
 
-        foreach ($right as $batch) {
+        foreach ($right->rows as $batch) {
+            $rightSchema ??= $batch->schema();
+            $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
             $hashes = $this->hasher->hash($this->rightValues->of($batch));
             $joined = [];
 
             foreach ($batch as $i => $rightRow) {
-                $nullRightBuilder?->collect($rightRow);
-
                 $matched = false;
 
                 foreach ($hashTable->candidatesFor($hashes[$i]) as $index => $leftRow) {
@@ -243,23 +242,32 @@ final class Joiner
                 }
 
                 if (!$matched && $this->type === Join::right) {
-                    $joined[] = $this->merge($nullLeftRow ?? new Row(Entries::recreate([])), $rightRow);
+                    $joined[] = $this->merge($nullLeftRow, $rightRow);
                 }
             }
 
             if ($joined !== []) {
-                yield new Rows(...$joined);
+                $projected = [];
+
+                foreach ($joined as $joinedRow) {
+                    $projected[] = $joinedRow->project($outputSchema);
+                }
+
+                yield Rows::conformed($outputSchema, $projected);
             }
         }
 
+        $rightSchema ??= new Schema();
+
         if ($this->type === Join::left || $this->type === Join::left_anti) {
-            $nullRightRow ??= $nullRightBuilder?->row() ?? new Row(Entries::recreate([]));
-            $buffer = new RowsBuffer($this->batchSize);
+            $nullRightRow ??= (new NullRowBuilder($rightSchema))->row();
+            $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
+            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
 
             foreach ($hashTable->unmatchedRows() as $leftRow) {
                 $joined = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow;
 
-                if (null !== ($batch = $buffer->add($joined))) {
+                if (null !== ($batch = $buffer->add($joined->project($outputSchema)))) {
                     yield $batch;
                 }
             }

@@ -10,6 +10,7 @@ use Flow\CLI\Command\Traits\CSVOptions;
 use Flow\CLI\Command\Traits\ExcelOptions;
 use Flow\CLI\Command\Traits\JSONOptions;
 use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\SchemaInferenceOptions;
 use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
@@ -22,6 +23,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,6 +36,7 @@ use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\df;
 
+#[AsCommand(name: 'file:analyze', description: 'Analyze a file.', aliases: ['analyze'])]
 final class FileAnalyzeCommand extends Command
 {
     use ConfigOptions;
@@ -41,6 +44,7 @@ final class FileAnalyzeCommand extends Command
     use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
+    use SchemaInferenceOptions;
     use StatisticsOptions;
     use XMLOptions;
 
@@ -55,8 +59,6 @@ final class FileAnalyzeCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:analyze')
-            ->setDescription('Analyze a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,
@@ -73,14 +75,14 @@ final class FileAnalyzeCommand extends Command
                 'input-file-batch-size',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once',
+                'Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once',
                 self::DEFAULT_BATCH_SIZE,
             )
             ->addOption(
                 'input-file-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                'Limit number of rows read from the file.',
                 null,
             )
             ->addOption(
@@ -89,13 +91,6 @@ final class FileAnalyzeCommand extends Command
                 InputOption::VALUE_REQUIRED,
                 'Number of rows to skip before starting to read data',
                 null,
-            )
-            ->addOption(
-                'schema-auto-cast',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
-                false,
             );
 
         $this->addConfigOptions($this);
@@ -104,6 +99,7 @@ final class FileAnalyzeCommand extends Command
         $this->addExcelInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addSchemaInferenceOptions($this);
         $this->addStatisticsOptions($this);
     }
 
@@ -118,7 +114,13 @@ final class FileAnalyzeCommand extends Command
         $style->title('Analyzing File');
         $style->info('File path: ' . $this->sourcePath->basename());
 
-        $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
+        $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
+
+        if (!$this->applySchemaInference($extractor, $input, $style)) {
+            return Command::FAILURE;
+        }
+
+        $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
 
@@ -129,10 +131,6 @@ final class FileAnalyzeCommand extends Command
         }
 
         $df->batchSize($batchSize);
-
-        if (option_bool('schema-auto-cast', $input)) {
-            $df->autoCast();
-        }
 
         $limit = option_int_nullable('input-file-limit', $input);
 
@@ -177,7 +175,7 @@ final class FileAnalyzeCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

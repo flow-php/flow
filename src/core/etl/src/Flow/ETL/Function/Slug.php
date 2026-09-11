@@ -7,22 +7,60 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-final class Slug extends ScalarFunctionChain
+use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_string;
+
+final class Slug implements ScalarFunction
 {
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $string;
+    private readonly ScalarFunction $separator;
+    private readonly ScalarFunction $locale;
+    private readonly ScalarFunction $symbolsMap;
+
     /**
-     * @param ScalarFunction|string $string
-     * @param ScalarFunction|string $separator
-     * @param null|ScalarFunction|string $locale
      * @param null|array<array-key, mixed>|ScalarFunction $symbolsMap
      */
     public function __construct(
-        private readonly ScalarFunction|string $string,
-        private readonly ScalarFunction|string $separator = '-',
-        private readonly ScalarFunction|string|null $locale = null,
-        private readonly ScalarFunction|array|null $symbolsMap = null,
-    ) {}
+        ScalarFunction|string $string,
+        ScalarFunction|string $separator = '-',
+        ScalarFunction|string|null $locale = null,
+        ScalarFunction|array|null $symbolsMap = null,
+    ) {
+        $this->string = $string instanceof ScalarFunction ? $string : lit($string);
+        $this->separator = $separator instanceof ScalarFunction ? $separator : lit($separator);
+        $this->locale = $locale instanceof ScalarFunction ? $locale : lit($locale);
+        $this->symbolsMap = $symbolsMap instanceof ScalarFunction ? $symbolsMap : lit($symbolsMap);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->string, $this->separator, $this->locale, $this->symbolsMap];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1], $children[2], $children[3]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_string();
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -32,9 +70,7 @@ final class Slug extends ScalarFunctionChain
         $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row, $context);
 
         if ($string === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Slug function requires non-null value'));
+            throw new InvalidArgumentException('Slug function requires non-null value');
         }
 
         return (new AsciiSlugger(symbolsMap: $symbolsMap))

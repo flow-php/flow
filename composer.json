@@ -29,9 +29,9 @@
         "doctrine/dbal": "^4.4",
         "google/apiclient": "^2.13",
         "google/protobuf": "^4.0 || ^5.0",
-        "halaxa/json-machine": "^1.1",
+        "halaxa/json-machine": "^1.2",
         "monolog/monolog": "^3.0",
-        "openspout/openspout": "^5.2",
+        "openspout/openspout": "~5.3.0",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",
         "psr/clock": "^1.0",
@@ -122,6 +122,7 @@
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
+        "flow-php/mago-types-bridge": "self.version",
         "flow-php/phpstan-types-bridge": "self.version",
         "flow-php/postgresql": "self.version",
         "flow-php/postgresql-valinor-bridge": "self.version",
@@ -169,6 +170,7 @@
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/monolog/telemetry/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
+                "src/bridge/mago/types/src/Flow",
                 "src/bridge/phpstan/types/src/Flow",
                 "src/bridge/postgresql/valinor/src/Flow",
                 "src/bridge/psr3/telemetry/src/Flow",
@@ -270,6 +272,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Mago\\": "tools/mago/vendor/carthage-software/mago/composer/src",
             "Flow\\": [
                 "src/adapter/etl-adapter-avro/tests/Flow",
                 "src/adapter/etl-adapter-chartjs/tests/Flow",
@@ -290,6 +293,7 @@
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/monolog/telemetry/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
+                "src/bridge/mago/types/tests/Flow",
                 "src/bridge/phpstan/types/tests/Flow",
                 "src/bridge/postgresql/valinor/tests/Flow",
                 "src/bridge/psr3/telemetry/tests/Flow",
@@ -325,6 +329,9 @@
             "Flow\\Benchmarks\\": [
                 "benchmarks/src",
                 "benchmarks/suites"
+            ],
+            "Flow\\Benchmarks\\Tests\\": [
+                "benchmarks/tests/Flow/Benchmarks/Tests"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
                 "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"

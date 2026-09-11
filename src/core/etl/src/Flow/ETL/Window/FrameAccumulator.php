@@ -14,5 +14,5 @@ interface FrameAccumulator
      * Must be idempotent and non-destructive - WindowProcessor reads it after every growth step of an
      * expanding frame.
      */
-    public function value(): mixed;
+    public function value(): float|int|null;
 }

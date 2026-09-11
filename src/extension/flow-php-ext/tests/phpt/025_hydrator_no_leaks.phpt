@@ -6,17 +6,34 @@ repeated native hydrate and dehydrate do not leak memory
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\RustRowHydratorNative;
 use Flow\ETL\Schema\Metadata;
 
-use function Flow\ETL\DSL\{schema, int_schema, str_schema, float_schema, bool_schema, datetime_schema, time_schema, uuid_schema, list_schema, map_schema, structure_schema, json_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_structure, type_integer, type_string, type_float, type_mixed};
-
 $schema = schema(
     int_schema('id'),
-    str_schema('name'),                       // non-nullable - null values force makeNullable
+    str_schema('name', nullable: true),       // the batch carries nulls, so the declaration admits them
     float_schema('price'),
     bool_schema('active'),
     datetime_schema('created_at'),
@@ -34,8 +51,8 @@ for ($i = 1; $i <= 100; $i++) {
     $batch[] = new RawRowValues(
         [
             'id' => $i,
-            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // exercises the makeNullable path
-            'price' => $i / 100,
+            'name' => $i % 10 === 0 ? null : 'user_' . $i,     // null values under a nullable declaration
+            'price' => (float) $i / 100,
             'active' => $i % 3 === 0,
             'created_at' => new DateTimeImmutable('2025-01-01 00:00:00.123456', new DateTimeZone('Europe/Warsaw')),
             'duration' => new DateInterval('PT1H2M3S'),

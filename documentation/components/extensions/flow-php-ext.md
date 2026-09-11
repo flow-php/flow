@@ -73,3 +73,21 @@ implementation automatically:
 
 All extension failures throw `Flow\Floe\Exception\ExtensionException`; `FloeReader`/`FloeWriter` wrap
 it as `Flow\Floe\Exception\FloeException`. There is no silent fallback to the PHP engine.
+
+## Structure columns across the PHP/Rust boundary
+
+A structure column crosses to Rust in the schema JSON as tag `structure_v2` with an ordered `fields`
+list - one `{name, type, optional}` object per field, `name` always a JSON string (PHP casts integer
+element names on `normalize()`). The Rust side reads the list in order; the per-field `optional` flag
+is used only by the cast plan (`required = !optional`), never by the encoder or decoder, which emit
+and read one flag byte per field in declared order.
+
+A version-skewed pair fails loudly instead of writing wrong bytes:
+
+- new `flow-php/etl` with a pre-`structure_v2` extension:
+  `flow_php does not support values of type "structure_v2" in this build`
+- old `flow-php/etl` with a current extension:
+  `flow_php does not support values of type "structure" in this build`
+
+Either message means the extension and `flow-php/etl` disagree on the structure schema format:
+reinstall one to match the other, or set the Floe engine to `FloeEngine::php` while upgrading.

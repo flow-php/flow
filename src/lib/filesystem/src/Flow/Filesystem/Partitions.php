@@ -7,16 +7,14 @@ namespace Flow\Filesystem;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
 use IteratorAggregate;
 use Traversable;
 
 use function array_key_exists;
 use function array_values;
 use function count;
-use function hash;
-use function uasort;
 
 /**
  * @implements \ArrayAccess<int, Partition>
@@ -31,6 +29,18 @@ final readonly class Partitions implements ArrayAccess, Countable, IteratorAggre
 
     public function __construct(Partition ...$partitions)
     {
+        $names = [];
+
+        foreach ($partitions as $partition) {
+            if (array_key_exists($partition->name, $names)) {
+                throw new InvalidArgumentException(
+                    "Partition \"{$partition->name}\" is declared more than once, a column partitions a dataset once",
+                );
+            }
+
+            $names[$partition->name] = true;
+        }
+
         $this->partitions = array_values($partitions);
     }
 
@@ -64,20 +74,6 @@ final readonly class Partitions implements ArrayAccess, Countable, IteratorAggre
         }
 
         return false;
-    }
-
-    public function id(): string
-    {
-        $partitions = $this->partitions;
-        uasort($partitions, static fn(Partition $a, Partition $b) => $a->name <=> $b->name);
-
-        $id = '|';
-
-        foreach ($partitions as $partition) {
-            $id .= $partition->name . '_' . $partition->value . '|';
-        }
-
-        return hash('xxh128', $id);
     }
 
     public function offsetExists(mixed $offset): bool

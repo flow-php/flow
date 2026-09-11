@@ -6,9 +6,9 @@ namespace Flow\Bridge\Symfony\HttpFoundationTelemetry\DSL;
 
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

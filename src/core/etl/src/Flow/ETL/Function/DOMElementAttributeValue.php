@@ -10,20 +10,55 @@ use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\Types\Type;
 
 use function class_exists;
 use function count;
+use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 use function is_array;
 use function reset;
 
-final class DOMElementAttributeValue extends ScalarFunctionChain
+final class DOMElementAttributeValue implements ScalarFunction
 {
-    public function __construct(
-        private readonly ScalarFunction|DOMNode|HTMLElement $domElement,
-        private readonly ScalarFunction|string $attribute,
-    ) {}
+    use ScalarFunctionChain;
+
+    private readonly ScalarFunction $domElement;
+    private readonly ScalarFunction $attribute;
+
+    public function __construct(ScalarFunction|DOMNode|HTMLElement $domElement, ScalarFunction|string $attribute)
+    {
+        $this->domElement = $domElement instanceof ScalarFunction ? $domElement : lit($domElement);
+        $this->attribute = $attribute instanceof ScalarFunction ? $attribute : lit($attribute);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function children(): array
+    {
+        return [$this->domElement, $this->attribute];
+    }
+
+    /**
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static
+    {
+        /** @var list<ScalarFunction> $children */
+        return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return type_optional(type_string());
+    }
 
     public function eval(Row $row, FlowContext $context): ?string
     {
@@ -50,17 +85,11 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
         $attributeName = (new Parameter($this->attribute))->asString($row, $context);
 
         if ($node === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode'));
+            throw new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode');
         }
 
         if ($attributeName === null) {
-            return $context
-                ->functions()
-                ->invalidResult(
-                    new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name'),
-                );
+            throw new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name');
         }
 
         if (!$node instanceof DOMNode && !$node instanceof HTMLElement) {

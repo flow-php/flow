@@ -6,55 +6,96 @@ namespace Flow\ETL\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\ThrowingAfterFirstBatchExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
 use Generator;
 use RuntimeException;
 
 use function array_merge;
-use function Flow\ETL\DSL\boolean_entry;
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ignore_error_handler;
-use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\skip_rows_handler;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\throw_error_handler;
 
 final class ETLErrorHandlingTest extends FlowTestCase
 {
+    public function test_a_source_ended_by_the_handler_takes_the_chained_sources_after_it(): void
+    {
+        $rows = data_frame()
+            ->read(from_all(new ThrowingAfterFirstBatchExtractor(), from_array([['id' => 2]])))
+            ->onError(ignore_error_handler())
+            ->fetch();
+
+        static::assertSame([['id' => 1]], $rows->toArray());
+    }
+
     public function test_default_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(
-                    integer_entry('id', 101),
-                    boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null),
-                ));
+                $schema = schema(
+                    int_schema('id'),
+                    bool_schema('deleted'),
+                    datetime_schema('expiration-date'),
+                    str_schema('phase', true),
+                );
 
-                yield rows(row(
-                    integer_entry('id', 102),
-                    boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
-                    string_entry('phase', null),
-                ));
+                yield rows($schema, row([
+                    'id' => 101,
+                    'deleted' => false,
+                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
+                    'phase' => null,
+                ]));
+
+                yield rows($schema, row([
+                    'id' => 102,
+                    'deleted' => true,
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
+                    'phase' => null,
+                ]));
             }
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 throw new RuntimeException('Transformer Exception');
@@ -85,30 +126,52 @@ final class ETLErrorHandlingTest extends FlowTestCase
     public function test_ignore_error_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(
-                    integer_entry('id', 101),
-                    boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null),
-                ));
+                $schema = schema(
+                    int_schema('id'),
+                    bool_schema('deleted'),
+                    datetime_schema('expiration-date'),
+                    str_schema('phase', true),
+                );
 
-                yield rows(row(
-                    integer_entry('id', 102),
-                    boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
-                    string_entry('phase', null),
-                ));
+                yield rows($schema, row([
+                    'id' => 101,
+                    'deleted' => false,
+                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
+                    'phase' => null,
+                ]));
+
+                yield rows($schema, row([
+                    'id' => 102,
+                    'deleted' => true,
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
+                    'phase' => null,
+                ]));
             }
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 throw new RuntimeException('Transformer Exception');
@@ -132,55 +195,84 @@ final class ETLErrorHandlingTest extends FlowTestCase
             ->load($loader)
             ->run();
 
-        static::assertEquals(
+        // a declined transformation drops its batch - running the remaining steps on it would load a half
+        // transformed batch
+        static::assertSame([], $loader->result);
+    }
+
+    public function test_skip_rows_handler_does_not_emit_the_half_transformed_batch(): void
+    {
+        $rows = data_frame()
+            ->read(from_array(
+                [['id' => 1, 'v' => '10'], ['id' => 2, 'v' => 'boom'], ['id' => 3, 'v' => '30']],
+                schema(int_schema('id'), str_schema('v')),
+            )->withBatchSize(1))
+            ->onError(skip_rows_handler())
+            ->withEntry('doubled', ref('v')->cast('integer')->multiply(lit(2)))
+            ->fetch();
+
+        static::assertSame(
             [
-                [
-                    'id' => 101,
-                    'deleted' => false,
-                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
-                    'phase' => null,
-                ],
-                [
-                    'id' => 102,
-                    'deleted' => true,
-                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
-                    'phase' => null,
-                ],
+                ['id' => 1, 'v' => '10', 'doubled' => 20],
+                ['id' => 3, 'v' => '30', 'doubled' => 60],
             ],
-            $loader->result,
+            $rows->toArray(),
         );
+        static::assertSame(['id', 'v', 'doubled'], $rows->schema()->references()->names());
     }
 
     public function test_skip_rows_handler(): void
     {
         $extractor = new class implements Extractor {
+            public function withSchema(Schema $schema): static
+            {
+                return $this;
+            }
+
+            public function schema(): Schema
+            {
+                return new Schema();
+            }
+
             /**
              * @param FlowContext $context
              *
-             * @return \Generator<int, Rows, mixed, void>
+             * @return \Generator<int, Rows, Signal|null, void>
              */
             public function extract(FlowContext $context): Generator
             {
-                yield rows(row(
-                    integer_entry('id', 101),
-                    boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null),
-                ));
+                $schema = schema(
+                    int_schema('id'),
+                    bool_schema('deleted'),
+                    datetime_schema('expiration-date'),
+                    str_schema('phase', true),
+                );
 
-                yield rows(row(
-                    integer_entry('id', 102),
-                    boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
-                    string_entry('phase', null),
-                ));
+                yield rows($schema, row([
+                    'id' => 101,
+                    'deleted' => false,
+                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
+                    'phase' => null,
+                ]));
+
+                yield rows($schema, row([
+                    'id' => 102,
+                    'deleted' => true,
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
+                    'phase' => null,
+                ]));
             }
         };
 
         $brokenTransformer = new class implements Transformer {
+            public function bind(Schema $input): BoundStep
+            {
+                return new BoundStep($this, $input);
+            }
+
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                if ($rows->first()->valueOf('id') === 101) {
+                if ($rows->first()->get('id') === 101) {
                     throw new RuntimeException('Transformer Exception');
                 }
 

@@ -4,54 +4,83 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
-use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\InfersSchema;
+use Flow\ETL\Extractor\LimitPushDown;
+use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\PushesLimit;
+use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
+use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\SourceStream;
 use Generator;
-use OpenSpout\Common\Entity\Cell;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Reader\ODS\Reader as OdsReader;
-use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use Throwable;
-use ZipArchive;
 
-use function array_map;
+use function array_diff;
+use function array_values;
 use function count;
-use function Flow\ETL\DSL\str_schema;
-use function str_starts_with;
+use function iterator_to_array;
+use function sprintf;
 
-final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class ExcelExtractor implements
+    BatchableExtractor,
+    Extractor,
+    FileExtractor,
+    InfersSchema,
+    LimitPushDown,
+    MetadataColumnsExtractor,
+    RewindableExtractor
 {
-    use Limitable;
-    use PathFiltering;
+    use Batches;
+    use PushesLimit;
+    use FileReading;
 
-    private bool $convertEmptyToNull = true;
+    private SchemaInference $inference;
 
-    private ?int $offset = null;
+    private ExcelReadOptions $readOptions;
 
-    private XlsxReader|OdsReader|null $reader = null;
+    /**
+     * The sheets the last inference sampled, still open: the next extract() reads on from where the sample stopped
+     * instead of parsing the sample again. DuckDB keeps its CSV sniffer's buffers for the scan the same way.
+     */
+    private ?WorkbookSampler $sampled = null;
 
     private ?Schema $schema = null;
 
-    private ?string $sheetName = null;
+    private string $inferredFrom = '';
 
-    private bool $withHeader = true;
+    private readonly Filesystem $filesystem;
 
     public function __construct(
         private readonly Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
+        if (!$filesystem->supports($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
+                . 'this scheme, e.g. from_excel($path, filesystem: aws_s3_filesystem(...)).',
+                $filesystem::class,
+                $filesystem->mount()->protocol,
+                $path->uri(),
+            ));
+        }
+
+        $this->filesystem = $filesystem;
+
         if (!$this->path->isLocal()) {
             // We can't use resources (returned by \fopen) since they are not supported by the OpenSpout library.
             // They are not supported because OpenSpout library uses php built in ZipArchive library, which doesn't support resources, only local paths.
@@ -60,114 +89,200 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             );
         }
 
-        $this->resetLimit();
+        $this->inference = new SchemaInference();
+        $this->readOptions = new ExcelReadOptions();
     }
 
     /**
-     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     * An inference no extract() followed still holds its sample's open readers, and OpenSpout's file-based
+     * shared-strings cache leaves its temp folder behind until a reader closes.
+     */
+    public function __destruct()
+    {
+        $this->sampled?->close();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
-        // Offset must be a positive number
-        $offset = $this->offset ?? 1;
-
-        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
         $hydrator = $context->hydrator();
-        $batchSize = $context->config->extractorBatchSize();
+        $batchSize = $this->batchSize();
+        $yielded = 0;
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
+        // only the first extract() after an inference reads on from its sample; every later one parses afresh
+        $sampled = $this->sampled;
+        $this->sampled = null;
 
-        $baseSchema = $this->schema;
+        try {
+            if ($this->schema !== null) {
+                $base = $this->schema;
+            } else {
+                // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+                $derived = $this->derivedSchema;
 
-        if (
-            $baseSchema !== null
-            && $shouldPutInputIntoRows
-            && $baseSchema->findDefinition('_input_file_uri') === null
-        ) {
-            $baseSchema = $baseSchema->add(str_schema('_input_file_uri'));
-        }
+                if ($derived === null) {
+                    $sampler = new WorkbookSampler($workbook, $sources);
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
-            $partitions = $stream->path()->partitions();
+                    try {
+                        // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
+                        $header = $sampler->header();
+                        $this->inferredFrom = $header->source ?? '';
 
-            $schema = $baseSchema;
+                        $derived =
+                            $this->derivedSchema = (new SchemaInferrer(
+                                $this->inference,
+                                new CellTypeNarrower($this->inference->candidates()),
+                            ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+                    } catch (Throwable $failure) {
+                        $sampler->close();
 
-            if ($schema !== null) {
-                foreach ($partitions as $partition) {
-                    if ($schema->findDefinition($partition->name) === null) {
-                        $schema = $schema->add(str_schema($partition->name));
+                        throw $failure;
                     }
+
+                    $sampled?->close();
+                    $sampled = $sampler;
                 }
+
+                $base = $fileColumns->withoutTail($derived);
             }
 
-            $encoder = new ExcelEncoder(withHeader: $this->withHeader, convertEmptyToNull: $this->convertEmptyToNull);
-            $rawCells = [];
+            $schema = $fileColumns->declare($base);
+            $tail = $fileColumns->tail();
+            $expected = $base->references()->names();
 
-            foreach ($this->extractRows($stream, $offset) as $cells) {
-                $rawCells[] = $cells;
+            foreach ($sources as $source) {
+                $sheet = $sampled?->take($source) ?? $workbook->sheet($source);
 
-                if (count($rawCells) >= $batchSize) {
-                    $batch = [];
+                try {
+                    if ($this->schema === null && !$this->inference->unionByName) {
+                        $columns = array_values(array_diff($sheet->columns(), $tail));
 
-                    foreach ($encoder->decode($rawCells) as $rowValues) {
-                        $row = $rowValues->values;
-
-                        if ($streamUri !== null) {
-                            $row['_input_file_uri'] = $streamUri;
+                        if (
+                            $columns !== []
+                            && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
+                        ) {
+                            throw InferredSchemaException::columnsDiverge(
+                                $source->uri(),
+                                $this->inferredFrom,
+                                $base,
+                                $columns,
+                                $this->inference,
+                            );
                         }
-
-                        foreach ($partitions as $partition) {
-                            $row[$partition->name] = $partition->value;
-                        }
-
-                        $batch[] = new RawRowValues($row);
                     }
 
-                    $rawCells = [];
+                    // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
+                    $constants = $fileColumns->forFile($source, $schema);
+                    $batch = [];
 
-                    foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                        $signal = yield Rows::partitioned([$hydratedRow], $partitions);
+                    foreach ($sheet->rows() as $rowValues) {
+                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
 
-                        $this->incrementReturnedRows();
+                        if (count($batch) < $batchSize) {
+                            continue;
+                        }
 
-                        if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $stream->close();
+                        $hydrated = $hydrator->hydrate($batch, $schema);
+                        $batch = [];
 
+                        $yielded += $hydrated->count();
+
+                        $signal = yield $hydrated;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
+
+                        $limit = $this->pushedLimit();
+
+                        if ($limit !== null && $yielded >= $limit) {
                             return;
                         }
                     }
+
+                    if ($batch === []) {
+                        continue;
+                    }
+
+                    $hydrated = $hydrator->hydrate($batch, $schema);
+
+                    $yielded += $hydrated->count();
+
+                    $signal = yield $hydrated;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    $limit = $this->pushedLimit();
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
+                } finally {
+                    $sheet->close();
                 }
             }
-
-            $batch = [];
-
-            foreach ($encoder->decode($rawCells) as $rowValues) {
-                $row = $rowValues->values;
-
-                if ($streamUri !== null) {
-                    $row['_input_file_uri'] = $streamUri;
-                }
-
-                foreach ($partitions as $partition) {
-                    $row[$partition->name] = $partition->value;
-                }
-
-                $batch[] = new RawRowValues($row);
-            }
-
-            foreach ($hydrator->cast($batch, $schema) as $hydratedRow) {
-                $signal = yield Rows::partitioned([$hydratedRow], $partitions);
-
-                $this->incrementReturnedRows();
-
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $stream->close();
-
-                    return;
-                }
-            }
-
-            $stream->close();
+        } finally {
+            $sampled?->close();
         }
+    }
+
+    public function inferSchema(SchemaInferenceBuilder $builder): static
+    {
+        $this->inference = $builder->build();
+        $this->forgetInference();
+
+        return $this;
+    }
+
+    public function schema(): Schema
+    {
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
+        if ($this->schema !== null) {
+            return $fileColumns->declare($this->schema);
+        }
+
+        // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
+        $derived = $this->derivedSchema;
+
+        if ($derived === null) {
+            $sampler = new WorkbookSampler(
+                new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem)),
+                iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
+            );
+
+            try {
+                // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
+                $header = $sampler->header();
+                $this->inferredFrom = $header->source ?? '';
+
+                $derived =
+                    $this->derivedSchema = (new SchemaInferrer(
+                        $this->inference,
+                        new CellTypeNarrower($this->inference->candidates()),
+                    ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+            } catch (Throwable $failure) {
+                $sampler->close();
+
+                throw $failure;
+            }
+
+            $this->sampled?->close();
+            $this->sampled = $sampler;
+        }
+
+        return $fileColumns->declare($fileColumns->withoutTail($derived));
     }
 
     public function source(): Path
@@ -177,40 +292,37 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function withConvertEmptyToNull(bool $convertEmptyToNull): self
     {
-        $this->convertEmptyToNull = $convertEmptyToNull;
+        $this->readOptions = $this->readOptions->withConvertEmptyToNull($convertEmptyToNull);
+        $this->forgetInference();
 
         return $this;
     }
 
     public function withHeader(bool $withHeader): self
     {
-        $this->withHeader = $withHeader;
+        $this->readOptions = $this->readOptions->withHeader($withHeader);
+        $this->forgetInference();
 
         return $this;
     }
 
     public function withOffset(int $offset): self
     {
-        if ($offset < 1) {
-            throw new InvalidArgumentException('Offset must be greater or equal to 1');
-        }
-
-        $this->offset = $offset;
+        $this->readOptions = $this->readOptions->withOffset($offset);
+        $this->forgetInference();
 
         return $this;
     }
 
     public function withReader(ExcelReader $reader): self
     {
-        $this->reader = match ($reader) {
-            ExcelReader::XLSX => new XlsxReader(),
-            ExcelReader::ODS => new OdsReader(),
-        };
+        $this->readOptions = $this->readOptions->withFormat($reader);
+        $this->forgetInference();
 
         return $this;
     }
 
-    public function withSchema(Schema $schema): self
+    public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;
 
@@ -219,114 +331,20 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function withSheetName(string $sheetName): self
     {
-        SheetNameAssertion::assert($sheetName);
-
-        $this->sheetName = $sheetName;
+        $this->readOptions = $this->readOptions->withSheetName($sheetName);
+        $this->forgetInference();
 
         return $this;
     }
 
     /**
-     * @return array<int, mixed>
+     * A changed read option or inference voids both the schema and the rows sampled under the old one.
      */
-    private function createRowsFromCells(Row $row, int $previousRowDataCount = 0): array
+    private function forgetInference(): void
     {
-        $rowData = array_map(static fn(Cell $cell) => $cell->getValue(), $row->cells);
-
-        // Expand columns to the size of the previous row
-        for ($i = count($rowData); $i < $previousRowDataCount; $i++) {
-            $rowData[$i] = null;
-        }
-
-        return $rowData;
-    }
-
-    /**
-     * @return Generator<int, array<int, mixed>>
-     */
-    private function extractRows(SourceStream $stream, int $offset): Generator
-    {
-        $reader = $this->reader($stream);
-
-        try {
-            $reader->open($stream->path()->path());
-
-            $manager = new SheetsManager($reader->getSheetIterator());
-
-            $previousRowDataCount = 0;
-
-            $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
-
-            $rowIndex = 0;
-
-            foreach ($sheet->getRowIterator() as $sheetRow) {
-                $rowIndex++;
-
-                if (1 === $rowIndex && $this->withHeader) {
-                    yield $this->createRowsFromCells($sheetRow);
-
-                    continue;
-                }
-
-                // Skip till offset is reach
-                if ($offset > $rowIndex) {
-                    continue;
-                }
-
-                // ODS format reader skips empty cells when reading rows
-                $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
-                $previousRowDataCount = count($row);
-
-                yield $row;
-            }
-
-            $reader->close();
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
-        }
-    }
-
-    private function reader(SourceStream $stream): XlsxReader|OdsReader
-    {
-        if (null === $this->reader) {
-            $this->reader = match ($stream->path()->extension()) {
-                'xlsx' => new XlsxReader(),
-                'ods' => new OdsReader(),
-                default => null,
-            };
-
-            if (null === $this->reader) {
-                $line = $stream->read(8, 0);
-
-                // XLS signature: D0 CF 11 E0 A1 B1 1A E1
-                if (str_starts_with($line, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
-                    return $this->reader = new XlsxReader();
-                }
-
-                // ZIP signature: 50 4B 03 04
-                if (str_starts_with($line, "\x50\x4B\x03\x04")) {
-                    $zip = new ZipArchive();
-
-                    if ($zip->open($stream->path()->path())) {
-                        $mimetype = $zip->getFromName('mimetype');
-                        $zip->close();
-
-                        $this->reader = match ($mimetype) {
-                            'application/vnd.oasis.opendocument.spreadsheet' => new OdsReader(),
-                            // Other zip-based file formats
-                            default => new XlsxReader(),
-                        };
-                    }
-                }
-            }
-
-            if (!$this->reader) {
-                throw new InvalidArgumentException(
-                    'Unsupported file format: ' . ($stream->path()->extension() ?: 'n/a'),
-                );
-            }
-        }
-
-        return $this->reader;
+        $this->derivedSchema = null;
+        $this->inferredFrom = '';
+        $this->sampled?->close();
+        $this->sampled = null;
     }
 }

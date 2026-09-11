@@ -11,29 +11,19 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 
-use function file_exists;
-use function Flow\ETL\DSL\generate_random_string;
 use function iterator_to_array;
-use function mkdir;
-use function unlink;
 
 class WriterValidatorTest extends ParquetIntegrationTestCase
 {
-    protected function setUp(): void
-    {
-        if (!file_exists(__DIR__ . '/var')) {
-            mkdir(__DIR__ . '/var');
-        }
-    }
-
     public function test_writing_int_value_to_string_column(): void
     {
         $this->expectExceptionMessage('Column "string" is not string, got "integer" instead');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::string('string'));
 
@@ -45,7 +35,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "list" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(NestedColumn::list('list', ListElement::string())->makeRequired());
 
@@ -57,7 +47,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "list.list.element" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(NestedColumn::list('list', ListElement::string(required: true)));
 
@@ -69,7 +59,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "map.key_value.value" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(NestedColumn::map('map', MapKey::string(), MapValue::string(required: true)));
 
@@ -81,7 +71,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "map" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(NestedColumn::map('map', MapKey::string(), MapValue::string())->makeRequired());
 
@@ -93,7 +83,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::string('string')->makeRequired());
 
@@ -103,7 +93,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
     public function test_writing_row_with_missing_optional_columns(): void
     {
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id'), FlatColumn::string('string'));
 
@@ -127,14 +117,12 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
             ],
             iterator_to_array($file->values()),
         );
-
-        unlink($path);
     }
 
     public function test_writing_row_with_missing_optional_columns_in_different_columns(): void
     {
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id'), FlatColumn::string('string'));
 
@@ -159,8 +147,6 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
             ],
             iterator_to_array($file->values()),
         );
-
-        unlink($path);
     }
 
     public function test_writing_row_without_required_column(): void
@@ -168,7 +154,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = Writer::php();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
+        $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::int32('id'), FlatColumn::string('string')->makeRequired());
 

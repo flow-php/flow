@@ -6,14 +6,34 @@ native cast propagates the exact PHP cast exceptions and aborts the batch
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
+use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 
-use function Flow\ETL\DSL\{schema, datetime_schema, date_schema, uuid_schema, json_schema, list_schema, map_schema};
-use function Flow\Types\DSL\{type_list, type_map, type_integer, type_string, type_positive_integer};
-
 $throwing = [
+    'integer from a non numeric string' => [schema(int_schema('id')), [new RawRowValues(['id' => 'abc'])]],
+    'float from a hex string' => [schema(float_schema('p')), [new RawRowValues(['p' => '0x1A'])]],
+    'boolean from an unrecognised word' => [schema(bool_schema('a')), [new RawRowValues(['a' => 'weird'])]],
+    'integer from an array' => [schema(int_schema('id')), [new RawRowValues(['id' => [1, 2, 3]])]],
     'uuid invalid' => [schema(uuid_schema('u')), [new RawRowValues(['u' => 'not-a-uuid'])]],
     'uuid uppercase' => [schema(uuid_schema('u')), [new RawRowValues(['u' => '01234567-89AB-4DEF-8123-456789ABCDEF'])]],
     'json scalar' => [schema(json_schema('j')), [new RawRowValues(['j' => 5])]],
@@ -38,6 +58,28 @@ $throwing = [
         schema(list_schema('l', type_list(type_positive_integer()))),
         [new RawRowValues(['l' => [-3]])],
     ],
+    'row index is 1' => [
+        schema(int_schema('i')),
+        [new RawRowValues(['i' => '1']), new RawRowValues(['i' => 'x'])],
+    ],
+    'integer overflow' => [schema(int_schema('id')), [new RawRowValues(['id' => '9223372036854775808'])]],
+    'date from an empty string' => [schema(date_schema('d')), [new RawRowValues(['d' => ''])]],
+    'datetime from a relative word' => [schema(datetime_schema('at')), [new RawRowValues(['at' => 'now'])]],
+    'string from null' => [
+        schema(list_schema('l', type_list(type_string()))),
+        [new RawRowValues(['l' => ['a', null]])],
+    ],
+    'list from a scalar' => [
+        schema(list_schema('l', type_list(type_integer()))),
+        [new RawRowValues(['l' => 5])],
+    ],
+    'exception outside the types package' => [
+        schema(new UnionDefinition('a', type_union(
+            new ThrowingType(new LogicException('stub type refuses everything')),
+            type_string(),
+        ))),
+        [new RawRowValues(['a' => [1, 2]])],
+    ],
 ];
 
 $php = new PhpRowHydrator();
@@ -47,7 +89,7 @@ foreach ($throwing as $label => [$s, $batch]) {
     $phpException = null;
 
     try {
-        $php->cast($batch, $s);
+        $php->hydrate($batch, $s);
     } catch (Throwable $e) {
         $phpException = $e::class . '|' . $e->getMessage();
     }
@@ -56,7 +98,7 @@ foreach ($throwing as $label => [$s, $batch]) {
     $nativeResult = null;
 
     try {
-        $nativeResult = $native->cast($batch, $s);
+        $nativeResult = $native->hydrate($batch, $s);
     } catch (Throwable $e) {
         $nativeException = $e::class . '|' . $e->getMessage();
     }
@@ -70,6 +112,10 @@ foreach ($throwing as $label => [$s, $batch]) {
 }
 ?>
 --EXPECT--
+integer from a non numeric string exception:match aborted:yes
+float from a hex string     exception:match aborted:yes
+boolean from an unrecognised word exception:match aborted:yes
+integer from an array       exception:match aborted:yes
 uuid invalid                exception:match aborted:yes
 uuid uppercase              exception:match aborted:yes
 json scalar                 exception:match aborted:yes
@@ -82,3 +128,10 @@ string map int keys         exception:match aborted:yes
 list bad keys               exception:match aborted:yes
 positive int list string    exception:match aborted:yes
 positive int list negative  exception:match aborted:yes
+row index is 1              exception:match aborted:yes
+integer overflow            exception:match aborted:yes
+date from an empty string   exception:match aborted:yes
+datetime from a relative word exception:match aborted:yes
+string from null            exception:match aborted:yes
+list from a scalar          exception:match aborted:yes
+exception outside the types package exception:match aborted:yes

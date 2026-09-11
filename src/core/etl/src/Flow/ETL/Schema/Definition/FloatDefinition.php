@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
-use Flow\Types\Type\Native\FloatType;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
@@ -36,7 +34,7 @@ final readonly class FloatDefinition implements Definition
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
         $this->type = type_float();
     }
@@ -90,17 +88,9 @@ final readonly class FloatDefinition implements Definition
         return new self($this->ref, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry): bool
+    public function matches(mixed $value): bool
     {
-        if (!$entry->is($this->ref)) {
-            return false;
-        }
-
-        if ($entry->value() === null) {
-            return $this->isNullable();
-        }
-
-        return $entry->type() instanceof FloatType;
+        return (new ValueMatch())->matches($this, $value);
     }
 
     public function merge(Definition $definition): Definition
@@ -184,13 +174,5 @@ final readonly class FloatDefinition implements Definition
     public function type(): Type
     {
         return $this->type;
-    }
-
-    /**
-     * @return class-string<Entry\FloatEntry>
-     */
-    public function entryClass(): string
-    {
-        return Entry\FloatEntry::class;
     }
 }

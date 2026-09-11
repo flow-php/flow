@@ -7,11 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSQLSession\Tests\Unit\Double;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 use Throwable;
@@ -66,9 +68,20 @@ final class SpyClient implements Client
         throw new RuntimeException('Not implemented');
     }
 
-    public function execute(Sql|string $sql, array $parameters = []): int
+    /**
+     * @return list<array{name: string, type: ColumnType}>
+     */
+    public function describe(Sql|string $sql, array $parameters = []): array
     {
-        $this->executedQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
+        throw new RuntimeException('Not implemented');
+    }
+
+    public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int
+    {
+        $this->executedQueries[] = [
+            'sql' => $sql instanceof Sql ? $sql->toSql() : $sql,
+            'parameters' => $parameters instanceof ConvertedParameters ? $parameters->values : $parameters,
+        ];
 
         return $this->executeReturn;
     }

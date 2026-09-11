@@ -9,12 +9,20 @@ use Doctrine\DBAL\Exception;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 
+use function count;
+use function intdiv;
+use function max;
+
 final readonly class Bulk
 {
+    private BulkStatement $statement;
+
     public function __construct(
-        private QueryFactory $queryFactory,
+        QueryFactory $queryFactory,
         private TableDefinitions $tableDefinitions,
-    ) {}
+    ) {
+        $this->statement = new BulkStatement($queryFactory);
+    }
 
     public static function create(): self
     {
@@ -29,12 +37,22 @@ final readonly class Bulk
     public function delete(Connection $connection, string $table, BulkData $bulkData): void
     {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
+        $chunks = $bulkData->chunk(max(1, intdiv(
+            (new DbalPlatform($connection->getDatabasePlatform()))->dialect()->maxBindParameters(),
+            $bulkData->columns()->count(),
+        )));
 
-        $connection->executeStatement(
-            $this->queryFactory->delete($connection->getDatabasePlatform(), $tableDefinition, $bulkData),
-            $bulkData->toSqlParameters($tableDefinition),
-            $tableDefinition->dbalParameterTypes($bulkData),
-        );
+        if (count($chunks) === 1) {
+            $this->statement->delete($connection, $tableDefinition, $chunks[0]);
+
+            return;
+        }
+
+        $connection->transactional(function (Connection $connection) use ($tableDefinition, $chunks): void {
+            foreach ($chunks as $chunk) {
+                $this->statement->delete($connection, $tableDefinition, $chunk);
+            }
+        });
     }
 
     /**
@@ -52,12 +70,22 @@ final readonly class Bulk
         ?InsertOptions $options = null,
     ): void {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
+        $chunks = $bulkData->chunk(max(1, intdiv(
+            (new DbalPlatform($connection->getDatabasePlatform()))->dialect()->maxBindParameters(),
+            $bulkData->columns()->count(),
+        )));
 
-        $connection->executeStatement(
-            $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
-            $bulkData->toSqlParameters($tableDefinition),
-            $bulkData->types(),
-        );
+        if (count($chunks) === 1) {
+            $this->statement->insert($connection, $tableDefinition, $chunks[0], $options);
+
+            return;
+        }
+
+        $connection->transactional(function (Connection $connection) use ($tableDefinition, $chunks, $options): void {
+            foreach ($chunks as $chunk) {
+                $this->statement->insert($connection, $tableDefinition, $chunk, $options);
+            }
+        });
     }
 
     /**
@@ -74,11 +102,21 @@ final readonly class Bulk
         ?UpdateOptions $options = null,
     ): void {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
+        $chunks = $bulkData->chunk(max(1, intdiv(
+            (new DbalPlatform($connection->getDatabasePlatform()))->dialect()->maxBindParameters(),
+            $bulkData->columns()->count(),
+        )));
 
-        $connection->executeStatement(
-            $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
-            $bulkData->toSqlParameters($tableDefinition),
-            $bulkData->types(),
-        );
+        if (count($chunks) === 1) {
+            $this->statement->update($connection, $tableDefinition, $chunks[0], $options);
+
+            return;
+        }
+
+        $connection->transactional(function (Connection $connection) use ($tableDefinition, $chunks, $options): void {
+            foreach ($chunks as $chunk) {
+                $this->statement->update($connection, $tableDefinition, $chunk, $options);
+            }
+        });
     }
 }

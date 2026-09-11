@@ -4,187 +4,69 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\SimilarNames;
+use Flow\Types\Type\TypedValueFormatter;
+use Flow\Types\Value\Json;
 
-final class Row
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function count;
+use function implode;
+
+final readonly class Row
 {
-    private ?Schema $schema = null;
-
+    /**
+     * @param array<string, mixed> $values storage keyed by name; the Schema defines column order (Rows::schema()->references())
+     */
     public function __construct(
-        private readonly Entries $entries,
+        private array $values,
     ) {}
 
     /**
-     * @param Entry<mixed> ...$entries
+     * Rewrites the storage to satisfy $schema: columns take the Schema's order and a declared
+     * nullable column the row omits is padded with null. The row does not know its position in a
+     * batch - Rows places the violation with SchemaMismatchException.
      *
-     * @throws InvalidArgumentException
+     * @throws ColumnMismatchException
      */
-    public static function create(Entry ...$entries): self
+    public function matchTo(Schema $schema): self
     {
-        return new self(new Entries(...$entries));
+        return $this->conform($schema, checkValues: true);
     }
 
     /**
-     * @param Entry<mixed> ...$entries
-     */
-    public static function with(Entry ...$entries): self
-    {
-        return self::create(...$entries);
-    }
-
-    /**
-     * @param Entry<mixed> ...$entries
+     * matchTo() without its value check: the order, padding, missing, unknown and null rules all hold, but a non-null
+     * value is not validated against its type - the caller produced it by casting to, or decoding from, that type.
      *
-     * @throws InvalidArgumentException
+     * @throws ColumnMismatchException
      */
-    public function add(Entry ...$entries): self
+    public function conformTo(Schema $schema): self
     {
-        return new self($this->entries->add(...$entries));
-    }
-
-    public function entries(): Entries
-    {
-        return $this->entries;
+        return $this->conform($schema, checkValues: false);
     }
 
     /**
-     * @throws InvalidArgumentException
-     *
-     * @return Entry<mixed>
+     * Drops the columns $schema does not declare and carries its order into the row. Unlike
+     * matchTo() it validates nothing - the caller is changing the shape, not checking it.
      */
-    public function get(string|Reference $reference): Entry
+    public function project(Schema $schema): self
     {
-        return $this->entries->get($reference);
-    }
+        $projected = [];
 
-    public function has(string|Reference $reference): bool
-    {
-        return $this->entries->has($reference);
-    }
-
-    public function hash(Algorithm $algorithm = new NativePHPHash()): string
-    {
-        $string = '';
-
-        foreach ($this->entries->sort()->all() as $entry) {
-            $string .= $entry->name() . $entry->toString();
-        }
-
-        return $algorithm->hash($string);
-    }
-
-    public function isEqual(self $row): bool
-    {
-        return $this->entries->isEqual($row->entries());
-    }
-
-    public function keep(string|Reference ...$references): self
-    {
-        $entries = [];
-
-        foreach ($references as $name) {
-            $entries[] = $this->entries->get($name);
-        }
-
-        return new self(new Entries(...$entries));
-    }
-
-    /**
-     * @param callable(Entry<mixed>) : Entry<mixed> $mapper
-     */
-    public function map(callable $mapper): self
-    {
-        return new self(new Entries(...$this->entries->map($mapper)));
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function merge(self $row, string $prefix = '_'): self
-    {
-        return new self(
-            $this->entries()->merge(
-                $row->map(static fn(Entry $entry): Entry => $entry->rename($prefix . $entry->name()))->entries(),
-            ),
-        );
-    }
-
-    public function remove(string|Reference ...$references): self
-    {
-        $namesToRemove = [];
-
-        foreach ($references as $name) {
-            if ($this->entries->has($name)) {
-                $namesToRemove[] = $name;
+        foreach ($schema->definitions() as $name => $_) {
+            if (array_key_exists($name, $this->values)) {
+                $projected[$name] = $this->values[$name];
             }
         }
 
-        return new self($this->entries->remove(...$namesToRemove));
-    }
-
-    public function rename(string $currentName, string $newName): self
-    {
-        return new self($this->entries->rename($currentName, $newName));
-    }
-
-    /**
-     * Rename multiple entries in a single pass.
-     *
-     * @param array<string, string> $renames Map of old_name => new_name
-     */
-    public function renameMany(array $renames): self
-    {
-        if ($renames === []) {
-            return $this;
-        }
-
-        return new self($this->entries->renameMany($renames));
-    }
-
-    /**
-     * @return Schema
-     */
-    public function schema(): Schema
-    {
-        if ($this->schema !== null) {
-            return $this->schema;
-        }
-
-        $definitions = [];
-
-        foreach ($this->entries->all() as $entry) {
-            $definitions[] = $entry->definition();
-        }
-
-        $this->schema = new Schema(...$definitions);
-
-        return $this->schema;
-    }
-
-    /**
-     * @param Entry<mixed> ...$entries
-     */
-    public function set(Entry ...$entries): self
-    {
-        return new self($this->entries->set(...$entries));
-    }
-
-    public function sortEntries(): self
-    {
-        return new self($this->entries->sort());
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    public function toArray(bool $withKeys = true): array
-    {
-        return $this->entries->toArray($withKeys);
+        return new self($projected);
     }
 
     /**
@@ -192,9 +74,132 @@ final class Row
      *
      * @return null|array<array-key, mixed>|bool|float|int|object|string
      */
-    public function valueOf(string|Reference $references): mixed
+    public function get(string|Reference $reference): mixed
     {
+        $name = $reference instanceof Reference ? $reference->base() : $reference;
+
+        if (!array_key_exists($name, $this->values)) {
+            $suggestions = (new SimilarNames())->closestTo(
+                $name,
+                array_values(array_map(
+                    static fn(int|string $column): string => (string) $column,
+                    array_keys($this->values),
+                )),
+            );
+
+            throw new InvalidArgumentException(
+                $suggestions === []
+                    ? "Column \"{$name}\" does not exist."
+                    : "Column \"{$name}\" does not exist. Did you mean one of the following? [\""
+                    . implode('", "', $suggestions)
+                    . '"]',
+            );
+        }
+
         // @mago-ignore analysis:mixed-return-statement
-        return $this->get($references)->value();
+        return $this->values[$name];
+    }
+
+    public function has(string|Reference ...$references): bool
+    {
+        foreach ($references as $reference) {
+            if (!array_key_exists($reference instanceof Reference ? $reference->base() : $reference, $this->values)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function hash(Schema $schema, Algorithm $algorithm = new NativePHPHash()): string
+    {
+        $formatter = new TypedValueFormatter();
+        $string = '';
+
+        foreach ($schema->sort()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $string .= $name . $formatter->format($definition->type(), $this->values[$name] ?? null);
+        }
+
+        return $algorithm->hash($string);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function names(): array
+    {
+        return array_keys($this->values);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function toArray(bool $withKeys = true): array
+    {
+        $data = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($this->values as $name => $value) {
+            if ($value instanceof Json) {
+                $value = $value->toArray();
+            }
+
+            $withKeys ? ($data[$name] = $value) : ($data[] = $value);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function values(): array
+    {
+        return $this->values;
+    }
+
+    /**
+     * @throws ColumnMismatchException
+     */
+    private function conform(Schema $schema, bool $checkValues): self
+    {
+        $definitions = $schema->definitions();
+        $matched = [];
+        $taken = 0;
+
+        foreach ($definitions as $name => $definition) {
+            if (!array_key_exists($name, $this->values)) {
+                if (!$definition->isNullable()) {
+                    throw ColumnMismatchException::missingColumn($definition);
+                }
+
+                $matched[$name] = null;
+
+                continue;
+            }
+
+            $taken++;
+
+            if (
+                $checkValues
+                    ? !$definition->matches($this->values[$name])
+                    : $this->values[$name] === null && !$definition->isNullable()
+            ) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+            }
+
+            $matched[$name] = $this->values[$name];
+        }
+
+        if ($taken !== count($this->values)) {
+            foreach ($this->values as $name => $_) {
+                if (!array_key_exists($name, $definitions)) {
+                    throw ColumnMismatchException::unexpectedColumn($name);
+                }
+            }
+        }
+
+        return new self($matched);
     }
 }

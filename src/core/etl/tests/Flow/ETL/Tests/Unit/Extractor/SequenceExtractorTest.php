@@ -7,18 +7,37 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use DateInterval;
 use DatePeriod;
 use DateTimeImmutable;
+use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Extractor\SequenceExtractor;
+use Flow\ETL\Tests\Double\MixedSequenceGenerator;
+use Flow\ETL\Tests\Double\RecordingSequenceGenerator;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
-use function Flow\ETL\DSL\date_entry;
-use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_sequence_date_period;
 use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
 use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function iterator_to_array;
 
 final class SequenceExtractorTest extends FlowTestCase
 {
+    public function test_declared_schema_is_used_to_hydrate_extracted_rows(): void
+    {
+        self::assertExtractedRowsEquals(
+            rows(schema(str_schema('num')), row(['num' => '1']), row(['num' => '2']), row(['num' => '3'])),
+            from_sequence_number('num', 1, 3)->withSchema(schema(str_schema('num'))),
+        );
+    }
+
     public function test_extracting_from_date_period(): void
     {
         $extractor = from_sequence_date_period(
@@ -31,15 +50,16 @@ final class SequenceExtractorTest extends FlowTestCase
 
         self::assertExtractedRowsEquals(
             rows(
-                row(date_entry('day', new DateTimeImmutable('2023-01-02'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-03'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-04'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-05'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-06'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-07'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-08'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-09'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-10'))),
+                schema(date_schema('day', true)),
+                row(['day' => new DateTimeImmutable('2023-01-02')]),
+                row(['day' => new DateTimeImmutable('2023-01-03')]),
+                row(['day' => new DateTimeImmutable('2023-01-04')]),
+                row(['day' => new DateTimeImmutable('2023-01-05')]),
+                row(['day' => new DateTimeImmutable('2023-01-06')]),
+                row(['day' => new DateTimeImmutable('2023-01-07')]),
+                row(['day' => new DateTimeImmutable('2023-01-08')]),
+                row(['day' => new DateTimeImmutable('2023-01-09')]),
+                row(['day' => new DateTimeImmutable('2023-01-10')]),
             ),
             $extractor,
         );
@@ -57,16 +77,17 @@ final class SequenceExtractorTest extends FlowTestCase
 
         self::assertExtractedRowsEquals(
             rows(
-                row(date_entry('day', new DateTimeImmutable('2023-01-02'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-03'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-04'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-05'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-06'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-07'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-08'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-09'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-10'))),
-                row(date_entry('day', new DateTimeImmutable('2023-01-11'))),
+                schema(date_schema('day', true)),
+                row(['day' => new DateTimeImmutable('2023-01-02')]),
+                row(['day' => new DateTimeImmutable('2023-01-03')]),
+                row(['day' => new DateTimeImmutable('2023-01-04')]),
+                row(['day' => new DateTimeImmutable('2023-01-05')]),
+                row(['day' => new DateTimeImmutable('2023-01-06')]),
+                row(['day' => new DateTimeImmutable('2023-01-07')]),
+                row(['day' => new DateTimeImmutable('2023-01-08')]),
+                row(['day' => new DateTimeImmutable('2023-01-09')]),
+                row(['day' => new DateTimeImmutable('2023-01-10')]),
+                row(['day' => new DateTimeImmutable('2023-01-11')]),
             ),
             $extractor,
         );
@@ -78,15 +99,113 @@ final class SequenceExtractorTest extends FlowTestCase
 
         self::assertExtractedRowsEquals(
             rows(
-                row(float_entry('num', 0)),
-                row(float_entry('num', 1.5)),
-                row(float_entry('num', 3)),
-                row(float_entry('num', 4.5)),
-                row(float_entry('num', 6)),
-                row(float_entry('num', 7.5)),
-                row(float_entry('num', 9)),
+                schema(float_schema('num', true)),
+                row(['num' => 0.0]),
+                row(['num' => 1.5]),
+                row(['num' => 3.0]),
+                row(['num' => 4.5]),
+                row(['num' => 6.0]),
+                row(['num' => 7.5]),
+                row(['num' => 9.0]),
             ),
             $extractor,
+        );
+    }
+
+    public function test_a_bounded_sample_types_only_its_prefix(): void
+    {
+        $extractor = (new SequenceExtractor(
+            new MixedSequenceGenerator(),
+            'code',
+        ))->inferSchema(infer_schema()->sampleSize(1));
+
+        static::assertSame('integer', $extractor->schema()->get('code')->type()->toString());
+        static::assertSame(
+            'string',
+            (new SequenceExtractor(new MixedSequenceGenerator(), 'code'))
+                ->schema()
+                ->get('code')
+                ->type()
+                ->toString(),
+        );
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('Row 1 of the sequence does not fit the schema inferred from its first 1 rows');
+
+        iterator_to_array($extractor->extract(flow_context(config())));
+    }
+
+    public function test_a_numeric_entry_name_yields_one_column(): void
+    {
+        // PHP re-keys '123' to int 123 inside the row, so a raw seed and the ColumnName-normalised
+        // observation would describe two columns: '123' and an all-null 'e123'.
+        $extractor = from_sequence_number('123', 1, 3);
+
+        static::assertSame(['e123'], $extractor->schema()->references()->names());
+        self::assertExtractedRowsAsArrayEquals([['e123' => 1], ['e123' => 2], ['e123' => 3]], $extractor);
+    }
+
+    public function test_infer_schema_resets_the_memo(): void
+    {
+        $extractor = new SequenceExtractor(new MixedSequenceGenerator(), 'code');
+
+        static::assertSame('string', $extractor->schema()->get('code')->type()->toString());
+
+        $extractor->inferSchema(infer_schema()->sampleSize(1));
+
+        static::assertSame('integer', $extractor->schema()->get('code')->type()->toString());
+    }
+
+    public function test_schema_is_memoised(): void
+    {
+        $extractor = new SequenceExtractor(new MixedSequenceGenerator(), 'code');
+
+        static::assertSame($extractor->schema(), $extractor->schema());
+    }
+
+    /**
+     * SequenceExtractor takes no Filesystem and constructs no SpilledRows, so "it cannot spill" is a
+     * structural fact of the class rather than something an absence check could evidence - and an
+     * absence check on the shared <tmp>/flow-php-source/ would be falsified by any concurrent flow
+     * process. What is observable, and what matters, is that the source is generated afresh for the
+     * fold and again for the read.
+     */
+    public function test_the_sequence_is_generated_again_for_extraction_and_never_spilled(): void
+    {
+        $generator = new RecordingSequenceGenerator(new MixedSequenceGenerator());
+        $extractor = new SequenceExtractor($generator, 'code');
+
+        $extractor->schema();
+
+        self::assertExtractedRowsAsArrayEquals(
+            [['code' => '1000'], ['code' => 'AB-01']],
+            $extractor,
+            flow_context(config()),
+        );
+        static::assertSame(2, $generator->generateCalls);
+    }
+
+    public function test_a_heterogeneous_sequence_is_extracted_with_one_shape(): void
+    {
+        $extractor = new SequenceExtractor(new MixedSequenceGenerator(), 'code');
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+        }
+
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+    }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_sequence_number('num', 1, 3)->isRepeatable());
+    }
+
+    public function test_sequence_extractor_honours_the_batch_contract(): void
+    {
+        self::assertExtractorHonoursBatchContract(
+            static fn(): SequenceExtractor => from_sequence_number('id', 1, 5),
+            RowsMother::sequentialIds(5),
         );
     }
 }

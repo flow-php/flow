@@ -7,12 +7,10 @@ namespace Flow\Floe;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\Entry\Instantiators;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
-use Flow\Filesystem\Partition;
 use Flow\Filesystem\SourceStream;
 use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
@@ -36,9 +34,9 @@ final class FloeStreamReader
 
     private ?Footer $footer = null;
 
-    private readonly Hydrator $hydrator;
+    private ?Schema $schema = null;
 
-    private readonly SchemaDecoder $schemaDecoder;
+    private readonly Hydrator $hydrator;
 
     /**
      * @param null|Hydrator $hydrator null uses the adaptive hydrator
@@ -53,7 +51,6 @@ final class FloeStreamReader
         private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
-        $this->schemaDecoder = new SchemaDecoder(new ValueDecoder(), new Instantiators());
         $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
     }
 
@@ -92,13 +89,12 @@ final class FloeStreamReader
      * stops the read after that many rows.
      *
      * @param int<1, max> $batchSize
-     * @param bool $conform pad/reorder every batch to the merged file schema (default); false yields rows verbatim per section (the raw read used by spill buckets)
      *
      * @throws FloeException
      *
-     * @return \Generator<int, Rows> every batch conforms to the merged file schema unless $conform is false
+     * @return \Generator<int, Rows> every batch matches the merged file schema - Rows::__construct sees to that
      */
-    public function rows(int $batchSize = 1000, int $offset = 0, ?int $limit = null, bool $conform = true): Generator
+    public function rows(int $batchSize = 1000, int $offset = 0, ?int $limit = null): Generator
     {
         if ($offset < 0) {
             throw new FloeException('Floe offset must be greater or equal to 0');
@@ -109,7 +105,7 @@ final class FloeStreamReader
         }
 
         if ($offset > 0) {
-            yield from $this->rowsFromOffset($batchSize, $offset, $limit, $conform);
+            yield from $this->rowsFromOffset($batchSize, $offset, $limit);
 
             return;
         }
@@ -139,18 +135,7 @@ final class FloeStreamReader
             ));
         }
 
-        yield from $this->walk(
-            $chunks,
-            $buffer,
-            Format::HEADER_LENGTH,
-            $fileSchema,
-            0,
-            [],
-            $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
-            $fileSchema->count(),
-            $batchSize,
-            $limit,
-        );
+        yield from $this->walk($chunks, $buffer, Format::HEADER_LENGTH, $fileSchema, 0, $batchSize, $limit);
     }
 
     /**
@@ -192,11 +177,10 @@ final class FloeStreamReader
 
     /**
      * The single strict frame-walk shared by rows() and rowsFromOffset(); they
-     * differ only in how it is seeded - start position, skip and partitions. The
+     * differ only in how it is seeded - start position and skip. The
      * file carries exactly one schema, so decode state comes from the footer.
      *
      * @param \Generator<int, string> $chunks
-     * @param array<int, Partition> $partitions
      * @param int<1, max> $batchSize
      *
      * @throws FloeException
@@ -209,9 +193,6 @@ final class FloeStreamReader
         int $position,
         Schema $schema,
         int $skip,
-        array $partitions,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         int $batchSize,
         ?int $limit,
     ): Generator {
@@ -252,11 +233,8 @@ final class FloeStreamReader
                         foreach ($this->emitBatch(
                             $schema,
                             $pending,
-                            $padding,
-                            $fileSchemaCount,
                             $batch,
                             $batchSize,
-                            $partitions,
                             $limit,
                             $yielded,
                             $stop,
@@ -270,39 +248,6 @@ final class FloeStreamReader
                             return;
                         }
                     }
-                } elseif ($frameType === Format::FRAME_PARTITIONS) {
-                    $frameBody = substr($buffer, $position, $frameLength);
-
-                    if ($pending !== []) {
-                        foreach ($this->emitBatch(
-                            $schema,
-                            $pending,
-                            $padding,
-                            $fileSchemaCount,
-                            $batch,
-                            $batchSize,
-                            $partitions,
-                            $limit,
-                            $yielded,
-                            $stop,
-                            $skip,
-                        ) as $ready) {
-                            yield $ready;
-                        }
-                        $pending = [];
-
-                        if ($stop) {
-                            return;
-                        }
-                    }
-
-                    if ($batch !== []) {
-                        yield $this->batch($batch, $partitions);
-                        $batch = [];
-                    }
-
-                    $partitions = self::decodePartitions($frameBody);
-                    $position = $frameEnd;
                 } elseif ($frameType === Format::FRAME_FOOTER) {
                     $position = $frameEnd;
                 } else {
@@ -319,11 +264,8 @@ final class FloeStreamReader
                 foreach ($this->emitBatch(
                     $schema,
                     $pending,
-                    $padding,
-                    $fileSchemaCount,
                     $batch,
                     $batchSize,
-                    $partitions,
                     $limit,
                     $yielded,
                     $stop,
@@ -341,17 +283,16 @@ final class FloeStreamReader
         }
 
         if ($batch !== []) {
-            yield $this->batch($batch, $partitions);
+            yield $this->batch($batch);
         }
     }
 
     /**
-     * Applies the per-row skip / padding / batch-yield / limit logic to a hydrated
+     * Applies the per-row skip / batch-yield / limit logic to a hydrated
      * batch of row frame bodies; $batch, $yielded, $stop and $skip are updated by reference.
      *
      * @param list<string> $pending
      * @param array<int, Row> $batch
-     * @param array<int, Partition> $partitions
      * @param int<1, max> $batchSize
      *
      * @return array<int, Rows> completed batches ready to yield
@@ -359,11 +300,8 @@ final class FloeStreamReader
     private function emitBatch(
         Schema $schema,
         array $pending,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         array &$batch,
         int $batchSize,
-        array $partitions,
         ?int $limit,
         int &$yielded,
         bool &$stop,
@@ -371,11 +309,8 @@ final class FloeStreamReader
     ): array {
         return $this->emitRows(
             $this->hydrator->hydrate($this->encoder($schema)->decode($pending), $schema)->all(),
-            $padding,
-            $fileSchemaCount,
             $batch,
             $batchSize,
-            $partitions,
             $limit,
             $yielded,
             $stop,
@@ -384,25 +319,19 @@ final class FloeStreamReader
     }
 
     /**
-     * Per-row skip / padding / batch-yield / limit logic over already-hydrated
-     * rows; $batch, $yielded, $stop and $skip are updated by reference. A null
-     * $padding yields rows verbatim (per-section, unpadded) - the raw read used
-     * by external-sort/join/group-by buckets.
+     * Per-row skip / batch-yield / limit logic over already-hydrated rows;
+     * $batch, $yielded, $stop and $skip are updated by reference.
      *
      * @param array<array-key, Row> $rows
      * @param array<int, Row> $batch
-     * @param array<int, Partition> $partitions
      * @param int<1, max> $batchSize
      *
      * @return array<int, Rows> completed batches ready to yield
      */
     private function emitRows(
         array $rows,
-        ?RowPadding $padding,
-        int $fileSchemaCount,
         array &$batch,
         int $batchSize,
-        array $partitions,
         ?int $limit,
         int &$yielded,
         bool &$stop,
@@ -417,11 +346,10 @@ final class FloeStreamReader
                 continue;
             }
 
-            $batch[] =
-                $padding === null || $row->entries()->count() === $fileSchemaCount ? $row : $padding->apply($row);
+            $batch[] = $row;
 
             if ($limit !== null && ++$yielded >= $limit) {
-                $ready[] = $this->batch($batch, $partitions);
+                $ready[] = $this->batch($batch);
                 $batch = [];
                 $stop = true;
 
@@ -429,7 +357,7 @@ final class FloeStreamReader
             }
 
             if (count($batch) === $batchSize) {
-                $ready[] = $this->batch($batch, $partitions);
+                $ready[] = $this->batch($batch);
                 $batch = [];
             }
         }
@@ -442,7 +370,7 @@ final class FloeStreamReader
      */
     public function schema(): Schema
     {
-        return $this->footer()->schema();
+        return $this->schema ??= $this->footer()->schema();
     }
 
     /**
@@ -455,11 +383,12 @@ final class FloeStreamReader
 
     /**
      * @param array<int, Row> $rows
-     * @param array<int, Partition> $partitions
      */
-    private function batch(array $rows, array $partitions): Rows
+    private function batch(array $rows): Rows
     {
-        return $partitions === [] ? new Rows(...$rows) : Rows::partitioned($rows, $partitions);
+        // every row comes out of the hydrator, which already conformed it to the file schema - padding and the
+        // NOT NULL check included
+        return Rows::trusted($this->schema(), $rows);
     }
 
     /**
@@ -493,7 +422,7 @@ final class FloeStreamReader
      *
      * @return \Generator<int, Rows>
      */
-    private function rowsFromOffset(int $batchSize, int $offset, ?int $limit, bool $conform = true): Generator
+    private function rowsFromOffset(int $batchSize, int $offset, ?int $limit): Generator
     {
         $footer = $this->footer();
         $fileSchema = $footer->schema();
@@ -515,12 +444,6 @@ final class FloeStreamReader
             return;
         }
 
-        $partitions = [];
-
-        foreach ($footer->partitionsFor($startSection->partitionsId) as $name => $value) {
-            $partitions[] = new Partition($name, $value);
-        }
-
         $size = $this->source->size();
 
         if ($size === null) {
@@ -536,32 +459,8 @@ final class FloeStreamReader
             0,
             $fileSchema,
             $offset - $cumulative,
-            $partitions,
-            $conform ? RowPadding::forFileSchema($fileSchema, $this->schemaDecoder) : null,
-            $fileSchema->count(),
             $batchSize,
             $limit,
         );
-    }
-
-    /**
-     * @return array<int, Partition>
-     */
-    private static function decodePartitions(string $body): array
-    {
-        $count = unpack('V', $body)[1];
-        $position = 4;
-        $partitions = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $nameLength = unpack('V', $body, $position)[1];
-            $name = substr($body, $position + 4, $nameLength);
-            $position += 4 + $nameLength;
-            $valueLength = unpack('V', $body, $position)[1];
-            $partitions[] = new Partition($name, substr($body, $position + 4, $valueLength));
-            $position += 4 + $valueLength;
-        }
-
-        return $partitions;
     }
 }

@@ -18,10 +18,11 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_transaction;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
 use function getenv;
 
 final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
@@ -44,8 +45,8 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_transaction($connection, to_dbal_table_insert($connection, 'test_table'));
 
-        $batch1 = rows(row(integer_entry('id', 1), integer_entry('value', 100)));
-        $batch2 = rows(row(integer_entry('id', 2), integer_entry('value', 200)));
+        $batch1 = rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 1, 'value' => 100]));
+        $batch2 = rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 2, 'value' => 200]));
 
         $context = flow_context(config());
 
@@ -79,7 +80,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
-        $rows = rows(row(integer_entry('id', 1), string_entry('name', 'Should fail')));
+        $rows = rows(schema(integer_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Should fail']));
 
         $loader = to_dbal_transaction(
             $connection,
@@ -118,8 +119,9 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
         $connection = $this->pgsqlDatabaseContext->connection();
 
         $rows = rows(
-            row(integer_entry('id', 1), string_entry('name', 'Updated')),
-            row(integer_entry('id', 2), string_entry('name', 'Updated')),
+            schema(integer_schema('id'), string_schema('name')),
+            row(['id' => 1, 'name' => 'Updated']),
+            row(['id' => 2, 'name' => 'Updated']),
         );
 
         $loader = to_dbal_transaction(
@@ -155,7 +157,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
-        $rows = rows(row(integer_entry('id', 1), string_entry('name', 'Test')));
+        $rows = rows(schema(integer_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']));
 
         $loader = to_dbal_transaction($connection, to_dbal_table_insert(
             $connection,

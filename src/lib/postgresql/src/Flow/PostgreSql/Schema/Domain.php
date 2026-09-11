@@ -17,11 +17,11 @@ use function array_map;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @phpstan-import-type ColumnTypeShape from ColumnType
- * @phpstan-import-type ColumnDefaultShape from ColumnDefault
- * @phpstan-import-type CheckConstraintShape from CheckConstraint
+ * @import-type ColumnTypeShape from ColumnType
+ * @import-type ColumnDefaultShape from ColumnDefault
+ * @import-type CheckConstraintShape from CheckConstraint
  *
- * @phpstan-type DomainShape = array{name: string, base_type: ColumnTypeShape, nullable: bool, default: ?ColumnDefaultShape, check_constraints: list<CheckConstraintShape>}
+ * @type DomainShape = array{name: string, base_type: ColumnTypeShape, nullable: bool, default: ?ColumnDefaultShape, check_constraints: list<CheckConstraintShape>}
  */
 final readonly class Domain
 {

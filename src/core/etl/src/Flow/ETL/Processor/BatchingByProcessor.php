@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Generator;
 
 use function count;
@@ -39,8 +42,15 @@ final readonly class BatchingByProcessor implements Processor
         }
     }
 
+    public function bind(Schema $input): BoundStep
+    {
+        return new BoundStep($this, $input);
+    }
+
     /**
-     * @return \Generator<Rows>
+     * @param Generator<int, Rows> $rows
+     *
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
@@ -48,11 +58,14 @@ final readonly class BatchingByProcessor implements Processor
         $buffer = [];
         $currentValue = null;
         $hasValue = false;
+        $schema = null;
 
-        foreach ($rows as $batch) {
-            /** @var Rows $batch */
+        while ($rows->valid()) {
+            $batch = $rows->current();
+            $schema ??= $batch->schema();
+
             foreach ($batch as $row) {
-                $value = $row->valueOf($this->column);
+                $value = $row->get($this->column);
 
                 if (!$hasValue) {
                     $currentValue = $value;
@@ -62,7 +75,14 @@ final readonly class BatchingByProcessor implements Processor
                 if ($value !== $currentValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
                         if ($buffer !== []) {
-                            yield new Rows(...$buffer);
+                            $signal = yield new Rows($schema, ...$buffer);
+
+                            if ($signal === Signal::STOP) {
+                                $rows->send(Signal::STOP);
+
+                                return;
+                            }
+
                             $buffer = [];
                         }
                     }
@@ -71,10 +91,12 @@ final readonly class BatchingByProcessor implements Processor
 
                 $buffer[] = $row;
             }
+
+            $rows->next();
         }
 
         if ($buffer !== []) {
-            yield new Rows(...$buffer);
+            yield new Rows($schema ?? new Schema(), ...$buffer);
         }
     }
 }

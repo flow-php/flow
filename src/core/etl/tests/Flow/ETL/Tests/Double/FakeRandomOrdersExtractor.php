@@ -27,16 +27,22 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function random_int;
+use function mt_rand;
 use function range;
 
 final readonly class FakeRandomOrdersExtractor implements Extractor
 {
+    /**
+     * One seed drives Faker and mt_rand() off the same stream, so a row count always produces the
+     * same bytes and a deleted fixture regenerates identically.
+     */
+    private const SEED = 20260908;
+
     public function __construct(
         private int $count = 1_000,
     ) {}
 
-    public static function schema(): Schema
+    public function schema(): Schema
     {
         return schema(
             uuid_schema('order_id'),
@@ -70,7 +76,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $context->hydrator(), schema: $schema);
+            yield array_to_rows($row, $schema, $context->hydrator());
         }
     }
 
@@ -80,6 +86,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     public function rawData(): Generator
     {
         $faker = Factory::create();
+        $faker->seed(self::SEED);
 
         $skus = [
             ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => $faker->randomFloat(2, 0, 500)],
@@ -98,15 +105,18 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
-            $createdAt = DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
-            $cancelledAt = random_int(1, 10) === 1
+            $createdAt = DateTimeImmutable::createFromMutable($faker->dateTimeBetween(
+                '2026-01-01 00:00:00',
+                '2026-12-31 23:59:59',
+            ));
+            $cancelledAt = mt_rand(1, 10) === 1
                 ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours')
                 : null;
 
             if ($cancelledAt) {
                 $updatedAt = $cancelledAt;
             } else {
-                $updatedAt = random_int(1, 3) === 1
+                $updatedAt = mt_rand(1, 3) === 1
                     ? $createdAt->modify('+' . $faker->numberBetween(1, 3) . ' days')
                     : null;
             }
@@ -114,11 +124,11 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
             // @mago-ignore analysis:mixed-assignment
             $signal = yield [
                 'order_id' => $faker->uuid,
-                'seller_id' => $sellers[random_int(0, count($sellers) - 1)],
+                'seller_id' => $sellers[mt_rand(0, count($sellers) - 1)],
                 'created_at' => $createdAt,
                 'updated_at' => $updatedAt,
                 'cancelled_at' => $cancelledAt,
-                'discount' => random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
+                'discount' => mt_rand(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
                 'email' => $faker->email,
                 'customer' => $faker->firstName . ' ' . $faker->lastName,
                 'address' => [
@@ -142,5 +152,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                 return;
             }
         }
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        return $this;
     }
 }

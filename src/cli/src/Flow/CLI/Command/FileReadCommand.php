@@ -10,6 +10,7 @@ use Flow\CLI\Command\Traits\CSVOptions;
 use Flow\CLI\Command\Traits\ExcelOptions;
 use Flow\CLI\Command\Traits\JSONOptions;
 use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\SchemaInferenceOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\ConfigOption;
@@ -20,6 +21,7 @@ use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,12 +30,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function count;
-use function Flow\CLI\option_bool;
 use function Flow\CLI\option_int;
 use function Flow\CLI\option_int_nullable;
 use function Flow\CLI\option_list_of_strings;
 use function Flow\ETL\DSL\df;
 
+#[AsCommand(name: 'file:read', description: 'Read data from a file.', aliases: ['read'])]
 final class FileReadCommand extends Command
 {
     use ConfigOptions;
@@ -41,6 +43,7 @@ final class FileReadCommand extends Command
     use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
+    use SchemaInferenceOptions;
     use XMLOptions;
 
     private const int DEFAULT_BATCH_SIZE = 100;
@@ -54,8 +57,6 @@ final class FileReadCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:read')
-            ->setDescription('Read data from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,
@@ -72,14 +73,14 @@ final class FileReadCommand extends Command
                 'input-file-batch-size',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once',
+                'Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once',
                 self::DEFAULT_BATCH_SIZE,
             )
             ->addOption(
                 'input-file-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                'Limit number of rows read from the file.',
                 null,
             )
             ->addOption(
@@ -102,13 +103,6 @@ final class FileReadCommand extends Command
                 InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
                 'Columns to include in output, when not set all columns are displayed',
                 [],
-            )
-            ->addOption(
-                'schema-auto-cast',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
-                false,
             );
 
         $this->addConfigOptions($this);
@@ -117,6 +111,7 @@ final class FileReadCommand extends Command
         $this->addExcelInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addSchemaInferenceOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -127,7 +122,13 @@ final class FileReadCommand extends Command
 
         $style = new SymfonyStyle($input, $output);
 
-        $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
+        $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
+
+        if (!$this->applySchemaInference($extractor, $input, $style)) {
+            return Command::FAILURE;
+        }
+
+        $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
         $outputTruncate = option_int('output-truncate', $input, 20);
@@ -139,10 +140,6 @@ final class FileReadCommand extends Command
         }
 
         $df->batchSize($batchSize);
-
-        if (option_bool('schema-auto-cast', $input)) {
-            $df->autoCast();
-        }
 
         $limit = option_int_nullable('input-file-limit', $input);
 
@@ -174,7 +171,7 @@ final class FileReadCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

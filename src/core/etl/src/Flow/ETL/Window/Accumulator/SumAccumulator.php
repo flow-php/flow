@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Window\Accumulator;
 
+use Flow\Calculator\RunningSum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Parameter;
@@ -21,6 +22,8 @@ final class SumAccumulator implements FrameAccumulator
      */
     private readonly ?bool $constantExact;
 
+    private readonly RunningSum $runningSum;
+
     private float|int|null $sum = null;
 
     public function __construct(
@@ -29,52 +32,28 @@ final class SumAccumulator implements FrameAccumulator
         private readonly FlowContext $context,
     ) {
         $this->constantExact = is_bool($exact) ? $exact : null;
+        $this->runningSum = new RunningSum($context->calculator());
     }
 
     public function accumulate(Row $row): void
     {
         try {
-            $value = $row->valueOf($this->ref);
+            $value = $row->get($this->ref);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->sum = $this->add(
+                $this->sum = $this->runningSum->add(
                     $this->sum ?? 0,
                     $value,
-                    $this->constantExact ?? (new Parameter($this->exact))->asBoolean($row, $this->context),
+                    $this->constantExact ?? (new Parameter($this->exact))->asBoolean($row, $this->context) ?? false,
                 );
             }
         } catch (InvalidArgumentException $e) {
-            $this->context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e));
+            throw new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e);
         }
     }
 
-    public function value(): mixed
+    public function value(): float|int|null
     {
         return $this->sum;
-    }
-
-    /**
-     * @param float|int|numeric-string $value
-     */
-    private function add(float|int $sum, float|int|string $value, bool $exact): float|int
-    {
-        if ($exact) {
-            return $this->context->calculator()->add($sum, $value);
-        }
-
-        $result = $sum + $value;
-
-        if (
-            is_float($result)
-            && floor($result) === $result
-            && $result >= (float) PHP_INT_MIN
-            && $result < (float) PHP_INT_MAX
-        ) {
-            return (int) $result;
-        }
-
-        return $result;
     }
 }

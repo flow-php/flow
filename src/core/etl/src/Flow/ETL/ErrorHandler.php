@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Throwable;
+use Flow\ETL\ErrorHandler\ExtractionAction;
+use Flow\ETL\ErrorHandler\ExtractionError;
+use Flow\ETL\ErrorHandler\LoadingAction;
+use Flow\ETL\ErrorHandler\LoadingError;
+use Flow\ETL\ErrorHandler\TransformationAction;
+use Flow\ETL\ErrorHandler\TransformationError;
 
 interface ErrorHandler
 {
-    public function skipRows(Throwable $error, Rows $rows): bool;
+    public function onExtraction(ExtractionError $error): ExtractionAction;
 
-    public function throw(Throwable $error, Rows $rows): bool;
+    public function onTransformation(TransformationError $error): TransformationAction;
+
+    public function onLoading(LoadingError $error): LoadingAction;
 }

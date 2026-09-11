@@ -16,13 +16,13 @@ Several Flow PHP methods accept multiple arguments where at least one is require
 
 A proposal was made to simplify the API signatures from:
 
-```php
+```php ignore
 public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
 ```
 
 To:
 
-```php
+```php ignore
 public function partitionBy(string|Reference ...$entries) : self
 ```
 
@@ -35,13 +35,13 @@ The rationale for the proposal was to reduce array operations like `array_unshif
 
 Methods that require at least one argument should use the signature pattern:
 
-```php
+```php ignore
 public function method(Type $first, Type ...$rest) : ReturnType
 ```
 
 Rather than:
 
-```php
+```php ignore
 public function method(Type ...$args) : ReturnType
 ```
 
@@ -66,7 +66,7 @@ public function method(Type ...$args) : ReturnType
 
 ### 1. Pure variadic with runtime validation
 
-```php
+```php ignore
 public function partitionBy(string|Reference ...$entries) : self
 {
     if ([] === $entries) {

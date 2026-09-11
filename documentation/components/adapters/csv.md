@@ -41,9 +41,10 @@ $rows = data_frame()
 data_frame()
     ->read(from_rows(
         rows(
-            row(new Row\Entry\IntegerEntry('id', 1), new Row\Entry\StringEntry('name', 'Norbert')),
-            row(new Row\Entry\IntegerEntry('id', 2), new Row\Entry\StringEntry('name', 'Tomek')),
-            row(new Row\Entry\IntegerEntry('id', 3), new Row\Entry\StringEntry('name', 'Dawid')),
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'Norbert']),
+            row(['id' => 2, 'name' => 'Tomek']),
+            row(['id' => 3, 'name' => 'Dawid']),
         )
     ))
     ->load(to_csv($path, true, true))

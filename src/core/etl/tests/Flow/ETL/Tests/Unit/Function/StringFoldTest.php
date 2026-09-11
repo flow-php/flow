@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
 
 final class StringFoldTest extends FlowTestCase
 {
@@ -17,11 +17,14 @@ final class StringFoldTest extends FlowTestCase
     {
         static::assertSame("die o'brian strasse", ref('str')
             ->stringFold()
-            ->eval(row(str_entry('str', "Die O'Brian Straße")), flow_context()));
+            ->eval(row(['str' => "Die O'Brian Straße"]), flow_context()));
     }
 
-    public function test_string_folded_returns_null(): void
+    public function test_string_fold_throws_on_null_input(): void
     {
-        static::assertNull(ref('str')->stringFold()->eval(row(str_entry('str', null)), flow_context()));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringFold function requires non-null value');
+
+        ref('str')->stringFold()->eval(row(['str' => null]), flow_context());
     }
 }

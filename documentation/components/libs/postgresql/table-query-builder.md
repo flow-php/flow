@@ -45,8 +45,8 @@ echo $query->toSql();
 use function Flow\PostgreSql\DSL\{create, column, column_type_serial};
 
 $query = create()->table('users')
-    ->ifNotExists()
-    ->column(column('id', column_type_serial())->primaryKey());
+    ->column(column('id', column_type_serial())->primaryKey())
+    ->ifNotExists();
 
 echo $query->toSql();
 // CREATE TABLE IF NOT EXISTS users (id serial PRIMARY KEY)
@@ -185,11 +185,11 @@ echo $query->toSql();
 use function Flow\PostgreSql\DSL\{create, column, column_type_integer};
 
 $query = create()->table('temp_results')
-    ->temporary()
-    ->column(column('id', column_type_integer()));
+    ->column(column('id', column_type_integer()))
+    ->temporary();
 
 echo $query->toSql();
-// CREATE TEMPORARY TABLE temp_results (id int) ON COMMIT DROP
+// CREATE TEMPORARY TABLE temp_results (id int)
 ```
 
 ### Unlogged Tables
@@ -200,8 +200,8 @@ echo $query->toSql();
 use function Flow\PostgreSql\DSL\{create, column, column_type_integer};
 
 $query = create()->table('cache_data')
-    ->unlogged()
-    ->column(column('id', column_type_integer()));
+    ->column(column('id', column_type_integer()))
+    ->unlogged();
 
 echo $query->toSql();
 // CREATE UNLOGGED TABLE cache_data (id int)

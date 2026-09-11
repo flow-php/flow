@@ -25,6 +25,7 @@ final readonly class IncludeFileOption
         private string $filePathOptionName,
         private string $expectedClass,
     ) {
+        // @mago-expect analysis:impossible-type-comparison
         if (!class_exists($this->expectedClass)) {
             throw new SymfonyInvalidArgumentException("Class {$this->expectedClass} does not exist.");
         }

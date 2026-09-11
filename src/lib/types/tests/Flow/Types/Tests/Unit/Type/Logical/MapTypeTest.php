@@ -169,6 +169,13 @@ final class MapTypeTest extends TestCase
         }
     }
 
+    public function test_a_null_value_is_not_an_empty_string(): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_map(type_string(), type_string())->cast(['k' => null]);
+    }
+
     /**
      * @param null|class-string<\Throwable> $exceptionClass
      */

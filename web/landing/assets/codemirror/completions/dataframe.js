@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 53
+ * DataFrame methods: 49
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","rename","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -22,30 +22,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">AggregatingFunction</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>@param Aggregations $aggregations<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
         },
-        apply: snippet("aggregate(" + "$" + "{" + "1:aggregations" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "autoCast",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">autoCast</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("autoCast()"),
+        apply: snippet("aggregate(" + "$" + "{" + "1:aggregations" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "batchBy",
@@ -91,15 +76,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cacheBatchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cacheBatchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Cache</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Start processing rows up to this moment and put each instance of Rows<br>into previously defined cache.<br>Cache type can be set through ConfigBuilder.<br>By default everything is cached in system tmp dir.<br>Important: cache batch size might significantly improve performance when processing large amount of rows.<br>Larger batch size will increase memory consumption but will reduce number of IO operations.<br>When not set, the batch size is taken from the last DataFrame::batchSize() call.<br>@lazy<br>@param null|string $id<br>@throws InvalidArgumentException
+                    Start processing rows up to this moment and put each instance of Rows<br>into previously defined cache.<br>Cache type can be set through ConfigBuilder.<br>By default everything is cached in system tmp dir.<br>Important: cache batch size might significantly improve performance when processing large amount of rows.<br>Larger batch size will increase memory consumption but will reduce number of IO operations.<br>When not set, the batch size is taken from the last DataFrame::batchSize() call.<br>@lazy<br>@param null|string $id<br>@param null|Cache $cache reads of this cache must pass the same instance to from_cache()<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
         },
-        apply: snippet("cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:cacheBatchSize" + "}" + ")"),
+        apply: snippet("cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:cacheBatchSize" + "}" + ", " + "$" + "{" + "3:cache" + "}" + ")"),
         boost: 10
     },        {
         label: "collect",
@@ -243,24 +228,6 @@ const dataframeMethods = [
         apply: snippet("dropDuplicates(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
-        label: "dropPartitions",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">dropPartitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$dropPartitionColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are<br>also removed.<br>@lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("dropPartitions(" + "$" + "{" + "1:dropPartitionColumns" + "}" + ")"),
-        boost: 10
-    },        {
         label: "duplicateRow",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -310,6 +277,24 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("filter(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "extractor",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">extractor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Extractor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal engine paths only - a build-time scan has to know whether the source can be read twice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("extractor()"),
         boost: 10
     },        {
         label: "filterPartitions",
@@ -445,15 +430,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
+                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>@param GroupByReferences|Reference|string $entries a single column is grouped by on its own<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
         },
-        apply: snippet("groupBy(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("groupBy(" + "$" + "{" + "1:entries" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "join",
@@ -463,15 +448,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">self</span> <span class=\"fn-param\">$dataFrame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">self</span> <span class=\"fn-param\">$dataFrame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>@param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                           for this operation and skips any automatic choice
                 </div>
                             `
             return div
         },
-        apply: snippet("join(" + "$" + "{" + "1:dataFrame" + "}" + ", " + "$" + "{" + "2:on" + "}" + ", " + "$" + "{" + "3:type" + "}" + ")"),
+        apply: snippet("join(" + "$" + "{" + "1:dataFrame" + "}" + ", " + "$" + "{" + "2:on" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "joinEach",
@@ -484,7 +469,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">joinEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrameFactory</span> <span class=\"fn-param\">$factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@psalm-param string|Join $type
+                    Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.<br>@lazy<br>@param string|Join $type
                 </div>
                             `
             return div
@@ -528,24 +513,6 @@ const dataframeMethods = [
         apply: snippet("load(" + "$" + "{" + "1:loader" + "}" + ")"),
         boost: 10
     },        {
-        label: "map",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">callable</span> <span class=\"fn-param\">$callback</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param callable(Row $row) : Row $callback
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("map(" + "$" + "{" + "1:callback" + "}" + ")"),
-        boost: 10
-    },        {
         label: "match",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -562,24 +529,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("match(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:validator" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "mode",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">mode</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SaveMode|ExecutionMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    This method is used to set the behavior of the DataFrame.<br>Available modes:<br>- SaveMode defines how Flow should behave when writing to a file/files that already exists.<br>- ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).<br>@lazy<br>@return $this
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("mode(" + "$" + "{" + "1:mode" + "}" + ")"),
         boost: 10
     },        {
         label: "offset",
@@ -618,22 +567,22 @@ const dataframeMethods = [
         apply: snippet("onError(" + "$" + "{" + "1:handler" + "}" + ")"),
         boost: 10
     },        {
-        label: "partitionBy",
+        label: "repartition",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">partitionBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>Shuffles the stream so every row sharing the given columns arrives in one batch. It does not<br>write directories - that is declared on the loader, \`to_csv(...)->partitionBy(\'region\')\`.
                 </div>
                             `
             return div
         },
-        apply: snippet("partitionBy(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
+        apply: snippet("repartition(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "printRows",
@@ -661,15 +610,33 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger
+                    @lazy<br>@throws SchemaNotDerivableException
                 </div>
                             `
             return div
         },
-        apply: snippet("printSchema(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
+        apply: snippet("printSchema(" + "$" + "{" + "1:formatter" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "registerGroupBy",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">registerGroupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal engine paths only - GroupedDataFrame builds its steps against this frame\'s plan
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("registerGroupBy(" + "$" + "{" + "1:groupBy" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "rename",
@@ -703,21 +670,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("renameEach(" + "$" + "{" + "1:strategies" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "reorderEntries",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">reorderEntries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Comparator</span> <span class=\"fn-param\">$comparator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Transformer\\OrderEntries\\TypeComparator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("reorderEntries(" + "$" + "{" + "1:comparator" + "}" + ")"),
         boost: 10
     },        {
         label: "rows",
@@ -756,24 +708,6 @@ const dataframeMethods = [
         apply: snippet("run(" + "$" + "{" + "1:callback" + "}" + ", " + "$" + "{" + "2:analyze" + "}" + ")"),
         boost: 10
     },        {
-        label: "saveMode",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">saveMode</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SaveMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Alias for DataFrame::mode.<br>@lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("saveMode(" + "$" + "{" + "1:mode" + "}" + ")"),
-        boost: 10
-    },        {
         label: "schema",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -784,7 +718,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">schema</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger<br>@return Schema
+                    @lazy<br>@throws SchemaNotDerivableException
                 </div>
                             `
             return div
@@ -817,15 +751,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">sortBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">sortBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
+                    @lazy<br>@param Reference|SortReferences|string $entries a single column is sorted by on its own<br>@param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                           for this operation and skips any automatic choice
                 </div>
                             `
             return div
         },
-        apply: snippet("sortBy(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("sortBy(" + "$" + "{" + "1:entries" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "transform",

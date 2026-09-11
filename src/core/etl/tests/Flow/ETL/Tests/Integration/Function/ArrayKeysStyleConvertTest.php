@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -16,7 +15,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\to_memory;
 
 final class ArrayKeysStyleConvertTest extends FlowTestCase
@@ -42,11 +40,9 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
     public function test_array_keys_style_convert_in_strict_mode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayKeysStyleConvert function requires non-null array');
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        $context->functions()->setMode(ExecutionMode::STRICT);
-
-        array_keys_style_convert(ref('string'), 'camel')->eval(row(string_entry('string', 'test')), $context);
+        array_keys_style_convert(ref('string'), 'camel')->eval(row(['string' => 'test']), $context);
     }
 }
