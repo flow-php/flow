@@ -469,7 +469,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">joinEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrameFactory</span> <span class=\"fn-param\">$factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.<br>@lazy<br>@psalm-param string|Join $type
+                    Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.<br>@lazy<br>@param string|Join $type
                 </div>
                             `
             return div

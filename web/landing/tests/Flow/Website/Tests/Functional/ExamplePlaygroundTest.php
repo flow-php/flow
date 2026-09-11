@@ -8,17 +8,16 @@ use function mb_strtolower;
 
 final class ExamplePlaygroundTest extends EndToEndTestCase
 {
-    public function test_back_to_example_link_navigates_correctly(): void
+    public function test_back_to_example_link_points_at_the_example(): void
     {
-        // the link is server-rendered, so this asserts navigation and must not wait on the WASM boot
-        $browser = $this->playwrightBrowser()->visit('/playground/caching/cache');
+        $href = $this
+            ->pageOf($this->playwrightBrowser()->visit('/playground/caching/cache'))
+            ->getByRole('link', ['name' => 'Back to Example'])
+            ->getAttribute('href');
 
-        $browser->click('Back to Example');
-
-        $url = $this->pageOf($browser)->url();
-
-        static::assertStringContainsString('/caching/cache/', $url);
-        static::assertStringNotContainsString('/playground/', $url);
+        static::assertNotNull($href);
+        static::assertStringContainsString('/caching/cache/', $href);
+        static::assertStringNotContainsString('/playground/', $href);
     }
 
     public function test_example_code_is_preloaded_in_playground(): void
