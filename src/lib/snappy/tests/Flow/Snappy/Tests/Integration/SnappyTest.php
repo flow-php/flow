@@ -82,4 +82,11 @@ final class SnappyTest extends TestCase
 
         static::assertSame($string, $snappy->uncompress($snappy->compress($string)));
     }
+
+    public function test_uncompress_returns_false_on_malformed_input(): void
+    {
+        $snappy = new Snappy();
+
+        static::assertFalse($snappy->uncompress("\xFF\xFF\xFF\xFF"));
+    }
 }

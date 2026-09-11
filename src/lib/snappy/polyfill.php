@@ -12,7 +12,7 @@ if (!function_exists('snappy_compress')) {
 }
 
 if (!function_exists('snappy_uncompress')) {
-    function snappy_uncompress(string $compressedText): string
+    function snappy_uncompress(string $compressedText): string|false
     {
         return (new Snappy())->uncompress($compressedText);
     }
