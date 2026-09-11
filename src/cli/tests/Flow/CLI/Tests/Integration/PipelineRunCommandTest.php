@@ -7,6 +7,7 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\PipelineRunCommand;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -91,5 +92,14 @@ final class PipelineRunCommandTest extends TestCase
         $this->expectExceptionMessage('Argument \'pipeline-file\' is required.');
 
         $tester->execute([]);
+    }
+
+    public function test_pipeline_run_command_registers_as_pipeline_run_with_the_run_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new PipelineRunCommand()]);
+
+        static::assertInstanceOf(PipelineRunCommand::class, $application->find('pipeline:run'));
+        static::assertInstanceOf(PipelineRunCommand::class, $application->find('run'));
     }
 }

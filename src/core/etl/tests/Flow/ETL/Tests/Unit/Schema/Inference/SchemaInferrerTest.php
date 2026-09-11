@@ -77,6 +77,23 @@ final class SchemaInferrerTest extends FlowTestCase
         return $sources;
     }
 
+    public function test_a_row_less_source_does_not_spend_a_files_to_sniff_slot(): void
+    {
+        $sources = new RecordingSources([
+            [],
+            [new RawRowValues(['a' => '1', 'b' => 'x'])],
+            [new RawRowValues(['c' => '1'])],
+        ]);
+
+        $schema = (new SchemaInferrer(
+            new SchemaInference(-1, 1),
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+        ))->infer([], $sources->sources());
+
+        static::assertSame([0, 1], $sources->started);
+        static::assertSame(['a', 'b'], array_keys($schema->definitions()));
+    }
+
     public function test_a_single_generator_source_is_accepted(): void
     {
         $sources = new RecordingSources([[new RawRowValues(['a' => '1'])]]);

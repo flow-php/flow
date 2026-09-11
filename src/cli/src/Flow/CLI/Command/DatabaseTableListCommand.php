@@ -10,6 +10,7 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Command\Traits\DBOptions;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,6 +24,7 @@ use function Flow\CLI\option_list_of_strings_nullable;
 use function Flow\Types\DSL\type_string;
 use function in_array;
 
+#[AsCommand(name: 'db:table:list', description: 'Print list of datasets from a database.')]
 final class DatabaseTableListCommand extends Command
 {
     use ConfigOptions;
@@ -32,17 +34,13 @@ final class DatabaseTableListCommand extends Command
 
     public function configure(): void
     {
-        $this
-            ->setName('db:table:list')
-            ->setDescription('Print list of datasets from a database.')
-            ->setHelp(self::DB_CONNECTION_HELP)
-            ->addOption(
-                'db-namespace',
-                null,
-                InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                'List of namespaces for which this command will list tables, multiple values allowed. When not set, all tables from all namespaces are listed.',
-                [],
-            );
+        $this->setHelp(self::DB_CONNECTION_HELP)->addOption(
+            'db-namespace',
+            null,
+            InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+            'List of namespaces for which this command will list tables, multiple values allowed. When not set, all tables from all namespaces are listed.',
+            [],
+        );
 
         $this->addConfigOptions($this);
         $this->addDbOptions($this);

@@ -90,6 +90,7 @@ lint-actions:
 # Run static analysis (Mago). The monorepo and web/landing are analyzed in separate runs because
 # web/landing is a standalone Composer sub-project with its own vendor (see web/landing/mago.toml).
 analyze *args:
+    tools/mago/vendor/bin/mago guard
     tools/mago/vendor/bin/mago analyze {{args}}
     tools/mago/vendor/bin/mago --workspace web/landing analyze {{args}}
 

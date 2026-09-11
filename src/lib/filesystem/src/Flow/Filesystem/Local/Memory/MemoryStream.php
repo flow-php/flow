@@ -13,14 +13,16 @@ use Generator;
 
 use function fclose;
 use function feof;
-use function fgets;
 use function fread;
 use function fseek;
 use function fstat;
 use function fwrite;
 use function is_resource;
 use function stream_get_contents;
+use function stream_get_line;
 use function strlen;
+
+use const PHP_INT_MAX;
 
 final class MemoryStream implements DestinationStream, SourceStream
 {
@@ -117,7 +119,13 @@ final class MemoryStream implements DestinationStream, SourceStream
         fseek($this->handle, 0);
 
         while (!feof($this->handle)) {
-            yield (string) fgets($this->handle, $length);
+            $line = stream_get_line($this->handle, PHP_INT_MAX, $separator);
+
+            if ($line === false) {
+                break;
+            }
+
+            yield $line;
         }
     }
 

@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\Seal;
 
 use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Schema as SealSchema;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type;
 use Flow\ETL\Schema;
 
 #[DocumentationDSL(module: Module::SEAL, type: Type::LOADER)]

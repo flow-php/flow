@@ -58,7 +58,7 @@ final class Calculator
         int|float|string $b,
         ?int $scale = null,
         ?Rounding $rounding = null,
-    ): int|float {
+    ): float {
         try {
             $aDecimal = BigDecimal::of((string) $a);
             $effectiveScale = $scale ?? $aDecimal->getScale();

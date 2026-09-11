@@ -21,6 +21,7 @@ use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,6 +34,11 @@ use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\schema_to_json;
 
+#[AsCommand(
+    name: 'file:schema',
+    description: 'Read and print (json by default) data schema from a file.',
+    aliases: ['schema'],
+)]
 final class FileSchemaCommand extends Command
 {
     use ConfigOptions;
@@ -52,8 +58,6 @@ final class FileSchemaCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:schema')
-            ->setDescription('Read and print (json by default) data schema from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,

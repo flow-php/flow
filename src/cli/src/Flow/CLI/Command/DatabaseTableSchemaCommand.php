@@ -13,6 +13,7 @@ use Flow\CLI\Command\Traits\DBOptions;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -29,6 +30,7 @@ use function Flow\ETL\Adapter\Doctrine\table_schema_to_flow_schema;
 use function Flow\ETL\DSL\schema_to_json;
 use function Flow\Types\DSL\type_string;
 
+#[AsCommand(name: 'db:table:schema', description: 'Read data schema from a database table.')]
 final class DatabaseTableSchemaCommand extends Command
 {
     use ConfigOptions;
@@ -39,8 +41,6 @@ final class DatabaseTableSchemaCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('db:table:schema')
-            ->setDescription('Read data schema from a database table.')
             ->setHelp(self::DB_CONNECTION_HELP)
             ->addArgument(
                 'input-db-table',

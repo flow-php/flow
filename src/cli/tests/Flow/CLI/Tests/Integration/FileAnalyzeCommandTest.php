@@ -7,6 +7,7 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\FileAnalyzeCommand;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
@@ -134,5 +135,13 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
 
         self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
+    }
+
+    public function test_file_analyze_command_registers_the_analyze_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileAnalyzeCommand()]);
+
+        static::assertInstanceOf(FileAnalyzeCommand::class, $application->find('analyze'));
     }
 }

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\DSL;
 
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Adapter\Excel\ExcelExtractor;
 use Flow\ETL\Adapter\Excel\ExcelLoader;
 use Flow\ETL\Adapter\Excel\Function\IsValidExcelSheetName;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;

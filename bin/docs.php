@@ -3,11 +3,11 @@
 
 declare(strict_types=1);
 
+use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\FunctionCollector;
 use Flow\Documentation\FunctionsExtractor;
 use Flow\Documentation\MethodCollector;
 use Flow\Documentation\MethodsExtractor;
-use Flow\ETL\Attribute\Module;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Flow;

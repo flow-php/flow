@@ -23,6 +23,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,6 +36,7 @@ use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\df;
 
+#[AsCommand(name: 'file:analyze', description: 'Analyze a file.', aliases: ['analyze'])]
 final class FileAnalyzeCommand extends Command
 {
     use ConfigOptions;
@@ -57,8 +59,6 @@ final class FileAnalyzeCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:analyze')
-            ->setDescription('Analyze a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,

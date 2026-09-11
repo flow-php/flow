@@ -24,6 +24,7 @@ use Flow\Types\Value\Uuid;
 
 use function array_fill_keys;
 use function array_key_exists;
+use function class_exists;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -180,7 +181,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isHTML(string $value): bool
     {
-        if ('<' !== $value[0]) {
+        if ('<' !== $value[0] || !class_exists('\Dom\HTMLDocument')) {
             return false;
         }
 

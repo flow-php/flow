@@ -8,11 +8,12 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockFactory;
 
+use function bin2hex;
 use function file_exists;
-use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
 use function is_dir;
 use function mkdir;
+use function random_bytes;
 use function sys_get_temp_dir;
 
 final readonly class NativeLocalFileBlocksFactory implements BlockFactory
@@ -40,7 +41,7 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
 
     public function create(int $size): Block
     {
-        $id = generate_random_string();
+        $id = bin2hex(random_bytes(16));
 
         return new Block($id, $size, path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
     }

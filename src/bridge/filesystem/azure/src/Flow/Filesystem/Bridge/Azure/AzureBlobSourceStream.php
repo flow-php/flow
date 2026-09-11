@@ -12,13 +12,10 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
 
-use function count;
+use function array_pop;
 use function explode;
 use function str_contains;
 use function strlen;
-use function strpos;
-use function substr;
-use function substr_count;
 
 final class AzureBlobSourceStream implements SourceStream
 {
@@ -76,38 +73,28 @@ final class AzureBlobSourceStream implements SourceStream
         $size = $this->size() ?? 0;
 
         while ($offset < $size) {
-            // Read a chunk of the file
             $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
+
+            if ($chunk === '') {
+                break;
+            }
+
             $offset += strlen($chunk);
             $content .= $chunk;
 
-            // no separators found in the chunk, we are still processing single line
             if (!str_contains($content, $separator)) {
                 continue;
             }
 
-            if (substr_count($content, $separator) > 1) {
-                $lines = explode($separator, $content);
+            $lines = explode($separator, $content);
+            $content = array_pop($lines);
 
-                $lastIndex = count($lines) - 1;
-
-                for ($i = 0; $i < $lastIndex; $i++) {
-                    yield $lines[$i];
-                }
-
-                $content = $lines[$lastIndex];
-            } elseif (substr_count($content, $separator) === 1) {
-                $pos = strpos($content, $separator);
-
-                if ($pos !== false) {
-                    yield substr($content, 0, $pos);
-                    $content = substr($content, $pos + 1);
-                }
+            foreach ($lines as $line) {
+                yield $line;
             }
         }
 
-        // Yield the remaining content if it's not empty
-        if ($content) {
+        if ($content !== '') {
             yield $content;
         }
     }

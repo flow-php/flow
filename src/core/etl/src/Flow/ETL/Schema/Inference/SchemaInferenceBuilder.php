@@ -36,7 +36,8 @@ final class SchemaInferenceBuilder
     }
 
     /**
-     * @param int<1, max>|-1 $filesToSniff - -1 opens every source. Ignored by a source that lists no files
+     * @param int<1, max>|-1 $filesToSniff - sources that yielded a row; -1 sniffs every source. Leading row-less
+     *                                     sources are all opened. Ignored by a source that lists no files
      */
     public function filesToSniff(int $filesToSniff): self
     {

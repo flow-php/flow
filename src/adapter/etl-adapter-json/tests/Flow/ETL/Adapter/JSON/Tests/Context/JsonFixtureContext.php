@@ -6,12 +6,16 @@ namespace Flow\ETL\Adapter\JSON\Tests\Context;
 
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
 use Flow\ETL\Extractor\SourceFile;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 
+use function file_get_contents;
+use function Flow\ETL\Adapter\JSON\from_json_lines;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 
@@ -37,6 +41,23 @@ final class JsonFixtureContext
         }
 
         return new JsonFileReader($filesystem, $format, $pointer, $pointerToEntryName, $sources);
+    }
+
+    /**
+     * @param 'memory'|'native' $filesystem
+     */
+    public static function linesExtractor(string $fixture, string $filesystem): JsonLinesExtractor
+    {
+        if ($filesystem === 'native') {
+            return from_json_lines(self::path($fixture));
+        }
+
+        $memory = memory_filesystem();
+        $stream = $memory->writeTo(path('memory://' . $fixture));
+        $stream->append((string) file_get_contents(self::path($fixture)));
+        $stream->close();
+
+        return from_json_lines(path('memory://' . $fixture), filesystem: $memory);
     }
 
     public static function path(string $fixture): string

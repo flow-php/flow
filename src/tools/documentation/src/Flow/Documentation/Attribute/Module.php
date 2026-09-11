@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Attribute;
+namespace Flow\Documentation\Attribute;
 
 enum Module: string
 {

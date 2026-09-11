@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileConvertCommand;
+use Flow\CLI\Command\FileReadCommand;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function file_exists;
@@ -175,5 +177,15 @@ final class FileConvertCommandTest extends TestCase
         static::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
 
         unlink($output);
+    }
+
+    public function test_file_convert_command_registers_under_its_own_name_beside_file_read_command(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileReadCommand(), new FileConvertCommand()]);
+
+        static::assertInstanceOf(FileReadCommand::class, $application->find('file:read'));
+        static::assertInstanceOf(FileConvertCommand::class, $application->find('file:convert'));
+        static::assertInstanceOf(FileConvertCommand::class, $application->find('convert'));
     }
 }

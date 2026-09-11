@@ -132,3 +132,56 @@ no-fully-qualified-global-function = { enabled = true, level = "error" }
 no-fully-qualified-global-class-like = { enabled = true, level = "error" }
 no-fully-qualified-global-constant = { enabled = true, level = "error" }
 disallowed-functions = { enabled = true, level = "error", functions = [{ name = "var_dump", help = "Debugging only — remove before commit." }, { name = "print_r", help = "Debugging only — remove before commit." }, { name = "dd", help = "Debugging only — remove before commit." }, { name = "dj", help = "Debugging only — remove before commit." }, { name = "ddj", help = "Debugging only — remove before commit." }] }
+
+[guard]
+mode = "perimeter"
+excludes = ["src/**/tests/**"]
+# Flow\Documentation\Attribute\* is documentation metadata resolved only by bin/docs.php; exempt from "a direct import gets a direct require".
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\ETL\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\ArrayComparison\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\Calculator\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\Clock\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\Floe\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\Serializer\\**"
+deny-from = [
+    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
+    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]

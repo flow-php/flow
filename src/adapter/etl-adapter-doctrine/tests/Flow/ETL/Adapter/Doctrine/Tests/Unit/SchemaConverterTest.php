@@ -268,4 +268,14 @@ final class SchemaConverterTest extends FlowTestCase
             table_schema_to_flow_schema($inputTable),
         );
     }
+
+    public function test_dbal_schema_to_flow_schema_drops_null_platform_options(): void
+    {
+        static::assertEquals(schema(int_schema('id', nullable: false)), table_schema_to_flow_schema(new Table('t', [
+            new Column('id', Type::getType('integer'), [
+                'notnull' => true,
+                'platformOptions' => ['charset' => null, 'collation' => null],
+            ]),
+        ])));
+    }
 }

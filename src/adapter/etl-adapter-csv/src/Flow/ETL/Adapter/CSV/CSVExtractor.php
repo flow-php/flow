@@ -228,6 +228,9 @@ final class CSVExtractor implements
         return $this;
     }
 
+    /**
+     * @param int $charactersReadInLine - bytes read per step from a remote stream (S3, Azure); never splits a line
+     */
     public function withCharactersReadInLine(int $charactersReadInLine): self
     {
         if ($charactersReadInLine < 1) {

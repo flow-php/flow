@@ -8,6 +8,7 @@ use Flow\CLI\Command\FileReadCommand;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileReadCommandTest extends TestCase
@@ -371,5 +372,13 @@ final class FileReadCommandTest extends TestCase
             +----------------------+
             5 rows
             OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_file_read_command_registers_the_read_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileReadCommand()]);
+
+        static::assertInstanceOf(FileReadCommand::class, $application->find('read'));
     }
 }

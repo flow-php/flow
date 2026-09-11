@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type;
 use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
 use Flow\ETL\Adapter\ChartJS\Chart\LineChart;
 use Flow\ETL\Adapter\ChartJS\Chart\PieChart;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\Filesystem\Filesystem;

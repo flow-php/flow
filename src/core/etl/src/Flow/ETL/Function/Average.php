@@ -122,7 +122,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
             return null;
         }
 
-        return (float) (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
+        return (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
     }
 
     public function toString(): string

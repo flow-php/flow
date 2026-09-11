@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\DocumentationExample;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\DocumentationExample;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -21,6 +21,7 @@ use Generator;
 
 use function count;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Parquet\empty_generator as parquet_empty_generator;
 use function is_string;
 
 /**
@@ -103,10 +104,13 @@ function array_to_generator(array $data): Generator
     }
 }
 
+/**
+ * @deprecated use Flow\Parquet\empty_generator() instead
+ */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function empty_generator(): Generator
 {
-    yield from [];
+    return parquet_empty_generator();
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]

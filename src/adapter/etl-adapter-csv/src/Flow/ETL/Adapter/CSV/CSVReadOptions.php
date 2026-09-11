@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\CSV;
 final readonly class CSVReadOptions
 {
     /**
-     * @param null|int<1, max> $charactersReadInLine
+     * @param null|int<1, max> $charactersReadInLine - bytes read per step from a remote stream (S3, Azure); never splits a line
      */
     public function __construct(
         public bool $withHeader = true,
@@ -20,7 +20,7 @@ final readonly class CSVReadOptions
     ) {}
 
     /**
-     * @param int<1, max> $charactersReadInLine
+     * @param int<1, max> $charactersReadInLine - bytes read per step from a remote stream (S3, Azure); never splits a line
      */
     public function withCharactersReadInLine(int $charactersReadInLine): self
     {

@@ -38,9 +38,10 @@ final readonly class DatabaseContext
     public function dropAllTables(): void
     {
         $schemaManager = $this->connection->createSchemaManager();
+        $platform = $this->connection->getDatabasePlatform();
 
-        foreach ($schemaManager->introspectTables() as $table) {
-            $schemaManager->dropTable($table->getObjectName()->getUnqualifiedName()->getValue());
+        foreach ($schemaManager->introspectTableNames() as $tableName) {
+            $schemaManager->dropTable($tableName->toSQL($platform));
         }
     }
 }

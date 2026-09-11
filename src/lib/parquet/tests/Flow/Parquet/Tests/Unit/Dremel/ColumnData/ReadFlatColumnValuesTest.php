@@ -12,7 +12,7 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\Adapter\Parquet\array_to_generator;
-use function Flow\ETL\Adapter\Parquet\empty_generator;
+use function Flow\Parquet\empty_generator;
 
 final class ReadFlatColumnValuesTest extends TestCase
 {

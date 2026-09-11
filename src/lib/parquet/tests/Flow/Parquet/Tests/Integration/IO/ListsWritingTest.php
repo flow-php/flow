@@ -64,6 +64,28 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
+    public function test_writing_list_of_decimals(ParquetEngine $engine): void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer(engine: $engine);
+        $schema = Schema::with(NestedColumn::list('prices', ListElement::decimal(18, 2)));
+
+        $inputData = [['prices' => [123.45, 1.23]]];
+
+        $writer->write($path, $schema, $inputData);
+
+        static::assertSame(
+            $inputData,
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read($path)
+                    ->values(),
+            ),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
     public function test_writing_list_of_ints(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';

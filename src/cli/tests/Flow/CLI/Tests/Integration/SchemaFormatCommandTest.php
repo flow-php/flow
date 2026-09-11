@@ -7,6 +7,7 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\SchemaFormatCommand;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class SchemaFormatCommandTest extends TestCase
@@ -237,5 +238,13 @@ final class SchemaFormatCommandTest extends TestCase
             9 rows
 
             OUTPUT, $tester->getDisplay());
+    }
+
+    public function test_schema_format_command_registers_the_format_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new SchemaFormatCommand()]);
+
+        static::assertInstanceOf(SchemaFormatCommand::class, $application->find('format'));
     }
 }

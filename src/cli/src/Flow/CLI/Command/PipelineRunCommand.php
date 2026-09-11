@@ -13,6 +13,7 @@ use Flow\ETL\Exception\Exception;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,6 +25,7 @@ use function Flow\CLI\option_bool;
 use function Flow\ETL\DSL\analyze;
 use function is_string;
 
+#[AsCommand(name: 'pipeline:run', description: 'Execute data processing pipeline from a php file.', aliases: ['run'])]
 final class PipelineRunCommand extends Command
 {
     use ConfigOptions;
@@ -34,8 +36,6 @@ final class PipelineRunCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('run')
-            ->setDescription('Execute data processing pipeline from a php file.')
             ->setHelp(<<<'HELP'
                 <info>pipeline-file</info> argument must point to a valid php file that returns DataFrame instance.
                 <comment>Make sure to not execute run() or any other trigger function.</comment>

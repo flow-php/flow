@@ -56,6 +56,7 @@ final class JsonFileReaderTest extends FlowTestCase
     #[TestWith([JsonFormat::Document, 'array_of_empty_object.json'])]
     #[TestWith([JsonFormat::Document, 'empty.json'])]
     #[TestWith([JsonFormat::Lines, 'empty.jsonl'])]
+    #[TestWith([JsonFormat::Lines, 'only_blank_lines.jsonl'])]
     public function test_batches_never_yields_an_empty_batch(JsonFormat $format, string $fixture): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
@@ -288,5 +289,48 @@ final class JsonFileReaderTest extends FlowTestCase
         static::assertSame(1, $afterAdvance, 'advancing the first sample opens exactly the first source');
         static::assertNotNull($first);
         static::assertSame(['id' => 1], $first->values);
+    }
+
+    #[TestWith(['blank_line.jsonl'])]
+    #[TestWith(['whitespace_line.jsonl'])]
+    #[TestWith(['crlf_blank_line.jsonl'])]
+    #[TestWith(['trailing_blank_lines.jsonl'])]
+    #[TestWith(['vertical_tab_line.jsonl'])]
+    #[TestWith(['form_feed_line.jsonl'])]
+    public function test_a_whitespace_only_line_is_skipped(string $fixture): void
+    {
+        $filesystem = new NativeLocalFilesystem();
+        $reader = JsonFixtureContext::reader(JsonFormat::Lines);
+
+        $stream = $filesystem->readFrom(JsonFixtureContext::source($fixture)->path);
+        $rows = iterator_to_array($reader->lineItems($stream), false);
+        $stream->close();
+
+        static::assertSame([['id' => 1], ['id' => 2]], $rows);
+    }
+
+    public function test_a_whitespace_only_line_is_skipped_under_a_pointer(): void
+    {
+        $reader = JsonFixtureContext::reader(JsonFormat::Lines, pointer: '/items');
+
+        $rows = iterator_to_array($reader->sample(JsonFixtureContext::source('pointer_blank_line.jsonl')), false);
+
+        static::assertSame([1, 2], array_map(static fn(RawRowValues $v): mixed => $v->values['a'], $rows));
+    }
+
+    public function test_a_nul_only_line_is_refused(): void
+    {
+        $filesystem = new NativeLocalFilesystem();
+        $reader = JsonFixtureContext::reader(JsonFormat::Lines);
+        $stream = $filesystem->readFrom(JsonFixtureContext::source('nul_line.jsonl')->path);
+
+        $this->expectException(SyntaxErrorException::class);
+        $this->expectExceptionMessage('Unexpected symbol');
+
+        try {
+            iterator_to_array($reader->lineItems($stream), false);
+        } finally {
+            $stream->close();
+        }
     }
 }

@@ -158,6 +158,28 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
+    public function test_writing_map_of_string_decimal(ParquetEngine $engine): void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer(engine: $engine);
+        $schema = Schema::with(NestedColumn::map('rates', MapKey::string(), MapValue::decimal(18, 2)));
+
+        $inputData = [['rates' => ['usd' => 123.45]]];
+
+        $writer->write($path, $schema, $inputData);
+
+        static::assertSame(
+            $inputData,
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read($path)
+                    ->values(),
+            ),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
     public function test_writing_nullable_map_of_int_int(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';

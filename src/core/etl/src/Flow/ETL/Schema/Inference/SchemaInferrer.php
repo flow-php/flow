@@ -18,8 +18,8 @@ final readonly class SchemaInferrer
     ) {}
 
     /**
-     * The outer iterable must yield UNSTARTED inner iterables - a source counts as opened only when it is first
-     * advanced, and a source abandoned mid-way is closed by its producer, not here.
+     * The outer iterable must yield UNSTARTED inner iterables - a source is started only when it is first advanced;
+     * a source abandoned mid-way is closed by its producer, not here.
      *
      * @param list<string> $names - columns known before any row; [] when the format carries none (JSON)
      * @param iterable<int, iterable<int, RawRowValues>> $sources - one inner iterable per source, in listing order.
@@ -29,10 +29,10 @@ final readonly class SchemaInferrer
     public function infer(array $names, iterable $sources): Schema
     {
         $columns = new ColumnTypes($names, $this->typer);
-        $opened = 0;
+        $sniffed = 0;
 
         foreach ($sources as $source) {
-            if ($this->inference->filesToSniff !== -1 && $opened >= $this->inference->filesToSniff) {
+            if ($this->inference->filesToSniff !== -1 && $sniffed >= $this->inference->filesToSniff) {
                 break;
             }
 
@@ -40,16 +40,17 @@ final readonly class SchemaInferrer
                 break;
             }
 
-            $opened++;
-
-            $columns = $columns->merge(
-                $this->sniff(
-                    $names,
-                    $source,
-                    $this->inference->sampleSize === -1 ? -1 : max(0, $this->inference->sampleSize - $columns->rows()),
-                ),
-                $columns->rows() === 0 || $this->inference->unionByName,
+            $partial = $this->sniff(
+                $names,
+                $source,
+                $this->inference->sampleSize === -1 ? -1 : max(0, $this->inference->sampleSize - $columns->rows()),
             );
+
+            if ($partial->rows() > 0) {
+                $sniffed++;
+            }
+
+            $columns = $columns->merge($partial, $columns->rows() === 0 || $this->inference->unionByName);
         }
 
         return $columns->schema(new TypeFloor($this->inference->candidates()));

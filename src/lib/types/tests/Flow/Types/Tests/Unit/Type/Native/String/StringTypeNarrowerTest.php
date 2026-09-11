@@ -119,6 +119,17 @@ final class StringTypeNarrowerTest extends TestCase
         static::assertEquals(type_string(), $narrower->narrow('not html'));
     }
 
+    #[RequiresPhp('< 8.4.0')]
+    public function test_html_is_not_detected_without_dom_html_document(): void
+    {
+        static::assertEquals(
+            type_string(),
+            (new StringTypeNarrower([type_html(), type_string()]))->narrow(
+                '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            ),
+        );
+    }
+
     public function test_detecting_integer(): void
     {
         $narrower = new StringTypeNarrower();

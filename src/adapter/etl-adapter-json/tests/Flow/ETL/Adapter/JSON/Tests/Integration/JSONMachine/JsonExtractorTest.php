@@ -460,11 +460,16 @@ final class JsonExtractorTest extends FlowTestCase
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config())), false));
     }
 
-    #[TestWith(['glob_with_empty'])]
-    #[TestWith(['glob_empty_first'])]
-    public function test_an_empty_document_in_a_glob_is_skipped(string $fixture): void
+    /**
+     * @param int<1, max>|-1 $filesToSniff
+     */
+    #[TestWith(['glob_with_empty', 10])]
+    #[TestWith(['glob_empty_first', 10])]
+    #[TestWith(['glob_empty_first', 1])]
+    public function test_an_empty_document_in_a_glob_is_skipped(string $fixture, int $filesToSniff): void
     {
-        $extractor = from_json(JsonFixtureContext::path($fixture . '/*.json'));
+        $extractor = from_json(JsonFixtureContext::path($fixture . '/*.json'))
+            ->inferSchema(infer_schema()->filesToSniff($filesToSniff));
 
         static::assertSame(<<<'SCHEMA'
             schema

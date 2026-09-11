@@ -60,7 +60,8 @@ first row is read, decide one schema, and every batch they yield carries exactly
 `from_csv(...)->schema()`, `from_excel(...)->schema()`, `from_json(...)->schema()`, `from_json_lines(...)->schema()`
 and `from_google_sheet(...)->schema()` answer without running the pipeline. Tune the sample with
 `->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`, where
-`filesToSniff()` counts files and so does nothing for Google Sheet, which reads a single sheet. `types()` restricts
+`filesToSniff()` counts files that yielded a row (DuckDB's `files_to_sniff` counts files opened; here a glob of empty
+files is opened in full) and so does nothing for Google Sheet, which reads a single sheet. `types()` restricts
 which types inference may produce (`allStrings()` is sugar for `types(type_string())`), and `unionByName()` reads
 sources with differing column sets as one wider schema, instead of rejecting them (CSV, Excel and Google Sheet,
 which check the column set against the header) or dropping the columns a later source introduces (JSON, which has no

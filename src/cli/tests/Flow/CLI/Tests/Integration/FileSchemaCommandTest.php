@@ -9,6 +9,7 @@ use Flow\CLI\Tests\Context\SchemaInferenceFixtureContext;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -644,5 +645,13 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
         self::assertCommandOutputIdentical("schema\n|-- a: ?integer\n|-- b: ?integer\n", $tester->getDisplay());
+    }
+
+    public function test_file_schema_command_registers_the_schema_alias(): void
+    {
+        $application = new Application();
+        $application->addCommands([new FileSchemaCommand()]);
+
+        static::assertInstanceOf(FileSchemaCommand::class, $application->find('schema'));
     }
 }

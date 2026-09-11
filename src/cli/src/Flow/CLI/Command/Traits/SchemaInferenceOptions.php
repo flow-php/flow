@@ -31,7 +31,7 @@ trait SchemaInferenceOptions
                 'schema-files-to-sniff',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Sources opened while the row budget is not spent; -1 opens every source. Ignored when the source declares its own schema.',
+                'Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.',
                 null,
             )
             ->addOption(

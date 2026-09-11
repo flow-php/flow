@@ -21,6 +21,7 @@ use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,6 +35,7 @@ use function Flow\CLI\option_int_nullable;
 use function Flow\CLI\option_list_of_strings;
 use function Flow\ETL\DSL\df;
 
+#[AsCommand(name: 'file:read', description: 'Read data from a file.', aliases: ['read'])]
 final class FileReadCommand extends Command
 {
     use ConfigOptions;
@@ -55,8 +57,6 @@ final class FileReadCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:read')
-            ->setDescription('Read data from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,

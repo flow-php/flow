@@ -8,6 +8,8 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
 
+use function array_pop;
+use function end;
 use function explode;
 use function str_split;
 use function strlen;
@@ -51,10 +53,14 @@ final readonly class StringSourceStream implements SourceStream
 
     public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
-        foreach (explode($separator, $this->content) as $line) {
-            if (strlen($line)) {
-                yield $line;
-            }
+        $lines = explode($separator, $this->content);
+
+        if (end($lines) === '') {
+            array_pop($lines);
+        }
+
+        foreach ($lines as $line) {
+            yield $line;
         }
     }
 

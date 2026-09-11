@@ -40,10 +40,10 @@ final readonly class MapValue
     public static function decimal(int $precision, int $scale, bool $required = false): self
     {
         if ($required) {
-            return new self(FlatColumn::decimal('value', $scale, $precision)->makeRequired());
+            return new self(FlatColumn::decimal('value', $precision, $scale)->makeRequired());
         }
 
-        return new self(FlatColumn::decimal('value', $scale, $precision));
+        return new self(FlatColumn::decimal('value', $precision, $scale));
     }
 
     public static function double(bool $required = false): self

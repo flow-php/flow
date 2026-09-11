@@ -13,6 +13,7 @@ use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,6 +25,11 @@ use function Flow\CLI\option_bool;
 use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\schema_to_json;
 
+#[AsCommand(
+    name: 'schema:format',
+    description: 'Print a json schema in one of the available formats.',
+    aliases: ['format'],
+)]
 final class SchemaFormatCommand extends Command
 {
     use ConfigOptions;
@@ -35,8 +41,6 @@ final class SchemaFormatCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('schema:format')
-            ->setDescription('Print a json schema in one of the available formats.')
             ->addArgument('input-schema-file', InputArgument::REQUIRED, 'Path to a json with schema Flow.')
             ->addOption('output-php', null, InputOption::VALUE_NONE, 'Print schema as PHP code')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')

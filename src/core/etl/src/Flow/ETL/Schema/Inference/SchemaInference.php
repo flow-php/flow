@@ -8,7 +8,8 @@ final readonly class SchemaInference
 {
     /**
      * @param int<1, max>|-1 $sampleSize - rows observed across every sampled source before the schema is frozen; -1 observes all
-     * @param int<1, max>|-1 $filesToSniff - sources opened while the row budget is not spent; -1 opens all.
+     * @param int<1, max>|-1 $filesToSniff - sources that yielded a row, counted while the row budget is not spent;
+     *                                     -1 sniffs all.
      * @param null|InferredTypes $types - the types inference may produce; null is every type but markup
      * @param bool $unionByName - false takes the column set from the first source and treats a later source's
      *                            unseen column as a divergence; true unions the sets and runs no divergence check

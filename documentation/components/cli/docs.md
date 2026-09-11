@@ -58,7 +58,8 @@ Usage:
 
 Options:
   -h, --help            Display help for the given command. When no command is given display help for the list command
-  -q, --quiet           Do not output any message
+      --silent          Do not output any message
+  -q, --quiet           Only errors are displayed. All other output is suppressed
   -V, --version         Display this application version
       --ansi|--no-ansi  Force (or disable --no-ansi) ANSI output
   -n, --no-interaction  Do not ask any interactive question
@@ -68,23 +69,30 @@ Available commands:
   completion             Dump the shell completion script
   help                   Display help for a command
   list                   List commands
+ db
+  db:table:list          Print list of datasets from a database.
+  db:table:schema        Read data schema from a database table.
  file
-  file:convert           [convert] Read data from a file.
+  file:analyze           [analyze] Analyze a file.
+  file:convert           [convert] Convert data from one file format to another.
   file:read              [read] Read data from a file.
-  file:rows:count        [count] Read data schema from a file.
-  file:schema            [schema] Read data schema from a file.
+  file:rows:count        [count] Count rows in a file.
+  file:schema            [schema] Read and print (json by default) data schema from a file.
  parquet
   parquet:read           [parquet:read:data] Read data from parquet file
+  parquet:read:ddl       Read DDL from parquet file
   parquet:read:metadata  Read metadata from parquet file
  pipeline
-  pipeline:run           [run] Execute ETL pipeline from a php/json file.
+  pipeline:run           [run] Execute data processing pipeline from a php file.
+ schema
+  schema:format          [format] Print a json schema in one of the available formats.
 ```
 
 ### `file:convert` alias `convert`
 
 ```shell
 Description:
-  Read data from a file.
+  Convert data from one file format to another.
 
 Usage:
   file:convert [options] [--] <input-file> <output-file>
@@ -130,7 +138,7 @@ Options:
       --input-parquet-columns=INPUT-PARQUET-COLUMNS                  Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET                    Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE                        Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
-      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF                  Sources opened while the row budget is not spent; -1 opens every source. Ignored when the source declares its own schema.
+      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF                  Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                           Infer every column as string instead of narrowing it.
       --schema-union-by-name                                         Union the column sets of every sniffed source instead of taking the first one.
   -h, --help                                                         Display help for the given command. When no command is given display help for the list command
@@ -180,7 +188,7 @@ Options:
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
-      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources opened while the row budget is not spent; -1 opens every source. Ignored when the source declares its own schema.
+      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
       --schema-union-by-name                               Union the column sets of every sniffed source instead of taking the first one.
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
@@ -249,7 +257,7 @@ Options:
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
-      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources opened while the row budget is not spent; -1 opens every source. Ignored when the source declares its own schema.
+      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
       --schema-union-by-name                               Union the column sets of every sniffed source instead of taking the first one.
       --stats-schema[=STATS-SCHEMA]                        Prints schema of executed data transformation pipeline. [default: false]
@@ -300,7 +308,7 @@ Options:
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
-      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources opened while the row budget is not spent; -1 opens every source. Ignored when the source declares its own schema.
+      --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
       --schema-union-by-name                               Union the column sets of every sniffed source instead of taking the first one.
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
@@ -317,7 +325,7 @@ Options:
 ```shell
 $ flow count --help
 Description:
-  Read data schema from a file.
+  Count rows in a file.
 
 Usage:
   file:rows:count [options] [--] <input-file>

@@ -932,7 +932,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(1, $total);
     }
 
-    public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows(): void
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_reads_one_row(): void
     {
         static::assertCount(
             1,
@@ -940,19 +940,17 @@ final class CSVExtractorTest extends FlowTestCase
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
                 ->fetch()
                 ->toArray(),
-            'Long line was broken down into two rows.',
+            'Long line was read as one row.',
         );
     }
 
-    public function test_extracting_csv_with_more_than_1000_characters_per_line_with_increased_read_in_line_option(): void
+    public function test_characters_read_in_line_shorter_than_the_line_does_not_split_it(): void
     {
         static::assertCount(
             1,
             df()
-                ->read(from_csv(
-                    __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv',
-                    characters_read_in_line: 2000,
-                ))
+                ->read(from_csv(__DIR__
+                . '/../Fixtures/more_than_1000_characters_per_line.csv')->withCharactersReadInLine(100))
                 ->fetch()
                 ->toArray(),
             'Long line was read as one row.',

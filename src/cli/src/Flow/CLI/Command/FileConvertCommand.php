@@ -20,6 +20,7 @@ use Flow\CLI\Options\FileFormatOption;
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,6 +35,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\overwrite;
 use function number_format;
 
+#[AsCommand(name: 'file:convert', description: 'Convert data from one file format to another.', aliases: ['convert'])]
 final class FileConvertCommand extends Command
 {
     use ConfigOptions;
@@ -59,8 +61,6 @@ final class FileConvertCommand extends Command
     public function configure(): void
     {
         $this
-            ->setName('file:read')
-            ->setDescription('Read data from a file.')
             ->addArgument(
                 'input-file',
                 InputArgument::REQUIRED,

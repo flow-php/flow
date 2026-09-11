@@ -27,7 +27,7 @@ final readonly class MapKey
 
     public static function decimal(int $precision, int $scale): self
     {
-        return new self(FlatColumn::decimal('key', $scale, $precision)->makeRequired());
+        return new self(FlatColumn::decimal('key', $precision, $scale)->makeRequired());
     }
 
     public static function double(): self

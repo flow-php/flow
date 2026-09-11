@@ -458,11 +458,16 @@ final class JsonLinesExtractorTest extends FlowTestCase
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config())), false));
     }
 
-    #[TestWith(['glob_with_empty'])]
-    #[TestWith(['glob_empty_first'])]
-    public function test_an_empty_document_in_a_glob_is_skipped(string $fixture): void
+    /**
+     * @param int<1, max>|-1 $filesToSniff
+     */
+    #[TestWith(['glob_with_empty', 10])]
+    #[TestWith(['glob_empty_first', 10])]
+    #[TestWith(['glob_empty_first', 1])]
+    public function test_an_empty_document_in_a_glob_is_skipped(string $fixture, int $filesToSniff): void
     {
-        $extractor = from_json_lines(JsonFixtureContext::path($fixture . '/*.jsonl'));
+        $extractor = from_json_lines(JsonFixtureContext::path($fixture . '/*.jsonl'))
+            ->inferSchema(infer_schema()->filesToSniff($filesToSniff));
 
         static::assertSame(<<<'SCHEMA'
             schema
@@ -471,6 +476,23 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
             SCHEMA, schema_to_ascii($extractor->schema()));
         static::assertSame([['id' => 1, 'name' => 'a']], df(config())->read($extractor)->fetch()->toArray());
+    }
+
+    /**
+     * @param 'memory'|'native' $filesystem
+     */
+    #[TestWith(['native'])]
+    #[TestWith(['memory'])]
+    public function test_a_blank_line_is_skipped_by_schema_and_read(string $filesystem): void
+    {
+        $extractor = JsonFixtureContext::linesExtractor('blank_line.jsonl', $filesystem);
+
+        static::assertSame(<<<'SCHEMA'
+            schema
+            |-- id: ?integer
+
+            SCHEMA, schema_to_ascii($extractor->schema()));
+        static::assertSame([['id' => 1], ['id' => 2]], df(config())->read($extractor)->fetch()->toArray());
     }
 
     public function test_an_empty_listing_infers_an_empty_schema(): void

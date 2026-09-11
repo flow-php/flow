@@ -6,9 +6,9 @@ namespace Flow\Bridge\Psr7\Telemetry\DSL;
 
 use Flow\Bridge\Psr7\Telemetry\RequestCarrier;
 use Flow\Bridge\Psr7\Telemetry\ResponseCarrier;
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type as DSLType;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

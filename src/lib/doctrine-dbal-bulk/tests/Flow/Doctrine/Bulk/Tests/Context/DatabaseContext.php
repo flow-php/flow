@@ -35,20 +35,21 @@ final readonly class DatabaseContext
 
     public function dropAllTables(): void
     {
-        // @mago-expect analysis:deprecated-method
-        foreach ($this->connection->createSchemaManager()->listTables() as $table) {
-            // @mago-expect analysis:deprecated-method
-            if (str_contains($table->getName(), 'innodb')) {
+        $schemaManager = $this->connection->createSchemaManager();
+        $platform = $this->connection->getDatabasePlatform();
+
+        foreach ($schemaManager->introspectTableNames() as $tableName) {
+            $name = $tableName->getUnqualifiedName()->getValue();
+
+            if (str_contains($name, 'innodb')) {
                 continue;
             }
 
-            // @mago-expect analysis:deprecated-method
-            if (str_contains($table->getName(), 'mysql')) {
+            if (str_contains($name, 'mysql')) {
                 continue;
             }
 
-            // @mago-expect analysis:deprecated-method
-            $this->connection->createSchemaManager()->dropTable($table->getName());
+            $schemaManager->dropTable($tableName->toSQL($platform));
         }
     }
 

@@ -18,6 +18,7 @@ use function count;
 use function is_array;
 use function iterator_to_array;
 use function json_decode;
+use function trim;
 
 /**
  * The read of one listed file, for both the sample and the real read.
@@ -25,6 +26,8 @@ use function json_decode;
 final readonly class JsonFileReader implements SchemaSampler
 {
     private const int CHUNK = 8 * 1024;
+
+    private const string C_ISSPACE = " \t\n\r\v\f";
 
     /**
      * @var array{decoder: ExtJsonDecoder, pointer?: string}
@@ -127,6 +130,10 @@ final readonly class JsonFileReader implements SchemaSampler
     public function lineItems(SourceStream $stream): Generator
     {
         foreach ($stream->readLines() as $line) {
+            if (trim($line, self::C_ISSPACE) === '') {
+                continue;
+            }
+
             if ($this->pointer === null) {
                 // json_decode is an order of magnitude faster and agrees with JSON Machine on every object or
                 // array line; a line it rejects (a BOM, two objects, a bare scalar) keeps JSON Machine's verdict

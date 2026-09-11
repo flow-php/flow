@@ -15,6 +15,7 @@ use Flow\CLI\Command\DatabaseTableListCommand;
 use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class DatabaseTableListCommandTest extends FlowTestCase
@@ -76,6 +77,14 @@ final class DatabaseTableListCommandTest extends FlowTestCase
         static::assertStringContainsString('Total tables       2', $display);
         static::assertStringContainsString('Total namespaces   1', $display);
         static::assertStringContainsString('Total columns      6', $display);
+    }
+
+    public function test_database_table_list_command_registers_as_db_table_list(): void
+    {
+        $application = new Application();
+        $application->addCommands([new DatabaseTableListCommand()]);
+
+        static::assertInstanceOf(DatabaseTableListCommand::class, $application->find('db:table:list'));
     }
 
     protected function dbContext(): DatabaseContext
