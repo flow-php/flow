@@ -162,6 +162,7 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array type detection never returns a type that rejects its own input** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [ae0025](https://github.com/flow-php/flow/commit/ae0025bbde39db2869e0074db13e0588e20b7a34) - **readonly.yaml workflow checks from packages** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Entry, its 19 implementations and the 31 *_entry() DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - DataFrame::map(), to_callable() and the callback transformers and loader** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - DataFrame::autoCast() and AutoCastTransformer** - [@norberttech](https://github.com/norberttech)
