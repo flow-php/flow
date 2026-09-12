@@ -116,26 +116,18 @@ final class NestedExpansionTest extends FlowTestCase
             'string',
             ['none', 'none'],
         ];
-    }
-
-    public function test_a_null_list_throws(): void
-    {
-        $expansion = NestedExpansionContext::of(structure(['tag' => ref('tags')->expand()]));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayExpand requires non-null array');
-
-        $expansion->eval(ListColumnsMother::row(['tags' => null]), flow_context(config()));
-    }
-
-    public function test_a_when_guard_does_not_stop_the_expand(): void
-    {
-        $expansion = NestedExpansionContext::of(when(ref('tags')->isNull(), lit('none'), ref('tags')->expand()));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ArrayExpand requires non-null array');
-
-        $expansion->eval(ListColumnsMother::row(['tags' => null]), flow_context(config()));
+        yield 'a null list gives no values' => [
+            structure(['tag' => ref('tags')->expand()]),
+            ['tags' => null],
+            'structure{tag: string}',
+            [],
+        ];
+        yield 'a when guard does not stop the expand of a null list' => [
+            when(ref('tags')->isNull(), lit('none'), ref('tags')->expand()),
+            ['tags' => null],
+            'string',
+            [],
+        ];
     }
 
     public function test_a_padded_null_follows_the_null_rule_of_the_function_reading_it(): void

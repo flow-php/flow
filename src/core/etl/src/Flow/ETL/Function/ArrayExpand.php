@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
@@ -89,7 +88,7 @@ final class ArrayExpand implements ScalarFunction, ExpandResults
         $array = (new Parameter($this->ref))->asArray($row, $context);
 
         if ($array === null) {
-            throw new InvalidArgumentException('ArrayExpand requires non-null array');
+            return [];
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {

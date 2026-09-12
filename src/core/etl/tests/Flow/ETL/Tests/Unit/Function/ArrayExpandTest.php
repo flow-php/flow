@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\array_expand;
 use function Flow\ETL\DSL\config;
@@ -169,5 +170,13 @@ final class ArrayExpandTest extends FlowTestCase
                 ]))),
             )
             ->returns();
+    }
+
+    #[TestWith([ArrayExpand::VALUES])]
+    #[TestWith([ArrayExpand::KEYS])]
+    #[TestWith([ArrayExpand::BOTH])]
+    public function test_a_null_array_expands_to_nothing(ArrayExpand $expand): void
+    {
+        static::assertSame([], array_expand(ref('list'), $expand)->eval(row(['list' => null]), flow_context()));
     }
 }
