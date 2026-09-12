@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP\DSL;
 
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
+use Flow\Documentation\Attribute\DocumentationDSL;
+use Flow\Documentation\Attribute\Module;
+use Flow\Documentation\Attribute\Type;
 use Flow\Filesystem\Bridge\SFTP\Options;
 use Flow\Filesystem\Bridge\SFTP\SFTPFilesystem;
 use Flow\Filesystem\Exception\RuntimeException;

@@ -89,6 +89,14 @@ final class SFTPFilesystemTest extends FlowTestCase
         sftp_filesystem(new SFTP('localhost'))->status(path('file:///var/orders.csv'));
     }
 
+    public function test_supports_only_its_own_scheme(): void
+    {
+        $filesystem = sftp_filesystem(new SFTP('localhost'));
+
+        static::assertTrue($filesystem->supports(path('sftp:///upload/orders.csv')));
+        static::assertFalse($filesystem->supports(path('file:///var/orders.csv')));
+    }
+
     public function test_tmp_dir_is_reported_as_a_directory(): void
     {
         $filesystem = sftp_filesystem(new SFTP('localhost'));

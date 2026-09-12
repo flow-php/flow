@@ -163,6 +163,11 @@ final readonly class SFTPFilesystem implements Filesystem
         return $this->fileStatus($path, $remotePath);
     }
 
+    public function supports(Path $path): bool
+    {
+        return $this->mount->supports($path);
+    }
+
     public function writeTo(Path $path): DestinationStream
     {
         $this->guardWritable($path);

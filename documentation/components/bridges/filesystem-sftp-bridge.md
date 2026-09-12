@@ -54,18 +54,20 @@ $fstab = fstab(
 
 ## Usage with Flow
 
-Mount the filesystem on the configuration and every `sftp://` path becomes readable and writable
-from a DataFrame.
+Pass the filesystem to the source or sink that reads or writes the `sftp://` path. Hold one instance
+and pass the same one to both sides.
 
 ```php
-$config = config_builder()
-    ->mount(sftp_filesystem(sftp_client($_ENV['SFTP_HOST'], $_ENV['SFTP_USER'], $_ENV['SFTP_PASSWORD'])));
+$sftp = sftp_filesystem(sftp_client($_ENV['SFTP_HOST'], $_ENV['SFTP_USER'], $_ENV['SFTP_PASSWORD']));
 
-data_frame($config)
-    ->read(from_csv(path('sftp:///upload/orders.csv')))
-    ->write(to_parquet(path('sftp:///archive/orders.parquet')))
+data_frame()
+    ->read(from_csv(path('sftp:///upload/orders.csv'), filesystem: $sftp))
+    ->write(to_parquet(path('sftp:///archive/orders.parquet'), filesystem: $sftp))
     ->run();
 ```
+
+A source or sink given a filesystem that does not serve its path throws at construction, naming the
+`filesystem:` argument.
 
 Paths are absolute on the remote server and relative to the directory the SSH account is chrooted
 into, so `sftp:///upload/orders.csv` is `/upload/orders.csv` as the account sees it.
@@ -79,8 +81,8 @@ below it; a glob is matched against the entries and directories that cannot lead
 never listed, which keeps the number of round trips down on deep trees.
 
 ```php
-data_frame($config)
-    ->read(from_csv(path('sftp:///upload/**/*.csv')))
+data_frame()
+    ->read(from_csv(path('sftp:///upload/**/*.csv'), filesystem: $sftp))
     ->run();
 ```
 

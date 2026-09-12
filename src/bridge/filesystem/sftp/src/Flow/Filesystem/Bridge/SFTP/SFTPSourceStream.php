@@ -9,16 +9,13 @@ use Flow\Filesystem\SourceStream;
 use Generator;
 use phpseclib3\Net\SFTP;
 
-use function count;
+use function array_pop;
 use function explode;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function max;
 use function str_contains;
 use function strlen;
-use function strpos;
-use function substr;
-use function substr_count;
 
 final class SFTPSourceStream implements SourceStream
 {
@@ -83,7 +80,6 @@ final class SFTPSourceStream implements SourceStream
     public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         $chunkSize = $length ?? $this->options->readChunkSize();
-        $separatorLength = strlen($separator);
         $size = $this->size() ?? 0;
         $offset = 0;
         $content = '';
@@ -102,24 +98,11 @@ final class SFTPSourceStream implements SourceStream
                 continue;
             }
 
-            if (substr_count($content, $separator) > 1) {
-                $lines = explode($separator, $content);
-                $lastIndex = count($lines) - 1;
+            $lines = explode($separator, $content);
+            $content = array_pop($lines);
 
-                for ($i = 0; $i < $lastIndex; $i++) {
-                    yield $lines[$i];
-                }
-
-                $content = $lines[$lastIndex];
-
-                continue;
-            }
-
-            $position = strpos($content, $separator);
-
-            if ($position !== false) {
-                yield substr($content, 0, $position);
-                $content = substr($content, $position + $separatorLength);
+            foreach ($lines as $line) {
+                yield $line;
             }
         }
 

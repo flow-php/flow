@@ -6,13 +6,48 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Context\GlobMatrixContext;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function sort;
 use function strlen;
+use function substr;
 
 final class SFTPFilesystemTest extends SFTPTestCase
 {
+    public static function glob_matrix(): Generator
+    {
+        yield from GlobMatrixContext::patterns();
+    }
+
+    /**
+     * @param list<string> $expected
+     */
+    #[DataProvider('glob_matrix')]
+    public function test_list_agrees_with_the_shared_glob_matrix(string $pattern, array $expected): void
+    {
+        $filesystem = $this->sftpContext()->filesystem();
+
+        foreach (GlobMatrixContext::files() as $file) {
+            $filesystem
+                ->writeTo(path('sftp:///upload/' . $file))
+                ->append($file)
+                ->close();
+        }
+
+        $listed = array_map(
+            static fn(FileStatus $status): string => substr($status->path->path(), strlen('/upload/')),
+            iterator_to_array($filesystem->list(path('sftp:///upload/' . $pattern), new OnlyFiles()), false),
+        );
+        sort($listed);
+
+        static::assertSame($expected, $listed);
+    }
+
     public function test_listing_a_directory_walks_it_recursively(): void
     {
         $this->sftpContext()->givenFileExists(path('sftp:///upload/2024/01/a.csv'), "id\n1\n");
