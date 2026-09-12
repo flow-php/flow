@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-09-12
 
 ### Added
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetFileWriter, one independent writer per file** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - GlobPattern matcher and GlobWalker local walk** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - Path value object with Key, Wildcard and Multimatch steps** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - Path|string accepted by every array_dot_* function** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - structure_get(), structure_get_collection(), structure_get_collection_first() DSL aliases** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +49,9 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetEngine::openForWrite() returns a ParquetFileWriter** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - glob wildcards match dotfiles, ** inside a name acts as *** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl-adapter-parquet - path-only partition columns read back as string unless declared** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - \ escapes every path grammar character** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_rename() refuses a path not ending with a key** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_get_collection() reads its keys as literal keys** - [@norberttech](https://github.com/norberttech)
@@ -120,6 +125,13 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl-adapter-parquet - path-only partition columns left out of the file schema** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - writers sharing one engine no longer overwrite each other** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - a writer whose close throws stays closed** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - PHP engine splits array batches into row groups** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - rows keep their order when writeRow() precedes writeBatch()** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl - a failed closure() leaves no staged file behind** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - local, memory, S3 and Azure list the same files for a glob** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_get() schema for nullsafe and escaped path segments** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - escapes after a wildcard and inside a multimatch** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_set() keeps sibling and integer keys** - [@norberttech](https://github.com/norberttech)
@@ -175,6 +187,8 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/types - array type detection never returns a type that rejects its own input** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetEngine::closeWrite(), writeBatch(), writeRow()** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - webmozart/glob dependency** - [@norberttech](https://github.com/norberttech)
 - [ae0025](https://github.com/flow-php/flow/commit/ae0025bbde39db2869e0074db13e0588e20b7a34) - **readonly.yaml workflow checks from packages** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Entry, its 19 implementations and the 31 *_entry() DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - DataFrame::map(), to_callable() and the callback transformers and loader** - [@norberttech](https://github.com/norberttech)
