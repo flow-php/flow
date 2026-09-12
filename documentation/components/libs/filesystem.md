@@ -152,6 +152,35 @@ $stream->append('3,jane,true');
 $stream->close();
 ```
 
+## Glob patterns
+
+Every filesystem - local, memory, S3, Azure - lists the same files for the same pattern.
+
+| token                   | matches                                                                |
+|-------------------------|------------------------------------------------------------------------|
+| `*`                     | any run of characters inside one path segment, a leading `.` included  |
+| `?`                     | one character inside one segment                                       |
+| `[abc]` `[a-z]`         | one character of the set / range, never `/`                            |
+| `[!abc]`                | one character outside the set, never `/`; `^` inside `[]` is a literal |
+| `**` as a whole segment | zero or more segments; as the last segment: everything below           |
+| `**` inside a segment   | same as `*`                                                            |
+| `{name}`                | flow partition placeholder: one or more characters inside one segment  |
+| unclosed `[`            | the literal `[` - also when its `]` comes after a `/`                  |
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
+
+// data/flat.parquet, data/date=2026-09-01/one.parquet, data/id=1/date=2026-09-01/two.parquet
+native_local_filesystem()->list(path(__DIR__ . '/data/**/*.parquet')); // all three
+native_local_filesystem()->list(path(__DIR__ . '/data/**.parquet'));   // data/flat.parquet
+```
+
+Local listing follows symlinks a pattern names; `**` never descends into a symlinked directory. There is no escape
+character.
+
 ## Cross-filesystem copy & move
 
 `FilesystemTable` coupled with the `Copy` / `Move` operations lets you copy or move files between any

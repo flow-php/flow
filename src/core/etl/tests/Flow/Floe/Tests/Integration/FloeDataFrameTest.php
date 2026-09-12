@@ -6,7 +6,10 @@ namespace Flow\Floe\Tests\Integration;
 
 use DateTimeZone;
 use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Tests\Context\LoaderEndingContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 use Flow\Floe\FloeEngine;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Types\Value\Json;
@@ -28,12 +31,15 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\to_transformation;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_time_zone;
+use function iterator_to_array;
 
 final class FloeDataFrameTest extends FlowIntegrationTestCase
 {
@@ -284,5 +290,37 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         static::assertSame(2, $result->count());
         static::assertSame(['id', 'name'], $result->first()->names());
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        try {
+            data_frame()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(to_floe(
+                    path('memory://var/staged/file.floe'),
+                    filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
+                )->partitionBy(partition_by('p')))
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://var/staged/p=a/file.floe" failed', $failure->getMessage());
+        }
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/staged/**/*')), false));
+    }
+
+    public function test_a_close_that_fails_while_discarding_a_failed_run_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        LoaderEndingContext::failedRun(to_floe(
+            path('memory://var/failed/file.floe'),
+            filesystem: new FailingCloseFilesystem($memory),
+        )->partitionBy(partition_by('id')));
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/failed/**/*')), false));
     }
 }

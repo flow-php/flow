@@ -52,6 +52,8 @@ final readonly class UnixPath
 
     private const string PLACEHOLDER_SENTINEL = "\x01";
 
+    private ?GlobPattern $glob;
+
     private Options $options;
 
     private string $path;
@@ -76,6 +78,8 @@ final readonly class UnixPath
         }
 
         $this->path = $this->normalizePath($this->resolveHomePath($path));
+        // listings match every entry against one pattern, so it is compiled once
+        $this->glob = $this->isPattern() ? new GlobPattern($this->path) : null;
     }
 
     /**
@@ -330,7 +334,7 @@ final readonly class UnixPath
             return false;
         }
 
-        return $this->fnmatch($this->path, $path->path);
+        return $this->glob?->matches($path->path) ?? false;
     }
 
     public function options(): Options
@@ -527,27 +531,6 @@ final readonly class UnixPath
     public function withOptions(Options $options): self
     {
         return new self($this->uri(), $options);
-    }
-
-    private function fnmatch(string $pattern, string $filename, int $flags = 0): bool
-    {
-        if ($flags & 4) {
-            if ($filename[0] === '.' && $pattern[0] !== '.') {
-                return false;
-            }
-        }
-
-        $rx = preg_quote(
-            preg_replace(self::PARTITION_PLACEHOLDER_PATTERN, self::PLACEHOLDER_SENTINEL, $pattern) ?? $pattern,
-            null,
-        );
-        $rx = str_replace('\\*\\*', '(.*)?', $rx);
-        $rx = str_replace('\\*', '[^/]*', $rx);
-        $rx = strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
-        $rx = str_replace(self::PLACEHOLDER_SENTINEL, '[^/]+', $rx);
-        $rx = '{^' . $rx . '$}' . ($flags & 16 ? 'i' : '');
-
-        return (bool) preg_match($rx, $filename);
     }
 
     private function isAbsolutePath(string $path): bool

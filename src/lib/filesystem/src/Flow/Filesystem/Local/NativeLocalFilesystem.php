@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Local;
 
 use DateTimeImmutable;
-use EmptyIterator;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
@@ -20,39 +19,26 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Generator;
-use Iterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use Webmozart\Glob\Glob;
-use Webmozart\Glob\Iterator\GlobFilterIterator;
-use Webmozart\Glob\Iterator\GlobIterator;
 
+use function array_reverse;
 use function file_exists;
 use function filemtime;
 use function filesize;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\type_string;
 use function in_array;
 use function is_dir;
 use function is_file;
 use function is_link;
 use function mkdir;
-use function preg_replace;
 use function rename;
 use function rmdir;
 use function scandir;
-use function sort;
 use function sprintf;
 use function str_ends_with;
-use function str_replace;
 use function sys_get_temp_dir;
 use function unlink;
 
-/**
- * This implementation is based on the native PHP filesystem functions documented here: https://www.php.net/manual/en/book.filesystem.php
- * Additionally, in order to support glob pattern `\/**\/` for matching zero or more directories it's using webmozart/glob library.
- */
 final readonly class NativeLocalFilesystem implements Filesystem
 {
     public function __construct(
@@ -104,15 +90,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
             return;
         }
 
-        $filePaths = [];
-
-        foreach (new GlobIterator($path->glob()) as $filePath) {
-            $filePaths[] = type_string()->assert($filePath);
-        }
-
-        sort($filePaths, SORT_STRING);
-
-        foreach ($filePaths as $filePath) {
+        foreach ((new GlobWalker())->walk($path) as $filePath) {
             $status = self::statFor(path_real($filePath, $path->options()), $filePath);
 
             if ($pathFilter->accept($status)) {
@@ -190,9 +168,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         $deletedCount = 0;
 
-        foreach ($this->matchChildFirst($path->glob()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
-
+        foreach (array_reverse((new GlobWalker())->walk($path)) as $filePath) {
             if (is_dir($filePath)) {
                 $this->rmdir($filePath);
             } else {
@@ -219,15 +195,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
             return self::statFor($path, $path->path());
         }
 
-        foreach (new GlobIterator($path->glob()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
+        $filePath = (new GlobWalker())->walk($path)[0] ?? null;
 
-            if (file_exists($filePath)) {
-                return self::statFor(path($filePath, $path->options()), $filePath);
-            }
-        }
-
-        return null;
+        return $filePath === null ? null : self::statFor(path($filePath, $path->options()), $filePath);
     }
 
     public function supports(Path $path): bool
@@ -259,41 +229,6 @@ final readonly class NativeLocalFilesystem implements Filesystem
         }
 
         return NativeLocalDestinationStream::openBlank($path);
-    }
-
-    /**
-     * Lazy iterator over glob matches in CHILD_FIRST order so callers can safely delete each match
-     * without confusing webmozart/glob's internal RecursiveIteratorIterator (which descends with SELF_FIRST).
-     */
-    /**
-     * @return \Iterator<int|string, string>
-     */
-    private function matchChildFirst(string $glob): Iterator
-    {
-        $glob = self::canonicalizePath($glob);
-        $basePath = Glob::getBasePath($glob);
-
-        if (!is_dir($basePath)) {
-            return new EmptyIterator();
-        }
-
-        $recursive = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(
-                $basePath,
-                RecursiveDirectoryIterator::CURRENT_AS_PATHNAME | RecursiveDirectoryIterator::SKIP_DOTS,
-            ),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        return new GlobFilterIterator(
-            $glob,
-            (static function () use ($recursive) {
-                foreach ($recursive as $path) {
-                    yield self::canonicalizePath(type_string()->assert($path));
-                }
-            })(),
-            GlobFilterIterator::FILTER_VALUE,
-        );
     }
 
     private function rmdir(string $dirPath): void
@@ -339,11 +274,6 @@ final readonly class NativeLocalFilesystem implements Filesystem
         }
 
         rmdir($dirPath);
-    }
-
-    private static function canonicalizePath(string $path): string
-    {
-        return type_string()->cast(preg_replace('#/+#', '/', str_replace('\\', '/', $path)));
     }
 
     private static function statFor(Path $path, string $absolutePath): FileStatus

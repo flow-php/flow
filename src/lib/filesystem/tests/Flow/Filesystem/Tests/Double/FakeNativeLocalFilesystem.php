@@ -10,6 +10,7 @@ use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\GlobWalker;
 use Flow\Filesystem\Mount;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
@@ -18,12 +19,11 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Generator;
-use Webmozart\Glob\Iterator\GlobIterator;
 
+use function array_reverse;
 use function file_exists;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\type_string;
 use function in_array;
 use function is_dir;
 use function is_file;
@@ -90,8 +90,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
             return;
         }
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
+        foreach ((new GlobWalker())->walk($path) as $filePath) {
             $status = new FileStatus(path_real($filePath, $path->options()), is_file($filePath));
 
             if ($pathFilter->accept($status)) {
@@ -169,9 +168,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
         $deletedCount = 0;
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
-
+        foreach (array_reverse((new GlobWalker())->walk($path)) as $filePath) {
             if (is_dir($filePath)) {
                 $this->rmdir($filePath);
             } else {
@@ -194,15 +191,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
             return new FileStatus($path, is_file($path->path()));
         }
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
-            $filePath = type_string()->assert($filePath);
+        $filePath = (new GlobWalker())->walk($path)[0] ?? null;
 
-            if (file_exists($filePath)) {
-                return new FileStatus(path($filePath, $path->options()), true);
-            }
-        }
-
-        return null;
+        return $filePath === null ? null : new FileStatus(path($filePath, $path->options()), true);
     }
 
     public function supports(Path $path): bool

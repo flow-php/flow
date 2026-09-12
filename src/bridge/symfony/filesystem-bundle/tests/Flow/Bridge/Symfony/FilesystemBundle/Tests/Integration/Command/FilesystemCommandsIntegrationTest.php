@@ -119,6 +119,20 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         static::assertStringContainsString('5 B', $display);
     }
 
+    public function test_ls_recursive_lists_top_level_files_on_a_memory_filesystem(): void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve(null), 'memory://tree/top.txt', 'top');
+        $this->seed($resolver->resolve(null), 'memory://tree/nested/deep.txt', 'deep');
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://tree', '--recursive' => true]);
+
+        static::assertSame(Command::SUCCESS, $exit);
+        static::assertStringContainsString('top.txt', $tester->getDisplay());
+        static::assertStringContainsString('deep.txt', $tester->getDisplay());
+    }
+
     public function test_ls_does_not_prompt_when_limit_exactly_equals_page_size(): void
     {
         $resolver = $this->bootWithMultiFstab();

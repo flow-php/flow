@@ -5,16 +5,55 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use Flow\Filesystem\Bridge\Azure\Options;
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Context\GlobMatrixContext;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
 use function file_get_contents;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
+use function iterator_to_array;
+use function sort;
 use function str_repeat;
+use function strlen;
+use function substr;
 
 final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 {
+    public static function glob_matrix(): Generator
+    {
+        yield from GlobMatrixContext::patterns();
+    }
+
+    /**
+     * @param list<string> $expected
+     */
+    #[DataProvider('glob_matrix')]
+    public function test_list_agrees_with_the_shared_glob_matrix(string $pattern, array $expected): void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        foreach (GlobMatrixContext::files() as $file) {
+            $fs
+                ->writeTo(path('azure-blob://' . $file))
+                ->append($file)
+                ->close();
+        }
+
+        $listed = array_map(
+            static fn(FileStatus $status): string => substr($status->path->uri(), strlen('azure-blob://')),
+            iterator_to_array($fs->list(path('azure-blob://' . $pattern), new OnlyFiles()), false),
+        );
+        sort($listed);
+
+        static::assertSame($expected, $listed);
+    }
+
     public function test_appending_to_existing_blob(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));

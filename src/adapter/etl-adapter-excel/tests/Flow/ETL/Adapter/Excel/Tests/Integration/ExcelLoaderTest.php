@@ -11,6 +11,8 @@ use Flow\ETL\Adapter\Excel\ExcelWriter;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
@@ -24,12 +26,14 @@ use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -38,8 +42,11 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_uuid;
+use function iterator_to_array;
 
 final class ExcelLoaderTest extends FlowTestCase
 {
@@ -549,6 +556,31 @@ final class ExcelLoaderTest extends FlowTestCase
                 ['id' => 1, 'name' => 'Test'],
             ],
             $rows,
+        );
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        try {
+            df()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(
+                    to_excel(
+                        __DIR__ . '/var/staged/file.xlsx',
+                        new FailingCloseFilesystem(native_local_filesystem(), failingStreams: 2),
+                    )
+                        ->saveMode(overwrite())
+                        ->partitionBy(partition_by('p')),
+                )
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertStringStartsWith('Closing "', $failure->getMessage());
+        }
+
+        static::assertSame(
+            [],
+            iterator_to_array(native_local_filesystem()->list(path(__DIR__ . '/var/staged/**/*')), false),
         );
     }
 }

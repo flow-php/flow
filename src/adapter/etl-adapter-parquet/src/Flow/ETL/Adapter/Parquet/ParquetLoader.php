@@ -102,10 +102,12 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     public function discard(FlowContext $context): void
     {
-        $this->closeWriters();
-
-        $this->files?->abandon();
-        $this->files = null;
+        try {
+            $this->closeWriters();
+        } finally {
+            $this->files?->abandon();
+            $this->files = null;
+        }
     }
 
     public function destination(): Path
@@ -120,8 +122,8 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
         ]);
 
         try {
-            if ($this->schema === null && $this->inferredSchema === null) {
-                $this->inferSchema($rows);
+            if ($this->schema === null) {
+                $this->inferredSchema ??= $rows->schema()->makeNullable();
             }
 
             foreach ($this->router->route($rows) as [$partitions, $group]) {
@@ -180,24 +182,26 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     private function closeWriters(): void
     {
+        $failure = null;
+
         foreach ($this->writers as $uri => $writer) {
             unset($this->writers[$uri]);
-            $writer->close();
+
+            try {
+                $writer->close();
+            } catch (Throwable $closeFailure) {
+                $failure ??= $closeFailure;
+            }
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 
     private function encoder(): ParquetEncoder
     {
         return $this->encoder ??= new ParquetEncoder($this->converter->toParquet($this->schema()));
-    }
-
-    private function inferSchema(Rows $rows): void
-    {
-        if ($this->inferredSchema === null) {
-            $this->inferredSchema = $rows->schema()->makeNullable();
-        } else {
-            $this->inferredSchema = $this->inferredSchema->merge($rows->schema())->makeNullable();
-        }
     }
 
     private function openWriter(DestinationStream $stream): Writer
@@ -214,10 +218,8 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     private function schema(): Schema
     {
-        return (
-            $this->schema ?? $this->inferredSchema ?? throw new RuntimeException(
-                'Schema has not been inferred yet. Load at least one batch of rows first.',
-            )
-        );
+        return ($this->schema ?? $this->inferredSchema ?? throw new RuntimeException(
+            'Schema has not been inferred yet. Load at least one batch of rows first.',
+        ))->gracefulRemove(...$this->router->droppedNames());
     }
 }

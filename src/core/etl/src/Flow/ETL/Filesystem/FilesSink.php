@@ -11,6 +11,7 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\VoidStream;
 use Generator;
+use Throwable;
 
 use function array_key_exists;
 use function count;
@@ -45,12 +46,17 @@ final class FilesSink
         $created = $this->created;
         $this->streams = [];
         $this->created = [];
+        $failure = null;
 
         // every handle closes first: a format writer flushes its footer on close, and the file has to be gone
         // after that, not before
         foreach ($streams as $stream) {
             if ($stream->isOpen()) {
-                $stream->close();
+                try {
+                    $stream->close();
+                } catch (Throwable $closeFailure) {
+                    $failure ??= $closeFailure;
+                }
             }
         }
 
@@ -59,47 +65,49 @@ final class FilesSink
                 $this->filesystem->rm($path);
             }
         }
+
+        if ($failure !== null) {
+            throw $failure;
+        }
     }
 
     public function publish(): void
     {
-        $streams = $this->streams;
-        $this->streams = [];
-        $this->created = [];
-
-        foreach ($streams as $stream) {
+        // a stream leaves the registry only once it is published, so abandon() after a failure part way through
+        // still removes every file that never made it
+        foreach ($this->streams as $uri => $stream) {
             if ($stream->isOpen()) {
                 $stream->close();
             }
 
-            if ($this->saveMode !== SaveMode::Overwrite) {
-                continue;
-            }
+            if ($this->saveMode === SaveMode::Overwrite) {
+                if ($stream->path()->partitions()->count() || [] !== $this->destination->partitionPlaceholders()) {
+                    $writtenFiles = path(
+                        $stream->path()->parentDirectory()->uri()
+                            . '/'
+                            . str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->filename())
+                            . '*.'
+                            // @mago-ignore analysis:possibly-false-operand
+                            . $stream->path()->extension(),
+                        $stream->path()->options(),
+                    );
 
-            if ($stream->path()->partitions()->count() || [] !== $this->destination->partitionPlaceholders()) {
-                $writtenFiles = path(
-                    $stream->path()->parentDirectory()->uri()
-                        . '/'
-                        . str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->filename())
-                        . '*.'
-                        // @mago-ignore analysis:possibly-false-operand
-                        . $stream->path()->extension(),
-                    $stream->path()->options(),
-                );
+                    foreach ($this->filesystem->list($writtenFiles) as $stale) {
+                        if (str_contains($stale->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
+                            continue;
+                        }
 
-                foreach ($this->filesystem->list($writtenFiles) as $stale) {
-                    if (str_contains($stale->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
-                        continue;
+                        $this->filesystem->rm($stale->path);
                     }
-
-                    $this->filesystem->rm($stale->path);
                 }
+
+                $this->filesystem->mv($stream->path(), path(
+                    str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->uri()),
+                    $stream->path()->options(),
+                ));
             }
 
-            $this->filesystem->mv($stream->path(), path(
-                str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->uri()),
-                $stream->path()->options(),
-            ));
+            unset($this->streams[$uri], $this->created[$uri]);
         }
     }
 

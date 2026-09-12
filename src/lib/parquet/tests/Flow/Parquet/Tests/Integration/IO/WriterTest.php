@@ -6,7 +6,9 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
 use Flow\Parquet\Consts;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
@@ -26,6 +28,7 @@ use RuntimeException;
 
 use function array_map;
 use function Flow\ETL\DSL\generate_random_int;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
@@ -33,6 +36,31 @@ use function range;
 
 class WriterTest extends ParquetIntegrationTestCase
 {
+    #[DataProvider('engine_provider')]
+    public function test_a_close_that_throws_leaves_the_writer_closed(ParquetEngine $engine): void
+    {
+        $writer = new Writer(engine: $engine);
+        $writer->openForStream(
+            new FailingCloseDestinationStream(memory_filesystem()->writeTo(path('memory://file.parquet'))),
+            Schema::with(FlatColumn::int32('id')),
+        );
+        $writer->writeRow(['id' => 1]);
+
+        try {
+            $writer->close();
+            static::fail('close() was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://file.parquet" failed', $failure->getMessage());
+        }
+
+        static::assertFalse($writer->isOpen());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Writer is not open');
+
+        $writer->close();
+    }
+
     #[DataProvider('engine_provider')]
     public function test_closing_not_open_writer(ParquetEngine $engine): void
     {
@@ -77,6 +105,42 @@ class WriterTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Writer is already open');
 
         $writer->open($path, $schema);
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_writers_sharing_one_engine_write_independent_files(ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        $schema = Schema::with(FlatColumn::int32('id'));
+        $first = new Writer(engine: $engine);
+        $second = new Writer(engine: $engine);
+
+        $first->openForStream($memory->writeTo(path('memory://first.parquet')), $schema);
+        $second->openForStream($memory->writeTo(path('memory://second.parquet')), $schema);
+        $first->writeRow(['id' => 1]);
+        $second->writeRow(['id' => 2]);
+        $first->writeRow(['id' => 3]);
+        $first->close();
+        $second->close();
+
+        static::assertSame(
+            [['id' => 1], ['id' => 3]],
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->readStream($memory->readFrom(path('memory://first.parquet')))
+                    ->values(),
+                false,
+            ),
+        );
+        static::assertSame(
+            [['id' => 2]],
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->readStream($memory->readFrom(path('memory://second.parquet')))
+                    ->values(),
+                false,
+            ),
+        );
     }
 
     #[DataProvider('engine_provider')]

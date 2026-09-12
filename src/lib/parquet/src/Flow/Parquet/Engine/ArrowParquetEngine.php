@@ -18,6 +18,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFileWriter;
 use Generator;
 
 use function array_column;
@@ -27,20 +28,6 @@ use function extension_loaded;
 
 final class ArrowParquetEngine implements ParquetEngine
 {
-    private ?Writer $arrowWriter = null;
-
-    /**
-     * @var array<string, array<mixed>>
-     */
-    private array $batch = [];
-
-    private int $batchSize = 0;
-
-    /**
-     * @var array<string>
-     */
-    private array $colNames = [];
-
     public function __construct(
         private readonly Options $options = new Options(),
     ) {
@@ -63,40 +50,31 @@ final class ArrowParquetEngine implements ParquetEngine
         };
     }
 
-    public function closeWrite(): void
-    {
-        if ($this->arrowWriter === null) {
-            throw new RuntimeException('Writer is not open');
-        }
-
-        if ($this->batchSize > 0) {
-            $this->arrowWriter->writeBatch($this->batch);
-        }
-
-        $this->arrowWriter->close();
-        $this->arrowWriter = null;
-        $this->batch = [];
-        $this->batchSize = 0;
-        $this->colNames = [];
-    }
-
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ): void {
-        $adapter = new DestinationStreamAdapter($stream);
+    ): ParquetFileWriter {
         $extensionSchema = SchemaConverter::toExtension($schema);
-        $compressionStr = self::mapCompression($compression);
-        $extensionOptions = OptionsConverter::toExtension($options);
 
-        $this->arrowWriter = new Writer($adapter, $extensionSchema, $compressionStr, $extensionOptions);
+        /** @var list<string> $columnNames */
+        $columnNames = array_column($extensionSchema, 'name');
+        // the arrow Writer takes the stream by reference, so it has to be a variable
+        $adapter = new DestinationStreamAdapter($stream);
 
-        /** @var array<string> $colNames */
-        $colNames = array_column($extensionSchema, 'name');
-        $this->colNames = $colNames;
-        $this->resetBatch();
+        return new ArrowParquetFileWriter(
+            new Writer(
+                $adapter,
+                $extensionSchema,
+                self::mapCompression($compression),
+                OptionsConverter::toExtension($options),
+            ),
+            $stream,
+            $columnNames,
+            // write batching is an engine option, not a per-file one
+            $this->options->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+        );
     }
 
     /**
@@ -154,31 +132,6 @@ final class ArrowParquetEngine implements ParquetEngine
         }
     }
 
-    public function writeBatch(iterable $rows): void
-    {
-        foreach ($rows as $row) {
-            $this->writeRow($row);
-        }
-    }
-
-    public function writeRow(array $row): void
-    {
-        if ($this->arrowWriter === null) {
-            throw new RuntimeException('Writer is not open');
-        }
-
-        foreach ($this->colNames as $name) {
-            $this->batch[$name][] = $row[$name] ?? null;
-        }
-
-        $this->batchSize++;
-
-        if ($this->batchSize >= $this->options->getInt(Option::ARROW_WRITE_BATCH_SIZE)) {
-            $this->arrowWriter->writeBatch($this->batch);
-            $this->resetBatch();
-        }
-    }
-
     public function writeRows(
         DestinationStream $stream,
         Schema $schema,
@@ -186,23 +139,12 @@ final class ArrowParquetEngine implements ParquetEngine
         Options $options,
         iterable $rows,
     ): void {
-        $this->openForWrite($stream, $schema, $compression, $options);
+        $file = $this->openForWrite($stream, $schema, $compression, $options);
 
         try {
-            $this->writeBatch($rows);
+            $file->writeBatch($rows);
         } finally {
-            $this->closeWrite();
+            $file->close();
         }
-    }
-
-    private function resetBatch(): void
-    {
-        $this->batch = [];
-
-        foreach ($this->colNames as $name) {
-            $this->batch[$name] = [];
-        }
-
-        $this->batchSize = 0;
     }
 }

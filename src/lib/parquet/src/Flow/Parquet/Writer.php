@@ -19,7 +19,7 @@ use function Flow\Filesystem\DSL\path;
 
 final class Writer
 {
-    private bool $isOpen = false;
+    private ?ParquetFileWriter $file = null;
 
     public function __construct(
         private readonly Compressions $compression = Compressions::SNAPPY,
@@ -62,17 +62,18 @@ final class Writer
 
     public function close(): void
     {
-        if (!$this->isOpen()) {
-            throw new RuntimeException('Writer is not open');
-        }
+        $file = $this->file ?? throw new RuntimeException('Writer is not open');
 
-        $this->engine->closeWrite();
-        $this->isOpen = false;
+        try {
+            $file->close();
+        } finally {
+            $this->file = null;
+        }
     }
 
     public function isOpen(): bool
     {
-        return $this->isOpen;
+        return $this->file !== null;
     }
 
     public function open(string $path, Schema $schema): void
@@ -85,19 +86,17 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $this->engine->openForWrite(
+        $this->file = $this->engine->openForWrite(
             NativeLocalDestinationStream::openBlank(path($path)),
             $schema,
             $this->compression,
             $this->options,
         );
-        $this->isOpen = true;
     }
 
     public function openForStream(DestinationStream $stream, Schema $schema): void
     {
-        $this->engine->openForWrite($stream, $schema, $this->compression, $this->options);
-        $this->isOpen = true;
+        $this->file = $this->engine->openForWrite($stream, $schema, $this->compression, $this->options);
     }
 
     /**
@@ -123,7 +122,7 @@ final class Writer
      */
     public function writeBatch(iterable $rows): void
     {
-        $this->engine->writeBatch($rows);
+        ($this->file ?? throw new RuntimeException('Writer is not open'))->writeBatch($rows);
     }
 
     /**
@@ -131,7 +130,7 @@ final class Writer
      */
     public function writeRow(array $row): void
     {
-        $this->engine->writeRow($row);
+        ($this->file ?? throw new RuntimeException('Writer is not open'))->writeRow($row);
     }
 
     /**

@@ -58,6 +58,9 @@ final class RowGroupBuilder
         /** @var int<1, max> $interval */
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
 
+        // rows still buffered by addRow() came first - parquet identifies a row by its position
+        $this->flushBuffer();
+
         foreach (array_chunk($rows, $interval) as $chunk) {
             $flatColumnsData = $this->shredder->shred($this->schema, $chunk);
 
