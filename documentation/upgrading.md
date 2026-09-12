@@ -1440,6 +1440,15 @@ Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 | `withSeparator('\|\|')` / `withEnclosure('\|\|')` / `withEscape('ab')` - PHP 8.3: first byte used; PHP 8.4+: `ValueError` on read | throws `Flow\ETL\Exception\InvalidArgumentException` |
 | `withSeparator('')` / `withEnclosure('')` - PHP 8.3: `,` / `"` used; PHP 8.4+: `ValueError` on read            | throws `Flow\ETL\Exception\InvalidArgumentException` |
 
+### 100) `flow-php/etl` - `array_expand()` nested in an expression gives rows, and is refused outside `withEntry()`
+
+| Before                                                                                                  | After                                                                  |
+|---------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| `withEntry('s', concat(ref('id'), ref('tags')->expand()))` - one row, list JSON-encoded: `a["x","y"]`   | one row per element: `ax`, `ay`                                        |
+| `withEntry('v', ref('lists')->expand()->expand())` - one row per outer element, inner list JSON-encoded | throws `InvalidArgumentException` - expand one level per `withEntry()` |
+| `array_expand()` in `filter()`, `until()`, `duplicateRow()`, `aggregate()`, `over()`                    | throws `InvalidArgumentException` at `schema()` / `run()`              |
+| `array_expand()` in an `onEach()` body                                                                  | throws `InvalidArgumentException` when `onEach()` is called            |
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x

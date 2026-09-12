@@ -198,18 +198,18 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         static::assertNotSame(count($children), count($rebuilt->children()));
     }
 
-    public function test_exactly_55_of_the_134_declare_themselves_nullable(): void
+    public function test_exactly_55_of_the_135_declare_themselves_nullable(): void
     {
         [$nullable, $notNull, $unavailable] = ScalarFunctionFixtures::nullabilitySplit();
 
-        static::assertCount(134, ScalarFunctionClasses::declaring());
+        static::assertCount(135, ScalarFunctionClasses::declaring());
         static::assertCount(55, self::declared_nullable_classes());
         static::assertCount(
             55,
             [...$nullable, ...array_intersect($unavailable, self::declared_nullable_classes())],
             'nullable set drifted: ' . implode(', ', array_diff($nullable, self::declared_nullable_classes())),
         );
-        static::assertCount(79, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
+        static::assertCount(80, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
     }
 
     /**

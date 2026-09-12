@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 
 use function Flow\ETL\DSL\config;
@@ -211,5 +212,27 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
             rows(schema()),
             flow_context(config()),
         );
+    }
+
+    public function test_bind_refuses_an_expand_in_the_predicate(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new ScalarFunctionFilterTransformer(ref('tags')->expand()->equals(lit('x'))))->bind(
+            ListColumnsMother::schema(),
+        );
+    }
+
+    public function test_bind_refuses_a_root_expand_over_booleans(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new ScalarFunctionFilterTransformer(ref('flags')->expand()))->bind(ListColumnsMother::schema());
     }
 }

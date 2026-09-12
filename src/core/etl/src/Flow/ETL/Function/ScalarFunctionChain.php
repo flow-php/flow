@@ -321,6 +321,10 @@ trait ScalarFunctionChain
     /**
      * Expands each value into entry, if there are more than one value, multiple rows will be created.
      * Array keys are ignored, only values are used to create new rows.
+     * Nested in another function (structure(), concat(), ...) it still gives one row per element. Several
+     * expands in one expression are zipped to the longest list; a shorter one gives null, so its element
+     * type becomes nullable. It is refused inside another array_expand() and in filter(), until(),
+     * duplicateRow(), aggregate(), over() and onEach().
      *
      * Before:
      *   +--+-------------------+

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\WindowFunction;
@@ -12,6 +13,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -22,6 +24,7 @@ use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\following;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\preceding;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
@@ -37,6 +40,17 @@ use function Flow\Types\DSL\type_optional;
 
 final class WindowProcessorTest extends FlowTestCase
 {
+    public function test_bind_replaces_an_input_column_named_like_the_window_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('n'), int_schema('rank')),
+            (new WindowProcessor('rank', rank()->over(window()->orderBy(ref('n')))))->bind(schema(
+                int_schema('n'),
+                str_schema('rank'),
+            ))->output,
+        );
+    }
+
     public function test_bind_adds_the_window_function_column(): void
     {
         static::assertEquals(
@@ -450,5 +464,18 @@ final class WindowProcessorTest extends FlowTestCase
         static::assertCount(0, $batches[0]);
         static::assertSame(['value', 'row_number'], $batches[0]->schema()->references()->names());
         static::assertSame([1, 2], $values);
+    }
+
+    public function test_bind_refuses_an_expand_in_the_window_function(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'over() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new WindowProcessor(
+            's',
+            sum(ref('n'), ref('flags')->expand()->equals(lit(true)))->over(window()->partitionBy(ref('n'))),
+        ))->bind(ListColumnsMother::numberAndFlagsSchema());
     }
 }

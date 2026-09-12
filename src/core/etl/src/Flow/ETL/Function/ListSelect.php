@@ -16,6 +16,7 @@ use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\TypeWidener;
 
 use function array_key_exists;
 use function array_values;
@@ -92,7 +93,7 @@ final readonly class ListSelect implements ScalarFunction
             }
 
             $elements[] = $element instanceof MapType
-                ? structure_element($selected->name(), type_optional($element->value()))
+                ? structure_element($selected->name(), (new TypeWidener())->nullable($element->value()))
                 : structure_element($selected->name(), type_null());
         }
 

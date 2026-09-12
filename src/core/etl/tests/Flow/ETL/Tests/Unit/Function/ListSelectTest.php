@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 
 final class ListSelectTest extends FlowTestCase
@@ -30,6 +31,17 @@ final class ListSelectTest extends FlowTestCase
         );
 
         static::assertSame('?list<structure{field: ?integer}>', $resolved->returns()->toString());
+    }
+
+    public function test_selecting_from_a_list_of_maps_of_mixed_keeps_the_value_mixed(): void
+    {
+        /** @var ScalarFunction $resolved */
+        $resolved = (new ReferenceResolver())->resolve(
+            new ListSelect(ref('list'), 'field'),
+            schema(list_schema('list', type_list(type_map(type_string(), type_mixed())))),
+        );
+
+        static::assertSame('?list<structure{field: mixed}>', $resolved->returns()->toString());
     }
 
     public function test_selecting_from_a_list_of_scalars_declares_null_element_types(): void

@@ -8,9 +8,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\OnEach;
+use Flow\ETL\Function\OnEachElementSchema;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\Double\CountingReturnsFunction;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\flow_context;
@@ -30,6 +34,8 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function serialize;
+use function substr_count;
 
 final class OnEachTest extends FlowTestCase
 {
@@ -191,5 +197,42 @@ final class OnEachTest extends FlowTestCase
                 ]))),
             )
             ->returns();
+    }
+
+    #[DataProvider('bodies_holding_an_expand')]
+    public function test_an_expand_in_the_body_is_refused_when_the_expression_is_built(ScalarFunction $body): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'onEach() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        ref('lists')->onEach($body);
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function bodies_holding_an_expand(): Generator
+    {
+        yield 'at the root' => [ref('element')->expand()];
+        yield 'nested' => [ref('element')->expand()->equals(lit('x'))];
+    }
+
+    public function test_a_null_array_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('OnEach requires non-null array');
+
+        ref('tags')->onEach(ref('element'))->eval(row(['tags' => null]), flow_context());
+    }
+
+    public function test_with_children_keeps_the_element_schema(): void
+    {
+        $elementSchema = new OnEachElementSchema();
+        $rebuilt = (new OnEach(ref('a'), ref('element'), true, $elementSchema))->withChildren([ref('b')]);
+
+        // two stateless instances are equal, but serialize() names an instance it already wrote only by back-reference
+        static::assertSame(1, substr_count(serialize([$elementSchema, $rebuilt]), 'OnEachElementSchema'));
     }
 }

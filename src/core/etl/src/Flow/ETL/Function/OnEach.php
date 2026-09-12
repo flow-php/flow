@@ -34,6 +34,8 @@ final class OnEach implements ScalarFunction
         private readonly bool $preserveKeys = true,
         private readonly OnEachElementSchema $elementSchema = new OnEachElementSchema(),
     ) {
+        (new ExpandingFunctions())->refuse($function, 'onEach');
+
         $this->array = $array instanceof ScalarFunction ? $array : lit($array);
     }
 
@@ -54,7 +56,7 @@ final class OnEach implements ScalarFunction
     public function withChildren(array $children): static
     {
         /** @var list<ScalarFunction> $children */
-        return new self($children[0], $this->function, $this->preserveKeys);
+        return new self($children[0], $this->function, $this->preserveKeys, $this->elementSchema);
     }
 
     /**

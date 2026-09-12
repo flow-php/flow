@@ -9,6 +9,7 @@ use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Row;
 use Flow\ETL\Schema;
@@ -81,6 +82,7 @@ final readonly class Aggregators implements Countable, IteratorAggregate
             /** @var AggregatingFunction $bound an aggregate root is never a reference leaf */
             $bound = $resolver->resolve($aggregator, $schema);
             $resolver->assertResolved($bound, $schema);
+            (new ExpandingFunctions())->refuse($bound, 'aggregate');
             $resolved[] = $bound;
         }
 

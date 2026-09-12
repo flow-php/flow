@@ -38,6 +38,17 @@ final class UnpackedColumnsTest extends FlowTestCase
         );
     }
 
+    public function test_values_prefixes_declared_keys_drops_undeclared_and_nulls_absent(): void
+    {
+        static::assertSame(
+            ['id' => 1, 'u.a' => 1, 'u.b' => null],
+            (new UnpackedColumns())->values(['id' => 1], 'u.', schema(int_schema('a'), str_schema('b')), [
+                'a' => '1',
+                'c' => 'x',
+            ]),
+        );
+    }
+
     public function test_the_declaration_order_is_the_column_order(): void
     {
         static::assertSame(

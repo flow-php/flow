@@ -118,6 +118,7 @@ use Flow\ETL\Function\Size;
 use Flow\ETL\Function\Split;
 use Flow\ETL\Function\Sprintf;
 use Flow\ETL\Function\StringAggregate;
+use Flow\ETL\Function\Structure;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Function\Sum;
 use Flow\ETL\Function\ToDate;
@@ -598,10 +599,6 @@ function rows(Schema $schema, Row ...$row): Rows
 }
 
 /**
- * @param array<Row> $rows
- * @param array<Partition|string>|Partitions $partitions
- */
-/**
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -631,6 +628,18 @@ function ref(string $entry): UnresolvedReference
 function structure_ref(string $entry): StructureFunctions
 {
     return ref($entry)->structure();
+}
+
+/**
+ * Builds a structure from scalar functions: one element per key, in key order.
+ * An element is nullable when its function is; the structure itself never is.
+ *
+ * @param array<array-key, ScalarFunction> $elements
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function structure(array $elements): Structure
+{
+    return new Structure($elements);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -940,8 +949,7 @@ function call(ScalarFunction $callable, Type $return_type, array $parameters = [
  * | 1|    2|    3|     |     |     |
  * | 2|     |     |    4|    5|    6|
  * +--+-----+-----+-----+-----+-----+
- */
-/**
+ *
  * @param array<array-key, mixed>|ScalarFunction $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -953,6 +961,10 @@ function array_unpack(ScalarFunction|array $array, Schema $schema): ArrayUnpack
 /**
  * Expands each value into entry, if there are more than one value, multiple rows will be created.
  * Array keys are ignored, only values are used to create new rows.
+ * Nested in another function (structure(), concat(), ...) it still gives one row per element. Several
+ * expands in one expression are zipped to the longest list; a shorter one gives null, so its element
+ * type becomes nullable. It is refused inside another array_expand() and in filter(), until(),
+ * duplicateRow(), aggregate(), over() and onEach().
  *
  * Before:
  *   +--+-------------------+

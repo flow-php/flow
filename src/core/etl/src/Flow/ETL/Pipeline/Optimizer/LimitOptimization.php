@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Function\ScalarFunction\ExpandResults;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Processor;
@@ -95,7 +95,7 @@ final class LimitOptimization implements Optimization
     private function hasOnlyNonExpandingSteps(Pipeline $pipeline): bool
     {
         foreach ($pipeline->segments()->steps() as $step) {
-            if ($step instanceof ScalarFunctionTransformer && $step->function instanceof ExpandResults) {
+            if ($step instanceof ScalarFunctionTransformer && (new ExpandingFunctions())->in($step->function) !== []) {
                 return false;
             }
 

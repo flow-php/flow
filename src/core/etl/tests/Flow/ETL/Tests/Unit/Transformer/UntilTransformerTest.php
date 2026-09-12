@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\UntilTransformer;
 
 use function Flow\ETL\DSL\config;
@@ -144,5 +145,15 @@ final class UntilTransformerTest extends FlowTestCase
 
         static::assertInstanceOf(LimitReachedException::class, $thrown);
         static::assertSame([], $thrown->rows?->toArray());
+    }
+
+    public function test_bind_refuses_an_expand_in_the_predicate(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'until() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new UntilTransformer(ref('tags')->expand()->equals(lit('x'))))->bind(ListColumnsMother::schema());
     }
 }

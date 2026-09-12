@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
@@ -127,6 +128,7 @@ final class DuplicateRowTransformer implements Transformer
         $duplicated = $input;
 
         foreach ($this->entries as $entry) {
+            (new ExpandingFunctions())->refuse($entry->function, 'duplicateRow');
             $duplicated = (new ScalarFunctionTransformer($entry->name, $entry->function))->bind($duplicated)->output;
         }
 
@@ -169,6 +171,7 @@ final class DuplicateRowTransformer implements Transformer
         $resolver = new ReferenceResolver();
         $resolved = $resolver->resolve($this->condition, $input);
         $resolver->assertResolved($resolved, $input);
+        (new ExpandingFunctions())->refuse($resolved, 'duplicateRow');
 
         return $resolved;
     }

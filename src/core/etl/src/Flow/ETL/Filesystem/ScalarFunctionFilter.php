@@ -18,8 +18,10 @@ use function sprintf;
 
 final readonly class ScalarFunctionFilter implements Filter
 {
+    private ScalarFunction $resolved;
+
     public function __construct(
-        private ScalarFunction $function,
+        ScalarFunction $function,
         private Schema $partitions,
         private FlowContext $context,
     ) {
@@ -27,10 +29,10 @@ final readonly class ScalarFunctionFilter implements Filter
         // are both in hand - a filter reaching withPathFilter() any other way is gated too.
         // resolved() guards it: files() and from_path_partitions() declare no partition columns, so
         // their reference never resolves and returns() would throw instead of answering.
-        $resolved = (new ReferenceResolver())->resolve($function, $partitions);
+        $this->resolved = (new ReferenceResolver())->resolve($function, $partitions);
 
-        if ($resolved->resolved()) {
-            $resolved->returns();
+        if ($this->resolved->resolved()) {
+            $this->resolved->returns();
         }
     }
 
@@ -67,6 +69,6 @@ final readonly class ScalarFunctionFilter implements Filter
         }
 
         // @mago-ignore analysis:mixed-operand
-        return (bool) $this->function->eval(row($values), $this->context);
+        return (bool) $this->resolved->eval(row($values), $this->context);
     }
 }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer;
@@ -21,6 +22,8 @@ use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function count;
 use function Flow\ETL\Adapter\CSV\from_csv;
@@ -29,6 +32,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure;
 use function Flow\Filesystem\DSL\path_real;
 
 final class LimitOptimizationTest extends FlowTestCase
@@ -111,10 +115,11 @@ final class LimitOptimizationTest extends FlowTestCase
         static::assertNull($partitionedExtractor->pushedLimit());
     }
 
-    public function test_optimization_for_a_pipeline_with_expanding_expression_transformations(): void
+    #[DataProvider('expanding_expressions')]
+    public function test_optimization_for_a_pipeline_with_expanding_expression_transformations(ScalarFunction $function): void
     {
         $pipeline = new Pipeline(from_csv(path_real('file.csv')));
-        $pipeline->add(new ScalarFunctionTransformer('expanded', ref('data')->expand()));
+        $pipeline->add(new ScalarFunctionTransformer('expanded', $function));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
@@ -122,6 +127,15 @@ final class LimitOptimizationTest extends FlowTestCase
         static::assertInstanceOf(CSVExtractor::class, $extractor);
         static::assertNull($extractor->pushedLimit());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function expanding_expressions(): Generator
+    {
+        yield 'root expand' => [ref('data')->expand()];
+        yield 'nested expand' => [structure(['tag' => ref('data')->expand()])];
     }
 
     public function test_optimization_for_a_pipeline_with_expanding_transformations(): void
