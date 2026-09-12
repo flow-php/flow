@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-09-12
 
 ### Added
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - structure() scalar function** - [@norberttech](https://github.com/norberttech)
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - nested array_expand() gives one row per element, zipped to the longest list** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Every extractor describes its schema through schema() and withSchema()** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - infer_schema() infers a schema for untyped sources from a bounded sample** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - DataFrame::schema() answers from the plan through bind() without running the pipeline** - [@norberttech](https://github.com/norberttech)
@@ -42,6 +44,8 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - array_expand() refused in filter(), until(), duplicateRow(), aggregate(), over(), onEach() body and inside another array_expand()** - [@norberttech](https://github.com/norberttech)
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - limit push-down skipped for any step holding a nested array_expand()** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - A row is a name-keyed array under one Schema carried by Rows** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Rows rejects rows that do not match its schema** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Schemas mark a column nullable only when it can hold null** - [@norberttech](https://github.com/norberttech)
@@ -108,6 +112,9 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - list_select over maps of mixed no longer throws** - [@norberttech](https://github.com/norberttech)
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - partition filters evaluate the resolved function** - [@norberttech](https://github.com/norberttech)
+- [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - array_unpack() DSL reference description restored** - [@norberttech](https://github.com/norberttech)
 - [#2623](https://github.com/flow-php/flow/pull/2623) - **Ensure false return from uncompressToBuffer is bubbled up, not silently ignored (e.g. on malformed input)** - [@asgrim](https://github.com/asgrim)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Arithmetic result types come from the operands, not the values** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - sum() no longer turns a whole-number float sum into an int** - [@norberttech](https://github.com/norberttech)
