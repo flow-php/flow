@@ -4,14 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
+use Closure;
 use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ArrayDot\Path;
+use Flow\ArrayDot\Step\Key;
 use Flow\ArrayDot\Tests\Unit\Fixtures\Letters;
 use Flow\ArrayDot\Tests\Unit\Fixtures\Numbers;
+use Flow\ArrayDot\Tests\Unit\Fixtures\UnknownStep;
+use Flow\Types\Exception\InvalidTypeException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ArrayDot\array_dot_exists;
 use function Flow\ArrayDot\array_dot_get;
+use function Flow\ArrayDot\array_dot_get_bool;
+use function Flow\ArrayDot\array_dot_get_datetime;
+use function Flow\ArrayDot\array_dot_get_enum;
+use function Flow\ArrayDot\array_dot_get_float;
+use function Flow\ArrayDot\array_dot_get_int;
+use function Flow\ArrayDot\array_dot_get_string;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
@@ -20,6 +34,43 @@ use function Flow\Types\DSL\type_string;
 
 final class ArrayDotGetTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{Closure(Path|string): mixed, mixed}>
+     */
+    public static function deprecated_getters(): Generator
+    {
+        yield 'int' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_int(['v' => '1'], $path),
+            1,
+        ];
+        yield 'string' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_string(['v' => 1], $path),
+            '1',
+        ];
+        yield 'bool' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_bool(['v' => 1], $path),
+            true,
+        ];
+        yield 'float' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_float(['v' => '1.5'], $path),
+            1.5,
+        ];
+        yield 'datetime' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_datetime(['v' => '2020-01-01 00:00:00'], $path),
+            new DateTimeImmutable('2020-01-01 00:00:00'),
+        ];
+        yield 'enum' => [
+            // @mago-ignore analysis:deprecated-function
+            static fn(Path|string $path): mixed => array_dot_get_enum(['v' => 'A'], $path, Letters::class),
+            Letters::A,
+        ];
+    }
+
     public function test_accessing_array_scalar_value_by_path_multiple_asterix_paths(): void
     {
         static::assertSame(
@@ -349,6 +400,8 @@ final class ArrayDotGetTest extends TestCase
     public function test_accessing_not_nested_nullsafe_on_empty_array(): void
     {
         static::assertNull(array_dot_get([], '?@id'));
+        static::assertNull(array_dot_get([], '?*.x'));
+        static::assertTrue(array_dot_exists([], '?*.x'));
     }
 
     public function test_accessing_null_value_under_existing_path(): void
@@ -604,5 +657,91 @@ final class ArrayDotGetTest extends TestCase
                 ],
             ], 'array.0.{id,?name}'),
         );
+    }
+
+    public function test_escaped_dot_after_a_wildcard_reads_the_dotted_key(): void
+    {
+        static::assertSame([1, 2], array_dot_get(['x' => [['a.b' => 1], ['a.b' => 2]]], 'x.*.a\\.b'));
+    }
+
+    public function test_escaped_dot_after_a_wildcard_does_not_read_a_nested_key(): void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Path "a\\.b" does not exists in array');
+
+        array_dot_get(['x' => [['a' => ['b' => 9]]]], 'x.*.a\\.b');
+    }
+
+    public function test_multimatch_reads_keys_holding_escaped_characters(): void
+    {
+        static::assertSame(
+            ['a.b' => 1, 'c,d' => 2],
+            array_dot_get(['x' => ['a.b' => 1, 'c,d' => 2]], 'x.{a\\.b, c\\,d}'),
+        );
+    }
+
+    /**
+     * @param array<mixed> $array
+     */
+    #[TestWith([['a{b' => ['c' => 1]], 'a\\{b.c'])]
+    #[TestWith([['a{b' => 1], 'a{b'])]
+    #[TestWith([['?x' => 1], '\\?x'])]
+    #[TestWith([['a\\' => 1], 'a\\\\'])]
+    public function test_reads_keys_holding_grammar_characters(array $array, string $path): void
+    {
+        static::assertSame(1, array_dot_get($array, $path));
+    }
+
+    public function test_reads_through_a_path_object(): void
+    {
+        static::assertSame(1, array_dot_get(['a.b' => ['c' => 1]], new Path([new Key('a.b'), new Key('c')])));
+    }
+
+    /**
+     * @param array<mixed> $array
+     */
+    #[TestWith([['a' => null], '?a.b', 'Expected array under path, "?a", but got: NULL'])]
+    #[TestWith([['a' => ['b' => null]], 'a.?b.c', 'Expected array under path, "a.?b", but got: NULL'])]
+    public function test_expected_array_message_keeps_the_nullsafe_marker(
+        array $array,
+        string $path,
+        string $message,
+    ): void {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage($message);
+
+        array_dot_get($array, $path);
+    }
+
+    public function test_nullsafe_multimatch_on_an_empty_array_reads_nulls(): void
+    {
+        static::assertSame(['a' => null, 'b' => null], array_dot_get([], '{?a,?b}'));
+    }
+
+    public function test_nullsafe_multimatch_under_a_wildcard_reads_nulls_for_an_empty_element(): void
+    {
+        static::assertSame([['id' => null], ['id' => null]], array_dot_get([['name' => 'a'], []], '*.{?id}'));
+    }
+
+    public function test_multimatch_on_an_empty_array_names_the_missing_path(): void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Path "a" does not exists in array "array()".');
+
+        array_dot_get([], '{a}');
+    }
+
+    public function test_an_unknown_step_fails(): void
+    {
+        $this->expectException(InvalidTypeException::class);
+
+        array_dot_get(['a' => 1], new Path([new UnknownStep()]));
+    }
+
+    #[DataProvider('deprecated_getters')]
+    public function test_deprecated_getters_read_through_a_string_and_a_path(Closure $getter, mixed $expected): void
+    {
+        static::assertEquals($expected, $getter('v'));
+        static::assertEquals($expected, $getter(new Path([new Key('v')])));
     }
 }

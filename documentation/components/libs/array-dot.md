@@ -27,12 +27,13 @@ For detailed installation instructions, see the [installation page](/documentati
 ```php ignore
 <?php 
 
-array_dot_get(array $array, string $path) : mixed;
-array_dot_set(array $array, string $path, mixed $value) : mixed;
-array_dot_rename(array $array, string $path, string $newName) : mixed;
-array_dot_exists(array $array, string $path) : bool;
-array_dot_steps(string $path) : array;
+array_dot_get(array $array, Path|string $path, ?Type $type = null) : mixed;
+array_dot_set(array $array, Path|string $path, mixed $value) : array;
+array_dot_rename(array $array, Path|string $path, string $newName) : array;
+array_dot_exists(array $array, Path|string $path) : bool;
 ```
+
+`array_dot_steps(string $path)` is deprecated, use `Path::fromString($path)->steps`.
 
 ### Dot Notation - Basic Syntax
 
@@ -47,7 +48,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.bar.baz'); // 1000
+$value = array_dot_get($array, 'foo.bar.baz'); // 1000
 
 $array = array_dot_set([], 'foo.bar.baz', 1000); // ['foo' => ['bar' => ['baz' => 1000]]];
 ```
@@ -62,7 +63,7 @@ In above example `foo.bar.baz` is path which also supports integer keys. For exa
 
 - `?` - nullsafe
 - `*` - wildcard
-- `?*` - nullsafe wildcar
+- `?*` - nullsafe wildcard
 
 
 ### Dot Notation - Custom Syntax
@@ -74,6 +75,10 @@ In above example `foo.bar.baz` is path which also supports integer keys. For exa
 Supported in functions:
 
 - `array_dot_get`
+- `array_dot_exists`
+- `array_dot_rename` - an absent key is left as it is
+
+`array_dot_set` writes the key without the `?`.
 
 Dot notation is strict by default, which means that if any step of path is not present,
 function will throw exception.
@@ -91,8 +96,8 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.bar.nothing'); // InvalidPathException
-$value = array_dot_get('foo.bar.?nothing'); // null
+$value = array_dot_get($array, 'foo.bar.nothing'); // InvalidPathException
+$value = array_dot_get($array, 'foo.bar.?nothing'); // null
 ```
 
 Nullsafe does not need to be used with the last step of path.
@@ -108,7 +113,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.?bar.nothing'); // null
+$value = array_dot_get($array, 'foo.?bar.nothing'); // null
 ```
 
 #### Wildcard Operator - *
@@ -135,7 +140,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('users.*.id'); // [1, 2]
+$value = array_dot_get($array, 'users.*.id'); // [1, 2]
 ```
 
 #### Nullsafe Wildcard Operator - ?*
@@ -143,6 +148,7 @@ $value = array_dot_get('users.*.id'); // [1, 2]
 Supported in functions:
 
 - `array_dot_get`
+- `array_dot_rename` - elements without the key are left as they are
 
 Nullsafe Wildcard operator allows to access all paths in nested arrays for non symmetric
 collections.
@@ -162,7 +168,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('users.*.name'); // ['John']
+$value = array_dot_get($array, 'users.?*.name'); // ['John']
 ```
 
 #### Multipath Syntax - {}
@@ -192,5 +198,45 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('users.*.{id,?role}'); // [[1, null], [2, 'ADMIN']]
+$value = array_dot_get($array, 'users.*.{id,?role}'); // [['id' => 1, 'role' => null], ['id' => 2, 'role' => 'ADMIN']]
+```
+
+### Dot Notation - Escaping
+
+A backslash makes the next `\`, `.`, `?`, `*`, `,`, `{` or `}` part of the key. Before any other character the
+backslash stays in the key.
+
+```php
+<?php
+
+$array = ['a.b' => ['*' => 1], '?x' => 2, 'k,l' => 3];
+
+$value = array_dot_get($array, 'a\.b.\*'); // 1
+$value = array_dot_get($array, '\?x'); // 2
+$value = array_dot_get(['m' => $array], 'm.{\?x, k\,l}'); // ['?x' => 2, 'k,l' => 3]
+```
+
+### Path
+
+Every function accepts a `Flow\ArrayDot\Path` instead of a string. Build it from steps when the keys come from data,
+so they are never parsed:
+
+```php
+<?php
+
+use Flow\ArrayDot\Path;
+use Flow\ArrayDot\Step\Key;
+use Flow\ArrayDot\Step\Multimatch;
+use Flow\ArrayDot\Step\Wildcard;
+
+$path = new Path([new Key('users'), new Wildcard(), new Multimatch([
+    new Path([new Key('id')]),
+    new Path([new Key('first.name', nullsafe: true)]),
+])]);
+
+$value = array_dot_get(['users' => [['id' => 1, 'first.name' => 'John'], ['id' => 2]]], $path);
+// [['id' => 1, 'first.name' => 'John'], ['id' => 2, 'first.name' => null]]
+
+$path->toString(); // 'users.*.{id,?first\.name}'
+Path::fromString('users.*.{id,?first\.name}') == $path; // true
 ```

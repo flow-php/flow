@@ -1435,10 +1435,10 @@ Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 
 ### 99) `flow-php/etl-adapter-csv` - `withSeparator()`, `withEnclosure()` and `withEscape()` take a single byte
 
-| Before                                                                                                         | After                                                |
-|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| Before                                                                                                                            | After                                                |
+|-----------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
 | `withSeparator('\|\|')` / `withEnclosure('\|\|')` / `withEscape('ab')` - PHP 8.3: first byte used; PHP 8.4+: `ValueError` on read | throws `Flow\ETL\Exception\InvalidArgumentException` |
-| `withSeparator('')` / `withEnclosure('')` - PHP 8.3: `,` / `"` used; PHP 8.4+: `ValueError` on read            | throws `Flow\ETL\Exception\InvalidArgumentException` |
+| `withSeparator('')` / `withEnclosure('')` - PHP 8.3: `,` / `"` used; PHP 8.4+: `ValueError` on read                               | throws `Flow\ETL\Exception\InvalidArgumentException` |
 
 ### 100) `flow-php/etl` - `array_expand()` nested in an expression gives rows, and is refused outside `withEntry()`
 
@@ -1448,6 +1448,54 @@ Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 | `withEntry('v', ref('lists')->expand()->expand())` - one row per outer element, inner list JSON-encoded | throws `InvalidArgumentException` - expand one level per `withEntry()` |
 | `array_expand()` in `filter()`, `until()`, `duplicateRow()`, `aggregate()`, `over()`                    | throws `InvalidArgumentException` at `schema()` / `run()`              |
 | `array_expand()` in an `onEach()` body                                                                  | throws `InvalidArgumentException` when `onEach()` is called            |
+
+### 101) `flow-php/array-dot` - `\` escapes every path grammar character, `array_dot_steps()` deprecated
+
+| Before                                              | After                                         |
+|-----------------------------------------------------|-----------------------------------------------|
+| `\?x`, `a\*b`, `a\\` read keys `\?x`, `a\*b`, `a\\` | read keys `?x`, `a*b`, `a\`                   |
+| `?{a}` reads key `{a}`                              | throws `InvalidPathException` - `?\{a\}`      |
+| `x.*.a\.b` reads `a` -> `b` of each element         | reads key `a.b` of each element               |
+| `x.{a\.b,c}` result keys `a__ESCAPED_DOT__b`, `c`   | `a.b`, `c`                                    |
+| `x.{a?b}` result key `ab`                           | `a?b`                                         |
+| `array_dot_steps($path)`                            | deprecated - `Path::fromString($path)->steps` |
+
+### 102) `flow-php/array-dot` - `array_dot_set()` and `array_dot_rename()` change only the addressed key
+
+| Before                                                                                      | After                           |
+|---------------------------------------------------------------------------------------------|---------------------------------|
+| `array_dot_set(['a' => ['x' => 1]], 'a.y', 2)` -> `['a' => ['y' => 2]]`                     | `['a' => ['x' => 1, 'y' => 2]]` |
+| `array_dot_set([5 => 'a', 7 => 'b'], '5', 'c')` -> `['a', 'b', 'c']`                        | `[5 => 'c', 7 => 'b']`          |
+| `array_dot_set([], '\{a\}', 1)` / `'?a'` write keys `\{a\}` / `?a`                          | write keys `{a}` / `a`          |
+| `array_dot_set($array, 'x.*', $value)` throws                                               | sets every element of `x`       |
+| `array_dot_set($array, 'x.{a,b}', $value)` writes key `{a,b}`                               | throws `InvalidPathException`   |
+| `array_dot_rename(['{a}' => 1], '\{a\}', 'b')` -> warning, `['{a}' => 1, 'b' => null]`      | `['b' => 1]`                    |
+| `array_dot_rename(['a' => 1], '?missing', 'b')` -> warning, `['a' => 1, 'b' => null]`       | `['a' => 1]`                    |
+| `array_dot_rename($array, 'x.*', 'c')` / `'x.{a,b}'` -> warning, adds `c => null` under `x` | throws `InvalidPathException`   |
+| `array_dot_set(['x' => 5], 'x.*', 1)` throws `InvalidPathException`                         | `['x' => []]`                   |
+| `array_dot_set([], 'x.*', 1)` throws `InvalidPathException`                                 | `['x' => []]`                   |
+| `array_dot_rename(['a' => 1, 'b' => 2], 'a', 'a')` -> `['b' => 2]`                          | `['a' => 1, 'b' => 2]`          |
+
+### 103) `flow-php/etl` - `array_get_collection()` reads its keys as literal keys
+
+| Before                                       | After                             |
+|----------------------------------------------|-----------------------------------|
+| key `a.b` reads `a` -> `b`, result key `a_b` | reads key `a.b`, result key `a.b` |
+| key `k,l` throws `InvalidArgumentException`  | reads key `k,l`                   |
+
+### 104) `flow-php/etl` - `array_expand()` over a null list gives no rows
+
+| Before                                        | After                |
+|-----------------------------------------------|----------------------|
+| `null` list throws `InvalidArgumentException` | no rows for that row |
+
+### 105) `flow-php/array-dot`, `flow-php/etl` - a nullsafe multimatch over an empty array reads `null`
+
+| Before                                                                                                  | After                              |
+|---------------------------------------------------------------------------------------------------------|------------------------------------|
+| `array_dot_get([], '{?a}')` throws `InvalidPathException`                                               | `['a' => null]`                    |
+| `array_dot_get([], '{a}')` message `Path "{a}" does not exists ...`                                     | `Path "a" does not exists ...`     |
+| `array_get_collection(ref('c'), ['id'])` over `[['name' => 'a'], []]` throws `InvalidArgumentException` | `[['id' => null], ['id' => null]]` |
 
 ---
 

@@ -721,10 +721,30 @@ function when(mixed $condition, mixed $then, mixed $else = null): When
     return new When($condition, $then, $else);
 }
 
+/**
+ * Alias for `array_get`.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function structure_get(ScalarFunction $ref, string $path): ArrayGet
+{
+    return array_get($ref, $path);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_get(ScalarFunction $ref, string $path): ArrayGet
 {
     return new ArrayGet($ref, $path);
+}
+
+/**
+ * Alias for `array_get_collection`.
+ *
+ * @param array<array-key, mixed>|ScalarFunction $keys
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function structure_get_collection(ScalarFunction $ref, ScalarFunction|array $keys): ArrayGetCollection
+{
+    return array_get_collection($ref, $keys);
 }
 
 /**
@@ -734,6 +754,15 @@ function array_get(ScalarFunction $ref, string $path): ArrayGet
 function array_get_collection(ScalarFunction $ref, ScalarFunction|array $keys): ArrayGetCollection
 {
     return new ArrayGetCollection($ref, $keys);
+}
+
+/**
+ * Alias for `array_get_collection_first`.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function structure_get_collection_first(ScalarFunction $ref, string ...$keys): ArrayGetCollection
+{
+    return array_get_collection_first($ref, ...$keys);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]

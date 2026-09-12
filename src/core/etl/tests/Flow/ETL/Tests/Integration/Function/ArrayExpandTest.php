@@ -14,13 +14,18 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\structure;
+use function Flow\ETL\DSL\structure_get;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\to_memory;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ArrayExpandTest extends FlowTestCase
 {
@@ -137,5 +142,40 @@ final class ArrayExpandTest extends FlowTestCase
             ],
             $memory->dump(),
         );
+    }
+
+    public function test_expand_of_an_absent_optional_collection_gives_no_rows(): void
+    {
+        data_frame()
+            ->read(from_array(
+                [['id' => 1, 'b' => ['x' => [1, 2]]], ['id' => 2, 'b' => []]],
+                schema(
+                    int_schema('id'),
+                    structure_schema('b', type_structure([
+                        'x' => structure_element('x', type_list(type_integer()), optional: true),
+                    ])),
+                ),
+            ))
+            ->withEntry('item', array_expand(structure_get(ref('b'), '?x')))
+            ->drop('b')
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame([['id' => 1, 'item' => 1], ['id' => 1, 'item' => 2]], $memory->dump());
+    }
+
+    public function test_nested_expand_of_a_null_list_gives_no_rows(): void
+    {
+        data_frame()
+            ->read(from_array(
+                [['id' => 1, 'data' => [1, 2]], ['id' => 2, 'data' => null]],
+                schema(int_schema('id'), list_schema('data', type_list(type_integer()), nullable: true)),
+            ))
+            ->withEntry('item', optional(array_expand(ref('data'))))
+            ->drop('data')
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame([['id' => 1, 'item' => 1], ['id' => 1, 'item' => 2]], $memory->dump());
     }
 }
