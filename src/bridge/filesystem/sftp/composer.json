@@ -1,0 +1,43 @@
+{
+    "name": "flow-php/filesystem-sftp-bridge",
+    "type": "library",
+    "description": "PHP ETL - Flow Filesystem SFTP Bridge",
+    "keywords": [
+        "filesystem",
+        "sftp",
+        "ssh",
+        "remote",
+        "stream",
+        "read",
+        "write",
+        "storage"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/filesystem": "self.version",
+        "flow-php/types": "self.version",
+        "phpseclib/phpseclib": "^3.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Filesystem/Bridge/SFTP/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

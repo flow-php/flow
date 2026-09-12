@@ -101,6 +101,12 @@
             <directory>src/bridge/filesystem/async-aws/tests/Flow/Filesystem/Bridge/AsyncAWS/Tests/Integration
             </directory>
         </testsuite>
+        <testsuite name="bridge-filesystem-sftp-unit">
+            <directory>src/bridge/filesystem/sftp/tests/Flow/Filesystem/Bridge/SFTP/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-filesystem-sftp-integration">
+            <directory>src/bridge/filesystem/sftp/tests/Flow/Filesystem/Bridge/SFTP/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-monolog-http-unit">
             <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
         </testsuite>
@@ -320,6 +326,7 @@
             <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
             <file>src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php</file>
             <file>src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php</file>
+            <file>src/bridge/filesystem/sftp/src/Flow/Filesystem/Bridge/SFTP/DSL/functions.php</file>
             <file>src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php</file>
             <file>src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php</file>
             <file>src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php</file>

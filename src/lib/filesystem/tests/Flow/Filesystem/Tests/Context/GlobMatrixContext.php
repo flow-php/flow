@@ -54,5 +54,9 @@ final class GlobMatrixContext
         yield 'question mark never crosses a directory' => ['data/date=2026-09-01?one.parquet', []];
         yield 'partition placeholder' => ['data/date={date}/one.parquet', ['data/date=2026-09-01/one.parquet']];
         yield 'double star glued to a name stays in one directory' => ['data/x**/*.parquet', []];
+        yield 'repeated separators address one path' => [
+            'data//*.parquet',
+            ['data/.hidden.parquet', 'data/flat.parquet'],
+        ];
     }
 }
