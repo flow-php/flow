@@ -67,6 +67,11 @@ final class GlobPatternTest extends TestCase
         yield ['/data/[à-é].csv', '/data/è.csv', true];
         yield ['/data/?.csv', "/data/\xff.csv", true];
         yield ["/data/\xff?.csv", "/data/\xffa.csv", true];
+        yield ['/data//*.csv', '/data/x.csv', true];
+        yield ['/data/*//x.csv', '/data/a/x.csv', true];
+        yield ['/data/*.csv', '/data//x.csv', true];
+        yield ['/data//**/x.csv', '/data/a/b/x.csv', true];
+        yield ['/data//*.csv', '/data/a/x.csv', false];
     }
 
     #[DataProvider('patterns')]
