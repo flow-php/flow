@@ -8,6 +8,8 @@ use DOMDocument;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 
 use function file_exists;
 use function file_get_contents;
@@ -31,8 +33,10 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_json;
+use function iterator_to_array;
 use function unlink;
 
 final class JsonTest extends FlowTestCase
@@ -307,5 +311,25 @@ final class JsonTest extends FlowTestCase
         if (file_exists($path)) {
             unlink($path);
         }
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        try {
+            df()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(to_json(
+                    path('memory://var/staged/file.json'),
+                    filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
+                )->partitionBy(partition_by('p')))
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://var/staged/p=a/file.json" failed', $failure->getMessage());
+        }
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/staged/**/*')), false));
     }
 }

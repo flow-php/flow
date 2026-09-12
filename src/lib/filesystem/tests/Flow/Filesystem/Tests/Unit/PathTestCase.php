@@ -56,6 +56,10 @@ abstract class PathTestCase extends TestCase
         yield ['/nested/folder/[a]*/file.csv', '/nested/folder/ab/file.csv', true];
         yield ['/nested/folder/**/file.csv', '/nested/folder/any/nested/file.csv', true];
         yield ['/nested/folder/**/fil?.csv', '/nested/folder/any/nested/file.csv', true];
+        yield ['/nested/folder/**/file.csv', '/nested/folder/file.csv', true];
+        yield ['/nested/folder/**.csv', '/nested/folder/any/file.csv', false];
+        yield ['/nested/folder/[!a]*.csv', '/nested/folder/b.csv', true];
+        yield ['/nested/folder/[a-c].csv', '/nested/folder/b.csv', true];
     }
 
     /**

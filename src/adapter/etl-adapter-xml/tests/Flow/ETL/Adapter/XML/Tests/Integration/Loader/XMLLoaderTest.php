@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration\Loader;
 
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 
 use function file_exists;
 use function file_get_contents;
@@ -20,6 +22,9 @@ use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class XMLLoaderTest extends FlowIntegrationTestCase
 {
@@ -132,5 +137,25 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             <row id="2"><name>Jane</name><address id="2"><city>Los Angeles</city><street>Hollywood Boulevard</street></address></row>
             </rows>
             XML, $content);
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        try {
+            df()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(to_xml(
+                    path('memory://var/staged/file.xml'),
+                    filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
+                )->partitionBy(partition_by('p')))
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://var/staged/p=a/file.xml" failed', $failure->getMessage());
+        }
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/staged/**/*')), false));
     }
 }

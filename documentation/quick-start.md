@@ -67,7 +67,7 @@ data_frame()
 
 In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\CSVExtractor` class.
 
-All file-based extractors accept [glob path patterns](https://github.com/webmozarts/glob), allowing you to read multiple files at once.
+All file-based extractors accept [glob path patterns](/documentation/components/libs/filesystem.md#glob-patterns), allowing you to read multiple files at once.
 
 ```php
 data_frame()

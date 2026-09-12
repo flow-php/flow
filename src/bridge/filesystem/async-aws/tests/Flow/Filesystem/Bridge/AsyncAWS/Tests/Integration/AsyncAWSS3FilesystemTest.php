@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
 use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Context\GlobMatrixContext;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function file_get_contents;
@@ -12,10 +16,42 @@ use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
+use function sort;
 use function str_repeat;
+use function strlen;
+use function substr;
 
 final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
 {
+    public static function glob_matrix(): Generator
+    {
+        yield from GlobMatrixContext::patterns();
+    }
+
+    /**
+     * @param list<string> $expected
+     */
+    #[DataProvider('glob_matrix')]
+    public function test_list_agrees_with_the_shared_glob_matrix(string $pattern, array $expected): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+
+        foreach (GlobMatrixContext::files() as $file) {
+            $fs
+                ->writeTo(path('aws-s3://' . $file))
+                ->append($file)
+                ->close();
+        }
+
+        $listed = array_map(
+            static fn(FileStatus $status): string => substr($status->path->uri(), strlen('aws-s3://')),
+            iterator_to_array($fs->list(path('aws-s3://' . $pattern), new OnlyFiles()), false),
+        );
+        sort($listed);
+
+        static::assertSame($expected, $listed);
+    }
+
     public function test_appending_to_existing_5mb_blob(): void
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());

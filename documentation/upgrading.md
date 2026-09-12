@@ -1497,6 +1497,40 @@ Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 | `array_dot_get([], '{a}')` message `Path "{a}" does not exists ...`                                     | `Path "a" does not exists ...`     |
 | `array_get_collection(ref('c'), ['id'])` over `[['name' => 'a'], []]` throws `InvalidArgumentException` | `[['id' => null], ['id' => null]]` |
 
+### 106) `flow-php/filesystem` - every filesystem matches glob patterns the same way
+
+Files: `data/flat.parquet`, `data/.hidden.parquet`, `data/.dir/x.parquet`, `data/date=2026-09-01/one.parquet`,
+`data/id=1/date=2026-09-01/two.parquet`
+
+| pattern                 | local, before | memory / S3 / Azure, before | every filesystem, after           |
+|-------------------------|---------------|-----------------------------|-----------------------------------|
+| `data/**.parquet`       | `flat`        | all five                    | `.hidden`, `flat`                 |
+| `data/**/*.parquet`     | all five      | `.dir/x`, `one`, `two`      | all five                          |
+| `data/**`               | `flat`        | all five                    | all five                          |
+| `data/*.parquet`        | `flat`        | `.hidden`, `flat`           | `.hidden`, `flat`                 |
+| `data/*/*.parquet`      | `one`         | `.dir/x`, `one`             | `.dir/x`, `one`                   |
+| `data/**/[!f]*.parquet` | `flat`        | none                        | `.dir/x`, `.hidden`, `one`, `two` |
+| `data/[a-g]*.parquet`   | `flat`        | none                        | `flat`                            |
+
+Recurse with `data/**/*.parquet`, not `data/**.parquet`. `webmozart/glob` is no longer installed with
+`flow-php/filesystem` or `flow-php/etl`.
+
+### 107) `flow-php/parquet` - `ParquetEngine::openForWrite()` returns a `ParquetFileWriter`
+
+| Before                                                                                                | After                                                                                                |
+|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `$engine->openForWrite($stream, $schema, $c, $o); $engine->writeBatch($rows); $engine->closeWrite();` | `$file = $engine->openForWrite($stream, $schema, $c, $o); $file->writeBatch($rows); $file->close();` |
+| `ParquetEngine::closeWrite()`, `writeBatch()`, `writeRow()`                                           | removed - on `ParquetFileWriter`                                                                     |
+| two `Writer`s sharing one engine overwrote each other                                                 | every `openForWrite()` returns an independent writer                                                 |
+| `ArrowParquetEngine` left the destination stream open                                                 | `ParquetFileWriter::close()` closes it on every engine                                               |
+
+### 108) `flow-php/etl-adapter-parquet` - path-only partition columns leave the file body
+
+| Before                                                                            | After                                                                                                |
+|-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `partitionBy(partition_by('date'))` - file body carries an all-null `date` column | file body without `date`                                                                             |
+| `from_parquet()` types `date` from that body column, e.g. `datetime`              | `string` - declare it: `from_parquet($path)->partitionTypes(partition_types(date: type_datetime()))` |
+
 ---
 
 ## Upgrading from 0.42.x to 0.43.x

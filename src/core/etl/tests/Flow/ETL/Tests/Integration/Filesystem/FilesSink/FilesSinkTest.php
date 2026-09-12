@@ -6,12 +6,17 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesSink;
 
 use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
+use Generator;
 use Override;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function file_get_contents;
 use function Flow\ETL\DSL\exception_if_exists;
+use function Flow\Filesystem\DSL\partition;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\stdout_filesystem;
 use function iterator_to_array;
@@ -23,6 +28,66 @@ final class FilesSinkTest extends FilesSinkTestCase
     {
         parent::tearDown();
         $this->cleanFiles();
+    }
+
+    public static function save_modes(): Generator
+    {
+        yield 'overwrite' => [SaveMode::Overwrite];
+        yield 'exception if exists' => [SaveMode::ExceptionIfExists];
+        yield 'append' => [SaveMode::Append];
+    }
+
+    #[DataProvider('save_modes')]
+    public function test_abandon_after_a_publish_that_failed_part_way_removes_only_what_was_not_published(SaveMode $saveMode): void
+    {
+        $this->setupFiles([__FUNCTION__ => []]);
+
+        $files = new FilesSink(
+            new FailingCloseFilesystem($this->fs, healthyStreams: 1),
+            $this->getPath(__FUNCTION__ . '/file.txt'),
+            $saveMode,
+        );
+        $files->writeTo([partition('p', 'a')])->append('a');
+        $b = $files->writeTo([partition('p', 'b')]);
+        $b->append('b');
+
+        try {
+            $files->publish();
+            static::fail('publish() was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "' . $b->path()->uri() . '" failed', $failure->getMessage());
+        }
+
+        $files->abandon();
+
+        static::assertSame('a', file_get_contents($this->getPath(__FUNCTION__ . '/p=a/file.txt')->path()));
+        static::assertFileDoesNotExist($this->getPath(__FUNCTION__ . '/p=b/file.txt')->path());
+        static::assertFileDoesNotExist($b->path()->path());
+    }
+
+    public function test_abandon_removes_every_file_even_when_a_stream_fails_to_close(): void
+    {
+        $this->setupFiles([__FUNCTION__ => []]);
+
+        $files = new FilesSink(
+            new FailingCloseFilesystem($this->fs, failingStreams: 2),
+            $this->getPath(__FUNCTION__ . '/file.txt'),
+            SaveMode::Overwrite,
+        );
+        $a = $files->writeTo([partition('p', 'a')]);
+        $a->append('a');
+        $b = $files->writeTo([partition('p', 'b')]);
+        $b->append('b');
+
+        try {
+            $files->abandon();
+            static::fail('abandon() was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "' . $a->path()->uri() . '" failed', $failure->getMessage());
+        }
+
+        static::assertFileDoesNotExist($a->path()->path());
+        static::assertFileDoesNotExist($b->path()->path());
     }
 
     public function test_abandon_leaves_the_destination_untouched(): void
@@ -133,8 +198,7 @@ final class FilesSinkTest extends FilesSinkTestCase
     {
         $this->setupFiles([__FUNCTION__ => []]);
 
-        $file = $this->getPath(__FUNCTION__ . '/file.txt');
-        $files = $this->files($file);
+        $files = $this->files($this->getPath(__FUNCTION__ . '/file.txt'));
 
         static::assertFalse($files->touched());
 
@@ -151,8 +215,7 @@ final class FilesSinkTest extends FilesSinkTestCase
     {
         $this->setupFiles([__FUNCTION__ => []]);
 
-        $file = $this->getPath(__FUNCTION__ . '/file.txt');
-        $files = $this->files($file);
+        $files = $this->files($this->getPath(__FUNCTION__ . '/file.txt'));
         $stream = $files->writeTo();
 
         static::assertSame([$stream], iterator_to_array($files->openStreams(), false));

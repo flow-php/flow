@@ -252,6 +252,25 @@ final readonly class Segment
                 // one sink failing to end must not strand the others
                 if ($completed) {
                     $ending[] = $failure;
+
+                    // a closure() that threw published at most part of its output; the rest is abandoned as on
+                    // a failed run
+                    foreach ((new LoaderTree())->flatten($loader) as $node) {
+                        if (!$node instanceof Discardable) {
+                            continue;
+                        }
+
+                        try {
+                            $node->discard($context);
+                        } catch (Throwable $discardFailure) {
+                            $context
+                                ->telemetry()
+                                ->logger()
+                                ->error('Loader failed to discard after its closure failed.', [
+                                    'exception' => $discardFailure,
+                                ]);
+                        }
+                    }
                 } else {
                     $context
                         ->telemetry()

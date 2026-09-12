@@ -48,8 +48,7 @@
         "symfony/http-kernel": "^6.4 || ^7.4 || ^8.0",
         "symfony/polyfill-mbstring": "^1.33",
         "symfony/string": "^6.4 || ^7.4 || ^8.0",
-        "symfony/uid": "^6.4 || ^7.4 || ^8.0",
-        "webmozart/glob": "^3.0 || ^4.0"
+        "symfony/uid": "^6.4 || ^7.4 || ^8.0"
     },
     "require-dev": {
         "cmsig/seal-elasticsearch-adapter": "^0.12",

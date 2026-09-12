@@ -404,6 +404,22 @@ final class RowGroupBuilderTest extends TestCase
         }
     }
 
+    public function test_rows_added_one_by_one_stay_before_a_later_batch(): void
+    {
+        $schema = Schema::with(FlatColumn::int32('id'));
+        $options = new Options();
+        $compression = Compressions::UNCOMPRESSED;
+        $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $mixed = new RowGroupBuilder($schema, $compression, $options, $shredder);
+        $batched = new RowGroupBuilder($schema, $compression, $options, $shredder);
+
+        $mixed->addRow(['id' => 1]);
+        $mixed->addRows([['id' => 2]]);
+        $batched->addRows([['id' => 1], ['id' => 2]]);
+
+        static::assertSame($batched->flush(0)->binaryBuffer, $mixed->flush(0)->binaryBuffer);
+    }
+
     public function test_rows_count_initially_zero(): void
     {
         $schema = Schema::with(FlatColumn::int32('id'));

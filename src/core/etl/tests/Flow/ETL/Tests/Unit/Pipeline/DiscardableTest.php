@@ -6,12 +6,12 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Loader;
+use Flow\ETL\Tests\Context\LoaderEndingContext;
+use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CallbackTransformation;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\RecordingSink;
-use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowTestCase;
-use Throwable;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
@@ -57,17 +57,72 @@ final class DiscardableTest extends FlowTestCase
     {
         $sink = new RecordingSink();
 
-        $this->failedRun($sink);
+        LoaderEndingContext::failedRun($sink);
 
         static::assertSame(1, $sink->discarded);
         static::assertSame(0, $sink->closed);
+    }
+
+    public function test_a_discard_that_throws_after_a_failed_closure_does_not_replace_the_closure_failure(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $closureFailure = new RuntimeException('closure failed');
+        $sink = new ClosureThrowingLoader($closureFailure, new RuntimeException('discard failed'));
+
+        static::assertSame($closureFailure, LoaderEndingContext::thrownByRun($sink, $telemetry->config));
+        static::assertSame(1, $sink->discarded);
+        static::assertCount(
+            1,
+            $telemetry->logs->entriesContaining('Loader failed to discard after its closure failed.'),
+        );
+    }
+
+    public function test_a_discard_that_throws_after_a_failed_run_is_logged(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $sink = new ClosureThrowingLoader(
+            new RuntimeException('closure failed'),
+            new RuntimeException('discard failed'),
+        );
+
+        LoaderEndingContext::failedRun($sink, $telemetry->config);
+
+        static::assertSame(1, $sink->discarded);
+        static::assertCount(1, $telemetry->logs->entriesContaining('Loader failed to end after a failed run.'));
+    }
+
+    public function test_a_sink_wrapped_in_a_retrying_loader_is_discarded_when_its_closure_throws(): void
+    {
+        $closureFailure = new RuntimeException('closure failed');
+        $sink = new ClosureThrowingLoader($closureFailure);
+
+        static::assertSame($closureFailure, LoaderEndingContext::thrownByRun(write_with_retries($sink)));
+        static::assertSame(1, $sink->discarded);
+    }
+
+    public function test_a_sink_whose_closure_throws_is_discarded_and_the_failure_rethrown(): void
+    {
+        $closureFailure = new RuntimeException('closure failed');
+        $sink = new ClosureThrowingLoader($closureFailure);
+
+        static::assertSame($closureFailure, LoaderEndingContext::thrownByRun($sink));
+        static::assertSame(1, $sink->discarded);
+    }
+
+    public function test_a_sink_wrapped_in_a_branching_loader_is_discarded_when_its_closure_throws(): void
+    {
+        $closureFailure = new RuntimeException('closure failed');
+        $sink = new ClosureThrowingLoader($closureFailure);
+
+        static::assertSame($closureFailure, LoaderEndingContext::thrownByRun(to_branch(ref('id')->isNotNull(), $sink)));
+        static::assertSame(1, $sink->discarded);
     }
 
     public function test_a_sink_wrapped_in_a_branching_loader_is_discarded(): void
     {
         $sink = new RecordingSink();
 
-        $this->failedRun(to_branch(ref('id')->isNotNull(), $sink));
+        LoaderEndingContext::failedRun(to_branch(ref('id')->isNotNull(), $sink));
 
         static::assertSame(1, $sink->discarded);
         static::assertSame(0, $sink->closed);
@@ -77,7 +132,7 @@ final class DiscardableTest extends FlowTestCase
     {
         $sink = new RecordingSink();
 
-        $this->failedRun(write_with_retries($sink));
+        LoaderEndingContext::failedRun(write_with_retries($sink));
 
         static::assertSame(1, $sink->discarded);
         static::assertSame(0, $sink->closed);
@@ -87,7 +142,7 @@ final class DiscardableTest extends FlowTestCase
     {
         $sink = new RecordingSink();
 
-        $this->failedRun(to_transformation(
+        LoaderEndingContext::failedRun(to_transformation(
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df),
             $sink,
         ));
@@ -100,22 +155,8 @@ final class DiscardableTest extends FlowTestCase
     {
         $sink = new RecordingSink();
 
-        $this->failedRun(write_with_retries(to_branch(ref('id')->isNotNull(), $sink)));
+        LoaderEndingContext::failedRun(write_with_retries(to_branch(ref('id')->isNotNull(), $sink)));
 
         static::assertSame(1, $sink->discarded);
-    }
-
-    protected function failedRun(Loader $loader): void
-    {
-        try {
-            data_frame()
-                ->read(from_array([['id' => 1], ['id' => 2]]))
-                ->batchSize(1)
-                ->with(new ThrowWhenRowMatches('id', 2, new RuntimeException('boom')))
-                ->write($loader)
-                ->run();
-        } catch (Throwable) {
-            // the run is expected to fail; what matters is which ending the sink was given
-        }
     }
 }

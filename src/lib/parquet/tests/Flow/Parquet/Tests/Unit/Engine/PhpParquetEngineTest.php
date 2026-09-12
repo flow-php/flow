@@ -5,38 +5,25 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Engine;
 
 use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Engine\PhpParquetFileWriter;
+use Flow\Parquet\Tests\Mother\ParquetFileWriterMother;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 
 final class PhpParquetEngineTest extends TestCase
 {
-    public function test_close_write_throws_when_writer_not_open(): void
+    public function test_open_for_write_returns_a_new_writer_for_every_call(): void
     {
         $engine = new PhpParquetEngine();
+        $memory = memory_filesystem();
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Writer is not open');
+        $first = ParquetFileWriterMother::open($engine, $memory->writeTo(path('memory://first.parquet')));
+        $second = ParquetFileWriterMother::open($engine, $memory->writeTo(path('memory://second.parquet')));
 
-        $engine->closeWrite();
-    }
-
-    public function test_write_batch_throws_when_writer_not_open(): void
-    {
-        $engine = new PhpParquetEngine();
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Writer is not open');
-
-        $engine->writeBatch([['col' => 'value']]);
-    }
-
-    public function test_write_row_throws_when_writer_not_open(): void
-    {
-        $engine = new PhpParquetEngine();
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Writer is not open');
-
-        $engine->writeRow(['col' => 'value']);
+        static::assertInstanceOf(PhpParquetFileWriter::class, $first);
+        static::assertInstanceOf(PhpParquetFileWriter::class, $second);
+        static::assertNotSame($first, $second);
     }
 }

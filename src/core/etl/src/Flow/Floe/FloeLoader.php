@@ -97,10 +97,12 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function discard(FlowContext $context): void
     {
-        $this->closeWriters();
-
-        $this->files?->abandon();
-        $this->files = null;
+        try {
+            $this->closeWriters();
+        } finally {
+            $this->files?->abandon();
+            $this->files = null;
+        }
     }
 
     public function destination(): Path
@@ -137,9 +139,20 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     private function closeWriters(): void
     {
+        $failure = null;
+
         foreach ($this->writers as $uri => $writer) {
             unset($this->writers[$uri]);
-            $writer->close();
+
+            try {
+                $writer->close();
+            } catch (Throwable $closeFailure) {
+                $failure ??= $closeFailure;
+            }
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 

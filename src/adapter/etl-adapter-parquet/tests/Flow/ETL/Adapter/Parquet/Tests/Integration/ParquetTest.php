@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use DateTimeImmutable;
+use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
+use Flow\ETL\Tests\Context\LoaderEndingContext;
+use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\FakeRandomOrdersExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\SizeUnits;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
@@ -23,14 +29,19 @@ use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\partition_types;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -40,6 +51,7 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -47,6 +59,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_uuid;
+use function iterator_to_array;
 use function unlink;
 
 final class ParquetTest extends FlowTestCase
@@ -362,5 +375,175 @@ final class ParquetTest extends FlowTestCase
         if (file_exists($path)) {
             unlink($path);
         }
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+        $telemetry = new MemoryTelemetryContext();
+
+        try {
+            data_frame($telemetry->config)
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(to_parquet(
+                    path('memory://var/staged/file.parquet'),
+                    filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
+                )->partitionBy(partition_by('p')))
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://var/staged/p=a/file.parquet" failed', $failure->getMessage());
+        }
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/staged/**/*')), false));
+        static::assertSame([], $telemetry->logs->entriesContaining('failed to discard'));
+    }
+
+    public function test_a_close_that_fails_while_discarding_a_failed_run_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        LoaderEndingContext::failedRun(to_parquet(
+            path('memory://var/failed/file.parquet'),
+            filesystem: new FailingCloseFilesystem($memory),
+        )->partitionBy(partition_by('id')));
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/failed/**/*')), false));
+    }
+
+    public function test_a_path_only_partition_column_is_left_out_of_a_declared_file_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([
+                ['id' => 'a', 'date' => new DateTimeImmutable('2026-09-01'), 'clicks' => 1],
+                ['id' => 'b', 'date' => new DateTimeImmutable('2026-09-02'), 'clicks' => 2],
+            ]))
+            ->write(to_parquet(
+                path('memory://var/declared/file.parquet'),
+                schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
+                filesystem: $memory,
+            )->partitionBy(partition_by('date')))
+            ->run();
+
+        static::assertSame(
+            ['id', 'clicks'],
+            ParquetFilesContext::columnNames($memory, 'memory://var/declared/date=2026-09-01/file.parquet'),
+        );
+        static::assertEquals(
+            [
+                ['id' => 'a', 'clicks' => 1, 'date' => new DateTimeImmutable('2026-09-01 00:00:00 UTC')],
+                ['id' => 'b', 'clicks' => 2, 'date' => new DateTimeImmutable('2026-09-02 00:00:00 UTC')],
+            ],
+            data_frame()
+                ->read(from_parquet(path('memory://var/declared/**/*.parquet'), filesystem: $memory)->partitionTypes(
+                    partition_types(date: type_datetime()),
+                ))
+                ->sortBy(ref('id'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_path_only_partition_column_is_left_out_of_an_inferred_file_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([
+                ['id' => 'a', 'date' => new DateTimeImmutable('2026-09-01'), 'clicks' => 1],
+                ['id' => 'b', 'date' => new DateTimeImmutable('2026-09-02'), 'clicks' => 2],
+            ]))
+            ->write(to_parquet(
+                path('memory://var/inferred/file.parquet'),
+                filesystem: $memory,
+            )->partitionBy(partition_by('date')))
+            ->run();
+
+        static::assertSame(
+            ['id', 'clicks'],
+            ParquetFilesContext::columnNames($memory, 'memory://var/inferred/date=2026-09-01/file.parquet'),
+        );
+    }
+
+    public function test_partitions_written_with_an_explicit_arrow_engine_each_get_their_own_file(): void
+    {
+        if (!extension_loaded('arrow')) {
+            static::markTestSkipped('arrow extension is not loaded');
+        }
+
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([
+                ['p' => 'a', 'v' => 1],
+                ['p' => 'b', 'v' => 2],
+                ['p' => 'a', 'v' => 3],
+                ['p' => 'c', 'v' => 4],
+            ]))
+            ->write(to_parquet(
+                path('memory://var/engine/file.parquet'),
+                engine: new ArrowParquetEngine(),
+                filesystem: $memory,
+            )->partitionBy(partition_by('p')))
+            ->run();
+
+        static::assertSame(
+            [['v' => 1], ['v' => 3]],
+            ParquetFilesContext::values($memory, 'memory://var/engine/p=a/file.parquet'),
+        );
+        static::assertSame([['v' => 2]], ParquetFilesContext::values($memory, 'memory://var/engine/p=b/file.parquet'));
+        static::assertSame([['v' => 4]], ParquetFilesContext::values($memory, 'memory://var/engine/p=c/file.parquet'));
+    }
+
+    public function test_partitions_written_with_an_explicit_php_engine_each_get_their_own_file(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([
+                ['p' => 'a', 'v' => 1],
+                ['p' => 'b', 'v' => 2],
+                ['p' => 'a', 'v' => 3],
+                ['p' => 'c', 'v' => 4],
+            ]))
+            ->write(to_parquet(
+                path('memory://var/engine/file.parquet'),
+                engine: new PhpParquetEngine(),
+                filesystem: $memory,
+            )->partitionBy(partition_by('p')))
+            ->run();
+
+        static::assertSame(
+            [['v' => 1], ['v' => 3]],
+            ParquetFilesContext::values($memory, 'memory://var/engine/p=a/file.parquet'),
+        );
+        static::assertSame([['v' => 2]], ParquetFilesContext::values($memory, 'memory://var/engine/p=b/file.parquet'));
+        static::assertSame([['v' => 4]], ParquetFilesContext::values($memory, 'memory://var/engine/p=c/file.parquet'));
+    }
+
+    public function test_write_columns_keeps_the_partition_column_in_the_file(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([
+                ['id' => 'a', 'date' => new DateTimeImmutable('2026-09-01'), 'clicks' => 1],
+                ['id' => 'b', 'date' => new DateTimeImmutable('2026-09-02'), 'clicks' => 2],
+            ]))
+            ->write(
+                to_parquet(
+                    path('memory://var/write_columns/file.parquet'),
+                    schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
+                    filesystem: $memory,
+                )->partitionBy(partition_by('date')->writeColumns()),
+            )
+            ->run();
+
+        static::assertSame(
+            ['id', 'date', 'clicks'],
+            ParquetFilesContext::columnNames($memory, 'memory://var/write_columns/date=2026-09-01/file.parquet'),
+        );
     }
 }

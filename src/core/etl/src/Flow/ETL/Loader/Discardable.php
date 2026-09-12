@@ -8,7 +8,7 @@ use Flow\ETL\FlowContext;
 
 /**
  * Loaders implementing this adapter will be notified by the pipeline when a run ends without reaching its last set of
- * Rows - it threw, or the caller walked away from the generator.
+ * Rows - it threw, or the caller walked away from the generator - and when their own closure() threw.
  */
 interface Discardable
 {

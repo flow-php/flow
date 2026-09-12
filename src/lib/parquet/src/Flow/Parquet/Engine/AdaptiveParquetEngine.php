@@ -11,6 +11,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFileWriter;
 use Generator;
 
 use function extension_loaded;
@@ -26,18 +27,13 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
             : new PhpParquetEngine($byteOrder, $options);
     }
 
-    public function closeWrite(): void
-    {
-        $this->delegate->closeWrite();
-    }
-
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ): void {
-        $this->delegate->openForWrite($stream, $schema, $compression, $options);
+    ): ParquetFileWriter {
+        return $this->delegate->openForWrite($stream, $schema, $compression, $options);
     }
 
     public function readValues(
@@ -48,16 +44,6 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
         ?int $offset = null,
     ): Generator {
         return $this->delegate->readValues($stream, $schema, $columns, $limit, $offset);
-    }
-
-    public function writeBatch(iterable $rows): void
-    {
-        $this->delegate->writeBatch($rows);
-    }
-
-    public function writeRow(array $row): void
-    {
-        $this->delegate->writeRow($row);
     }
 
     public function writeRows(

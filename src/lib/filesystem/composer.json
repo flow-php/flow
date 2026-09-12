@@ -17,8 +17,7 @@
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/telemetry": "self.version",
         "flow-php/types": "self.version",
-        "symfony/polyfill-mbstring": "^1.33",
-        "webmozart/glob": "^3.0 || ^4.0"
+        "symfony/polyfill-mbstring": "^1.33"
     },
     "config": {
         "optimize-autoloader": true,

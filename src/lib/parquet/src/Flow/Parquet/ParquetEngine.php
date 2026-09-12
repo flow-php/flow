@@ -12,14 +12,12 @@ use Generator;
 
 interface ParquetEngine
 {
-    public function closeWrite(): void;
-
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ): void;
+    ): ParquetFileWriter;
 
     /**
      * @param array<string> $columns
@@ -33,16 +31,6 @@ interface ParquetEngine
         ?int $limit = null,
         ?int $offset = null,
     ): Generator;
-
-    /**
-     * @param iterable<array<string, mixed>> $rows
-     */
-    public function writeBatch(iterable $rows): void;
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    public function writeRow(array $row): void;
 
     /**
      * @param iterable<array<string, mixed>> $rows
