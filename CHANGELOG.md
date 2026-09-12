@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-09-11
+## [Unreleased] - 2026-09-12
 
 ### Added
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Every extractor describes its schema through schema() and withSchema()** - [@norberttech](https://github.com/norberttech)
@@ -108,6 +108,7 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2623](https://github.com/flow-php/flow/pull/2623) - **Ensure false return from uncompressToBuffer is bubbled up, not silently ignored (e.g. on malformed input)** - [@asgrim](https://github.com/asgrim)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Arithmetic result types come from the operands, not the values** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - sum() no longer turns a whole-number float sum into an int** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - A global aggregate over zero rows returns one row of typed defaults** - [@norberttech](https://github.com/norberttech)
@@ -4092,6 +4093,7 @@
 ## Contributors
 
 - @alexislefebvre
+- @asgrim
 - @Bellangelo
 - @bendavies
 - @blacksmith-sh[bot]
