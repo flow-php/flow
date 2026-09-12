@@ -689,6 +689,16 @@ final class ScalarFunctionFixtures
                 'factory' => static fn(): ScalarFunction => new Function\StrReplace(ref('string'), lit('a'), lit('b')),
                 'returns' => type_string(),
             ],
+            Function\Structure::class => [
+                'factory' => static fn(): ScalarFunction => new Function\Structure([
+                    'id' => ref('string'),
+                    'quantity' => ref('integer'),
+                ]),
+                'returns' => type_structure([
+                    'id' => type_optional(type_string()),
+                    'quantity' => type_optional(type_integer()),
+                ]),
+            ],
             Function\StructureSelect::class => [
                 'factory' => static fn(): ScalarFunction => new Function\StructureSelect(ref('structure'), 'field'),
                 'returns' => type_optional(type_structure(['field' => type_integer()])),

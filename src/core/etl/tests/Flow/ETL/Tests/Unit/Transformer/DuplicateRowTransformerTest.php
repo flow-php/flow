@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use DateTimeImmutable;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
+use Flow\Types\Exception\InvalidTypeException;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
@@ -26,6 +30,41 @@ use function Flow\Types\DSL\type_date;
 
 final class DuplicateRowTransformerTest extends FlowTestCase
 {
+    public function test_bind_widens_a_column_an_entry_overwrites_with_another_type(): void
+    {
+        static::assertEquals(
+            schema(float_schema('amount')),
+            (new DuplicateRowTransformer(lit(true), with_entry('amount', lit(1.5))))->bind(schema(int_schema(
+                'amount',
+            )))->output,
+        );
+    }
+
+    public function test_bind_refuses_an_entry_without_a_common_type_with_the_column_it_overwrites(): void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage(
+            'Cannot combine types "integer", "list<integer>" - an explicit cast is required.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), with_entry('amount', lit([1, 2]))))->bind(schema(int_schema('amount')));
+    }
+
+    public function test_a_literal_condition_duplicates_every_row(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'flag' => null],
+                ['id' => 1, 'flag' => true],
+                ['id' => 2, 'flag' => null],
+                ['id' => 2, 'flag' => true],
+            ],
+            (new DuplicateRowTransformer(true, with_entry('flag', lit(true))))
+                ->transform(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), flow_context(config()))
+                ->toArray(),
+        );
+    }
+
     public function test_a_transformation_that_adds_a_column_conforms_the_untouched_rows(): void
     {
         $transformed = (new DuplicateRowTransformer(
@@ -230,5 +269,42 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
         (new DuplicateRowTransformer(ref('missing')->equals(lit(1))))->transform(rows(schema()), flow_context());
+    }
+
+    public function test_bind_refuses_an_expand_in_the_condition(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), with_entry('flag', lit(true))))->bind(
+            ListColumnsMother::schema(),
+        );
+    }
+
+    public function test_bind_refuses_an_expand_in_an_entry(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->bind(
+            ListColumnsMother::schema(),
+        );
+    }
+
+    public function test_an_unbound_transform_refuses_an_expand_in_an_entry(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->transform(
+            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            flow_context(config()),
+        );
     }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\FrameAccumulating;
 use Flow\ETL\Function\PartitionRanking;
 use Flow\ETL\Function\ReferenceResolver;
@@ -17,6 +17,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Window\BoundWindow;
 use Flow\ETL\Window\WindowContext;
 use Flow\ETL\Window\WindowFrame;
 use Generator;
@@ -34,75 +35,50 @@ use function Flow\ETL\DSL\rows;
 final class WindowProcessor implements Processor
 {
     /**
-     * The resolved function and the schemas this step declares. Only bind() sets them; the unbound
-     * path derives them from the first batch.
-     *
-     * @var null|Definition<mixed>
-     */
-    private ?Definition $derived = null;
-
-    private ?WindowFunction $resolved = null;
-
-    private ?Schema $input = null;
-
-    private ?Schema $output = null;
-
-    /**
      * @param Definition<mixed>|string $entry
      */
     public function __construct(
         private readonly string|Definition $entry,
         private readonly WindowFunction $function,
+        private readonly ?BoundWindow $bound = null,
     ) {}
 
     public function bind(Schema $input): BoundStep
     {
         $bound = $this->boundTo($input);
 
-        return new BoundStep($bound, $bound->declares());
+        return new BoundStep(new self($this->entry, $this->function, $bound), $bound->output);
     }
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $bound = $this->output === null ? null : $this;
+        $bound = $this->bound;
 
         foreach ($rows as $batch) {
             $bound ??= $this->boundTo($batch->schema());
-            $resolved = $bound->resolved;
-            $derived = $bound->derived;
-            $input = $bound->input;
-            $output = $bound->declares();
-
-            if ($resolved === null || $derived === null || $input === null) {
-                throw new RuntimeException('WindowProcessor was not bound');
-            }
 
             if (!$batch->count()) {
-                yield new Rows($output);
+                yield new Rows($bound->output);
 
                 continue;
             }
 
             // one incoming batch is one partition: RepartitionSteps put every row sharing the
             // partition key into a single Rows before this processor ever sees it
-            yield $this->processPartition($resolved, $derived, $input, $output, $batch->all(), $context);
+            yield $this->processPartition($bound, $batch->all(), $context);
         }
-    }
-
-    private function declares(): Schema
-    {
-        return $this->output ?? throw new RuntimeException('WindowProcessor was not bound');
     }
 
     /**
      * @throws SchemaDefinitionNotFoundException
      */
-    private function boundTo(Schema $input): self
+    private function boundTo(Schema $input): BoundWindow
     {
         $resolver = new ReferenceResolver();
         /** @var WindowFunction $resolved a window root is never a reference leaf */
         $resolved = $resolver->resolve($this->function, $input);
         $resolver->assertResolved($resolved, $input);
+        (new ExpandingFunctions())->refuse($resolved, 'over');
         self::assertWindowReferences($resolved, $input);
 
         $derived = $this->entry instanceof Definition
@@ -111,15 +87,12 @@ final class WindowProcessor implements Processor
 
         $name = $derived->entry()->name();
 
-        $bound = new self($this->entry, $this->function);
-        $bound->resolved = $resolved;
-        $bound->derived = $derived;
-        $bound->input = $input;
-        $bound->output = $input->findDefinition($name) === null
-            ? $input->add($derived)
-            : $input->replace($name, $derived);
-
-        return $bound;
+        return new BoundWindow(
+            $resolved,
+            $derived,
+            $input,
+            $input->findDefinition($name) === null ? $input->add($derived) : $input->replace($name, $derived),
+        );
     }
 
     /**
@@ -199,21 +172,16 @@ final class WindowProcessor implements Processor
     }
 
     /**
-     * @param Definition<mixed> $derived
      * @param array<Row> $rows - never empty; process() answers a zero-row batch from the bound schema
      */
-    private function processPartition(
-        WindowFunction $resolved,
-        Definition $derived,
-        Schema $input,
-        Schema $output,
-        array $rows,
-        FlowContext $context,
-    ): Rows {
+    private function processPartition(BoundWindow $bound, array $rows, FlowContext $context): Rows
+    {
+        $resolved = $bound->resolved;
+        $derived = $bound->derived;
         $window = $resolved->window();
         $orderBy = $window->order();
         $sortBy = $orderBy === [] ? $window->partitions()->all() : $orderBy;
-        $partitionRows = rows($input, ...$rows)->sortBy(...$sortBy);
+        $partitionRows = rows($bound->input, ...$rows)->sortBy(...$sortBy);
 
         $frame = $window->frame();
         $processedRows = [];
@@ -240,6 +208,6 @@ final class WindowProcessor implements Processor
             ]);
         }
 
-        return rows($output, ...$processedRows);
+        return rows($bound->output, ...$processedRows);
     }
 }

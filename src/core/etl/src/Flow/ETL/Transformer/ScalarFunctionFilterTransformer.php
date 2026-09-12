@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Pipeline\BoundStep;
@@ -73,6 +74,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
         $resolver = new ReferenceResolver();
         $resolved = $resolver->resolve($this->function, $input);
         $resolver->assertResolved($resolved, $input);
+        (new ExpandingFunctions())->refuse($resolved, 'filter');
 
         // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
         // ?boolean, and (bool) null === false is how a NULL row is dropped.

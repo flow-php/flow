@@ -8,26 +8,40 @@ use DOMDocument;
 use DOMNodeList;
 use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Function\ArrayExpand;
 use Flow\ETL\Function\ArrayUnpack;
+use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Double\NonStructureUnpackStub;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
+use Flow\ETL\Transformer\NestedExpandTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
 
@@ -272,5 +286,151 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             rows(schema()),
             flow_context(config()),
         );
+    }
+
+    #[DataProvider('trees_without_a_nested_expand')]
+    public function test_bind_keeps_a_tree_without_a_nested_expand_on_itself(ScalarFunction $function): void
+    {
+        static::assertInstanceOf(
+            ScalarFunctionTransformer::class,
+            (new ScalarFunctionTransformer('s', $function))->bind(ListColumnsMother::schema())->step,
+        );
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function trees_without_a_nested_expand(): Generator
+    {
+        yield 'no expand' => [concat(ref('id'), lit('x'))];
+        yield 'root expand' => [ref('tags')->expand()];
+    }
+
+    public function test_bind_plans_a_nested_expand_on_nested_expand_transformer(): void
+    {
+        static::assertInstanceOf(
+            NestedExpandTransformer::class,
+            (new ScalarFunctionTransformer('s', structure(['tag' => ref('tags')->expand()])))->bind(
+                ListColumnsMother::schema(),
+            )->step,
+        );
+    }
+
+    public function test_bind_declares_zipped_expands_nullable(): void
+    {
+        static::assertEquals(
+            schema(
+                str_schema('id'),
+                list_schema('tags', type_list(type_string())),
+                list_schema('nums', type_list(type_integer())),
+                structure_schema('s', type_structure([
+                    'n' => type_optional(type_integer()),
+                    'tag' => type_optional(type_string()),
+                ])),
+            ),
+            (new ScalarFunctionTransformer('s', structure([
+                'n' => ref('nums')->expand(),
+                'tag' => ref('tags')->expand(),
+            ])))->bind(schema(
+                str_schema('id'),
+                list_schema('tags', type_list(type_string())),
+                list_schema('nums', type_list(type_integer())),
+            ))->output,
+        );
+    }
+
+    public function test_bind_plans_an_unpack_over_a_nested_expand_on_nested_expand_transformer(): void
+    {
+        $bound = (new ScalarFunctionTransformer(
+            'u',
+            structure(['tag' => ref('tags')->expand()])->unpack(schema(str_schema('tag'))),
+        ))->bind(ListColumnsMother::tagsSchema());
+
+        static::assertInstanceOf(NestedExpandTransformer::class, $bound->step);
+        static::assertEquals(
+            schema(
+                str_schema('id'),
+                list_schema('tags', type_list(type_string())),
+                str_schema('u.tag', nullable: true),
+            ),
+            $bound->output,
+        );
+    }
+
+    public function test_an_unbound_nested_expand_is_expanded(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'x']],
+                ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'y']],
+            ],
+            (new ScalarFunctionTransformer('s', structure(['tag' => ref('tags')->expand()])))
+                ->transform(
+                    rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
+                    flow_context(config()),
+                )
+                ->toArray(),
+        );
+    }
+
+    public function test_an_unbound_unpack_over_a_nested_expand_is_expanded(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'x'],
+                ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'y'],
+            ],
+            (new ScalarFunctionTransformer(
+                'u',
+                structure(['tag' => ref('tags')->expand()])->unpack(schema(str_schema('tag'))),
+            ))
+                ->transform(
+                    rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
+                    flow_context(config()),
+                )
+                ->toArray(),
+        );
+    }
+
+    #[DataProvider('expands_inside_an_expand')]
+    public function test_bind_refuses_an_expand_inside_an_expand(ScalarFunction $function): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+        );
+
+        (new ScalarFunctionTransformer('v', $function))->bind(ListColumnsMother::schema());
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function expands_inside_an_expand(): Generator
+    {
+        yield 'at the root' => [ref('lists')->expand()->expand()];
+        yield 'inside a structure' => [structure(['v' => ref('lists')->expand()->expand()])];
+    }
+
+    public function test_an_unbound_expand_inside_an_expand_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+        );
+
+        (new ScalarFunctionTransformer('v', ref('lists')->expand()->expand()))->transform(
+            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            flow_context(config()),
+        );
+    }
+
+    public function test_bind_refuses_an_unpack_whose_type_is_not_a_structure(): void
+    {
+        $this->expectException(InvalidLogicException::class);
+        $this->expectExceptionMessage(NonStructureUnpackStub::class
+        . ' unpacks into N columns, so returns() must be a StructureType, got "string".');
+
+        (new ScalarFunctionTransformer('u', new NonStructureUnpackStub()))->bind(schema());
     }
 }

@@ -8,6 +8,7 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Pipeline\BoundStep;
@@ -96,6 +97,7 @@ final class UntilTransformer implements Transformer
         $resolver = new ReferenceResolver();
         $resolved = $resolver->resolve($this->function, $input);
         $resolver->assertResolved($resolved, $input);
+        (new ExpandingFunctions())->refuse($resolved, 'until');
 
         // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
         // ?boolean, and an evaluated null stops the stream like false does.

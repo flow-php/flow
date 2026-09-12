@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Filesystem;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\ETL\Tests\Double\ReportsResolvedOperand;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\FileStatus;
 
@@ -19,6 +20,15 @@ use function Flow\Filesystem\DSL\path;
 
 final class ScalarFunctionFilterTest extends FlowTestCase
 {
+    public function test_accept_evaluates_the_resolved_function(): void
+    {
+        static::assertTrue((new ScalarFunctionFilter(
+            new ReportsResolvedOperand(ref('year')),
+            schema(int_schema('year')),
+            flow_context(config()),
+        ))->accept(new FileStatus(path('flow-file://data/year=2024/file.csv'), true)));
+    }
+
     public function test_a_hive_null_partition_value_against_a_declared_nullable_type(): void
     {
         $filter = new ScalarFunctionFilter(
