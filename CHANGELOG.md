@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-09-12
 
 ### Added
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - Path value object with Key, Wildcard and Multimatch steps** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - Path|string accepted by every array_dot_* function** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - structure_get(), structure_get_collection(), structure_get_collection_first() DSL aliases** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - structure() scalar function** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - nested array_expand() gives one row per element, zipped to the longest list** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - Every extractor describes its schema through schema() and withSchema()** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +47,11 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - \ escapes every path grammar character** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_rename() refuses a path not ending with a key** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_get_collection() reads its keys as literal keys** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_expand() over a null list gives no rows** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_get() throws InvalidArgumentException for a malformed path** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - array_expand() refused in filter(), until(), duplicateRow(), aggregate(), over(), onEach() body and inside another array_expand()** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - limit push-down skipped for any step holding a nested array_expand()** - [@norberttech](https://github.com/norberttech)
 - [#2620](https://github.com/flow-php/flow/pull/2620) - **flow-php/etl - A row is a name-keyed array under one Schema carried by Rows** - [@norberttech](https://github.com/norberttech)
@@ -112,6 +120,11 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/etl - array_get() schema for nullsafe and escaped path segments** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - escapes after a wildcard and inside a multimatch** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_set() keeps sibling and integer keys** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_rename() to the same name no longer deletes the key** - [@norberttech](https://github.com/norberttech)
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - nullsafe multimatch over an empty array reads null** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - list_select over maps of mixed no longer throws** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - partition filters evaluate the resolved function** - [@norberttech](https://github.com/norberttech)
 - [#2624](https://github.com/flow-php/flow/pull/2624) - **flow-php/etl - array_unpack() DSL reference description restored** - [@norberttech](https://github.com/norberttech)
@@ -178,6 +191,9 @@
 - [#2600](https://github.com/flow-php/flow/pull/2600) - **flow-php/web - unpublished consuming-apis-without-sdks blog post** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Extractor\SwappableRowsExtractor** - [@norberttech](https://github.com/norberttech)
 - [#2599](https://github.com/flow-php/flow/pull/2599) - **flow-php/etl - Config::filesystemStreams() and the FilesystemStreams constructor parameter** - [@norberttech](https://github.com/norberttech)
+
+### Deprecated
+- [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_steps(), use Path::fromString()** - [@norberttech](https://github.com/norberttech)
 
 ## [0.43.0] - 2026-08-10
 
