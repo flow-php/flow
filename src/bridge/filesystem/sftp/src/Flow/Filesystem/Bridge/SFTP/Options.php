@@ -15,7 +15,7 @@ use function Flow\Filesystem\DSL\path;
 final class Options
 {
     /** @var int<1, max> */
-    public const int DEFAULT_BLOCK_SIZE = 4 * SizeUnits::MiB_SIZE;
+    public const int DEFAULT_BLOCK_SIZE = 16 * SizeUnits::MiB_SIZE;
 
     /** @var int<1, max> */
     public const int DEFAULT_READ_CHUNK_SIZE = SizeUnits::MiB_SIZE;
