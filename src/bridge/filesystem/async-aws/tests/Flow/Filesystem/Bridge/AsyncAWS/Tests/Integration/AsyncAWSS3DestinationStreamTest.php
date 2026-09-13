@@ -8,6 +8,8 @@ use function file_get_contents;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
+use function glob;
+use function sys_get_temp_dir;
 
 final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
 {
@@ -18,6 +20,22 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         static::assertTrue($stream->isOpen());
         $stream->close();
         static::assertFalse($stream->isOpen());
+    }
+
+    public function test_closing_streams_leaves_no_blocks_in_the_system_tmp_directory(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $tmpBefore = glob(sys_get_temp_dir() . '/*') ?: [];
+
+        $fs->writeTo(path('aws-s3://never_written.txt'))->close();
+
+        $stream = $fs->writeTo(path('aws-s3://orders.csv'));
+        $stream->append("id\n1\n");
+        $stream->close();
+
+        static::assertSame($tmpBefore, glob(sys_get_temp_dir() . '/*') ?: []);
+        static::assertSame('', $fs->readFrom(path('aws-s3://never_written.txt'))->content());
+        static::assertSame("id\n1\n", $fs->readFrom(path('aws-s3://orders.csv'))->content());
     }
 
     public function test_writing_content_from_resource(): void
