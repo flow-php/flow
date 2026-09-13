@@ -83,6 +83,10 @@ component_management:
       name: bridge-filesystem-azure
       paths:
         - src/bridge/filesystem/azure/**
+    - component_id: bridge-filesystem-sftp
+      name: bridge-filesystem-sftp
+      paths:
+        - src/bridge/filesystem/sftp/**
     - component_id: bridge-monolog-http
       name: bridge-monolog-http
       paths:

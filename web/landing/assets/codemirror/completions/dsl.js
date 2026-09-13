@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 819
+ * Total functions: 826
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -484,7 +484,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
+                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
                 </div>
                             `
             return div
@@ -739,7 +739,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed>|ScalarFunction $array
+                    Unpacks each element of an array into a new entry, using the array key as the entry name.<br>Before:<br>+--+-------------------+<br>|id|              array|<br>+--+-------------------+<br>| 1|{\"a\":1,\"b\":2,\"c\":3}|<br>| 2|{\"d\":4,\"e\":5,\"f\":6}|<br>+--+-------------------+<br>After:<br>+--+-----+-----+-----+-----+-----+<br>|id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>+--+-----+-----+-----+-----+-----+<br>| 1|    2|    3|     |     |     |<br>| 2|     |     |    4|    5|    6|<br>+--+-----+-----+-----+-----+-----+<br>@param array<array-key, mixed>|ScalarFunction $array
                 </div>
                             `
             return div
@@ -9966,6 +9966,54 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\severity_mapper(" + "$" + "{" + "1:customMapping" + "}" + ")"),
         boost: 10
     },                {
+        label: "sftp_client",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sftp_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$host</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$user</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PrivateKey|string</span> <span class=\"fn-param\">$credential</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$port</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">22</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SFTP</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @throws RuntimeException
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\SFTP\\DSL\\sftp_client(" + "$" + "{" + "1:host" + "}" + ", " + "$" + "{" + "2:user" + "}" + ", " + "$" + "{" + "3:credential" + "}" + ", " + "$" + "{" + "4:port" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "sftp_filesystem",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sftp_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SFTP</span> <span class=\"fn-param\">$sftp</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\SFTP\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;sftp&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SFTPFilesystem</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\SFTP\\DSL\\sftp_filesystem(" + "$" + "{" + "1:sftp" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:protocol" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "sftp_filesystem_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sftp_filesystem_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\SFTP\\DSL\\sftp_filesystem_options()"),
+        boost: 10
+    },                {
         label: "similar_to",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -10698,6 +10746,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\string_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },                {
+        label: "structure",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Structure</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Builds a structure from scalar functions: one element per key, in key order.<br>An element is nullable when its function is; the structure itself never is.<br>@param array<array-key, ScalarFunction> $elements
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure(" + "$" + "{" + "1:elements" + "}" + ")"),
+        boost: 10
+    },                {
         label: "structure_element",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -10714,6 +10780,60 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\structure_element(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:optional" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGet</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get\`.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get_collection",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get_collection</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGetCollection</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get_collection\`.<br>@param array<array-key, mixed>|ScalarFunction $keys
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get_collection(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get_collection_first",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get_collection_first</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGetCollection</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get_collection_first\`.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get_collection_first(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
         boost: 10
     },                {
         label: "structure_ref",

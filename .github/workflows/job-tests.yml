@@ -95,6 +95,14 @@ jobs:
             mc mb local/flowphpbucket01 --ignore-existing
           "
 
+      - name: "Start SFTP server"
+        run: |
+          docker run -d --name sftp -p 2222:22 \
+            -v ${{ github.workspace }}/docker/sftp.json:/app/config/sftp.json:ro \
+            emberstack/sftp:latest
+          timeout 60 sh -c 'until nc -z localhost 2222; do sleep 1; done'
+          echo "SFTP is ready"
+
       - name: "Setup PHP Environment"
         uses: "./.github/actions/setup-php-env"
         with:
@@ -148,6 +156,10 @@ jobs:
           S3_REGION: "us-east-1"
           S3_ACCESS_KEY_ID: "minioadmin"
           S3_SECRET_ACCESS_KEY: "minioadmin"
+          SFTP_HOST: "localhost"
+          SFTP_PORT: "2222"
+          SFTP_USER: "flow"
+          SFTP_PASSWORD: "flow"
           OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
           OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
           OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"

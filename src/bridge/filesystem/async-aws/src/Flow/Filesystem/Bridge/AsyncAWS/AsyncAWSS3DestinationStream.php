@@ -24,6 +24,7 @@ use function ltrim;
 use function rewind;
 use function str_replace;
 use function stream_get_meta_data;
+use function unlink;
 
 final class AsyncAWSS3DestinationStream implements DestinationStream
 {
@@ -186,6 +187,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             ]);
 
             fclose($handle);
+            unlink($this->blocks->block()->path()->path());
 
             $this->s3Client->completeMultipartUpload([
                 'Bucket' => $this->bucket,

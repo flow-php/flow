@@ -161,6 +161,16 @@
             }
         },
         {
+            "name": "flow-php/filesystem-sftp-bridge",
+            "path": "src/bridge/filesystem/sftp",
+            "type": "bridge",
+            "links": {
+                "documentation": "/documentation/components/bridges/filesystem-sftp-bridge",
+                "api": "/documentation/api/bridge/filesystem/sftp",
+                "files": "/documentation/api/bridge/filesystem/sftp/indices/files.html"
+            }
+        },
+        {
             "name": "flow-php/monolog-http-bridge",
             "path": "src/bridge/monolog/http",
             "type": "bridge",

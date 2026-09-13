@@ -7,6 +7,7 @@ namespace Flow\Filesystem\Path;
 use function count;
 use function preg_match;
 use function preg_quote;
+use function preg_replace;
 use function preg_split;
 use function str_contains;
 use function str_split;
@@ -23,6 +24,7 @@ final readonly class GlobPattern
 
     public function __construct(string $pattern)
     {
+        $pattern = self::oneSeparator($pattern);
         // a pattern that is not valid UTF-8 can only be read byte by byte
         $unicode = preg_match('//u', $pattern) === 1;
         $regex = '';
@@ -115,9 +117,15 @@ final readonly class GlobPattern
 
     public function matches(string $path): bool
     {
+        $path = self::oneSeparator($path);
         $matched = preg_match($this->regex, $path);
 
         // a path that is not valid UTF-8 can only be matched byte by byte
         return ($matched === false ? preg_match($this->byteRegex, $path) : $matched) === 1;
+    }
+
+    private static function oneSeparator(string $path): string
+    {
+        return preg_replace('#/+#', '/', $path) ?? $path;
     }
 }

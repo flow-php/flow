@@ -83,6 +83,8 @@ jobs:
             split_repository: 'filesystem-azure-bridge'
           - local_path: 'src/bridge/filesystem/async-aws'
             split_repository: 'filesystem-async-aws-bridge'
+          - local_path: 'src/bridge/filesystem/sftp'
+            split_repository: 'filesystem-sftp-bridge'
           - local_path: 'src/bridge/monolog/http'
             split_repository: 'monolog-http-bridge'
           - local_path: 'src/bridge/monolog/telemetry'

@@ -87,6 +87,15 @@ services:
             "
         networks:
             - flow-php
+    sftp:
+        image: emberstack/sftp:latest
+        container_name: flow-php-sftp
+        ports:
+            - "2222:22"
+        volumes:
+            - "./docker/sftp.json:/app/config/sftp.json:ro"
+        networks:
+            - flow-php
     aspire:
         image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
         container_name: flow-php-aspire

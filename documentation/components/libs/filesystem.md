@@ -32,6 +32,8 @@ you need by specifying the byte range.
   `flow-php/filesystem-azure-bridge`](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
 - [AWS S3 Filesystem](/documentation/components/bridges/filesystem-async-aws-bridge) - [
   `flow-php/filesystem-async-aws-bridge`](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
+- [SFTP Filesystem](/documentation/components/bridges/filesystem-sftp-bridge) - [
+  `flow-php/filesystem-sftp-bridge`](https://packagist.org/packages/flow-php/filesystem-sftp-bridge)
 
 # Building Blocks
 
