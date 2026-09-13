@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
+use Flow\Filesystem\Bridge\SFTP\Tests\Context\SFTPContext;
 use Flow\Filesystem\Exception\RuntimeException;
 use phpseclib3\Crypt\EC;
 
@@ -15,7 +16,7 @@ final class SFTPConnectionTest extends SFTPTestCase
 {
     public function test_authenticated_client_sees_the_upload_directory(): void
     {
-        static::assertTrue($this->sftpContext()->client()->is_dir('/upload'));
+        static::assertTrue(SFTPContext::connect()->is_dir('/upload'));
     }
 
     public function test_a_private_key_is_accepted_as_a_credential(): void

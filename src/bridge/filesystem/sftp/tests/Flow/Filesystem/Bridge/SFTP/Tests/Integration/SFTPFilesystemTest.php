@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Context\GlobMatrixContext;
@@ -11,6 +12,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
+use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function sort;
@@ -48,6 +50,19 @@ final class SFTPFilesystemTest extends SFTPTestCase
         static::assertSame($expected, $listed);
     }
 
+    public function test_the_system_tmp_directory_can_be_pointed_at_a_writable_path(): void
+    {
+        $tmpDir = path('sftp:///upload/_$flow_tmp$');
+        $filesystem = $this->sftpContext()->filesystem(sftp_filesystem_options()->withTmpDir($tmpDir));
+
+        static::assertTrue($filesystem->getSystemTmpDir()->isEqual($tmpDir));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot write to system tmp directory');
+
+        $filesystem->writeTo($tmpDir);
+    }
+
     public function test_listing_a_directory_walks_it_recursively(): void
     {
         $this->sftpContext()->givenFileExists(path('sftp:///upload/2024/01/a.csv'), "id\n1\n");
@@ -62,6 +77,20 @@ final class SFTPFilesystemTest extends SFTPTestCase
         static::assertSame(['/upload/2024/01/a.csv', '/upload/2024/02/b.csv'], $paths);
     }
 
+    public function test_listing_a_pattern_that_matches_directories_reports_them_as_directories(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/2024/01/a.csv'), 'a');
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/2024/02/b.csv'), 'b');
+
+        $paths = [];
+
+        foreach ($this->sftpContext()->filesystem()->list(path('sftp:///upload/2024/*')) as $fileStatus) {
+            $paths[] = $fileStatus->path->path() . ($fileStatus->isDirectory() ? '/' : '');
+        }
+
+        static::assertSame(['/upload/2024/01/', '/upload/2024/02/'], $paths);
+    }
+
     public function test_listing_a_pattern_returns_only_matching_files(): void
     {
         $this->sftpContext()->givenFileExists(path('sftp:///upload/orders.csv'), "id\n1\n");
@@ -74,6 +103,21 @@ final class SFTPFilesystemTest extends SFTPTestCase
         }
 
         static::assertSame(['/upload/orders.csv'], $paths);
+    }
+
+    public function test_listing_a_pattern_yields_entries_in_a_stable_order(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/c.csv'), 'c');
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/a.csv'), 'a');
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/b.csv'), 'b');
+
+        $paths = [];
+
+        foreach ($this->sftpContext()->filesystem()->list(path('sftp:///upload'), new OnlyFiles()) as $fileStatus) {
+            $paths[] = $fileStatus->path->path();
+        }
+
+        static::assertSame(['/upload/a.csv', '/upload/b.csv', '/upload/c.csv'], $paths);
     }
 
     public function test_listing_a_single_file_yields_it_with_size_and_modification_time(): void
@@ -133,6 +177,14 @@ final class SFTPFilesystemTest extends SFTPTestCase
         static::assertFalse($this->sftpContext()->exists(path('sftp:///upload/archive')));
     }
 
+    public function test_removing_a_path_that_is_only_a_prefix_of_a_directory_removes_nothing(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/folder/orders.csv'), "id\n1\n");
+
+        static::assertFalse($this->sftpContext()->filesystem()->rm(path('sftp:///upload/fold')));
+        static::assertTrue($this->sftpContext()->exists(path('sftp:///upload/folder/orders.csv')));
+    }
+
     public function test_removing_a_missing_file_reports_failure(): void
     {
         static::assertFalse($this->sftpContext()->filesystem()->rm(path('sftp:///upload/missing.csv')));
@@ -169,6 +221,21 @@ final class SFTPFilesystemTest extends SFTPTestCase
         static::assertNotNull($status);
         static::assertTrue($status->isFile());
         static::assertSame(strlen($content), $status->size);
+    }
+
+    public function test_status_of_a_path_that_is_only_a_prefix_of_a_file_is_null(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/orders.csv'), "id\n1\n");
+
+        static::assertNull($this->sftpContext()->filesystem()->status(path('sftp:///upload/ord')));
+    }
+
+    public function test_status_of_the_root_is_a_directory(): void
+    {
+        $status = $this->sftpContext()->filesystem()->status(path('sftp:///'));
+
+        static::assertNotNull($status);
+        static::assertTrue($status->isDirectory());
     }
 
     public function test_status_of_a_missing_file_is_null(): void

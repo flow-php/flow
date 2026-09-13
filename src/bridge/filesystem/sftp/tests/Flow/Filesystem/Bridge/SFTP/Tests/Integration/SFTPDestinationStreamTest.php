@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
+
 use function fclose;
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem_options;
 use function Flow\Filesystem\DSL\path;
@@ -15,9 +17,29 @@ use function str_repeat;
 use function strlen;
 use function substr;
 use function sys_get_temp_dir;
+use function uniqid;
 
 final class SFTPDestinationStreamTest extends SFTPTestCase
 {
+    public function test_blocks_are_written_through_the_configured_block_factory_and_removed_after_upload(): void
+    {
+        $blockLocation = sys_get_temp_dir() . '/flow_sftp_blocks_' . uniqid();
+        $options = sftp_filesystem_options()
+            ->withBlockFactory(new NativeLocalFileBlocksFactory($blockLocation))
+            ->withBlockSize(1024);
+        $content = str_repeat("id,name\n", 500);
+
+        $stream = $this->sftpContext()->filesystem($options)->writeTo(path('sftp:///upload/orders.csv'));
+
+        static::assertCount(1, glob($blockLocation . '/*') ?: []);
+
+        $stream->append($content);
+        $stream->close();
+
+        static::assertSame([], glob($blockLocation . '/*') ?: []);
+        static::assertSame($content, $this->sftpContext()->contentOf(path('sftp:///upload/orders.csv')));
+    }
+
     public function test_appending_to_an_existing_file_keeps_what_was_there(): void
     {
         $this->sftpContext()->givenFileExists(path('sftp:///upload/orders.csv'), "id,name\n1,one\n");
@@ -30,6 +52,21 @@ final class SFTPDestinationStreamTest extends SFTPTestCase
             "id,name\n1,one\n2,two\n",
             $this->sftpContext()->contentOf(path('sftp:///upload/orders.csv')),
         );
+    }
+
+    public function test_appending_a_payload_spanning_many_blocks_continues_after_what_was_there(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/orders.csv'), $existing = "id,name\n1,one\n");
+        $appended = str_repeat("2,two\n", 1000);
+
+        $stream = $this
+            ->sftpContext()
+            ->filesystem(sftp_filesystem_options()->withBlockSize(1024))
+            ->appendTo(path('sftp:///upload/orders.csv'));
+        $stream->append($appended);
+        $stream->close();
+
+        static::assertSame($existing . $appended, $this->sftpContext()->contentOf(path('sftp:///upload/orders.csv')));
     }
 
     public function test_appending_to_a_missing_file_creates_it(): void

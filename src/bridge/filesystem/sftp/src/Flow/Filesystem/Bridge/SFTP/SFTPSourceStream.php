@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP;
 
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
@@ -21,8 +22,6 @@ final class SFTPSourceStream implements SourceStream
 {
     private readonly string $remotePath;
 
-    private readonly SFTPSession $session;
-
     private ?int $size = null;
 
     public function __construct(
@@ -31,14 +30,20 @@ final class SFTPSourceStream implements SourceStream
         private readonly Options $options = new Options(),
     ) {
         $this->remotePath = $path->path();
-        $this->session = new SFTPSession($sftp);
     }
 
     public function close(): void {}
 
     public function content(): string
     {
-        return $this->download($this->sftp->get($this->remotePath));
+        $content = $this->sftp->get($this->remotePath);
+
+        if ($content === false) {
+            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
+                || throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
+        }
+
+        return type_string()->assert($content);
     }
 
     public function isOpen(): bool
@@ -70,7 +75,14 @@ final class SFTPSourceStream implements SourceStream
             $offset = max(0, ($this->size() ?? 0) + $offset);
         }
 
-        return $this->download($this->sftp->get($this->remotePath, false, $offset, $length));
+        $content = $this->sftp->get($this->remotePath, false, $offset, $length);
+
+        if ($content === false) {
+            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
+                || throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
+        }
+
+        return type_string()->assert($content);
     }
 
     /**
@@ -114,33 +126,20 @@ final class SFTPSourceStream implements SourceStream
     public function size(): ?int
     {
         if ($this->size === null) {
-            $size = self::narrowSize($this->sftp->filesize($this->remotePath));
+            // @mago-ignore analysis:mixed-assignment
+            $filesize = $this->sftp->filesize($this->remotePath);
 
-            if ($size === null) {
-                $this->session->assertAlive('read the size of ' . $this->remotePath);
+            if ($filesize === false) {
+                $this->sftp->isConnected() && $this->sftp->isAuthenticated()
+                    || throw new RuntimeException('SFTP session is no longer usable, cannot read the size of '
+                    . $this->remotePath);
 
                 return null;
             }
 
-            $this->size = $size;
+            $this->size = type_integer()->assert($filesize);
         }
 
         return $this->size;
-    }
-
-    private static function narrowSize(mixed $filesize): ?int
-    {
-        return type_integer()->isValid($filesize) ? $filesize : null;
-    }
-
-    private function download(mixed $content): string
-    {
-        if (type_string()->isValid($content)) {
-            return $content;
-        }
-
-        $this->session->assertAlive('read ' . $this->remotePath);
-
-        return '';
     }
 }

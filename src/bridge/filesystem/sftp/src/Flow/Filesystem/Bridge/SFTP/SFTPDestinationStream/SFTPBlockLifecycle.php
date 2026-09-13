@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP\SFTPDestinationStream;
 
-use Flow\Filesystem\Bridge\SFTP\SFTPSession;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
@@ -21,16 +20,13 @@ final class SFTPBlockLifecycle implements BlockLifecycle
 
     private readonly string $remotePath;
 
-    private readonly SFTPSession $session;
-
     public function __construct(
         private readonly SFTP $sftp,
-        Path $path,
+        public Path $path,
         private readonly WriteOffset $offset,
         private readonly WriteMode $mode = WriteMode::BLANK,
     ) {
         $this->remotePath = $path->path();
-        $this->session = new SFTPSession($sftp);
     }
 
     public function filled(Block $block): void
@@ -43,7 +39,9 @@ final class SFTPBlockLifecycle implements BlockLifecycle
         );
 
         if ($uploaded === false) {
-            $this->session->assertAlive('upload a block of ' . $this->remotePath);
+            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
+                || throw new RuntimeException('SFTP session is no longer usable, cannot upload a block of '
+                . $this->remotePath);
 
             throw new RuntimeException('Could not upload block to ' . $this->remotePath);
         }

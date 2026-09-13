@@ -20,7 +20,7 @@ final class Options
     /** @var int<1, max> */
     public const int DEFAULT_READ_CHUNK_SIZE = SizeUnits::MiB_SIZE;
 
-    private readonly BlockFactory $blockFactory;
+    private BlockFactory $blockFactory;
 
     /** @var int<1, max> */
     private int $blockSize = self::DEFAULT_BLOCK_SIZE;
@@ -28,7 +28,7 @@ final class Options
     /** @var int<1, max> */
     private int $readChunkSize = self::DEFAULT_READ_CHUNK_SIZE;
 
-    private readonly Path $tmpDir;
+    private Path $tmpDir;
 
     public function __construct()
     {
@@ -62,6 +62,13 @@ final class Options
         return $this->tmpDir;
     }
 
+    public function withBlockFactory(BlockFactory $blockFactory): self
+    {
+        $this->blockFactory = $blockFactory;
+
+        return $this;
+    }
+
     public function withBlockSize(int $bytes): self
     {
         if ($bytes < 1) {
@@ -80,6 +87,13 @@ final class Options
         }
 
         $this->readChunkSize = $bytes;
+
+        return $this;
+    }
+
+    public function withTmpDir(Path $tmpDir): self
+    {
+        $this->tmpDir = $tmpDir;
 
         return $this;
     }

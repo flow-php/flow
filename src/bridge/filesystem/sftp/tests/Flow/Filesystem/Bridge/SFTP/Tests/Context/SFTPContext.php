@@ -6,7 +6,6 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Context;
 
 use Flow\Filesystem\Bridge\SFTP\Options;
 use Flow\Filesystem\Bridge\SFTP\SFTPFilesystem;
-use Flow\Filesystem\Bridge\SFTP\Tests\Double\RecordingSFTP;
 use Flow\Filesystem\Path;
 use phpseclib3\Net\SFTP;
 
@@ -20,7 +19,7 @@ use function substr;
 
 final readonly class SFTPContext
 {
-    public const BASE_DIRECTORY = '/upload';
+    private const string BASE_DIRECTORY = '/upload';
 
     private SFTP $sftp;
 
@@ -39,11 +38,6 @@ final readonly class SFTPContext
         );
     }
 
-    public function client(): SFTP
-    {
-        return $this->sftp;
-    }
-
     public function contentOf(Path $path): string
     {
         return type_string()->assert($this->sftp->get(self::remote($path)));
@@ -59,14 +53,6 @@ final readonly class SFTPContext
     public function filesystem(Options $options = new Options()): SFTPFilesystem
     {
         return sftp_filesystem($this->sftp, $options);
-    }
-
-    public function recordingClient(): RecordingSFTP
-    {
-        $sftp = new RecordingSFTP(type_string()->assert($_ENV['SFTP_HOST']), type_integer()->cast($_ENV['SFTP_PORT']));
-        $sftp->login(type_string()->assert($_ENV['SFTP_USER']), type_string()->assert($_ENV['SFTP_PASSWORD']));
-
-        return $sftp;
     }
 
     public function givenFileExists(Path $path, string $content): void

@@ -29,8 +29,6 @@ final class SFTPDestinationStream implements DestinationStream
 
     private readonly string $remotePath;
 
-    private readonly SFTPSession $session;
-
     public function __construct(
         private readonly Path $path,
         private readonly Blocks $blocks,
@@ -38,7 +36,6 @@ final class SFTPDestinationStream implements DestinationStream
         private readonly WriteMode $mode,
     ) {
         $this->remotePath = $path->path();
-        $this->session = new SFTPSession($sftp);
     }
 
     /**
@@ -98,7 +95,12 @@ final class SFTPDestinationStream implements DestinationStream
         $this->blocks->done();
 
         if ($this->blocks->size() === 0) {
-            $this->discardUnusedBlock();
+            $blockPath = $this->blocks->block()->path()->path();
+
+            if (file_exists($blockPath)) {
+                unlink($blockPath);
+            }
+
             $this->createEmptyFile();
         }
 
@@ -139,18 +141,10 @@ final class SFTPDestinationStream implements DestinationStream
         }
 
         if ($this->sftp->put($this->remotePath, '', SFTP::SOURCE_STRING) === false) {
-            $this->session->assertAlive('create ' . $this->remotePath);
+            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
+                || throw new RuntimeException('SFTP session is no longer usable, cannot create ' . $this->remotePath);
 
             throw new RuntimeException('Could not create empty file: ' . $this->remotePath);
-        }
-    }
-
-    private function discardUnusedBlock(): void
-    {
-        $blockPath = $this->blocks->block()->path()->path();
-
-        if (file_exists($blockPath)) {
-            unlink($blockPath);
         }
     }
 }
