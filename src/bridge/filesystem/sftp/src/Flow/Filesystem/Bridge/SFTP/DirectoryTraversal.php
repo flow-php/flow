@@ -27,9 +27,9 @@ final readonly class DirectoryTraversal
     public function walk(Path $path, Filter $pathFilter): Generator
     {
         $pattern = new PathPattern($path);
-        $root = RemotePath::from($path->isPattern() ? $path->staticPart() : $path);
+        $root = ($path->isPattern() ? $path->staticPart() : $path)->path();
 
-        yield from $this->descend($root->withoutTrailingSlash(), $pattern, $pathFilter);
+        yield from $this->descend(rtrim($root, '/') ?: '/', $pattern, $pathFilter);
     }
 
     /**

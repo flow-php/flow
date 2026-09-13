@@ -19,7 +19,7 @@ use function strlen;
 
 final class SFTPSourceStream implements SourceStream
 {
-    private readonly RemotePath $remotePath;
+    private readonly string $remotePath;
 
     private readonly SFTPSession $session;
 
@@ -30,7 +30,7 @@ final class SFTPSourceStream implements SourceStream
         private readonly SFTP $sftp,
         private readonly Options $options = new Options(),
     ) {
-        $this->remotePath = RemotePath::from($path);
+        $this->remotePath = $path->path();
         $this->session = new SFTPSession($sftp);
     }
 
@@ -38,7 +38,7 @@ final class SFTPSourceStream implements SourceStream
 
     public function content(): string
     {
-        return $this->download($this->sftp->get($this->remotePath->toString()));
+        return $this->download($this->sftp->get($this->remotePath));
     }
 
     public function isOpen(): bool
@@ -70,7 +70,7 @@ final class SFTPSourceStream implements SourceStream
             $offset = max(0, ($this->size() ?? 0) + $offset);
         }
 
-        return $this->download($this->sftp->get($this->remotePath->toString(), false, $offset, $length));
+        return $this->download($this->sftp->get($this->remotePath, false, $offset, $length));
     }
 
     /**
@@ -114,10 +114,10 @@ final class SFTPSourceStream implements SourceStream
     public function size(): ?int
     {
         if ($this->size === null) {
-            $size = self::narrowSize($this->sftp->filesize($this->remotePath->toString()));
+            $size = self::narrowSize($this->sftp->filesize($this->remotePath));
 
             if ($size === null) {
-                $this->session->assertAlive('read the size of ' . $this->remotePath->toString());
+                $this->session->assertAlive('read the size of ' . $this->remotePath);
 
                 return null;
             }
@@ -139,7 +139,7 @@ final class SFTPSourceStream implements SourceStream
             return $content;
         }
 
-        $this->session->assertAlive('read ' . $this->remotePath->toString());
+        $this->session->assertAlive('read ' . $this->remotePath);
 
         return '';
     }

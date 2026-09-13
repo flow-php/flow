@@ -27,7 +27,7 @@ final class SFTPDestinationStream implements DestinationStream
 {
     private bool $closed = false;
 
-    private readonly RemotePath $remotePath;
+    private readonly string $remotePath;
 
     private readonly SFTPSession $session;
 
@@ -37,7 +37,7 @@ final class SFTPDestinationStream implements DestinationStream
         private readonly SFTP $sftp,
         private readonly WriteMode $mode,
     ) {
-        $this->remotePath = RemotePath::from($path);
+        $this->remotePath = $path->path();
         $this->session = new SFTPSession($sftp);
     }
 
@@ -50,7 +50,7 @@ final class SFTPDestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = Options::DEFAULT_BLOCK_SIZE,
     ): self {
-        $remotePath = RemotePath::from($path)->toString();
+        $remotePath = $path->path();
         $offset = new WriteOffset($sftp->is_file($remotePath) ? (int) $sftp->filesize($remotePath) : 0);
 
         return new self(
@@ -134,14 +134,14 @@ final class SFTPDestinationStream implements DestinationStream
 
     private function createEmptyFile(): void
     {
-        if ($this->mode === WriteMode::APPEND && $this->sftp->is_file($this->remotePath->toString())) {
+        if ($this->mode === WriteMode::APPEND && $this->sftp->is_file($this->remotePath)) {
             return;
         }
 
-        if ($this->sftp->put($this->remotePath->toString(), '', SFTP::SOURCE_STRING) === false) {
-            $this->session->assertAlive('create ' . $this->remotePath->toString());
+        if ($this->sftp->put($this->remotePath, '', SFTP::SOURCE_STRING) === false) {
+            $this->session->assertAlive('create ' . $this->remotePath);
 
-            throw new RuntimeException('Could not create empty file: ' . $this->remotePath->toString());
+            throw new RuntimeException('Could not create empty file: ' . $this->remotePath);
         }
     }
 

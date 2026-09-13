@@ -58,9 +58,9 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->guardScheme($path);
 
         if (!$path->isPattern()) {
-            $remotePath = RemotePath::from($path);
+            $remotePath = $path->path();
 
-            if ($this->sftp->is_file($remotePath->toString())) {
+            if ($this->sftp->is_file($remotePath)) {
                 $fileStatus = $this->fileStatus($path, $remotePath);
 
                 if ($pathFilter->accept($fileStatus)) {
@@ -84,23 +84,23 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->guardScheme($from);
         $this->guardScheme($to);
 
-        $remoteFrom = RemotePath::from($from);
+        $remoteFrom = $from->path();
 
         if (!$this->exists($remoteFrom)) {
-            $this->session->assertAlive('move ' . $remoteFrom->toString());
+            $this->session->assertAlive('move ' . $remoteFrom);
 
             return false;
         }
 
         $this->createParentDirectory($to);
 
-        $remoteTo = RemotePath::from($to);
+        $remoteTo = $to->path();
 
         if ($this->exists($remoteTo)) {
-            $this->sftp->delete($remoteTo->toString(), true);
+            $this->sftp->delete($remoteTo, true);
         }
 
-        return $this->sftp->rename($remoteFrom->toString(), $remoteTo->toString());
+        return $this->sftp->rename($remoteFrom, $remoteTo);
     }
 
     public function readFrom(Path $path): SourceStream
@@ -122,7 +122,7 @@ final readonly class SFTPFilesystem implements Filesystem
             return $this->rmMatching($path);
         }
 
-        $remotePath = RemotePath::from($path)->toString();
+        $remotePath = $path->path();
         $removed = $this->sftp->delete($remotePath, true);
 
         if (!$removed) {
@@ -148,14 +148,14 @@ final readonly class SFTPFilesystem implements Filesystem
             return null;
         }
 
-        $remotePath = RemotePath::from($path);
+        $remotePath = $path->path();
 
-        if ($this->sftp->is_dir($remotePath->toString())) {
+        if ($this->sftp->is_dir($remotePath)) {
             return new FileStatus($path, false);
         }
 
-        if (!$this->sftp->is_file($remotePath->toString())) {
-            $this->session->assertAlive('stat ' . $remotePath->toString());
+        if (!$this->sftp->is_file($remotePath)) {
+            $this->session->assertAlive('stat ' . $remotePath);
 
             return null;
         }
@@ -183,31 +183,31 @@ final readonly class SFTPFilesystem implements Filesystem
 
     private function createParentDirectory(Path $path): void
     {
-        $parent = RemotePath::from($path)->directory();
+        $parent = $path->parentDirectory()->path();
 
-        if ($parent->isRoot() || $this->sftp->is_dir($parent->toString())) {
+        if ($parent === '/' || $this->sftp->is_dir($parent)) {
             return;
         }
 
-        if (!$this->sftp->mkdir($parent->toString(), -1, true) && !$this->sftp->is_dir($parent->toString())) {
-            $this->session->assertAlive('create directory ' . $parent->toString());
+        if (!$this->sftp->mkdir($parent, -1, true) && !$this->sftp->is_dir($parent)) {
+            $this->session->assertAlive('create directory ' . $parent);
 
-            throw new RuntimeException('Could not create directory: ' . $parent->toString());
+            throw new RuntimeException('Could not create directory: ' . $parent);
         }
     }
 
-    private function exists(RemotePath $remotePath): bool
+    private function exists(string $remotePath): bool
     {
-        return $this->sftp->is_file($remotePath->toString()) || $this->sftp->is_dir($remotePath->toString());
+        return $this->sftp->is_file($remotePath) || $this->sftp->is_dir($remotePath);
     }
 
-    private function fileStatus(Path $path, RemotePath $remotePath): FileStatus
+    private function fileStatus(Path $path, string $remotePath): FileStatus
     {
         return new FileStatus(
             $path,
             true,
-            (int) $this->sftp->filesize($remotePath->toString()),
-            $this->lastModifiedAt($this->sftp->filemtime($remotePath->toString())),
+            (int) $this->sftp->filesize($remotePath),
+            $this->lastModifiedAt($this->sftp->filemtime($remotePath)),
         );
     }
 
@@ -236,11 +236,11 @@ final readonly class SFTPFilesystem implements Filesystem
 
     private function rmMatching(Path $path): bool
     {
-        /** @var array<int, RemotePath> $remotePaths */
+        /** @var array<int, string> $remotePaths */
         $remotePaths = [];
 
         foreach ($this->list($path) as $fileStatus) {
-            $remotePaths[] = RemotePath::from($fileStatus->path);
+            $remotePaths[] = $fileStatus->path->path();
         }
 
         $removed = 0;
@@ -250,7 +250,7 @@ final readonly class SFTPFilesystem implements Filesystem
                 continue;
             }
 
-            if ($this->sftp->delete($remotePath->toString(), true)) {
+            if ($this->sftp->delete($remotePath, true)) {
                 $removed++;
             }
         }
