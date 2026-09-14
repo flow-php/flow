@@ -66,6 +66,8 @@ php.buildPecl {
 
   buildInputs = [ protobufc libpg_query ];
 
+  env.PG_QUERY_EXT_VERSION = "dev";
+
   configureFlags = [
     "--with-pg-query=${libpg_query}"
   ];

@@ -10,7 +10,10 @@
 extern zend_module_entry pg_query_module_entry;
 #define phpext_pg_query_ptr &pg_query_module_entry
 
-#define PHP_PG_QUERY_VERSION "0.1.0"
+#ifndef PHP_PG_QUERY_VERSION
+#   error "PHP_PG_QUERY_VERSION is defined by config.m4, run phpize && ./configure"
+#endif
+
 #define PHP_PG_QUERY_EXTNAME "pg_query"
 
 #ifdef PHP_WIN32

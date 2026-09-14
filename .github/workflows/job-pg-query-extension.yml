@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
 
       - name: Setup PHP Environment
         uses: ./.github/actions/setup-php-env
@@ -68,6 +70,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
 
       - name: Setup PHP Environment
         uses: ./.github/actions/setup-php-env
@@ -95,17 +99,26 @@ jobs:
           pie --version
 
       - name: Prepare local package for PIE installation
-        working-directory: src/extension/pg-query-ext
         run: |
+          # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
+          git archive HEAD src/extension/pg-query-ext | tar -x -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/src/extension/pg-query-ext"
           jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
           mv composer.tmp.json composer.json
 
       - name: Install extension via PIE (from local)
         run: |
           sudo pie repository:remove packagist.org
-          sudo pie repository:add path ${{ github.workspace }}/src/extension/pg-query-ext
+          sudo pie repository:add path "$RUNNER_TEMP/src/extension/pg-query-ext"
           sudo pie install flow-php/pg-query-ext:0.0.9999@dev
 
       - name: Verify extension is loaded
         run: |
           php -m | grep pg_query
+
+      - name: Verify extension version
+        run: |
+          expected="$(git describe --tags --match '[0-9]*' | sed -E 's/-([0-9]+)-(g[0-9a-f]+)$/+\1.\2/')"
+          actual="$(php -r 'echo phpversion("pg_query");')"
+          echo "expected: $expected, actual: $actual"
+          test "$actual" = "$expected"

@@ -45,6 +45,7 @@ pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 
 #[php(startup = "module_startup")]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
+        .version(env!("ARROW_VERSION"))
         .info_function(php_module_info)
         .class::<Reader>()
         .class::<Writer>()
