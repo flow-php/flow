@@ -1,3 +1,15 @@
+## [Unreleased] - 2026-09-14
+
+### Changed
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/arrow-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/flow-php-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/arrow-ext - extension reports release tag or commit instead of hardcoded 0.1.0** - [@norberttech](https://github.com/norberttech)
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/flow-php-ext - extension reports release tag or commit instead of hardcoded 0.3.0** - [@norberttech](https://github.com/norberttech)
+- [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - extension reports release tag or commit instead of hardcoded 0.1.0** - [@norberttech](https://github.com/norberttech)
+
 ## [0.44.0] - 2026-09-14
 
 ### Added
