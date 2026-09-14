@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-09-12
+## [Unreleased] - 2026-09-14
 
 ### Added
+- [#2631](https://github.com/flow-php/flow/pull/2631) - **flow-php/types - TypeFactory::fromString() parses ?T into an optional type** - [@norberttech](https://github.com/norberttech)
+- [#2610](https://github.com/flow-php/flow/pull/2610) - **SFTP filesystem bridge (flow-php/filesystem-sftp-bridge) — sftp:// paths usable anywhere Flow accepts a path** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2610](https://github.com/flow-php/flow/pull/2610) - **sftp_client(), sftp_filesystem() and sftp_filesystem_options() DSL** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetFileWriter, one independent writer per file** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - GlobPattern matcher and GlobWalker local walk** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - Path value object with Key, Wildcard and Multimatch steps** - [@norberttech](https://github.com/norberttech)
@@ -49,6 +52,8 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl - array and array{} project onto json at any schema depth** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [8dbc10](https://github.com/flow-php/flow/commit/8dbc10182618788666275d9bd48a86157c34823e) - **fix(flow-php/filesystem-async-aws-bridge): stop block-leak tests from asserting on shared /tmp** - [@norberttech](https://github.com/norberttech)
+- [5bd742](https://github.com/flow-php/flow/commit/5bd74226a7c5f28f40745ca4734f892cb0710c84) - **chore: updated project dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetEngine::openForWrite() returns a ParquetFileWriter** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - glob wildcards match dotfiles; a double star inside a name acts as a single star** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl-adapter-parquet - path-only partition columns read back as string unless declared** - [@norberttech](https://github.com/norberttech)
@@ -125,6 +130,9 @@
 - [#2593](https://github.com/flow-php/flow/pull/2593) - **flow-php/etl-adapter-json - to_json()/to_json_lines() write list/map/structure/array entries as nested JSON instead of escaped strings** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [b1f099](https://github.com/flow-php/flow/commit/b1f0991ceaf85e35daac37f353ca6a796db78799) - **change log entry** - [@norberttech](https://github.com/norberttech)
+- [#2631](https://github.com/flow-php/flow/pull/2631) - **flow-php/etl - cast() returns null for a null value when the target type is optional** - [@norberttech](https://github.com/norberttech)
+- [#2610](https://github.com/flow-php/flow/pull/2610) - **Repeated separators in a path pattern now address one path, so GlobPattern agrees with GlobWalker across local, memory, S3, Azure and SFTP** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl-adapter-parquet - path-only partition columns left out of the file schema** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - writers sharing one engine no longer overwrite each other** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - a writer whose close throws stays closed** - [@norberttech](https://github.com/norberttech)
