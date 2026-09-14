@@ -336,6 +336,7 @@ $df->filter(ref('a')->notSame(lit(5)));
 | `$df->mode(execution_lenient())`                                               | removed - `optional($function)` per function                            |
 | `$df->mode(execution_strict())`                                                | removed - strict is the only behaviour                                  |
 | `coalesce($a, $b)` skipped a branch that threw                                 | rethrows - `coalesce(optional($a), $b)`                                 |
+| `cast($v, type_integer())` over `null` returned `null`                         | throws - `cast($v, type_optional(type_integer()))`                      |
 | `ref('l')->onEach($fn)` set an element whose `$fn` threw to `null`             | throws - `ref('l')->onEach(optional($fn))`                              |
 | `ref('s')->indexOf('a')` / `->indexOfLast('a')` over `null` - `false`          | throws - `optional(ref('s')->indexOf('a'))`                             |
 | `DataFrame::mode()`                                                            | removed                                                                 |

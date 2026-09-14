@@ -16,6 +16,7 @@ use Flow\Types\Type\TypeFactory;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_is_nullable;
 use function sprintf;
 
 final class Cast implements ScalarFunction
@@ -82,7 +83,7 @@ final class Cast implements ScalarFunction
     {
         $value = (new Parameter($this->value))->eval($row, $context);
 
-        if (null === $value) {
+        if (null === $value && !type_is_nullable($this->type)) {
             throw new InvalidArgumentException('Cast function requires non-null value');
         }
 

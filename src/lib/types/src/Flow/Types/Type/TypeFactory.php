@@ -34,6 +34,7 @@ use function Flow\Types\DSL\type_non_empty_string;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_object;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_positive_integer;
 use function Flow\Types\DSL\type_resource;
 use function Flow\Types\DSL\type_scalar;
@@ -44,6 +45,8 @@ use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
 use function mb_strtolower;
+use function str_starts_with;
+use function substr;
 
 final class TypeFactory
 {
@@ -109,6 +112,10 @@ final class TypeFactory
      */
     public static function fromString(string $name): Type
     {
+        if (str_starts_with($name, '?')) {
+            return type_optional(self::fromString(substr($name, 1)));
+        }
+
         return match (mb_strtolower($name)) {
             'int', 'integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
             'float', 'double', 'real' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),

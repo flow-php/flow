@@ -17,6 +17,9 @@ use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_optional;
 use function is_object;
 
 final class CastTest extends FlowTestCase
@@ -27,6 +30,21 @@ final class CastTest extends FlowTestCase
         $this->expectExceptionMessage('Cast function requires non-null value');
 
         cast(ref('value'), 'int')->eval(row(['value' => null]), flow_context());
+    }
+
+    public function test_cast_of_a_null_value_to_an_optional_target_is_null(): void
+    {
+        static::assertNull(cast(ref('value'), type_optional(type_integer()))->eval(row([
+            'value' => null,
+        ]), flow_context()));
+    }
+
+    public function test_casting_an_unconvertible_value_to_an_optional_target_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "datetime" type');
+
+        cast(ref('value'), type_optional(type_datetime()))->eval(row(['value' => 'abc']), flow_context());
     }
 
     public function test_constructor_rejects_a_non_representable_target(): void
