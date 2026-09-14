@@ -12,9 +12,11 @@ use IteratorAggregate;
  */
 final readonly class DirectoryEntries implements IteratorAggregate
 {
+    /**
+     * @param array<int, DirectoryEntry> $entries
+     */
     public function __construct(
-        private ?DirectoryEntry $entry = null,
-        private ?DirectoryEntries $following = null,
+        private array $entries = [],
     ) {}
 
     /**
@@ -22,16 +24,12 @@ final readonly class DirectoryEntries implements IteratorAggregate
      */
     public function getIterator(): Generator
     {
-        $entries = $this;
+        foreach ($this->entries as $entry) {
+            yield $entry;
 
-        while ($entries !== null && $entries->entry !== null) {
-            yield $entries->entry;
-
-            if ($entries->entry->content !== null) {
-                yield from $entries->entry->content;
+            if ($entry->content !== null) {
+                yield from $entry->content;
             }
-
-            $entries = $entries->following;
         }
     }
 }

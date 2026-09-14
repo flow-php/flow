@@ -13,7 +13,6 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function is_array;
-use function krsort;
 
 final readonly class DirectoryListing
 {
@@ -38,9 +37,9 @@ final readonly class DirectoryListing
      */
     private static function fromRawList(string $directory, array $rawList): DirectoryEntries
     {
-        krsort($rawList, SORT_STRING);
+        ksort($rawList, SORT_STRING);
 
-        $entries = new DirectoryEntries();
+        $entries = [];
 
         foreach ($rawList as $name => $value) {
             if ($name === '.' || $name === '..') {
@@ -51,25 +50,19 @@ final readonly class DirectoryListing
 
             if (is_array($value)) {
                 /** @var array<array-key, array<array-key, mixed>|stdClass> $value */
-                $entries = new DirectoryEntries(
-                    DirectoryEntry::subdirectory($path, self::fromRawList($path, $value)),
-                    $entries,
-                );
+                $entries[] = DirectoryEntry::subdirectory($path, self::fromRawList($path, $value));
 
                 continue;
             }
 
-            $entries = new DirectoryEntries(
-                DirectoryEntry::file(
-                    $path,
-                    type_optional(type_integer())->assert($value->size ?? null),
-                    // @mago-expect analysis:less-specific-argument
-                    isset($value->mtime) ? type_datetime()->cast($value->mtime) : null,
-                ),
-                $entries,
+            $entries[] = DirectoryEntry::file(
+                $path,
+                type_optional(type_integer())->assert($value->size ?? null),
+                // @mago-expect analysis:less-specific-argument
+                isset($value->mtime) ? type_datetime()->cast($value->mtime) : null,
             );
         }
 
-        return $entries;
+        return new DirectoryEntries($entries);
     }
 }
