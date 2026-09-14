@@ -1428,9 +1428,9 @@ Registering the commands in your own console application: drop the `setName()` /
 
 ### 98) `flow-php/flow-php-ext` - the `flow_php` extension must be reinstalled
 
-| Before                     | After                                  |
-|----------------------------|----------------------------------------|
-| `flow_php` extension 0.1.0 | 0.3.0, required by this `flow-php/etl` |
+| Before                     | After                                       |
+|----------------------------|---------------------------------------------|
+| `flow_php` extension 0.1.0 | same version as this `flow-php/etl` release |
 
 Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 

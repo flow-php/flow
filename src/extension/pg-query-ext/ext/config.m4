@@ -170,6 +170,26 @@ if test "$PHP_PG_QUERY" != "no"; then
 
   PHP_SUBST(PG_QUERY_SHARED_LIBADD)
 
+  dnl GitHub archives expand the $Format placeholder in .git_archival.txt (export-subst), a git checkout leaves it verbatim
+  AC_MSG_CHECKING([for pg_query extension version])
+  PG_QUERY_EXT_DESCRIBE="$PG_QUERY_EXT_VERSION"
+  if test -z "$PG_QUERY_EXT_DESCRIBE"; then
+    PG_QUERY_EXT_DESCRIBE=`sed -n 's/^describe-name: //p' "$EXT_DIR/../.git_archival.txt" 2>/dev/null`
+    case "$PG_QUERY_EXT_DESCRIBE" in
+      *Format*) PG_QUERY_EXT_DESCRIBE="" ;;
+    esac
+  fi
+  if test -z "$PG_QUERY_EXT_DESCRIBE"; then
+    PG_QUERY_EXT_DESCRIBE=`cd "$EXT_DIR" && git describe --tags --match '[[0-9]]*' 2>/dev/null`
+  fi
+  if test -z "$PG_QUERY_EXT_DESCRIBE"; then
+    AC_MSG_ERROR([cannot determine the extension version: set PG_QUERY_EXT_VERSION, build from a GitHub release archive, or build from a git checkout with tags])
+  fi
+  dnl 0.43.0-107-gf998a45d0 (git describe) becomes 0.43.0+107.gf998a45d0, semver build metadata Composer reads as 0.43.0
+  PG_QUERY_EXT_SEMVER=`echo "$PG_QUERY_EXT_DESCRIBE" | sed -E 's/-([[0-9]]+)-(g[[0-9a-f]]+)$/+\1.\2/'`
+  AC_MSG_RESULT([$PG_QUERY_EXT_SEMVER])
+  AC_DEFINE_UNQUOTED([PHP_PG_QUERY_VERSION], ["$PG_QUERY_EXT_SEMVER"], [pg_query extension version])
+
   dnl Define extension
   PHP_NEW_EXTENSION(pg_query, pg_query.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 

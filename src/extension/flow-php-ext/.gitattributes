@@ -6,6 +6,9 @@
 /.gitattributes export-ignore
 /.gitignore export-ignore
 
+# Expand the version placeholder in release archives
+/.git_archival.txt export-subst
+
 # Ensure consistent line endings
 *.php text eol=lf
 *.rs text eol=lf

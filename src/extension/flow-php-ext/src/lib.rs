@@ -251,6 +251,7 @@ impl RustRowHydratorNative {
 #[php(startup = "module_startup")]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
+        .version(env!("FLOW_PHP_EXT_VERSION"))
         .info_function(php_module_info)
         .class::<RustFloeEncoderNative>()
         .class::<RustRowHydratorNative>()
