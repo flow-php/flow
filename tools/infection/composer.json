@@ -3,7 +3,7 @@
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
     "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-    "infection/infection": "^0.34"
+    "infection/infection": "^0.35"
   },
   "config": {
     "allow-plugins": false

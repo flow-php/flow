@@ -718,16 +718,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.458.0",
+            "version": "v0.459.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "1bf817c792a3c2112f93d785d1a891510f7366c9"
+                "reference": "3b45be50c8420dea56b6f2326ff745175c3cafb8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/1bf817c792a3c2112f93d785d1a891510f7366c9",
-                "reference": "1bf817c792a3c2112f93d785d1a891510f7366c9",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/3b45be50c8420dea56b6f2326ff745175c3cafb8",
+                "reference": "3b45be50c8420dea56b6f2326ff745175c3cafb8",
                 "shasum": ""
             },
             "require": {
@@ -756,9 +756,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.458.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.459.0"
             },
-            "time": "2026-09-07T01:24:24+00:00"
+            "time": "2026-09-14T01:22:23+00:00"
         },
         {
             "name": "google/auth",
@@ -5176,16 +5176,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.8.0",
+            "version": "v5.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f"
+                "reference": "9e33da9553fe7786f0962b35f4e4ecf01be89def"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
-                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/9e33da9553fe7786f0962b35f4e4ecf01be89def",
+                "reference": "9e33da9553fe7786f0962b35f4e4ecf01be89def",
                 "shasum": ""
             },
             "require": {
@@ -5227,9 +5227,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.8.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.9.0"
             },
-            "time": "2026-07-04T14:30:18+00:00"
+            "time": "2026-09-13T18:51:52+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -5812,11 +5812,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.13",
+            "version": "2.2.14",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9ba9ac76ee9c5cf5b56d58eb5deec6315b7a0260",
-                "reference": "9ba9ac76ee9c5cf5b56d58eb5deec6315b7a0260",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9c672e7a8e791dfc3d30e55f683e73fc0b63a3ac",
+                "reference": "9c672e7a8e791dfc3d30e55f683e73fc0b63a3ac",
                 "shasum": ""
             },
             "require": {
@@ -5872,7 +5872,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-03T20:38:19+00:00"
+            "time": "2026-09-12T21:39:33+00:00"
         },
         {
             "name": "ramsey/collection",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "40186233c43735be3c92ce0bfcafc30e",
+    "content-hash": "78aa96537d4d3f946ce8be90ccb31e6c",
     "packages": [],
     "packages-dev": [
         {
@@ -479,16 +479,16 @@
         },
         {
             "name": "infection/infection",
-            "version": "0.34.2",
+            "version": "0.35.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/infection/infection.git",
-                "reference": "18d9bef39fae250f202920d1453ab96e793e6637"
+                "reference": "487bf060228e1272c6a9653468b87a4fe29436df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/infection/infection/zipball/18d9bef39fae250f202920d1453ab96e793e6637",
-                "reference": "18d9bef39fae250f202920d1453ab96e793e6637",
+                "url": "https://api.github.com/repos/infection/infection/zipball/487bf060228e1272c6a9653468b87a4fe29436df",
+                "reference": "487bf060228e1272c6a9653468b87a4fe29436df",
                 "shasum": ""
             },
             "require": {
@@ -509,7 +509,7 @@
                 "ondram/ci-detector": "^4.1.0",
                 "php": "^8.3",
                 "psr/log": "^2.0 || ^3.0",
-                "sanmai/di-container": "^0.1.16",
+                "sanmai/di-container": "^0.1.23 || ^0.2",
                 "sanmai/duoclock": "^0.1.0",
                 "sanmai/later": "^0.1.7",
                 "sanmai/pipeline": "^7.2",
@@ -524,7 +524,8 @@
             },
             "conflict": {
                 "antecedent/patchwork": "<2.1.25",
-                "dg/bypass-finals": "<1.4.1"
+                "dg/bypass-finals": "<1.4.1",
+                "marc-mabe/php-enum": "<4.4"
             },
             "require-dev": {
                 "carthage-software/mago": "^1.20",
@@ -602,7 +603,7 @@
             ],
             "support": {
                 "issues": "https://github.com/infection/infection/issues",
-                "source": "https://github.com/infection/infection/tree/0.34.2"
+                "source": "https://github.com/infection/infection/tree/0.35.4"
             },
             "funding": [
                 {
@@ -614,7 +615,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-08-07T12:59:47+00:00"
+            "time": "2026-09-02T13:30:25+00:00"
         },
         {
             "name": "infection/mutator",
@@ -809,16 +810,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.8.0",
+            "version": "v5.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f"
+                "reference": "9e33da9553fe7786f0962b35f4e4ecf01be89def"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
-                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/9e33da9553fe7786f0962b35f4e4ecf01be89def",
+                "reference": "9e33da9553fe7786f0962b35f4e4ecf01be89def",
                 "shasum": ""
             },
             "require": {
@@ -860,9 +861,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.8.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.9.0"
             },
-            "time": "2026-07-04T14:30:18+00:00"
+            "time": "2026-09-13T18:51:52+00:00"
         },
         {
             "name": "ondram/ci-detector",
