@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP;
 
-use DateTimeImmutable;
 use Flow\Filesystem\Exception\RuntimeException;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Exception\BaseException;
+use phpseclib4\Net\SFTP;
 use stdClass;
 
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function is_array;
@@ -22,27 +23,22 @@ final readonly class DirectoryListing
 
     public function read(string $directory): DirectoryEntries
     {
-        /** @var array<array-key, array<array-key, mixed>|stdClass>|false $rawList */
-        $rawList = $this->sftp->rawlist($directory, true);
-
-        if (!is_array($rawList)) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot list ' . $directory);
-
-            return new DirectoryEntries();
+        try {
+            /** @var array<array-key, array<array-key, mixed>|stdClass> $rawList */
+            $rawList = $this->sftp->rawlist($directory, true);
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot list ' . $directory);
         }
 
-        return self::fromRawList($directory, $rawList);
+        return self::fromRawList($directory, $rawList, new DirectoryEntries());
     }
 
     /**
      * @param array<array-key, array<array-key, mixed>|stdClass> $rawList
      */
-    private static function fromRawList(string $directory, array $rawList): DirectoryEntries
+    private static function fromRawList(string $directory, array $rawList, DirectoryEntries $entries): DirectoryEntries
     {
         krsort($rawList, SORT_STRING);
-
-        $entries = new DirectoryEntries();
 
         foreach ($rawList as $name => $value) {
             if ($name === '.' || $name === '..') {
@@ -54,8 +50,8 @@ final readonly class DirectoryListing
             if (is_array($value)) {
                 /** @var array<array-key, array<array-key, mixed>|stdClass> $value */
                 $entries = new DirectoryEntries(
-                    DirectoryEntry::subdirectory($path, self::fromRawList($path, $value)),
-                    $entries,
+                    DirectoryEntry::subdirectory($path),
+                    self::fromRawList($path, $value, $entries),
                 );
 
                 continue;
@@ -65,7 +61,8 @@ final readonly class DirectoryListing
                 DirectoryEntry::file(
                     $path,
                     type_optional(type_integer())->assert($value->size ?? null),
-                    isset($value->mtime) ? new DateTimeImmutable('@' . type_integer()->assert($value->mtime)) : null,
+                    // @mago-expect analysis:less-specific-argument
+                    isset($value->mtime) ? type_datetime()->cast($value->mtime) : null,
                 ),
                 $entries,
             );

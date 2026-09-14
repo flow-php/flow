@@ -27,10 +27,6 @@ final readonly class DirectoryEntries implements IteratorAggregate
         while ($entries !== null && $entries->entry !== null) {
             yield $entries->entry;
 
-            if ($entries->entry->content !== null) {
-                yield from $entries->entry->content;
-            }
-
             $entries = $entries->following;
         }
     }

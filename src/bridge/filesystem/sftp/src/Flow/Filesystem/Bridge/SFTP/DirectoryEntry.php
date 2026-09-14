@@ -13,16 +13,15 @@ final readonly class DirectoryEntry
         public bool $isDirectory,
         public ?int $size,
         public ?DateTimeImmutable $modifiedAt,
-        public ?DirectoryEntries $content,
     ) {}
 
     public static function file(string $path, ?int $size, ?DateTimeImmutable $modifiedAt): self
     {
-        return new self($path, false, $size, $modifiedAt, null);
+        return new self($path, false, $size, $modifiedAt);
     }
 
-    public static function subdirectory(string $path, DirectoryEntries $content): self
+    public static function subdirectory(string $path): self
     {
-        return new self($path, true, null, null, $content);
+        return new self($path, true, null, null);
     }
 }

@@ -6,6 +6,7 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
 use Flow\Filesystem\Bridge\SFTP\Tests\Context\SFTPContext;
 use Flow\Filesystem\Exception\RuntimeException;
+use phpseclib4\Exception\InvalidStateException;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -20,8 +21,7 @@ final class SFTPLostSessionTest extends SFTPTestCase
         $filesystem = sftp_filesystem($sftp = SFTPContext::connect());
         $sftp->disconnect();
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('SFTP session is no longer usable');
+        $this->expectException(InvalidStateException::class);
 
         iterator_to_array($filesystem->list(path('sftp:///upload')), false);
     }
@@ -73,7 +73,7 @@ final class SFTPLostSessionTest extends SFTPTestCase
         $filesystem = sftp_filesystem($sftp = SFTPContext::connect());
         $sftp->disconnect();
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(InvalidStateException::class);
 
         $filesystem->readFrom(path('sftp:///upload/orders.csv'))->size();
     }
@@ -85,7 +85,7 @@ final class SFTPLostSessionTest extends SFTPTestCase
         $filesystem = sftp_filesystem($sftp = SFTPContext::connect());
         $sftp->disconnect();
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(InvalidStateException::class);
 
         $filesystem->status(path('sftp:///upload/orders.csv'));
     }

@@ -32,7 +32,7 @@ $sftp = sftp_client($_ENV['SFTP_HOST'], $_ENV['SFTP_USER'], $_ENV['SFTP_PASSWORD
 $sftp = sftp_client(
     $_ENV['SFTP_HOST'],
     $_ENV['SFTP_USER'],
-    \phpseclib3\Crypt\PublicKeyLoader::load(\file_get_contents($_ENV['SFTP_PRIVATE_KEY'])),
+    \phpseclib4\Crypt\PublicKeyLoader::load(\file_get_contents($_ENV['SFTP_PRIVATE_KEY'])),
     port: 2222,
 );
 
@@ -114,13 +114,13 @@ $filesystem = sftp_filesystem(
 
 ## Lost connections
 
-This bridge does not reconnect on your behalf. phpseclib answers a dropped session with the same
-`false` it uses for "no such file", so every operation checks the session before reporting an empty
-result, and raises `Flow\Filesystem\Exception\RuntimeException` naming the operation that failed:
+This bridge does not reconnect on your behalf. phpseclib raises `InvalidStateException` once a
+session is gone and `FileSystemException` when a path is missing or unreadable; the bridge turns the
+first into `Flow\Filesystem\Exception\RuntimeException` naming the operation that failed, and keeps
+the original exception as `previous`:
 
 ```
-SFTP session is no longer usable, cannot read /upload/orders.csv. The connection was closed or lost,
-this bridge does not reconnect on your behalf.
+SFTP session is no longer usable, cannot read /upload/orders.csv
 ```
 
 Long running pipelines against servers with an idle timeout should keep that in mind and build a

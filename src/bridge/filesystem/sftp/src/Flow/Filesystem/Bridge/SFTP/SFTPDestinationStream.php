@@ -14,7 +14,9 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 use Flow\Filesystem\Stream\Blocks;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Exception\BaseException;
+use phpseclib4\Exception\FileSystemException;
+use phpseclib4\Net\SFTP;
 
 use function file_exists;
 use function gettype;
@@ -140,11 +142,12 @@ final class SFTPDestinationStream implements DestinationStream
             return;
         }
 
-        if ($this->sftp->put($this->remotePath, '', SFTP::SOURCE_STRING) === false) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot create ' . $this->remotePath);
-
-            throw new RuntimeException('Could not create empty file: ' . $this->remotePath);
+        try {
+            $this->sftp->put($this->remotePath, '', SFTP::SOURCE_STRING);
+        } catch (FileSystemException $e) {
+            throw new RuntimeException('Could not create empty file: ' . $this->remotePath, previous: $e);
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot create ' . $this->remotePath);
         }
     }
 }

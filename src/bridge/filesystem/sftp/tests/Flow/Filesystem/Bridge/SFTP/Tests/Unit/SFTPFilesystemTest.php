@@ -7,7 +7,7 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Unit;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Net\SFTP;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;
 use function Flow\Filesystem\DSL\path;

@@ -11,8 +11,8 @@ use Flow\Filesystem\Bridge\SFTP\Options;
 use Flow\Filesystem\Bridge\SFTP\SFTPFilesystem;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Mount;
-use phpseclib3\Crypt\Common\PrivateKey;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Crypt\Common\PrivateKey;
+use phpseclib4\Net\SFTP;
 use SensitiveParameter;
 
 use function sprintf;
