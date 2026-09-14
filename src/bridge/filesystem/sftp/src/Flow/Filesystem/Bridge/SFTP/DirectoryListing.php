@@ -30,15 +30,17 @@ final readonly class DirectoryListing
             throw new RuntimeException('SFTP session is no longer usable, cannot list ' . $directory);
         }
 
-        return self::fromRawList($directory, $rawList, new DirectoryEntries());
+        return self::fromRawList($directory, $rawList);
     }
 
     /**
      * @param array<array-key, array<array-key, mixed>|stdClass> $rawList
      */
-    private static function fromRawList(string $directory, array $rawList, DirectoryEntries $entries): DirectoryEntries
+    private static function fromRawList(string $directory, array $rawList): DirectoryEntries
     {
         krsort($rawList, SORT_STRING);
+
+        $entries = new DirectoryEntries();
 
         foreach ($rawList as $name => $value) {
             if ($name === '.' || $name === '..') {
@@ -50,8 +52,8 @@ final readonly class DirectoryListing
             if (is_array($value)) {
                 /** @var array<array-key, array<array-key, mixed>|stdClass> $value */
                 $entries = new DirectoryEntries(
-                    DirectoryEntry::subdirectory($path),
-                    self::fromRawList($path, $value, $entries),
+                    DirectoryEntry::subdirectory($path, self::fromRawList($path, $value)),
+                    $entries,
                 );
 
                 continue;
