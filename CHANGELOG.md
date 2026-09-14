@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-09-14
+## [0.44.0] - 2026-09-14
 
 ### Added
 - [#2631](https://github.com/flow-php/flow/pull/2631) - **flow-php/types - TypeFactory::fromString() parses ?T into an optional type** - [@norberttech](https://github.com/norberttech)
