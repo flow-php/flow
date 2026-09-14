@@ -13,7 +13,7 @@ use function Flow\Filesystem\DSL\path;
 
 final class Options
 {
-    private readonly BlockFactory $blockFactory;
+    private BlockFactory $blockFactory;
 
     private bool $fileFastPath = true;
 
@@ -49,6 +49,13 @@ final class Options
     public function tmpDir(): Path
     {
         return $this->tmpDir;
+    }
+
+    public function withBlockFactory(BlockFactory $blockFactory): self
+    {
+        $this->blockFactory = $blockFactory;
+
+        return $this;
     }
 
     public function withBlockSize(int $bytes): self

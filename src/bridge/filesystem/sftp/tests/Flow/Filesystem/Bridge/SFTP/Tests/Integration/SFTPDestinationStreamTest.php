@@ -16,14 +16,12 @@ use function rewind;
 use function str_repeat;
 use function strlen;
 use function substr;
-use function sys_get_temp_dir;
-use function uniqid;
 
 final class SFTPDestinationStreamTest extends SFTPTestCase
 {
     public function test_blocks_are_written_through_the_configured_block_factory_and_removed_after_upload(): void
     {
-        $blockLocation = sys_get_temp_dir() . '/flow_sftp_blocks_' . uniqid();
+        $blockLocation = $this->cacheDir->path() . '/blocks';
         $options = sftp_filesystem_options()
             ->withBlockFactory(new NativeLocalFileBlocksFactory($blockLocation))
             ->withBlockSize(1024);
@@ -92,26 +90,34 @@ final class SFTPDestinationStreamTest extends SFTPTestCase
 
     public function test_no_block_files_are_left_behind_after_a_multi_block_write(): void
     {
-        $blockFilesBefore = glob(sys_get_temp_dir() . '/*') ?: [];
+        $blockLocation = $this->cacheDir->path() . '/blocks';
 
         $stream = $this
             ->sftpContext()
-            ->filesystem(sftp_filesystem_options()->withBlockSize(1024))
+            ->filesystem(
+                sftp_filesystem_options()
+                    ->withBlockFactory(new NativeLocalFileBlocksFactory($blockLocation))
+                    ->withBlockSize(1024),
+            )
             ->writeTo(path('sftp:///upload/blocks.txt'));
         $stream->append(str_repeat('a', 4096));
         $stream->close();
 
         static::assertSame(4096, $this->sftpContext()->sizeOf(path('sftp:///upload/blocks.txt')));
-        static::assertSame($blockFilesBefore, glob(sys_get_temp_dir() . '/*') ?: []);
+        static::assertSame([], glob($blockLocation . '/*') ?: []);
     }
 
     public function test_no_block_file_is_left_behind_when_nothing_was_written(): void
     {
-        $blockFilesBefore = glob(sys_get_temp_dir() . '/*') ?: [];
+        $blockLocation = $this->cacheDir->path() . '/blocks';
 
-        $this->sftpContext()->filesystem()->writeTo(path('sftp:///upload/empty.csv'))->close();
+        $this
+            ->sftpContext()
+            ->filesystem(sftp_filesystem_options()->withBlockFactory(new NativeLocalFileBlocksFactory($blockLocation)))
+            ->writeTo(path('sftp:///upload/empty.csv'))
+            ->close();
 
-        static::assertSame($blockFilesBefore, glob(sys_get_temp_dir() . '/*') ?: []);
+        static::assertSame([], glob($blockLocation . '/*') ?: []);
     }
 
     public function test_writing_a_payload_spanning_many_blocks(): void

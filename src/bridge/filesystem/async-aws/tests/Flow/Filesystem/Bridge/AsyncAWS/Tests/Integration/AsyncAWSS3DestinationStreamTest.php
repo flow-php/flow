@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
+use Flow\Filesystem\Bridge\AsyncAWS\Options;
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
+
 use function file_get_contents;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function glob;
-use function sys_get_temp_dir;
 
 final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
 {
@@ -22,18 +24,25 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         static::assertFalse($stream->isOpen());
     }
 
-    public function test_closing_streams_leaves_no_blocks_in_the_system_tmp_directory(): void
+    public function test_closing_streams_leaves_no_blocks_behind(): void
     {
-        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
-        $tmpBefore = glob(sys_get_temp_dir() . '/*') ?: [];
+        $blockLocation = $this->cacheDir->path() . '/blocks';
+        $fs = aws_s3_filesystem(
+            $this->bucket(),
+            $this->s3Client(),
+            (new Options())->withBlockFactory(new NativeLocalFileBlocksFactory($blockLocation)),
+        );
 
         $fs->writeTo(path('aws-s3://never_written.txt'))->close();
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
+
+        static::assertCount(1, glob($blockLocation . '/*') ?: []);
+
         $stream->append("id\n1\n");
         $stream->close();
 
-        static::assertSame($tmpBefore, glob(sys_get_temp_dir() . '/*') ?: []);
+        static::assertSame([], glob($blockLocation . '/*') ?: []);
         static::assertSame('', $fs->readFrom(path('aws-s3://never_written.txt'))->content());
         static::assertSame("id\n1\n", $fs->readFrom(path('aws-s3://orders.csv'))->content());
     }
