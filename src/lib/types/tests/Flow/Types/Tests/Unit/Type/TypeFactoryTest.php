@@ -26,6 +26,7 @@ use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_resource;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -79,6 +80,15 @@ final class TypeFactoryTest extends TestCase
     public function test_double_and_real_resolve_to_float(string $alias): void
     {
         static::assertEquals(type_float(), TypeFactory::fromString($alias));
+    }
+
+    public function test_a_question_mark_prefix_resolves_to_an_optional_type(): void
+    {
+        static::assertEquals(type_optional(type_integer()), TypeFactory::fromString('?int'));
+        static::assertEquals(
+            type_optional(type_datetime()),
+            TypeFactory::fromString(type_optional(type_datetime())->toString()),
+        );
     }
 
     public function test_normalizing_and_creating_enum_type(): void
