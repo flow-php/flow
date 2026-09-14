@@ -50,7 +50,7 @@
 
 ### Changed
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/parquet - ParquetEngine::openForWrite() returns a ParquetFileWriter** - [@norberttech](https://github.com/norberttech)
-- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - glob wildcards match dotfiles, ** inside a name acts as *** - [@norberttech](https://github.com/norberttech)
+- [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/filesystem - glob wildcards match dotfiles; a double star inside a name acts as a single star** - [@norberttech](https://github.com/norberttech)
 - [#2626](https://github.com/flow-php/flow/pull/2626) - **flow-php/etl-adapter-parquet - path-only partition columns read back as string unless declared** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - \ escapes every path grammar character** - [@norberttech](https://github.com/norberttech)
 - [#2625](https://github.com/flow-php/flow/pull/2625) - **flow-php/array-dot - array_dot_rename() refuses a path not ending with a key** - [@norberttech](https://github.com/norberttech)
